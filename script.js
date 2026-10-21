@@ -144,7 +144,7 @@ const Hardware = (() => {
         powerAmp: {
             ".power-btn": {width:26, height:40},
             ".poweramp-level": {width:50, height:50},
-            "[data-radio-knob]": {width:38, height:38},
+            "[data-radio-knob]": {width:32, height:32},
             "[data-receiver-input]": {width:64, height:24},
         },
         powerStereo: {
@@ -432,7 +432,7 @@ const Hardware = (() => {
     function knobModel(dev,el){
         const vintage=dev.el.classList.contains('device-family-vintage');
         const silver=['integratedSilver','preReference','preControl','powerBias'].includes(dev.type);
-        if(el.matches('[data-radio-knob]'))return 'flywheel';
+        if(el.matches('[data-radio-knob]'))return dev.type==='powerAmp'?'touchDisc':'flywheel';
         if(el.matches('[data-pre-rotary]'))return dev.type==='preReference'?'machined':'faceted';
         if(el.matches('[data-sp="vol"]'))return vintage?'ivory':dev.type==='spkActiveBookshelf'?'faceted':'rubber';
         if(el.matches('[data-signal-level-knob]'))return vintage?'machined':'recessed';
@@ -442,7 +442,7 @@ const Hardware = (() => {
         if(el.matches('[data-power-channel]'))return vintage?'bakelite':'faceted';
         if(el.matches('[data-bias-gain]'))return 'machined';
         if(el.matches('.phone-volume'))return vintage?'ivory':'recessed';
-        if(el.matches('.is-large,[data-receiver-control="volume"]'))return ['integratedMinimal','preDisplay'].includes(dev.type)?'touchDisc':'skirted';
+        if(el.matches('.is-large,[data-receiver-control="volume"]'))return ['integratedBlue','integratedMinimal','preDisplay'].includes(dev.type)?'touchDisc':'skirted';
         if(el.matches('[data-tape-level]'))return 'bakelite';
         if(el.matches('[data-pre-knob]'))return 'recessed';
         return vintage||silver?'machined':'recessed';
@@ -540,11 +540,12 @@ const Hardware = (() => {
         if(['tapeDeck','turntableVintage'].includes(dev.type)&&el.matches('[data-source-play],[data-tape-back],[data-tape-stop],[data-tape-forward],.at-startstop'))return 'vintageSteel';
         if(el.matches('[data-source-play],[data-tape-back],[data-tape-stop],[data-tape-forward]'))return 'transport';
         if(el.matches('.at-startstop'))return 'studioCap';
+        if(dev.type==='powerAmp'&&el.matches('[data-receiver-input]'))return 'flushMetal';
         if(el.matches('.receiver-source-buttons button,.selector-key,[data-integrated-source],[data-pre-source],[data-integrated-direct],[data-pre-toggle]')){
             if(vintage)return 'vintageSteel';
             if(['preDisplay','integratedMinimal'].includes(dev.type))return 'illuminatedBar';
             if(['preControl','integratedSilver'].includes(dev.type))return 'flushMetal';
-            if(dev.type==='integratedBlue'&&el.matches('[data-integrated-direct]'))return 'brassPill';
+            if(dev.type==='integratedBlue'&&el.matches('[data-integrated-direct]'))return 'selectorKey';
             if(el.matches('.selector-key'))return 'studioCap';
             return 'modernGraphite';
         }
