@@ -4,6 +4,10 @@ Monte um sistema de som virtual, conecte os equipamentos e ouça o resultado dir
 
 O **Audio System Simulator** é um simulador interativo de áudio para experimentar combinações de aparelhos, entender o percurso do sinal e explorar ajustes de reprodução. O catálogo reúne equipamentos com estilos vintage, de estúdio e modernos: toca-discos, CD players, streamers, receivers, amplificadores, equalizadores, mixers, seletores, caixas, subwoofers, fones e instrumentos de áudio.
 
+## Wiki e guias de uso
+
+Acesse a **[Wiki do programa](https://github.com/gperegr/AudioSystem/wiki)** para consultar guias por categoria de equipamento, exemplos de montagem, conceitos de áudio e solução de problemas.
+
 ## Como começar
 
 1. Neste repositório, clique em **Code → Download ZIP**.
