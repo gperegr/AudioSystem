@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="456" viewBox="0 0 280 456">
+  <defs>
+    <linearGradient id="wood"><stop stop-color="#52351f"/><stop offset=".18" stop-color="#805936"/><stop offset=".52" stop-color="#694326"/><stop offset=".8" stop-color="#89603c"/><stop offset="1" stop-color="#4d301c"/></linearGradient>
+    <filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".075 .004" numOctaves="3" seed="19" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feBlend in="SourceGraphic" mode="soft-light"/></filter>
+  </defs>
+  <path fill="url(#wood)" d="M0 0h280v456H0z"/>
+  <g fill="none" stroke="#321b0d" opacity=".25" stroke-width="1.2">
+    <path d="M12-20C27 90 3 176 17 290s-2 126 6 190M33-20C18 90 48 200 35 330s0 110 5 150M59-20C71 120 40 190 58 295s-2 120 4 185M86-20C69 100 105 145 84 270s12 150 5 210M112-20C125 110 99 175 115 290s-3 140 2 190M142-20C124 140 158 192 138 320s7 103 2 160M172-20C187 80 160 190 175 300s-7 110 0 180M202-20C186 90 215 190 200 300s10 130 3 180M231-20C246 130 217 200 234 320s-7 120-2 160M260-20C245 100 275 180 258 300s10 130 4 180"/>
+  </g>
+  <path fill="#765133" opacity=".32" filter="url(#grain)" d="M0 0h280v456H0z"/>
+</svg>
