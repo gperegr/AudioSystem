@@ -540,7 +540,8 @@ const Hardware = (() => {
         if(['tapeDeck','turntableVintage'].includes(dev.type)&&el.matches('[data-source-play],[data-tape-back],[data-tape-stop],[data-tape-forward],.at-startstop'))return 'vintageSteel';
         if(el.matches('[data-source-play],[data-tape-back],[data-tape-stop],[data-tape-forward]'))return 'transport';
         if(el.matches('.at-startstop'))return 'studioCap';
-        if(dev.type==='powerAmp'&&el.matches('[data-receiver-input]'))return 'flushMetal';
+        if((SELECTOR_TYPES.has(dev.type)||MATRIX_TYPES.has(dev.type))&&el.matches('.selector-key'))return 'illuminatedBar';
+        if(dev.type==='powerAmp'&&el.matches('[data-receiver-input]'))return 'illuminatedBar';
         if(el.matches('.receiver-source-buttons button,.selector-key,[data-integrated-source],[data-pre-source],[data-integrated-direct],[data-pre-toggle]')){
             if(vintage)return 'vintageSteel';
             if(['preDisplay','integratedMinimal'].includes(dev.type))return 'illuminatedBar';
@@ -3724,7 +3725,7 @@ const Hardware = (() => {
                 const channels = ['CANAL 1','CANAL 2','CANAL 3'];
                 const pair = (n) => `<div class="mixer-rack-pair"><div class="port" data-type="rca-r" data-io="in" data-node="in${n}R" title="Entrada ${n} · RCA direito R"></div><div class="port" data-type="rca-l" data-io="in" data-node="in${n}L" title="Entrada ${n} · RCA esquerdo L"></div></div>`;
                 const strip = (name,index) => `<div class="mixer-rack-strip"><strong>${name}</strong><small>LINE IN · RCA R/L</small>${pair(index+1)}<div class="mixer-rack-fader"><input class="mixer-level-control" type="range" min="0" max="1" step="0.01" value="0.8" data-mixer-channel="${index}" aria-label="Volume ${name}"><output data-mixer-value="${index}">80%</output></div></div>`;
-                el.innerHTML = `<div class="device-header"><span>${deviceName}</span><button class="power-btn" title="Ligar / desligar"></button></div><section class="mixer-rack-panel"><div class="mixer-rack-inputs"><header><strong>MIXER ESTÉREO</strong><span>3 ENTRADAS · RCA R/L</span></header><div class="mixer-rack-channels">${channels.map(strip).join('')}</div></div><div class="mixer-rack-output"><span>LINE OUT</span><small>RCA R/L</small><div class="mixer-rack-pair"><div class="port" data-type="rca-r" data-io="out" data-node="outR" title="Line Out · RCA direito R"></div><div class="port" data-type="rca-l" data-io="out" data-node="outL" title="Line Out · RCA esquerdo L"></div></div></div></section>`;
+                el.innerHTML = `<div class="device-header"><span>${deviceName}</span><button class="power-btn" title="Ligar / desligar"></button></div><section class="mixer-rack-panel"><i class="mixer-rack-handle handle-left" aria-hidden="true"></i><i class="mixer-rack-handle handle-right" aria-hidden="true"></i><div class="mixer-rack-inputs"><header><strong>MIXER ESTÉREO</strong><span>3 ENTRADAS · RCA R/L</span></header><div class="mixer-rack-channels">${channels.map(strip).join('')}</div></div><div class="mixer-rack-output"><span>LINE OUT</span><small>RCA R/L</small><div class="mixer-rack-pair"><div class="port" data-type="rca-r" data-io="out" data-node="outR" title="Line Out · RCA direito R"></div><div class="port" data-type="rca-l" data-io="out" data-node="outL" title="Line Out · RCA esquerdo L"></div></div></div></section>`;
             }
             if (CROSSOVER_TYPES.has(type)) {
                 const groups = [

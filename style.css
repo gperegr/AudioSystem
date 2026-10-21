@@ -3576,3 +3576,22 @@
 :is(#audio-world,.equipment-preview-world) .device-node[data-equipment-type] :is(.cd-lcd,.bench-lcd,.bench-screen,.poweramp-screen,.custom-pre-screen,.signal-screen) * {font-family:"Equipment Digital",monospace!important;font-variant-numeric:tabular-nums;}
 :is(#audio-world,.equipment-preview-world) .device-node[data-equipment-type] .device-header,
 :is(#audio-world,.equipment-preview-world) .device-node[data-equipment-type] .device-header * {font-family:var(--font-ui)!important;}
+
+/* Mixer handles leave clear space around the channel strips and power switch. */
+:is(#audio-world,.equipment-preview-world) .device-node.rack-standard:is(.device-type-mixer,.device-type-mixerVintage)>.mixer-rack-panel.rack-face {position:relative;padding:14px 48px!important;}
+:is(#audio-world,.equipment-preview-world) .mixer-rack-handle {position:absolute;top:30px;bottom:30px;width:12px;box-sizing:border-box;border:2px solid #586b76;border-radius:5px;background:linear-gradient(90deg,#111a20,#52616b 45%,#17232b);box-shadow:3px 2px 4px #0007,inset 1px 0 #b9cad255;}
+:is(#audio-world,.equipment-preview-world) .mixer-rack-handle.handle-left {left:14px;}
+:is(#audio-world,.equipment-preview-world) .mixer-rack-handle.handle-right {right:14px;}
+:is(#audio-world,.equipment-preview-world) .device-type-mixerVintage .mixer-rack-handle {border-color:#7b7565;border-radius:7px;background:linear-gradient(90deg,#777366,#f0e9ce 38%,#b8b2a0 66%,#686659);box-shadow:3px 2px 4px #352c2255,inset 1px 0 #fff8;}
+
+/* Illuminated selector keys: cool indicators on modern units, amber on vintage. */
+:is(#audio-world,.equipment-preview-world) .device-family-vintage .selector-key.hw-button[data-button-model="illuminatedBar"] {--hw-cap-finish:linear-gradient(#e2dccb,#b2ad9b);border-color:#786f5c!important;background:#625b4c!important;}
+:is(#audio-world,.equipment-preview-world) .device-family-vintage .selector-key[data-button-model="illuminatedBar"] .hw-bar-lens {background:#665437;box-shadow:inset 0 .5px #e2c88f44;}
+:is(#audio-world,.equipment-preview-world) .device-family-vintage .selector-key[data-button-model="illuminatedBar"][aria-pressed="true"] .hw-bar-lens {background:#ffd489;box-shadow:0 0 4px #efb45399;}
+:is(#audio-world,.equipment-preview-world) .device-family-vintage.power-off .selector-key[data-button-model="illuminatedBar"] .hw-bar-lens {background:#665437;box-shadow:none;}
+
+/* Modern receiver inputs: dark keys with cyan selection indicators. */
+:is(#audio-world,.equipment-preview-world) .device-type-powerAmp .receiver-source-buttons>button.hw-button[data-button-model="illuminatedBar"] {--hw-cap-finish:linear-gradient(#27343e,#17232c);border-color:#3c505e!important;background:#101a22!important;}
+:is(#audio-world,.equipment-preview-world) .device-type-powerAmp [data-receiver-input] .hw-bar-lens {background:#203b48;box-shadow:inset 0 .5px #7796a633;}
+:is(#audio-world,.equipment-preview-world) .device-type-powerAmp [data-receiver-input][aria-pressed="true"] .hw-bar-lens {background:#82d7ed;box-shadow:0 0 4px #63c9eb88;}
+:is(#audio-world,.equipment-preview-world) .device-type-powerAmp.power-off [data-receiver-input] .hw-bar-lens {background:#203b48;box-shadow:none;}
