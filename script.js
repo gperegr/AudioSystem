@@ -659,7 +659,7 @@ const Hardware = (() => {
             skinKnob(el,bindings.get(el)?.model||knobModel(dev,el));const accent=el.dataset.demoAccent||accentModel(dev,el);if(accent)skinAccent(dev,el,accent);
         });
         dev.el.querySelectorAll('.speaker-grille').forEach(el=>{el.dataset.hardwareSurface='grille';});
-        dev.el.querySelectorAll('button:not([data-hardware-knob]):not(.speaker-grille)').forEach(el=>skinButton(el,buttonModel(dev,el)));
+        dev.el.querySelectorAll('button:not([data-hardware-knob]):not(.speaker-grille):not(.cd-tray)').forEach(el=>skinButton(el,buttonModel(dev,el)));
         dev.el.querySelectorAll('input[type="range"]').forEach(slider);
         dev.el.querySelectorAll('.device-led,.at-led,.integrated-status-led,.selector-input-led,.graphic-eq-led,[data-dual-led],.stereo-power-meters i,.bt-indicator').forEach(el=>{
             const model=el.hasAttribute('data-dual-led')?'signal':dev.el.classList.contains('device-family-vintage')?'warm':el.classList.contains('bt-indicator')?'blue':'power',spec=leds[model];
@@ -754,6 +754,15 @@ const Hardware = (() => {
         }
         document.getElementById('canvas-theme').addEventListener('change',event=>{setCanvasTheme(event.target.value);scheduleProjectSave();});
         setCanvasTheme('light');
+        const atmospherePresets={neutral:'Luz neutra',sunset:'Fim de tarde',night:'Bancada à noite',sunday:'Sala de domingo'};
+        const atmosphereControl=document.createElement('label');atmosphereControl.className='canvas-theme-control';
+        atmosphereControl.innerHTML='<span>Iluminação</span><select id="canvas-atmosphere" aria-label="Iluminação do ambiente">'+Object.entries(atmospherePresets).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
+        function setAtmosphere(preset){
+            preset=Object.hasOwn(atmospherePresets,preset)?preset:'neutral';state.atmosphere=preset;canvas.dataset.atmosphere=preset;
+            atmosphereControl.querySelector('select').value=preset;
+        }
+        atmosphereControl.querySelector('select').addEventListener('change',event=>{setAtmosphere(event.target.value);const theme={sunset:'sepia',night:'midnight',sunday:'light'}[state.atmosphere];if(theme)setCanvasTheme(theme);scheduleProjectSave();});
+        setAtmosphere('sunset');setCanvasTheme('sepia');
         const canvasGridModes={dots:'Pontos',lines:'Linhas',hidden:'Invisível'};
         const canvasGridControl=document.createElement('label');canvasGridControl.className='canvas-theme-control';
         canvasGridControl.innerHTML='<span>Grade</span><select id="canvas-grid" aria-label="Visual da grade">'+Object.entries(canvasGridModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
@@ -1200,6 +1209,32 @@ const Hardware = (() => {
                 }
             }
             return null;
+        }
+
+        const equipmentLandings=new WeakMap();
+        function stopEquipmentLanding(dev){
+            const landing=equipmentLandings.get(dev);if(!landing)return;
+            cancelAnimationFrame(landing.frame);landing.animation.cancel();equipmentLandings.delete(dev);updateCables();
+        }
+        function animateEquipmentLanding(dev){
+            stopEquipmentLanding(dev);
+            if(FURNITURE_TYPES[dev.type]||state.restoringProject||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+            const x=parseFloat(dev.el.style.left)||0,y=parseFloat(dev.el.style.top)||0,bottom=y+dev.el.offsetHeight;
+            const supported=Object.values(state.devices).some(furniture=>{
+                const config=FURNITURE_TYPES[furniture.type];if(!config)return false;
+                const fx=parseFloat(furniture.el.style.left)||0,fy=parseFloat(furniture.el.style.top)||0;
+                return x>=fx+config.inset-1&&x+dev.el.offsetWidth<=fx+config.width-config.inset+1&&config.surfaces.some(surface=>Math.abs(bottom-fy-surface)<=1);
+            });
+            if(!supported)return;
+            const filter=getComputedStyle(dev.el).filter,base=filter==='none'?'':filter;
+            const animation=dev.el.animate([
+                {translate:'0px -3px',filter:(base+' drop-shadow(0 8px 7px #30201535)').trim()},
+                {translate:'0px 0px',filter}
+            ],{duration:230,easing:'cubic-bezier(.2,.7,.3,1)'});
+            const landing={animation,frame:0};equipmentLandings.set(dev,landing);
+            const follow=()=>{if(!state.devices[dev.id]){stopEquipmentLanding(dev);return;}updateCables();if(animation.playState==='running')landing.frame=requestAnimationFrame(follow);};
+            landing.frame=requestAnimationFrame(follow);
+            animation.onfinish=()=>{equipmentLandings.delete(dev);cancelAnimationFrame(landing.frame);updateCables();};
         }
 
         function settleEquipmentDrop(targets,ignored,fallback) {
@@ -2589,6 +2624,7 @@ const Hardware = (() => {
 
         async function setSourcePlaying(dev, playing) {
             if(dev.state.damage&&playing)return;
+            if(playing&&dev.type==='cdPlayer')dev.setTrayOpen?.(false);
             if (!SOURCE_TYPES.has(dev.type)) return;
             if (playing && state.audioCtx.state !== 'running') {
                 try {
@@ -4257,9 +4293,33 @@ const Hardware = (() => {
             if(type==='hardwareDemo')Hardware.bindDemo(dev);
             Hardware.mount(dev);
             if(!FURNITURE_TYPES[type]) setupAudioMeters(dev);
+            animateDevicePower(dev);
             selectDevice(id);
             updateCableFlows();
         }
+
+        const powerOnAnimations=new WeakMap();
+        const powerMotionPreference=matchMedia('(prefers-reduced-motion: reduce)');
+        function stopPowerOnRitual(dev){
+            powerOnAnimations.get(dev)?.forEach(animation=>animation.cancel());powerOnAnimations.delete(dev);
+        }
+        function animateDevicePower(dev){
+            stopPowerOnRitual(dev);
+            if(!dev.powered||dev.state.damage||state.restoringProject||powerMotionPreference.matches)return;
+            const animations=[];
+            const fade=(element,delay,duration)=>{
+                const opacity=getComputedStyle(element).opacity;
+                animations.push(element.animate([{opacity:0},{opacity}],{delay,duration,easing:'ease-out',fill:'backwards'}));
+            };
+            dev.el.querySelectorAll('.hw-led,.device-led,.hw-bar-lens').forEach(element=>fade(element,0,220));
+            const screens='.device-display,.cd-lcd,.poweramp-screen,.receiver-radio,.custom-pre-screen,.signal-screen,.bench-lcd,.bench-screen,.integrated-gauges,.integrated-green-window,.bias-meter,.extra-vu';
+            [...dev.el.querySelectorAll(screens)].filter(element=>!element.parentElement.closest(screens)).forEach((element,index)=>fade(element,70+Math.min(index,2)*40,300));
+            dev.el.querySelectorAll('[data-integrated-needle],[data-bias-needle],[data-live-vu],.receiver-vu i').forEach(element=>{
+                animations.push(element.animate([{translate:'-1px 1.5px'},{translate:'.3px -.4px',offset:.7},{translate:'0px 0px'}],{delay:130,duration:420,easing:'ease-out',fill:'backwards'}));
+            });
+            powerOnAnimations.set(dev,animations);
+        }
+        powerMotionPreference.addEventListener('change',event=>{if(event.matches)Object.values(state.devices).forEach(dev=>{stopPowerOnRitual(dev);stopEquipmentLanding(dev);});});
 
         function toggleDevicePower(dev) {
             dev.powered = dev.state.damage ? false : !dev.powered;
@@ -4307,6 +4367,7 @@ const Hardware = (() => {
             }
             dev.refreshTurntable?.();
             refreshCdDisplay(dev);
+            animateDevicePower(dev);
             updateCableFlows();
         }
 
@@ -4442,6 +4503,17 @@ const Hardware = (() => {
         }
 
         function bindDeviceEvents(dev) {
+            if(dev.type==='cdPlayer'){
+                const tray=dev.el.querySelector('.cd-tray');
+                dev.setTrayOpen=open=>{
+                    dev.state.trayOpen=!!open;dev.el.classList.toggle('cd-tray-open',!!open);
+                    tray.setAttribute('aria-expanded',String(!!open));tray.setAttribute('aria-label',open?'Fechar bandeja do CD':'Abrir bandeja do CD');tray.title=open?'Fechar bandeja':'Abrir bandeja';
+                    if(open)setSourcePlaying(dev,false);
+                };
+                tray.addEventListener('pointerdown',event=>event.stopPropagation());
+                tray.addEventListener('click',()=>{dev.setTrayOpen(!dev.state.trayOpen);scheduleProjectSave();});
+            }
+
             if (SOURCE_TYPES.has(dev.type) && !TURNTABLE_TYPES.has(dev.type)) {
                 const integrated = dev.el.querySelector('[data-source-play]');
                 const button = integrated || document.createElement('button');
@@ -4633,7 +4705,7 @@ const Hardware = (() => {
                     }
 
                     movingDevices.forEach(item=>item.cancelPlacementMotion?.());
-                    const cancel = () => { clearDiscardPreview();cancelAnimationFrame(frame); frame=0;movingDevices.forEach(item=>item.el.classList.remove('equipment-dragging','history-settling')); };
+                    const cancel = () => { clearDiscardPreview();cancelAnimationFrame(frame); frame=0;movingDevices.forEach(item=>{stopEquipmentLanding(item);item.el.classList.remove('equipment-dragging','history-settling');}); };
                     movingDevices.forEach(item=>item.cancelPlacementMotion=cancel);
                     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
                     const animate = now => {
@@ -4658,6 +4730,7 @@ const Hardware = (() => {
                         else if(released){
                             targets.forEach(p=>{p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;p.dev.el.classList.remove('equipment-dragging','history-settling');});
                             updateCables();
+                            if(isDragging)targets.forEach(p=>animateEquipmentLanding(p.dev));
                         }
                     };
                     const aim = (ev,settle=false) => {
@@ -4809,6 +4882,8 @@ const Hardware = (() => {
         function deleteDevice(dev) {
             if (!dev || !state.devices[dev.id]) return;
             Hardware.dispose(dev);
+            stopPowerOnRitual(dev);
+            stopEquipmentLanding(dev);
             dev.cancelPlacementMotion?.();
             stopVinylNoise(dev);
             if(dev.syncRadio){stopReceiverRadioVoices(dev);dev.radioNoiseGain.disconnect();dev.radioNoiseFilter.disconnect();Object.values(dev.radioMusic).forEach(node=>node.disconnect());Object.values(dev.radioLine).forEach(node=>node.disconnect());dev.receiverInputNodes.forEach(node=>node.disconnect());}
@@ -5434,13 +5509,16 @@ const Hardware = (() => {
                 }
                 if (plug.dataset.type !== cableType) {
                     plug.dataset.type = cableType;
-                    plug.innerHTML=Hardware.plugMarkup(cableType);
+                    plug.innerHTML='<g class="plug-seat-body">'+Hardware.plugMarkup(cableType)+'</g>';
                 }
+                const body=plug.querySelector('.plug-seat-body');
+                body?.setAttribute('transform',`translate(${container.dataset.seatEnd===end?Number(container.dataset.seatOffset||0):0} 0)`);
+                plug.style.opacity=container.dataset.seating==='true'?container.dataset.seatOpacity||'1':'1';
                 const {tip,angle,rear}=endpoints[index];
                 plug.setAttribute('transform', `translate(${tip.x} ${tip.y}) rotate(${angle})`);
                 if(cableType!=='wire'){
                     let boot=plug.querySelector('.plug-strain-relief');
-                    if(!boot){boot=document.createElementNS('http://www.w3.org/2000/svg','path');boot.setAttribute('class','plug-strain-relief');plug.insertBefore(boot,plug.firstChild);}
+                    if(!boot){boot=document.createElementNS('http://www.w3.org/2000/svg','path');boot.setAttribute('class','plug-strain-relief');(body||plug).insertBefore(boot,(body||plug).firstChild);}
                     boot.setAttribute('d',`M ${rear-1} 0 L ${rear+8} 0`);
                     boot.setAttribute('fill','none');boot.setAttribute('stroke','#252d32');boot.setAttribute('stroke-width',String(cableGeometry(cableType).outer));boot.setAttribute('stroke-linecap','round');
                 }
@@ -5449,7 +5527,8 @@ const Hardware = (() => {
         }
 
         function drawCable(container, p1, p2, waypoints = [], cableType = 'rca-r', swing = { x: 0, y: 0 }, routeOffset = 0) {
-            const showPlugs=isPatching&&container===tempCableEl&&!state.connections.some(connection=>connection.el===container);
+            const seating=container.dataset.seating==='true';
+            const showPlugs=seating||(isPatching&&container===tempCableEl&&!state.connections.some(connection=>connection.el===container));
             const geometry=cableGeometry(cableType);
             container.style.setProperty('--cable-outer',geometry.outer+'px');
             container.style.setProperty('--cable-inner',geometry.inner+'px');
@@ -5464,7 +5543,7 @@ const Hardware = (() => {
             });
             const [start,end]=endpoints;
             const pull=Math.max(24,Math.min(180,Math.hypot(p2.x-p1.x,p2.y-p1.y)*.3));
-            const pathData=showPlugs?`M ${start.base.x} ${start.base.y} C ${start.base.x+start.direction.x*pull} ${start.base.y+start.direction.y*pull}, ${end.base.x+end.direction.x*pull} ${end.base.y+end.direction.y*pull}, ${end.base.x} ${end.base.y}`:guide;
+            const pathData=showPlugs&&!seating?`M ${start.base.x} ${start.base.y} C ${start.base.x+start.direction.x*pull} ${start.base.y+start.direction.y*pull}, ${end.base.x+end.direction.x*pull} ${end.base.y+end.direction.y*pull}, ${end.base.x} ${end.base.y}`:guide;
 
             if (cableType === 'wire') {
                 // Desenha o Fio de Caixa Trançado (Vermelho e Preto)
@@ -5973,7 +6052,8 @@ const Hardware = (() => {
 
                     tempCableEl.classList.remove('active');
                     const connType = outP.dataset.type || inP.dataset.type;
-                    state.connections.push({ outId: outP.id, inId: inP.id, el: tempCableEl, type: connType, wps: [] });
+                    const connection={outId:outP.id,inId:inP.id,el:tempCableEl,type:connType,wps:[]};
+                    state.connections.push(connection);animateCableSeat(connection,tPort);
                     playUiSound('connect');
                     outP.classList.add('connected'); inP.classList.add('connected');
                     updatePortGuidance();
@@ -5996,9 +6076,19 @@ const Hardware = (() => {
             }
         });
 
+        function animateCableSeat(connection,port){
+            if(state.restoringProject||powerMotionPreference.matches)return;
+            connection.seatStarted=performance.now();connection.seatEnd=port.id===connection.inId?'end':'start';
+            connection.seatAnimations=[port.animate([
+                {outline:'2px solid rgba(157,224,181,.8)',outlineOffset:'2px'},
+                {outline:'2px solid transparent',outlineOffset:'5px'}
+            ],{delay:100,duration:300,easing:'ease-out'})];
+        }
+
         function removeConnection(idx) {
             const c = state.connections[idx];
             if (!c) return;
+            c.seatAnimations?.forEach(animation=>animation.cancel());
             playUiSound('disconnect');
             if (state.selectedConnection === c) selectCable(null);
             c.el.remove();
@@ -6046,7 +6136,20 @@ const Hardware = (() => {
             state.connections.forEach(c => {
                 const p1 = document.getElementById(c.outId); const p2 = document.getElementById(c.inId);
                 c.el.dataset.slack=String(c.slack??5);
-                if(p1 && p2) drawCable(c.el, getPortCenter(p1), getPortCenter(p2), [], c.type, { x:0, y:0 }, getCableBundleOffset(c));
+                let settle=0;
+                if(c.seatStarted!=null){
+                    const progress=Math.min(1,(performance.now()-c.seatStarted)/440);
+                    if(progress>=1||powerMotionPreference.matches){
+                        delete c.seatStarted;delete c.el.dataset.seating;delete c.el.dataset.seatEnd;delete c.el.dataset.seatOffset;delete c.el.dataset.seatOpacity;
+                        c.seatAnimations?.forEach(animation=>animation.cancel());delete c.seatAnimations;
+                    }else{
+                        c.el.dataset.seating='true';c.el.dataset.seatEnd=c.seatEnd;
+                        c.el.dataset.seatOffset=String(6*(1-Math.min(1,progress/.45))**3);
+                        c.el.dataset.seatOpacity=String(Math.min(1,(1-progress)*4));
+                        settle=Math.sin(progress*Math.PI*2)*3*(1-progress);
+                    }
+                }
+                if(p1 && p2) drawCable(c.el, getPortCenter(p1), getPortCenter(p2), [], c.type, {x:0,y:settle}, getCableBundleOffset(c));
                 applyCableAppearance(c);
             });
             updateBluetoothLinks();
@@ -6558,6 +6661,7 @@ const Hardware = (() => {
 
         function renderVisuals() {
             requestAnimationFrame(renderVisuals);
+            if(state.connections.some(connection=>connection.seatStarted!=null))updateCables();
             updateRealtimePanels(performance.now());
             updateExtraDisplays(performance.now());
             updateIntegratedDisplays(performance.now());
@@ -6625,7 +6729,7 @@ const Hardware = (() => {
             });
             const connections=state.connections.map(c=>{const out=document.getElementById(c.outId),input=document.getElementById(c.inId);return {from:out?.closest('.device-node')?.id,out:out?.dataset.node,to:input?.closest('.device-node')?.id,input:input?.dataset.node,label:c.label||'',color:c.color||null,hidden:!!c.hidden,slack:c.slack??5};});
             const panel=document.getElementById('learning-panel'),catalogScroll=equipmentCatalog.querySelector('.overflow-y-auto');
-            return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{environment:{...(state.environment||{preset:'near',intensity:0})},canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'light',soundVolume:state.uiSoundVolume??.8,hideCables:!!state.hideCables,selected:[...state.selectedDeviceIds],selectedCable:state.connections.indexOf(state.selectedConnection),search:document.getElementById('equipment-search').value,catalogScroll:catalogScroll?.scrollTop||0,inspectorScroll:inspectorContent.scrollTop,overviewOpen:document.getElementById('system-overview').open,overviewVisible:!document.getElementById('system-overview').hidden,learning:{open:!panel.hidden,left:parseFloat(panel.style.left)||16,top:parseFloat(panel.style.top)||16,category:document.getElementById('learning-category').value,challenge:document.getElementById('learning-challenge').value,hint:document.getElementById('learning-hint').textContent,completed:[...learningCompleted],active:activeLearning?projectJSON(activeLearning):null,answers:[...document.querySelectorAll('#learning-quiz-content fieldset')].map(field=>[...field.querySelectorAll('button')].findIndex(button=>button.classList.contains('is-answer')))}}};
+            return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{environment:{...(state.environment||{preset:'near',intensity:0})},canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'light',atmosphere:state.atmosphere||'neutral',soundVolume:state.uiSoundVolume??.8,hideCables:!!state.hideCables,selected:[...state.selectedDeviceIds],selectedCable:state.connections.indexOf(state.selectedConnection),search:document.getElementById('equipment-search').value,catalogScroll:catalogScroll?.scrollTop||0,inspectorScroll:inspectorContent.scrollTop,overviewOpen:document.getElementById('system-overview').open,overviewVisible:!document.getElementById('system-overview').hidden,learning:{open:!panel.hidden,left:parseFloat(panel.style.left)||16,top:parseFloat(panel.style.top)||16,category:document.getElementById('learning-category').value,challenge:document.getElementById('learning-challenge').value,hint:document.getElementById('learning-hint').textContent,completed:[...learningCompleted],active:activeLearning?projectJSON(activeLearning):null,answers:[...document.querySelectorAll('#learning-quiz-content fieldset')].map(field=>[...field.querySelectorAll('button')].findIndex(button=>button.classList.contains('is-answer')))}}};
         }
         function projectValidate(value){
             if(!value||value.format!==PROJECT_FORMAT||value.version!==PROJECT_VERSION||!Array.isArray(value.devices)||!Array.isArray(value.connections))throw new Error('Arquivo de projeto inválido ou versão incompatível.');
@@ -6715,6 +6819,7 @@ const Hardware = (() => {
             if(FURNITURE_TYPES[dev.type]){dev.el.dataset.material=Object.hasOwn(FURNITURE_MATERIALS,s.material)?s.material:'black';dev.el.dataset.back=String(s.hasBack!==false);}
             if(controlAmpConfig(dev.type)){s.integratedSource=clamp(s.integratedSource,0,3,0);s.integratedSource=Math.round(s.integratedSource);s.direct=!!s.direct;s.subLevel=clamp(s.subLevel,0,1,.8);s.subFrequency=clamp(s.subFrequency,40,200,80);s.preMuted=!!s.preMuted;s.preMono=!!s.preMono;s.preInvert=!!s.preInvert;dev.applyIntegrated();}
             dev.setLidOpen?.(!!dev.state.lidOpen);
+            dev.setTrayOpen?.(!!dev.state.trayOpen);
             dev.el.classList.toggle('grille-off',!!saved.grilleOff);dev.el.querySelector('.speaker-grille')?.setAttribute('aria-label',saved.grilleOff?'Recolocar tela da caixa':'Remover tela da caixa');
             if((saved.powered===false||dev.state.damage)&&dev.powered)toggleDevicePower(dev);
             dev.el.classList.toggle('device-damaged',!!dev.state.damage);
@@ -6751,7 +6856,7 @@ const Hardware = (() => {
                     connection.label=typeof saved.label==='string'?saved.label.slice(0,60):'';connection.color=/^#[0-9a-f]{6}$/i.test(saved.color||'')?saved.color:undefined;connection.hidden=!!saved.hidden;connection.slack=Number.isFinite(saved.slack)?Math.max(0,Math.min(10,Math.round(saved.slack))):5;links.push(connection);
                 });
                 restored.forEach(([saved,dev])=>{const other=state.devices[ids.get(saved.pairedId)];if(other&&BT_TX_TYPES.has(dev.type)&&canPair(dev,other))pairDevices(dev,other);});
-                const ui=snapshot.ui||{};setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setRoomSettings(ui.environment);
+                const ui=snapshot.ui||{};setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setAtmosphere(ui.atmosphere??'sunset');setRoomSettings(ui.environment);
                 cableVisibilityButton.textContent='Visibilidade dos cabos';cableVisibilityButton.setAttribute('aria-pressed',String(!!ui.hideCables));
                 state.uiSoundVolume=typeof ui.soundVolume==='number'?Math.max(0,Math.min(1,ui.soundVolume)):.8;state.hideCables=!!ui.hideCables;
                 const sound=document.getElementById('ui-sound-volume');sound.value=Math.round(state.uiSoundVolume*100);document.getElementById('ui-sound-value').textContent=state.uiSoundVolume?`${sound.value}%`:'desligados';uiEffectsGain?.gain.setValueAtTime(state.uiSoundVolume,state.audioCtx.currentTime);
@@ -6841,7 +6946,7 @@ const Hardware = (() => {
         const settingsMenu=document.createElement('details');settingsMenu.className='app-settings';
         settingsMenu.innerHTML='<summary aria-label="Abrir configurações"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 3-1 3-3 1v4l2 1v2l-2 1 2 4 3-1 2 2 3-2 3 1 2-4-2-2v-2l2-2-2-4-3 1-2-2z"/><circle cx="12" cy="12" r="3"/></svg><span>Configurações</span></summary>';
         clearCatalogFooter.className='app-settings-content';
-        const themeSection=document.createElement('section');themeSection.className='settings-theme-section';themeSection.appendChild(canvasThemeControl);themeSection.appendChild(canvasGridControl);setCanvasGrid('dots');
+        const themeSection=document.createElement('section');themeSection.className='settings-theme-section';themeSection.appendChild(canvasThemeControl);themeSection.appendChild(canvasGridControl);themeSection.appendChild(atmosphereControl);setCanvasGrid('dots');
         clearCatalogFooter.insertBefore(themeSection,soundControls);
         const overviewSetting=document.createElement('label');overviewSetting.className='overview-visibility-setting';
         overviewSetting.innerHTML='<input id="show-system-overview" type="checkbox" aria-controls="system-overview" checked><span>Exibir Visão do Sistema</span>';themeSection.appendChild(overviewSetting);

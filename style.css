@@ -3605,3 +3605,45 @@
 :is(#audio-world,.equipment-preview-world) :is(.device-type-spkPassiveWood,.device-type-spkActiveMonitor) .sp-cab.sp-vintage {background:linear-gradient(100deg,#ffffff0d,transparent 18% 82%,#160c0866),url("./assets/textures/vintage-walnut.svg") center/100% 100%;box-shadow:inset 1px 1px #d4ab6c66,inset -3px -2px 5px #20110799,0 9px 17px #0005;}
 :is(#audio-world,.equipment-preview-world) :is(.device-type-spkPassiveWood,.device-type-spkActiveMonitor) .sp-vintage .sp-face {background:linear-gradient(90deg,#1c100b33,transparent 12% 88%,#1c100b44),url("./assets/textures/vintage-walnut.svg") center/100% 100%;box-shadow:inset 0 0 0 1px #2b180d88,inset 0 2px 5px #25140c44;}
 :is(#audio-world,.equipment-preview-world) :is(.device-type-spkPassiveWood,.device-type-spkActiveMonitor) .fabric-grille {border-color:#493b28;border-radius:4px;background:radial-gradient(ellipse at 30% 15%,#f1d9a118,transparent 65%),url("./assets/textures/vintage-weave.svg") 0 0/6px 6px,#5e5542;box-shadow:inset 0 0 0 1px #c2ab7355,inset 0 0 14px #16130dcc,0 2px 5px #0007;}
+
+/* Screen-space lighting stays anchored while the equipment canvas moves. */
+#canvas {isolation:isolate;}
+#canvas::after {content:"";position:absolute;inset:0;z-index:25;pointer-events:none;opacity:0;background:var(--atmosphere-light,none);transition:opacity 600ms ease;}
+#canvas[data-atmosphere="sunset"] {--atmosphere-light:radial-gradient(ellipse at 0% 18%,#ffca7b55,transparent 68%),linear-gradient(115deg,#efad5a18,transparent 52%,#36283b22);--atmosphere-shadow:10px 14px 12px #36241545;}
+#canvas[data-atmosphere="night"] {--atmosphere-light:radial-gradient(ellipse at 0% 30%,#ffc16c44,transparent 55%),linear-gradient(110deg,#1a223822,#111a3655);--atmosphere-shadow:8px 12px 10px #080d245c;}
+#canvas[data-atmosphere="sunday"] {--atmosphere-light:radial-gradient(ellipse at 0% 0%,#fff2c855,transparent 78%),linear-gradient(120deg,#ffe7b51a,transparent 70%);--atmosphere-shadow:5px 9px 13px #50422d30;}
+#canvas:is([data-atmosphere="sunset"],[data-atmosphere="night"],[data-atmosphere="sunday"])::after {opacity:1;}
+#canvas:is([data-atmosphere="sunset"],[data-atmosphere="night"],[data-atmosphere="sunday"]) #audio-world>.device-node:not(.furniture-node) {filter:drop-shadow(var(--atmosphere-shadow));}
+#canvas:is([data-atmosphere="sunset"],[data-atmosphere="night"],[data-atmosphere="sunday"]) #audio-world>.device-node.selected:not(.furniture-node) {filter:drop-shadow(var(--atmosphere-shadow)) drop-shadow(0 0 5px #60a5facc);}
+@media(prefers-reduced-motion:reduce){#canvas::after {transition:none;}}
+
+/* The CD drawer travels outward; its controls stay active throughout the motion. */
+:is(#audio-world,.equipment-preview-world) .device-type-cdPlayer .cd-tray {appearance:none;display:block;padding:0;overflow:visible;cursor:pointer;touch-action:manipulation;perspective:500px;}
+:is(#audio-world,.equipment-preview-world) .cd-tray-front {position:absolute;inset:0;z-index:2;border:1px solid #18232b;border-radius:2px;background:linear-gradient(#465158,#29343b 75%,#1c272e);box-shadow:inset 0 1px #a3b0b633,0 1px 2px #0008;transition:translate 340ms cubic-bezier(.2,.7,.3,1),box-shadow 340ms;pointer-events:none;}
+:is(#audio-world,.equipment-preview-world) .cd-drawer {position:absolute;left:8%;right:8%;top:3px;height:44px;overflow:hidden;border:2px solid #161e24;border-radius:3px;background:linear-gradient(#172027,#34414b);transform-origin:50% 0;transform:rotateX(62deg) scaleY(0);opacity:0;transition:transform 340ms cubic-bezier(.2,.7,.3,1),opacity 120ms;pointer-events:none;}
+:is(#audio-world,.equipment-preview-world) .cd-disc {position:absolute;width:64px;height:64px;left:calc(50% - 32px);top:-15px;box-sizing:border-box;border:1px solid #c6d3d5;border-radius:50%;background:radial-gradient(circle,transparent 0 4px,#5d6b75 4px 7px,transparent 7px),conic-gradient(#b8cdd1,#e0d9c6,#91aab5,#dae0e2,#b8cdd1);box-shadow:0 1px 3px #0009;}
+:is(#audio-world,.equipment-preview-world) .cd-tray-open .cd-tray-front {translate:0 22px;box-shadow:0 7px 7px #0006,inset 0 1px #c7d5dd44;}
+:is(#audio-world,.equipment-preview-world) .cd-tray-open .cd-drawer {transform:rotateX(62deg) scaleY(1);opacity:1;}
+:is(#audio-world,.equipment-preview-world) .cd-tray:focus-visible {outline:2px solid #93c5fd;outline-offset:4px;}
+/* A fixed-size transparent cover pivots around its hinge instead of stretching. */
+:is(#audio-world,.equipment-preview-world) .device-type-turntable .at-deck::after {height:var(--lid-depth,460px);transform-origin:50% 100%;transform:perspective(900px) rotateX(78deg);transition:transform 420ms cubic-bezier(.2,.7,.3,1),opacity 280ms;backface-visibility:hidden;border-bottom:3px solid #7e959b88;box-shadow:inset 0 -2px #e0f5ff44;pointer-events:none;}
+:is(#audio-world,.equipment-preview-world) .device-type-turntable.lid-open .at-deck::after {transform:perspective(900px) rotateX(18deg);opacity:.85;}
+/* Button caps compress into their wells and return without a bounce. */
+:is(#audio-world,.equipment-preview-world) .hw-plunger-key .hw-plunger-face {transition:transform 140ms cubic-bezier(.2,.7,.3,1),box-shadow 120ms,filter 120ms;}
+:is(#audio-world,.equipment-preview-world) .hw-mechanical-key .hw-mechanical-key-face {transition:transform 140ms cubic-bezier(.2,.7,.3,1),box-shadow 120ms,filter 120ms;}
+:is(#audio-world,.equipment-preview-world) .hw-button:is(.hw-pressing,:active) :is(.hw-plunger-face,.hw-mechanical-key-face) {filter:brightness(.94);}
+@media(prefers-reduced-motion:reduce){:is(#audio-world,.equipment-preview-world) :is(.cd-tray-front,.cd-drawer),:is(#audio-world,.equipment-preview-world) .device-type-turntable .at-deck::after {transition:none!important;}}
+
+/* Bezel reflections stay within a narrow band around luminous displays. */
+#canvas {--display-reflection-strength:.09;}
+#canvas[data-atmosphere="night"] {--display-reflection-strength:.18;}
+:is(#audio-world,.equipment-preview-world) .device-node {--display-reflection-rgb:100 192 228;}
+:is(#audio-world,.equipment-preview-world) .device-family-vintage {--display-reflection-rgb:239 191 105;}
+:is(#audio-world,.equipment-preview-world) .device-type-integratedSilver {--display-reflection-rgb:239 191 105;}
+:is(#audio-world,.equipment-preview-world) .pre-finish-reference {--display-reflection-rgb:147 222 119;}
+:is(#audio-world,.equipment-preview-world) .signal-screen,
+:is(#audio-world,.equipment-preview-world) .bench-lcd {--display-reflection-rgb:121 211 173;}
+:is(#audio-world,.equipment-preview-world) .device-node:not(.power-off):not(.device-damaged) :is(.integrated-gauge,.bias-meter,.cd-lcd,.poweramp-screen,.custom-pre-screen,.receiver-radio,.bench-lcd,.extra-vu,.signal-screen):not(.is-off) {box-shadow:inset 0 1px 4px #07151c66,0 1px 0 #ffffff12,-2px 2px 7px rgb(var(--display-reflection-rgb)/var(--display-reflection-strength,.09)),0 0 3px rgb(var(--display-reflection-rgb)/var(--display-reflection-strength,.09));}
+/* The unlit vintage LCD is reflective, so it does not cast light. */
+:is(#audio-world,.equipment-preview-world) .device-type-signalGeneratorVintage .signal-screen {box-shadow:inset 0 2px 5px #000b,0 1px 0 #fff6!important;}
+:is(#audio-world,.equipment-preview-world) .device-node:is(.power-off,.device-damaged) :is(.integrated-gauge,.bias-meter,.cd-lcd,.poweramp-screen,.custom-pre-screen,.receiver-radio,.bench-lcd,.extra-vu,.signal-screen) {box-shadow:inset 0 1px 4px #0008;}
