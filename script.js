@@ -641,7 +641,7 @@ const Hardware = (() => {
     }
     function dispose(dev){dev.el.querySelectorAll('[data-hardware-knob],[data-hardware-linear],[data-hardware-feedback]').forEach(el=>releases.get(el)?.());}
     function layout({type,el}){
-        if(type==='hardwareDemo'||FURNITURE_TYPES[type]||isListeningDevice({type})||(SOURCE_TYPES.has(type)&&!SIGNAL_GENERATOR_TYPES.has(type)&&type!=='btReceiverA'))return;
+        if(type==='hardwareDemo'||FURNITURE_TYPES[type]||isListeningDevice({type})||(SOURCE_TYPES.has(type)&&!SIGNAL_GENERATOR_TYPES.has(type)&&!['btReceiverA','cdPlayer','streamer'].includes(type)))return;
         const compact=!!INTERFACE_DEVICES[type]||['headphoneAmp','headphoneAmpModern','btTransmitterPro','btReceiverA'].includes(type);
         const height=type==='powerValve'?'high':INTEGRATED_AMPS[type]||CUSTOM_PREAMPS[type]||CUSTOM_POWER_AMPS[type]||RADIO_RECEIVERS.has(type)||MIXER_TYPES.has(type)||BENCH_METER_TYPES.has(type)||SIGNAL_GENERATOR_TYPES.has(type)?'medium':'low';
         el.dataset.chassis=height;el.dataset.chassisWidth=compact?'compact':'full';
