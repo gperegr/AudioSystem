@@ -3647,3 +3647,29 @@
 /* The unlit vintage LCD is reflective, so it does not cast light. */
 :is(#audio-world,.equipment-preview-world) .device-type-signalGeneratorVintage .signal-screen {box-shadow:inset 0 2px 5px #000b,0 1px 0 #fff6!important;}
 :is(#audio-world,.equipment-preview-world) .device-node:is(.power-off,.device-damaged) :is(.integrated-gauge,.bias-meter,.cd-lcd,.poweramp-screen,.custom-pre-screen,.receiver-radio,.bench-lcd,.extra-vu,.signal-screen) {box-shadow:inset 0 1px 4px #0008;}
+
+/* Optional bench scenery stays behind equipment and never captures gestures. */
+.bench-scene,.bench-scene * {position:absolute;box-sizing:border-box;pointer-events:none;}
+.bench-scene {inset:0;z-index:0;}
+.bench-backdrop {left:40px;right:40px;top:-280px;height:280px;border-radius:12px 12px 0 0;background:linear-gradient(180deg,#353c3e28,#292e3070);border:1px solid #b2b8ae12;box-shadow:inset 0 -30px 45px #00000018;}
+[data-bench-backdrop="false"] .bench-backdrop {display:none;}
+.device-node[data-bench-surface="wood"] .furniture-top {border-color:#785437;background:repeating-linear-gradient(2deg,#dfb98518 0 2px,transparent 2px 9px,#33201414 9px 11px),linear-gradient(100deg,#a77a4c,#745033 55%,#b58a59);box-shadow:inset 0 2px #efd5ac55,0 4px 8px #0005;}
+.device-node[data-bench-surface="felt"] .furniture-top {border-color:#354a41;background:repeating-linear-gradient(35deg,#ffffff08 0 1px,transparent 1px 3px),repeating-linear-gradient(-35deg,#0000000b 0 1px,transparent 1px 4px),linear-gradient(#50665a,#35483e);box-shadow:inset 0 2px 3px #ffffff16,0 3px 6px #0005;}
+.device-node[data-bench-surface="studio"] .furniture-top {border-color:#49525c;background:repeating-linear-gradient(90deg,#ffffff06 0 1px,transparent 1px 5px),linear-gradient(#454d58,#252d36);box-shadow:inset 0 2px #91a1ae55,0 3px 8px #0006;}
+.bench-decoration {bottom:100%;filter:drop-shadow(2px 3px 3px #0005);}
+.bench-decoration-records {left:65px;width:108px;height:108px;border-radius:50%;background:repeating-radial-gradient(circle,#1b1c20 0 2px,#303237 3px,#141619 4px);transform:rotate(-12deg);}
+.bench-decoration-records::after {content:'';position:absolute;inset:35px;border-radius:50%;background:radial-gradient(circle,#bbb4a4 0 2px,#a05f4d 3px 18px);}
+.bench-decoration-covers {right:200px;width:96px;height:105px;border:2px solid #bcb5a4;background:linear-gradient(135deg,#858e86 0 40%,#d1b789 41% 65%,#414c57 66%);transform:rotate(8deg);box-shadow:-9px -4px 0 -1px #786453,-17px -8px 0 -2px #586974;}
+.bench-decoration-cds {left:220px;width:76px;height:76px;border-radius:50%;background:radial-gradient(circle,#343b40 0 5px,#a1a9a7 6px 10px,transparent 11px),conic-gradient(#b9c6c5,#a9b2ce,#ddcfb2,#b5c8bd,#b9c6c5);transform:scaleY(.45);transform-origin:bottom;box-shadow:10px -12px 0 #adb6b2;}
+.bench-decoration-lamp {right:65px;width:110px;height:190px;border-bottom:9px solid #555d5d;border-radius:0 0 40% 40%;}
+.bench-decoration-lamp i {left:50px;bottom:0;width:7px;height:145px;background:linear-gradient(90deg,#3d4748,#9aaba7,#3d4748);transform:rotate(14deg);transform-origin:bottom;}
+.bench-decoration-lamp b {left:14px;top:10px;width:90px;height:55px;border-radius:65px 65px 8px 8px;background:linear-gradient(120deg,#83928b,#394844);border-bottom:4px solid #d5c6a2;transform:rotate(-12deg);box-shadow:0 14px 25px #ebcf8220;}
+.bench-options {display:flex;flex-direction:column;gap:10px;margin-top:16px;padding:14px;border:1px solid #45515c;border-radius:8px;}
+.bench-options legend {padding:0 6px;font-weight:600;}
+.bench-options label {display:flex;align-items:center;gap:8px;cursor:pointer;}
+.bench-options select {padding:8px;border:1px solid #56616c;border-radius:5px;background:#222d38;color:#e2e8ed;}
+
+/* Transport phase is driven by its motor, including the gentle stop. */
+.device-node.tt-motor .at-record {animation:none;}
+.device-type-turntable .at-platter::after,
+.device-type-turntable.tt-motor .at-platter::after {animation:none;background-position:var(--tt-strobe-offset,0px) 0;}

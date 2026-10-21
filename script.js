@@ -1147,6 +1147,21 @@ const Hardware = (() => {
             }
             return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><div class="furniture-body ${config.back?'rack-body':''} ${config.rack?'furniture-rack':''}" style="width:${config.width}px;height:${config.height}px;--back-top:${config.rack?16:20}px;--back-bottom:${config.rack?60:20}px">${parts}</div>`;
         }
+        const BENCH_SURFACES={wood:'Madeira',felt:'Feltro',studio:'Estúdio'};
+        const BENCH_DECORATIONS={records:'Discos',covers:'Capas',cds:'CDs',lamp:'Luminária'};
+        function updateBenchAppearance(dev){
+            if(dev.type!=='furnitureTable')return;
+            const settings=dev.state;
+            settings.benchSurface=Object.hasOwn(BENCH_SURFACES,settings.benchSurface)?settings.benchSurface:'wood';
+            settings.benchBackdrop=settings.benchBackdrop!==false;
+            settings.benchDecorations=Array.isArray(settings.benchDecorations)?Object.keys(BENCH_DECORATIONS).filter(key=>settings.benchDecorations.includes(key)):[];
+            dev.el.dataset.benchSurface=settings.benchSurface;
+            dev.el.dataset.benchBackdrop=String(settings.benchBackdrop);
+            dev.el.querySelector('.bench-scene')?.remove();
+            const scene=document.createElement('div');scene.className='bench-scene';scene.setAttribute('aria-hidden','true');
+            scene.innerHTML='<div class="bench-backdrop"></div>'+settings.benchDecorations.map(key=>`<div class="bench-decoration bench-decoration-${key}"><i></i><b></b></div>`).join('');
+            dev.el.querySelector('.furniture-body').prepend(scene);
+        }
         const STACK_FEET=Object.freeze({width:22,height:20,insetRatio:.1});
         function snapOnFurniture(dev,x,y){
             if(FURNITURE_TYPES[dev.type])return{x,y};
@@ -1211,32 +1226,6 @@ const Hardware = (() => {
             return null;
         }
 
-        const equipmentLandings=new WeakMap();
-        function stopEquipmentLanding(dev){
-            const landing=equipmentLandings.get(dev);if(!landing)return;
-            cancelAnimationFrame(landing.frame);landing.animation.cancel();equipmentLandings.delete(dev);updateCables();
-        }
-        function animateEquipmentLanding(dev){
-            stopEquipmentLanding(dev);
-            if(FURNITURE_TYPES[dev.type]||state.restoringProject||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-            const x=parseFloat(dev.el.style.left)||0,y=parseFloat(dev.el.style.top)||0,bottom=y+dev.el.offsetHeight;
-            const supported=Object.values(state.devices).some(furniture=>{
-                const config=FURNITURE_TYPES[furniture.type];if(!config)return false;
-                const fx=parseFloat(furniture.el.style.left)||0,fy=parseFloat(furniture.el.style.top)||0;
-                return x>=fx+config.inset-1&&x+dev.el.offsetWidth<=fx+config.width-config.inset+1&&config.surfaces.some(surface=>Math.abs(bottom-fy-surface)<=1);
-            });
-            if(!supported)return;
-            const filter=getComputedStyle(dev.el).filter,base=filter==='none'?'':filter;
-            const animation=dev.el.animate([
-                {translate:'0px -3px',filter:(base+' drop-shadow(0 8px 7px #30201535)').trim()},
-                {translate:'0px 0px',filter}
-            ],{duration:230,easing:'cubic-bezier(.2,.7,.3,1)'});
-            const landing={animation,frame:0};equipmentLandings.set(dev,landing);
-            const follow=()=>{if(!state.devices[dev.id]){stopEquipmentLanding(dev);return;}updateCables();if(animation.playState==='running')landing.frame=requestAnimationFrame(follow);};
-            landing.frame=requestAnimationFrame(follow);
-            animation.onfinish=()=>{equipmentLandings.delete(dev);cancelAnimationFrame(landing.frame);updateCables();};
-        }
-
         function settleEquipmentDrop(targets,ignored,fallback) {
             const obstacles=Object.values(state.devices).filter(dev=>!ignored.has(dev.id)).flatMap(dev=>placementShapes(dev,parseFloat(dev.el.style.left)||0,parseFloat(dev.el.style.top)||0));
             const shapes=targets.map(p=>({p,parts:placementShapes(p.dev,0,0)}));
@@ -1276,6 +1265,7 @@ const Hardware = (() => {
                 layer.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:0;';
                 world.appendChild(layer);
             }
+            layer.style.zIndex = '3';
             const boxes = Object.values(state.devices).map(dev => ({
                 dev, x:parseFloat(dev.el.style.left)||0, y:parseFloat(dev.el.style.top)||0,
                 width:dev.el.offsetWidth, height:dev.el.offsetHeight
@@ -1288,13 +1278,12 @@ const Hardware = (() => {
                 const turntable=TURNTABLE_TYPES.has(upper.dev.type);
                 if(turntable)upper.dev.el.classList.remove('turntable-stacked');
                 const bottom = upper.y + upper.height;
-                const onShelf = boxes.some(f => {
+                const shelf = boxes.find(f => {
                     const config = FURNITURE_TYPES[f.dev.type];
                     return config && upper.x >= f.x + config.inset - 1 && upper.x + upper.width <= f.x + config.width - config.inset + 1
                         && config.surfaces.some(surface => Math.abs(bottom - f.y - surface) <= 1);
                 });
-                if (onShelf) return;
-                const support = equipment.filter(lower => {
+                const support = shelf ? {dev:shelf.dev,y:bottom} : equipment.filter(lower => {
                     const gap = lower.y - bottom;
                     const overlap = Math.min(upper.x + upper.width, lower.x + lower.width) - Math.max(upper.x, lower.x);
                     return lower !== upper && gap >= (turntable?0:2) && gap <= 20 && overlap >= Math.min(upper.width, lower.width) * .7;
@@ -1304,7 +1293,7 @@ const Hardware = (() => {
                 const newlyDeployed=deployedFootSupports.get(upper.dev.id)!==support.dev.id;
                 if(newlyDeployed)playUiSound('feet');
                 if(turntable)upper.dev.el.classList.add('turntable-stacked');
-                const footTop=upper.dev.el.dataset.chassis?Math.min(bottom,support.y-STACK_FEET.height):bottom-(turntable?8:0);
+                const footTop=shelf?bottom-STACK_FEET.height:upper.dev.el.dataset.chassis?Math.min(bottom,support.y-STACK_FEET.height):bottom-(turntable?8:0);
                 const left=upper.x, right=upper.x+upper.width;
                 const inset = Math.max(16, (right - left) * STACK_FEET.insetRatio), width = STACK_FEET.width;
                 const footHeight=upper.dev.el.dataset.chassis?STACK_FEET.height:support.y-footTop;
@@ -2462,7 +2451,7 @@ const Hardware = (() => {
                 updateStereoPowerMeters(dev);
                 dev.el.querySelectorAll('.receiver-vu i').forEach((needle,index)=>{
                     const level=Math.max(0,Math.min(1,(audioDb(meter.levels[index]||0)+48)/48));
-                    needle.style.transform=`rotate(${-45+level*75}deg)`;
+                    needle.style.transform=`rotate(${dampedNeedle(needle,-45+level*75,now,-45)}deg)`;
                 });
                 if(state.selectedDeviceId===dev.id){const status=document.getElementById('meter-clip-status');if(status){status.textContent=clipped?'SATURAÇÃO':'SEM SATURAÇÃO';status.classList.toggle('is-clipping',clipped);}}
             });
@@ -3253,6 +3242,34 @@ const Hardware = (() => {
             }
         }
         function tapePosition(dev){return dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?state.audioCtx.currentTime-dev.demoStartedAt:0);}
+        const needleMotion=new WeakMap();
+        function dampedNeedle(needle,target,now,rest){
+            const previous=needleMotion.get(needle)||{angle:rest,time:now-16};
+            const elapsed=Math.max(0,Math.min(.25,(now-previous.time)/1000));
+            const response=target>previous.angle?.12:.38;
+            const angle=matchMedia('(prefers-reduced-motion: reduce)').matches?target:previous.angle+(target-previous.angle)*(1-Math.exp(-elapsed/response));
+            needleMotion.set(needle,{angle,time:now});return angle;
+        }
+        let lastTransportFrame;
+        function updateTransportMotion(now){
+            const elapsed=lastTransportFrame==null?0:Math.max(0,Math.min(.1,(now-lastTransportFrame)/1000));lastTransportFrame=now;
+            const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+            Object.values(state.devices).forEach(dev=>{
+                if(dev.type==='tapeDeck')updateTapeReels(dev,tapePosition(dev),elapsed,isSourceRunning(dev));
+                if(!TURNTABLE_TYPES.has(dev.type))return;
+                const running=dev.powered&&dev.state.tt?.running;
+                const target=running?200*(dev.ttRate?.()||1):0;
+                const speed=dev.platterSpeed||0,response=running?.18:.65;
+                let next=reduced?0:target+(speed-target)*Math.exp(-elapsed/response);
+                if(!running&&next<.1)next=0;
+                // Integrate speed to preserve the platter's phase through stop/start.
+                const travel=reduced?0:target*elapsed+(speed-target)*response*(1-Math.exp(-elapsed/response));
+                dev.platterSpeed=next;dev.platterAngle=((dev.platterAngle||0)+travel)%360;
+                dev.el.style.setProperty('--tt-strobe-offset',(dev.platterAngle/360*80).toFixed(3)+'px');
+                const record=dev.el.querySelector('[data-tt="record"]');
+                if(record&&!dev.el.classList.contains('device-type-turntable'))record.style.transform=`rotate(${dev.platterAngle}deg)`;
+            });
+        }
         function updateTapeReels(dev,seconds,elapsed,running){
             const duration=dev.audioBuffer?.duration||180;
             const target=Math.max(0,Math.min(duration,seconds));
@@ -3268,7 +3285,7 @@ const Hardware = (() => {
             dev.el.querySelectorAll('.tape-reel').forEach((reel,index)=>{
                 const radius=radii[index];reel.querySelector('.tape-winding').style.inset=(88-radius)+'px';
                 const metal=reel.querySelector('.reel-metal');
-                if(!reduced){dev.tapeReelAngles[index]+=(Math.abs(delta)>.002?Math.max(-7,Math.min(7,delta))*130:running?elapsed*130:0)*(60/radius);}
+                if(!reduced){dev.tapeReelAngles[index]=(dev.tapeReelAngles[index]+(Math.abs(delta)>.002?Math.max(-7,Math.min(7,delta))*130:running?elapsed*130:0)*(60/radius))%360;}
                 metal.style.transform=`rotate(${dev.tapeReelAngles[index]}deg)`;
             });
             // The free tape leaves each changing winding tangentially toward its guide.
@@ -3291,14 +3308,12 @@ const Hardware = (() => {
                     const channel=Number(needle.dataset.liveVu),level=dev.powered?(dev.meters?.levels[channel]||0):0;
                     if(dev.type==='tapeDeck'||BENCH_METER_TYPES.has(dev.type)){
                         const vu=audioDb(dev.vuEnvelope[channel])+18;
-                        needle.setAttribute('transform',`rotate(${tapeVuAngle(vu)} 50 62)`);
+                        needle.setAttribute('transform',`rotate(${dampedNeedle(needle,tapeVuAngle(vu),now,-48)} 50 62)`);
                         needle.parentElement.setAttribute('aria-label',`VU ${channel?'R':'L'}: ${Number.isFinite(vu)?vu.toFixed(1):'menos infinito'} VU; referência 0 VU = −18 dBFS`);
-                    }else needle.style.transform=`rotate(${-48+Math.max(0,Math.min(1,(audioDb(level)+48)/48))*94}deg)`;
+                    }else needle.style.transform=`rotate(${dampedNeedle(needle,-48+Math.max(0,Math.min(1,(audioDb(level)+48)/48))*94,now,-48)}deg)`;
                 });
                 if(dev.type==='tapeDeck'){
                     const running=isSourceRunning(dev);dev.el.classList.toggle('tape-running',running);
-                    const seconds=dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?state.audioCtx.currentTime-dev.demoStartedAt:0);
-                    updateTapeReels(dev,seconds,elapsed,running);
                     return;
                 }
                 if(!BENCH_METER_TYPES.has(dev.type)||!dev.meters)return;
@@ -3571,7 +3586,7 @@ const Hardware = (() => {
                     dev.integratedEnvelope[i]+=(value-dev.integratedEnvelope[i])*(1-Math.exp(-elapsed/.13));
                     const load=dev.channelLoads?.[i?'R':'L']??Infinity,watts=wattsAtLoad(dev.integratedEnvelope[i],load);
                     const fraction=Math.max(.0001,Math.min(1,watts/dev.state.ratedWatts));
-                    needle.setAttribute('transform',`rotate(${-48+(Math.log10(fraction)+4)*24} 50 62)`);
+                    needle.setAttribute('transform',`rotate(${dampedNeedle(needle,-48+(Math.log10(fraction)+4)*24,now,-48)} 50 62)`);
                     needle.parentElement.setAttribute('aria-label',`Potência simulada ${i?'R':'L'}: ${watts.toFixed(2)} W`);
                 });
             });
@@ -3906,6 +3921,7 @@ const Hardware = (() => {
 
             if (FURNITURE_TYPES[type]) {
                 dev.state.material='black';
+                updateBenchAppearance(dev);
                 if(FURNITURE_TYPES[type].back){dev.state.hasBack=true;el.dataset.back='true';}
             } else if (INTERFACE_DEVICES[type]) {
                 const config = INTERFACE_DEVICES[type];
@@ -4319,7 +4335,7 @@ const Hardware = (() => {
             });
             powerOnAnimations.set(dev,animations);
         }
-        powerMotionPreference.addEventListener('change',event=>{if(event.matches)Object.values(state.devices).forEach(dev=>{stopPowerOnRitual(dev);stopEquipmentLanding(dev);});});
+        powerMotionPreference.addEventListener('change',event=>{if(event.matches)Object.values(state.devices).forEach(dev=>{stopPowerOnRitual(dev);});});
 
         function toggleDevicePower(dev) {
             dev.powered = dev.state.damage ? false : !dev.powered;
@@ -4705,7 +4721,7 @@ const Hardware = (() => {
                     }
 
                     movingDevices.forEach(item=>item.cancelPlacementMotion?.());
-                    const cancel = () => { clearDiscardPreview();cancelAnimationFrame(frame); frame=0;movingDevices.forEach(item=>{stopEquipmentLanding(item);item.el.classList.remove('equipment-dragging','history-settling');}); };
+                    const cancel = () => { clearDiscardPreview();cancelAnimationFrame(frame); frame=0;movingDevices.forEach(item=>{item.el.classList.remove('equipment-dragging','history-settling');}); };
                     movingDevices.forEach(item=>item.cancelPlacementMotion=cancel);
                     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
                     const animate = now => {
@@ -4730,7 +4746,6 @@ const Hardware = (() => {
                         else if(released){
                             targets.forEach(p=>{p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;p.dev.el.classList.remove('equipment-dragging','history-settling');});
                             updateCables();
-                            if(isDragging)targets.forEach(p=>animateEquipmentLanding(p.dev));
                         }
                     };
                     const aim = (ev,settle=false) => {
@@ -4883,7 +4898,6 @@ const Hardware = (() => {
             if (!dev || !state.devices[dev.id]) return;
             Hardware.dispose(dev);
             stopPowerOnRitual(dev);
-            stopEquipmentLanding(dev);
             dev.cancelPlacementMotion?.();
             stopVinylNoise(dev);
             if(dev.syncRadio){stopReceiverRadioVoices(dev);dev.radioNoiseGain.disconnect();dev.radioNoiseFilter.disconnect();Object.values(dev.radioMusic).forEach(node=>node.disconnect());Object.values(dev.radioLine).forEach(node=>node.disconnect());dev.receiverInputNodes.forEach(node=>node.disconnect());}
@@ -5113,6 +5127,7 @@ const Hardware = (() => {
             if(ACTIVE_SPK.has(dev.type)||SUB_TYPES.has(dev.type))dev.setSpeakerVolume(.8);
             if(MATRIX_TYPES.has(dev.type)){dev.state.matrixInput=1;dev.state.matrixOutputs=[true,false,false,false];dev.updateMatrix();}
             if(SELECTOR_TYPES.has(dev.type))dev.el.querySelector('[data-switch-source="A"]').click();
+            if(dev.type==='furnitureTable'){Object.assign(dev.state,{benchSurface:'wood',benchBackdrop:true,benchDecorations:[]});updateBenchAppearance(dev);}
             if(FURNITURE_TYPES[dev.type]){dev.state.material='black';dev.el.dataset.material='black';if(FURNITURE_TYPES[dev.type].back){dev.state.hasBack=true;dev.el.dataset.back='true';}}
             if(dev.meters){dev.meters.hold=[0,0];dev.meters.clipUntil=0;}
             if(state.selectedDeviceId===dev.id){selectDevice(dev.id,true);document.getElementById('restore-settings-status').textContent=message;}
@@ -5280,6 +5295,7 @@ const Hardware = (() => {
             } else if(FURNITURE_TYPES[dev.type]) {
                 const config=FURNITURE_TYPES[dev.type];
                 html += `<div class="flex flex-col gap-3"><label class="text-sm text-gray-300" for="furniture-material">Material</label><select id="furniture-material" class="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700">${Object.entries(FURNITURE_MATERIALS).map(([key,name])=>`<option value="${key}" ${dev.state.material===key?'selected':''}>${name}</option>`).join('')}</select><p class="text-xs text-gray-400">${config.description}</p><p class="text-xs text-gray-400">Aproxime a base do equipamento de uma prateleira para apoiá-lo. Arraste o móvel pelas partes sólidas.${config.rack?' Os equipamentos apoiados nas prateleiras e empilhados acompanham o rack.':''}</p></div>`;
+                if(dev.type==='furnitureTable')html+=`<fieldset class="bench-options"><legend>Ambiente da bancada</legend><label for="bench-surface">Superfície</label><select id="bench-surface">${Object.entries(BENCH_SURFACES).map(([key,label])=>`<option value="${key}" ${dev.state.benchSurface===key?'selected':''}>${label}</option>`).join('')}</select><label><input type="checkbox" id="bench-backdrop" ${dev.state.benchBackdrop!==false?'checked':''}> Fundo discreto</label><span>Objetos decorativos</span>${Object.entries(BENCH_DECORATIONS).map(([key,label])=>`<label><input type="checkbox" data-bench-decoration="${key}" ${dev.state.benchDecorations?.includes(key)?'checked':''}> ${label}</label>`).join('')}</fieldset>`;
                 if(config.back)html+=`<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Fundo do móvel</span><button id="furniture-back" class="tt-insp-btn ${dev.state.hasBack?'is-on':''}" aria-pressed="${!!dev.state.hasBack}">FUNDO DO MÓVEL</button><p class="text-xs text-gray-400">O fundo acompanha o material do móvel, com acabamento escurecido pela sombra.</p></div>`;
             } else if (INTERFACE_DEVICES[dev.type]) {
                 html += `<p class="text-sm text-gray-400">${INTERFACE_DEVICES[dev.type].description}</p>`;
@@ -5337,6 +5353,11 @@ const Hardware = (() => {
                 event.currentTarget.disabled=true;
                 try{await restoreDeviceSettings(dev);}finally{const button=document.getElementById('restore-device-settings');if(button)button.disabled=false;}
             });
+            document.getElementById('bench-surface')?.addEventListener('change',event=>{dev.state.benchSurface=event.target.value;updateBenchAppearance(dev);});
+            document.getElementById('bench-backdrop')?.addEventListener('change',event=>{dev.state.benchBackdrop=event.target.checked;updateBenchAppearance(dev);});
+            document.querySelectorAll('[data-bench-decoration]').forEach(input=>input.addEventListener('change',()=>{
+                dev.state.benchDecorations=[...document.querySelectorAll('[data-bench-decoration]:checked')].map(item=>item.dataset.benchDecoration);updateBenchAppearance(dev);
+            }));
             if(FURNITURE_TYPES[dev.type])document.getElementById('furniture-material').addEventListener('change',event=>{dev.state.material=event.target.value;dev.el.dataset.material=event.target.value;});
             document.getElementById('furniture-back')?.addEventListener('click',event=>{
                 dev.state.hasBack=!dev.state.hasBack;dev.el.dataset.back=String(dev.state.hasBack);
@@ -6663,6 +6684,7 @@ const Hardware = (() => {
             requestAnimationFrame(renderVisuals);
             if(state.connections.some(connection=>connection.seatStarted!=null))updateCables();
             updateRealtimePanels(performance.now());
+            updateTransportMotion(performance.now());
             updateExtraDisplays(performance.now());
             updateIntegratedDisplays(performance.now());
             updateReceiverRadioDisplays(performance.now());
@@ -6816,6 +6838,7 @@ const Hardware = (() => {
             if(dev.applyTapeSettings){s.tapeVolume=clamp(s.tapeVolume,0,1,.8);s.tapeHiss=clamp(s.tapeHiss,1,100,35);s.tapeWow=clamp(s.tapeWow,1,100,35);dev.applyTapeSettings();}
             if(dev.updateMatrix)dev.updateMatrix();
             if(SELECTOR_TYPES.has(dev.type)){const source=saved.selectedSource==='B'?'B':'A';dev.el.querySelector(`[data-switch-source="${source}"]`)?.click();}
+            updateBenchAppearance(dev);
             if(FURNITURE_TYPES[dev.type]){dev.el.dataset.material=Object.hasOwn(FURNITURE_MATERIALS,s.material)?s.material:'black';dev.el.dataset.back=String(s.hasBack!==false);}
             if(controlAmpConfig(dev.type)){s.integratedSource=clamp(s.integratedSource,0,3,0);s.integratedSource=Math.round(s.integratedSource);s.direct=!!s.direct;s.subLevel=clamp(s.subLevel,0,1,.8);s.subFrequency=clamp(s.subFrequency,40,200,80);s.preMuted=!!s.preMuted;s.preMono=!!s.preMono;s.preInvert=!!s.preInvert;dev.applyIntegrated();}
             dev.setLidOpen?.(!!dev.state.lidOpen);
