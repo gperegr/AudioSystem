@@ -399,33 +399,60 @@ const Hardware = (() => {
     const bindings = new WeakMap(),releases=new WeakMap();
     const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number.isFinite(Number(v))?Number(v):min));
     const snap=(value,min,max,step)=>Number((min+Math.round((clamp(value,min,max)-min)/step)*step).toFixed(6));
+    let knobReadout=null,readoutOwner=null,readoutTimer=null;
+    const knobValueText=({get,min,max,format})=>{
+        const value=clamp(get(),min,max);
+        return format?format(value):min===0&&max===1?`${Number((value*100).toFixed(1))}%`:String(Number(value.toFixed(2)));
+    };
+    function showKnobReadout(el,renew=true){
+        const control=bindings.get(el);if(!control||!el.isConnected)return;
+        if(renew)clearTimeout(readoutTimer);readoutOwner=el;
+        if(!knobReadout){knobReadout=document.createElement('output');knobReadout.className='knob-value-readout';knobReadout.setAttribute('aria-hidden','true');document.body.appendChild(knobReadout);}
+        knobReadout.textContent=knobValueText(control);knobReadout.hidden=false;
+        const rect=el.getBoundingClientRect(),width=knobReadout.offsetWidth,height=knobReadout.offsetHeight;
+        knobReadout.style.left=Math.max(8,Math.min(innerWidth-width-8,rect.left+(rect.width-width)/2))+'px';
+        knobReadout.style.top=(rect.top>height+18?rect.top-height-10:rect.bottom+10)+'px';
+    }
+    function hideKnobReadout(delay=450){
+        clearTimeout(readoutTimer);readoutTimer=setTimeout(()=>{if(knobReadout)knobReadout.hidden=true;readoutOwner=null;},delay);
+    }
     function paintKnob(el){
         const control=bindings.get(el);if(!control)return;
-        const {get,min,max,format}=control,value=clamp(get(),min,max);
+        const {get,min,max}=control,value=clamp(get(),min,max);
         el.setAttribute('role','slider');el.setAttribute('aria-valuemin',min);el.setAttribute('aria-valuemax',max);el.setAttribute('aria-valuenow',value);
-        el.setAttribute('aria-valuetext',format?format(value):`${value} · ${Math.round((value-min)/(max-min)*10)} de 10`);
+        el.setAttribute('aria-valuetext',knobValueText(control));
         paintAccent(el,(value-min)/(max-min));
+        if(readoutOwner===el)showKnobReadout(el,false);
     }
-    function bindKnob(el,{get,set,min=0,max=1,step=(max-min)/physics.detents,activate,format,model,kind='knob',pointerToValue,width,height}){
+    function bindKnob(el,{get,set,min=0,max=1,step=null,activate,format,model,kind='knob',pointerToValue,width,height}){
         if(!el||bindings.has(el))return;
         if(kind==='knob')setControlSize(el,{width,height});
-        const control={get,set,min,max,step,activate,format,model,kind};bindings.set(el,control);el.tabIndex=0;if(kind==='knob')el.dataset.hardwareKnob='';
-        const change=value=>{const next=clamp(snap(value,min,max,step),min,max);if(Math.abs(next-get())>1e-7){set(next);playUiSound(movementSound(el,kind));}paintKnob(el);};
+        const continuous=step==null&&kind==='linear',precision=step??(max-min)/(kind==='knob'?physics.detents:1000);
+        const keyboardStep=step??(kind==='knob'?precision:min<0&&max>0 ? .1 : (max-min)/100);
+        const detents=continuous?(min<0&&max>0?[0]:min===0&&max===1?[0,.5,1]:[min,max]):[];
+        const control={get,set,min,max,step:precision,activate,format,model,kind};bindings.set(el,control);el.tabIndex=0;if(kind==='knob')el.dataset.hardwareKnob='';
+        const change=(value,magnetic=false)=>{
+            let next=clamp(snap(value,min,max,precision),min,max);
+            const detent=magnetic?detents.find(point=>Math.abs(next-point)<(max-min)*.012):undefined;
+            if(detent!==undefined)next=detent;
+            el.classList.toggle('hw-at-detent',detents.some(point=>Math.abs(next-point)<1e-7));
+            if(Math.abs(next-get())>1e-7){set(next);playUiSound(movementSound(el,kind));}paintKnob(el);
+        };
         const commit=()=>{if(el.isConnected){updateCableFlows();scheduleProjectSave();}};
         el.addEventListener('pointerdown',event=>{
             if(event.button!==0||el.disabled)return;event.preventDefault();event.stopPropagation();activate?.();el.classList.add('hw-pointer-focus');el.focus({preventScroll:true});
-            const pointer=event.pointerId,start=get(),x=event.clientX,y=event.clientY,zoom=Math.max(.1,view.zoom);el.setPointerCapture(pointer);el.classList.add('hw-turning');
-            if(pointerToValue)change(pointerToValue(event));
-            const move=e=>{if(e.pointerId===pointer){e.preventDefault();change(pointerToValue?pointerToValue(e):start+((y-e.clientY)+(e.clientX-x)*.35)*(max-min)/(physics.travel*zoom));}};
-            const finish=e=>{if(e?.pointerId!=null&&e.pointerId!==pointer)return;el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',finish);el.removeEventListener('pointercancel',finish);el.removeEventListener('lostpointercapture',finish);window.removeEventListener('blur',finish);releases.delete(el);el.classList.remove('hw-turning');if(el.hasPointerCapture(pointer))el.releasePointerCapture(pointer);commit();};
+            const pointer=event.pointerId,start=get(),x=event.clientX,y=event.clientY,zoom=Math.max(.1,view.zoom);el.setPointerCapture(pointer);el.classList.add('hw-turning');showKnobReadout(el);
+            if(pointerToValue)change(pointerToValue(event),true);
+            const move=e=>{if(e.pointerId===pointer){e.preventDefault();change(pointerToValue?pointerToValue(e):start+((y-e.clientY)+(e.clientX-x)*.35)*(max-min)/(physics.travel*zoom),true);}};
+            const finish=e=>{if(e?.pointerId!=null&&e.pointerId!==pointer)return;el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',finish);el.removeEventListener('pointercancel',finish);el.removeEventListener('lostpointercapture',finish);window.removeEventListener('blur',finish);releases.delete(el);el.classList.remove('hw-turning');if(el.hasPointerCapture(pointer))el.releasePointerCapture(pointer);hideKnobReadout();commit();};
             releases.set(el,finish);el.addEventListener('pointermove',move);el.addEventListener('pointerup',finish);el.addEventListener('pointercancel',finish);el.addEventListener('lostpointercapture',finish);window.addEventListener('blur',finish);
         });
-        el.addEventListener('blur',()=>el.classList.remove('hw-pointer-focus'));
+        el.addEventListener('blur',()=>{el.classList.remove('hw-pointer-focus');if(readoutOwner===el)hideKnobReadout(0);});
         el.addEventListener('keydown',event=>{
             el.classList.remove('hw-pointer-focus');
             if(!['ArrowUp','ArrowRight','ArrowDown','ArrowLeft','Home','End','PageUp','PageDown'].includes(event.key)||el.disabled)return;
             event.preventDefault();event.stopPropagation();activate?.();const direction=['ArrowUp','ArrowRight','PageUp'].includes(event.key)?1:-1;
-            change(event.key==='Home'?min:event.key==='End'?max:get()+direction*step*(event.key.startsWith('Page')?2:1));commit();
+            change(event.key==='Home'?min:event.key==='End'?max:get()+direction*keyboardStep*(event.key.startsWith('Page')?5:1));showKnobReadout(el);hideKnobReadout(700);commit();
         });
         paintKnob(el);
     }
@@ -453,6 +480,11 @@ const Hardware = (() => {
         el.style.setProperty('--hw-knob-face',spec.face);el.style.setProperty('--hw-knob-rim',spec.rim);el.style.setProperty('--hw-knob-ink',spec.ink);
         const face=document.createElement('span');face.className='hw-knob-face';face.setAttribute('aria-hidden','true');face.innerHTML='<span class="hw-knob-cap"><span class="hw-knob-fastener"></span></span><span class="hw-knob-indicator"></span>';el.appendChild(face);
         if(el.dataset.controlLabel){const caption=document.createElement('span');caption.className='hw-knob-caption';caption.textContent=el.dataset.controlLabel;el.appendChild(caption);}
+        const control=bindings.get(el);
+        if(control&&control.min<0&&control.max>0){
+            const mark=document.createElement('span');mark.className='hw-neutral-mark';mark.setAttribute('aria-hidden','true');
+            mark.style.rotate=(-135+(0-control.min)/(control.max-control.min)*270)+'deg';el.appendChild(mark);
+        }
         paintKnob(el);
     }
     function accentModel(dev,el){
@@ -641,7 +673,7 @@ const Hardware = (() => {
         el.classList.add('hw-linear');el.dataset.hardwareLinear='vertical';
         bindKnob(el,{...options,kind:'linear'});
     }
-    function dispose(dev){dev.el.querySelectorAll('[data-hardware-knob],[data-hardware-linear],[data-hardware-feedback]').forEach(el=>releases.get(el)?.());}
+    function dispose(dev){if(readoutOwner&&dev.el.contains(readoutOwner))hideKnobReadout(0);dev.el.querySelectorAll('[data-hardware-knob],[data-hardware-linear],[data-hardware-feedback]').forEach(el=>releases.get(el)?.());}
     function layout({type,el}){
         if(type==='hardwareDemo'||FURNITURE_TYPES[type]||isListeningDevice({type})||(SOURCE_TYPES.has(type)&&!SIGNAL_GENERATOR_TYPES.has(type)&&!['btReceiverA','cdPlayer','streamer'].includes(type)))return;
         const compact=!!INTERFACE_DEVICES[type]||['headphoneAmp','headphoneAmpModern','btTransmitterPro','btReceiverA'].includes(type);
@@ -749,12 +781,12 @@ const Hardware = (() => {
         canvasThemeControl.innerHTML='<span>Fundo</span><select id="canvas-theme" aria-label="Cor do fundo do canvas">'+Object.entries(canvasThemes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
         document.querySelector('.canvas-tools').appendChild(canvasThemeControl);
         function setCanvasTheme(theme){
-            theme=Object.hasOwn(canvasThemes,theme)?theme:'light';state.canvasTheme=theme;canvas.dataset.theme=theme;
+            theme=Object.hasOwn(canvasThemes,theme)?theme:'sepia';state.canvasTheme=theme;canvas.dataset.theme=theme;
             document.getElementById('canvas-theme').value=theme;
         }
         document.getElementById('canvas-theme').addEventListener('change',event=>{setCanvasTheme(event.target.value);scheduleProjectSave();});
-        setCanvasTheme('light');
-        const atmospherePresets={neutral:'Luz neutra',sunset:'Fim de tarde',night:'Bancada à noite',sunday:'Sala de domingo'};
+        setCanvasTheme('sepia');
+        const atmospherePresets={neutral:'Luz neutra',warm:'Luz quente',sunset:'Fim de tarde',night:'Bancada à noite',sunday:'Sala de domingo'};
         const atmosphereControl=document.createElement('label');atmosphereControl.className='canvas-theme-control';
         atmosphereControl.innerHTML='<span>Iluminação</span><select id="canvas-atmosphere" aria-label="Iluminação do ambiente">'+Object.entries(atmospherePresets).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
         function setAtmosphere(preset){
@@ -762,7 +794,7 @@ const Hardware = (() => {
             atmosphereControl.querySelector('select').value=preset;
         }
         atmosphereControl.querySelector('select').addEventListener('change',event=>{setAtmosphere(event.target.value);const theme={sunset:'sepia',night:'midnight',sunday:'light'}[state.atmosphere];if(theme)setCanvasTheme(theme);scheduleProjectSave();});
-        setAtmosphere('sunset');setCanvasTheme('sepia');
+        setAtmosphere('neutral');
         const canvasGridModes={dots:'Pontos',lines:'Linhas',hidden:'Invisível'};
         const canvasGridControl=document.createElement('label');canvasGridControl.className='canvas-theme-control';
         canvasGridControl.innerHTML='<span>Grade</span><select id="canvas-grid" aria-label="Visual da grade">'+Object.entries(canvasGridModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
@@ -775,7 +807,6 @@ const Hardware = (() => {
         const svgLayer = document.getElementById('cables-layer');
         const inspectorEmpty = document.getElementById('inspector-empty');
         const inspectorContent = document.getElementById('inspector-content');
-        document.getElementById('inspector').appendChild(document.getElementById('system-overview'));
         const equipmentCatalog = document.getElementById('equipment-catalog');
         const discardZone=document.createElement('div');
         discardZone.className='catalog-discard-zone';
@@ -815,6 +846,19 @@ const Hardware = (() => {
             return Math.max(minimum, Math.min(MAX_CANVAS_ZOOM, zoom));
         };
         const snapCoordinate = value => Math.round(value / Hardware.sizes.grid) * Hardware.sizes.grid;
+        let viewAnimation=0;
+        function stopViewMotion(){cancelAnimationFrame(viewAnimation);viewAnimation=0;}
+        function animateViewTo(target){
+            stopViewMotion();
+            if(matchMedia('(prefers-reduced-motion: reduce)').matches){Object.assign(view,target);applyView();return;}
+            const start={...view},started=performance.now();
+            const tick=now=>{
+                const progress=matchMedia('(prefers-reduced-motion: reduce)').matches?1:Math.max(0,Math.min(1,(now-started)/280)),ease=1-(1-progress)**3;
+                for(const key of ['x','y','zoom'])view[key]=start[key]+(target[key]-start[key])*ease;
+                applyView();viewAnimation=progress<1?requestAnimationFrame(tick):0;
+            };
+            viewAnimation=requestAnimationFrame(tick);
+        }
         function applyView() {
             view.zoom = clampZoom(view.zoom);
             view.x = Math.max(Math.min(0, canvas.clientWidth - world.offsetWidth * view.zoom), Math.min(0, view.x));
@@ -825,12 +869,13 @@ const Hardware = (() => {
             document.getElementById('zoom-label').textContent = `${Math.round(view.zoom * 100)}%`;
             updateCables();
         }
-        new ResizeObserver(() => applyView()).observe(canvas);
+        new ResizeObserver(() => {stopViewMotion();applyView();}).observe(canvas);
         function screenToWorld(clientX, clientY) {
             const rect = canvas.getBoundingClientRect();
             return { x: (clientX - rect.left - view.x) / view.zoom, y: (clientY - rect.top - view.y) / view.zoom };
         }
         function setZoomAt(nextZoom, clientX, clientY) {
+            stopViewMotion();
             const rect = canvas.getBoundingClientRect();
             const px = clientX - rect.left, py = clientY - rect.top;
             const worldX = (px - view.x) / view.zoom, worldY = (py - view.y) / view.zoom;
@@ -841,19 +886,21 @@ const Hardware = (() => {
         }
         document.getElementById('zoom-in').addEventListener('click', () => { const r = canvas.getBoundingClientRect(); setZoomAt(view.zoom * 1.15, r.left + r.width / 2, r.top + r.height / 2); });
         document.getElementById('zoom-out').addEventListener('click', () => { const r = canvas.getBoundingClientRect(); setZoomAt(view.zoom / 1.15, r.left + r.width / 2, r.top + r.height / 2); });
-        canvas.addEventListener('wheel', e => { e.preventDefault(); setZoomAt(view.zoom * (e.deltaY < 0 ? 1.08 : 1 / 1.08), e.clientX, e.clientY); }, { passive: false });
+        canvas.addEventListener('wheel',e=>{
+            e.preventDefault();
+            const pixels=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?canvas.clientHeight:1);
+            setZoomAt(view.zoom*Math.exp(-Math.max(-160,Math.min(160,pixels))*.001),e.clientX,e.clientY);
+        },{passive:false});
         document.getElementById('fit-canvas').addEventListener('click', () => {
             const devices = Object.values(state.devices);
-            if (!devices.length) { view.zoom = 1; view.x = 0; view.y = 0; applyView(); return; }
+            if (!devices.length) { animateViewTo({zoom:1,x:0,y:0}); return; }
             const bounds = devices.reduce((b, dev) => {
                 const left = parseFloat(dev.el.style.left) || 0, top = parseFloat(dev.el.style.top) || 0;
                 return { left: Math.min(b.left, left), top: Math.min(b.top, top), right: Math.max(b.right, left + dev.el.offsetWidth), bottom: Math.max(b.bottom, top + dev.el.offsetHeight) };
             }, { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity });
             const rect = canvas.getBoundingClientRect(), pad = 48;
-            view.zoom = clampZoom(Math.min((rect.width - pad * 2) / Math.max(1, bounds.right - bounds.left), (rect.height - pad * 2) / Math.max(1, bounds.bottom - bounds.top)));
-            view.x = (rect.width - (bounds.right - bounds.left) * view.zoom) / 2 - bounds.left * view.zoom;
-            view.y = (rect.height - (bounds.bottom - bounds.top) * view.zoom) / 2 - bounds.top * view.zoom;
-            applyView();
+            const zoom=clampZoom(Math.min((rect.width-pad*2)/Math.max(1,bounds.right-bounds.left),(rect.height-pad*2)/Math.max(1,bounds.bottom-bounds.top)));
+            animateViewTo({zoom,x:(rect.width-(bounds.right-bounds.left)*zoom)/2-bounds.left*zoom,y:(rect.height-(bounds.bottom-bounds.top)*zoom)/2-bounds.top*zoom});
         });
 
         const canvasTouches=new Map();let canvasPinch=null;
@@ -863,7 +910,7 @@ const Hardware = (() => {
         }
         document.addEventListener('pointerdown',event=>{
             if(event.pointerType!=='touch')return;
-            if(canvas.contains(event.target)&&!event.target.closest('.canvas-tools,.learning-panel')){
+            if(canvas.contains(event.target)&&!event.target.closest('.canvas-tools')){
                 canvasTouches.set(event.pointerId,{x:event.clientX,y:event.clientY});
                 if(canvasTouches.size===2){
                     cancelPointerInteraction(event);
@@ -906,7 +953,7 @@ const Hardware = (() => {
             const className=button.dataset.mobilePanel==='catalog'?'mobile-catalog-open':'mobile-properties-open',open=document.body.classList.contains(className);
             closeMobilePanels();if(!open){document.body.classList.add(className);button.setAttribute('aria-expanded','true');}
         }));
-        canvas.addEventListener('pointerdown',closeMobilePanels,{capture:true});
+        canvas.addEventListener('pointerdown',()=>{stopViewMotion();closeMobilePanels();},{capture:true});
         const mobileInspectorClose=document.createElement('button');mobileInspectorClose.type='button';mobileInspectorClose.className='mobile-inspector-close';mobileInspectorClose.textContent='Ocultar propriedades →';mobileInspectorClose.setAttribute('aria-label','Ocultar menu da direita');
         mobileInspectorClose.addEventListener('click',()=>{closeMobilePanels();mobileControls.querySelector('[data-mobile-panel="properties"]').focus();});
         document.getElementById('inspector').prepend(mobileInspectorClose);
@@ -962,9 +1009,7 @@ const Hardware = (() => {
             const rect = canvas.getBoundingClientRect();
             const centerX = (bounds.left + bounds.right) / 2;
             const centerY = (bounds.top + bounds.bottom) / 2;
-            view.x = rect.width / 2 - centerX * view.zoom;
-            view.y = rect.height / 2 - centerY * view.zoom;
-            applyView();
+            animateViewTo({zoom:view.zoom,x:rect.width/2-centerX*view.zoom,y:rect.height/2-centerY*view.zoom});
         }
 
         function centerSelectedDevices() {
@@ -1020,7 +1065,7 @@ const Hardware = (() => {
 
         canvas.addEventListener('pointerdown', e => {
             if (e.button !== 0) return;
-            if (e.target.closest('.device-node, .canvas-tools, .learning-panel, button, path')) return;
+            if (e.target.closest('.device-node, .canvas-tools, button, path')) return;
             e.preventDefault();
             if (e.shiftKey) {
                 const rect = canvas.getBoundingClientRect();
@@ -1301,10 +1346,13 @@ const Hardware = (() => {
                 const newlyDeployed=deployedFootSupports.get(upper.dev.id)!==support.dev.id;
                 if(newlyDeployed)playUiSound('feet');
                 if(turntable)upper.dev.el.classList.add('turntable-stacked');
-                const footTop=bottom;
+                // Turntables retain the original feet in their layout when hidden.
+                // Start the replacement feet at the cabinet, not below that reserved space.
+                const plinth=turntable?upper.dev.el.querySelector('.at-plinth'):null;
+                const footTop=plinth?upper.y+plinth.offsetTop+plinth.offsetHeight:bottom;
                 const left=upper.x, right=upper.x+upper.width;
                 const inset = Math.max(16, (right - left) * STACK_FEET.insetRatio), width = STACK_FEET.width;
-                const footHeight=gap;
+                const footHeight=support.y-footTop;
                 [left + inset, right - inset - width].forEach((x,index) => {
                     const key=upper.dev.id+':'+index;
                     let foot=[...layer.querySelectorAll('.auto-stack-foot')].find(el=>el.dataset.footKey===key);
@@ -1902,7 +1950,7 @@ const Hardware = (() => {
         }
         function renderCableProperties(){
             let panel=document.getElementById('cable-properties');
-            if(!panel){panel=document.createElement('section');panel.id='cable-properties';panel.className='p-5 border-t border-gray-700 flex flex-col gap-3';document.getElementById('inspector').insertBefore(panel,document.getElementById('system-overview'));}
+            if(!panel){panel=document.createElement('section');panel.id='cable-properties';panel.className='p-5 border-t border-gray-700 flex flex-col gap-3';document.getElementById('inspector').appendChild(panel);}
             const connection=state.selectedConnection;panel.hidden=!connection;
             if(!connection)return;
             panel.innerHTML='<h3 class="text-sm font-semibold text-gray-200">Organizar cabo</h3><label class="text-sm text-gray-300 flex flex-col gap-2">Etiqueta<input id="cable-label" type="text" maxlength="60" class="p-2 rounded bg-gray-800 border border-gray-600 text-gray-100" placeholder="Ex.: CD → Equalizador"></label><div class="flex flex-col gap-3"><div class="flex items-center justify-between"><span class="text-sm text-gray-300">Cor</span><button id="cable-color-reset" type="button" class="text-xs text-blue-300">Padrão</button></div><div id="cable-color-palette" class="cable-color-palette" role="group" aria-label="Cor do cabo"></div></div><button id="cable-visibility" class="tt-insp-btn"></button><p class="text-xs text-gray-400">Ocultar altera apenas o visual; o áudio continua passando.</p>';
@@ -2456,7 +2504,6 @@ const Hardware = (() => {
             Object.values(state.devices).filter(isPassiveLoad).forEach(applySpeakerLoadDynamics);
             const selected=state.devices[state.selectedDeviceId];
             if(selected?.audioBuffer){const progress=document.getElementById('source-progress'),label=document.getElementById('source-position');const position=sourcePosition(selected);if(progress&&document.activeElement!==progress)progress.value=position;if(label)label.textContent=formatAudioTime(position);}
-            if(now-learningLastCheck>500 || force){learningLastCheck=now;updateLearningProgress();}
         }
 
         function readAudioTrackTitle(buffer){
@@ -3243,7 +3290,7 @@ const Hardware = (() => {
         function dampedNeedle(needle,target,now,rest){
             const previous=needleMotion.get(needle)||{angle:rest,time:now-16};
             const elapsed=Math.max(0,Math.min(.25,(now-previous.time)/1000));
-            const response=target>previous.angle?.12:.38;
+            const response=target>previous.angle?.14:.42;
             const angle=matchMedia('(prefers-reduced-motion: reduce)').matches?target:previous.angle+(target-previous.angle)*(1-Math.exp(-elapsed/response));
             needleMotion.set(needle,{angle,time:now});return angle;
         }
@@ -4673,7 +4720,7 @@ const Hardware = (() => {
                     const origin = initialPositions[0] || { x:0, y:0 };
                     const baseY = Math.max(...initialPositions.map(position => position.y + position.dev.el.offsetHeight));
                     const ignored = new Set(movingDevices.map(item => item.id));
-                    let isDragging = false, frame = 0, lastTime = 0, released = false, magnetic = false;
+                    let isDragging = false, frame = 0, lastTime = 0, released = false;
                     let targets = initialPositions.map(p=>({...p}));
                     const discardPreviews=new Map();
                     let discardPreviewLayer=null;
@@ -4723,7 +4770,7 @@ const Hardware = (() => {
                         frame=0;
                         if (!targets.every(p=>state.devices[p.dev.id])) return;
                         const dt=Math.min(32,now-(lastTime||now-16));lastTime=now;
-                        const blend=reducedMotion?1:1-Math.exp(-dt/(magnetic||released?55:22));
+                        const blend=!released||reducedMotion?1:1-Math.exp(-dt/55);
                         const intermediate=targets.map(p=>{
                             const x=parseFloat(p.dev.el.style.left)||0,y=parseFloat(p.dev.el.style.top)||0;
                             return {dev:p.dev,x:Math.abs(p.x-x)<.2?p.x:x+(p.x-x)*blend,y:Math.abs(p.y-y)<.2?p.y:y+(p.y-y)*blend};
@@ -4747,11 +4794,9 @@ const Hardware = (() => {
                         const rawX=(ev.clientX-startX)/view.zoom,rawY=(ev.clientY-startY)/view.zoom;
                         const dx=settle?snapCoordinate(origin.x+rawX)-origin.x:rawX;
                         const dy=settle?snapCoordinate(baseY+rawY)-baseY:rawY;
-                        magnetic=false;
                         targets=initialPositions.map(p=>{
                             const x=p.x+dx,y=p.y+dy;
                             const target=settle&&initialPositions.length===1?snapOnFurniture(p.dev,x,y):{x,y};
-                            magnetic ||= Math.abs(target.x-x)+Math.abs(target.y-y)>.1;
                             return {dev:p.dev,x:Math.max(0,target.x),y:Math.max(0,target.y)};
                         });
                         if(settle)targets=settleEquipmentDrop(targets,ignored,initialPositions);
@@ -4782,11 +4827,11 @@ const Hardware = (() => {
                         window.removeEventListener('blur',abortDrag);
                         window.removeEventListener('keydown',cancelWithEscape);
                         released=true;clearDiscardPreview();
-                        movingDevices.forEach(item=>item.el.classList.add('history-settling'));
+                        if(isDragging)movingDevices.forEach(item=>item.el.classList.add('history-settling'));
                         if(isDragging&&isOverCatalog(ev)){
                             playUiSound('discard');showDiscardCloud(ev.clientX,ev.clientY);
                             cancel();initialPositions.forEach(p=>{if(state.devices[p.dev.id])deleteDevice(p.dev);});
-                        }else if(isDragging){aim(ev,true);recordMovement(initialPositions,targets);playUiSound('drop');}
+                        }else if(isDragging){aim(ev,true);recordMovement(initialPositions,targets);playUiSound('drop');}else cancel();
                     };
 
                     const abortDrag=()=>{
@@ -5079,7 +5124,11 @@ const Hardware = (() => {
 
         function hasRestorableSettings(dev) {
             if(controlAmpConfig(dev.type)||CUSTOM_POWER_AMPS[dev.type])return true;
-            return EXTRA_AUDIO_TYPES.has(dev.type)||isListeningDevice(dev)||SOURCE_TYPES.has(dev.type)||EQ_TYPES.has(dev.type)||MIXER_TYPES.has(dev.type)||SELECTOR_TYPES.has(dev.type)||MATRIX_TYPES.has(dev.type)||ACTIVE_SPK.has(dev.type)||SUB_TYPES.has(dev.type)||!!FURNITURE_TYPES[dev.type]||['receiver','powerAmp','powerStereo','powerVintage','headphoneAmp','headphoneAmpModern','headphoneAmp4'].includes(dev.type);
+            // Listening controls and live meters alone are not equipment settings.
+            return SOURCE_TYPES.has(dev.type)||EQ_TYPES.has(dev.type)||MIXER_TYPES.has(dev.type)
+                ||SELECTOR_TYPES.has(dev.type)||MATRIX_TYPES.has(dev.type)
+                ||ACTIVE_SPK.has(dev.type)||SUB_TYPES.has(dev.type)||!!FURNITURE_TYPES[dev.type]
+                ||['preamp','receiver','powerAmp','powerStereo','powerVintage','headphoneAmp','headphoneAmpModern','headphoneAmp4'].includes(dev.type);
         }
         async function restoreDeviceSettings(dev) {
             if(!state.devices[dev.id]||!hasRestorableSettings(dev))return;
@@ -6169,101 +6218,6 @@ const Hardware = (() => {
             updateBluetoothLinks();
         }
 
-        function updateSystemOverview() {
-            const panel = document.getElementById('system-overview');
-            if (!panel) return;
-            const devices = Object.values(state.devices).filter(dev=>!FURNITURE_TYPES[dev.type]);
-            const powerable = devices.filter(dev => dev.el.querySelector('.power-btn'));
-            const powered = powerable.filter(dev => dev.powered).length;
-            const withSignal = devices.filter(dev => dev.el.classList.contains('device-has-signal')).length;
-
-            document.getElementById('overview-summary-count').textContent = `${devices.length} ${devices.length === 1 ? 'equipamento' : 'equipamentos'}`;
-            document.getElementById('overview-powered-count').textContent = `${powered}/${powerable.length}`;
-            document.getElementById('overview-signal-count').textContent = String(withSignal);
-            document.getElementById('overview-connection-count').textContent = String(state.connections.length);
-            document.getElementById('overview-play-state').textContent = state.isPlaying ? 'som ativo' : 'som parado';
-            document.getElementById('overview-flow-state').textContent = state.connections.length ? (state.isPlaying ? 'reprodução' : 'em espera') : 'sem ligações';
-
-            const deviceList = document.getElementById('overview-device-list');
-            const deviceRows = devices
-                .sort((a, b) => (DEVICE_NAMES[a.type] || a.type).localeCompare(DEVICE_NAMES[b.type] || b.type))
-                .map(dev => {
-                    const hasPower = !!dev.el.querySelector('.power-btn');
-                    const connected = dev.el.classList.contains('device-connected');
-                    const hasSignal = dev.el.classList.contains('device-has-signal');
-                    const row = document.createElement('div');
-                    row.className = 'overview-row';
-                    if (hasSignal) row.classList.add('is-signal');
-                    else if (hasPower && !dev.powered) row.classList.add('is-off');
-                    else if (connected) row.classList.add('is-waiting');
-                    else if (hasPower && dev.powered) row.classList.add('is-powered');
-                    const dot = document.createElement('i');
-                    dot.className = 'overview-state-dot';
-                    dot.setAttribute('aria-hidden', 'true');
-                    const name = document.createElement('span');
-                    name.className = 'overview-device-name';
-                    name.textContent = DEVICE_NAMES[dev.type] || dev.type;
-                    const status = document.createElement('span');
-                    status.className = 'overview-status';
-                    status.textContent = SELECTOR_TYPES.has(dev.type)
-                        ? `SAÍDA ${dev.selectedSource}`
-                        : hasPower
-                        ? (!dev.powered ? 'DESLIGADO' : (hasSignal ? 'LIGADO · SINAL' : (connected ? 'LIGADO · AGUARDANDO' : 'LIGADO · SEM SINAL')))
-                        : (hasSignal ? 'SINAL' : (connected ? 'CONECTADO' : 'LIVRE'));
-                    row.append(dot, name, status);
-                    return row;
-                });
-            if (!deviceRows.length) {
-                const empty = document.createElement('div');
-                empty.className = 'overview-empty';
-                empty.textContent = 'Adicione equipamentos para acompanhar o sistema.';
-                deviceRows.push(empty);
-            }
-            deviceList.replaceChildren(...deviceRows);
-
-            const connectionList = document.getElementById('overview-connection-list');
-            const connectionRows = state.connections.map(connection => {
-                const outPort = document.getElementById(connection.outId);
-                const inPort = document.getElementById(connection.inId);
-                const outDevice = outPort?.closest('.device-node');
-                const inDevice = inPort?.closest('.device-node');
-                const from = state.devices[outDevice?.id];
-                const to = state.devices[inDevice?.id];
-                const row = document.createElement('div');
-                const active = connection.el.dataset.signal === 'ativo';
-                row.className = `overview-row overview-connection ${active ? 'is-signal' : 'is-idle'}`;
-                const route = document.createElement('div');
-                route.className = 'overview-route';
-                const fromName = document.createElement('span');
-                fromName.textContent = DEVICE_NAMES[from?.type] || from?.type || 'Saída';
-                const arrow = document.createElement('b');
-                arrow.className = 'overview-arrow';
-                arrow.textContent = '→';
-                const toName = document.createElement('span');
-                toName.textContent = DEVICE_NAMES[to?.type] || to?.type || 'Entrada';
-                route.append(fromName, arrow, toName);
-                const meta = document.createElement('div');
-                meta.className = 'overview-connection-meta';
-                const channelLabel = ({ 'rca-r':'RCA · direito', 'rca-l':'RCA · esquerdo', rca:'RCA', p10:'P10', p2:'P2', wire:'Fio de caixa' }[connection.type] || 'Cabo de áudio');
-                const switchOutput = outPort?.dataset.node?.match(/^out([AB])[RL]$/)?.[1];
-                const cableLabel = outPort?.dataset.role === 'lfe-out' ? 'RCA · LFE' : (switchOutput ? `Saída ${switchOutput} · ${channelLabel}` : channelLabel);
-                const type = document.createElement('span');
-                type.textContent = cableLabel+(outPort?' · '+portSignalLabel(outPort):'');
-                const signal = document.createElement('span');
-                signal.textContent = active ? 'SINAL ATIVO' : 'SEM SINAL';
-                meta.append(type, signal);
-                row.append(route, meta);
-                return row;
-            });
-            if (!connectionRows.length) {
-                const empty = document.createElement('div');
-                empty.className = 'overview-empty';
-                empty.textContent = 'Conecte dois equipamentos para ver o percurso.';
-                connectionRows.push(empty);
-            }
-            connectionList.replaceChildren(...connectionRows);
-        }
-
         // --- PROPAGAÇÃO REAL DE ENERGIA/SINAL PELA CADEIA DE ÁUDIO ---
         function isSourceRunning(dev) {
             return state.audioCtx?.state === 'running' && !!dev.powered && (RADIO_RECEIVERS.has(dev.type)?!!dev.state.radioOn:SOURCE_TYPES.has(dev.type)&&dev.state.playing===true&&(!SIGNAL_GENERATOR_TYPES.has(dev.type)||dev.state.signalLevel>0));
@@ -6394,7 +6348,6 @@ const Hardware = (() => {
                     }
                 });
             });
-            updateSystemOverview();
         }
 
         canvas.addEventListener('click', e => {
@@ -6459,218 +6412,12 @@ const Hardware = (() => {
             if(info)info.textContent=inputPeak>-85?'Comparação ao vivo · frequência em Hz e nível em dBFS. Cinza: entrada. Azul: saída.':'Sem áudio na entrada. Reproduza uma fonte conectada; o gráfico responde também à sua música.';
         }
 
-        let activeLearning=null,learningLastCheck=0;
-        const LEARNING_CHALLENGES={
-            vinyl:{title:'1 · Seu primeiro sistema de vinil',category:'Fundamentos',level:'Inicial',description:'Monte toca-discos → receiver → duas caixas passivas. Aprenda a distinguir sinal de linha e sinal amplificado.',concept:'RCA transporta a fonte em nível de linha; as caixas passivas precisam da saída amplificada. L fica à esquerda e R à direita.',hints:['No toca-discos, use LINE para a entrada de linha do receiver.','Ligue OUT L/R da fonte em IN L/R do receiver.','Ligue SPEAKER L à caixa esquerda e SPEAKER R à direita; só então inicie a fonte.']},
-            repair:{title:'2 · Descubra por que falta som',category:'Diagnóstico',level:'Inicial',description:'Um seletor está na saída errada e falta um canal de entrada. Encontre as duas causas e restaure a reprodução estéreo.',concept:'Um cabo conectado não garante áudio: seleção de saída, alimentação, volume e reprodução também precisam estar corretos.',hints:['As duas caixas estão ligadas à saída A.','Confira o canal R entre a fonte e o seletor.','Selecione A no seletor e inicie a fonte; observe os níveis atuais nas duas caixas.']},
-            phono:{title:'3 · Phono precisa de conversão',category:'Sinais',level:'Intermediário',description:'Monte toca-discos em PHONO → conversor phono/linha → amplificador de potência → caixas passivas.',concept:'Adaptar o plugue não muda o nível de sinal. Phono precisa de ganho e equalização RIAA antes de entrar em equipamentos de linha.',hints:['Mantenha a saída do toca-discos em PHONO.','Use o Conversor Phono → Linha, não um adaptador de plugue.','A saída do conversor entra no amplificador; a saída amplificada alimenta as caixas.']},
-            preamp:{title:'4 · Pré e potência trabalham juntos',category:'Sinais',level:'Intermediário',description:'Monte CD → entrada CD do pré → amplificador de potência → duas caixas. Selecione a fonte correta no pré.',concept:'O pré seleciona fontes e controla volume/tonalidade, mas sua saída continua em nível de linha. Quem alimenta as caixas passivas é o amplificador de potência.',hints:['CD é a segunda entrada do pré-amplificador.','Selecione CD no painel ou nas propriedades do pré.','Conecte LINE OUT do pré à entrada RCA do amplificador e use as saídas de caixa para as passivas.']},
-            meter:{title:'5 · Leia VU, espectro e correlação',category:'Medição',level:'Intermediário',description:'Monte tape deck → medidor de bancada → caixas ativas. Observe L/R e leia a referência dos VUs.',concept:'0 VU corresponde aqui a −18 dBFS para uma senoide. Correlação positiva indica semelhança entre canais; negativa indica oposição de fase. Valores próximos de zero podem ser normais em música estéreo.',hints:['O medidor recebe e devolve sinal de linha; deve ficar entre a fonte e as caixas ativas.','Use os dois canais de entrada e saída do medidor.','Selecione o medidor para ver níveis e espectro. Inicie a fita e procure áudio atual nos dois canais, sem exigir correlação +1.']},
-            eq:{title:'6 · Esculpa o som com sete bandas',category:'Ajustes',level:'Intermediário',description:'Monte streamer → equalizador → caixas ativas. Neste exercício, reduza a primeira banda para −3 dB ou menos e eleve a última para +2 dB ou mais.',concept:'Graves ocupam as bandas de menor frequência; agudos, as de maior frequência. A curva altera o timbre, e o analisador permite comparar entrada e saída.',hints:['Ligue a fonte ao equalizador e suas saídas às caixas ativas.','A primeira banda é a de menor frequência: abaixe para −3 dB ou menos.','Eleve a última banda para pelo menos +2 dB, mantenha o nível de saída acima de zero e ouça o resultado.']},
-            load:{title:'7 · Combine amplificador e caixas',category:'Diagnóstico',level:'Avançado',description:'As caixas de 4 Ω foram ligadas a uma potência que exige pelo menos 8 Ω. Escolha outro amplificador compatível e refaça as ligações.',concept:'Watts e ohms são características fixas. Escolha o equipamento apropriado; use volume e ganho para controlar o nível.',hints:['Confira a impedância das caixas e a carga mínima da potência.','Adicione uma potência capaz de trabalhar com 4 Ω por canal.','Ligue o CD à nova potência e conecte cada caixa ao respectivo canal.']},
-            headphones:{title:'8 · Monte uma cadeia para fones',category:'Fundamentos',level:'Inicial',description:'Monte CD → amplificador de fones → fone de estúdio. Diferencie a saída para fones da saída de potência para caixas.',concept:'O formato P10 não define sozinho o sinal. Uma saída para fones é diferente de uma saída de potência para caixas passivas.',hints:['A fonte entra por RCA L/R no amplificador de fones.','Conecte a saída FONE P10 à entrada do fone.','Ligue a fonte e o amplificador, confira o volume e pressione Reproduzir.']}
-        };
-        let learningCompleted=new Set();
-        try{const saved=JSON.parse(localStorage.getItem('audio-learning-completed-v2')||'[]');if(Array.isArray(saved))learningCompleted=new Set(saved.filter(key=>Object.hasOwn(LEARNING_CHALLENGES,key)));}catch{}
-        const LEARNING_QUIZ=[
-            {question:'Um adaptador RCA → P10 converte phono em linha?',answers:['Sim, porque o plugue mudou.','Não. É necessário um conversor/pré de phono.','Só quando o volume estiver alto.'],correct:1,explanation:'Adaptadores trocam o conector; o conversor de phono aplica ganho e equalização RIAA.'},
-            {question:'0 VU neste simulador significa que o áudio está saturando?',answers:['Sim, todo zero significa saturação.','Não. É a referência equivalente a −18 dBFS para uma senoide.','Significa ausência de som.'],correct:1,explanation:'O limite de pico digital é 0 dBFS. A referência dos VUs foi escolhida abaixo desse limite.'},
-            {question:'Uma caixa de 2 Ω é adequada a um amplificador com mínimo de 4 Ω?',answers:['Não: a carga fica abaixo do mínimo.','Sim, porque 2 é menor que 4.','Depende apenas da cor do cabo.'],correct:0,explanation:'Uma impedância menor exige mais corrente; esta simulação aciona proteção quando a carga cai abaixo do mínimo.'},
-            {question:'Correlação próxima de zero sempre indica uma ligação errada?',answers:['Sim, o correto é sempre +1.','Não. Pode ocorrer naturalmente em música estéreo.','Significa que L e R estão em curto.'],correct:1,explanation:'Correlação mede semelhança entre canais. +1 indica sinais iguais; −1, oposição de fase. A interpretação depende do conteúdo.'}
-        ];
-        function learningFocus(id){const dev=state.devices[id];if(!dev)return;selectDevice(id);centerDeviceSet([dev]);if(matchMedia('(max-width:1000px)').matches){closeMobilePanels();document.body.classList.add('mobile-properties-open');}}
-        function setupLearningMode(){
-            const button=document.createElement('button');button.type='button';button.id='open-learning';button.className='learning-open-button';button.textContent='Modo de aprendizado';clearCatalogFooter.insertBefore(button,clearCatalogFooter.firstChild);
-            const panel=document.createElement('section');panel.id='learning-panel';panel.className='learning-panel';panel.hidden=true;panel.setAttribute('aria-label','Modo de aprendizado');
-            panel.innerHTML=`<header><h2>Modo de aprendizado</h2><button type="button" id="close-learning" aria-label="Fechar modo de aprendizado">×</button></header><p id="learning-achievements" class="learning-note"></p><label for="learning-category">Tema</label><select id="learning-category">${['Todos','Fundamentos','Sinais','Ajustes','Medição','Diagnóstico'].map(category=>`<option>${category}</option>`).join('')}</select><label for="learning-challenge">Escolha um desafio</label><select id="learning-challenge"></select><p id="learning-description"></p><details class="learning-concept"><summary>O que você vai aprender</summary><p id="learning-concept-text"></p></details><p class="learning-note">Sua montagem é preservada. Iniciar outro desafio substitui apenas os equipamentos do desafio em andamento. Encerrar mantém a montagem criada.</p><button type="button" class="tt-insp-btn" id="start-learning">INICIAR DESAFIO</button><div id="learning-progress" aria-live="polite"></div><div class="learning-actions"><button type="button" class="tt-insp-btn" id="check-learning">VERIFICAR</button><button type="button" class="tt-insp-btn" id="hint-learning">PRÓXIMA DICA</button></div><p id="learning-hint" aria-live="polite"></p><button type="button" class="tt-insp-btn" id="leave-learning" hidden>ENCERRAR E MANTER MONTAGEM</button><details class="learning-analysis"><summary>Analisar minha montagem</summary><button type="button" id="learning-analyze" class="tt-insp-btn">ANALISAR AGORA</button><div id="learning-analysis-result" aria-live="polite"></div></details><details class="learning-quiz"><summary>Teste seus conhecimentos · 4 perguntas</summary><div id="learning-quiz-content"></div></details>`;
-            canvas.appendChild(panel);panel.style.touchAction='pan-y';panel.addEventListener('pointerdown',event=>event.stopPropagation());panel.addEventListener('wheel',event=>event.stopPropagation(),{passive:true});
-            const dragHeader=panel.querySelector('header');
-            dragHeader.classList.add('learning-drag-handle');
-            dragHeader.title='Arraste para mover a janela';
-            dragHeader.tabIndex=0;
-            dragHeader.setAttribute('aria-label','Mover janela de aprendizado. Arraste ou use as setas do teclado.');
-            const positionPanel=(x,y)=>{
-                const margin=8;
-                panel.style.left=`${Math.max(margin,Math.min(x,canvas.clientWidth-panel.offsetWidth-margin))}px`;
-                panel.style.top=`${Math.max(margin,Math.min(y,canvas.clientHeight-panel.offsetHeight-margin))}px`;
-            };
-            let panelDrag=null;
-            dragHeader.addEventListener('pointerdown',event=>{
-                if(event.button!==0||event.target.closest('button'))return;
-                event.preventDefault();event.stopPropagation();
-                panelDrag={id:event.pointerId,x:event.clientX,y:event.clientY,left:panel.offsetLeft,top:panel.offsetTop};
-                dragHeader.setPointerCapture(event.pointerId);
-                panel.classList.add('learning-dragging');
-            });
-            dragHeader.addEventListener('pointermove',event=>{
-                if(!panelDrag||event.pointerId!==panelDrag.id)return;
-                event.preventDefault();event.stopPropagation();
-                positionPanel(panelDrag.left+event.clientX-panelDrag.x,panelDrag.top+event.clientY-panelDrag.y);
-            });
-            const finishPanelDrag=event=>{
-                if(!panelDrag||event.pointerId!==panelDrag.id)return;
-                panelDrag=null;panel.classList.remove('learning-dragging');
-                if(dragHeader.hasPointerCapture(event.pointerId))dragHeader.releasePointerCapture(event.pointerId);
-            };
-            ['pointerup','pointercancel','lostpointercapture'].forEach(type=>dragHeader.addEventListener(type,finishPanelDrag));
-            dragHeader.addEventListener('keydown',event=>{
-                if(event.target!==dragHeader||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;
-                event.preventDefault();event.stopPropagation();const step=event.shiftKey?32:16;
-                positionPanel(panel.offsetLeft+(event.key==='ArrowLeft'?-step:event.key==='ArrowRight'?step:0),panel.offsetTop+(event.key==='ArrowUp'?-step:event.key==='ArrowDown'?step:0));
-            });
-            new ResizeObserver(()=>{if(!panel.hidden)positionPanel(panel.offsetLeft,panel.offsetTop);}).observe(canvas);
-            new ResizeObserver(()=>{if(!panel.hidden)positionPanel(panel.offsetLeft,panel.offsetTop);}).observe(panel);
-            const selector=document.getElementById('learning-challenge');
-            const description=()=>{const item=LEARNING_CHALLENGES[selector.value];if(!item)return;document.getElementById('learning-description').textContent=`${item.level} · ${item.description}`;document.getElementById('learning-concept-text').textContent=item.concept;};
-            const options=()=>{const previous=selector.value,category=document.getElementById('learning-category').value;selector.replaceChildren();Object.entries(LEARNING_CHALLENGES).filter(([,item])=>category==='Todos'||item.category===category).forEach(([key,item])=>selector.add(new Option((learningCompleted.has(key)?'✓ ':'')+item.title,key)));if([...selector.options].some(option=>option.value===previous))selector.value=previous;description();};
-            options();document.getElementById('learning-achievements').textContent=`${learningCompleted.size} de ${Object.keys(LEARNING_CHALLENGES).length} desafios concluídos`;
-            button.onclick=()=>{panel.hidden=!panel.hidden;if(!panel.hidden)closeMobilePanels();};document.getElementById('close-learning').onclick=()=>panel.hidden=true;
-            document.getElementById('learning-category').onchange=options;selector.onchange=description;
-            document.getElementById('start-learning').onclick=()=>startLearningChallenge(selector.value);
-            document.getElementById('check-learning').onclick=()=>updateLearningProgress();
-            document.getElementById('hint-learning').onclick=()=>{
-                const challenge=activeLearning,item=LEARNING_CHALLENGES[challenge?.type||selector.value];
-                const index=challenge?Math.min(challenge.hintIndex++,item.hints.length-1):0;
-                const pending=challenge?learningSteps().find(step=>!step.ok):null;
-                document.getElementById('learning-hint').textContent=(pending?`Próximo passo: ${pending.label}. `:'')+item.hints[index];
-            };
-            document.getElementById('leave-learning').onclick=()=>{activeLearning=null;panel.hidden=true;document.getElementById('learning-progress').replaceChildren();document.getElementById('learning-hint').textContent='';document.getElementById('leave-learning').hidden=true;};
-            document.getElementById('learning-analyze').onclick=renderLearningAnalysis;
-            const quiz=document.getElementById('learning-quiz-content');
-            LEARNING_QUIZ.forEach((item,index)=>{
-                const field=document.createElement('fieldset'),title=document.createElement('legend');title.textContent=`${index+1}. ${item.question}`;field.appendChild(title);
-                const feedback=document.createElement('p');feedback.setAttribute('aria-live','polite');
-                item.answers.forEach((answer,answerIndex)=>{const option=document.createElement('button');option.type='button';option.textContent=answer;option.onclick=()=>{field.querySelectorAll('button').forEach(button=>button.classList.remove('is-answer'));option.classList.add('is-answer');feedback.textContent=(answerIndex===item.correct?'Correto. ':'Tente novamente. ')+item.explanation;feedback.style.color=answerIndex===item.correct?'#6ee7b7':'#fcd89b';};field.appendChild(option);});field.appendChild(feedback);quiz.appendChild(field);
-            });
-        }
-        function connectLearningPorts(from,nodeOut,to,nodeIn){
+        function connectProjectPorts(from,nodeOut,to,nodeIn){
             const output=from.el.querySelector(`[data-node="${nodeOut}"]`),input=to.el.querySelector(`[data-node="${nodeIn}"]`);
-            if(!output||!input||!getPortCompatibility(output,input).compatible)throw new Error('Ligação do desafio incompatível.');
+            if(!output||!input||!getPortCompatibility(output,input).compatible)throw new Error('Ligação do projeto incompatível.');
             const el=document.createElementNS('http://www.w3.org/2000/svg','g');el.setAttribute('class','cable-group');svgLayer.appendChild(el);
             const type=output.dataset.type;drawCable(el,getPortCenter(output),getPortCenter(input),[],type);
             state.connections.push({outId:output.id,inId:input.id,el,type,wps:[]});from.nodes[nodeOut].connect(to.nodes[nodeIn]);output.classList.add('connected');input.classList.add('connected');
-        }
-        function startLearningChallenge(type){
-            if(!Object.hasOwn(LEARNING_CHALLENGES,type))return;
-            const old=activeLearning;activeLearning=null;
-            old?.ids.forEach(id=>{if(state.devices[id])deleteDevice(state.devices[id]);});
-            const created=[],roles={},edges=[];
-            const add=(role,kind,x,y)=>{
-                const before=new Set(Object.keys(state.devices));createDevice(kind,Math.min(x,Math.max(20,world.offsetWidth-800)),y);
-                const dev=Object.values(state.devices).find(item=>!before.has(item.id));if(!dev)throw new Error('Não há espaço livre suficiente. Libere espaço no canvas antes de iniciar o desafio.');created.push(dev);roles[role]=dev.id;return dev;
-            };
-            const pair=(from,out,to,input)=>['L','R'].forEach(ch=>edges.push([from.id,out+ch,to.id,input+ch]));
-            try{
-                const source=add('source',type==='vinyl'||type==='phono'?'turntableVintage':type==='meter'?'tapeDeck':['preamp','load','headphones'].includes(type)?'cdPlayer':'streamer',40,60);
-                if(type==='headphones'){
-                    const amp=add('amp','headphoneAmpModern',40,500),headphone=add('left','hpStudio',950,100);roles.right=headphone.id;pair(source,'out',amp,'in');edges.push([amp.id,'outPhone',headphone.id,'in']);
-                }else{
-                    const passive=['vinyl','phono','preamp','load'].includes(type);
-                    const left=add('left',type==='load'?'floorCoax':passive?'spkPassiveWood':'spkActiveBookshelf',960,80),right=add('right',type==='load'?'floorCoax':passive?'spkPassiveWood':'spkActiveBookshelf',1300,80);
-                    let tail=source,output='out';
-                    if(type==='vinyl'){const receiver=add('middle','receiver',40,550);pair(source,'out',receiver,'in');tail=receiver;output='spkOut';}
-                    if(type==='repair'){const sw=add('middle','rcaSwitch',40,550);pair(source,'out',sw,'in');tail=sw;output='outA';}
-                    if(type==='phono'){const converter=add('middle','phonoConverter',40,550),amp=add('amp','powerStereo',40,750);source.ttSetOutput('phono');pair(source,'out',converter,'in');pair(converter,'out',amp,'in');tail=amp;}
-                    if(type==='preamp'){const pre=add('middle','preamp',40,550),amp=add('amp','powerStereo',40,750);pair(source,'out',pre,'in2');pair(pre,'out',amp,'in');tail=amp;}
-                    if(type==='meter'){const meter=add('middle','benchMeter',40,600);pair(source,'out',meter,'in');tail=meter;}
-                    if(type==='eq'){const equalizer=add('middle','eqStudio',40,550);pair(source,'out',equalizer,'in');tail=equalizer;}
-                    if(type==='load'){const amp=add('amp','powerStereo',40,550);pair(source,'out',amp,'in');tail=amp;}
-                    edges.push([tail.id,output+'L',left.id,'in'],[tail.id,output+'R',right.id,'in']);
-                    if(type==='repair'){[edges[0],...edges.slice(2)].forEach(edge=>connectLearningPorts(state.devices[edge[0]],edge[1],state.devices[edge[2]],edge[3]));tail.el.querySelector('[data-switch-source="B"]').click();}
-                    if(type==='load')edges.forEach(edge=>connectLearningPorts(state.devices[edge[0]],edge[1],state.devices[edge[2]],edge[3]));
-                }
-                activeLearning={type,roles,edges,ids:created.map(dev=>dev.id),hintIndex:0};
-                document.getElementById('learning-hint').textContent='';document.getElementById('leave-learning').hidden=false;document.getElementById('learning-panel').hidden=false;
-                const rect=canvas.getBoundingClientRect(),maxX=Math.max(...created.map(dev=>parseFloat(dev.el.style.left)+dev.el.offsetWidth)),maxY=Math.max(...created.map(dev=>parseFloat(dev.el.style.top)+dev.el.offsetHeight));
-                view.zoom=clampZoom(Math.min((rect.width-80)/maxX,(rect.height-80)/maxY));centerDeviceSet(created);selectDevice(source.id);updateCables();updateCableFlows();updatePortGuidance();updateLearningProgress();
-            }catch(error){created.forEach(dev=>deleteDevice(dev));activeLearning=null;document.getElementById('learning-hint').textContent=error.message;document.getElementById('learning-progress').replaceChildren();document.getElementById('leave-learning').hidden=true;}
-        }
-        function learningSteps(){
-            const challenge=activeLearning;if(!challenge)return [];
-            const {type,roles}=challenge,source=state.devices[roles.source],middle=state.devices[roles.middle],amp=state.devices[roles.amp];
-            const devices=challenge.ids.map(id=>state.devices[id]),steps=[];
-            const add=(label,ok,detail,focus)=>steps.push({label,ok:!!ok,detail,focus});
-            const name=id=>DEVICE_NAMES[state.devices[id]?.type]||'Equipamento removido';
-            const portName=(id,node)=>{const port=state.devices[id]?.el.querySelector(`[data-node="${node}"]`);return port?.dataset.baseTitle||port?.getAttribute('title')||node;};
-            add('Manter os equipamentos do desafio no canvas',challenge.ids.filter(id=>!(challenge.type==='load'&&id===challenge.roles.amp)).every(id=>!!state.devices[id]),'Um equipamento foi removido. Reinicie este desafio para recuperá-lo.');
-            challenge.edges.forEach(([outId,outNode,inId,inNode])=>{
-                if(challenge.type==='load'&&(outId===challenge.roles.amp||inId===challenge.roles.amp))return;
-                const connected=state.connections.some(c=>{const o=document.getElementById(c.outId),i=document.getElementById(c.inId);return o?.closest('.device-node')?.id===outId&&o.dataset.node===outNode&&i?.closest('.device-node')?.id===inId&&i.dataset.node===inNode;});
-                add(`${name(outId)} · ${portName(outId,outNode)} → ${name(inId)} · ${portName(inId,inNode)}`,connected,'Esta ligação ainda falta ou está em outra porta. Siga o canal L/R e o nível de sinal esperado.',outId);
-            });
-            if(type==='vinyl')add('Usar saída LINE no toca-discos',source?.state.tt?.output==='line','A entrada do receiver espera sinal de linha; use o pré interno do toca-discos.',roles.source);
-            if(type==='phono')add('Usar PHONO e conversor phono/linha',source?.state.tt?.output==='phono','Neste exercício, o conversor faz o ganho e a equalização; a fonte deve continuar em PHONO.',roles.source);
-            if(type==='repair')add('Selecionar a saída A no seletor',middle?.selectedSource==='A','As caixas foram conectadas à saída A, mas o seletor pode estar enviando o sinal para B.',roles.middle);
-            if(type==='preamp')add('Selecionar CD no pré-amplificador',middle?.state.preSource===2,'As entradas in2L/in2R correspondem à fonte CD.',roles.middle);
-            if(type==='eq'){
-                add('Primeira banda em −3 dB ou menos',(middle?.state.eq[0]??0)<=-3,'A primeira banda altera os graves; mova-a para baixo.',roles.middle);
-                add('Última banda em +2 dB ou mais',(middle?.state.eq[6]??0)>=2,'A última banda altera os agudos; mova-a para cima.',roles.middle);
-            }
-            if(type==='load'){
-                [roles.left,roles.right].forEach(id=>{
-                    const dev=state.devices[id],route=dev&&amplifierRoutes(dev)[0],selectedAmp=route?.amp;
-                    add(`Amplificador compatível: ${name(id)}`,!!(selectedAmp&&dev.state.speakerOhms>=selectedAmp.state.minOhms),selectedAmp?`Carga ${dev.state.speakerOhms} Ω; mínimo do amplificador ${selectedAmp.state.minOhms} Ω.`:'Conecte a caixa a uma potência compatível.',id);
-                    const connected=selectedAmp&&['L','R'].every(ch=>state.connections.some(c=>{const o=document.getElementById(c.outId),i=document.getElementById(c.inId);return o?.closest('.device-node')?.id===source?.id&&o.dataset.channel===ch&&i?.closest('.device-node')?.id===selectedAmp.id&&i.dataset.channel===ch;}));
-                    add(`Fonte ligada à potência de ${name(id)}`,!!connected,'Ligue os dois canais do CD à potência que alimenta esta caixa.',id);
-                });
-            }
-            devices.filter(dev=>dev&&!(type==='load'&&dev.id===roles.amp)).forEach(dev=>{
-                if(dev.el.querySelector('.power-btn'))add(`${DEVICE_NAMES[dev.type]} ligado`,dev.powered,'Ligue este equipamento no painel ou nas propriedades.',dev.id);
-                const values=[dev.state.volume??1,dev.state.tapeVolume??1,dev.state.eqLevel??1,...Object.values(dev.state.channelGain||{})];
-                if(dev.volumeNode||dev.setChannelGain||dev.applyPreamp||dev.nodes.vol||EQ_TYPES.has(dev.type)||dev.type==='tapeDeck'||dev.setPhoneVolume)add(`Nível aberto: ${DEVICE_NAMES[dev.type]}`,values.every(value=>value>.001),'Um volume, nível de saída ou ganho de canal está zerado.',dev.id);
-            });
-            add('Fonte reproduzindo áudio',source&&isSourceRunning(source),'A fonte inicia pausada. Pressione Reproduzir e confirme que o navegador liberou o áudio.',roles.source);
-            const sinks=[...new Set([roles.left,roles.right])].map(id=>state.devices[id]).filter(Boolean);
-            const soloElsewhere=Object.values(state.devices).some(dev=>isListeningDevice(dev)&&dev.state.solo&&!sinks.includes(dev));
-            add('Saídas de escuta sem mute ou solo externo',sinks.length>0&&sinks.every(dev=>!dev.state.muted)&&!soloElsewhere,'Desative Mute nas saídas do exercício ou limpe Solo/Mute para voltar à escuta de todas as caixas.',roles.left);
-            sinks.forEach(dev=>add(`Áudio atual em ${DEVICE_NAMES[dev.type]}`,state.audioCtx?.state==='running'&&dev.meters?.levels.some(level=>level>.00002),'Não basta ter detectado áudio antes: esta etapa acompanha o sinal recebido agora. Confira reprodução, ligações, alimentação e volume.',dev.id));
-            if(type==='meter'){
-                const levels=middle?.meters?.levels||[];
-                add('Medir sinal atual nos dois canais',levels.length===2&&levels.every(level=>level>.00002),'Observe as duas agulhas e as curvas L/R; não é necessário que os canais tenham correlação +1.',roles.middle);
-                add('Manter os picos abaixo da saturação',middle?.meters&&performance.now()>=middle.meters.clipUntil,'Reduza o nível de saída da fita se a indicação de saturação estiver acesa.',roles.source);
-            }
-            return steps;
-        }
-        function updateLearningProgress(){
-            if(!activeLearning)return;
-            const progress=document.getElementById('learning-progress');if(!progress)return;
-            const steps=learningSteps(),complete=steps.length>0&&steps.every(step=>step.ok),done=steps.filter(step=>step.ok).length;
-            if(complete&&!learningCompleted.has(activeLearning.type)){
-                learningCompleted.add(activeLearning.type);try{localStorage.setItem('audio-learning-completed-v2',JSON.stringify([...learningCompleted]));}catch{}
-                const selector=document.getElementById('learning-challenge');[...selector.options].forEach(option=>{if(option.value===activeLearning.type&&!option.textContent.startsWith('✓'))option.textContent='✓ '+option.textContent;});
-            }
-            document.getElementById('learning-achievements').textContent=`${learningCompleted.size} de ${Object.keys(LEARNING_CHALLENGES).length} desafios concluídos`;
-            const signature=JSON.stringify(steps.map(step=>[step.label,step.focus,step.ok,step.detail]));if(progress.dataset.signature===signature)return;progress.dataset.signature=signature;
-            progress.replaceChildren();const title=document.createElement('strong');title.className=complete?'learning-complete':'';title.textContent=complete?'Desafio concluído!':`${done} de ${steps.length} etapas · ${LEARNING_CHALLENGES[activeLearning.type].title}`;progress.appendChild(title);
-            const bar=document.createElement('progress');bar.max=steps.length;bar.value=done;bar.setAttribute('aria-label','Etapas concluídas');progress.appendChild(bar);
-            const next=steps.find(step=>!step.ok);if(next){const note=document.createElement('p');note.className='learning-next';note.textContent=`Próximo ajuste: ${next.detail}`;progress.appendChild(note);}
-            const list=document.createElement('ul');steps.forEach(step=>{const item=document.createElement('li');item.classList.toggle('is-done',step.ok);const text=document.createElement('span');text.textContent=(step.ok?'✓ ':'○ ')+step.label;item.appendChild(text);if(!step.ok&&step.focus&&state.devices[step.focus]){const button=document.createElement('button');button.type='button';button.textContent='Ver';button.setAttribute('aria-label','Ver equipamento: '+step.label);button.onclick=()=>learningFocus(step.focus);item.appendChild(button);}list.appendChild(item);});progress.appendChild(list);
-        }
-        function renderLearningAnalysis(){
-            const result=document.getElementById('learning-analysis-result');result.replaceChildren();const findings=[];
-            const add=(dev,message)=>findings.push({id:dev?.id,message});
-            const devices=Object.values(state.devices).filter(dev=>!FURNITURE_TYPES[dev.type]);
-            if(!devices.length){result.textContent='Adicione equipamentos ao canvas para analisar.';return;}
-            if(state.audioCtx?.state!=='running')add(null,'O mecanismo de áudio está suspenso. Toque em Reproduzir em uma fonte para liberá-lo.');
-            const solos=devices.filter(dev=>isListeningDevice(dev)&&dev.state.solo);
-            devices.forEach(dev=>{
-                const name=DEVICE_NAMES[dev.type];
-                if(dev.el.querySelector('.power-btn')&&!dev.powered)add(dev,`${name}: está desligado.`);
-                if(SOURCE_TYPES.has(dev.type)&&!dev.state.playing)add(dev,`${name}: a reprodução está pausada.`);
-                if((dev.state.volume??1)<=.001||(dev.state.tapeVolume??1)<=.001||(dev.state.eqLevel??1)<=.001||Object.values(dev.state.channelGain||{}).some(value=>value<=.001))add(dev,`${name}: há volume ou ganho zerado.`);
-                if(dev.state.muted)add(dev,`${name}: Mute está ativo.`);
-                if(isListeningDevice(dev)&&solos.length&&!dev.state.solo)add(dev,`${name}: está silenciado pelo Solo de outra saída.`);
-                if(dev.type==='preamp'&&!state.connections.some(c=>{const port=document.getElementById(c.inId);return port?.closest('.device-node')?.id===dev.id&&port.dataset.node.startsWith('in'+dev.state.preSource);}))add(dev,`${name}: a fonte selecionada não tem conexão de entrada.`);
-                const incoming=state.connections.some(c=>document.getElementById(c.inId)?.closest('.device-node')?.id===dev.id);
-                if(isListeningDevice(dev)&&!incoming&&!dev.btPairedId)add(dev,`${name}: falta uma ligação de entrada.`);
-                if(isPassiveLoad(dev)&&dev.powerStatus&&/Proteção|limitada/.test(dev.powerStatus))add(dev,`${name}: ${dev.powerStatus}`);
-                if(dev.meters&&performance.now()<dev.meters.clipUntil)add(dev,`${name}: pico de saturação detectado; reduza o ganho antes deste ponto.`);
-                if(isListeningDevice(dev)&&incoming&&!dev.state.muted&&dev.powered&&dev.meters&&!dev.meters.levels.some(level=>level>.00002))add(dev,`${name}: conectado, mas sem áudio atual. Confira os equipamentos anteriores na cadeia.`);
-            });
-            state.connections.forEach(c=>{const output=document.getElementById(c.outId),input=document.getElementById(c.inId);if(output&&input){const compatibility=getPortCompatibility(output,input);if(!compatibility.compatible)add(state.devices[input.closest('.device-node').id],compatibility.reason);}});
-            if(!devices.some(isListeningDevice))add(null,'Não há uma saída de escuta: adicione caixa ativa, caixa passiva com amplificador ou fones.');
-            if(!findings.length){result.textContent='Nenhum bloqueio evidente encontrado. Compare os níveis atuais, o VU e o espectro para avaliar o resultado sonoro.';return;}
-            const list=document.createElement('ul');findings.forEach(finding=>{const item=document.createElement('li');item.textContent=finding.message;if(finding.id){const button=document.createElement('button');button.type='button';button.textContent='Ver';button.onclick=()=>learningFocus(finding.id);item.appendChild(button);}list.appendChild(item);});result.appendChild(list);
         }
 
         function renderVisuals() {
@@ -6729,7 +6476,6 @@ const Hardware = (() => {
                 });
             }
         }
-        setupLearningMode();
         const PROJECT_FORMAT='audio-system-project',PROJECT_VERSION=1;
         let projectDatabase=null,projectPersistenceBlocked=false,projectRestoring=false,projectSaving=false,projectSaveAgain=false,lastProjectSignature='',knownAudioKeys=new Set();
         const projectTools=document.createElement('section');projectTools.className='project-tools';
@@ -6743,8 +6489,14 @@ const Hardware = (() => {
                 return {id:dev.id,type:dev.type,x:parseFloat(dev.el.style.left)||0,y:parseFloat(dev.el.style.top)||0,settings,powered:dev.powered,selectedSource:dev.selectedSource,grilleOff:dev.el.classList.contains('grille-off'),pairedId:dev.btPairedId||null,mediaKey:dev.audioBuffer?dev.mediaKey||null:null,fileName:dev.fileName||'',trackTitle:dev.trackTitle||'',position:dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?state.audioCtx.currentTime-dev.demoStartedAt:0)};
             });
             const connections=state.connections.map(c=>{const out=document.getElementById(c.outId),input=document.getElementById(c.inId);return {from:out?.closest('.device-node')?.id,out:out?.dataset.node,to:input?.closest('.device-node')?.id,input:input?.dataset.node,label:c.label||'',color:c.color||null,hidden:!!c.hidden,slack:c.slack??5};});
-            const panel=document.getElementById('learning-panel'),catalogScroll=equipmentCatalog.querySelector('.overflow-y-auto');
-            return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{environment:{...(state.environment||{preset:'near',intensity:0})},canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'light',atmosphere:state.atmosphere||'neutral',soundVolume:state.uiSoundVolume??.8,hideCables:!!state.hideCables,selected:[...state.selectedDeviceIds],selectedCable:state.connections.indexOf(state.selectedConnection),search:document.getElementById('equipment-search').value,catalogScroll:catalogScroll?.scrollTop||0,inspectorScroll:inspectorContent.scrollTop,overviewOpen:document.getElementById('system-overview').open,overviewVisible:!document.getElementById('system-overview').hidden,learning:{open:!panel.hidden,left:parseFloat(panel.style.left)||16,top:parseFloat(panel.style.top)||16,category:document.getElementById('learning-category').value,challenge:document.getElementById('learning-challenge').value,hint:document.getElementById('learning-hint').textContent,completed:[...learningCompleted],active:activeLearning?projectJSON(activeLearning):null,answers:[...document.querySelectorAll('#learning-quiz-content fieldset')].map(field=>[...field.querySelectorAll('button')].findIndex(button=>button.classList.contains('is-answer')))}}};
+            const catalogScroll=equipmentCatalog.querySelector('.overflow-y-auto');
+            return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{
+                environment:{...(state.environment||{preset:'near',intensity:0})},
+                canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'sepia',atmosphere:state.atmosphere||'neutral',
+                soundVolume:state.uiSoundVolume??.8,hideCables:!!state.hideCables,
+                selected:[...state.selectedDeviceIds],selectedCable:state.connections.indexOf(state.selectedConnection),
+                search:document.getElementById('equipment-search').value,catalogScroll:catalogScroll?.scrollTop||0,inspectorScroll:inspectorContent.scrollTop
+            }};
         }
         function projectValidate(value){
             if(!value||value.format!==PROJECT_FORMAT||value.version!==PROJECT_VERSION||!Array.isArray(value.devices)||!Array.isArray(value.connections))throw new Error('Arquivo de projeto inválido ou versão incompatível.');
@@ -6761,8 +6513,6 @@ const Hardware = (() => {
             });
             value.connections.forEach(c=>{if(!c||!ids.has(c.from)||!ids.has(c.to)||typeof c.out!=='string'||typeof c.input!=='string')throw new Error('O projeto contém uma conexão inválida.');});
             if(value.ui?.selected!=null&&!Array.isArray(value.ui.selected))throw new Error('Seleção inválida.');
-            const active=value.ui?.learning?.active;
-            if(active&&(!Array.isArray(active.ids)||!Array.isArray(active.edges)||active.edges.some(edge=>!Array.isArray(edge)||edge.length!==4)))throw new Error('Desafio inválido.');
             return value;
         }
         function openProjectDatabase(){
@@ -6778,7 +6528,7 @@ const Hardware = (() => {
         async function saveLocalProject(force=false){
             if(projectRestoring||projectPersistenceBlocked)return;
             if(projectSaving){projectSaveAgain=true;return;}
-            if(!force&&(isPatching||document.querySelector('.equipment-dragging,.learning-dragging')))return;
+            if(!force&&(isPatching||document.querySelector('.equipment-dragging')))return;
             const snapshot=projectCapture(),signature=JSON.stringify(snapshot);
             snapshot.savedAt=Date.now();
             if(!force&&signature===lastProjectSignature)return;
@@ -6846,7 +6596,7 @@ const Hardware = (() => {
             const shield=document.createElement('div');shield.className='project-restore-shield';shield.textContent='Restaurando montagem local…';document.body.appendChild(shield);
             const ids=new Map(),restored=[],warnings=[];
             try{
-                activeLearning=null;cancelCableDrag();Object.values(state.devices).forEach(deleteDevice);
+                stopViewMotion();cancelCableDrag();Object.values(state.devices).forEach(deleteDevice);
                 const maxX=Math.max(2400,...snapshot.devices.map(dev=>dev.x+1100)),maxY=Math.max(1600,...snapshot.devices.map(dev=>dev.y+1100));
                 world.style.minWidth=`${Math.min(22000,Math.max(maxX,Math.min(22000,snapshot.world?.width||0)))}px`;
                 world.style.minHeight=`${Math.min(22000,Math.max(maxY,Math.min(22000,snapshot.world?.height||0)))}px`;
@@ -6867,26 +6617,19 @@ const Hardware = (() => {
                     const from=state.devices[ids.get(saved.from)],to=state.devices[ids.get(saved.to)];
                     const output=from?.el.querySelector(`[data-node="${CSS.escape(saved.out)}"]`),input=to?.el.querySelector(`[data-node="${CSS.escape(saved.input)}"]`);
                     if(!output||!input||isPortOccupied(output)||isPortOccupied(input)||!getPortCompatibility(output,input).compatible){warnings.push('conexão incompatível');links.push(null);return;}
-                    connectLearningPorts(from,saved.out,to,saved.input);const connection=state.connections.at(-1);
+                    connectProjectPorts(from,saved.out,to,saved.input);const connection=state.connections.at(-1);
                     connection.label=typeof saved.label==='string'?saved.label.slice(0,60):'';connection.color=/^#[0-9a-f]{6}$/i.test(saved.color||'')?saved.color:undefined;connection.hidden=!!saved.hidden;connection.slack=Number.isFinite(saved.slack)?Math.max(0,Math.min(10,Math.round(saved.slack))):5;links.push(connection);
                 });
                 restored.forEach(([saved,dev])=>{const other=state.devices[ids.get(saved.pairedId)];if(other&&BT_TX_TYPES.has(dev.type)&&canPair(dev,other))pairDevices(dev,other);});
-                const ui=snapshot.ui||{};setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setAtmosphere(ui.atmosphere??'sunset');setRoomSettings(ui.environment);
+                const ui=snapshot.ui||{};setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setAtmosphere(ui.atmosphere);setRoomSettings(ui.environment);
                 cableVisibilityButton.textContent='Visibilidade dos cabos';cableVisibilityButton.setAttribute('aria-pressed',String(!!ui.hideCables));
                 state.uiSoundVolume=typeof ui.soundVolume==='number'?Math.max(0,Math.min(1,ui.soundVolume)):.8;state.hideCables=!!ui.hideCables;
                 const sound=document.getElementById('ui-sound-volume');sound.value=Math.round(state.uiSoundVolume*100);document.getElementById('ui-sound-value').textContent=state.uiSoundVolume?`${sound.value}%`:'desligados';uiEffectsGain?.gain.setValueAtTime(state.uiSoundVolume,state.audioCtx.currentTime);
                 const search=document.getElementById('equipment-search');search.value=typeof ui.search==='string'?ui.search:'';search.dispatchEvent(new Event('input'));
-                const learning=ui.learning||{};if(Array.isArray(learning.completed)){learningCompleted=new Set(learning.completed.filter(type=>Object.hasOwn(LEARNING_CHALLENGES,type)));try{localStorage.setItem('audio-learning-completed-v2',JSON.stringify([...learningCompleted]));}catch{}}
-                const category=document.getElementById('learning-category');if([...category.options].some(option=>option.value===learning.category))category.value=learning.category;category.dispatchEvent(new Event('change'));
-                const challenge=document.getElementById('learning-challenge');if([...challenge.options].some(option=>option.value===learning.challenge))challenge.value=learning.challenge;challenge.dispatchEvent(new Event('change'));
-                if(learning.active&&Object.hasOwn(LEARNING_CHALLENGES,learning.active.type)&&Array.isArray(learning.active.ids)&&learning.active.ids.every(id=>ids.has(id))){const saved=learning.active;activeLearning={type:saved.type,ids:saved.ids.map(id=>ids.get(id)),roles:Object.fromEntries(Object.entries(saved.roles||{}).map(([role,id])=>[role,ids.get(id)])),edges:(saved.edges||[]).map(([out,node,to,input])=>[ids.get(out),node,ids.get(to),input]),hintIndex:Math.max(0,Number(saved.hintIndex)||0)};}
-                const panel=document.getElementById('learning-panel');panel.hidden=!learning.open;panel.style.left=`${Math.max(8,Math.min(Number(learning.left)||16,canvas.clientWidth-100))}px`;panel.style.top=`${Math.max(8,Math.min(Number(learning.top)||16,canvas.clientHeight-100))}px`;document.getElementById('learning-hint').textContent=typeof learning.hint==='string'?learning.hint:'';document.getElementById('leave-learning').hidden=!activeLearning;
-                if(Array.isArray(learning.answers))document.querySelectorAll('#learning-quiz-content fieldset').forEach((field,index)=>{field.querySelectorAll('button')[learning.answers[index]]?.click();});
                 if(snapshot.view){view.zoom=clampZoom(Number(snapshot.view.zoom)||1);view.x=Number(snapshot.view.x)||0;view.y=Number(snapshot.view.y)||0;}applyView();
                 setDeviceSelection((ui.selected||[]).map(id=>ids.get(id)).filter(Boolean));if(links[ui.selectedCable])selectCable(links[ui.selectedCable]);else selectCable(null);
-                document.getElementById('system-overview').open=ui.overviewOpen===true;setOverviewVisible(ui.overviewVisible!==false);
                 const scroll=equipmentCatalog.querySelector('.overflow-y-auto');if(scroll)scroll.scrollTop=Number(ui.catalogScroll)||0;inspectorContent.scrollTop=Number(ui.inspectorScroll)||0;
-                updateCables();updateCableFlows();updateLearningProgress();
+                updateCables();updateCableFlows();
                 return warnings;
             }finally{shield.remove();state.restoringProject=false;projectRestoring=false;}
         }
@@ -6932,40 +6675,11 @@ const Hardware = (() => {
             }catch(error){projectPersistenceBlocked=true;projectStatus('Falha ao restaurar o projeto local. Você pode abrir uma cópia exportada.',true);}
             finally{initialShield.remove();projectRestoring=false;state.restoringProject=false;}
         }
-        const overviewPanel=document.getElementById('system-overview');
-        const overviewBody=overviewPanel.querySelector('.overview-content');
-        function setOverviewVisible(visible){
-            overviewPanel.hidden=!visible;
-            const toggle=document.getElementById('show-system-overview');if(toggle)toggle.checked=visible;
-        }
-        let overviewAnimation=null,overviewClosing=false;
-        overviewPanel.querySelector('summary').addEventListener('click',event=>{
-            if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-            event.preventDefault();
-            const closing=overviewPanel.open&&!overviewClosing;
-            const fromHeight=overviewPanel.open?overviewBody.getBoundingClientRect().height:0;
-            const fromOpacity=overviewPanel.open?Number(getComputedStyle(overviewBody).opacity):0;
-            overviewAnimation?.cancel();overviewClosing=closing;
-            overviewPanel.open=true;
-            const fullHeight=overviewBody.getBoundingClientRect().height;
-            overviewBody.style.overflow='hidden';overviewBody.style.boxSizing='border-box';
-            overviewAnimation=overviewBody.animate([
-                {height:fromHeight+'px',opacity:fromOpacity},
-                {height:(closing?0:fullHeight)+'px',opacity:closing?0:1}
-            ],{duration:220,easing:'cubic-bezier(.2,.7,.3,1)',fill:'forwards'});
-            overviewAnimation.onfinish=()=>{
-                overviewPanel.open=!closing;overviewAnimation.cancel();overviewAnimation=null;overviewClosing=false;
-                overviewBody.style.overflow='';overviewBody.style.boxSizing='';scheduleProjectSave();
-            };
-        });
         const settingsMenu=document.createElement('details');settingsMenu.className='app-settings';
         settingsMenu.innerHTML='<summary aria-label="Abrir configurações"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 3-1 3-3 1v4l2 1v2l-2 1 2 4 3-1 2 2 3-2 3 1 2-4-2-2v-2l2-2-2-4-3 1-2-2z"/><circle cx="12" cy="12" r="3"/></svg><span>Configurações</span></summary>';
         clearCatalogFooter.className='app-settings-content';
         const themeSection=document.createElement('section');themeSection.className='settings-theme-section';themeSection.appendChild(canvasThemeControl);themeSection.appendChild(canvasGridControl);themeSection.appendChild(atmosphereControl);setCanvasGrid('dots');
         clearCatalogFooter.insertBefore(themeSection,soundControls);
-        const overviewSetting=document.createElement('label');overviewSetting.className='overview-visibility-setting';
-        overviewSetting.innerHTML='<input id="show-system-overview" type="checkbox" aria-controls="system-overview" checked><span>Exibir Visão do Sistema</span>';themeSection.appendChild(overviewSetting);
-        overviewSetting.querySelector('input').addEventListener('change',event=>{setOverviewVisible(event.target.checked);scheduleProjectSave();});
         const contemplateButton=document.createElement('button');contemplateButton.type='button';contemplateButton.id='contemplate-mode';contemplateButton.textContent='Modo contemplação';themeSection.appendChild(contemplateButton);
         function setContemplation(active){
             document.body.classList.toggle('contemplation',active);settingsMenu.open=false;
@@ -6990,7 +6704,6 @@ const Hardware = (() => {
         document.getElementById('app-topbar').lastElementChild.appendChild(settingsMenu);
         document.addEventListener('pointerdown',event=>{if(settingsMenu.open&&!settingsMenu.contains(event.target)&&!event.target.closest('.app-select-popup'))settingsMenu.open=false;});
         document.addEventListener('keydown',event=>{if(event.key==='Escape'&&settingsMenu.open){settingsMenu.open=false;settingsMenu.querySelector('summary').focus();}});
-        document.getElementById('open-learning').addEventListener('click',()=>settingsMenu.open=false);
         function setupAppDropdowns(){
             const widgets=new WeakMap();let active=null,sequence=0,typeBuffer='',typeTime=0;
             const valueDescriptor=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value'),indexDescriptor=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'selectedIndex'),disabledDescriptor=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'disabled');
@@ -7083,5 +6796,4 @@ const Hardware = (() => {
 
         initializeProjectPersistence();
 
-        updateSystemOverview();
         renderVisuals();

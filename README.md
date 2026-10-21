@@ -53,13 +53,13 @@ Observe os avisos apresentados ao conectar equipamentos. O simulador pode alerta
 ## Operando os aparelhos
 
 - **Selecione um equipamento** para abrir seus ajustes no painel lateral.
-- **Arraste os knobs e faders** para ajustar volume, ganho, tonalidade e outros parâmetros. Os controles compatíveis também respondem ao teclado quando estão em foco.
+- **Arraste os knobs e faders** para ajustar volume, ganho, tonalidade e outros parâmetros. Os knobs de ajuste mantêm dez passos fixos, com rotação suave entre eles e valor numérico durante a interação. Seletores e sintonia preservam seus passos específicos. Os controles compatíveis também respondem ao teclado quando estão em foco.
 - **Escolha a entrada correta** em receivers, integrados e seletores. Nos modelos com botões iluminados, a luz identifica a opção selecionada.
 - **Experimente os equalizadores** para modificar graves, médios e agudos. Cada fader atua na frequência indicada abaixo dele.
 - **Use mixers e seletores** para combinar fontes ou comparar caminhos de áudio.
 - **Observe os medidores dos aparelhos** e os indicadores para acompanhar a atividade do sinal.
 
-Alguns ajustes aparecem apenas no painel lateral. Na **Potência · Visor Circular**, por exemplo, os ganhos A/B são ajustados por esse painel.
+O botão **Restaurar Configurações** aparece apenas nos modelos com ajustes restauráveis. Alguns ajustes aparecem apenas no painel lateral. Na **Potência · Visor Circular**, por exemplo, os ganhos A/B são ajustados por esse painel.
 
 Os dois modelos de toca-discos são vistos de frente, com o prato e o disco em perfil e o braço visível acima deles. O slider **PITCH**, no painel frontal, ajusta a velocidade de reprodução; arraste para alterar e dê duplo clique para zerar. Use o botão **Abrir tampa / Fechar tampa** para movimentar a tampa de acrílico, que abre para trás a partir das dobradiças traseiras.
 
@@ -71,23 +71,19 @@ Os aparelhos Bluetooth representam conexões dentro da simulação; não substit
 
 No catálogo, a **Caixa Passiva Moderna** e a **Caixa Passiva Vintage** ficam em **Caixas Passivas · Bookshelf**, junto aos demais modelos dessa categoria.
 
-Mova os equipamentos pela área de trabalho e use os botões de **zoom**, **Centralizar** e **Ajustar para exibir tudo** para navegar por sistemas maiores.
+Arraste os equipamentos pela área de trabalho: eles acompanham o cursor com uma sombra discreta. O zoom pela roda do mouse preserva o ponto sob o cursor. Use **Centralizar** e **Ajustar para exibir tudo** para navegar com transições suaves; um novo gesto interrompe o movimento.
 
 Para selecionar vários aparelhos, use **Shift + clique** ou **Shift + arraste**. **Ctrl/Cmd + A** seleciona todos os equipamentos quando o foco está na área de montagem.
 
-A **Visão do Sistema** reúne os aparelhos, suas conexões e o percurso do sinal. Clique no título para expandir ou recolher o painel. Em **Configurações**, a opção **Exibir Visão do Sistema** permite ocultá-lo.
-
-Na categoria **Móveis**, adicione racks, nichos ou a **Mesa de Áudio** e aproxime a base de um aparelho de uma prateleira ou tampo para apoiá-lo. Os equipamentos compatíveis exibem pezinhos apenas quando há um pequeno espaço até a base de apoio. Ao encostar na base, os pezinhos desaparecem; ficam sempre atrás do aparelho, sem animação de descida.
+Na categoria **Móveis**, adicione racks, nichos ou a **Mesa de Áudio** e aproxime a base de um aparelho de uma prateleira ou tampo para apoiá-lo. Os equipamentos compatíveis exibem pezinhos automáticos apenas quando há um pequeno espaço até a base de apoio. Ao encostar na base, os pezinhos automáticos desaparecem; ficam sempre atrás do aparelho, sem animação de descida. Nos toca-discos, o apoio automático se liga diretamente ao gabinete, sem deixar um vão acima dos pés.
 
 Selecione a **Mesa de Áudio** e, no painel lateral, abra **Ambiente da bancada**. Escolha a superfície **Madeira**, **Feltro** ou **Estúdio**, ative ou oculte o **Fundo discreto** e combine os objetos opcionais: **Discos**, **Capas**, **CDs** e **Luminária**. Os acessórios incluem um LP com capa em proporção correspondente, CD em estojo transparente e luminária articulada. Essas escolhas acompanham o projeto salvo e exportado.
 
-## Aprender e experimentar
-
-Abra **Configurações → Modo de aprendizado** para acessar atividades guiadas sobre montagem, conexões e áudio.
+## Experimentar a montagem
 
 Para explorar um componente de cada vez, comece com uma fonte, um amplificador e um par de caixas. Depois acrescente um equalizador, compare seletores ou experimente um subwoofer. O gerador de sinais e os medidores ajudam a investigar o comportamento da montagem.
 
-Em **Configurações**, você também pode alterar o tema e a grade da área de trabalho, ajustar os sons da interface e experimentar o **Ambiente sonoro**. Com intensidade zero, a escuta permanece sem a reverberação desse ambiente. O **Modo contemplação** permite observar a montagem com menos elementos na tela; pressione **Esc** para sair.
+Novas montagens começam com **Luz neutra**, fundo **Sépia** e grade de **Pontos**. A opção **Luz quente**, em **Configurações → Iluminação**, oferece uma iluminação suave e estável. Em **Configurações**, você pode alterar a iluminação, o fundo e a grade da área de trabalho, ajustar os sons da interface e experimentar o **Ambiente sonoro**. Com intensidade zero, a escuta permanece sem a reverberação desse ambiente. O **Modo contemplação** permite observar a montagem com menos elementos na tela; pressione **Esc** para sair.
 
 ## Salvar, continuar e compartilhar
 
@@ -107,7 +103,7 @@ O salvamento local pertence ao navegador e ao endereço em que você abriu a apl
 3. Verifique se os equipamentos estão ligados, com volume ou ganho acima de zero e sem mute ativo.
 4. Confirme a entrada selecionada no amplificador, receiver ou seletor.
 5. Siga o caminho dos cabos: fonte → processamento ou amplificação → caixas ou fones.
-6. Confira os avisos de conexão, os indicadores de sinal e a Visão do Sistema.
+6. Confira os avisos de conexão, os medidores dos aparelhos e os indicadores de sinal.
 7. Se um arquivo não reproduzir, tente outro formato aceito pelo navegador, como MP3 ou WAV.
 
 ## Sobre a simulação

@@ -223,7 +223,7 @@
             </div>
         </div>
 
-        <div class="flex-1 relative" id="canvas">
+        <div class="flex-1 relative" id="canvas" data-theme="sepia" data-atmosphere="neutral" data-grid="dots">
             <div id="audio-world"><svg id="cables-layer"></svg></div>
             <div id="selection-marquee" aria-hidden="true"></div>
 
@@ -241,23 +241,7 @@
                 <span class="sr-only">Use Shift+clique ou Shift+arraste para selecionar vários equipamentos. Ctrl ou Command mais A seleciona todos. Escape limpa a seleção.</span>
             </div>
 
-            <details id="system-overview" class="system-overview">
-                <summary>
-                    <span class="overview-heading"><svg class="overview-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 4 6 6-6 6"/></svg>Visão do sistema</span>
-                    <span class="overview-summary-count" id="overview-summary-count">0 equipamentos</span>
-                </summary>
-                <div class="overview-content">
-                    <div class="overview-metrics" aria-live="polite">
-                        <div class="overview-metric"><strong id="overview-powered-count">0/0</strong><span>ligados</span></div>
-                        <div class="overview-metric"><strong id="overview-signal-count">0</strong><span>com sinal</span></div>
-                        <div class="overview-metric"><strong id="overview-connection-count">0</strong><span>conexões</span></div>
-                    </div>
-                    <div class="overview-section-title"><span>Equipamentos</span><span id="overview-play-state">som parado</span></div>
-                    <div id="overview-device-list" class="overview-list" aria-label="Estado dos equipamentos"></div>
-                    <div class="overview-section-title"><span>Percurso do sinal</span><span id="overview-flow-state">sem ligações</span></div>
-                    <div id="overview-connection-list" class="overview-list" aria-label="Percurso entre equipamentos"></div>
-                </div>
-            </details>
+
 
             
             
