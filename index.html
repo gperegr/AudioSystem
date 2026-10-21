@@ -277,36 +277,43 @@
         <div class="device-header"><span>Toca-discos</span></div>
         <div class="at-plinth">
             <div class="at-deck">
-                <div class="at-top-surface">
+                <div class="at-front-mechanism">
                     <div class="at-platter"><div class="at-record" data-tt="record"><div class="at-label"></div><div class="at-spindle"></div></div></div>
-                    <div class="at-sheen"></div>
-                    <div class="at-pitch" role="slider" tabindex="0" data-tt="pitch" aria-label="Ajuste de pitch" aria-valuemin="-8" aria-valuemax="8" aria-valuenow="0" title="Pitch · arraste (duplo clique para zerar)"><span class="at-pitch-track"></span><span class="at-pitch-mid"></span><span class="at-pitch-cap"></span><b>PITCH</b></div>
-                    <svg class="at-arm-svg" viewBox="0 0 558 469" aria-hidden="true">
-                        <rect x="423" y="43" width="30" height="79" rx="7" fill="#27353b" stroke="#82949c" stroke-width="2"/>
-                        <circle cx="438" cy="90" r="27" fill="#37464b" stroke="#85979d" stroke-width="3"/>
-                        <circle cx="438" cy="90" r="18" fill="#1b262b" stroke="#576d76" stroke-width="2"/>
-                        <path d="M474 173v58" stroke="#26343a" stroke-width="9" stroke-linecap="round"/>
-                        <path d="M469 205h10" stroke="#a7b7ba" stroke-width="3"/>
+                    <svg class="at-arm-svg" viewBox="0 0 558 120" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="tt-arm-steel" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#d3dcde"/><stop offset=".38" stop-color="#8d9ea5"/><stop offset=".55" stop-color="#485e68"/><stop offset="1" stop-color="#9daeb2"/></linearGradient>
+                        </defs>
+                        <path d="M434 94h36v12h-36Z" fill="#172127" stroke="#677d85"/>
+                        <rect x="444" y="41" width="16" height="54" rx="2" fill="url(#tt-arm-steel)" stroke="#435962"/>
+                        <path d="M446 48v41" stroke="#d2dfe0" stroke-opacity=".55"/>
+                        <rect x="431" y="31" width="42" height="18" rx="4" fill="#23343c" stroke="#778e98"/>
                         <g class="at-arm">
-                            <path d="M438 60V244Q438 259 427 271L326 334" fill="none" stroke="#0a1115" stroke-width="10" stroke-linecap="round"/>
-                            <path d="M438 60V244Q438 259 427 271L326 334" fill="none" stroke="#acbbc0" stroke-width="6" stroke-linecap="round"/>
-                            <path d="M436 65V242Q436 256 425 268L324 331" fill="none" stroke="#e2e9e8" stroke-width="1.4"/>
-                            <rect x="426" y="42" width="24" height="25" rx="3" fill="#6e8087" stroke="#bcc8c8" stroke-width="2"/>
-                            <path d="M430 48h16m-16 5h16m-16 5h16" stroke="#364b55"/>
-                            <g transform="translate(325 335) rotate(-40)">
-                                <rect x="-24" y="-7" width="32" height="16" rx="3" fill="#25383f" stroke="#92a8ae" stroke-width="1.5"/>
-                                <rect x="-25" y="-3" width="7" height="9" rx="1" fill="#a58e66"/>
-                                <path d="M-29 1h5" stroke="#e0cf9f" stroke-width="1.5"/>
-                            </g>
+                            <path d="M452 38H238Q230 38 224 42L166 60" fill="none" stroke="#0b151b" stroke-width="8" stroke-linecap="round"/>
+                            <path d="M452 37H238Q230 37 224 41L166 59" fill="none" stroke="#91a5af" stroke-width="5" stroke-linecap="round"/>
+                            <path d="M448 35H238Q230 35 223 39L166 57" fill="none" stroke="#e2ebec" stroke-width="1.2" stroke-linecap="round"/>
+                            <rect x="455" y="29" width="23" height="17" rx="3" fill="url(#tt-arm-steel)" stroke="#536b76"/>
+                            <path d="M461 32v11m5-11v11m5-11v11" stroke="#3c535f" stroke-width="1"/>
+                            <path d="M144 59h26v9l-26 2Z" fill="#20313a" stroke="#8ca4b0" stroke-width="1.2"/>
+                            <path d="M148 61h17" stroke="#bdcccf" stroke-width="1.2"/>
+                            <path d="M149 70h10v4h-10Z" fill="#b19a70" stroke="#4e5149"/>
+                            <path d="m153 74-2 4" stroke="#ecdbb2" stroke-width="1.3"/>
                         </g>
-                        <circle cx="438" cy="90" r="8" fill="#b1bfc0" stroke="#465e68" stroke-width="2"/>
-                        <circle cx="438" cy="90" r="2.5" fill="#354950"/>
+                        <circle cx="452" cy="38" r="6" fill="#a7babf" stroke="#4b6370"/>
+                        <circle cx="452" cy="38" r="2" fill="#354f5e"/>
                     </svg>
+                </div>
+                <div class="at-lid-scene" aria-hidden="true">
+                    <span class="at-lid-hinge at-lid-hinge-left"></span><span class="at-lid-hinge at-lid-hinge-right"></span>
+                    <div class="at-dust-cover">
+                        <span class="at-cover-roof"></span><span class="at-cover-front"></span><span class="at-cover-back"></span>
+                        <span class="at-cover-side at-cover-side-left"></span><span class="at-cover-side at-cover-side-right"></span>
+                    </div>
                 </div>
             </div>
             <div class="at-controls">
                 <div class="at-ctl"><button class="at-startstop" data-tt="startstop" aria-pressed="true" aria-label="Iniciar ou parar o prato" title="Iniciar / parar o prato"><i class="at-led"></i></button><span>START/STOP</span></div>
                 <div class="at-ctl"><button class="at-sw" data-tt="output" role="switch" aria-checked="false" aria-label="Saída: LINE ou PHONO" title="Saída LINE (pré interno) / PHONO"><span data-m="line" class="is-on">LINE</span><i class="tt-output-switch-rail" aria-hidden="true"><i class="tt-output-switch-thumb"></i></i><span data-m="phono">PHONO</span></button><span>SAÍDA</span></div>
+                <div class="at-pitch" role="slider" tabindex="0" data-tt="pitch" aria-label="Ajuste de pitch" aria-valuemin="-8" aria-valuemax="8" aria-valuenow="0" title="Pitch · arraste (duplo clique para zerar)"><span class="at-pitch-track"></span><span class="at-pitch-mid"></span><span class="at-pitch-cap"></span><b>PITCH</b></div>
                 <div class="at-ctl"><div class="at-power-slot" data-power-slot title="Interruptor do toca-discos"><button class="power-btn" title="Ligar / Desligar"></button></div></div>
             </div>
             <div class="at-io">

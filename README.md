@@ -57,17 +57,19 @@ Observe os avisos apresentados ao conectar equipamentos. O simulador pode alerta
 - **Escolha a entrada correta** em receivers, integrados e seletores. Nos modelos com botões iluminados, a luz identifica a opção selecionada.
 - **Experimente os equalizadores** para modificar graves, médios e agudos. Cada fader atua na frequência indicada abaixo dele.
 - **Use mixers e seletores** para combinar fontes ou comparar caminhos de áudio.
-- **Observe os medidores** e os indicadores para acompanhar a atividade do sinal.
+- **Observe os medidores dos aparelhos** e os indicadores para acompanhar a atividade do sinal.
 
 Alguns ajustes aparecem apenas no painel lateral. Na **Potência · Visor Circular**, por exemplo, os ganhos A/B são ajustados por esse painel.
 
-Nos dois modelos de toca-discos, o topo aparece em perspectiva para permitir observar o prato e o braço, enquanto o painel frontal permanece reto. Use o botão **Abrir tampa / Fechar tampa** para movimentar a tampa de acrílico.
+Os dois modelos de toca-discos são vistos de frente, com o prato e o disco em perfil e o braço visível acima deles. O slider **PITCH**, no painel frontal, ajusta a velocidade de reprodução; arraste para alterar e dê duplo clique para zerar. Use o botão **Abrir tampa / Fechar tampa** para movimentar a tampa de acrílico, que abre para trás a partir das dobradiças traseiras.
 
 Os ponteiros dos medidores respondem com inércia e retorno suave. Os rolos do tape deck giram durante a reprodução, e o prato do toca-discos desacelera gradualmente ao parar. Os movimentos respeitam a preferência de movimento reduzido do sistema ou navegador.
 
 Os aparelhos Bluetooth representam conexões dentro da simulação; não substituem o pareamento Bluetooth do seu computador ou celular.
 
 ## Organizando a montagem
+
+No catálogo, a **Caixa Passiva Moderna** e a **Caixa Passiva Vintage** ficam em **Caixas Passivas · Bookshelf**, junto aos demais modelos dessa categoria.
 
 Mova os equipamentos pela área de trabalho e use os botões de **zoom**, **Centralizar** e **Ajustar para exibir tudo** para navegar por sistemas maiores.
 
