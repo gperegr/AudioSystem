@@ -61,6 +61,8 @@ Observe os avisos apresentados ao conectar equipamentos. O simulador pode alerta
 
 Alguns ajustes aparecem apenas no painel lateral. Na **Potência · Visor Circular**, por exemplo, os ganhos A/B são ajustados por esse painel.
 
+Os ponteiros dos medidores respondem com inércia e retorno suave. Os rolos do tape deck giram durante a reprodução, e o prato do toca-discos desacelera gradualmente ao parar. Os movimentos respeitam a preferência de movimento reduzido do sistema ou navegador.
+
 Os aparelhos Bluetooth representam conexões dentro da simulação; não substituem o pareamento Bluetooth do seu computador ou celular.
 
 ## Organizando a montagem
@@ -70,6 +72,10 @@ Mova os equipamentos pela área de trabalho e use os botões de **zoom**, **Cent
 Para selecionar vários aparelhos, use **Shift + clique** ou **Shift + arraste**. **Ctrl/Cmd + A** seleciona todos os equipamentos quando o foco está na área de montagem.
 
 A **Visão do Sistema** reúne os aparelhos, suas conexões e o percurso do sinal. Clique no título para expandir ou recolher o painel. Em **Configurações**, a opção **Exibir Visão do Sistema** permite ocultá-lo.
+
+Na categoria **Móveis**, adicione racks, nichos ou a **Mesa de Áudio** e aproxime a base de um aparelho de uma prateleira ou tampo para apoiá-lo. Os equipamentos compatíveis acionam os pezinhos automaticamente ao receber apoio, sem animação de descida.
+
+Selecione a **Mesa de Áudio** e, no painel lateral, abra **Ambiente da bancada**. Escolha a superfície **Madeira**, **Feltro** ou **Estúdio**, ative ou oculte o **Fundo discreto** e combine os objetos opcionais: **Discos**, **Capas**, **CDs** e **Luminária**. Essas escolhas acompanham o projeto salvo e exportado.
 
 ## Aprender e experimentar
 
