@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Audio System Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body class="flex flex-col h-screen bg-black text-white">
+
+    <div id="app-topbar" class="h-14 bg-[#1e2329] border-b border-gray-800 flex items-center justify-between px-4 shrink-0 z-40 relative shadow-md">
+        <div class="flex items-center gap-6">
+            <div class="app-brand flex items-center gap-2 font-bold text-lg">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-blue-500"><path d="M2 12h4l3-9 5 18 3-9h5"/></svg>
+                Audio System
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+
+        </div>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden">
+        
+        <div id="equipment-catalog" class="w-64 md:w-72 bg-[#181d23] border-r border-gray-800 flex flex-col shrink-0 z-30 shadow-xl">
+            <div class="p-4 border-b border-gray-800">
+                <div class="bg-[#22282e] border border-gray-700 rounded flex items-center px-3 py-2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-500"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input id="equipment-search" type="search" aria-label="Buscar equipamentos" placeholder="Buscar equipamentos..." class="bg-transparent border-none outline-none text-sm ml-2 w-full text-gray-300">
+                </div>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-4 pt-2">
+                <div class="mb-6">
+                    <h3 class="text-[10px] font-bold text-gray-500 mb-3 tracking-wider uppercase">Fontes & Conexões</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="turntable">
+                            <div class="w-12 h-10 rounded border border-gray-600 bg-gray-800 relative"><div class="absolute left-1 top-1 w-8 h-8 rounded-full border border-gray-400 bg-black"><div class="absolute inset-[11px] rounded-full bg-blue-500"></div></div><div class="absolute right-2 top-1 w-px h-5 bg-gray-300 origin-top rotate-[25deg]"></div></div>
+                            <span class="text-xs text-center text-gray-300">Toca-discos</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="turntableVintage">
+                            <div></div><span class="text-xs text-center text-gray-300">Toca-discos Vintage</span>
+                        </div>
+<div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="tapeDeck"><div></div><span class="text-xs text-center text-gray-300">Tape Deck de Rolo</span></div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="streamer">
+                            <div class="w-10 h-6 rounded border border-gray-600 bg-gray-800 flex items-center justify-center"><div class="w-4 h-2 bg-blue-500/20 rounded-sm"></div></div>
+                            <span class="text-xs text-center text-gray-300">Streamer</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="cdPlayer">
+                            <div class="w-11 h-7 rounded border border-gray-500 bg-gradient-to-b from-gray-500 to-gray-800 flex items-center justify-center"><div class="w-6 h-2 rounded-sm border border-blue-300/50 bg-blue-900/70"></div></div>
+                            <span class="text-xs text-center text-gray-300">CD Player</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="btReceiverA">
+                            <div class="w-10 h-8 rounded-lg bg-sky-950 border border-sky-600 flex flex-col items-center justify-center text-sky-400 font-bold"><span class="text-[10px]">BT RX</span><span class="text-[6px] text-sky-300/70">RCA</span></div>
+                            <span class="text-xs text-center text-gray-300">Receptor BT Slim<br><small class="text-[9px] text-gray-500">Bluetooth → RCA</small></span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="btTransmitterPro">
+                            <div class="w-10 h-8 rounded border border-violet-400 bg-neutral-900 flex flex-col items-center justify-center text-violet-300 font-bold"><span class="text-[10px]">BT TX</span><span class="text-[6px] text-violet-200/70">LDAC</span></div>
+                            <span class="text-xs text-center text-gray-300">Transmissor BT Pro<br><small class="text-[9px] text-gray-500">RCA → fones</small></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-[10px] font-bold text-gray-500 mb-3 tracking-wider uppercase">Processamento & Rack</h3>
+                    <div class="grid grid-cols-2 gap-3">
+<div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="preamp"><div></div><span class="text-xs text-center text-gray-300">Pré · Slim</span></div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="eqStudio">
+                            <div class="w-12 h-6 rounded border border-blue-500/50 bg-[#161a1f] flex items-center justify-center gap-1 px-1">
+                                <div class="w-0.5 h-4 bg-blue-400"></div><div class="w-0.5 h-3 bg-blue-400"></div><div class="w-0.5 h-4 bg-blue-400"></div>
+                            </div>
+                            <span class="text-xs text-center text-gray-300">Equalizador Studio</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="eqVintage">
+                            <div class="w-12 h-7 rounded border border-[#694326] bg-gradient-to-b from-[#a36a3d] to-[#593319] p-1">
+                                <div class="h-full rounded-sm border border-[#9e9277] bg-[#e6ddc6] flex items-center justify-center gap-1">
+                                    <div class="w-0.5 h-4 bg-gray-800"></div><div class="w-0.5 h-3 bg-gray-800"></div><div class="w-0.5 h-4 bg-gray-800"></div>
+                                </div>
+                            </div>
+                            <span class="text-xs text-center text-gray-300">Equalizador Vintage</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="receiver">
+                            <div class="w-12 h-7 rounded border border-[#694326] bg-gradient-to-b from-[#a36a3d] to-[#593319] p-1">
+                                <div class="h-full rounded-sm bg-[#d9d0bd] flex items-center gap-1 px-1"><div class="w-1.5 h-1.5 rounded-full bg-gray-600"></div><div class="flex-1 h-2 rounded-sm border border-green-950 bg-[#102018]"></div><div class="w-1.5 h-1.5 rounded-full bg-gray-600"></div></div>
+                            </div>
+                            <span class="text-xs text-center text-gray-300">Receiver Vintage</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="powerAmp">
+                            <div class="w-12 h-7 rounded border border-sky-700/70 bg-gradient-to-b from-slate-600 to-slate-950 flex items-center justify-center gap-1"><div class="w-1 h-4 rounded bg-blue-400/80"></div><div class="w-1 h-4 rounded bg-blue-400/50"></div><div class="w-1 h-4 rounded bg-blue-400/80"></div></div>
+                            <span class="text-xs text-center text-gray-300">Receiver Moderno</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="powerStereo">
+                            <div class="w-12 h-7 rounded bg-gray-900 border border-gray-500 flex items-center justify-around"><i>◯</i><span class="text-green-400">▥</span><i>◯</i></div>
+                            <span class="text-xs text-center text-gray-300">Potência Tradicional</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="powerVintage">
+                            <div class="w-12 h-7 rounded bg-stone-300 border-4 border-amber-900 flex items-center justify-around text-gray-800">◯ ▥ ◯</div>
+                            <span class="text-xs text-center text-gray-300">Potência Vintage</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="headphoneAmpModern"><div class="w-12 h-7 rounded bg-gray-900 border border-gray-500 flex items-center justify-center">◯</div><span class="text-xs text-center text-gray-300">Amp Fone Normal</span></div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="headphoneAmp">
+                            <div class="w-10 h-5 rounded border border-gray-600 bg-gray-800 flex items-center gap-1 px-1"><div class="w-2 h-2 rounded-full bg-red-500/50"></div><div class="w-2 h-2 rounded-full bg-gray-600"></div></div>
+                            <span class="text-xs text-center text-gray-300">Amp Fone Vintage</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="headphoneAmp4">
+                            <div class="w-12 h-7 rounded border border-gray-600 bg-gray-900 flex items-center justify-around"><i class="w-1.5 h-1.5 rounded-full bg-red-500"></i><i class="w-1.5 h-1.5 rounded-full bg-gray-500"></i><i class="w-1.5 h-1.5 rounded-full bg-gray-500"></i><i class="w-1.5 h-1.5 rounded-full bg-gray-500"></i></div>
+                            <span class="text-xs text-center text-gray-300">Amp Fone 4 Canais</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="rcaMatrix">
+                            <div class="w-12 h-7 bg-gray-900 border border-gray-500 rounded flex items-center justify-center text-sky-400">3 × 4</div><span class="text-xs text-center text-gray-300">Seletor RCA 3×4</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="rcaMatrixVintage">
+                            <div class="w-12 h-7 bg-stone-300 border-x-4 border-amber-900 rounded flex items-center justify-center text-gray-800">3 × 4</div><span class="text-xs text-center text-gray-300">Seletor RCA 3×4 Vintage</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="rcaSwitchVintage">
+                            <div class="w-12 h-7 border-x-4 border-amber-900 bg-stone-300 flex items-center justify-evenly rounded-sm"><i class="w-2 h-2 rounded-full bg-amber-500"></i><i class="w-2 h-2 rounded-full bg-gray-500"></i></div>
+                            <span class="text-xs text-center text-gray-300">Seletor RCA Vintage</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="rcaSwitch">
+                            <div class="w-12 h-7 rounded border border-gray-500 bg-gray-900 flex items-center justify-around"><span class="text-[7px] text-gray-300">A/B</span><i class="w-2 h-2 rounded-full bg-emerald-500"></i></div>
+                            <span class="text-xs text-center text-gray-300">Seletor RCA</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-6"><h3 class="text-[10px] font-bold text-gray-500 mb-3 tracking-wider uppercase">Medição & Análise</h3><div class="grid grid-cols-2 gap-3"><div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="signalGenerator"><div><svg width="52" height="36" viewBox="0 0 52 36" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="5" width="48" height="26" rx="3"/><path d="M7 18c5-15 9 15 14 0s9 15 14 0"/><circle cx="43" cy="18" r="3"/></svg></div><span class="text-xs text-center text-gray-300">Gerador de Sinais</span></div><div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="signalGeneratorVintage"><div></div><span class="text-xs text-center text-gray-300">Gerador de Sinais Vintage</span></div><div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="hardwareDemo"><div><svg width="52" height="36" viewBox="0 0 52 36" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="4" width="48" height="28" rx="3"/><circle cx="14" cy="16" r="5"/><circle cx="29" cy="16" r="5"/><path d="M40 10v15M37 19h6M9 27h24"/></svg></div><span class="text-xs text-center text-gray-300">Modelo · Controles</span></div><div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="benchMeter"><div></div><span class="text-xs text-center text-gray-300">Medidor de Bancada</span></div><div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="benchMeterVintage"><div></div><span class="text-xs text-center text-gray-300">Medidor de Bancada Vintage</span></div></div></div>
+                <div class="mb-6">
+                    <h3 class="text-[10px] font-bold text-gray-500 mb-3 tracking-wider uppercase">Mixagem & Distribuição</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="mixer">
+                            <div class="w-12 h-7 rounded border border-sky-700 bg-slate-900 flex items-end justify-around px-1 pb-1"><i class="w-1 h-4 bg-sky-400"></i><i class="w-1 h-3 bg-sky-400/70"></i><i class="w-1 h-5 bg-sky-400"></i></div>
+                            <span class="text-xs text-center text-gray-300">Mixer 3 canais</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="mixerVintage">
+                            <div class="w-12 h-7 rounded border border-amber-800 bg-amber-950 p-1"><div class="h-full bg-[#dfd2b4] flex items-end justify-around"><i class="w-1 h-4 bg-amber-900"></i><i class="w-1 h-3 bg-amber-900"></i><i class="w-1 h-5 bg-amber-900"></i></div></div>
+                            <span class="text-xs text-center text-gray-300">Mixer Vintage</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="speakerSwitch">
+                            <div class="w-12 h-7 rounded border border-gray-600 bg-gray-900 flex items-center justify-around"><span class="text-[7px] text-gray-200">A</span><span class="text-[7px] text-gray-500">B</span></div>
+                            <span class="text-xs text-center text-gray-300">Seletor de Caixas A/B</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="speakerSwitchVintage">
+                            <div class="w-12 h-7 rounded border border-amber-800 bg-amber-950 flex items-center justify-around"><span class="text-[7px] text-amber-200">A</span><span class="text-[7px] text-amber-700">B</span></div>
+                            <span class="text-xs text-center text-gray-300">Seletor A/B Vintage</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="crossover">
+                            <div class="w-12 h-7 rounded border border-cyan-800 bg-slate-900 flex items-center justify-around"><i class="w-2 h-1 bg-rose-400"></i><i class="w-2 h-1 bg-amber-300"></i><i class="w-2 h-1 bg-sky-400"></i></div>
+                            <span class="text-xs text-center text-gray-300">Crossover 3 vias</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="crossoverVintage">
+                            <div class="w-12 h-7 rounded border border-amber-800 bg-amber-950 p-1"><div class="h-full bg-[#e4d7b9] flex items-center justify-around"><i class="w-2 h-1 bg-rose-800"></i><i class="w-2 h-1 bg-amber-700"></i><i class="w-2 h-1 bg-sky-800"></i></div></div>
+                            <span class="text-xs text-center text-gray-300">Crossover Vintage</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-[10px] font-bold text-gray-500 mb-3 tracking-wider uppercase">Caixas & Subwoofers</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="spkPassiveWood">
+                            <div class="w-9 h-14 rounded-sm border-2 border-[#4a2f17] bg-[#6d4a2a] flex flex-col items-center justify-center gap-1"><div class="w-3 h-3 rounded-full bg-black border border-black"></div><div class="w-6 h-6 rounded-full bg-[#a8a59d] border-2 border-black"></div></div>
+                            <span class="text-xs text-center text-gray-300">Caixa Passiva Vintage</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="spkPassiveCarbon">
+                            <div class="w-9 h-14 rounded border border-gray-600 bg-[#1f2125] flex flex-col items-center justify-center gap-1"><div class="w-3 h-3 rounded-full bg-black border border-gray-700"></div><div class="w-6 h-6 rounded-full bg-[#a9b5a8] border-2 border-black"></div></div>
+                            <span class="text-xs text-center text-gray-300">Caixa Passiva Moderna</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="spkPassiveGridBlack">
+                            <div class="w-11 h-14 border-2 border-black bg-[#25282a] p-1"><div class="w-full h-full border border-black bg-[repeating-linear-gradient(90deg,transparent_0_7px,#080909_7px_9px),repeating-linear-gradient(0deg,transparent_0_7px,#080909_7px_9px),#3a3d3f]"></div></div>
+                            <span class="text-xs text-center text-gray-300">Caixa Passiva Preta</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="spkPassiveGridOrange">
+                            <div class="w-11 h-14 border-2 border-[#6e3814] bg-[#884518] p-1"><div class="w-full h-full border border-[#421501] bg-[repeating-linear-gradient(90deg,transparent_0_7px,#8c2e06_7px_9px),repeating-linear-gradient(0deg,transparent_0_7px,#8c2e06_7px_9px),#f26b12]"></div></div>
+                            <span class="text-xs text-center text-gray-300">Caixa Passiva Laranja</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="spkActiveMonitor">
+                            <div class="w-9 h-14 rounded-sm border-2 border-[#4a2f17] bg-[#6d4a2a] flex flex-col items-center justify-center gap-1"><div class="w-3 h-3 rounded-full bg-black border border-black"></div><div class="w-6 h-6 rounded-full bg-[#a8a59d] border-2 border-black"></div></div>
+                            <span class="text-xs text-center text-gray-300">Caixa Ativa Vintage</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="spkActiveCompact"><div></div><span class="text-xs text-center text-gray-300">Caixa Ativa Compacta</span></div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="spkActiveBookshelf">
+                            <div class="w-9 h-14 rounded border border-gray-600 bg-[#1f2125] flex flex-col items-center justify-center gap-1"><div class="w-3 h-3 rounded-full bg-black border border-gray-700"></div><div class="w-6 h-6 rounded-full bg-[#a9b5a8] border-2 border-black"></div></div>
+                            <span class="text-xs text-center text-gray-300">Caixa Ativa Moderna</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="subwooferCube">
+                            <div class="w-11 h-11 rounded border border-gray-600 bg-[#1f2125] flex items-center justify-center"><div class="w-8 h-8 rounded-full bg-[#a9b5a8] border-[3px] border-black"></div></div>
+                            <span class="text-xs text-center text-gray-300">Subwoofer Cubo 10"</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="subwooferPro">
+                            <div class="w-12 h-12 rounded border border-gray-600 bg-[#1f2125] flex flex-col items-center justify-center gap-0.5"><div class="w-8 h-8 rounded-full bg-[#a9b5a8] border-[3px] border-black"></div><div class="w-6 h-1 rounded-full bg-black"></div></div>
+                            <span class="text-xs text-center text-gray-300">Subwoofer Pro 12"</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="subwooferPassive">
+                            <div class="w-11 h-11 rounded border border-gray-600 bg-[#1f2125] flex items-center justify-center"><div class="w-8 h-8 rounded-full bg-[#a9b5a8] border-[3px] border-black"></div></div>
+                            <span class="text-xs text-center text-gray-300">Subwoofer Passivo Moderno</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="subwooferPassiveVintage">
+                            <div class="w-11 h-11 rounded-sm border-2 border-[#4a2f17] bg-[#6d4a2a] flex items-center justify-center"><div class="w-8 h-8 rounded-full bg-[#a8a59d] border-[3px] border-black"></div></div>
+                            <span class="text-xs text-center text-gray-300">Subwoofer Passivo Vintage</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="text-[10px] font-bold text-gray-500 mb-3 tracking-wider uppercase">Fones de Ouvido</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="hpStudio">
+                            <div class="w-8 h-8 border-2 border-t-4 border-gray-500 rounded-full border-b-transparent"></div>
+                            <span class="text-xs text-center text-gray-300">Fone Over-Ear Studio</span>
+                        </div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="hpClassic">
+                            <div class="w-8 h-8 border-2 border-t-4 border-amber-600 rounded-full border-b-transparent"></div>
+                            <span class="text-xs text-center text-gray-300">Fone Clássico Vinyl</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="flex-1 relative" id="canvas">
+            <div id="audio-world"><svg id="cables-layer"></svg></div>
+            <div id="selection-marquee" aria-hidden="true"></div>
+
+            <div class="canvas-tools" aria-label="Ferramentas do canvas">
+                <button id="center-devices" type="button" title="Centralizar seleção ou todos (atalho: C)">Centralizar <kbd aria-hidden="true">C</kbd></button>
+                <div class="canvas-zoom-group" aria-label="Zoom do canvas">
+                    <button id="zoom-out" type="button" title="Diminuir zoom" aria-label="Diminuir zoom">−</button>
+                    <span id="zoom-label" aria-live="polite" aria-label="Zoom atual">100%</span>
+                    <button id="zoom-in" type="button" title="Aumentar zoom" aria-label="Aumentar zoom">+</button>
+                </div>
+                <button id="fit-canvas" type="button" title="Ajustar para exibir tudo">Ajustar para exibir tudo</button>
+                <span id="selection-count" aria-live="polite" title="Shift+clique ou Shift+arraste para selecionar vários; Ctrl/Cmd+A seleciona todos"></span>
+                <span id="connection-guidance" aria-live="polite"></span>
+                <span class="selection-hint">Shift+clique/arraste</span>
+                <span class="sr-only">Use Shift+clique ou Shift+arraste para selecionar vários equipamentos. Ctrl ou Command mais A seleciona todos. Escape limpa a seleção.</span>
+            </div>
+
+            <details id="system-overview" class="system-overview">
+                <summary>
+                    <span class="overview-heading"><svg class="overview-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 4 6 6-6 6"/></svg>Visão do sistema</span>
+                    <span class="overview-summary-count" id="overview-summary-count">0 equipamentos</span>
+                </summary>
+                <div class="overview-content">
+                    <div class="overview-metrics" aria-live="polite">
+                        <div class="overview-metric"><strong id="overview-powered-count">0/0</strong><span>ligados</span></div>
+                        <div class="overview-metric"><strong id="overview-signal-count">0</strong><span>com sinal</span></div>
+                        <div class="overview-metric"><strong id="overview-connection-count">0</strong><span>conexões</span></div>
+                    </div>
+                    <div class="overview-section-title"><span>Equipamentos</span><span id="overview-play-state">som parado</span></div>
+                    <div id="overview-device-list" class="overview-list" aria-label="Estado dos equipamentos"></div>
+                    <div class="overview-section-title"><span>Percurso do sinal</span><span id="overview-flow-state">sem ligações</span></div>
+                    <div id="overview-connection-list" class="overview-list" aria-label="Percurso entre equipamentos"></div>
+                </div>
+            </details>
+
+            
+            
+        </div>
+
+        <div class="w-72 bg-[#181d23] border-l border-gray-800 flex flex-col shrink-0 z-30 shadow-xl overflow-y-auto" id="inspector">
+            <div class="p-6 flex flex-col items-center justify-center h-full text-center text-gray-500" id="inspector-empty">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="mb-4 opacity-50"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <p class="text-sm">Selecione um equipamento<br>para ver suas propriedades</p>
+            </div>
+
+            <div id="inspector-content" class="hidden p-5 flex flex-col gap-6"></div>
+        </div>
+    </div>
+
+    <template id="tpl-turntable">
+        <div class="device-header"><span>Toca-discos</span></div>
+        <div class="at-plinth">
+            <div class="at-deck">
+                <div class="at-platter"><div class="at-record" data-tt="record"><div class="at-label"></div><div class="at-spindle"></div></div></div>
+                <div class="at-sheen"></div>
+                <div class="at-pitch" role="slider" tabindex="0" data-tt="pitch" aria-label="Ajuste de pitch" aria-valuemin="-8" aria-valuemax="8" aria-valuenow="0" title="Pitch · arraste (duplo clique para zerar)"><span class="at-pitch-track"></span><span class="at-pitch-mid"></span><span class="at-pitch-cap"></span><b>PITCH</b></div>
+                <svg class="at-arm-svg" viewBox="0 0 425 80" aria-hidden="true"><rect x="384" y="18" width="19" height="57" rx="3" fill="#34434b" stroke="#778b95"/><path d="M379 75h29" stroke="#8e9da4" stroke-width="2"/><path d="M392 16H148l-24 12" fill="none" stroke="#0b1115" stroke-width="7" stroke-linecap="round"/><path d="M392 15H148l-24 12" fill="none" stroke="#b7c4ca" stroke-width="3.5" stroke-linecap="round"/><path d="M388 14H150" stroke="#e7edef" stroke-width="1"/><rect x="101" y="26" width="25" height="8" rx="2" fill="#26343b" stroke="#899da7"/><path d="M105 34h8v3h-8z" fill="#b4a580"/><path d="m109 37-2 6" stroke="#d9c79e" stroke-width="1.3"/><circle cx="392" cy="15" r="6" fill="#acbbc2" stroke="#586f7c"/><circle cx="392" cy="15" r="2" fill="#4a5f69"/></svg>
+            </div>
+            <div class="at-controls">
+                <div class="at-ctl"><button class="at-startstop" data-tt="startstop" aria-pressed="true" aria-label="Iniciar ou parar o prato" title="Iniciar / parar o prato"><i class="at-led"></i></button><span>START/STOP</span></div>
+                <div class="at-ctl"><button class="at-sw" data-tt="output" role="switch" aria-checked="false" aria-label="Saída: LINE ou PHONO" title="Saída LINE (pré interno) / PHONO"><span data-m="line" class="is-on">LINE</span><i class="tt-output-switch-rail" aria-hidden="true"><i class="tt-output-switch-thumb"></i></i><span data-m="phono">PHONO</span></button><span>SAÍDA</span></div>
+                <div class="at-ctl"><div class="at-power-slot" data-power-slot title="Interruptor do toca-discos"><button class="power-btn" title="Ligar / Desligar"></button></div></div>
+            </div>
+            <div class="at-io">
+                <span>SAÍDA · RCA R/L</span>
+                <div class="at-io-ports">
+                    <div class="at-io-ch">
+                        <span class="text-red-400">R</span>
+                        <div class="port" data-type="rca-r" data-io="out" data-node="outR" title="Saída RCA direito R"></div>
+                    </div>
+                    <div class="at-io-ch">
+                        <span class="text-gray-300">L</span>
+                        <div class="port" data-type="rca-l" data-io="out" data-node="outL" title="Saída RCA esquerdo L"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-receiver">
+        <div class="device-header">
+            <span>Receiver Estéreo</span>
+            <div class="flex items-center gap-2">
+                <div class="w-1.5 h-1.5 bg-blue-500 rounded-full device-led shadow-[0_0_5px_#3b82f6]"></div>
+                <button class="power-btn" title="Ligar / Desligar"></button>
+            </div>
+        </div>
+        <div class="p-4 flex flex-col gap-4">
+            <div class="receiver-front">
+                <div class="receiver-instruments"><div class="receiver-vu"><span>−20 −10 0 +3</span><i></i><b>VU · L</b></div><div class="receiver-vu"><span>−20 −10 0 +3</span><i></i><b>VU · R</b></div><div class="receiver-radio device-display"><span>88 · 92 · 96 · 100 · 104 · 108 MHz</span><i></i><b>STEREO · LINE</b></div><button class="receiver-dial receiver-master" data-receiver-control="volume" aria-label="Volume" title="Volume · arraste para ajustar"></button></div>
+                <div class="receiver-controls"><div class="receiver-control"><div class="receiver-power-slot" data-power-slot aria-label="Interruptor de energia"></div></div><div class="receiver-control"><button class="receiver-dial" data-receiver-control="bass" aria-label="Graves" title="Graves · arraste para ajustar"></button><span>BASS</span></div><div class="receiver-control"><button class="receiver-dial" data-receiver-control="treble" aria-label="Agudos" title="Agudos · arraste para ajustar"></button><span>TREBLE</span></div><div class="receiver-control"><button class="receiver-dial" data-receiver-control="balance" aria-label="Balanço estéreo" title="Balanço L/R · arraste para ajustar"></button><span>BALANCE</span></div><span class="receiver-signature">SONORA <small>STEREO RECEIVER · SR-70</small></span></div>
+            </div>
+            <div class="flex justify-between items-center bg-black/40 p-2 rounded border border-gray-700/50">
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-[7px] text-gray-400 font-bold">LINE IN · RCA R/L</span>
+                    <div class="flex gap-1">
+                        <div class="port" data-type="rca-r" data-io="in" data-node="inR" title="RCA In R"></div>
+                        <div class="port" data-type="rca-l" data-io="in" data-node="inL" title="RCA In L"></div>
+                    </div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-[7px] text-gray-400 font-bold">LINE OUT · RCA R/L</span>
+                    <div class="flex items-center gap-1"><span class="text-[7px] text-red-400 font-bold">R</span><div class="port" data-type="rca-r" data-io="out" data-node="outR" title="Line Out R (direito)"></div><span class="text-[7px] text-gray-300 font-bold">L</span><div class="port" data-type="rca-l" data-io="out" data-node="outL" title="Line Out L (esquerdo)"></div></div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-[7px] text-gray-400 font-bold">SPEAKER OUT · FIO R/L</span>
+                    <div class="flex items-center gap-1"><span class="text-[7px] text-red-400 font-bold">R</span><div class="port" data-type="wire" data-io="out" data-node="spkOutR" title="Speaker Out R (direito)"></div><span class="text-[7px] text-gray-300 font-bold">L</span><div class="port" data-type="wire" data-io="out" data-node="spkOutL" title="Speaker Out L (esquerdo)"></div></div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-[7px] text-gray-400 font-bold">SUB OUT · RCA LFE MONO</span>
+                    <div class="port" data-type="rca" data-io="out" data-role="lfe-out" data-node="outSub" title="Saída dedicada Subwoofer / LFE (RCA)"></div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-[7px] text-gray-400 font-bold">PHONES · P10</span>
+                    <div class="port" data-type="p10" data-io="out" data-node="outPhone" title="Phones Out (P10)"></div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-streamer">
+        <div class="device-header">
+            <span>Streamer Hi-Fi</span>
+            <div class="flex items-center gap-2">
+                <div class="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse device-led shadow-[0_0_5px_#60a5fa]"></div>
+                <button class="power-btn" title="Ligar / Desligar"></button>
+            </div>
+        </div>
+        <div class="p-3.5 flex flex-col gap-3">
+            <div class="bg-black/70 border border-gray-700/70 rounded-md p-2 flex items-center justify-between shadow-inner device-display">
+                <div class="flex items-center gap-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]"></div>
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-mono text-gray-200 leading-tight">FLAC 96kHz</span>
+                        <span class="text-[8px] text-gray-500 font-mono">24-bit Lossless</span>
+                    </div>
+                </div>
+                <div class="flex gap-0.5 items-end h-3">
+                    <div class="w-1 bg-blue-400 h-2 rounded-xs animate-pulse"></div>
+                    <div class="w-1 bg-blue-400 h-3 rounded-xs"></div>
+                    <div class="w-1 bg-blue-400 h-1 rounded-xs animate-pulse"></div>
+                </div>
+            </div>
+            <div class="flex items-center justify-between bg-black/40 px-3 py-2 rounded border border-gray-800">
+                    <span class="text-[9px] text-gray-400 font-bold tracking-wider">LINE OUT · RCA R/L</span>
+                <div class="flex gap-2">
+                    <div class="port" data-type="rca-r" data-io="out" data-node="outR" title="RCA Line Out R (Vermelho)"></div>
+                    <div class="port" data-type="rca-l" data-io="out" data-node="outL" title="RCA Line Out L (Branco)"></div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-cdPlayer">
+        <div class="device-header"><span>CD PLAYER · DIGITAL AUDIO</span></div>
+        <section class="cd-player-face">
+            <div class="cd-drive"><span>COMPACT DISC</span><div class="cd-tray"><i></i></div><small>DIGITAL AUDIO</small></div>
+            <div class="cd-lcd device-display" aria-label="Visor do CD Player">
+                <div class="cd-lcd-meta"><span>TRACK 01 · STEREO</span><span data-cd-status>PAUSE</span></div>
+                <div class="cd-title-window"><span data-cd-title>DEMONSTRAÇÃO</span></div>
+                <div class="cd-lcd-time"><b data-cd-time>00:00</b><span data-cd-duration>--:--</span><span data-cd-repeat></span></div>
+            </div>
+            <div class="cd-play-control"><button type="button" class="cd-transport-play" data-source-play aria-label="Reproduzir" aria-pressed="false" title="Reproduzir / pausar">▶</button></div>
+            <div class="cd-output"><span>LINE OUT · RCA L/R</span><div><div class="port" data-type="rca-l" data-io="out" data-node="outL" title="CD Out · RCA esquerdo L"></div><div class="port" data-type="rca-r" data-io="out" data-node="outR" title="CD Out · RCA direito R"></div></div></div>
+            <div class="rack-power-slot" data-power-slot><button class="power-btn" title="Ligar / Desligar"></button></div>
+        </section>
+    </template>
+
+    <template id="tpl-powerAmp">
+        <div class="device-header"><span>RECEIVER MODERNO · ESTÉREO</span></div>
+        <div class="poweramp-body">
+            <div class="poweramp-control-panel">
+                <div class="poweramp-meter" aria-label="Medidores dos canais A e B">
+                    <div class="poweramp-meter-channel"><span>CH A</span><div><i style="height:35%"></i><i style="height:60%"></i><i style="height:82%"></i><i style="height:54%"></i><i style="height:30%"></i></div></div>
+                    <div class="poweramp-meter-channel"><span>CH B</span><div><i style="height:28%"></i><i style="height:50%"></i><i style="height:72%"></i><i style="height:46%"></i><i style="height:25%"></i></div></div>
+                </div>
+                <div class="poweramp-screen"><strong>STEREO · RECEIVER</strong><span>VOLUME · <b data-amp-level>100%</b></span></div>
+                <button class="receiver-dial receiver-master poweramp-level" aria-label="Volume do amplificador" title="Volume · arraste para ajustar"></button>
+                <div class="poweramp-power-slot" data-power-slot aria-label="Interruptor de energia"><button class="power-btn" title="Ligar / Desligar"></button></div>
+            </div>
+            <div class="poweramp-io-panel">
+                <div class="poweramp-io-group"><span>LINE IN · RCA R/L</span><div><i>R</i><div class="port" data-type="rca-r" data-io="in" data-node="inR" title="Power Amp Line In · RCA direito R"></div><i>L</i><div class="port" data-type="rca-l" data-io="in" data-node="inL" title="Power Amp Line In · RCA esquerdo L"></div></div></div>
+                <div class="poweramp-io-group"><span>SPEAKER OUT · FIO R/L</span><div><i>R</i><div class="port" data-type="wire" data-io="out" data-role="amp-speaker-out" data-node="outR" title="Power Amp Speaker Out · Fio de caixa direito R"></div><i>L</i><div class="port" data-type="wire" data-io="out" data-role="amp-speaker-out" data-node="outL" title="Power Amp Speaker Out · Fio de caixa esquerdo L"></div></div></div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-headphoneAmp">
+        <div class="device-header">
+            <span>Amp de Fone</span>
+            <div class="flex items-center gap-2">
+                <div class="w-1.5 h-1.5 bg-amber-400 rounded-full device-led shadow-[0_0_5px_#f59e0b]"></div>
+                <button class="power-btn" title="Ligar / Desligar"></button>
+            </div>
+        </div>
+        <div class="p-3.5 flex flex-col gap-3">
+            <div class="bg-black/60 border border-gray-700/60 rounded-md p-2.5 flex items-center justify-around shadow-inner device-display">
+                <div class="flex flex-col items-center gap-1">
+                    <div class="amp-volume-knob w-9 h-9 rounded-full bg-gradient-to-tr from-gray-800 via-gray-700 to-gray-600 border border-gray-500 flex items-center justify-center shadow-md relative">
+                        <div class="w-1 h-3 bg-amber-400 absolute top-1 rounded-full"></div>
+                    </div>
+                    <span class="text-[8px] text-gray-400 uppercase font-semibold">Volume</span>
+                </div>
+                <div class="h-8 w-px bg-gray-700/70"></div>
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-[8px] text-amber-400/90 font-mono px-1.5 py-0.5 bg-black/60 rounded border border-gray-700">CLASS-A</span>
+                    <span class="text-[7px] text-gray-400 uppercase font-bold tracking-widest">Hi-Res</span>
+                </div>
+            </div>
+            <div class="flex items-center justify-between bg-black/40 px-3 py-2 rounded border border-gray-800">
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-[8px] text-gray-400 font-bold">LINE IN · RCA R/L</span>
+                    <div class="flex gap-1.5">
+                        <div class="port" data-type="rca-r" data-io="in" data-node="inR" title="RCA In R"></div>
+                        <div class="port" data-type="rca-l" data-io="in" data-node="inL" title="RCA In L"></div>
+                    </div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-[8px] text-amber-300 font-bold">PHONES OUT · P10</span>
+                    <div class="port" data-type="p10" data-io="out" data-node="outPhone" title="P10 Phones Out"></div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-headphoneAmp4">
+        <div class="device-header"><span>AMPLIFICADOR DE FONES · 4 CANAIS</span><button class="power-btn" title="Ligar / desligar"></button></div>
+        <section class="amp4-rack-face"><div class="amp4-input"><strong>STEREO IN</strong><div class="amp4-input-ports"><div class="port" data-type="rca-l" data-io="in" data-node="inL" title="Entrada RCA L · esquerdo"></div><div class="port" data-type="rca-r" data-io="in" data-node="inR" title="Entrada RCA R · direito"></div></div><small>LINE · RCA L/R</small></div><div class="amp4-channels"><div class="amp4-channel"><span class="amp4-channel-name">CANAL 1</span><div class="amp4-channel-controls"><button type="button" class="amp4-knob" data-channel-knob="1" role="slider" aria-label="Volume do canal 1" aria-valuemin="0" aria-valuemax="100" aria-valuenow="80" title="Volume do canal 1"></button><div class="port" data-type="p10" data-io="out" data-node="outPhone1" title="Saída de fones 1 · P10 estéreo"></div></div><span class="amp4-level-label">VOLUME · PHONES P10</span></div><div class="amp4-channel"><span class="amp4-channel-name">CANAL 2</span><div class="amp4-channel-controls"><button type="button" class="amp4-knob" data-channel-knob="2" role="slider" aria-label="Volume do canal 2" aria-valuemin="0" aria-valuemax="100" aria-valuenow="80" title="Volume do canal 2"></button><div class="port" data-type="p10" data-io="out" data-node="outPhone2" title="Saída de fones 2 · P10 estéreo"></div></div><span class="amp4-level-label">VOLUME · PHONES P10</span></div><div class="amp4-channel"><span class="amp4-channel-name">CANAL 3</span><div class="amp4-channel-controls"><button type="button" class="amp4-knob" data-channel-knob="3" role="slider" aria-label="Volume do canal 3" aria-valuemin="0" aria-valuemax="100" aria-valuenow="80" title="Volume do canal 3"></button><div class="port" data-type="p10" data-io="out" data-node="outPhone3" title="Saída de fones 3 · P10 estéreo"></div></div><span class="amp4-level-label">VOLUME · PHONES P10</span></div><div class="amp4-channel"><span class="amp4-channel-name">CANAL 4</span><div class="amp4-channel-controls"><button type="button" class="amp4-knob" data-channel-knob="4" role="slider" aria-label="Volume do canal 4" aria-valuemin="0" aria-valuemax="100" aria-valuenow="80" title="Volume do canal 4"></button><div class="port" data-type="p10" data-io="out" data-node="outPhone4" title="Saída de fones 4 · P10 estéreo"></div></div><span class="amp4-level-label">VOLUME · PHONES P10</span></div></div><div class="amp4-rack-power" data-power-slot></div></section>
+    </template>
+
+    <template id="tpl-rcaSwitch">
+        <div class="device-header"><span>SELETOR DE SAÍDAS RCA · 1×2</span></div>
+        <div class="p-3.5 flex flex-col gap-3">
+            <div class="flex items-center justify-between rounded border border-gray-700 bg-gradient-to-b from-gray-900 to-black p-2.5 device-display">
+                <div class="flex flex-col gap-1"><span class="text-[8px] font-mono font-bold tracking-widest text-gray-300">LINE SELECT · RCA</span><span class="text-[7px] font-mono text-gray-500">1 INPUT · RCA R/L · 2 OUTPUTS A/B</span></div>
+                <div class="flex gap-1.5"><button class="rca-switch-select active" data-switch-source="A" aria-pressed="true">A</button><button class="rca-switch-select" data-switch-source="B" aria-pressed="false">B</button></div>
+            </div>
+            <div class="rca-switch-io rounded border border-gray-800 bg-black/40 p-2">
+                <div class="rca-switch-port-group"><span class="rca-switch-port-label">LINE IN · RCA R/L</span><div class="rca-switch-port-pair"><div class="port" data-type="rca-r" data-io="in" data-node="inR" title="Line In · RCA direito R"></div><div class="port" data-type="rca-l" data-io="in" data-node="inL" title="Line In · RCA esquerdo L"></div></div></div>
+                <div class="rca-switch-port-group"><span class="rca-switch-port-label" style="color:#34d399">LINE OUT A · RCA R/L</span><div class="rca-switch-port-pair"><div class="port" data-type="rca-r" data-io="out" data-node="outAR" title="Line Out A · RCA direito R"></div><div class="port" data-type="rca-l" data-io="out" data-node="outAL" title="Line Out A · RCA esquerdo L"></div></div></div>
+                <div class="rca-switch-port-group"><span class="rca-switch-port-label" style="color:#34d399">LINE OUT B · RCA R/L</span><div class="rca-switch-port-pair"><div class="port" data-type="rca-r" data-io="out" data-node="outBR" title="Line Out B · RCA direito R"></div><div class="port" data-type="rca-l" data-io="out" data-node="outBL" title="Line Out B · RCA esquerdo L"></div></div></div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-mixer">
+        <div class="device-header"><span>MIXER · 3 CANAIS ESTÉREO</span><button class="power-btn" title="Ligar / Desligar"></button></div>
+        <div class="p-3.5 flex flex-col gap-2.5">
+            <div class="mixer-face">
+                <div class="flex items-center justify-between"><strong class="text-[9px] tracking-[.16em] text-sky-300">AUDIO LAB · MX3</strong><span class="text-[7px] font-mono text-gray-500">3 STEREO INPUTS</span></div>
+                <div class="mixer-channel-strips">
+                    <div class="mixer-strip"><span class="mixer-strip-name">CH 1</span><span class="mixer-strip-format">RCA R/L IN</span><div class="mixer-strip-input"><div class="port" data-type="rca-r" data-io="in" data-node="in1R" title="Mixer canal 1 R"></div><div class="port" data-type="rca-l" data-io="in" data-node="in1L" title="Mixer canal 1 L"></div></div><input class="mixer-level-control" type="range" min="0" max="1" step="0.01" value="0.8" data-mixer-channel="0" aria-label="Volume do canal 1"><output data-mixer-value="0">80%</output></div>
+                    <div class="mixer-strip"><span class="mixer-strip-name">CH 2</span><span class="mixer-strip-format">RCA R/L IN</span><div class="mixer-strip-input"><div class="port" data-type="rca-r" data-io="in" data-node="in2R" title="Mixer canal 2 R"></div><div class="port" data-type="rca-l" data-io="in" data-node="in2L" title="Mixer canal 2 L"></div></div><input class="mixer-level-control" type="range" min="0" max="1" step="0.01" value="0.8" data-mixer-channel="1" aria-label="Volume do canal 2"><output data-mixer-value="1">80%</output></div>
+                    <div class="mixer-strip"><span class="mixer-strip-name">CH 3</span><span class="mixer-strip-format">RCA R/L IN</span><div class="mixer-strip-input"><div class="port" data-type="rca-r" data-io="in" data-node="in3R" title="Mixer canal 3 R"></div><div class="port" data-type="rca-l" data-io="in" data-node="in3L" title="Mixer canal 3 L"></div></div><input class="mixer-level-control" type="range" min="0" max="1" step="0.01" value="0.8" data-mixer-channel="2" aria-label="Volume do canal 3"><output data-mixer-value="2">80%</output></div>
+                </div>
+            </div>
+            <div class="mixer-master-io"><span class="text-[8px] font-bold text-sky-300">LINE OUT · RCA R/L</span><div class="mixer-io-pair"><div class="port" data-type="rca-r" data-io="out" data-node="outR" title="Mixer Line Out · RCA direito R"></div><div class="port" data-type="rca-l" data-io="out" data-node="outL" title="Mixer Line Out · RCA esquerdo L"></div></div></div>
+        </div>
+    </template>
+    <template id="tpl-mixerVintage">
+        <div class="device-header"><span>MIXER VINTAGE · SERIES 70</span><button class="power-btn" title="Ligar / Desligar"></button></div>
+        <div class="p-3.5 flex flex-col gap-2.5">
+            <div class="mixer-face">
+                <div class="flex items-center justify-between"><strong class="text-[9px] tracking-[.16em] text-amber-950">SONORA · MX-3</strong><span class="text-[7px] font-mono text-amber-900">STEREO MIXER</span></div>
+                <div class="mixer-channel-strips">
+                    <div class="mixer-strip"><span class="mixer-strip-name">CANAL 1</span><span class="mixer-strip-format">RCA R/L IN</span><div class="mixer-strip-input"><div class="port" data-type="rca-r" data-io="in" data-node="in1R" title="Mixer canal 1 R"></div><div class="port" data-type="rca-l" data-io="in" data-node="in1L" title="Mixer canal 1 L"></div></div><input class="mixer-level-control" type="range" min="0" max="1" step="0.01" value="0.8" data-mixer-channel="0" aria-label="Volume do canal 1"><output data-mixer-value="0">80%</output></div>
+                    <div class="mixer-strip"><span class="mixer-strip-name">AUX</span><span class="mixer-strip-format">RCA R/L IN</span><div class="mixer-strip-input"><div class="port" data-type="rca-r" data-io="in" data-node="in2R" title="Mixer canal 2 R"></div><div class="port" data-type="rca-l" data-io="in" data-node="in2L" title="Mixer canal 2 L"></div></div><input class="mixer-level-control" type="range" min="0" max="1" step="0.01" value="0.8" data-mixer-channel="1" aria-label="Volume do canal 2"><output data-mixer-value="1">80%</output></div>
+                    <div class="mixer-strip"><span class="mixer-strip-name">TAPE</span><span class="mixer-strip-format">RCA R/L IN</span><div class="mixer-strip-input"><div class="port" data-type="rca-r" data-io="in" data-node="in3R" title="Mixer canal 3 R"></div><div class="port" data-type="rca-l" data-io="in" data-node="in3L" title="Mixer canal 3 L"></div></div><input class="mixer-level-control" type="range" min="0" max="1" step="0.01" value="0.8" data-mixer-channel="2" aria-label="Volume do canal 3"><output data-mixer-value="2">80%</output></div>
+                </div>
+            </div>
+            <div class="mixer-master-io"><span class="text-[8px] font-bold text-amber-950">LINE OUT · RCA R/L</span><div class="mixer-io-pair"><div class="port" data-type="rca-r" data-io="out" data-node="outR" title="Mixer Line Out · RCA direito R"></div><div class="port" data-type="rca-l" data-io="out" data-node="outL" title="Mixer Line Out · RCA esquerdo L"></div></div></div>
+        </div>
+    </template>
+    <template id="tpl-crossover">
+        <div class="device-header"><span>CROSSOVER ATIVO · 3 VIAS</span><button class="power-btn" title="Ligar / Desligar"></button></div>
+        <div class="p-3.5 flex flex-col gap-2.5">
+            <div class="crossover-face"><div class="crossover-band"><span>LOW · RCA R/L · &lt; 250 Hz</span><i></i><div class="crossover-io-pair"><div class="port" data-type="rca-r" data-io="out" data-node="outLowR" title="Low Out · RCA direito R"></div><div class="port" data-type="rca-l" data-io="out" data-node="outLowL" title="Low Out · RCA esquerdo L"></div></div></div><div class="crossover-band"><span>MID · RCA R/L · 250–2.5 kHz</span><i></i><div class="crossover-io-pair"><div class="port" data-type="rca-r" data-io="out" data-node="outMidR" title="Mid Out · RCA direito R"></div><div class="port" data-type="rca-l" data-io="out" data-node="outMidL" title="Mid Out · RCA esquerdo L"></div></div></div><div class="crossover-band"><span>HIGH · RCA R/L · &gt; 2.5 kHz</span><i></i><div class="crossover-io-pair"><div class="port" data-type="rca-r" data-io="out" data-node="outHighR" title="High Out · RCA direito R"></div><div class="port" data-type="rca-l" data-io="out" data-node="outHighL" title="High Out · RCA esquerdo L"></div></div></div></div>
+            <div class="crossover-io"><div class="crossover-io-group"><span>LINE IN · RCA R/L</span><div class="crossover-io-pair"><div class="port" data-type="rca-r" data-io="in" data-node="inR" title="Crossover Line In · RCA direito R"></div><div class="port" data-type="rca-l" data-io="in" data-node="inL" title="Crossover Line In · RCA esquerdo L"></div></div></div><span class="text-[7px] font-mono text-gray-500">250 Hz · 2.5 kHz</span></div>
+        </div>
+    </template>
+    <template id="tpl-crossoverVintage">
+        <div class="device-header"><span>DIVISOR DE FREQUÊNCIAS · VINTAGE</span><button class="power-btn" title="Ligar / Desligar"></button></div>
+        <div class="p-3.5 flex flex-col gap-2.5">
+            <div class="crossover-face"><div class="flex items-center justify-between text-[8px] font-serif font-bold tracking-[.16em] text-amber-950"><span>SONORA</span><span>3-WAY NETWORK</span></div><div class="crossover-band"><span>WOOFER · RCA R/L</span><i></i><div class="crossover-io-pair"><div class="port" data-type="rca-r" data-io="out" data-node="outLowR" title="Woofer Out · RCA direito R"></div><div class="port" data-type="rca-l" data-io="out" data-node="outLowL" title="Woofer Out · RCA esquerdo L"></div></div></div><div class="crossover-band"><span>MIDRANGE · RCA R/L</span><i></i><div class="crossover-io-pair"><div class="port" data-type="rca-r" data-io="out" data-node="outMidR" title="Midrange Out · RCA direito R"></div><div class="port" data-type="rca-l" data-io="out" data-node="outMidL" title="Midrange Out · RCA esquerdo L"></div></div></div><div class="crossover-band"><span>TWEETER · RCA R/L</span><i></i><div class="crossover-io-pair"><div class="port" data-type="rca-r" data-io="out" data-node="outHighR" title="Tweeter Out · RCA direito R"></div><div class="port" data-type="rca-l" data-io="out" data-node="outHighL" title="Tweeter Out · RCA esquerdo L"></div></div></div></div>
+            <div class="crossover-io"><div class="crossover-io-group"><span>LINE IN · RCA R/L</span><div class="crossover-io-pair"><div class="port" data-type="rca-r" data-io="in" data-node="inR" title="Crossover Vintage Line In · RCA direito R"></div><div class="port" data-type="rca-l" data-io="in" data-node="inL" title="Crossover Vintage Line In · RCA esquerdo L"></div></div></div><span class="text-[7px] font-mono text-amber-900">250 Hz · 2.5 kHz</span></div>
+        </div>
+    </template>
+    <template id="tpl-speakerSwitch">
+        <div class="device-header"><span>SELETOR DE CAIXAS · A/B</span></div><div class="p-3.5 flex flex-col gap-2.5"><div class="speaker-switch-controls"><span class="text-[8px] font-bold text-gray-400">OUTPUT</span><button class="active" data-switch-source="A" aria-pressed="true">A</button><button data-switch-source="B" aria-pressed="false">B</button></div><div class="speaker-switch-io"><div class="speaker-switch-bank"><span>AMP IN · FIO R/L</span><div><div class="port" data-type="wire" data-io="in" data-role="amp-speaker-in" data-node="inAmpR" title="Entrada amplificada R"></div><div class="port" data-type="wire" data-io="in" data-role="amp-speaker-in" data-node="inAmpL" title="Entrada amplificada L"></div></div></div><div class="speaker-switch-bank"><span>SPEAKERS A · FIO R/L</span><div><div class="port" data-type="wire" data-io="out" data-node="outAR" title="Caixa A R"></div><div class="port" data-type="wire" data-io="out" data-node="outAL" title="Caixa A L"></div></div></div><div class="speaker-switch-bank"><span>SPEAKERS B · FIO R/L</span><div><div class="port" data-type="wire" data-io="out" data-node="outBR" title="Caixa B R"></div><div class="port" data-type="wire" data-io="out" data-node="outBL" title="Caixa B L"></div></div></div></div></div>
+    </template>
+    <template id="tpl-speakerSwitchVintage">
+        <div class="device-header"><span>SONORA · SELETOR DE CAIXAS</span></div><div class="p-3.5 flex flex-col gap-2.5"><div class="speaker-switch-controls"><span class="text-[8px] font-bold text-amber-900">AUDIO</span><button class="active" data-switch-source="A" aria-pressed="true">A</button><button data-switch-source="B" aria-pressed="false">B</button></div><div class="speaker-switch-io"><div class="speaker-switch-bank"><span>AMPLIFIER · FIO R/L</span><div><div class="port" data-type="wire" data-io="in" data-role="amp-speaker-in" data-node="inAmpR" title="Entrada amplificada R"></div><div class="port" data-type="wire" data-io="in" data-role="amp-speaker-in" data-node="inAmpL" title="Entrada amplificada L"></div></div></div><div class="speaker-switch-bank"><span>PAIR A · FIO R/L</span><div><div class="port" data-type="wire" data-io="out" data-node="outAR" title="Caixa A R"></div><div class="port" data-type="wire" data-io="out" data-node="outAL" title="Caixa A L"></div></div></div><div class="speaker-switch-bank"><span>PAIR B · FIO R/L</span><div><div class="port" data-type="wire" data-io="out" data-node="outBR" title="Caixa B R"></div><div class="port" data-type="wire" data-io="out" data-node="outBL" title="Caixa B L"></div></div></div></div></div>
+    </template>
+    <template id="tpl-subwooferPassive">
+        <div class="device-header"><span>Subwoofer passivo · moderno</span></div>
+        <div class="sp-body">
+            <div class="sp-cab sp-modern sp-sub sp-sub-passive">
+                <div class="sp-face">
+                    <div class="sp-woofer spk-woofer"><i class="sp-cone"><b></b></i></div>
+                    <div class="sp-panel">
+                        <div class="sp-conn"><div class="sp-terminal sp-terminal-2"><div class="sp-term-ch"><em class="is-r">R</em><div class="port" data-type="wire" data-io="in" data-role="passive-sub-in" data-node="inR" title="Speaker In · fio de caixa R"></div></div><div class="sp-term-ch"><em>L</em><div class="port" data-type="wire" data-io="in" data-role="passive-sub-in" data-node="inL" title="Speaker In · fio de caixa L"></div></div></div><span>SPEAKER IN</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+    <template id="tpl-subwooferPassiveVintage">
+        <div class="device-header"><span>Subwoofer passivo · vintage</span></div>
+        <div class="sp-body">
+            <div class="sp-cab sp-vintage sp-sub sp-sub-passive">
+                <div class="sp-face">
+                    <div class="sp-woofer spk-woofer"><i class="sp-cone"><b></b></i></div>
+                    <div class="sub-air-ducts" aria-hidden="true"><i></i><i></i></div>
+                    <div class="sp-panel">
+                        <div class="sp-conn"><div class="sp-terminal sp-terminal-2"><div class="sp-term-ch"><em class="is-r">R</em><div class="port" data-type="wire" data-io="in" data-role="passive-sub-in" data-node="inR" title="Speaker In · fio de caixa R"></div></div><div class="sp-term-ch"><em>L</em><div class="port" data-type="wire" data-io="in" data-role="passive-sub-in" data-node="inL" title="Speaker In · fio de caixa L"></div></div></div><span>SPEAKER IN</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- EQUALIZADORES DE 5 BANDAS (MODELO STUDIO E MODELO VINTAGE) -->
+    <template id="tpl-eqStudio">
+        <div class="device-header border-b-blue-900/50 bg-[#151a21]">
+            <span class="text-blue-400 font-mono tracking-wider">EQ-5 STUDIO</span>
+            <div class="flex items-center gap-2">
+                <div class="w-1.5 h-1.5 bg-blue-400 rounded-full device-led shadow-[0_0_5px_#60a5fa]"></div>
+                <button class="power-btn" title="Ligar / Desligar"></button>
+            </div>
+        </div>
+        <div class="p-4 flex flex-col gap-3">
+            <div class="eq-studio-face">
+                <div class="flex items-center justify-between">
+                    <span class="eq-studio-brand">AUDIO LAB</span>
+                    <span class="eq-studio-model">GE-5 · GRAPHIC EQUALIZER</span>
+                </div>
+                <div class="eq-studio-scale" title="Indicador de nível estéreo"></div>
+            </div>
+            <div class="eq-studio-display border rounded p-3 flex justify-between items-center gap-2 device-display shadow-inner">
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-[8px] font-mono text-gray-400">60Hz</span>
+                    <input type="range" class="eq-slider" orient="vertical" min="-12" max="12" step="0.5" value="0" data-band="0">
+                    <span class="text-[8px] font-mono text-blue-400 lbl-band-0">0dB</span>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-[8px] font-mono text-gray-400">250Hz</span>
+                    <input type="range" class="eq-slider" orient="vertical" min="-12" max="12" step="0.5" value="0" data-band="1">
+                    <span class="text-[8px] font-mono text-blue-400 lbl-band-1">0dB</span>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-[8px] font-mono text-gray-400">1kHz</span>
+                    <input type="range" class="eq-slider" orient="vertical" min="-12" max="12" step="0.5" value="0" data-band="2">
+                    <span class="text-[8px] font-mono text-blue-400 lbl-band-2">0dB</span>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-[8px] font-mono text-gray-400">4kHz</span>
+                    <input type="range" class="eq-slider" orient="vertical" min="-12" max="12" step="0.5" value="0" data-band="3">
+                    <span class="text-[8px] font-mono text-blue-400 lbl-band-3">0dB</span>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-[8px] font-mono text-gray-400">12kHz</span>
+                    <input type="range" class="eq-slider" orient="vertical" min="-12" max="12" step="0.5" value="0" data-band="4">
+                    <span class="text-[8px] font-mono text-blue-400 lbl-band-4">0dB</span>
+                </div>
+            </div>
+            <div class="flex justify-between px-1 text-[7px] font-mono text-blue-300/70 tracking-widest"><span>LOW</span><span>LOW-MID</span><span>MID</span><span>HI-MID</span><span>HIGH</span></div>
+            <div class="flex justify-between items-center bg-black/40 px-3 py-2 rounded border border-gray-800">
+                <div class="flex items-center gap-2">
+                    <span class="text-[8px] text-gray-400 font-bold">LINE IN · RCA R/L</span>
+                    <div class="port" data-type="rca-r" data-io="in" data-node="inR" title="EQ In R"></div>
+                    <div class="port" data-type="rca-l" data-io="in" data-node="inL" title="EQ In L"></div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-[8px] text-gray-400 font-bold">LINE OUT · RCA R/L</span>
+                    <div class="port" data-type="rca-r" data-io="out" data-node="outR" title="EQ Out R"></div>
+                    <div class="port" data-type="rca-l" data-io="out" data-node="outL" title="EQ Out L"></div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-eqVintage">
+        <div class="device-header border-b-amber-900/50 bg-[#2b1b11]">
+            <span class="text-amber-300 font-serif tracking-widest text-[11px]">PARAMETRIC-5 VINTAGE</span>
+            <div class="flex items-center gap-2">
+                <div class="w-1.5 h-1.5 bg-amber-400 rounded-full device-led shadow-[0_0_5px_#f59e0b]"></div>
+                <button class="power-btn" title="Ligar / Desligar"></button>
+            </div>
+        </div>
+        <div class="p-4 bg-gradient-to-b from-[#382315] to-[#24160d] flex flex-col gap-3 rounded-b-lg">
+            <div class="eq-vintage-face">
+                <div class="flex items-center justify-between">
+                    <span class="eq-vintage-brand">SONORA</span>
+                    <span class="eq-vintage-model">TONE CONTROL · SERIES 70</span>
+                </div>
+                <div class="eq-vintage-meter" title="Medidor analógico de nível"></div>
+            </div>
+            <div class="eq-vintage-display border rounded p-3 flex justify-between items-center gap-2 device-display shadow-inner">
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-[8px] font-mono text-amber-500/80">LOW 80Hz</span>
+                    <input type="range" class="eq-slider accent-amber-500" orient="vertical" min="-12" max="12" step="0.5" value="0" data-band="0">
+                    <span class="text-[8px] font-mono text-amber-400 lbl-band-0">0dB</span>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-[8px] font-mono text-amber-500/80">300Hz</span>
+                    <input type="range" class="eq-slider accent-amber-500" orient="vertical" min="-12" max="12" step="0.5" value="0" data-band="1">
+                    <span class="text-[8px] font-mono text-amber-400 lbl-band-1">0dB</span>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-[8px] font-mono text-amber-500/80">MID 1.2k</span>
+                    <input type="range" class="eq-slider accent-amber-500" orient="vertical" min="-12" max="12" step="0.5" value="0" data-band="2">
+                    <span class="text-[8px] font-mono text-amber-400 lbl-band-2">0dB</span>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-[8px] font-mono text-amber-500/80">3.5k</span>
+                    <input type="range" class="eq-slider accent-amber-500" orient="vertical" min="-12" max="12" step="0.5" value="0" data-band="3">
+                    <span class="text-[8px] font-mono text-amber-400 lbl-band-3">0dB</span>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                    <span class="text-[8px] font-mono text-amber-500/80">AIR 10k</span>
+                    <input type="range" class="eq-slider accent-amber-500" orient="vertical" min="-12" max="12" step="0.5" value="0" data-band="4">
+                    <span class="text-[8px] font-mono text-amber-400 lbl-band-4">0dB</span>
+                </div>
+            </div>
+            <div class="flex justify-between px-1 text-[7px] font-mono text-amber-300/70 tracking-widest"><span>LOW</span><span>BODY</span><span>PRESENCE</span><span>EDGE</span><span>AIR</span></div>
+            <div class="flex justify-between items-center bg-black/50 px-3 py-2 rounded border border-amber-900/40">
+                <div class="vintage-eq-power-slot" data-power-slot aria-label="Interruptor de energia"></div>
+                <div class="flex items-center gap-2">
+                    <span class="text-[8px] text-amber-400/80 font-bold">LINE IN · RCA R/L</span>
+                    <div class="port" data-type="rca-r" data-io="in" data-node="inR" title="Vintage In R"></div>
+                    <div class="port" data-type="rca-l" data-io="in" data-node="inL" title="Vintage In L"></div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-[8px] text-amber-400/80 font-bold">LINE OUT · RCA R/L</span>
+                    <div class="port" data-type="rca-r" data-io="out" data-node="outR" title="Vintage Out R"></div>
+                    <div class="port" data-type="rca-l" data-io="out" data-node="outL" title="Vintage Out L"></div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Receptor Bluetooth: entrada sem fio e saída analógica RCA. -->
+    <template id="tpl-btReceiverA">
+        <div class="device-header"><span>BLUETOOTH RECEIVER · SLIM</span><button class="power-btn" title="Ligar / Desligar"></button></div>
+        <div class="bt-face">
+            <div class="bt-display device-display">
+                <span class="bt-glyph"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 7 10 10-5 5V2l5 5L7 17"/></svg></span>
+                <div class="bt-text"><b>BT AUDIO IN · SEM FIO</b><small>aptX HD · COMPACT DAC</small></div>
+                <div class="bt-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+                <span class="bt-badge">RX</span>
+            </div>
+            <div class="bt-ports">
+                <div class="bt-port-group"><div class="bt-port-pair"><div class="bt-port-ch"><em class="is-r">R</em><div class="port" data-type="rca-r" data-io="out" data-node="outR" title="BT Out R"></div></div><div class="bt-port-ch"><em>L</em><div class="port" data-type="rca-l" data-io="out" data-node="outL" title="BT Out L"></div></div></div><span class="bt-label">LINE OUT · RCA R/L</span></div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Transmissor Bluetooth: entrada analógica RCA e saída sem fio para fones. -->
+    <template id="tpl-btTransmitterPro">
+        <div class="device-header"><span>BLUETOOTH TRANSMITTER · PRO</span><button class="power-btn" title="Ligar / Desligar"></button></div>
+        <div class="bt-face">
+            <div class="bt-display device-display">
+                <span class="bt-glyph"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 7 10 10-5 5V2l5 5L7 17"/></svg></span>
+                <div class="bt-text"><b class="bt-device-name">Sem conexão</b><small>LDAC · aptX HD · 24/96</small></div>
+                <span class="bt-dot bt-indicator"></span>
+                <button class="btn-bt-pair" type="button">BLUETOOTH</button>
+            </div>
+            <div class="bt-ports">
+                <div class="bt-port-group"><div class="bt-port-pair"><div class="bt-port-ch"><em class="is-r">R</em><div class="port" data-type="rca-r" data-io="in" data-node="inR" title="Transmitter RCA In R"></div></div><div class="bt-port-ch"><em>L</em><div class="port" data-type="rca-l" data-io="in" data-node="inL" title="Transmitter RCA In L"></div></div></div><span class="bt-label">LINE IN · RCA R/L</span></div>
+                <span class="bt-divider"></span>
+                <div class="bt-out"><span class="bt-glyph bt-glyph-sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 7 10 10-5 5V2l5 5L7 17"/></svg></span><div class="bt-text"><b>BT AUDIO OUT</b><small>SEM FIO · HEADPHONES</small></div></div>
+            </div>
+        </div>
+    </template>
+
+    <!-- SUBWOOFERS ATIVOS (MODELO CUBO 10" E MODELO PRO 12") -->
+    <template id="tpl-subwoofer">
+        <div class="device-header"><span>Subwoofer ativo · 10″</span></div>
+        <div class="sp-body">
+            <div class="sp-cab sp-modern sp-sub sp-sub-cube">
+                <div class="sp-face">
+                    <div class="sp-woofer spk-woofer"><i class="sp-cone"><b></b></i></div>
+                    
+                    <div class="sp-panel">
+                        <div class="sp-conn"><div class="port" data-type="rca" data-io="in" data-role="lfe-in" data-node="in" title="Entrada dedicada LFE / Sub · RCA mono"></div><span>LFE IN</span></div>
+                        <div class="sp-conn"><div class="sp-knob" role="slider" tabindex="0" data-sp="vol" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="80" title="Volume · arraste ou use as setas"></div><span>VOL</span></div>
+                        <div class="sp-conn"><div class="sp-power-slot" data-power-slot title="Interruptor do subwoofer"><button class="power-btn" title="Ligar / Desligar"></button></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-subwooferCube">
+        <div class="device-header"><span>Subwoofer cubo · 10″</span></div>
+        <div class="sp-body">
+            <div class="sp-cab sp-modern sp-sub sp-sub-cube">
+                <div class="sp-face">
+                    <div class="sp-woofer spk-woofer"><i class="sp-cone"><b></b></i></div>
+                    
+                    <div class="sp-panel">
+                        <div class="sp-conn"><div class="port" data-type="rca" data-io="in" data-role="lfe-in" data-node="in" title="Entrada dedicada LFE / Sub · RCA mono"></div><span>LFE IN</span></div>
+                        <div class="sp-conn"><div class="sp-knob" role="slider" tabindex="0" data-sp="vol" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="80" title="Volume · arraste ou use as setas"></div><span>VOL</span></div>
+                        <div class="sp-conn"><div class="sp-power-slot" data-power-slot title="Interruptor do subwoofer"><button class="power-btn" title="Ligar / Desligar"></button></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-subwooferPro">
+        <div class="device-header"><span>Subwoofer pro · 12″</span></div>
+        <div class="sp-body">
+            <div class="sp-cab sp-modern sp-sub sp-sub-pro">
+                <div class="sp-face">
+                    <div class="sp-woofer spk-woofer"><i class="sp-cone"><b></b></i></div>
+                    
+                    <div class="sub-oblong-duct" aria-hidden="true"></div>
+                    <div class="sp-panel">
+                        <div class="sp-conn"><div class="port" data-type="rca" data-io="in" data-role="lfe-in" data-node="in" title="Entrada dedicada LFE / Sub · RCA mono"></div><span>LFE IN</span></div>
+                        <div class="sp-conn"><div class="sp-knob" role="slider" tabindex="0" data-sp="vol" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="80" title="Volume · arraste ou use as setas"></div><span>VOL</span></div>
+                        <div class="sp-conn"><div class="sp-power-slot" data-power-slot title="Interruptor do subwoofer"><button class="power-btn" title="Ligar / Desligar"></button></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- CAIXAS PASSIVAS (MADEIRA E CARBON BLACK) -->
+    <template id="tpl-speaker">
+        <div class="device-header bg-[#3e2210] border-b-[#2c1608]">
+            <span>Caixa Passiva Madeira</span>
+        </div>
+        <div class="p-3 bg-gradient-to-b from-[#5c3a21] to-[#3e2210] flex flex-col items-center rounded-b-lg border-2 border-t-0 border-[#2c1608]">
+            <div class="w-full bg-[#111] p-3 rounded flex flex-col items-center gap-3 shadow-inner">
+                <div class="w-8 h-8 rounded-full bg-gray-800 border-2 border-gray-700"></div>
+                <div class="w-16 h-16 rounded-full bg-gray-800 border-4 border-gray-700 shadow-inner spk-woofer transition-transform duration-75"></div>
+            </div>
+            <div class="flex flex-col items-center gap-1 mt-3 bg-black/60 px-2 py-1 rounded">
+                <span class="text-[8px] text-gray-400 font-bold">SPEAKER IN · FIO MONO</span>
+                <div class="port" data-type="wire" data-io="in" data-node="in" title="Speaker Wire In"></div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-spkPassiveWood">
+        <div class="device-header"><span>Caixa passiva · vintage</span></div>
+        <div class="sp-body">
+            <div class="sp-cab sp-vintage">
+                <div class="sp-face">
+                    <div class="sp-tweeter"><i></i></div>
+                    <div class="sp-woofer spk-woofer"><i class="sp-cone"><b></b></i></div>
+                    <div class="sp-panel">
+                    <div class="sp-conn"><div class="sp-terminal"><div class="port" data-type="wire" data-io="in" data-node="in" title="Entrada para fio de caixa"></div></div><span>SPEAKER IN</span></div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-spkPassiveCarbon">
+        <div class="device-header"><span>Caixa passiva · moderna</span></div>
+        <div class="sp-body">
+            <div class="sp-cab sp-modern">
+                <div class="sp-face">
+                    <div class="sp-tweeter"><i></i></div>
+                    <div class="sp-woofer spk-woofer"><i class="sp-cone"><b></b></i></div>
+                    <div class="sp-panel">
+                    <div class="sp-conn"><div class="sp-terminal"><div class="port" data-type="wire" data-io="in" data-node="in" title="Entrada para fio de caixa"></div></div><span>SPEAKER IN</span></div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-spkPassiveGridBlack">
+        <div class="device-header"><span>Caixa passiva · preta</span></div>
+        <div class="classic-box-body">
+            <div class="classic-box-cab classic-box-black">
+                <div class="classic-box-baffle">
+                    <div class="classic-box-exposed">
+                        <div class="classic-box-control-panel" aria-hidden="true"><b>MF · HF</b><span><i></i></span><span><i></i></span></div>
+                        <div class="classic-box-driver classic-box-tweeter"></div>
+                        <div class="classic-box-driver classic-box-mid"></div>
+                        <div class="classic-box-driver classic-box-midrange"></div>
+                        <div class="classic-box-driver classic-box-woofer"></div>
+                    </div>
+                    <button class="speaker-grille classic-box-grille" type="button" tabindex="0" aria-label="Remover tampa frontal" title="Remover tampa frontal"></button>
+                    <button class="grille-restore" type="button" title="Recolocar tampa frontal">RECOLOCAR TAMPA</button>
+                </div>
+                <div class="classic-box-connection"><div class="port" data-type="wire" data-io="in" data-node="in" title="Entrada para fio de caixa"></div><span>SPEAKER IN · FIO</span></div>
+            </div>
+            <div class="classic-box-base" aria-hidden="true"></div>
+        </div>
+    </template>
+
+    <template id="tpl-spkPassiveGridOrange">
+        <div class="device-header"><span>Caixa passiva · laranja</span></div>
+        <div class="classic-box-body">
+            <div class="classic-box-cab classic-box-orange">
+                <div class="classic-box-baffle">
+                    <div class="classic-box-exposed">
+                        <div class="classic-box-control-panel" aria-hidden="true"><b>MF · HF</b><span><i></i></span><span><i></i></span></div>
+                        <div class="classic-box-driver classic-box-tweeter"></div>
+                        <div class="classic-box-driver classic-box-mid"></div>
+                        <div class="classic-box-driver classic-box-midrange"></div>
+                        <div class="classic-box-driver classic-box-woofer"></div>
+                    </div>
+                    <button class="speaker-grille classic-box-grille" type="button" tabindex="0" aria-label="Remover tampa frontal" title="Remover tampa frontal"></button>
+                    <button class="grille-restore" type="button" title="Recolocar tampa frontal">RECOLOCAR TAMPA</button>
+                </div>
+                <div class="classic-box-connection"><div class="port" data-type="wire" data-io="in" data-node="in" title="Entrada para fio de caixa"></div><span>SPEAKER IN · FIO</span></div>
+            </div>
+            <div class="classic-box-base" aria-hidden="true"></div>
+        </div>
+    </template>
+
+    <!-- CAIXAS ATIVAS (MONITOR STUDIO COM POWER E BOOKSHELF ATIVA) -->
+    <template id="tpl-spkActiveMonitor">
+        <div class="device-header"><span>Caixa ativa · vintage</span></div>
+        <div class="sp-body">
+            <div class="sp-cab sp-vintage">
+                <div class="sp-face">
+                    <div class="sp-tweeter"><i></i></div>
+                    <div class="sp-woofer spk-woofer"><i class="sp-cone"><b></b></i></div>
+                    <div class="sp-panel">
+                    <div class="sp-conn"><div class="port" data-type="rca" data-io="in" data-node="in" title="Entrada RCA mono; o canal vem da saída conectada"></div><span>RCA</span></div>
+                    <div class="sp-conn"><div class="sp-knob" role="slider" tabindex="0" data-sp="vol" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="80" title="Volume · arraste ou use as setas"></div><span>VOL</span></div>
+                    <div class="sp-conn"><div class="sp-power-slot" data-power-slot title="Interruptor de energia"><button class="power-btn" title="Ligar / Desligar"></button></div></div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-spkActiveBookshelf">
+        <div class="device-header"><span>Caixa ativa · moderna</span></div>
+        <div class="sp-body">
+            <div class="sp-cab sp-modern">
+                <div class="sp-face">
+                    <div class="sp-tweeter"><i></i></div>
+                    <div class="sp-woofer spk-woofer"><i class="sp-cone"><b></b></i></div>
+                    <div class="sp-panel">
+                    <div class="sp-conn"><div class="port" data-type="rca" data-io="in" data-node="in" title="Entrada RCA mono; o canal vem da saída conectada"></div><span>RCA</span></div>
+                    <div class="sp-conn"><div class="sp-knob" role="slider" tabindex="0" data-sp="vol" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="80" title="Volume · arraste ou use as setas"></div><span>VOL</span></div>
+                    <div class="sp-conn"><div class="sp-power-slot" data-power-slot title="Interruptor de energia"><button class="power-btn" title="Ligar / Desligar"></button></div></div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </template>
+    <template id="tpl-spkActiveRounded">
+        <div class="device-header"><span>Caixa ativa · precisão</span></div>
+        <div class="sp-body">
+            <div class="sp-cab sp-modern">
+                <div class="sp-face">
+                    <div class="sp-tweeter"><i></i></div>
+                    <div class="sp-woofer spk-woofer"><i class="sp-cone"><b></b></i></div>
+                    <div class="sp-panel">
+                    <div class="sp-conn"><div class="port" data-type="p10" data-signal="line" data-format="P10 mono · linha" data-io="in" data-node="in" title="Entrada P10 de linha mono"></div><span>LINE</span></div>
+                    <div class="sp-conn"><div class="sp-knob" role="slider" tabindex="0" data-sp="vol" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="80" title="Volume · arraste ou use as setas"></div><span>VOL</span></div>
+                    <div class="sp-conn"><div class="sp-power-slot" data-power-slot title="Interruptor de energia"><button class="power-btn" title="Ligar / Desligar"></button></div></div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- FONES DE OUVIDO (MODELO STUDIO E MODELO VINYL CLASSIC) -->
+    <template id="tpl-headphone">
+        <div class="device-header">
+            <span>Fones Over-Ear</span>
+        </div>
+        <div class="headphone-body">
+            <div class="headphone-object">
+                <div class="headphone-band"></div>
+                <div class="headphone-cups"><div class="headphone-cup"></div><div class="headphone-cup"></div></div>
+            </div>
+            <div class="headphone-controls">
+                <span class="text-[8px] font-bold">AUDIO IN · P10</span>
+                <div class="port" data-type="p10" data-io="in" data-node="in" title="Entrada de áudio · P10"></div>
+                <button class="btn-bt-pair">BLUETOOTH</button>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-hpStudio">
+        <div class="device-header">
+            <span>Fone Over-Ear Studio</span>
+        </div>
+        <div class="headphone-body">
+            <div class="headphone-object">
+                <div class="headphone-band"></div>
+                <div class="headphone-cups"><div class="headphone-cup"></div><div class="headphone-cup"></div></div>
+            </div>
+            <div class="headphone-controls">
+                <span class="text-[8px] font-bold">AUDIO IN · P10</span>
+                <div class="port" data-type="p10" data-io="in" data-node="in" title="Entrada de áudio · P10"></div>
+                <button class="btn-bt-pair">BLUETOOTH</button>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-hpMonitor">
+        <div class="device-header">
+            <span>Fone Monitor</span>
+        </div>
+        <div class="headphone-body">
+            <div class="headphone-object">
+                <div class="headphone-band"></div>
+                <div class="headphone-cups"><div class="headphone-cup"><span class="headphone-model-detail" aria-hidden="true"></span></div><div class="headphone-cup"><span class="headphone-model-detail" aria-hidden="true"></span></div></div>
+            </div>
+            <div class="headphone-controls">
+                <span class="text-[8px] font-bold">AUDIO IN · P10</span>
+                <div class="port" data-type="p10" data-io="in" data-node="in" title="Entrada de áudio · P10"></div>
+                <button class="btn-bt-pair">BLUETOOTH</button>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-hpMax">
+        <div class="device-header">
+            <span>Fone Max</span>
+        </div>
+        <div class="headphone-body">
+            <div class="headphone-object">
+                <div class="headphone-band"><i class="headphone-mesh-canopy" aria-hidden="true"></i></div>
+                <div class="headphone-cups"><div class="headphone-cup"><span class="headphone-model-detail" aria-hidden="true"></span></div><div class="headphone-cup"><span class="headphone-model-detail" aria-hidden="true"></span></div></div>
+            </div>
+            <div class="headphone-controls">
+                <span class="text-[8px] font-bold">AUDIO IN · P10</span>
+                <div class="port" data-type="p10" data-io="in" data-node="in" title="Entrada de áudio · P10"></div>
+                <button class="btn-bt-pair">BLUETOOTH</button>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-hpClassic">
+        <div class="device-header bg-[#221c18] border-b-amber-950">
+            <span class="text-amber-300 font-serif text-[11px]">FONE VINYL CLASSIC</span>
+        </div>
+        <div class="headphone-body">
+            <div class="headphone-object">
+                <div class="headphone-band"></div>
+                <div class="headphone-cups"><div class="headphone-cup"></div><div class="headphone-cup"></div></div>
+            </div>
+            <div class="headphone-controls">
+                <span class="text-[8px] font-bold">AUDIO IN · P10</span>
+                <div class="port" data-type="p10" data-io="in" data-node="in" title="Entrada de áudio · P10"></div>
+                <button class="btn-bt-pair">BLUETOOTH</button>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-spkActiveCompact">
+        <div class="device-header"><span>Caixa ativa · compacta</span></div>
+        <div class="sp-body"><div class="sp-cab compact-white"><div class="sp-face">
+            <div class="sp-tweeter"><i></i></div>
+            <div class="sp-woofer spk-woofer"><i class="sp-cone"><b></b></i></div>
+            <strong class="compact-name">COMPACT</strong><small class="compact-subtitle">BOOKSHELF · ATIVA</small>
+            <div class="sp-panel">
+                <div class="sp-conn"><div class="interface-pair"><div class="port" data-type="rca-l" data-io="in" data-node="inL" title="Entrada de linha RCA L"></div><div class="port" data-type="rca-r" data-io="in" data-node="inR" title="Entrada de linha RCA R"></div></div><span>RCA L/R</span></div>
+                <div class="sp-conn"><div class="port" data-type="p2" data-io="in" data-node="inStereo" title="Entrada AUX P2 estéreo · sinal de linha"></div><span>AUX P2</span></div>
+                <div class="sp-conn"><div class="sp-knob" role="slider" tabindex="0" data-sp="vol" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="80"></div><span>VOL</span></div>
+                <div class="sp-conn"><div class="sp-power-slot" data-power-slot><button class="power-btn" title="Ligar / desligar"></button></div></div>
+            </div>
+        </div></div></div>
+    </template>
+
+    <script src="./script.js"></script>
+</body>
+</html>
