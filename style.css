@@ -3651,19 +3651,18 @@
 /* Optional bench scenery stays behind equipment and never captures gestures. */
 .bench-scene,.bench-scene * {position:absolute;box-sizing:border-box;pointer-events:none;}
 .bench-scene {inset:0;z-index:0;}
-.bench-backdrop {left:40px;right:40px;top:-280px;height:280px;border-radius:12px 12px 0 0;background:linear-gradient(180deg,#353c3e28,#292e3070);border:1px solid #b2b8ae12;box-shadow:inset 0 -30px 45px #00000018;}
+.bench-backdrop {left:40px;right:40px;top:-700px;height:700px;border-radius:12px 12px 0 0;background:linear-gradient(180deg,transparent,#353c3e10 35%,#292e3040);box-shadow:inset 0 -30px 45px #00000012;}
 [data-bench-backdrop="false"] .bench-backdrop {display:none;}
 .device-node[data-bench-surface="wood"] .furniture-top {border-color:#785437;background:repeating-linear-gradient(2deg,#dfb98518 0 2px,transparent 2px 9px,#33201414 9px 11px),linear-gradient(100deg,#a77a4c,#745033 55%,#b58a59);box-shadow:inset 0 2px #efd5ac55,0 4px 8px #0005;}
 .device-node[data-bench-surface="felt"] .furniture-top {border-color:#354a41;background:repeating-linear-gradient(35deg,#ffffff08 0 1px,transparent 1px 3px),repeating-linear-gradient(-35deg,#0000000b 0 1px,transparent 1px 4px),linear-gradient(#50665a,#35483e);box-shadow:inset 0 2px 3px #ffffff16,0 3px 6px #0005;}
 .device-node[data-bench-surface="studio"] .furniture-top {border-color:#49525c;background:repeating-linear-gradient(90deg,#ffffff06 0 1px,transparent 1px 5px),linear-gradient(#454d58,#252d36);box-shadow:inset 0 2px #91a1ae55,0 3px 8px #0006;}
-.bench-decoration {bottom:100%;filter:drop-shadow(2px 3px 3px #0005);}
-.bench-decoration-records {left:65px;width:108px;height:108px;border-radius:50%;background:repeating-radial-gradient(circle,#1b1c20 0 2px,#303237 3px,#141619 4px);transform:rotate(-12deg);}
-.bench-decoration-records::after {content:'';position:absolute;inset:35px;border-radius:50%;background:radial-gradient(circle,#bbb4a4 0 2px,#a05f4d 3px 18px);}
-.bench-decoration-covers {right:200px;width:96px;height:105px;border:2px solid #bcb5a4;background:linear-gradient(135deg,#858e86 0 40%,#d1b789 41% 65%,#414c57 66%);transform:rotate(8deg);box-shadow:-9px -4px 0 -1px #786453,-17px -8px 0 -2px #586974;}
-.bench-decoration-cds {left:220px;width:76px;height:76px;border-radius:50%;background:radial-gradient(circle,#343b40 0 5px,#a1a9a7 6px 10px,transparent 11px),conic-gradient(#b9c6c5,#a9b2ce,#ddcfb2,#b5c8bd,#b9c6c5);transform:scaleY(.45);transform-origin:bottom;box-shadow:10px -12px 0 #adb6b2;}
-.bench-decoration-lamp {right:65px;width:110px;height:190px;border-bottom:9px solid #555d5d;border-radius:0 0 40% 40%;}
-.bench-decoration-lamp i {left:50px;bottom:0;width:7px;height:145px;background:linear-gradient(90deg,#3d4748,#9aaba7,#3d4748);transform:rotate(14deg);transform-origin:bottom;}
-.bench-decoration-lamp b {left:14px;top:10px;width:90px;height:55px;border-radius:65px 65px 8px 8px;background:linear-gradient(120deg,#83928b,#394844);border-bottom:4px solid #d5c6a2;transform:rotate(-12deg);box-shadow:0 14px 25px #ebcf8220;}
+/* A 12-inch LP and its sleeve share the equipment's physical scale;
+   the 120 mm CD stays proportionally smaller. Artwork includes contact shadows. */
+.bench-decoration {bottom:calc(100% - 8px);display:block;max-width:none;object-fit:contain;user-select:none;-webkit-user-drag:none;}
+.bench-decoration-records {left:36px;width:512px;height:520px;}
+.bench-decoration-cds {left:582px;width:250px;height:224px;}
+.bench-decoration-covers {right:288px;width:548px;height:552px;}
+.bench-decoration-lamp {right:12px;width:284px;height:656px;}
 .bench-options {display:flex;flex-direction:column;gap:10px;margin-top:16px;padding:14px;border:1px solid #45515c;border-radius:8px;}
 .bench-options legend {padding:0 6px;font-weight:600;}
 .bench-options label {display:flex;align-items:center;gap:8px;cursor:pointer;}
@@ -3673,3 +3672,29 @@
 .device-node.tt-motor .at-record {animation:none;}
 .device-type-turntable .at-platter::after,
 .device-type-turntable.tt-motor .at-platter::after {animation:none;background-position:var(--tt-strobe-offset,0px) 0;}
+
+/* Project the top plane only; the front panel and RCA ports remain face-on. */
+.device-node.device-type-turntable {--tt-deck-height:150px;--tt-top-tilt:70deg;}
+.device-type-turntable .at-plinth {grid-template-rows:var(--tt-deck-height) 88px;}
+.device-node.device-type-turntable .at-deck {height:var(--tt-deck-height);}
+.device-node.device-type-turntable .at-plinth::before {top:var(--tt-deck-height);}
+.device-type-turntable .at-top-surface {position:absolute;left:0;right:0;bottom:23px;height:var(--lid-depth,469px);box-sizing:border-box;transform-origin:50% 100%;transform:perspective(900px) rotateX(var(--tt-top-tilt));border:2px solid #56636a;border-radius:5px;background:linear-gradient(110deg,#344047,#202b31 55%,#3d494e);box-shadow:inset 0 2px #aebcc333,inset 0 -3px #0b131b99;}
+.device-type-turntableVintage .at-top-surface {border-color:#9d9f91;background:repeating-linear-gradient(0deg,#fff1 0 1px,transparent 1px 4px),linear-gradient(110deg,#e0dfd2,#aeb2a4 65%,#d2d2c4);box-shadow:inset 0 2px #fff8,inset 0 -3px #626b5b66;}
+.device-type-turntable .at-top-surface .at-platter {left:30px;top:48px;width:350px;height:350px;border-radius:50%;background:repeating-radial-gradient(circle,#bdc8cb 0 2px,#6d7d85 3px 5px,#dae0df 6px 7px);box-shadow:0 8px 0 -1px #526269,0 12px 12px #0008,inset 0 0 0 2px #d6dedd;}
+.device-type-turntable .at-top-surface .at-record {inset:10px;height:auto;border-radius:50%;background:repeating-radial-gradient(circle,#101316 0 1px,#2b2e31 2px 3px,#121619 4px 5px);box-shadow:0 1px 2px #0009;transform-origin:50% 50%;}
+.device-type-turntable .at-top-surface .at-label {display:block;inset:33%;background:radial-gradient(circle at 35% 30%,#91a2ad,#466a7e 70%,#2c4b60);box-shadow:0 0 0 2px #0e1418,inset 0 0 0 1px #c1d5db55;}
+.device-type-turntableVintage .at-top-surface .at-label {background:radial-gradient(circle at 35% 30%,#d4b47d,#a27346 70%,#6e4b31);}
+.device-type-turntable .at-top-surface .at-label::after {width:3px;height:3px;margin-left:-1.5px;}
+.device-type-turntable .at-top-surface .at-spindle {display:block;width:8px;height:8px;}
+.device-type-turntable .at-top-surface .at-sheen {display:block;left:30px;top:48px;width:350px;height:350px;background:conic-gradient(from 20deg,transparent 0 10%,#d7e4ef15 17%,transparent 25% 58%,#d7e4ef12 65%,transparent 73%);}
+.device-type-turntable .at-top-surface .at-platter::after {top:auto;bottom:-4px;left:10%;right:10%;height:6px;border-radius:0 0 50% 50%;}
+.device-type-turntable .at-top-surface .at-arm-svg {left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none;}
+.device-type-turntable .at-top-surface .at-arm {transform-origin:438px 90px;}
+.device-type-turntable .at-top-surface .at-pitch {right:22px;top:auto;bottom:46px;width:68px;height:150px;}
+.device-type-turntable .at-top-surface .at-pitch-track {top:12px;bottom:25px;}
+.device-type-turntable .at-top-surface .at-pitch-mid {top:68px;left:17px;}
+.device-type-turntable .at-top-surface .at-pitch-cap {top:calc(12px + 113px * (1 - var(--p,.5)) - 6px);height:12px;}
+.device-type-turntable .at-top-surface .at-pitch-cap::after {top:5px;}
+.device-type-turntable .at-top-surface .at-pitch b {bottom:8px;font-size:9px;}
+:is(#audio-world,.equipment-preview-world) .device-type-turntable:not(.lid-open) .at-deck::after {transform:perspective(900px) rotateX(var(--tt-top-tilt));}
+@media(prefers-reduced-motion:reduce){.device-type-turntable .at-top-surface .at-arm {transition:none;}}

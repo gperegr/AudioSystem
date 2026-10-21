@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="250" height="224" viewBox="0 0 250 224">
+<defs>
+ <linearGradient id="plastic" x2="1" y2="1"><stop stop-color="#c3d2d7" stop-opacity=".42"/><stop offset=".4" stop-color="#849da7" stop-opacity=".16"/><stop offset="1" stop-color="#d2e3e5" stop-opacity=".3"/></linearGradient>
+ <linearGradient id="disc" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9caeb8"/><stop offset=".25" stop-color="#e0e2de"/><stop offset=".43" stop-color="#abb5bf"/><stop offset=".57" stop-color="#e1d8c1"/><stop offset=".75" stop-color="#b4bdc1"/><stop offset="1" stop-color="#e4e8e1"/></linearGradient>
+ <linearGradient id="prism"><stop stop-color="#d2b8c3" stop-opacity=".05"/><stop offset=".3" stop-color="#a6cfca" stop-opacity=".6"/><stop offset=".6" stop-color="#c0b7d0" stop-opacity=".45"/><stop offset="1" stop-color="#ddcda1" stop-opacity=".15"/></linearGradient>
+</defs>
+<ellipse cx="126" cy="221" rx="120" ry="3" fill="#000" opacity=".25"/>
+<rect x="4" y="9" width="240" height="210" rx="3" fill="#303a40" stroke="#849499" stroke-width="1.5"/>
+<path d="M20 10h223v208H20Z" fill="url(#plastic)"/>
+<path d="M5 12h14v203H5Z" fill="#151e25"/>
+<path d="M9 17v194m5-194v194" stroke="#8e9da4" stroke-opacity=".5"/>
+<circle cx="133" cy="112" r="99" fill="url(#disc)" stroke="#e4e9e7"/>
+<path d="M56 50a99 99 0 0 1 151 2l-57 49a24 24 0 0 0-33-1Zm15 141a99 99 0 0 0 130-3l-53-58a24 24 0 0 1-29 1Z" fill="url(#prism)"/>
+<circle cx="133" cy="112" r="94" fill="none" stroke="#899ba6" stroke-opacity=".45"/>
+<circle cx="133" cy="112" r="33" fill="#aab9bf" fill-opacity=".45" stroke="#e2e9e7"/>
+<circle cx="133" cy="112" r="17" fill="#303b42" stroke="#728891" stroke-width="2"/>
+<circle cx="133" cy="112" r="12" fill="#1a242c"/>
+<g fill="#465762" text-anchor="middle" font-family="Arial,sans-serif">
+ <text x="133" y="66" font-size="7" letter-spacing="1.5">STEREO COLLECTION</text>
+ <text x="133" y="175" font-size="9" font-weight="700" letter-spacing="2">COMPACT DISC</text>
+ <text x="133" y="188" font-size="5.5" letter-spacing="1">DIGITAL AUDIO · 01</text>
+</g>
+<rect x="21" y="11" width="221" height="206" rx="2" fill="url(#plastic)" fill-opacity=".3" stroke="#c8d5d9" stroke-opacity=".7"/>
+<path d="m25 15 214 0-214 83Z" fill="#fff" opacity=".06"/>
+<path d="M24 19v-5h214M238 209v5H24" fill="none" stroke="#e4eceb" stroke-opacity=".5"/>
+<path d="M21 48h7v16h-7m0 98h7v16h-7" fill="#7e959e" fill-opacity=".6" stroke="#b4c8ce" stroke-width=".5"/>
+</svg>

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="548" height="552" viewBox="0 0 548 552">
+<defs>
+ <linearGradient id="paper" x2="1" y2="1"><stop stop-color="#e5ddc9"/><stop offset="1" stop-color="#bcb29d"/></linearGradient>
+ <linearGradient id="dark" x2="1" y2="1"><stop stop-color="#38474d"/><stop offset="1" stop-color="#172b32"/></linearGradient>
+ <pattern id="grain" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 1h2m1 2h2" stroke="#fff" stroke-opacity=".07" stroke-width=".5"/></pattern>
+</defs>
+<ellipse cx="278" cy="548" rx="250" ry="4" fill="#000" opacity=".22"/>
+<path d="M4 18 526 3 541 528 19 543Z" fill="#3c4b4c" stroke="#6d7670" stroke-width="2"/>
+<path d="M12 12 534 20 526 544 4 536Z" fill="#9d7760" stroke="#3f3934" stroke-width="2"/>
+<path d="m19 23 4 504" stroke="#d4a483" stroke-opacity=".5"/>
+<rect x="28" y="26" width="518" height="518" rx="1" fill="url(#paper)" stroke="#8f897d" stroke-width="2"/>
+<rect x="44" y="42" width="486" height="486" fill="url(#dark)"/>
+<g fill="none" stroke="#ddc9a0" stroke-width="1.3" opacity=".38">
+ <path d="M44 353Q157 176 269 353T530 353M44 365Q157 188 269 365T530 365M44 377Q157 200 269 377T530 377M44 389Q157 212 269 389T530 389M44 401Q157 224 269 401T530 401"/>
+</g>
+<circle cx="388" cy="205" r="87" fill="#b77950"/>
+<path d="M44 433 178 282 280 433Z" fill="#78918a"/>
+<path d="M163 433 311 236 463 433Z" fill="#c0b28b"/>
+<path d="M44 433h486v95H44Z" fill="#192e34"/>
+<g fill="#e6dcc0" font-family="Georgia,serif">
+ <text x="70" y="102" font-size="35" letter-spacing="6">NIGHT</text>
+ <text x="70" y="144" font-size="35" letter-spacing="4">SESSIONS</text>
+</g>
+<g fill="#b9b8a4" font-family="Arial,sans-serif" font-size="9" letter-spacing="2.5">
+ <text x="72" y="177">INSTRUMENTAL COLLECTION</text>
+ <text x="70" y="491">LONG PLAY · STEREO</text>
+ <text x="498" y="491" text-anchor="end">VOL. 01</text>
+</g>
+<rect x="29" y="27" width="516" height="516" fill="url(#grain)"/>
+<path d="M30 542V28h514" fill="none" stroke="#fff" stroke-opacity=".25"/>
+</svg>

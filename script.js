@@ -1149,6 +1149,7 @@ const Hardware = (() => {
         }
         const BENCH_SURFACES={wood:'Madeira',felt:'Feltro',studio:'Estúdio'};
         const BENCH_DECORATIONS={records:'Discos',covers:'Capas',cds:'CDs',lamp:'Luminária'};
+        const BENCH_DECORATION_ASSETS={records:'vinyl-record',covers:'record-sleeves',cds:'compact-discs',lamp:'desk-lamp'};
         function updateBenchAppearance(dev){
             if(dev.type!=='furnitureTable')return;
             const settings=dev.state;
@@ -1159,7 +1160,7 @@ const Hardware = (() => {
             dev.el.dataset.benchBackdrop=String(settings.benchBackdrop);
             dev.el.querySelector('.bench-scene')?.remove();
             const scene=document.createElement('div');scene.className='bench-scene';scene.setAttribute('aria-hidden','true');
-            scene.innerHTML='<div class="bench-backdrop"></div>'+settings.benchDecorations.map(key=>`<div class="bench-decoration bench-decoration-${key}"><i></i><b></b></div>`).join('');
+            scene.innerHTML='<div class="bench-backdrop"></div>'+settings.benchDecorations.map(key=>`<img class="bench-decoration bench-decoration-${key}" src="./assets/decorations/${BENCH_DECORATION_ASSETS[key]}.svg" alt="" draggable="false">`).join('');
             dev.el.querySelector('.furniture-body').prepend(scene);
         }
         const STACK_FEET=Object.freeze({width:22,height:20,insetRatio:.1});
@@ -1265,6 +1266,7 @@ const Hardware = (() => {
                 layer.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:0;';
                 world.appendChild(layer);
             }
+            // Above furniture backs (1–2), always below equipment chassis (10+).
             layer.style.zIndex = '3';
             const boxes = Object.values(state.devices).map(dev => ({
                 dev, x:parseFloat(dev.el.style.left)||0, y:parseFloat(dev.el.style.top)||0,
@@ -1278,25 +1280,31 @@ const Hardware = (() => {
                 const turntable=TURNTABLE_TYPES.has(upper.dev.type);
                 if(turntable)upper.dev.el.classList.remove('turntable-stacked');
                 const bottom = upper.y + upper.height;
-                const shelf = boxes.find(f => {
-                    const config = FURNITURE_TYPES[f.dev.type];
-                    return config && upper.x >= f.x + config.inset - 1 && upper.x + upper.width <= f.x + config.width - config.inset + 1
-                        && config.surfaces.some(surface => Math.abs(bottom - f.y - surface) <= 1);
+                const shelfSupports=boxes.flatMap(f=>{
+                    const config=FURNITURE_TYPES[f.dev.type];
+                    if(!config||upper.x<f.x+config.inset-1||upper.x+upper.width>f.x+config.width-config.inset+1)return [];
+                    return config.surfaces.map(surface=>({dev:f.dev,y:f.y+surface}));
                 });
-                const support = shelf ? {dev:shelf.dev,y:bottom} : equipment.filter(lower => {
-                    const gap = lower.y - bottom;
-                    const overlap = Math.min(upper.x + upper.width, lower.x + lower.width) - Math.max(upper.x, lower.x);
-                    return lower !== upper && gap >= (turntable?0:2) && gap <= 20 && overlap >= Math.min(upper.width, lower.width) * .7;
-                }).sort((a,b) => a.y - b.y)[0];
-                if (!support) return;
+                const equipmentSupports=equipment.filter(lower=>{
+                    const overlap=Math.min(upper.x+upper.width,lower.x+lower.width)-Math.max(upper.x,lower.x);
+                    return lower!==upper&&overlap>=Math.min(upper.width,lower.width)*.7;
+                });
+                const support=[...shelfSupports,...equipmentSupports].filter(base=>base.y>=bottom&&base.y-bottom<=STACK_FEET.height).sort((a,b)=>a.y-b.y)[0];
+                if(!support)return;
+                const gap=support.y-bottom;
+                if(gap<=.5){
+                    // Contact leaves no exposed support: remove immediately, without a retracting foot.
+                    layer.querySelectorAll('.auto-stack-foot').forEach(foot=>{if(foot.dataset.footOwner===upper.dev.id){foot.getAnimations().forEach(animation=>animation.cancel());foot.remove();}});
+                    return;
+                }
                 nextSupports.set(upper.dev.id,support.dev.id);
                 const newlyDeployed=deployedFootSupports.get(upper.dev.id)!==support.dev.id;
                 if(newlyDeployed)playUiSound('feet');
                 if(turntable)upper.dev.el.classList.add('turntable-stacked');
-                const footTop=shelf?bottom-STACK_FEET.height:upper.dev.el.dataset.chassis?Math.min(bottom,support.y-STACK_FEET.height):bottom-(turntable?8:0);
+                const footTop=bottom;
                 const left=upper.x, right=upper.x+upper.width;
                 const inset = Math.max(16, (right - left) * STACK_FEET.insetRatio), width = STACK_FEET.width;
-                const footHeight=upper.dev.el.dataset.chassis?STACK_FEET.height:support.y-footTop;
+                const footHeight=gap;
                 [left + inset, right - inset - width].forEach((x,index) => {
                     const key=upper.dev.id+':'+index;
                     let foot=[...layer.querySelectorAll('.auto-stack-foot')].find(el=>el.dataset.footKey===key);
@@ -3267,7 +3275,7 @@ const Hardware = (() => {
                 dev.platterSpeed=next;dev.platterAngle=((dev.platterAngle||0)+travel)%360;
                 dev.el.style.setProperty('--tt-strobe-offset',(dev.platterAngle/360*80).toFixed(3)+'px');
                 const record=dev.el.querySelector('[data-tt="record"]');
-                if(record&&!dev.el.classList.contains('device-type-turntable'))record.style.transform=`rotate(${dev.platterAngle}deg)`;
+                if(record)record.style.transform=`rotate(${dev.platterAngle}deg)`;
             });
         }
         function updateTapeReels(dev,seconds,elapsed,running){
