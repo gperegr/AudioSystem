@@ -3542,3 +3542,37 @@
 :is(#audio-world,.equipment-preview-world) .device-type-receiver .receiver-controls .receiver-control {height:40px;display:grid;grid-template-rows:24px 8px;justify-items:center;gap:8px;}
 :is(#audio-world,.equipment-preview-world) .device-type-receiver .receiver-control>span,
 :is(#audio-world,.equipment-preview-world) .device-type-receiver .receiver-tuning-control>span {font:700 6px/8px "Inter",sans-serif;letter-spacing:.6px;color:#48564e;white-space:nowrap;}
+
+#system-overview[hidden] {display:none!important;}
+.overview-visibility-setting {display:flex;align-items:center;gap:8px;cursor:pointer;}
+.overview-visibility-setting input {accent-color:#60a5fa;width:16px;height:16px;}
+
+/* Medium-height equalizers: frequency legends sit below the fader travel. */
+:is(#audio-world,.equipment-preview-world) .device-node .graphic-eq-face {position:relative;padding:22px 48px;gap:16px;}
+:is(#audio-world,.equipment-preview-world) .graphic-eq-bank {height:124px;align-items:start;background:none;}
+:is(#audio-world,.equipment-preview-world) .graphic-eq-band {display:grid;grid-template-rows:96px 16px;justify-items:center;align-items:center;gap:12px;min-width:0;}
+:is(#audio-world,.equipment-preview-world) .device-node .graphic-eq-bank .graphic-eq-fader {height:96px!important;}
+:is(#audio-world,.equipment-preview-world) .graphic-eq-band>span {display:block;width:100%;text-align:center;font:600 9px/16px "Inter",sans-serif;letter-spacing:.03em;color:#b6ceda;white-space:nowrap;}
+:is(#audio-world,.equipment-preview-world) .device-type-eqVintage .graphic-eq-band>span {color:#424a43;text-shadow:0 1px #ffffff66;}
+:is(#audio-world,.equipment-preview-world) .graphic-eq-handle {position:absolute;top:34px;bottom:34px;width:12px;box-sizing:border-box;border:2px solid #586b76;border-radius:5px;background:linear-gradient(90deg,#111a20,#52616b 45%,#17232b);box-shadow:3px 2px 4px #0007,inset 1px 0 #b9cad255;}
+:is(#audio-world,.equipment-preview-world) .graphic-eq-handle.handle-left {left:14px;}
+:is(#audio-world,.equipment-preview-world) .graphic-eq-handle.handle-right {right:14px;}
+:is(#audio-world,.equipment-preview-world) .device-type-eqVintage .graphic-eq-handle {border-color:#7b7565;border-radius:7px;background:linear-gradient(90deg,#777366,#f0e9ce 38%,#b8b2a0 66%,#686659);box-shadow:3px 2px 4px #352c2255,inset 1px 0 #fff8;}
+
+/* Equipment lettering. Bundled fonts are distributed under SIL OFL 1.1. */
+@font-face {font-family:"Equipment Vintage";src:url("./assets/fonts/barlowcondensed/BarlowCondensed-SemiBold.ttf") format("truetype");font-style:normal;font-weight:600;font-display:swap;}
+@font-face {font-family:"Equipment Studio";src:url("./assets/fonts/barlow/Barlow-Medium.ttf") format("truetype");font-style:normal;font-weight:500;font-display:swap;}
+@font-face {font-family:"Equipment Modern";src:url("./assets/fonts/manrope/Manrope[wght].ttf") format("truetype");font-style:normal;font-weight:200 800;font-display:swap;}
+@font-face {font-family:"Equipment Digital";src:url("./assets/fonts/ibmplexmono/IBMPlexMono-Medium.ttf") format("truetype");font-style:normal;font-weight:500;font-display:swap;}
+:is(#audio-world,.equipment-preview-world) .device-node {--equipment-font:"Equipment Modern",sans-serif;}
+:is(#audio-world,.equipment-preview-world) .device-node.device-family-vintage {--equipment-font:"Equipment Vintage",sans-serif;}
+:is(#audio-world,.equipment-preview-world) .device-node.device-family-studio {--equipment-font:"Equipment Studio",sans-serif;}
+/* Silver and valve instruments keep their engraved, analog character. */
+:is(#audio-world,.equipment-preview-world) .device-node:is(.device-type-integratedSilver,.device-type-preReference,.device-type-powerValve,.device-type-powerBias) {--equipment-font:"Equipment Vintage",sans-serif;}
+:is(#audio-world,.equipment-preview-world) .device-node[data-equipment-type],
+:is(#audio-world,.equipment-preview-world) .device-node[data-equipment-type] * {font-family:var(--equipment-font)!important;}
+/* Digital readouts use fixed-width numerals; analog scales retain panel lettering. */
+:is(#audio-world,.equipment-preview-world) .device-node[data-equipment-type] :is(.cd-lcd,.bench-lcd,.bench-screen,.poweramp-screen,.custom-pre-screen,.signal-screen),
+:is(#audio-world,.equipment-preview-world) .device-node[data-equipment-type] :is(.cd-lcd,.bench-lcd,.bench-screen,.poweramp-screen,.custom-pre-screen,.signal-screen) * {font-family:"Equipment Digital",monospace!important;font-variant-numeric:tabular-nums;}
+:is(#audio-world,.equipment-preview-world) .device-node[data-equipment-type] .device-header,
+:is(#audio-world,.equipment-preview-world) .device-node[data-equipment-type] .device-header * {font-family:var(--font-ui)!important;}

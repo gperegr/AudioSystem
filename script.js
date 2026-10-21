@@ -644,7 +644,7 @@ const Hardware = (() => {
     function layout({type,el}){
         if(type==='hardwareDemo'||FURNITURE_TYPES[type]||isListeningDevice({type})||(SOURCE_TYPES.has(type)&&!SIGNAL_GENERATOR_TYPES.has(type)&&!['btReceiverA','cdPlayer','streamer'].includes(type)))return;
         const compact=!!INTERFACE_DEVICES[type]||['headphoneAmp','headphoneAmpModern','btTransmitterPro','btReceiverA'].includes(type);
-        const height=type==='powerValve'?'high':INTEGRATED_AMPS[type]||CUSTOM_PREAMPS[type]||CUSTOM_POWER_AMPS[type]||RADIO_RECEIVERS.has(type)||MIXER_TYPES.has(type)||BENCH_METER_TYPES.has(type)||SIGNAL_GENERATOR_TYPES.has(type)?'medium':'low';
+        const height=type==='powerValve'?'high':INTEGRATED_AMPS[type]||CUSTOM_PREAMPS[type]||CUSTOM_POWER_AMPS[type]||RADIO_RECEIVERS.has(type)||MIXER_TYPES.has(type)||EQ_TYPES.has(type)||BENCH_METER_TYPES.has(type)||SIGNAL_GENERATOR_TYPES.has(type)?'medium':'low';
         el.dataset.chassis=height;el.dataset.chassisWidth=compact?'compact':'full';
         const width=sizes.widths[el.dataset.chassisWidth],h=sizes.heights[height];el.style.setProperty('--chassis-height',h+'px');el.style.setProperty('--chassis-width',width+'px');
         for(const [key,value]of Object.entries({width:width+'px','min-width':width+'px','max-width':width+'px',height:h+'px','min-height':h+'px','max-height':h+'px'}))el.style.setProperty(key,value,'important');
@@ -1354,7 +1354,7 @@ const Hardware = (() => {
 
         function graphicEqMarkup(type) {
             const ports = (io) => `<div class="graphic-eq-ports"><div class="graphic-eq-pair"><div class="port" data-type="rca-r" data-io="${io}" data-node="${io}R" title="RCA ${io} · R"></div><div class="port" data-type="rca-l" data-io="${io}" data-node="${io}L" title="RCA ${io} · L"></div></div><span>RCA R/L ${io.toUpperCase()}</span><div class="port" data-type="p10" data-io="${io}" data-node="${io}Stereo" title="P10 TRS estéreo · ${io}"></div><span>P10 ${io.toUpperCase()}</span></div>`;
-            return `<div class="device-header"><span>${DEVICE_NAMES[type]} · 7 bandas</span></div><section class="graphic-eq-face">${ports('in')}<div class="graphic-eq-bank">${GRAPHIC_EQ_FREQUENCIES.map((freq,i) => `<div class="graphic-eq-band"><input class="graphic-eq-fader eq-slider" type="range" min="-12" max="12" step="0.5" value="0" data-band="${i}" aria-label="${freq} Hz" title="${freq} Hz · 0 dB"><span aria-hidden="true">${freq>=1000?freq/1000+'k':freq}</span></div>`).join('')}</div>${ports('out')}<div class="graphic-eq-controls"><span class="graphic-eq-led"></span><input type="range" class="graphic-eq-level" min="0" max="1" step="0.01" value="1" aria-label="Nível de saída" title="Nível de saída"><span>LEVEL</span><div data-power-slot class="graphic-eq-power"><button class="power-btn" title="Ligar / desligar"></button></div></div></section>`;
+            return `<div class="device-header"><span>${DEVICE_NAMES[type]} · 7 bandas</span></div><section class="graphic-eq-face"><i class="graphic-eq-handle handle-left" aria-hidden="true"></i><i class="graphic-eq-handle handle-right" aria-hidden="true"></i>${ports('in')}<div class="graphic-eq-bank">${GRAPHIC_EQ_FREQUENCIES.map((freq,i) => `<div class="graphic-eq-band"><input class="graphic-eq-fader eq-slider" type="range" min="-12" max="12" step="0.5" value="0" data-band="${i}" aria-label="${freq} Hz" title="${freq} Hz · 0 dB"><span aria-hidden="true">${freq>=1000?freq/1000+'k':freq}</span></div>`).join('')}</div>${ports('out')}<div class="graphic-eq-controls"><span class="graphic-eq-led"></span><input type="range" class="graphic-eq-level" min="0" max="1" step="0.01" value="1" aria-label="Nível de saída" title="Nível de saída"><span>LEVEL</span><div data-power-slot class="graphic-eq-power"><button class="power-btn" title="Ligar / desligar"></button></div></div></section>`;
         }
 
         function createEqFilters(freqs) {
@@ -1509,7 +1509,7 @@ const Hardware = (() => {
         const CUSTOM_POWER_AMPS={
             powerValve:{watts:75,finish:'valve',constantPower:true,description:'Potência estéreo com válvulas expostas, transformadores pretos e chassi cromado. Entrada RCA de linha e saídas amplificadas para caixas; 75 W nominais por canal, em simulação simplificada.'},
             powerDual:{watts:300,finish:'dual',description:'Potência estéreo de frente preta robusta, alças e LEDs independentes L/R. Conexões RCA e fio de caixa simplificadas para o simulador.'},
-            powerBias:{watts:250,finish:'bias',description:'Potência estéreo prateada, dissipadores laterais e visor circular azul. O ponteiro mostra a potência de saída simulada do canal com maior nível; ganhos A/B ajustáveis.'}
+            powerBias:{watts:250,finish:'bias',description:'Potência estéreo prateada, dissipadores laterais e visor circular azul. O ponteiro mostra a potência de saída simulada do canal com maior nível; ganhos A/B ajustáveis no menu lateral.'}
         };
         // Individual simulation voicings.
         const AMPLIFICATION_VOICINGS={
@@ -3626,8 +3626,7 @@ const Hardware = (() => {
             const valveArt=type==='powerValve'?valveAssemblyMarkup():'';
             const powerAngle=watts=>watts<=0?-100:-100+(Math.log10(watts/250)+4)*46;
             const biasTicks=[0,.1,1,10,100,250].map(watts=>{const angle=powerAngle(watts)*Math.PI/180;const label=watts===0?'0':String(watts);return `<path d="M${60+Math.sin(angle)*40} ${62-Math.cos(angle)*40}L${60+Math.sin(angle)*46} ${62-Math.cos(angle)*46}"/><text x="${60+Math.sin(angle)*32}" y="${64-Math.cos(angle)*32}" text-anchor="middle" style="font-size:6px;letter-spacing:0">${label}</text>`;}).join('');
-            const gainControl=ch=>`<div class="bias-gain-control gain-${ch}"><button type="button" class="bias-gain-knob" data-bias-gain="${ch}" role="slider" aria-label="Ganho ${ch==='L'?'A · esquerdo':'B · direito'}" aria-valuemin="0" aria-valuemax="10" aria-valuenow="10"><i></i></button><span>GANHO ${ch==='L'?'A':'B'}</span></div>`;
-            const biasArt=`<i class="bias-heatsink heatsink-left" aria-hidden="true"></i><i class="bias-heatsink heatsink-right" aria-hidden="true"></i><div class="bias-center">${gainControl('L')}<div class="bias-meter"><svg viewBox="0 0 120 120" role="img" aria-label="Potência de saída simulada em watts"><g>${biasTicks}</g><text x="60" y="97" text-anchor="middle">W</text><line x1="60" y1="62" x2="60" y2="22" data-bias-needle transform="rotate(-100 60 62)"/><circle cx="60" cy="62" r="3"/></svg></div>${gainControl('R')}</div><div class="bias-vent vent-left"></div><div class="bias-vent vent-right"></div>`;
+            const biasArt=`<i class="bias-heatsink heatsink-left" aria-hidden="true"></i><i class="bias-heatsink heatsink-right" aria-hidden="true"></i><div class="bias-center"><div class="bias-meter"><svg viewBox="0 0 120 120" role="img" aria-label="Potência de saída simulada em watts"><g>${biasTicks}</g><text x="60" y="97" text-anchor="middle">W</text><line x1="60" y1="62" x2="60" y2="22" data-bias-needle transform="rotate(-100 60 62)"/><circle cx="60" cy="62" r="3"/></svg></div></div><div class="bias-vent vent-left"></div><div class="bias-vent vent-right"></div>`;
             const dualArt='<i class="dual-handle handle-left" aria-hidden="true"></i><i class="dual-handle handle-right" aria-hidden="true"></i><div class="dual-top-vents" aria-hidden="true"></div><div class="custom-power-indicators"><span><i data-dual-led="0"></i><b>L</b></span><span><i data-dual-led="1"></i><b>R</b></span></div>';
             return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><section class="custom-power-face power-finish-${config.finish}"><div class="custom-power-main">${type==='powerValve'?valveArt:type==='powerBias'?biasArt:dualArt}</div>${connectorRow}</section>`;
         }
@@ -6626,7 +6625,7 @@ const Hardware = (() => {
             });
             const connections=state.connections.map(c=>{const out=document.getElementById(c.outId),input=document.getElementById(c.inId);return {from:out?.closest('.device-node')?.id,out:out?.dataset.node,to:input?.closest('.device-node')?.id,input:input?.dataset.node,label:c.label||'',color:c.color||null,hidden:!!c.hidden,slack:c.slack??5};});
             const panel=document.getElementById('learning-panel'),catalogScroll=equipmentCatalog.querySelector('.overflow-y-auto');
-            return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{environment:{...(state.environment||{preset:'near',intensity:0})},canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'light',soundVolume:state.uiSoundVolume??.8,hideCables:!!state.hideCables,selected:[...state.selectedDeviceIds],selectedCable:state.connections.indexOf(state.selectedConnection),search:document.getElementById('equipment-search').value,catalogScroll:catalogScroll?.scrollTop||0,inspectorScroll:inspectorContent.scrollTop,overviewOpen:document.getElementById('system-overview').open,learning:{open:!panel.hidden,left:parseFloat(panel.style.left)||16,top:parseFloat(panel.style.top)||16,category:document.getElementById('learning-category').value,challenge:document.getElementById('learning-challenge').value,hint:document.getElementById('learning-hint').textContent,completed:[...learningCompleted],active:activeLearning?projectJSON(activeLearning):null,answers:[...document.querySelectorAll('#learning-quiz-content fieldset')].map(field=>[...field.querySelectorAll('button')].findIndex(button=>button.classList.contains('is-answer')))}}};
+            return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{environment:{...(state.environment||{preset:'near',intensity:0})},canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'light',soundVolume:state.uiSoundVolume??.8,hideCables:!!state.hideCables,selected:[...state.selectedDeviceIds],selectedCable:state.connections.indexOf(state.selectedConnection),search:document.getElementById('equipment-search').value,catalogScroll:catalogScroll?.scrollTop||0,inspectorScroll:inspectorContent.scrollTop,overviewOpen:document.getElementById('system-overview').open,overviewVisible:!document.getElementById('system-overview').hidden,learning:{open:!panel.hidden,left:parseFloat(panel.style.left)||16,top:parseFloat(panel.style.top)||16,category:document.getElementById('learning-category').value,challenge:document.getElementById('learning-challenge').value,hint:document.getElementById('learning-hint').textContent,completed:[...learningCompleted],active:activeLearning?projectJSON(activeLearning):null,answers:[...document.querySelectorAll('#learning-quiz-content fieldset')].map(field=>[...field.querySelectorAll('button')].findIndex(button=>button.classList.contains('is-answer')))}}};
         }
         function projectValidate(value){
             if(!value||value.format!==PROJECT_FORMAT||value.version!==PROJECT_VERSION||!Array.isArray(value.devices)||!Array.isArray(value.connections))throw new Error('Arquivo de projeto inválido ou versão incompatível.');
@@ -6765,7 +6764,7 @@ const Hardware = (() => {
                 if(Array.isArray(learning.answers))document.querySelectorAll('#learning-quiz-content fieldset').forEach((field,index)=>{field.querySelectorAll('button')[learning.answers[index]]?.click();});
                 if(snapshot.view){view.zoom=clampZoom(Number(snapshot.view.zoom)||1);view.x=Number(snapshot.view.x)||0;view.y=Number(snapshot.view.y)||0;}applyView();
                 setDeviceSelection((ui.selected||[]).map(id=>ids.get(id)).filter(Boolean));if(links[ui.selectedCable])selectCable(links[ui.selectedCable]);else selectCable(null);
-                document.getElementById('system-overview').open=ui.overviewOpen===true;
+                document.getElementById('system-overview').open=ui.overviewOpen===true;setOverviewVisible(ui.overviewVisible!==false);
                 const scroll=equipmentCatalog.querySelector('.overflow-y-auto');if(scroll)scroll.scrollTop=Number(ui.catalogScroll)||0;inspectorContent.scrollTop=Number(ui.inspectorScroll)||0;
                 updateCables();updateCableFlows();updateLearningProgress();
                 return warnings;
@@ -6815,6 +6814,10 @@ const Hardware = (() => {
         }
         const overviewPanel=document.getElementById('system-overview');
         const overviewBody=overviewPanel.querySelector('.overview-content');
+        function setOverviewVisible(visible){
+            overviewPanel.hidden=!visible;
+            const toggle=document.getElementById('show-system-overview');if(toggle)toggle.checked=visible;
+        }
         let overviewAnimation=null,overviewClosing=false;
         overviewPanel.querySelector('summary').addEventListener('click',event=>{
             if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
@@ -6840,6 +6843,9 @@ const Hardware = (() => {
         clearCatalogFooter.className='app-settings-content';
         const themeSection=document.createElement('section');themeSection.className='settings-theme-section';themeSection.appendChild(canvasThemeControl);themeSection.appendChild(canvasGridControl);setCanvasGrid('dots');
         clearCatalogFooter.insertBefore(themeSection,soundControls);
+        const overviewSetting=document.createElement('label');overviewSetting.className='overview-visibility-setting';
+        overviewSetting.innerHTML='<input id="show-system-overview" type="checkbox" aria-controls="system-overview" checked><span>Exibir Visão do Sistema</span>';themeSection.appendChild(overviewSetting);
+        overviewSetting.querySelector('input').addEventListener('change',event=>{setOverviewVisible(event.target.checked);scheduleProjectSave();});
         const contemplateButton=document.createElement('button');contemplateButton.type='button';contemplateButton.id='contemplate-mode';contemplateButton.textContent='Modo contemplação';themeSection.appendChild(contemplateButton);
         function setContemplation(active){
             document.body.classList.toggle('contemplation',active);settingsMenu.open=false;
