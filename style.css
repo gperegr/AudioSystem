@@ -3384,8 +3384,8 @@
 :is(#audio-world,.equipment-preview-world) .stereo-power-face .stereo-power-gain {gap:8px;}
 :is(#audio-world,.equipment-preview-world) .custom-power-connections {align-items:center;}
 :is(#audio-world,.equipment-preview-world) .power-finish-bias .bias-gain-control {top:calc(50% - 28px);gap:8px;width:64px;}
-:is(#audio-world,.equipment-preview-world) .power-finish-bias .gain-L {left:43px;}
-:is(#audio-world,.equipment-preview-world) .power-finish-bias .gain-R {right:43px;}
+:is(#audio-world,.equipment-preview-world) .power-finish-bias .gain-L {left:20.5px;}
+:is(#audio-world,.equipment-preview-world) .power-finish-bias .gain-R {right:20.5px;}
 /* Sources: identical transport buttons, with room around their fixed symbols. */
 :is(#audio-world,.equipment-preview-world) .device-node.rack-standard.device-type-cdPlayer>.cd-player-face.rack-face {grid-template-columns:230px minmax(0,1fr) 64px 100px 30px!important;gap:14px!important;align-items:center!important;}
 :is(#audio-world,.equipment-preview-world) .device-node.rack-standard.device-type-streamer>.rack-face {grid-template-columns:minmax(0,1fr) 64px 150px 66px 30px!important;gap:14px!important;}
