@@ -1015,7 +1015,7 @@ const Hardware = (() => {
         },{capture:true});
 
         const touchMoveModeButton=document.getElementById('touch-move-mode');let touchMovementMode=false;
-        touchMoveModeButton.addEventListener('click',()=>{touchMovementMode=!touchMovementMode;touchMoveModeButton.setAttribute('aria-pressed',String(touchMovementMode));touchMoveModeButton.dataset.tooltip=touchMovementMode?'Modo mover ativo · toque e arraste equipamentos':'Toque prolongado para mover; ative para arrastar imediatamente';});
+        touchMoveModeButton.addEventListener('click',()=>{touchMovementMode=!touchMovementMode;touchMoveModeButton.setAttribute('aria-pressed',String(touchMovementMode));touchMoveModeButton.dataset.tooltip=touchMovementMode?'Modo Touch ativo · toque e arraste para mover imediatamente':'Modo Touch desligado · segure brevemente um equipamento antes de arrastá-lo';});
         const mobileControls=document.createElement('div');mobileControls.className='mobile-panel-controls';
         mobileControls.innerHTML='<button type="button" data-mobile-panel="catalog" aria-expanded="false">Equipamentos</button><button type="button" data-mobile-panel="properties" aria-expanded="false">Propriedades</button>';
         document.getElementById('app-topbar').lastElementChild.prepend(mobileControls);
