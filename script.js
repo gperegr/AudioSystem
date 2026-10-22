@@ -869,9 +869,57 @@ const Hardware = (() => {
         const inspectorContent = document.getElementById('inspector-content');
         const inspector=document.getElementById('inspector'),inspectorDensityToggle=document.getElementById('inspector-density-toggle');
         function setInspectorDensity(compact){compactInspectorEnabled=!!compact;inspector.classList.toggle('inspector-compact',compactInspectorEnabled);inspectorDensityToggle.setAttribute('aria-pressed',String(compactInspectorEnabled));const label=compactInspectorEnabled?'Usar espaçamento confortável':'Ativar modo compacto';inspectorDensityToggle.setAttribute('aria-label',label);inspectorDensityToggle.title=label;}
-        inspectorDensityToggle.addEventListener('click',()=>{setInspectorDensity(!compactInspectorEnabled);scheduleAppPreferencesSave();});
+        let inspectorDensityAnimation;
+        inspectorDensityToggle.addEventListener('click',()=>{
+            inspectorDensityAnimation?.cancel();
+            setInspectorDensity(!compactInspectorEnabled);
+            if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
+                inspectorDensityAnimation=document.getElementById('inspector-content').animate(
+                    [{transform:`scale(${compactInspectorEnabled?1.035:.965})`},{transform:'scale(1)'}],
+                    {duration:180,easing:'cubic-bezier(.2,.75,.25,1)'}
+                );
+            }
+            scheduleAppPreferencesSave();
+        });
         setInspectorDensity(compactInspectorEnabled);
         const equipmentCatalog = document.getElementById('equipment-catalog');
+        function enableWheelMomentumScroll(element){
+            if(!element)return;
+            const motion={position:element.scrollTop,target:element.scrollTop,frame:0,lastTime:0};
+            element.classList.add('wheel-momentum-scroll');
+            element.addEventListener('wheel',event=>{
+                if(event.ctrlKey||event.deltaY===0)return;
+                event.preventDefault();
+                const unit=event.deltaMode===1?32:event.deltaMode===2?element.clientHeight:1;
+                const delta=Math.max(-180,Math.min(180,event.deltaY*unit));
+                const max=Math.max(0,element.scrollHeight-element.clientHeight);
+                motion.target=Math.max(-240,Math.min(max+240,motion.target+delta));
+                if(!motion.frame){motion.position=element.scrollTop;motion.lastTime=performance.now();motion.frame=requestAnimationFrame(step);}
+            },{passive:false});
+            function step(now){
+                const elapsed=Math.min(32,now-motion.lastTime||16);motion.lastTime=now;
+                const max=Math.max(0,element.scrollHeight-element.clientHeight);
+                if(matchMedia('(prefers-reduced-motion: reduce)').matches){
+                    motion.position=Math.max(0,Math.min(max,motion.target));motion.target=motion.position;
+                }else{
+                    const amount=1-Math.pow(.78,elapsed/16.67);
+                    motion.position+=(motion.target-motion.position)*amount;
+                    if(motion.target<0)motion.target+=(0-motion.target)*amount*.72;
+                    else if(motion.target>max)motion.target+=(max-motion.target)*amount*.72;
+                }
+                const bounded=Math.max(0,Math.min(max,motion.position));
+                const over=motion.position-bounded;
+                element.scrollTop=bounded;
+                element.style.setProperty('--wheel-elastic-offset',`${Math.max(-24,Math.min(24,over*.22))}px`);
+                if(Math.abs(motion.target-bounded)<.25&&Math.abs(over)<.5){
+                    motion.position=bounded;motion.target=bounded;motion.frame=0;element.style.setProperty('--wheel-elastic-offset','0px');return;
+                }
+                motion.frame=requestAnimationFrame(step);
+            }
+        }
+        enableWheelMomentumScroll(equipmentCatalog.querySelector('.overflow-y-auto'));
+        enableWheelMomentumScroll(document.getElementById('inspector-content'));
+        enableWheelMomentumScroll(document.getElementById('inspector-empty'));
         const discardZone=document.createElement('div');
         discardZone.className='catalog-discard-zone';
         discardZone.setAttribute('aria-hidden','true');
@@ -1015,6 +1063,7 @@ const Hardware = (() => {
         },{capture:true});
 
         const touchMoveModeButton=document.getElementById('touch-move-mode');let touchMovementMode=false;
+        document.documentElement.classList.toggle('has-touch-input',navigator.maxTouchPoints>0);
         touchMoveModeButton.addEventListener('click',()=>{touchMovementMode=!touchMovementMode;touchMoveModeButton.setAttribute('aria-pressed',String(touchMovementMode));touchMoveModeButton.dataset.tooltip=touchMovementMode?'Modo Touch ativo · toque e arraste para mover imediatamente':'Modo Touch desligado · segure brevemente um equipamento antes de arrastá-lo';});
         const mobileControls=document.createElement('div');mobileControls.className='mobile-panel-controls';
         mobileControls.innerHTML='<button type="button" data-mobile-panel="catalog" aria-label="Abrir painel de equipamentos" data-tooltip="Equipamentos" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg></button><button type="button" data-mobile-panel="properties" aria-label="Abrir painel de propriedades" data-tooltip="Propriedades" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="18" r="2"/></svg></button>';

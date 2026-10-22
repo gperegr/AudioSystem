@@ -1837,6 +1837,8 @@
         #canvas .device-node,#canvas .port,#canvas input[type=range] {touch-action:none;}
         button,select {touch-action:manipulation;}
         #equipment-catalog,#inspector {overscroll-behavior:contain;}
+        .wheel-momentum-scroll {translate:0 var(--wheel-elastic-offset,0px);will-change:scroll-position,translate;}
+        @media(prefers-reduced-motion:reduce){.wheel-momentum-scroll {will-change:auto;}}
         /* Keep sidebar scrolling native so touch momentum and the browser's
            subtle edge elasticity remain available on phones and tablets. */
         #equipment-catalog .overflow-y-auto,
@@ -4034,6 +4036,13 @@
 .inspector-density-toggle[aria-pressed="true"] .density-icon-compact {opacity:1;transform:scaleY(1);}
 .inspector-density-toggle:focus-visible {outline:2px solid #60a5fa;outline-offset:2px;}
 @media(prefers-reduced-motion:reduce){.inspector-density-toggle svg,.inspector-density-toggle svg g{transition:none;}}
+#inspector-content {transform-origin:top center;transition:gap .18s ease,padding .18s ease;}
+#inspector-content>div,#inspector-content>section {transition:gap .18s ease,padding .18s ease;}
+#inspector-content :is(p,.text-xs,.text-sm,small) {transition:font-size .18s ease,line-height .18s ease,margin .18s ease;}
+#inspector-content :is(button,select,input[type=text],input[type=number]) {transition:min-height .18s ease,padding .18s ease;}
+@media(prefers-reduced-motion:reduce){
+    #inspector-content,#inspector-content * {transition:none!important;}
+}
 .inspector-compact #inspector-content {gap:12px!important;padding:12px!important;}
 .inspector-compact #inspector-content>div,.inspector-compact #inspector-content>section {gap:8px!important;padding:10px!important;}
 .inspector-compact #inspector-content :is(p,.text-xs,.text-sm,small) {font-size:11px!important;line-height:1.35!important;}
@@ -4047,6 +4056,7 @@ body.catalog-collapsed #equipment-catalog .sidebar-toggle {width:36px;}
 body.inspector-collapsed #inspector {width:48px;min-width:48px;flex:0 0 48px;padding:0;overflow:hidden;box-sizing:border-box;}
 body.inspector-collapsed #inspector>.inspector-panel-header {min-height:100%;padding:8px 6px;flex-direction:column;justify-content:flex-start;gap:12px;border:0;}
 body.inspector-collapsed #inspector>.inspector-panel-header>span,body.inspector-collapsed #inspector>#inspector-empty,body.inspector-collapsed #inspector>#inspector-content {display:none!important;}
+body.inspector-collapsed #inspector .inspector-density-toggle {display:none;}
 body.inspector-collapsed #inspector .sidebar-toggle {width:36px;}
 @media(prefers-reduced-motion:reduce){#equipment-catalog,#inspector,.sidebar-toggle{transition:none!important;}}
 
@@ -4074,11 +4084,18 @@ body.inspector-collapsed #inspector .sidebar-toggle {width:36px;}
     body.catalog-collapsed #equipment-catalog>.overflow-y-auto {display:block!important;}
     body.inspector-collapsed #inspector>.inspector-panel-header {min-height:60px;padding:0 14px 0 20px;flex-direction:row;justify-content:space-between;}
     body.inspector-collapsed #inspector>.inspector-panel-header>span {display:inline!important;}
+    body.inspector-collapsed #inspector .inspector-density-toggle {display:grid;}
     body.inspector-collapsed #inspector>#inspector-empty {display:flex!important;}
 }
 @media(hover:none) and (pointer:coarse) {
     #app-topbar .canvas-tools #touch-move-mode {display:inline-grid;}
 }
+/* Hybrid desktops expose the touch movement option, and its icon lights up when enabled. */
+.has-touch-input #app-topbar .canvas-tools #touch-move-mode {display:inline-grid;}
+#app-topbar .canvas-tools #touch-move-mode svg {opacity:.42;transition:opacity .16s ease;}
+#app-topbar .canvas-tools #touch-move-mode[aria-pressed="true"] svg {opacity:1;}
+@media(prefers-reduced-motion:reduce){#app-topbar .canvas-tools #touch-move-mode svg {transition:none;}}
+
 @media(max-width:420px) {
     #app-topbar {gap:4px;}
     #app-topbar>.topbar-controls {gap:3px;}
