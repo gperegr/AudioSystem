@@ -2112,7 +2112,34 @@
         .model-spec-icon {display:grid;place-items:center;flex:none;width:18px;height:18px;border:1px solid #465b6c;border-radius:5px;background:#263744;color:#b9d8e7;font-size:12px;}
         .model-spec[data-kind="impedance"] .model-spec-icon {font-size:11px;}
         .model-spec dd {margin:0;color:#e5edf2;font-size:14px;font-weight:650;line-height:1.25;overflow-wrap:anywhere;}
-        .model-specs-status {min-height:0;margin:0;color:#fde68a;font-size:12px;line-height:1.4;}
+        .model-specs-status:empty {display:none;}
+        .electrical-status {display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:2px;}
+        .electrical-channel,.electrical-status-badge,.electrical-current {display:inline-flex;align-items:center;gap:5px;min-height:26px;box-sizing:border-box;padding:4px 8px;border:1px solid #465463;border-radius:999px;background:#202a33;color:#c2ced8;font-size:10px;line-height:1.2;}
+        .electrical-channel b {color:#eef4f8;font-size:9px;}
+        .electrical-channel small {font-size:8px;color:#a8bdca;white-space:nowrap;}
+        .electrical-channel[data-state="compatible"] {border-color:#39715e;background:#19392f;color:#b2e4ce;}
+        .electrical-channel[data-state="protection"] {border-color:#9a424b;background:#3d2024;color:#ffc1c4;}
+        .electrical-channel[data-state="empty"] {border-color:#485461;background:#252e37;color:#aab6c0;}
+        .electrical-status-badge {font-weight:650;}
+        .electrical-status-badge i {display:grid;place-items:center;width:14px;height:14px;border-radius:50%;background:currentColor;font-style:normal;}
+        .electrical-status-badge i::after {color:#17212a;font-size:10px;font-weight:800;}
+        .electrical-status-badge[data-state="compatible"] {border-color:#39715e;background:#19392f;color:#b2e4ce;}
+        .electrical-status-badge[data-state="compatible"] i::after {content:'✓';}
+        .electrical-status-badge[data-state="attention"] {border-color:#8d6b34;background:#382e1d;color:#f5d18b;}
+        .electrical-status-badge[data-state="attention"] i::after {content:'!';}
+        .electrical-status-badge[data-state="protection"] {border-color:#9a424b;background:#3d2024;color:#ffc1c4;}
+        .electrical-status-badge[data-state="protection"] i::after {content:'×';}
+        .electrical-status-badge[data-state="waiting"] {border-color:#485461;background:#252e37;color:#aab6c0;}
+        .electrical-status-badge[data-state="waiting"] i::after {content:'·';}
+        .electrical-current {border-color:#455b70;background:#202d39;color:#c5d8e7;font-variant-numeric:tabular-nums;}
+        .electrical-current small {font-size:8px;letter-spacing:.04em;color:#93a8ba;}
+        .headphone-output-specs {display:grid;gap:8px;border-top:1px solid #374151;padding-top:12px;}
+        .headphone-output-heading {display:flex;align-items:center;justify-content:space-between;color:#d1d5db;font-size:12px;font-weight:600;}
+        .headphone-output-heading>span:last-child {color:#b9d8e7;font-size:16px;}
+        .headphone-output-specs dl {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0;}
+        .headphone-output-specs dl>div {display:grid;align-content:start;gap:5px;min-width:0;padding:8px 7px;border:1px solid #354351;border-radius:6px;background:#1c252e;}
+        .headphone-output-specs dt {color:#9eafbd;font-size:9px;line-height:1.25;}
+        .headphone-output-specs dd {margin:0;color:#e5edf2;font-size:11px;font-weight:650;line-height:1.25;overflow-wrap:anywhere;}
 
         .device-node.rack-standard.device-type-streamer>.rack-face {grid-template-columns:minmax(0,1fr) minmax(0,1fr) 76px 32px;}
         .device-type-streamer .streamer-aux-output {grid-column:3;grid-row:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;}

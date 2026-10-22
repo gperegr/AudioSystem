@@ -1926,6 +1926,18 @@ const Hardware = (() => {
                 stage.peakLimit=limit;stage.shaper.curve=electricalLimitCurve(limit);stage.gate.gain.setTargetAtTime(protectedLoad?0:1,state.audioCtx.currentTime,.025);
             });
         }
+        function electricalStatusMarkup(dev){
+            const data=dev.powerStatusVisual||{},channels=data.channels||[],notes=data.notes||[];
+            const state=dev.speakerOverloaded||notes.some(note=>note.state==='protection')?'protection':notes.some(note=>note.state==='attention')?'attention':notes.some(note=>note.state==='compatible')?'compatible':'waiting';
+            const labels={protection:'Proteção',attention:'Atenção',compatible:'Compatível',waiting:'Sem conexão'};
+            const channelMarkup=channels.map(channel=>`<span class="electrical-channel" data-state="${channel.state}" title="Canal ${channel.channel}: ${channel.detail}"><b>${channel.channel}</b><span>${channel.label}</span>${Number.isFinite(channel.watts)?`<small>${channel.watts} W</small>`:''}</span>`).join('');
+            const noteText=notes.map(note=>note.detail).filter(Boolean);
+            if(dev.speakerOverloaded)noteText.push('Sobrecarga: reduza o nível. Esta caixa passiva não possui limitador automático.');
+            if(state==='waiting'&&!noteText.length)noteText.push('Conecte caixas passivas para calcular a carga por canal.');
+            const current=Number(dev.simulatedInputWatts)||0;
+            const currentMarkup=current>0?`<span class="electrical-current" title="Potência atual estimada">${current.toFixed(2)} W <small>ATUAL</small></span>`:'';
+            return `<div class="electrical-status" data-state="${state}" role="status" aria-label="${[...channels.map(channel=>`${channel.channel}: ${channel.label}`),labels[state],...noteText].join('. ')}">${channelMarkup}<span class="electrical-status-badge" data-state="${state}" title="${noteText.join(' ')}"><i aria-hidden="true"></i>${labels[state]}</span>${currentMarkup}</div>`;
+        }
         function applySpeakerLoadDynamics(dev){
             if(!dev.listeningGain)return;
             let gain=dev.electricalBaseGain??1,power=0;
@@ -1938,8 +1950,8 @@ const Hardware = (() => {
             dev.speakerOverloaded=!recommended&&power>dev.state.speakerWatts;
             if(dev.state.damage)gain=0;
             dev.simulatedInputWatts=power;
-            dev.electricalLevelStatus=(power>0?' Potência atual estimada: '+power.toFixed(2)+' W.':'')+(dev.speakerOverloaded?' SOBRECARGA: reduza o nível. Esta caixa passiva não possui limitador automático.':'');
-            if(state.selectedDeviceId===dev.id){const status=document.getElementById('power-load-status');if(status)status.textContent=(dev.powerStatus||'')+dev.electricalLevelStatus;}
+            dev.powerStatusVisual={...(dev.powerStatusVisual||{}),currentWatts:power,overloaded:dev.speakerOverloaded};
+            if(state.selectedDeviceId===dev.id){const status=document.getElementById('power-load-status');if(status)status.innerHTML=electricalStatusMarkup(dev);}
             dev.listeningGain.gain.setTargetAtTime(gain,state.audioCtx.currentTime,.06);
         }
         const isPassiveLoad=dev=>PASSIVE_SPK.has(dev.type)||PASSIVE_SUB_TYPES.has(dev.type);
@@ -2068,45 +2080,53 @@ const Hardware = (() => {
             updateOutputCircuitLoads();
             const ampWarnings=new Map();
             sinks.forEach(dev=>{
-                let gain=1,notes=[];
+                let gain=1,notes=[],statusNotes=[],statusChannels=[];
                 if(isPassiveLoad(dev)){
                     const list=routes.get(dev.id)||[];
-                    if(!list.length)notes.push('Conecte a uma saída amplificada para calcular a carga.');
+                    if(!list.length){notes.push('Conecte a uma saída amplificada para calcular a carga.');statusNotes.push({state:'waiting',detail:'Conecte a uma saída amplificada para calcular a carga.'});}
                     list.forEach(route=>{
                         const group=loads.get(route.key);
                         const load=route.amp.channelLoads[route.channel];
                         const amp=route.amp,available=ampPowerAtLoad(amp.type,load);
                         const delivered=available*(load/dev.state.speakerOhms);
                         let message=`Carga ${load.toFixed(1)} Ω · até ${Math.round(delivered)} W nominais nesta caixa.`;
-                        if(load<amp.state.minOhms-.01){gain=0;message+=' Proteção: carga abaixo do mínimo do amplificador.';}
-                        else if(delivered>dev.state.speakerWatts){message+=' Atenção ao nível: reserva do amplificador acima da referência desta caixa.';}
+                        let statusState='compatible';
+                        if(load<amp.state.minOhms-.01){gain=0;statusState='protection';message+=' Proteção: carga abaixo do mínimo do amplificador.';}
+                        else if(delivered>dev.state.speakerWatts){statusState='attention';message+=' Atenção ao nível: reserva do amplificador acima da referência desta caixa.';}
                         else message+=' Conjunto compatível.';
                         notes.push(message);
-                        if(!ampWarnings.has(amp.id))ampWarnings.set(amp.id,new Set());
-                        ampWarnings.get(amp.id).add(message);
+                        const detail=`Canal ${route.channel}: ${message}`;
+                        statusNotes.push({state:statusState,detail});
+                        statusChannels.push({channel:route.channel,label:`${load.toFixed(1)} Ω`,watts:Math.round(delivered),state:statusState,detail});
+                        if(!ampWarnings.has(amp.id))ampWarnings.set(amp.id,[]);
+                        ampWarnings.get(amp.id).push({state:statusState,detail});
                     });
                 }
                 dev.electricalRoutes=routes.get(dev.id)||[];
                 dev.powerStatus=notes.join(' ');
+                if(isPassiveLoad(dev))dev.powerStatusVisual={channels:statusChannels,notes:statusNotes};
                 const audible=!dev.state.damage&&!dev.state.muted&&(!solo||dev.state.solo);
                 dev.electricalBaseGain=audible?gain:0;
                 if(isPassiveLoad(dev))applySpeakerLoadDynamics(dev);else dev.listeningGain?.gain.setTargetAtTime(audible?gain:0,state.audioCtx.currentTime,.025);
                 dev.el.classList.toggle('listening-muted',!audible||gain===0);
                 dev.el.classList.toggle('listening-solo',!!dev.state.solo);
             });
-            ampWarnings.forEach((notes,id)=>state.devices[id].powerStatus=[...notes].join(' '));
+            ampWarnings.forEach((notes,id)=>state.devices[id].powerStatus=notes.map(note=>note.detail).join(' '));
             devices.filter(dev=>FIXED_AMP_SPECS[dev.type]).forEach(dev=>{
-                const channels=['L','R'].map(ch=>{const ohms=dev.channelLoads?.[ch]??Infinity;return ch+': '+(Number.isFinite(ohms)?(ohms>=1000?(ohms/1000).toFixed(1)+' kΩ':ohms.toFixed(1)+' Ω'):'sem carga');});
-                dev.powerStatus=[channels.join(' · '),dev.powerStatus,dev.type==='powerValve'&&Object.values(dev.channelLoads||{}).some(load=>!Number.isFinite(load)||load>16)?'Valvulado: use uma carga de caixa adequada; circuito aberto não equivale a 8 Ω.':''].filter(Boolean).join(' ');
+                const channels=['L','R'].map(ch=>{const ohms=dev.channelLoads?.[ch]??Infinity,min=dev.state.minOhms||0,state=!Number.isFinite(ohms)?'empty':ohms<min-.01?'protection':'compatible',label=Number.isFinite(ohms)?(ohms>=1000?(ohms/1000).toFixed(1)+' kΩ':ohms.toFixed(1)+' Ω'):'Sem carga',watts=Number.isFinite(ohms)?Math.round(ampPowerAtLoad(dev.type,ohms)):null;return {channel:ch,label,watts,state,detail:`Canal ${ch}: ${label}${watts!==null?`, até ${watts} W`:''}${state==='protection'?`; abaixo da carga mínima de ${min} Ω`:''}.`};});
+                const valveWarning=dev.type==='powerValve'&&Object.values(dev.channelLoads||{}).some(load=>!Number.isFinite(load)||load>16)?{state:'attention',detail:'Valvulado: use uma carga de caixa adequada; circuito aberto não equivale a 8 Ω.'}:null;
+                const notes=[...(ampWarnings.get(dev.id)||[]),...(valveWarning?[valveWarning]:[])];
+                dev.powerStatus=[...channels.map(channel=>`${channel.channel}: ${channel.label}`),...notes.map(note=>note.detail)].join(' ');
+                dev.powerStatusVisual={channels,notes};
             });
 
             const selected=state.devices[state.selectedDeviceId];
-            const status=document.getElementById('power-load-status');if(status&&selected)status.textContent=selected.powerStatus||'Conecte caixas passivas para calcular a carga por canal.';
+            const status=document.getElementById('power-load-status');if(status&&selected)status.innerHTML=electricalStatusMarkup(selected);
         }
         function listeningInspectorHtml(dev){
             let html='';
             if(isListeningDevice(dev))html+=`<section class="flex flex-col gap-2 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Escuta desta saída</span><div class="flex gap-2"><button id="listening-solo" class="tt-insp-btn flex-1 ${dev.state.solo?'is-on':''}" aria-pressed="${!!dev.state.solo}">SOLO</button><button id="listening-mute" class="tt-insp-btn flex-1 ${dev.state.muted?'is-on':''}" aria-pressed="${!!dev.state.muted}">MUTE</button></div><button id="clear-listening" class="tt-insp-btn">LIMPAR SOLO E MUTE</button><p class="text-xs text-gray-400">Solo mantém apenas as saídas selecionadas e suas cadeias audíveis. Mute silencia esta saída, preservando cabos e reprodução.</p></section>`;
-            if(HEADPHONE_OUTPUT_SPECS[dev.type]){const spec=HEADPHONE_OUTPUT_SPECS[dev.type];html+=`<p class="text-xs text-gray-400">Saída de fones: até ${spec.voltsRms} V RMS · ${Math.round(spec.currentRms*1000)} mA RMS por canal · resistência de saída ${spec.outputOhms} Ω.</p>`;}
+            if(HEADPHONE_OUTPUT_SPECS[dev.type]){const spec=HEADPHONE_OUTPUT_SPECS[dev.type];html+=`<section class="headphone-output-specs" aria-label="Saída de fones"><div class="headphone-output-heading"><span>Saída de fones</span><span aria-hidden="true">♫</span></div><dl><div><dt>Tensão máx.</dt><dd>${spec.voltsRms} V RMS</dd></div><div><dt>Corrente · canal</dt><dd>${Math.round(spec.currentRms*1000)} mA RMS</dd></div><div><dt>Resistência saída</dt><dd>${spec.outputOhms} Ω</dd></div></dl></section>`;}
             if(HP_TYPES.has(dev.type)&&dev.type!=='hpMax')html+=`<p class="text-sm text-gray-300">Impedância fixa: ${dev.state.headphoneOhms} Ω. A impedância, a resistência de saída e os limites de tensão/corrente do amplificador afetam o sinal.</p>`;
             const amp=POWER_OUTPUT_TYPES.has(dev.type),passive=isPassiveLoad(dev);
             if(amp||passive){
@@ -2114,7 +2134,7 @@ const Hardware = (() => {
                 const fields=amp?[["power",'Potência por canal',`${dev.state.ratedWatts} W / 8 Ω`],["impedance",'Carga mínima simulada',`${dev.state.minOhms} Ω`],["load",'Potência por carga',Object.entries(spec.powerByOhms).map(([r,p])=>`${p} W / ${r} Ω`).join(' · ')]]:[["impedance",PASSIVE_SUB_TYPES.has(dev.type)?'Impedância por bobina isolada':'Impedância nominal',`${dev.state.speakerOhms} Ω`],["power",recommended?'Amplificação recomendada':'Potência nominal suportada',`${dev.state.speakerWatts} W`]];
                 const icons={power:'W',impedance:'Ω',load:'W'};
                 const note='Valores fixos do modelo. A carga altera a reserva de saída; abaixo da carga mínima há proteção. Saturação e limitação dependem do nível do áudio. Modelo nominal simplificado.';
-                html+=`<section class="model-specs"><div class="model-specs-heading"><span>Características do modelo</span><span class="model-specs-help" role="note" aria-label="${note}" title="${note}">i</span></div><dl class="model-specs-grid">${fields.map(([kind,label,value])=>`<div class="model-spec" data-kind="${kind}"><dt><span class="model-spec-icon" aria-hidden="true">${icons[kind]}</span>${label}</dt><dd>${value}</dd></div>`).join('')}</dl><p id="power-load-status" role="status" class="model-specs-status"></p></section>`;
+                html+=`<section class="model-specs"><div class="model-specs-heading"><span>Características do modelo</span><span class="model-specs-help" role="note" aria-label="${note}" title="${note}">i</span></div><dl class="model-specs-grid">${fields.map(([kind,label,value])=>`<div class="model-spec" data-kind="${kind}"><dt><span class="model-spec-icon" aria-hidden="true">${icons[kind]}</span>${label}</dt><dd>${value}</dd></div>`).join('')}</dl><div id="power-load-status" class="model-specs-status"></div></section>`;
             }
             if(PASSIVE_SUB_TYPES.has(dev.type))html+='<p class="text-xs text-gray-400">Entradas L/R representam bobinas eletricamente isoladas. A potência total soma as duas bobinas; não una saídas de amplificadores entre si.</p>';
             return html;
