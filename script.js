@@ -6150,6 +6150,8 @@ const Hardware = (() => {
                         <span>${names[dev.type] || dev.type.toUpperCase()}</span>
                     </div>
                 </div>`;
+
+            html+=amplificationInspectorHtml(dev);
                 
             if (hasPowerControl && !TURNTABLE_TYPES.has(dev.type)) {
                 html += `<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Power</span><button id="inspector-power-toggle" type="button" aria-label="Ligar ou desligar equipamento" aria-pressed="${dev.powered}" class="tt-insp-btn w-full ${dev.powered ? 'is-on' : ''}">LIGAR / DESLIGAR</button></div>`;
@@ -6268,7 +6270,6 @@ const Hardware = (() => {
             if (dev.audioBuffer&&!RADIO_RECEIVERS.has(dev.type)) html += transportInspectorHtml(dev);
             if (EQ_TYPES.has(dev.type) || CROSSOVER_TYPES.has(dev.type) || BENCH_METER_TYPES.has(dev.type)) html += spectrumInspectorHtml(dev);
             if(hasRestorableSettings(dev))html += '<div class="flex flex-col gap-2 border-t border-gray-700 pt-4"><button id="restore-device-settings" type="button" class="tt-insp-btn w-full">RESTAURAR CONFIGURAÇÕES</button><p id="restore-settings-status" role="status" class="text-xs text-gray-400"></p></div>';
-            html+=amplificationInspectorHtml(dev);
             html+=portSignalsInspectorHtml(dev);
             html+=listeningInspectorHtml(dev);
             if(dev.el.querySelector('.speaker-grille'))html+=`<button type="button" class="tt-insp-btn" id="inspector-grille" aria-pressed="${dev.el.classList.contains('grille-off')}">GRADE</button>`;
