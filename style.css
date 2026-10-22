@@ -2117,7 +2117,6 @@
 
         .model-specs {display:grid;gap:10px;border-top:1px solid #374151;padding-top:16px;}
         .model-specs-heading {display:flex;align-items:center;justify-content:space-between;color:#d1d5db;font-size:13px;font-weight:600;}
-        .model-specs-help {display:grid;place-items:center;width:17px;height:17px;border:1px solid #536273;border-radius:50%;color:#9fb2c3;font-size:11px;cursor:help;}
         .model-specs-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0;}
         .model-spec {display:grid;align-content:start;gap:7px;min-width:0;padding:10px;border:1px solid #354351;border-radius:7px;background:linear-gradient(145deg,#202b35,#192129);}
         .model-spec[data-kind="load"] {grid-column:1/-1;}
