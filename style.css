@@ -1837,8 +1837,7 @@
         #canvas .device-node,#canvas .port,#canvas input[type=range] {touch-action:none;}
         button,select {touch-action:manipulation;}
         #equipment-catalog,#inspector {overscroll-behavior:contain;}
-        .wheel-momentum-scroll {translate:0 var(--wheel-elastic-offset,0px);will-change:scroll-position,translate;}
-        @media(prefers-reduced-motion:reduce){.wheel-momentum-scroll {will-change:auto;}}
+        .wheel-momentum-scroll.wheel-elastic-active>* {translate:0 var(--wheel-elastic-offset,0px);}
         /* Keep sidebar scrolling native so touch momentum and the browser's
            subtle edge elasticity remain available on phones and tablets. */
         #equipment-catalog .overflow-y-auto,
@@ -4017,8 +4016,8 @@
 #app-topbar .canvas-tools .movement-history-tools {gap:2px;margin:0;padding:0 5px 0 0;border:0;}
 #app-topbar .canvas-tools .movement-history-tools button {width:34px;height:34px;min-width:34px;min-height:34px;padding:6px;}
 
-/* Sidebars collapse to narrow handles and restore without shifting the canvas abruptly. */
-#equipment-catalog,#inspector {transition:width 240ms cubic-bezier(.22,.7,.2,1),flex-basis 240ms cubic-bezier(.22,.7,.2,1),min-width 240ms cubic-bezier(.22,.7,.2,1),opacity 180ms ease;}
+/* Slide full-width sidebars beyond the viewport while retaining their reopening handles. */
+#equipment-catalog,#inspector {transition:margin 240ms cubic-bezier(.22,.7,.2,1),transform 240ms cubic-bezier(.22,.7,.2,1),opacity 180ms ease;}
 .catalog-panel-header {display:flex;align-items:center;gap:8px;}
 .catalog-search {flex:1;min-width:0;}
 .sidebar-toggle {display:grid;place-items:center;flex:none;width:36px;height:36px;border:1px solid #45515b;border-radius:6px;background:#242c33;color:#d4dce1;font:500 24px/1 "Inter",sans-serif;cursor:pointer;transition:background 150ms,color 150ms;}
@@ -4049,12 +4048,13 @@
 .inspector-compact #inspector-content p {margin-block:2px!important;}
 .inspector-compact #inspector-content :is(label,.flex-col) {gap:5px!important;}
 .inspector-compact #inspector-content :is(button,select,input[type=text],input[type=number]) {min-height:34px!important;padding-top:6px!important;padding-bottom:6px!important;}
-body.catalog-collapsed #equipment-catalog {width:48px;min-width:48px;flex:0 0 48px;padding:0;overflow:hidden;box-sizing:border-box;}
-body.catalog-collapsed #equipment-catalog .catalog-panel-header {justify-content:center;padding:6px;border:0;}
+body.catalog-collapsed #equipment-catalog {width:18rem;min-width:18rem;flex:0 0 18rem;margin-left:calc(48px - 18rem);padding:0;overflow:hidden;box-sizing:border-box;}
+body.catalog-collapsed #equipment-catalog .catalog-panel-header {justify-content:flex-end;padding:6px;border:0;}
 body.catalog-collapsed #equipment-catalog .catalog-search,body.catalog-collapsed #equipment-catalog>.overflow-y-auto {display:none!important;}
 body.catalog-collapsed #equipment-catalog .sidebar-toggle {width:36px;}
-body.inspector-collapsed #inspector {width:48px;min-width:48px;flex:0 0 48px;padding:0;overflow:hidden;box-sizing:border-box;}
+body.inspector-collapsed #inspector {width:18rem;min-width:18rem;flex:0 0 18rem;margin-right:calc(48px - 18rem);padding:0;overflow:hidden;box-sizing:border-box;}
 body.inspector-collapsed #inspector>.inspector-panel-header {min-height:100%;padding:8px 6px;flex-direction:column;justify-content:flex-start;gap:12px;border:0;}
+body.inspector-collapsed #inspector .inspector-header-actions {align-self:flex-start;}
 body.inspector-collapsed #inspector>.inspector-panel-header>span,body.inspector-collapsed #inspector>#inspector-empty,body.inspector-collapsed #inspector>#inspector-content {display:none!important;}
 body.inspector-collapsed #inspector .inspector-density-toggle {display:none;}
 body.inspector-collapsed #inspector .sidebar-toggle {width:36px;}
@@ -4079,13 +4079,14 @@ body.inspector-collapsed #inspector .sidebar-toggle {width:36px;}
     #app-topbar .canvas-tools .movement-history-tools button {width:44px;height:44px;min-width:44px;min-height:44px;padding:9px;}
     #equipment-catalog,#inspector {transition:transform 240ms cubic-bezier(.22,.7,.2,1),visibility 240ms,width 240ms;}
     .catalog-panel-header .sidebar-toggle,.inspector-panel-header .sidebar-toggle {display:none;}
-    body.catalog-collapsed #equipment-catalog,body.inspector-collapsed #inspector {width:min(360px,calc(100vw - 24px));min-width:0;flex:initial;}
+    body.catalog-collapsed #equipment-catalog,body.inspector-collapsed #inspector {width:min(360px,calc(100vw - 24px));min-width:0;flex:initial;margin-left:0;margin-right:0;}
     body.catalog-collapsed #equipment-catalog .catalog-search {display:flex!important;}
     body.catalog-collapsed #equipment-catalog>.overflow-y-auto {display:block!important;}
     body.inspector-collapsed #inspector>.inspector-panel-header {min-height:60px;padding:0 14px 0 20px;flex-direction:row;justify-content:space-between;}
     body.inspector-collapsed #inspector>.inspector-panel-header>span {display:inline!important;}
     body.inspector-collapsed #inspector .inspector-density-toggle {display:grid;}
-    body.inspector-collapsed #inspector>#inspector-empty {display:flex!important;}
+    body.inspector-collapsed #inspector .inspector-header-actions {align-self:auto;}
+    body.inspector-collapsed #inspector>:is(#inspector-empty,#inspector-content):not(.hidden) {display:flex!important;}
 }
 @media(hover:none) and (pointer:coarse) {
     #app-topbar .canvas-tools #touch-move-mode {display:inline-grid;}

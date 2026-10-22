@@ -178,6 +178,8 @@ Os layouts dos painéis foram ajustados junto com a tabela: fontes, blocos de to
 
 `Hardware.movementSound(elemento, tipo)` resolve o perfil pela construção compartilhada. O som só é disparado ao mudar efetivamente o valor com mouse, toque ou teclado; montagem, restauração e atualizações programáticas não produzem movimento sonoro. Envelopes curtos e intervalos mínimos por perfil evitam sobreposição excessiva. Todos respeitam o volume global de sons de interação, incluindo zero. Os botões mantêm seus próprios sons de pressionar, soltar e comutar.
 
+O perfil `catalogGear`, em `uiSoundProfiles`, produz o engrenamento leve do catálogo. `enableCatalogScrollSound` acompanha o deslocamento real com mouse, toque ou teclado, incluindo a inércia; `playUiSound` recebe intensidade e altura proporcionais à velocidade. O efeito usa o mesmo volume global, só toca com o áudio desbloqueado e não acumula sons para depois da parada.
+
 ### Novas construções de botões
 
 Todas aparecem automaticamente no equipamento Modelo, com o identificador abaixo, e usam o mesmo sistema de dimensões ajustáveis e inscrições fixas.

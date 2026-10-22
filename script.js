@@ -883,9 +883,11 @@ const Hardware = (() => {
         });
         setInspectorDensity(compactInspectorEnabled);
         const equipmentCatalog = document.getElementById('equipment-catalog');
+        const wheelScrollMotions=new WeakMap();
         function enableWheelMomentumScroll(element){
             if(!element)return;
             const motion={position:element.scrollTop,target:element.scrollTop,frame:0,lastTime:0};
+            wheelScrollMotions.set(element,motion);
             element.classList.add('wheel-momentum-scroll');
             element.addEventListener('wheel',event=>{
                 if(event.ctrlKey||event.deltaY===0)return;
@@ -893,8 +895,9 @@ const Hardware = (() => {
                 const unit=event.deltaMode===1?32:event.deltaMode===2?element.clientHeight:1;
                 const delta=Math.max(-180,Math.min(180,event.deltaY*unit));
                 const max=Math.max(0,element.scrollHeight-element.clientHeight);
+                if(!motion.frame){motion.position=element.scrollTop;motion.target=motion.position;motion.lastTime=performance.now();}
                 motion.target=Math.max(-240,Math.min(max+240,motion.target+delta));
-                if(!motion.frame){motion.position=element.scrollTop;motion.lastTime=performance.now();motion.frame=requestAnimationFrame(step);}
+                if(!motion.frame)motion.frame=requestAnimationFrame(step);
             },{passive:false});
             function step(now){
                 const elapsed=Math.min(32,now-motion.lastTime||16);motion.lastTime=now;
@@ -910,9 +913,9 @@ const Hardware = (() => {
                 const bounded=Math.max(0,Math.min(max,motion.position));
                 const over=motion.position-bounded;
                 element.scrollTop=bounded;
-                element.style.setProperty('--wheel-elastic-offset',`${Math.max(-24,Math.min(24,over*.22))}px`);
+                element.style.setProperty('--wheel-elastic-offset',`${Math.max(-32,Math.min(32,-over*.32))}px`);element.classList.toggle('wheel-elastic-active',Math.abs(over)>=.25);
                 if(Math.abs(motion.target-bounded)<.25&&Math.abs(over)<.5){
-                    motion.position=bounded;motion.target=bounded;motion.frame=0;element.style.setProperty('--wheel-elastic-offset','0px');return;
+                    motion.position=bounded;motion.target=bounded;motion.frame=0;element.style.setProperty('--wheel-elastic-offset','0px');element.classList.remove('wheel-elastic-active');return;
                 }
                 motion.frame=requestAnimationFrame(step);
             }
@@ -2324,6 +2327,7 @@ const Hardware = (() => {
             connect:{duration:.095,frequency:1350,noise:.085,tone:240,body:.012},
             disconnect:{duration:.12,frequency:720,noise:.075,tone:165,body:.012},
             adjust:{duration:.055,frequency:950,noise:.04,tone:0,body:0},
+            catalogGear:{duration:.024,frequency:1350,noise:.009,tone:185,body:.0015,attack:.0015,lowpass:2400,ring:2100,ringLevel:.0006,cooldown:28},
             discard:{duration:.13,frequency:2400,noise:.20,tone:95,body:.045},
             ...Hardware.buttonSounds,
             ...Hardware.movementSounds
@@ -2344,7 +2348,7 @@ const Hardware = (() => {
             const control=event.target.closest('button,input,select,textarea,.port,.speaker-grille,.grille-restore,[role="button"]');
             if(!control&&event.target.closest('.device-node,.catalog-item'))playUiSound('pickup');
         },{capture:true});
-        async function playUiSound(kind = 'click') {
+        async function playUiSound(kind = 'click', options = {}) {
             if(state.restoringProject)return;
             const now=performance.now(),profile=uiSoundProfiles[kind]||uiSoundProfiles.click;
             if(now-(uiSoundTimes[kind]??-Infinity)<(profile.cooldown??(kind==='drag'?140:kind==='adjust'?95:55)))return;
@@ -2355,14 +2359,14 @@ const Hardware = (() => {
                 if(context.state!=='running')await context.resume();
                 if(context.state!=='running')return;
                 prepareUiAudio();
-                const variation=.94+Math.random()*.12;
+                const variation=(.94+Math.random()*.12)*(options.pitch??1);
                 const burst=(delay,level=1)=>{
                     const time=context.currentTime+delay,duration=profile.duration;
                     const noise=context.createBufferSource(),filter=context.createBiquadFilter(),low=context.createBiquadFilter(),gain=context.createGain();
                     noise.buffer=uiNoiseBuffer;filter.type='bandpass';filter.frequency.value=profile.frequency*variation*(kind==='discard'?.7+Math.random()*.9:1);filter.Q.value=profile.resonance??(kind==='discard'?1.5:.65);
                     const wooden=kind==='pickup'||kind==='drop',bubble=kind==='feet'||kind==='feetRetract';
                     low.type='lowpass';low.frequency.value=profile.lowpass??(wooden?1400:kind==='receiverClick'?4300:kind==='discard'?5600:2200);
-                    const constructionLevel=kind.startsWith('move')?1.8:kind.startsWith('hw')?1.5:1.35;
+                    const constructionLevel=(kind.startsWith('move')?1.8:kind.startsWith('hw')?1.5:1.35)*(options.level??1);
                     gain.gain.setValueAtTime(0,time);gain.gain.linearRampToValueAtTime(profile.noise*level*constructionLevel,time+(profile.attack??(wooden||bubble||kind==='discard'||kind==='receiverClick'?.0015:Math.min(.012,duration*.18))));gain.gain.exponentialRampToValueAtTime(.00001,time+duration);
                     noise.connect(filter);filter.connect(low);low.connect(gain);gain.connect(uiEffectsGain);
                     noise.onended=()=>{noise.disconnect();filter.disconnect();low.disconnect();gain.disconnect();};
@@ -2387,6 +2391,36 @@ const Hardware = (() => {
                 if(kind==='discard'){burst(.023,.62);burst(.061,.35);burst(.104,.16);}
             }catch(error){ /* Feedback is optional when audio is unavailable. */ }
         }
+        function enableCatalogScrollSound(element){
+            const scrollKeys=new Set(['ArrowUp','ArrowDown','PageUp','PageDown','Home','End',' ']);
+            let armed=false,inputType='',lastPosition=element.scrollTop,lastTime=performance.now(),lastMovement=0,distance=0,speed=0;
+            function arm(event){
+                if(!event.isTrusted||event.ctrlKey||event.metaKey)return;
+                if(event.type==='keydown'&&(!scrollKeys.has(event.key)||event.target.closest('input,select,textarea,[contenteditable]')))return;
+                const now=performance.now();
+                if(!armed||now-lastMovement>220){lastPosition=element.scrollTop;lastTime=now;distance=0;speed=0;}
+                armed=true;inputType=event.type==='wheel'?'wheel':event.type==='keydown'?'keyboard':event.pointerType;lastMovement=now;
+            }
+            for(const type of ['wheel','pointerdown','keydown'])element.addEventListener(type,arm,{capture:true,passive:true});
+            element.addEventListener('scroll',()=>{
+                const now=performance.now(),position=element.scrollTop,travel=Math.abs(position-lastPosition),elapsed=Math.max(8,now-lastTime);
+                lastPosition=position;lastTime=now;
+                if(!armed||(inputType==='wheel'&&!wheelScrollMotions.get(element)?.frame)||now-lastMovement>220||state.restoringProject||document.visibilityState!=='visible'||!element.clientHeight||getComputedStyle(element).visibility==='hidden'){
+                    armed=false;distance=0;return;
+                }
+                lastMovement=now;
+                speed+=(travel*1000/elapsed-speed)*.4;
+                distance+=travel;
+                // Each tooth follows actual travel, including native touch and wheel inertia.
+                // Discard excess travel instead of queuing sounds after the list has stopped.
+                if(distance<16)return;
+                distance%=16;
+                if(state.uiSoundVolume===0||state.audioCtx?.state!=='running')return;
+                const intensity=Math.min(1,speed/1400);
+                playUiSound('catalogGear',{level:.4+intensity*.55,pitch:.85+intensity*.35});
+            },{passive:true});
+        }
+        enableCatalogScrollSound(equipmentCatalog.querySelector('.overflow-y-auto'));
         let cableHumVoice=null,cableHumRequest=0;
         function stopCableHum(){
             cableHumRequest++;

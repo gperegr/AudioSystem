@@ -65,7 +65,11 @@ Os rótulos acessíveis dos conectores identificam direção, conector, canal e 
 
 A busca do catálogo também encontra equipamentos por função, conector ou tipo de sinal, como **entrada óptica** ou **caixa passiva**. Em **Configurações**, você pode desativar os avisos de compatibilidade e a ajuda contextual para experimentar ligações incorretas; essa opção não remove as barreiras físicas entre plugues incompatíveis. Com a ajuda ativa, as dicas de mouseover aparecem após um segundo sobre o item; ao navegar pelo teclado, elas aparecem ao focar o controle.
 
-No cabeçalho de **Propriedades**, o botão com ícone de espaçamento alterna entre os modos confortável e compacto para navegar por aparelhos com muitos controles. A mudança anima suavemente o tamanho do conteúdo e dos textos; o ícone também anima, e o modo escolhido é lembrado. O botão fica oculto enquanto o painel está recolhido. As listas de equipamentos e propriedades mantêm a rolagem com toque e também oferecem suavidade, inércia e retorno elástico nas bordas ao usar a roda do mouse.
+No cabeçalho de **Propriedades**, o botão com ícone de espaçamento alterna entre os modos confortável e compacto para navegar por aparelhos com muitos controles. A mudança anima suavemente o tamanho do conteúdo e dos textos; o ícone também anima, e o modo escolhido é lembrado. O botão fica oculto enquanto o painel está recolhido.
+
+No desktop, use as setas dos cabeçalhos para recolher ou expandir as laterais. Os menus deslizam para fora da tela sem comprimir seu conteúdo e deixam uma alça visível para reabri-los.
+
+As listas de equipamentos e propriedades mantêm a rolagem com toque e também oferecem suavidade, inércia e retorno elástico dos itens nas bordas ao usar a roda do mouse. Ao rolar o catálogo de equipamentos, um som leve de engrenamento acompanha a velocidade e a desaceleração da lista. Ele respeita o volume dos sons de interação e pode ser silenciado em **Configurações**.
 
 O botão **Restaurar Configurações** aparece apenas nos modelos com ajustes restauráveis. Alguns ajustes aparecem apenas no painel lateral. Na **Potência · Visor Circular**, por exemplo, os ganhos A/B são ajustados por esse painel.
 
