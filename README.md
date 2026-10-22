@@ -63,19 +63,21 @@ O botão **Restaurar Configurações** aparece apenas nos modelos com ajustes re
 
 Os toca-discos de braço articulado são vistos de frente, com o prato e o disco em perfil e o braço visível acima deles. O slider **PITCH**, no painel frontal, ajusta a velocidade de reprodução; arraste para alterar e dê duplo clique para zerar. Use o botão **Abrir tampa / Fechar tampa** para movimentar a tampa de acrílico, que abre para trás a partir das dobradiças traseiras.
 
-O **Toca-discos Tangencial** tem vista frontal elevada para mostrar os dois braços paralelos e o carro de leitura linear. No painel lateral, escolha **30 cm · LP**, **17 cm · Single** ou **Sem disco**. **INICIAR** detecta o diâmetro simulado, seleciona **33⅓** ou **45 rpm** e baixa a agulha antes de liberar o áudio; sem disco, retorna ao repouso. As teclas de velocidade permitem alterar a rotação durante a escuta, e os dois ajustes finos frontais guardam correções independentes de até ±3%. **Elevar / baixar agulha** pausa ou retoma a leitura mantendo o prato em movimento. Segure as setas para mover o carro com a agulha elevada; **Shift** acelera o deslocamento. **PARAR**, ou o fim do lado, eleva a agulha, retorna o carro e desliga o motor. A saída oferece **LINE** ou **PHONO**, e a tampa abre para trás. Disco, velocidade, ajustes finos e tampa acompanham o projeto; a reprodução é restaurada em repouso.
+O **Toca-discos Tangencial** é visto totalmente de frente, com prato e disco em perfil, carro de leitura linear e os dois braços paralelos vistos pela extremidade. Os comandos ficam na face frontal. No painel lateral, escolha **30 cm · LP**, **17 cm · Single** ou **Sem disco**. **INICIAR** detecta o diâmetro simulado, seleciona **33⅓** ou **45 rpm** e baixa a agulha antes de liberar o áudio; sem disco, retorna ao repouso. As teclas de velocidade permitem alterar a rotação durante a escuta, e os dois ajustes finos frontais guardam correções independentes de até ±3%. **Elevar / baixar agulha** pausa ou retoma a leitura mantendo o prato em movimento. Segure as setas para mover o carro com a agulha elevada; **Shift** acelera o deslocamento. **PARAR**, ou o fim do lado, eleva a agulha, retorna o carro e desliga o motor. A saída oferece **LINE** ou **PHONO**, e a tampa abre para trás. Disco, velocidade, ajustes finos e tampa acompanham o projeto; a reprodução é restaurada em repouso.
 
 Os ponteiros dos medidores respondem com inércia e retorno suave. Os rolos do tape deck giram durante a reprodução, e o prato do toca-discos desacelera gradualmente ao parar. Os movimentos respeitam a preferência de movimento reduzido do sistema ou navegador.
 
 Os aparelhos Bluetooth representam conexões dentro da simulação; não substituem o pareamento Bluetooth do seu computador ou celular.
 
-Em **Fones de Ouvido**, o **Kuba Disco 2** reproduz o arco clássico de madeira laminada, as regulagens laterais, as conchas com relevos concêntricos e as almofadas XL costuradas. Selecione o fone para escolher **Tauari**, **Nogueira** ou **Ébano** em **Madeira do arco**; o acabamento acompanha o projeto salvo. Conecte uma saída de fones ao **P2 na ponta do cabo**, abaixo do divisor em Y. A escuta desse modelo não acrescenta coloração tonal e não pretende reproduzir medições acústicas do produto real.
+Em **Fones de Ouvido**, o **Kuba Disco 2** é visto totalmente de frente, no mesmo suporte de madeira dos demais fones, e reproduz o arco clássico de madeira laminada, as regulagens laterais com trilhos que seguem a curvatura do arco e encaixes alinhados ao centro das conchas, as conchas com relevos concêntricos e as almofadas XL costuradas. Selecione o fone para escolher **Tauari**, **Nogueira** ou **Ébano** em **Madeira do arco**; o acabamento acompanha o projeto salvo. Conecte uma saída de fones ao **P2 na ponta do cabo**, abaixo do divisor em Y. A escuta desse modelo não acrescenta coloração tonal e não pretende reproduzir medições acústicas do produto real.
 
 O **Streamer Integrado**, em **Amplificadores integrados**, reúne uma fonte interna e amplificação nominal de **40 W por canal / 8 Ω** na simulação. A tela mostra faixa, artista, álbum e capa de arquivos MP3/FLAC quando esses metadados estão disponíveis, além do progresso, tempo, fonte e volume. Os dados de reprodução PCM correspondem ao áudio decodificado pelo navegador. O menu frontal alterna **Música** e **Linha**, e os controles permitem reproduzir, pausar e avançar ou retroceder 10 segundos. O disco superior iluminado ajusta o volume em dez passos; o duplo clique silencia. As saídas **SPEAKERS L/R** alimentam caixas passivas, **PRE OUT** tem volume variável e conectar **fones P2** silencia as caixas. A fonte interna usa demonstração ou música própria carregada; a entrada **LINE IN** recebe outra fonte por RCA.
 
 O **Integrado · Essencial** tem acabamento cinza-oliva, controles de plástico e amplificação nominal de **20 W por canal / 8 Ω**. Selecione **AUX**, **TUNER**, **TAPE** ou **PHONO** e use volume, balanço, graves e agudos. **TONE DEFEAT** ignora os ajustes de tonalidade, **LOUDNESS** reforça discretamente os extremos em volumes baixos e **MONO** combina os canais. Os pequenos LEDs indicam a potência simulada entregue às caixas.
 
 O **Pré · Precisão** oferece quatro entradas de linha e **LINE OUT** para uma potência ou caixas ativas. O modulômetro mede as saídas reais em **dBFS**, com agulha preta para L e vermelha para R, ambas com inércia. A chave **GAIN** alterna **0, +6 e +12 dB**; as demais chaves controlam **MUTE**, **MONO** e **PHASE** (inversão de polaridade). Seleção rotativa, volume e balanço também são funcionais. Esses ajustes acompanham o projeto salvo e podem ser restaurados pelo painel lateral.
+
+O **Pré · Vidro Clássico** combina vidro preto, inscrições verdes discretas, laterais de alumínio escovado, knobs prateados canelados e oito alavancas metálicas. O seletor escolhe **AUX**, **TUNER**, **TAPE** ou **PHONO**; PHONO aplica ganho e equalização RIAA. **LINE OUT** tem volume variável e alimenta uma potência ou caixas ativas. Graves, agudos e balanço são funcionais. **MONO** combina os canais, **PHASE** inverte a polaridade e **MUTE** silencia. **LOW FILTER** atenua abaixo de **35 Hz**, **HIGH FILTER** acima de **7 kHz** e **LOUDNESS** reforça graves e agudos em volumes baixos. **TONE DEFEAT** ignora os ajustes de graves/agudos, mantendo filtros e loudness. Seleção, knobs e chaves acompanham o projeto salvo e o comando de restaurar configurações. A coloração suave é uma interpretação sonora da simulação.
 
 ## Organizando a montagem
 
@@ -109,12 +111,18 @@ O salvamento local pertence ao navegador e ao endereço em que você abriu a apl
 ## Se não estiver saindo som
 
 1. Clique ou toque na aplicação e inicie a reprodução na fonte.
-2. Confira o volume e a saída de áudio do computador, além de verificar se a aba do navegador está silenciada.
+2. Confira o volume de mídia e a saída de áudio do dispositivo, além de verificar se a aba do navegador está silenciada.
 3. Verifique se os equipamentos estão ligados, com volume ou ganho acima de zero e sem mute ativo.
 4. Confirme a entrada selecionada no amplificador, receiver ou seletor.
 5. Siga o caminho dos cabos: fonte → processamento ou amplificação → caixas ou fones.
 6. Confira os avisos de conexão, os medidores dos aparelhos e os indicadores de sinal.
 7. Se um arquivo não reproduzir, tente outro formato aceito pelo navegador, como MP3 ou WAV.
+
+No Safari do iPhone e iPad, o áudio é ativado por um toque em **Reproduzir**. A aplicação configura a sessão para reprodução de mídia e tenta retomar uma sessão já ativada ao voltar de outra aba ou após desbloquear a tela. Se o sistema exigir uma nova interação, toque em Reproduzir novamente. Abrir ou restaurar um projeto mantém as fontes pausadas.
+
+O desbloqueio usa toque, clique ou teclado, mesmo com os sons de interação desligados. Em versões antigas do iOS sem a API de sessão de áudio, um áudio silencioso local mantém a rota de mídia; ele pausa quando a página fica oculta. A música continua passando pelo circuito Web Audio da montagem.
+
+Para verificar regressões de ativação e retomada, execute `node --test tests/audio-activation.test.cjs` (Node.js, sem dependências adicionais).
 
 ## Sobre a simulação
 
