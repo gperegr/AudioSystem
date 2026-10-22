@@ -2911,6 +2911,10 @@ const Hardware = (() => {
                 : `<path class="noise-level-axis" d="M2 12h20"/><path d="${waveforms[level]||waveforms.low}"/>`;
             return `<svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">${symbol}</svg>`;
         }
+        function tapeWowLevelIcon(level){
+            const controlY={low:8,medium:4,high:-2}[level]??8;
+            return `<svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path class="noise-level-axis" d="M2 12h20"/><path d="M2 12Q4.5 ${controlY} 7 12T12 12T17 12T22 12"/></svg>`;
+        }
         let vinylNoiseBuffer=null;
         function stopVinylNoise(dev){
             const voice=dev.vinylNoise;dev.vinylNoise=null;
@@ -3599,7 +3603,7 @@ const Hardware = (() => {
         function extraInspectorHtml(dev){
             if(dev.type==='preamp')return `<section class="flex flex-col gap-4"><label class="text-sm text-gray-300">Fonte<select id="preamp-source" class="w-full bg-gray-800 border border-gray-600 p-2 rounded">${['AUX','CD','TAPE','PHONO'].map((name,i)=>`<option value="${i+1}" ${dev.state.preSource===i+1?'selected':''}>${name}</option>`).join('')}</select></label>${[['volume','Volume',0,100,Math.round(dev.state.volume*100)],['bass','Graves (dB)',-12,12,dev.state.bass],['treble','Agudos (dB)',-12,12,dev.state.treble]].map(([key,label,min,max,value])=>`<label class="text-sm text-gray-300">${label} <output id="preamp-value-${key}">${value}</output><input type="range" data-preamp-setting="${key}" min="${min}" max="${max}" step="${key==='volume'?1:.5}" value="${value}"></label>`).join('')}<p class="text-xs text-gray-400">AUX, CD e TAPE recebem linha; PHONO recebe a cápsula MM do toca-discos. Ligue LINE OUT ao amplificador de potência. Os canais L/R permanecem separados.</p></section>`;
             if(BENCH_METER_TYPES.has(dev.type))return '<p class="text-sm text-gray-400">Ligue em série entre equipamentos de linha: entrada → medidor → saída. VU indica nível; correlação próxima de +1 indica canais semelhantes e valores negativos indicam oposição de fase. Sem sinal, a correlação não é calculada. Os VUs usam 0 VU = −18 dBFS como referência senoidal; +3 VU não indica saturação digital.</p><div class="text-sm text-gray-300">Correlação estéreo: <output id="bench-inspector-correlation">SEM SINAL</output></div>';
-            if(dev.type==='tapeDeck')return `<section class="flex flex-col gap-4">${[['tapeVolume','Nível de saída',Math.round(dev.state.tapeVolume*100)]].map(([key,label,value])=>`<label class="text-sm text-gray-300">${label} <output id="tape-value-${key}">${value}%</output><input type="range" data-tape-setting="${key}" min="0" max="100" step="1" value="${value}"></label>`).join('')}${[['tapeHiss','Ruído de fita'],['tapeWow','Oscilação da fita']].map(([key,label])=>`<div class="flex flex-col gap-3"><span class="text-sm text-gray-300">${label}</span><div class="${key==='tapeHiss'?'noise-level-buttons':'grid grid-cols-3 gap-2'}" role="group" aria-label="${label}">${(key==='tapeHiss'?[[0,'none'],[15,'low'],[35,'medium'],[65,'high']]:[[15,'Baixo'],[35,'Médio'],[65,'Alto']]).map(([value,level])=>{const selected=dev.state[key]===value;if(key==='tapeWow')return `<button type="button" class="tt-insp-btn ${selected?'is-on':''}" data-tape-preset="${key}" data-value="${value}" aria-pressed="${selected}">${level}</button>`;const name=level==='none'?'Sem ruído':`Ruído ${level==='low'?'baixo':level==='medium'?'médio':'alto'}`;return `<button type="button" class="tt-insp-btn noise-level-button ${selected?'is-on':''}" data-tape-preset="${key}" data-value="${value}" aria-label="${name}" title="${name}" aria-pressed="${selected}">${noiseLevelIcon(level)}</button>`}).join('')}</div></div>`).join('')}</section>`;
+            if(dev.type==='tapeDeck')return `<section class="flex flex-col gap-4">${[['tapeVolume','Nível de saída',Math.round(dev.state.tapeVolume*100)]].map(([key,label,value])=>`<label class="text-sm text-gray-300">${label} <output id="tape-value-${key}">${value}%</output><input type="range" data-tape-setting="${key}" min="0" max="100" step="1" value="${value}"></label>`).join('')}${[['tapeHiss','Ruído de fita'],['tapeWow','Oscilação da fita']].map(([key,label])=>`<div class="flex flex-col gap-3"><span class="text-sm text-gray-300">${label}</span><div class="noise-level-buttons ${key==='tapeWow'?'noise-level-buttons--three':''}" role="group" aria-label="${label}">${(key==='tapeHiss'?[[0,'none'],[15,'low'],[35,'medium'],[65,'high']]:[[15,'low'],[35,'medium'],[65,'high']]).map(([value,level])=>{const selected=dev.state[key]===value;const name=key==='tapeWow'?`Oscilação ${level==='low'?'baixa':level==='medium'?'média':'alta'}`:level==='none'?'Sem ruído':`Ruído ${level==='low'?'baixo':level==='medium'?'médio':'alto'}`;return `<button type="button" class="tt-insp-btn noise-level-button ${selected?'is-on':''}" data-tape-preset="${key}" data-value="${value}" aria-label="${name}" title="${name}" aria-pressed="${selected}">${key==='tapeWow'?tapeWowLevelIcon(level):noiseLevelIcon(level)}</button>`}).join('')}</div></div>`).join('')}</section>`;
             return '';
         }
         function bindExtraInspector(dev){
@@ -6163,7 +6167,7 @@ const Hardware = (() => {
             inspectorContent.classList.remove('hidden');
             
             const names = DEVICE_NAMES;
-            const equipmentName=dev.el.querySelector('.device-header > span')?.textContent.trim()||names[dev.type]||dev.type;
+            const equipmentName=names[dev.type]||dev.el.querySelector('.device-header > span')?.textContent.trim()||dev.type;
             document.getElementById('inspector-title').textContent=equipmentName;
 
             const hasPowerControl = !!dev.el.querySelector('.power-btn');
