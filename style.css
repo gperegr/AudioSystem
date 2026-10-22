@@ -3993,13 +3993,20 @@
 /* Canvas tools live in the header, leaving more uninterrupted workspace. */
 #app-topbar {overflow:visible;}
 #app-topbar>.topbar-controls {min-width:0;flex:1;justify-content:flex-end;}
-#app-topbar .canvas-tools {position:static;z-index:auto;min-width:0;max-width:100%;flex:0 1 auto;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;box-sizing:border-box;}
+#app-topbar .canvas-tools {position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;min-width:0;max-width:calc(100% - 340px);width:max-content;flex:none;flex-wrap:nowrap;overflow:visible;scrollbar-width:none;box-sizing:border-box;gap:8px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;color:#d8dee8;}
 #app-topbar .canvas-tools::-webkit-scrollbar {display:none;}
-.canvas-tools[data-theme="sepia"] {border-color:#baaa90;background:#e9dfccf5;color:#554b3f;box-shadow:0 3px 12px #6b57351a;}
-.canvas-tools[data-theme="sepia"] button:hover {background:#d7cab0;color:#3f372d;}
-.canvas-tools[data-theme="sepia"] kbd {background:#eee5d3;border-color:#c7b99e;color:#75664f;}
-.canvas-tools[data-theme="graphite"],.canvas-tools[data-theme="midnight"] {border-color:#475569;background:#1e293bf5;color:#d4deea;box-shadow:0 3px 12px #0004;}
-.canvas-tools[data-theme="graphite"] button:hover,.canvas-tools[data-theme="midnight"] button:hover {background:#334155;color:#f1f5f9;}
+#app-topbar .canvas-tools button {position:relative;display:inline-grid;place-items:center;width:38px;height:38px;min-width:38px;padding:7px;border:0;border-radius:8px;background:transparent;color:inherit;cursor:pointer;}
+#app-topbar .canvas-tools button:hover:not(:disabled),#app-topbar .canvas-tools button:focus-visible {background:#ffffff14;color:#fff;}
+#app-topbar .canvas-tools button[aria-pressed="true"] {color:#b5e0c5;background:#4d866d26;}
+#app-topbar .canvas-tools button svg {display:block;width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+#toolbar-tooltip {position:fixed;z-index:10000;max-width:min(260px,calc(100vw - 24px));box-sizing:border-box;padding:7px 9px;border:1px solid #46515e;border-radius:6px;background:#171d24;color:#e8edf2;box-shadow:0 5px 16px #0006;font:500 11px/1.35 "Inter",sans-serif;text-align:center;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .12s ease,visibility 0s linear .12s;}
+#toolbar-tooltip.is-visible {opacity:1;visibility:visible;transition:opacity .12s ease;}
+#app-topbar .canvas-tools .canvas-zoom-group {gap:2px;padding:0 4px;border:0;}
+#app-topbar .canvas-tools #zoom-label {min-width:42px;color:#aeb8c4;font:600 11px/1 "Inter",sans-serif;}
+#app-topbar .canvas-tools .selection-hint {color:#aeb8c4;}
+#app-topbar .canvas-tools .selection-hint svg {width:19px;height:19px;}
+#app-topbar .canvas-tools .movement-history-tools {gap:2px;margin:0;padding:0 5px 0 0;border:0;}
+#app-topbar .canvas-tools .movement-history-tools button {width:34px;height:34px;min-width:34px;min-height:34px;padding:6px;}
 
 /* Sidebars collapse to narrow handles and restore without shifting the canvas abruptly. */
 #equipment-catalog,#inspector {transition:width 240ms cubic-bezier(.22,.7,.2,1),flex-basis 240ms cubic-bezier(.22,.7,.2,1),min-width 240ms cubic-bezier(.22,.7,.2,1),opacity 180ms ease;}
@@ -4031,23 +4038,19 @@ body.inspector-collapsed #inspector .sidebar-toggle {width:36px;}
 
 @media(max-width:1000px),(hover:none) and (pointer:coarse) and (max-width:1400px) {
     #app-topbar>.topbar-controls {gap:5px;}
-    #app-topbar .canvas-tools {flex:1 1 0;width:0;max-width:none;gap:2px;padding:3px;}
-    #app-topbar .canvas-tools button {padding:6px;}
-    #app-topbar .canvas-tools kbd,.canvas-tools .selection-hint {display:none;}
-    #app-topbar .canvas-tools #center-devices {font-size:0;}
-    #app-topbar .canvas-tools #center-devices::after {content:"⌖";font-size:18px;}
-    #app-topbar .canvas-tools #fit-canvas {font-size:0;}
-    #app-topbar .canvas-tools #fit-canvas::after {content:"Ajustar";font-size:10px;}
-    #app-topbar .canvas-tools #touch-move-mode {font-size:0;}
-    #app-topbar .canvas-tools #touch-move-mode {display:inline-flex;align-items:center;justify-content:center;min-width:42px;min-height:40px;padding:6px 8px;border:1px solid #c6b79e;border-radius:5px;background:#e9dfcc;color:#4e4438;font:600 10px/1.2 "Inter",sans-serif;}
-    #app-topbar .canvas-tools #touch-move-mode::after {content:"Mover";font-size:10px;}
-    #app-topbar .canvas-tools #touch-move-mode[aria-pressed="true"] {border-color:#4d866d;background:#d6e8d8;color:#214d37;box-shadow:inset 0 0 0 1px #4d866d55;}
+    #app-topbar .canvas-tools {position:static;left:auto;top:auto;transform:none;flex:1 1 0;width:0;max-width:none;gap:2px;padding:0;overflow-x:auto;}
+    #app-topbar .canvas-tools button {width:44px;height:44px;min-width:44px;padding:9px;border-radius:8px;}
+    #app-topbar .canvas-tools kbd {display:none;}
+    #app-topbar .canvas-tools #touch-move-mode {display:inline-grid;}
+    #app-topbar .canvas-tools #touch-move-mode[aria-pressed="true"] {color:#a8e0bc;background:#24583d;box-shadow:inset 0 0 0 1px #4d866d;}
     .mobile-panel-controls {position:static;display:flex;flex:none;gap:3px;z-index:auto;}
     .mobile-panel-controls button {min-width:38px;min-height:40px;padding:6px;border:1px solid #4b5563;border-radius:6px;background:#22282e;color:#e5e7eb;font:600 10px/1.1 "Inter",sans-serif;}
     .mobile-panel-controls button[aria-expanded=true] {border-color:#60a5fa;color:#bfdbfe;}
     .app-settings {flex:none;}
-    #app-topbar .canvas-tools .canvas-zoom-group {gap:0;}
-    #app-topbar .canvas-tools #zoom-label {min-width:32px;}
+    #app-topbar .canvas-tools .canvas-zoom-group {gap:0;padding:0 2px;}
+    #app-topbar .canvas-tools #zoom-label {min-width:34px;}
+    #app-topbar .canvas-tools .selection-hint {display:inline-grid;}
+    #app-topbar .canvas-tools .movement-history-tools button {width:44px;height:44px;min-width:44px;min-height:44px;padding:9px;}
     #equipment-catalog,#inspector {transition:transform 240ms cubic-bezier(.22,.7,.2,1),visibility 240ms,width 240ms;}
     .catalog-panel-header .sidebar-toggle,.inspector-panel-header .sidebar-toggle {display:none;}
     body.catalog-collapsed #equipment-catalog,body.inspector-collapsed #inspector {width:min(360px,calc(100vw - 24px));min-width:0;flex:initial;}

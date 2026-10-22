@@ -891,13 +891,13 @@ const Hardware = (() => {
             return event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
         };
         const cableVisibilityButton=document.createElement('button');
-        cableVisibilityButton.type='button';cableVisibilityButton.className='cable-visibility-toggle';cableVisibilityButton.textContent='Visibilidade dos cabos';cableVisibilityButton.setAttribute('aria-pressed','false');
+        cableVisibilityButton.type='button';cableVisibilityButton.className='cable-visibility-toggle';cableVisibilityButton.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>';cableVisibilityButton.setAttribute('aria-label','Visibilidade dos cabos');cableVisibilityButton.dataset.tooltip='Mostrar ou ocultar os cabos';cableVisibilityButton.setAttribute('aria-pressed','false');
         document.querySelector('.canvas-tools').appendChild(cableVisibilityButton);
         cableVisibilityButton.addEventListener('click',()=>{
             if(state.hideCables||state.connections.some(c=>c.hidden)){
                 state.hideCables=false;state.connections.forEach(c=>c.hidden=false);
             }else state.hideCables=!state.hideCables;
-            cableVisibilityButton.textContent='Visibilidade dos cabos';cableVisibilityButton.setAttribute('aria-pressed',String(!!state.hideCables));
+            cableVisibilityButton.setAttribute('aria-pressed',String(!!state.hideCables));
             updateCables();renderCableProperties();
         });
         const selectionMarquee = document.getElementById('selection-marquee');
@@ -1015,7 +1015,7 @@ const Hardware = (() => {
         },{capture:true});
 
         const touchMoveModeButton=document.getElementById('touch-move-mode');let touchMovementMode=false;
-        touchMoveModeButton.addEventListener('click',()=>{touchMovementMode=!touchMovementMode;touchMoveModeButton.setAttribute('aria-pressed',String(touchMovementMode));touchMoveModeButton.textContent=touchMovementMode?'Mover: ativo':'Mover';touchMoveModeButton.title=touchMovementMode?'Toque e arraste um equipamento para movê-lo':'Toque prolongado para mover; ative para arrastar imediatamente';});
+        touchMoveModeButton.addEventListener('click',()=>{touchMovementMode=!touchMovementMode;touchMoveModeButton.setAttribute('aria-pressed',String(touchMovementMode));touchMoveModeButton.dataset.tooltip=touchMovementMode?'Modo mover ativo · toque e arraste equipamentos':'Toque prolongado para mover; ative para arrastar imediatamente';});
         const mobileControls=document.createElement('div');mobileControls.className='mobile-panel-controls';
         mobileControls.innerHTML='<button type="button" data-mobile-panel="catalog" aria-expanded="false">Equipamentos</button><button type="button" data-mobile-panel="properties" aria-expanded="false">Propriedades</button>';
         document.getElementById('app-topbar').lastElementChild.prepend(mobileControls);
@@ -2065,7 +2065,6 @@ const Hardware = (() => {
         }
         function applyCableAppearance(connection){
             const hidden=!!state.hideCables||!!connection.hidden;
-            cableVisibilityButton.textContent='Visibilidade dos cabos';
             connection.el.style.display=hidden?'none':'';
             connection.el.querySelectorAll('.cable-path,.wire-braid-red').forEach(path=>{
                 if(connection.color)path.style.setProperty('stroke',connection.color,'important');else path.style.removeProperty('stroke');
@@ -5965,8 +5964,19 @@ const Hardware = (() => {
 
         const movementUndo=[],movementRedo=[];
         const historyTools=document.createElement('div');historyTools.className='movement-history-tools';
-        historyTools.innerHTML='<button type="button" id="undo-movement" aria-label="Desfazer movimento" title="Desfazer movimento (Cmd/Ctrl+Z)" disabled>↶</button><button type="button" id="redo-movement" aria-label="Refazer movimento" title="Refazer movimento (Cmd/Ctrl+Shift+Z ou Ctrl+Y)" disabled>↷</button>';
+        historyTools.innerHTML='<button type="button" id="undo-movement" aria-label="Desfazer movimento" data-tooltip="Desfazer movimento · Ctrl/Cmd+Z" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h9a7 7 0 0 1 0 14h-2"/></svg></button><button type="button" id="redo-movement" aria-label="Refazer movimento" data-tooltip="Refazer movimento · Ctrl/Cmd+Shift+Z" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5m5 5h-9a7 7 0 0 0 0 14h2"/></svg></button>';
         document.querySelector('.canvas-tools').prepend(historyTools);
+        const toolbarTooltip=document.createElement('div');toolbarTooltip.id='toolbar-tooltip';toolbarTooltip.setAttribute('role','tooltip');document.body.appendChild(toolbarTooltip);
+        let toolbarTooltipTimer=0,toolbarTooltipTarget=null,toolbarTooltipPreviousDescription='',touchTooltipTarget=null;
+        function hideToolbarTooltip(){clearTimeout(toolbarTooltipTimer);toolbarTooltip.classList.remove('is-visible');if(toolbarTooltipTarget){const ids=(toolbarTooltipTarget.getAttribute('aria-describedby')||'').split(/\s+/).filter(id=>id&&id!=='toolbar-tooltip');if(toolbarTooltipPreviousDescription)ids.unshift(...toolbarTooltipPreviousDescription.split(/\s+/).filter(Boolean));if(ids.length)toolbarTooltipTarget.setAttribute('aria-describedby',[...new Set(ids)].join(' '));else toolbarTooltipTarget.removeAttribute('aria-describedby');}toolbarTooltipTarget=null;toolbarTooltipPreviousDescription='';}
+        function scheduleToolbarTooltip(target){if(!target?.dataset.tooltip)return;hideToolbarTooltip();toolbarTooltipTarget=target;toolbarTooltipPreviousDescription=target.getAttribute('aria-describedby')||'';toolbarTooltip.textContent=target.dataset.tooltip;toolbarTooltipTimer=setTimeout(()=>{if(!target.isConnected||!(target.matches(':hover')||document.activeElement===target||touchTooltipTarget===target))return;const rect=target.getBoundingClientRect();toolbarTooltip.classList.add('is-visible');const tip=toolbarTooltip.getBoundingClientRect(),gap=7,left=Math.max(8,Math.min(innerWidth-tip.width-8,rect.left+(rect.width-tip.width)/2)),top=rect.bottom+gap+tip.height<=innerHeight?rect.bottom+gap:Math.max(8,rect.top-gap-tip.height);toolbarTooltip.style.left=`${left}px`;toolbarTooltip.style.top=`${top}px`;const ids=new Set((target.getAttribute('aria-describedby')||'').split(/\s+/).filter(Boolean));ids.add('toolbar-tooltip');target.setAttribute('aria-describedby',[...ids].join(' '));},1000);}
+        document.addEventListener('pointerover',event=>{if(event.pointerType==='touch')return;const target=event.target instanceof Element?event.target.closest('.canvas-tools [data-tooltip]'):null;if(target)scheduleToolbarTooltip(target);});
+        document.addEventListener('pointerout',event=>{const target=event.target instanceof Element?event.target.closest('.canvas-tools [data-tooltip]'):null;if(target&&!(event.relatedTarget instanceof Node&&target.contains(event.relatedTarget)))hideToolbarTooltip();});
+        document.addEventListener('pointerdown',event=>{const target=event.target instanceof Element?event.target.closest('.canvas-tools [data-tooltip]'):null;if(target&&event.pointerType==='touch'){touchTooltipTarget=target;scheduleToolbarTooltip(target);}});
+        document.addEventListener('pointerup',event=>{if(event.pointerType==='touch'){touchTooltipTarget=null;hideToolbarTooltip();}});
+        document.addEventListener('pointercancel',()=>{touchTooltipTarget=null;hideToolbarTooltip();});
+        document.addEventListener('focusin',event=>{const target=event.target instanceof Element?event.target.closest('.canvas-tools [data-tooltip]'):null;if(target)scheduleToolbarTooltip(target);});
+        document.addEventListener('focusout',event=>{if(event.target instanceof Element&&event.target.matches('.canvas-tools [data-tooltip]')&&!event.target.matches(':hover'))hideToolbarTooltip();});
         function updateMovementHistoryButtons(){
             const valid=entry=>entry.before.every(p=>state.devices[p.id]);
             for(const stack of [movementUndo,movementRedo])for(let i=stack.length-1;i>=0;i--)if(!valid(stack[i]))stack.splice(i,1);
@@ -7445,7 +7455,7 @@ const Hardware = (() => {
                 });
                 restored.forEach(([saved,dev])=>{const other=state.devices[ids.get(saved.pairedId)];if(other&&BT_TX_TYPES.has(dev.type)&&canPair(dev,other))pairDevices(dev,other);});
                 const ui=snapshot.ui||{};setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setAtmosphere(ui.atmosphere);setRoomSettings(ui.environment);
-                cableVisibilityButton.textContent='Visibilidade dos cabos';cableVisibilityButton.setAttribute('aria-pressed',String(!!ui.hideCables));
+                cableVisibilityButton.setAttribute('aria-pressed',String(!!ui.hideCables));
                 state.uiSoundVolume=typeof ui.soundVolume==='number'?Math.max(0,Math.min(1,ui.soundVolume)):.9;state.hideCables=!!ui.hideCables;
                 const sound=document.getElementById('ui-sound-volume');sound.value=Math.round(state.uiSoundVolume*100);document.getElementById('ui-sound-value').textContent=state.uiSoundVolume?`${sound.value}%`:'desligados';uiEffectsGain?.gain.setValueAtTime(interactionGain(state.uiSoundVolume),state.audioCtx.currentTime);
                 const search=document.getElementById('equipment-search');search.value=typeof ui.search==='string'?ui.search:'';search.dispatchEvent(new Event('input'));
