@@ -4081,6 +4081,9 @@
 
 /* Slide full-width sidebars beyond the viewport while retaining their reopening handles. */
 #equipment-catalog,#inspector {transition:margin 240ms cubic-bezier(.22,.7,.2,1),transform 240ms cubic-bezier(.22,.7,.2,1),opacity 180ms ease;}
+/* Keep the properties panel's flex basis fixed: equipment content must not
+   influence the sidebar width, and collapsing should slide it off-canvas. */
+#inspector {box-sizing:border-box;width:18rem;min-width:18rem;flex:0 0 18rem;}
 .catalog-panel-header {display:flex;align-items:center;gap:8px;}
 .catalog-search {flex:1;min-width:0;}
 .sidebar-toggle {display:grid;place-items:center;flex:none;width:36px;height:36px;border:1px solid #45515b;border-radius:6px;background:#242c33;color:#d4dce1;font:500 24px/1 "Inter",sans-serif;cursor:pointer;transition:background 150ms,color 150ms;}
@@ -4137,7 +4140,7 @@ body.catalog-collapsed #equipment-catalog {width:18rem;min-width:18rem;flex:0 0 
 body.catalog-collapsed #equipment-catalog .catalog-panel-header {justify-content:flex-end;padding:6px;border:0;}
 body.catalog-collapsed #equipment-catalog .catalog-search,body.catalog-collapsed #equipment-catalog>.overflow-y-auto {display:none!important;}
 body.catalog-collapsed #equipment-catalog .sidebar-toggle {width:36px;}
-body.inspector-collapsed #inspector {width:0;min-width:0;flex:0 0 0;margin-right:0;padding:0;overflow:hidden;box-sizing:border-box;}
+body.inspector-collapsed #inspector {width:18rem;min-width:18rem;flex:0 0 18rem;margin-right:-18rem;padding:0;overflow:hidden;box-sizing:border-box;}
 body.inspector-collapsed #inspector>.inspector-panel-header,body.inspector-collapsed #inspector>#inspector-empty,body.inspector-collapsed #inspector>#inspector-content {display:none!important;}
 #app-topbar .topbar-controls>.sidebar-toggle {width:40px;height:40px;}
 @media(prefers-reduced-motion:reduce){#equipment-catalog,#inspector,.sidebar-toggle{transition:none!important;}}
@@ -4162,6 +4165,7 @@ body.inspector-collapsed #inspector>.inspector-panel-header,body.inspector-colla
     #equipment-catalog,#inspector {transition:transform 240ms cubic-bezier(.22,.7,.2,1),visibility 240ms,width 240ms;}
     .catalog-panel-header .sidebar-toggle,#app-topbar .topbar-controls>.sidebar-toggle {display:none;}
     body.catalog-collapsed #equipment-catalog,body.inspector-collapsed #inspector {width:min(360px,calc(100vw - 24px));min-width:0;flex:initial;margin-left:0;margin-right:0;}
+    body.inspector-collapsed #inspector {margin-right:0;}
     body.catalog-collapsed #equipment-catalog .catalog-search {display:flex!important;}
     body.catalog-collapsed #equipment-catalog>.overflow-y-auto {display:block!important;}
     body.inspector-collapsed #inspector>.inspector-panel-header {min-height:60px;padding:0 14px 0 20px;flex-direction:row;justify-content:space-between;}
