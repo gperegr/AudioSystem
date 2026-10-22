@@ -1661,32 +1661,32 @@ const Hardware = (() => {
         }
 
         const LISTENING_PROFILES = {
-            hpKubaDisco2:{label:'Disco 2 · escuta sem coloração adicional',description:'O modelo visual usa resposta neutra no simulador; não representa uma medição acústica do fabricante.',bands:[0,0,0]},
-            headphone:{label:'Moderno · graves presentes',description:'Batidas e graves reforçados, com agudos discretamente realçados.',bands:[3,-.5,.5]},
-            hpStudio:{label:'Studio · graves definidos',description:'Leve reforço de graves, com médios equilibrados e detalhes nos agudos.',bands:[2,0,1]},
+            hpKubaDisco2:{label:'Disco 2 · escuta sem coloração adicional',bands:[0,0,0]},
+            headphone:{label:'Moderno · graves presentes',bands:[3,-.5,.5]},
+            hpStudio:{label:'Studio · graves definidos',bands:[2,0,1]},
             // Perceptual tonal approximations, not raw ear-simulator transfer curves or corrective EQ presets.
-            hpOpenRing:{label:'Aberto anelar · graves contidos e brilho',description:'Subgraves contidos, médios equilibrados e presença nos agudos, com destaque próximo de 6 kHz.',headroomDb:-8,curveMinDb:-12,filterSpecs:[{type:'highpass',frequency:12,Q:.70710678},{type:'lowshelf',frequency:65,gain:-3.5},{type:'peaking',frequency:2500,Q:.8,gain:-1.5},{type:'peaking',frequency:6000,Q:2,gain:4},{type:'highshelf',frequency:9000,gain:1.2}]},
-            hpOpenDome:{label:'Aberto cúpula · médios presentes',description:'Médios presentes, graves discretos e pequenos destaques nos agudos.',headroomDb:-8,curveMinDb:-12,filterSpecs:[{type:'highpass',frequency:10,Q:.70710678},{type:'lowshelf',frequency:100,gain:-2},{type:'peaking',frequency:1500,Q:1.2,gain:3.5},{type:'peaking',frequency:4000,Q:2,gain:1.2},{type:'peaking',frequency:6000,Q:2.5,gain:2}]},
-            hpPlanar:{label:'Planar · extensão e presença suave',description:'Graves extensos, recuo de presença próximo de 4 kHz e agudos suaves.',headroomDb:-8,curveMinDb:-12,filterSpecs:[{type:'highpass',frequency:5,Q:.70710678},{type:'peaking',frequency:4000,Q:1,gain:-3},{type:'peaking',frequency:7500,Q:1.5,gain:-1},{type:'highshelf',frequency:12000,gain:.5}]},
-            hpMonitor:{label:'Monitor · corpo e presença',description:'Graves encorpados e médios presentes.',bands:[2.5,1.2,-.5]},
-            hpMax:{label:'Max · graves e suavidade',description:'Graves cheios, médios equilibrados e agudos suaves.',bands:[3,.2,-.7]},
-            hpClassic:{label:'Vintage · vozes e guitarras',description:'Médios em destaque e agudos suaves, valorizando vozes e guitarras.',bands:[.5,2.5,-1.5]},
+            hpOpenRing:{label:'Aberto anelar · graves contidos e brilho',headroomDb:-8,curveMinDb:-12,filterSpecs:[{type:'highpass',frequency:12,Q:.70710678},{type:'lowshelf',frequency:65,gain:-3.5},{type:'peaking',frequency:2500,Q:.8,gain:-1.5},{type:'peaking',frequency:6000,Q:2,gain:4},{type:'highshelf',frequency:9000,gain:1.2}]},
+            hpOpenDome:{label:'Aberto cúpula · médios presentes',headroomDb:-8,curveMinDb:-12,filterSpecs:[{type:'highpass',frequency:10,Q:.70710678},{type:'lowshelf',frequency:100,gain:-2},{type:'peaking',frequency:1500,Q:1.2,gain:3.5},{type:'peaking',frequency:4000,Q:2,gain:1.2},{type:'peaking',frequency:6000,Q:2.5,gain:2}]},
+            hpPlanar:{label:'Planar · extensão e presença suave',headroomDb:-8,curveMinDb:-12,filterSpecs:[{type:'highpass',frequency:5,Q:.70710678},{type:'peaking',frequency:4000,Q:1,gain:-3},{type:'peaking',frequency:7500,Q:1.5,gain:-1},{type:'highshelf',frequency:12000,gain:.5}]},
+            hpMonitor:{label:'Monitor · corpo e presença',bands:[2.5,1.2,-.5]},
+            hpMax:{label:'Max · graves e suavidade',bands:[3,.2,-.7]},
+            hpClassic:{label:'Vintage · vozes e guitarras',bands:[.5,2.5,-1.5]},
             // Broad tonal approximations, not digitized measurements or complete acoustic models.
-            shelfCoax:{label:'Bookshelf · resposta uniforme',description:'Médios e agudos uniformes, com queda gradual dos graves no gabinete compacto.',highpass:79,headroomDb:-12,bassAlignment:{minus3:79,minus6:47,subsonic:20},filterSpecs:[]},
-            shelfWood:{label:'Bookshelf · agudos suaves',description:'Médios equilibrados e queda suave na oitava superior, com extensão de graves até aproximadamente 41 Hz.',highpass:41,headroomDb:-12,bassAlignment:{frequency:41,order:4},filterSpecs:[{type:'peaking',frequency:1100,Q:2.5,gain:1},{type:'peaking',frequency:1450,Q:4,gain:-1.5},{type:'highshelf',frequency:11000,gain:-2}]},
-            shelfTop:{label:'Bookshelf · agudos destacados',description:'Agudos destacados acima de 3 kHz e graves com corte aproximado em 50 Hz.',highpass:50,headroomDb:-12,curveMaxDb:12,bassAlignment:{frequency:50,order:4},filterSpecs:[{type:'peaking',frequency:10000,Q:1.1,gain:9.5}]},
-            floorDiamond:{label:'Coluna · agudos presentes',description:'Agudos presentes e médios superiores discretamente recuados.',highpass:24,headroomDb:-6,bassAlignment:{frequency:24,order:4},filterSpecs:[{type:'peaking',frequency:90,Q:.65,gain:.6},{type:'peaking',frequency:2000,Q:.75,gain:-1.5},{type:'highshelf',frequency:3000,gain:3.4},{type:'peaking',frequency:3800,Q:3,gain:1.5},{type:'peaking',frequency:6500,Q:2.5,gain:-2.2},{type:'peaking',frequency:11000,Q:1,gain:1}]},
-            floorCoax:{label:'Coluna · resposta equilibrada',description:'Resposta equilibrada, com leve queda nos agudos e graves extensos.',highpass:46,headroomDb:-6,bassAlignment:{minus3:46,minus6:30,subsonic:16},filterSpecs:[{type:'highshelf',frequency:7000,gain:-.6}]},
-            floorFlax:{label:'Coluna · extensão de graves',description:'Graves extensos, médios e agudos equilibrados.',highpass:39,headroomDb:-6,bassAlignment:{minus3:39,minus6:32,subsonic:12},filterSpecs:[]},
-            speaker:{label:'Vintage · médios quentes',description:'Vozes e instrumentos em destaque, com agudos suaves.',bands:[1,2,-1]},
-            spkPassiveWood:{label:'Vintage · presença vocal',description:'Médios encorpados e agudos suaves.',bands:[1,2.5,-1.5]},
-            spkPassiveCarbon:{label:'Moderna · graves e detalhes',description:'Graves reforçados e agudos ligeiramente destacados.',bands:[2.5,-.5,1]},
-            spkPassiveGridBlack:{label:'Três vias · corpo e equilíbrio',description:'Graves encorpados com queda progressiva no subgrave, médios equilibrados e agudos presentes. Perfil tonal simplificado deste modelo.',highpass:40,headroomDb:-8,filterSpecs:[{type:'highpass',frequency:40,Q:.70710678},{type:'highpass',frequency:40,Q:.70710678},{type:'peaking',frequency:90,Q:.7,gain:.6}]},
-            spkPassiveGridOrange:{label:'Três vias · corpo e equilíbrio',description:'Graves encorpados com queda progressiva no subgrave, médios equilibrados e agudos presentes. Perfil tonal simplificado deste modelo.',highpass:40,headroomDb:-8,filterSpecs:[{type:'highpass',frequency:40,Q:.70710678},{type:'highpass',frequency:40,Q:.70710678},{type:'peaking',frequency:90,Q:.7,gain:.6}]},
-            spkActiveMonitor:{label:'Monitor vintage · médios presentes',description:'Leve destaque de médios para vozes e instrumentos.',bands:[.5,1.5,-.5]},
-            spkActiveCompact:{label:'Compacta · graves contidos e clareza',description:'Aproximação de uma bookshelf ativa de duas vias: graves moderados, médios claros e agudos suaves. Perfil inspirado em especificações de uma caixa compacta, sem reproduzir uma curva medida do produto real.',bands:[1.5,.3,.7],highpass:67},
-            spkActiveRounded:{label:'Monitor · precisão e equilíbrio',description:'Médios e agudos equilibrados, sem reforço de graves. Queda progressiva no subgrave, com limite aproximado de 47 Hz a −6 dB. Perfil tonal simplificado; não simula a diretividade física.',highpass:47,headroomDb:-8,filterSpecs:[{type:'highpass',frequency:47,Q:.70710678},{type:'highpass',frequency:47,Q:.70710678}]},
-            spkActiveBookshelf:{label:'Ativa moderna · graves e clareza',description:'Graves ligeiramente reforçados com brilho suave.',bands:[2,0,1]}
+            shelfCoax:{label:'Bookshelf · resposta uniforme',highpass:79,headroomDb:-12,bassAlignment:{minus3:79,minus6:47,subsonic:20},filterSpecs:[]},
+            shelfWood:{label:'Bookshelf · agudos suaves',highpass:41,headroomDb:-12,bassAlignment:{frequency:41,order:4},filterSpecs:[{type:'peaking',frequency:1100,Q:2.5,gain:1},{type:'peaking',frequency:1450,Q:4,gain:-1.5},{type:'highshelf',frequency:11000,gain:-2}]},
+            shelfTop:{label:'Bookshelf · agudos destacados',highpass:50,headroomDb:-12,curveMaxDb:12,bassAlignment:{frequency:50,order:4},filterSpecs:[{type:'peaking',frequency:10000,Q:1.1,gain:9.5}]},
+            floorDiamond:{label:'Coluna · agudos presentes',highpass:24,headroomDb:-6,bassAlignment:{frequency:24,order:4},filterSpecs:[{type:'peaking',frequency:90,Q:.65,gain:.6},{type:'peaking',frequency:2000,Q:.75,gain:-1.5},{type:'highshelf',frequency:3000,gain:3.4},{type:'peaking',frequency:3800,Q:3,gain:1.5},{type:'peaking',frequency:6500,Q:2.5,gain:-2.2},{type:'peaking',frequency:11000,Q:1,gain:1}]},
+            floorCoax:{label:'Coluna · resposta equilibrada',highpass:46,headroomDb:-6,bassAlignment:{minus3:46,minus6:30,subsonic:16},filterSpecs:[{type:'highshelf',frequency:7000,gain:-.6}]},
+            floorFlax:{label:'Coluna · extensão de graves',highpass:39,headroomDb:-6,bassAlignment:{minus3:39,minus6:32,subsonic:12},filterSpecs:[]},
+            speaker:{label:'Vintage · médios quentes',bands:[1,2,-1]},
+            spkPassiveWood:{label:'Vintage · presença vocal',bands:[1,2.5,-1.5]},
+            spkPassiveCarbon:{label:'Moderna · graves e detalhes',bands:[2.5,-.5,1]},
+            spkPassiveGridBlack:{label:'Três vias · corpo e equilíbrio',highpass:40,headroomDb:-8,filterSpecs:[{type:'highpass',frequency:40,Q:.70710678},{type:'highpass',frequency:40,Q:.70710678},{type:'peaking',frequency:90,Q:.7,gain:.6}]},
+            spkPassiveGridOrange:{label:'Três vias · corpo e equilíbrio',highpass:40,headroomDb:-8,filterSpecs:[{type:'highpass',frequency:40,Q:.70710678},{type:'highpass',frequency:40,Q:.70710678},{type:'peaking',frequency:90,Q:.7,gain:.6}]},
+            spkActiveMonitor:{label:'Monitor vintage · médios presentes',bands:[.5,1.5,-.5]},
+            spkActiveCompact:{label:'Compacta · graves contidos e clareza',bands:[1.5,.3,.7],highpass:67},
+            spkActiveRounded:{label:'Monitor · precisão e equilíbrio',highpass:47,headroomDb:-8,filterSpecs:[{type:'highpass',frequency:47,Q:.70710678},{type:'highpass',frequency:47,Q:.70710678}]},
+            spkActiveBookshelf:{label:'Ativa moderna · graves e clareza',bands:[2,0,1]}
         };
 
         function speakerFilterCoefficients(spec,sampleRate){
@@ -1743,7 +1743,19 @@ const Hardware = (() => {
             const path=Array.from(response,(db,i)=>`${i?'L':'M'}${x(frequencies[i]).toFixed(2)},${y(db).toFixed(2)}`).join(' ');
             const horizontal=(minDb<=-12?Array.from({length:(maxDb-minDb)/6+1},(_,i)=>minDb+i*6):[-6,-3,0,3,6]).map(db=>`<line x1="${left}" x2="${right}" y1="${y(db)}" y2="${y(db)}" stroke="${db===0?'#718096':'#303c49'}" ${db===0?'':'stroke-dasharray="3 4"'}/><text x="${left-7}" y="${y(db)+3}" text-anchor="end" fill="#aab6c5" font-size="10">${db>0?'+':''}${db}</text>`).join('');
             const vertical=[[20,'20'],[100,'100'],[1000,'1k'],[10000,'10k'],[20000,'20k']].map(([hz,label])=>`<line x1="${x(hz)}" x2="${x(hz)}" y1="${top}" y2="${bottom}" stroke="#303c49"/><text x="${x(hz)}" y="${bottom+18}" text-anchor="middle" fill="#aab6c5" font-size="10">${label}</text>`).join('');
-            return `<figure class="m-0 rounded-lg border border-gray-700 bg-gray-900/50 p-2"><svg viewBox="0 0 ${width} ${height}" class="block w-full" role="img" aria-label="Curva da assinatura sonora: ${dev.listeningProfile.label}. Frequência de 20 Hz a 20 kHz; ganho relativo entre ${minDb} e mais ${maxDb} decibéis." style="font-family:Inter,sans-serif"><text x="${left}" y="10" fill="#aab6c5" font-size="9">dB</text>${horizontal}${vertical}<path d="${path}" fill="none" stroke="#60a5fa" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><text x="${right}" y="${height-2}" text-anchor="end" fill="#aab6c5" font-size="9">Hz</text></svg><figcaption class="text-xs text-gray-400 leading-relaxed">Resposta tonal do modelo · igual em L/R. A linha de 0 dB é neutra. Não inclui a compensação de volume nem os equalizadores da cadeia.</figcaption></figure>`;
+            const bands=[['Graves',60,200],['Médios',300,2500],['Agudos',5000,12000]].map(([label,low,high])=>{
+                const samples=Array.from(response,(db,index)=>({db,frequency:frequencies[index]})).filter(sample=>sample.frequency>=low&&sample.frequency<=high);
+                const levelOffset=dev.listeningProfile.headroomDb??-4;
+                const meanDb=samples.length?samples.reduce((sum,sample)=>sum+sample.db,0)/samples.length-levelOffset:0;
+                const position=Math.round((Math.max(-6,Math.min(6,meanDb))+6)/12*4);
+                const state=meanDb>1.25?'realce':meanDb< -1.25?'recuo':'neutro';
+                const stateLabel={realce:'Realce',recuo:'Recuo',neutro:'Neutro'}[state];
+                const dots=Array.from({length:5},(_,index)=>`<i class="${index===2?'is-neutral ':''}${index===position?'is-active':''}"></i>`).join('');
+                const range=`${low>=1000?`${low/1000}–${high/1000} kHz`:`${low}–${high} Hz`}`;
+                return `<div class="sonic-band" data-tone="${state}" role="img" aria-label="${label}: ${stateLabel.toLowerCase()}, referência tonal média aproximada em ${range}."><span class="sonic-band-name">${label}</span><span class="sonic-band-dots" aria-hidden="true">${dots}</span><span class="sonic-band-state">${stateLabel}</span></div>`;
+            }).join('');
+            const legend='O gráfico mostra o perfil tonal aplicado, igual em L/R. A linha de 0 dB é neutra. Os marcadores resumem o balanço tonal sem a compensação global de nível; a compensação de volume e os equalizadores da cadeia não aparecem nesta curva.';
+            return `<div class="sonic-signature-visuals">${bands}</div><figure class="sonic-curve-figure"><svg viewBox="0 0 ${width} ${height}" class="sonic-curve-graph" role="img" aria-label="Curva da assinatura sonora: ${dev.listeningProfile.label}. Frequência de 20 Hz a 20 kHz; ganho relativo entre ${minDb} e mais ${maxDb} decibéis." style="font-family:Inter,sans-serif"><text x="${left}" y="10" fill="#aab6c5" font-size="9">dB</text>${horizontal}${vertical}<path d="${path}" fill="none" stroke="#60a5fa" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><text x="${right}" y="${height-2}" text-anchor="end" fill="#aab6c5" font-size="9">Hz</text></svg><figcaption class="sonic-curve-legend"><span><i class="sonic-curve-swatch" aria-hidden="true"></i>Perfil</span><span><i class="sonic-neutral-swatch" aria-hidden="true"></i>0 dB neutro</span><span class="sonic-stereo-tag">L = R</span><span class="sonic-curve-help" role="note" aria-label="${legend}" title="${legend}">i</span></figcaption></figure>`;
         }
 
         const INTEGRATED_AMPS={
@@ -6287,7 +6299,7 @@ const Hardware = (() => {
 
             if (SOURCE_TYPES.has(dev.type) && !TURNTABLE_TYPES.has(dev.type)) html += `<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Reprodução</span><button id="source-inspector-play" type="button" class="tt-insp-btn ${dev.state.playing ? 'is-on' : ''}" aria-pressed="${!!dev.state.playing}">REPRODUZIR / PAUSAR</button></div>`;
             if (SOURCE_TYPES.has(dev.type)&&!SIGNAL_GENERATOR_TYPES.has(dev.type)) html += `<div class="flex flex-col gap-2 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Música própria</span><button id="source-load-audio" type="button" class="tt-insp-btn">CARREGAR ÁUDIO</button><input id="source-audio-file" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac" hidden><p id="source-file-name" class="text-xs text-gray-300 break-words"></p><p id="source-file-message" class="text-xs text-gray-400"></p><button id="source-remove-audio" type="button" class="tt-insp-btn" ${dev.audioBuffer ? '' : 'hidden'}>REMOVER ARQUIVO</button></div>`;
-            if (dev.listeningProfile) html += `<section class="flex flex-col gap-2 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Assinatura sonora</span><strong class="text-sm text-gray-200">${dev.listeningProfile.label}</strong><p class="text-sm text-gray-400">${dev.listeningProfile.description}</p>${listeningCurveHtml(dev)}<p class="text-xs text-gray-500">Perfil simulado deste modelo, aplicado ao áudio. Os ajustes de equalização da cadeia continuam atuando sobre ele.</p></section>`;
+            if (dev.listeningProfile) html += `<section class="sonic-signature-panel"><h3>Assinatura sonora</h3>${listeningCurveHtml(dev)}</section>`;
             if(RADIO_RECEIVERS.has(dev.type))html+=radioInspectorHtml(dev);
             if (dev.audioBuffer&&!RADIO_RECEIVERS.has(dev.type)) html += transportInspectorHtml(dev);
             if (EQ_TYPES.has(dev.type) || CROSSOVER_TYPES.has(dev.type) || BENCH_METER_TYPES.has(dev.type)) html += spectrumInspectorHtml(dev);
