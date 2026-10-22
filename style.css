@@ -841,29 +841,30 @@
         }
 
         /* The native range keeps keyboard/touch behavior; decoration never receives input. */
-        #inspector-content .gain-slider-control {position:relative;display:block;height:44px;--gain-energy:0;--gain-color:var(--accent);}
-        #inspector-content .gain-slider-visual {position:absolute;inset:8px 0;border-radius:999px;overflow:hidden;pointer-events:none;background:#29323f;box-shadow:inset 0 0 0 1px #ffffff16,inset 0 2px 5px #0004;}
-        #inspector-content .gain-slider-fill {position:absolute;inset:0 auto 0 0;width:calc(14px + (100% - 28px)*var(--gain-energy));overflow:hidden;border-radius:inherit;background:linear-gradient(105deg,color-mix(in srgb,var(--gain-color),white 15%),var(--gain-color));transition:width .14s ease-out,background .18s ease;}
-        #inspector-content .gain-slider-fill::before {content:'';position:absolute;inset:-40% -25%;background:radial-gradient(ellipse at 30% 50%,#ffffff26,transparent 55%);opacity:calc(.3 + var(--gain-energy)*.45);animation:gain-soft-glow 5s ease-in-out infinite alternate;}
-        #inspector-content .gain-slider-particles {position:absolute;inset:0;opacity:calc(.16 + var(--gain-energy)*.7);transition:opacity .18s ease;}
-        #inspector-content .gain-slider-particles i {position:absolute;left:var(--particle-x);top:var(--particle-y);width:var(--particle-size);height:var(--particle-size);border-radius:50%;background:#fff;box-shadow:0 0 4px #fffc;opacity:0;animation:gain-particle-float calc(var(--particle-duration)/(1 + var(--gain-energy)*.55)) ease-in-out var(--particle-delay) infinite;}
+        #inspector-content .gain-slider-control {position:relative;display:block;height:44px;--gain-track-size:28px;--gain-thumb-size:22px;--gain-thumb-inset:calc((var(--gain-track-size) - var(--gain-thumb-size))/2);--gain-position:0;--gain-energy:0;--gain-color:var(--accent);}
+        #inspector-content .gain-slider-visual {position:absolute;inset:0;top:50%;height:var(--gain-track-size);transform:translateY(-50%);border-radius:999px;overflow:hidden;pointer-events:none;background:#29323f;box-shadow:inset 0 0 0 1px #ffffff16,inset 0 2px 5px #0004;}
+        /* Center the fill's rounded end on the thumb, including its surrounding rim. */
+        #inspector-content .gain-slider-fill {position:absolute;inset:0 auto 0 0;width:calc(var(--gain-track-size) + (100% - var(--gain-track-size))*var(--gain-position));overflow:hidden;border-radius:inherit;background:linear-gradient(105deg,color-mix(in srgb,var(--gain-color),white 15%),var(--gain-color));}
+        #inspector-content .gain-slider-fill::before {content:'';position:absolute;inset:-40% -25%;background:radial-gradient(ellipse at 30% 50%,#ffffff26,transparent 55%);opacity:calc(.3 + var(--gain-energy)*.45);animation:gain-soft-glow calc(5s - var(--gain-energy)*3.8s) ease-in-out infinite alternate;}
+        #inspector-content .gain-slider-particles {position:absolute;inset:0;opacity:calc(.25 + var(--gain-energy)*.65);transition:opacity .18s ease;}
+        #inspector-content .gain-slider-particles i {position:absolute;left:var(--particle-x);top:var(--particle-y);width:var(--particle-size);height:var(--particle-size);--particle-strength:clamp(0,(var(--gain-energy) - var(--particle-threshold))*4,1);--particle-drift:calc((3px + var(--gain-energy)*22px)*var(--particle-direction));--particle-lift:calc(2px + var(--gain-energy)*8px);border-radius:50%;background:#fff;box-shadow:0 0 calc(2px + var(--gain-energy)*4px) #fffc;opacity:0;animation:gain-particle-float calc(var(--particle-duration)/(1 + var(--gain-energy)*4.5)) ease-in-out var(--particle-delay) infinite;}
         #inspector-content .gain-slider-control[data-idle="true"] .gain-slider-particles {opacity:0;}
-        #inspector-content .gain-slider-control[data-idle="true"] .gain-slider-particles i {animation-play-state:paused;}
-        #inspector-content .gain-slider-control input.gain-spark-slider[type=range] {position:absolute;inset:0 3px;width:calc(100% - 6px);height:44px!important;min-height:44px;margin:0;padding:0;z-index:1;cursor:ew-resize;outline-offset:0;border-radius:999px;}
-        #inspector-content input.gain-spark-slider[type=range]::-webkit-slider-runnable-track {box-sizing:border-box;height:28px;border:0;border-radius:999px;background:transparent;box-shadow:none;}
-        #inspector-content input.gain-spark-slider[type=range]::-moz-range-track {box-sizing:border-box;height:28px;border:0;border-radius:999px;background:transparent;box-shadow:none;}
+        #inspector-content .gain-slider-control[data-idle="true"] .gain-slider-particles i,#inspector-content .gain-slider-control[data-idle="true"] .gain-slider-fill::before {animation-play-state:paused;}
+        #inspector-content .gain-slider-control input.gain-spark-slider[type=range] {position:absolute;inset:0 var(--gain-thumb-inset);width:calc(100% - var(--gain-thumb-inset)*2);height:44px!important;min-height:44px;margin:0;padding:0;z-index:1;cursor:ew-resize;outline-offset:0;border-radius:999px;}
+        #inspector-content input.gain-spark-slider[type=range]::-webkit-slider-runnable-track {box-sizing:border-box;height:var(--gain-track-size);border:0;border-radius:999px;background:transparent;box-shadow:none;}
+        #inspector-content input.gain-spark-slider[type=range]::-moz-range-track {box-sizing:border-box;height:var(--gain-track-size);border:0;border-radius:999px;background:transparent;box-shadow:none;}
         #inspector-content input.gain-spark-slider[type=range]::-moz-range-progress {background:transparent;box-shadow:none;}
-        #inspector-content input.gain-spark-slider[type=range]::-webkit-slider-thumb {box-sizing:border-box;appearance:none;-webkit-appearance:none;width:22px;height:22px;margin-top:3px;border:1px solid #fff9;border-radius:50%;background:linear-gradient(#fff,#e9edf3);box-shadow:0 1px 4px #0005;transition:box-shadow .15s ease;cursor:ew-resize;}
-        #inspector-content input.gain-spark-slider[type=range]::-moz-range-thumb {box-sizing:border-box;width:22px;height:22px;border:1px solid #fff9;border-radius:50%;background:linear-gradient(#fff,#e9edf3);box-shadow:0 1px 4px #0005;transition:box-shadow .15s ease;cursor:ew-resize;}
+        #inspector-content input.gain-spark-slider[type=range]::-webkit-slider-thumb {box-sizing:border-box;appearance:none;-webkit-appearance:none;width:var(--gain-thumb-size);height:var(--gain-thumb-size);margin-top:var(--gain-thumb-inset);border:1px solid #fff9;border-radius:50%;background:linear-gradient(#fff,#e9edf3);box-shadow:0 1px 4px #0005;transition:box-shadow .15s ease;cursor:ew-resize;}
+        #inspector-content input.gain-spark-slider[type=range]::-moz-range-thumb {box-sizing:border-box;width:var(--gain-thumb-size);height:var(--gain-thumb-size);border:1px solid #fff9;border-radius:50%;background:linear-gradient(#fff,#e9edf3);box-shadow:0 1px 4px #0005;transition:box-shadow .15s ease;cursor:ew-resize;}
         #inspector-content input.gain-spark-slider[type=range]:focus-visible {outline:2px solid var(--gain-color);}
         #inspector-content input.gain-spark-slider[type=range]:is(:hover,:active)::-webkit-slider-thumb {box-shadow:0 0 0 2px #fff4,0 2px 5px #0005;}
         #inspector-content input.gain-spark-slider[type=range]:is(:hover,:active)::-moz-range-thumb {box-shadow:0 0 0 2px #fff4,0 2px 5px #0005;}
-        @keyframes gain-particle-float {0%,100%{opacity:0;transform:translate(-3px,4px) scale(.55);}30%{opacity:.5;}60%{opacity:.85;transform:translate(2px,-2px) scale(1);}85%{opacity:.2;transform:translate(4px,-5px) scale(.65);}}
+        @keyframes gain-particle-float {0%{opacity:0;transform:translate(calc(var(--particle-drift)*-1),calc(var(--particle-lift)*.6)) scale(.45);}20%{opacity:calc(var(--particle-strength)*.55);}55%{opacity:var(--particle-strength);transform:translate(calc(var(--particle-drift)*.2),calc(var(--particle-lift)*-.2)) scale(calc(.75 + var(--gain-energy)*.5));}85%{opacity:calc(var(--particle-strength)*.4);}100%{opacity:0;transform:translate(var(--particle-drift),calc(var(--particle-lift)*-1)) scale(.3);}}
         @keyframes gain-soft-glow {to{transform:translateX(15%);}}
         @media (prefers-reduced-motion:reduce) {
             #inspector-content .gain-slider-fill,#inspector-content .gain-slider-particles,#inspector-content .gain-slider-control input {transition:none;}
             #inspector-content .gain-slider-fill::before,#inspector-content .gain-slider-particles i {animation:none;}
-            #inspector-content .gain-slider-particles i {opacity:.5;}
+            #inspector-content .gain-slider-particles i {opacity:calc(var(--particle-strength)*.5);}
         }
 
         /* Sliders Verticais de Equalizador de Rack */

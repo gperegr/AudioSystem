@@ -6078,11 +6078,13 @@ const Hardware = (() => {
             const control=slider.closest('.gain-slider-control');if(!control)return;
             const min=Number(slider.min),max=Number(slider.max);
             const amount=Math.max(0,Math.min(1,(Number(slider.value)-min)/(max-min)));
-            // Blend the UI blue into red without cycling through unrelated colors.
-            const color=[59,130,246].map((blue,i)=>Math.round(blue+([239,68,68][i]-blue)*amount));
-            control.style.setProperty('--gain-energy',String(amount));
-            control.style.setProperty('--gain-color',`rgb(${color.join(' ')})`);
-            control.dataset.idle=String(amount===0);
+            // The lower half is the normal blue range; energy builds above level five.
+            const energy=Math.max(0,(amount-.5)*2);
+            const color=[59,130,246].map((blue,i)=>Math.round(blue+([239,68,68][i]-blue)*energy));
+            control.style.setProperty('--gain-position',String(amount));
+            control.style.setProperty('--gain-energy',String(energy));
+            control.style.setProperty('--gain-color',energy===0?'var(--accent)':`rgb(${color.join(' ')})`);
+            control.dataset.idle=String(energy===0);
             const index=Math.round(amount*Hardware.physics.detents);
             slider.setAttribute('aria-valuetext',`${index} · ${Number(slider.value)}`);
             control.nextElementSibling?.querySelectorAll('span').forEach((tick,i)=>tick.classList.toggle('is-current',i===index));
@@ -6090,7 +6092,7 @@ const Hardware = (() => {
         function setupInspectorGainVisual(slider){
             const control=document.createElement('span');control.className='gain-slider-control';
             const visual=document.createElement('span');visual.className='gain-slider-visual';visual.setAttribute('aria-hidden','true');
-            const particles=Array.from({length:10},(_,i)=>`<i style="--particle-x:${8+(i*23)%85}%;--particle-y:${20+(i*19)%60}%;--particle-size:${i%3===0?3:2}px;--particle-delay:${-(i*.47).toFixed(2)}s;--particle-duration:${(2.8+(i%4)*.5).toFixed(1)}s"></i>`).join('');
+            const particles=Array.from({length:24},(_,i)=>`<i style="--particle-x:${5+(i*37)%90}%;--particle-y:${16+(i*29)%68}%;--particle-size:${i%3===0?3:2}px;--particle-direction:${i%2?-1:1};--particle-threshold:${i<8?0:((i-8)/16*.7).toFixed(3)};--particle-delay:${-(i*.47).toFixed(2)}s;--particle-duration:${(2.8+(i%4)*.5).toFixed(1)}s"></i>`).join('');
             visual.innerHTML=`<span class="gain-slider-fill"><span class="gain-slider-particles">${particles}</span></span>`;
             slider.before(control);control.append(visual,slider);
             slider.addEventListener('input',()=>syncInspectorGainVisual(slider));
