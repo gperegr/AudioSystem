@@ -6123,6 +6123,15 @@ const Hardware = (() => {
         // Keep physical units for the audio graph while exposing fixed detents in the inspector.
         function setupInspectorDetents() {
             inspectorContent.querySelectorAll('input[type="range"]:not(#source-progress)').forEach(slider=>{
+                if(slider.matches('.gain-spark-slider')){
+                    const updateGainVisual=()=>{
+                        const min=Number(slider.min)||0,max=Number(slider.max)||1;
+                        const amount=Math.max(0,Math.min(1,(Number(slider.value)-min)/(max-min)));
+                        slider.style.setProperty('--gain-progress',`${amount*100}%`);
+                        slider.style.setProperty('--gain-energy',amount.toFixed(3));
+                    };
+                    slider.addEventListener('input',updateGainVisual);slider.addEventListener('change',updateGainVisual);updateGainVisual();
+                }
                 if(slider.dataset.detents)return;slider.dataset.detents='true';Hardware.slider(slider);
                 const min=Number(slider.min),max=Number(slider.max),intervals=Hardware.physics.detents;
                 if(!Number.isFinite(min)||!Number.isFinite(max)||max<=min)return;
@@ -6262,7 +6271,7 @@ const Hardware = (() => {
             } else if (dev.type === 'cdPlayer') {
                 html += `<div class="text-sm text-gray-400 mt-2">Fonte digital estéreo. Conecte as saídas RCA R/L a um pré, receiver ou monitor ativo do mesmo lado.</div>`;
             } else if (['powerStereo','powerVintage'].includes(dev.type)||CUSTOM_POWER_AMPS[dev.type]) {
-                html += ['L','R'].map(ch=>`<label class="block text-sm mt-4">Ganho ${ch==='L'?'A · esquerdo':'B · direito'}<input id="power-gain-${ch}" type="range" min="0" max="1" step=".01" value="${dev.state.channelGain[ch]}"></label>`).join('');
+                html += ['L','R'].map(ch=>`<label class="block text-sm mt-4">Ganho ${ch==='L'?'A · esquerdo':'B · direito'}<input id="power-gain-${ch}" class="gain-spark-slider" type="range" min="0" max="1" step=".01" aria-label="Ganho ${ch==='L'?'A esquerdo':'B direito'}" value="${dev.state.channelGain[ch]}"></label>`).join('');
             } else if (dev.type === 'powerAmp') {
                 html += `<label class="block text-sm text-gray-400 mt-4">Volume</label><input id="sl-poweramp-volume" aria-label="Volume do amplificador" type="range" min="0" max="1" step="0.01" value="${dev.state.volume ?? 1}" class="w-full">`;
                 html += `<div class="text-sm text-gray-400 mt-2">Receiver moderno. Recebe RCA R/L e entrega saídas SPEAKER R/L para caixas passivas.</div>`;
