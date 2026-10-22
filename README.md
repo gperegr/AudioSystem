@@ -71,6 +71,8 @@ No desktop, use as setas dos cabeçalhos para recolher ou expandir as laterais. 
 
 As listas de equipamentos e propriedades mantêm a rolagem com toque e também oferecem suavidade, inércia e retorno elástico dos itens nas bordas ao usar a roda do mouse. Ao rolar o catálogo de equipamentos, um som leve de engrenamento acompanha a velocidade e a desaceleração da lista. Ele respeita o volume dos sons de interação e pode ser silenciado em **Configurações**.
 
+Em **Comportamento sonoro**, as bolinhas comparam graves, agudos, saturação e harmônicos pares entre os modelos de amplificação. A bolinha preenchida indica a posição na escala, e o centro representa a resposta neutra em graves e agudos. Os limites são os mesmos para todos os aparelhos; os indicadores descrevem o perfil base da simulação.
+
 O botão **Restaurar Configurações** aparece apenas nos modelos com ajustes restauráveis. Alguns ajustes aparecem apenas no painel lateral. Na **Potência · Visor Circular**, por exemplo, os ganhos A/B são ajustados por esse painel.
 
 Os toca-discos de braço articulado são vistos de frente, com o prato e o disco em perfil e o braço visível acima deles. O slider **PITCH**, no painel frontal, ajusta a velocidade de reprodução; arraste para alterar e dê duplo clique para zerar. Use o botão **Abrir tampa / Fechar tampa** para movimentar a tampa de acrílico, que abre para trás a partir das dobradiças traseiras.

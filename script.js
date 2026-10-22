@@ -1768,27 +1768,27 @@ const Hardware = (() => {
         };
         // Individual simulation voicings.
         const AMPLIFICATION_VOICINGS={
-            preGlass:{label:'Pré clássico · corpo e suavidade',bass:.2,treble:-.35,drive:.38,asymmetry:.035,description:'Interpretação valvulada com corpo discreto e arredondamento gradual dos picos. Tonalidade, filtros, loudness, mono e polaridade são processamentos reais da cadeia.'},
-            integratedUtility:{label:'Integrado essencial · equilíbrio suave',bass:.15,treble:-.2,drive:.2,asymmetry:0,description:'Resposta próxima da neutra com arredondamento discreto dos picos. Phono, tonalidade, loudness e mono atuam no circuito simulado.'},
-            prePrecision:{label:'Pré de precisão · transparência',bass:0,treble:0,drive:.06,asymmetry:0,description:'Estágio de linha neutro, com ganho selecionável e leitura do áudio real no modulômetro.'},
-            streamIntegrated:{label:'Integrado compacto · resposta limpa',bass:0,treble:0,drive:.08,asymmetry:0,description:'Amplificação de resposta neutra com saturação discreta. A fonte interna e a entrada de linha compartilham volume e mute.'},
-            powerValve:{label:'Valvulado · calor e saturação suave',bass:.8,treble:-1.5,drive:1.05,asymmetry:.11,knee:-9,ratio:1.55,description:'O mais quente das potências: graves levemente cheios, agudos suavizados e saturação assimétrica gradual. Aquecimento visual e entrada progressiva do áudio em 3 segundos, abreviados para o jogo.'},
-            powerDual:{label:'Duplo canal · resposta limpa',bass:0,treble:0,drive:.12,asymmetry:0,description:'Resposta tonal plana e grande região linear; a saturação simétrica é muito discreta. Ganhos e medição independentes em L/R.'},
-            powerBias:{label:'Visor circular · corpo e suavidade',bass:.25,treble:-.35,drive:.32,asymmetry:.025,description:'Coloração sutil de graves e saturação macia, menos intensa que a valvulada. O visor acompanha a potência de saída simulada.'},
-            powerStereo:{label:'Tradicional · equilíbrio',bass:.1,treble:-.1,drive:.22,asymmetry:0,description:'Resposta próxima da neutra e saturação simétrica leve nos picos.'},
-            powerVintage:{label:'Vintage · calor moderado',bass:.5,treble:-.8,drive:.52,asymmetry:.055,description:'Graves mais presentes, agudos suaves e coloração harmônica moderada; menos quente que a potência valvulada.'},
-            integratedBlue:{label:'Integrado · corpo discreto',bass:.2,treble:-.2,drive:.26,asymmetry:.012,description:'Resposta próxima da neutra com corpo discreto e saturação progressiva. Tonalidade e seleção de fontes continuam funcionais.'},
-            integratedMinimal:{label:'Integrado · direto e linear',bass:0,treble:0,drive:.16,asymmetry:0,description:'Tonalidade plana, processamento discreto e saturação simétrica leve, preservando transientes.'},
-            integratedSilver:{label:'Integrado · suavidade',bass:.3,treble:-.4,drive:.36,asymmetry:.018,description:'Corpo suave nos graves e arredondamento dos picos um pouco maior que nos outros integrados.'},
-            receiver:{label:'Receiver vintage · calor',bass:.4,treble:-.65,drive:.42,asymmetry:.04,description:'Coloração vintage moderada. Seleção de entradas, PHONO e sintonia FM são processamentos reais da cadeia.'},
-            powerAmp:{label:'Receiver moderno · transparência',bass:0,treble:0,drive:.1,asymmetry:0,description:'Resposta tonal neutra e coloração harmônica mínima. O timbre da fonte e a recepção FM ficam em primeiro plano.'},
-            preamp:{label:'Pré Slim · compacto e neutro',bass:0,treble:0,drive:.09,asymmetry:0,description:'Estágio de linha praticamente neutro; os ajustes de graves e agudos permanecem independentes.'},
-            preReference:{label:'Pré verde · textura suave',bass:.15,treble:-.25,drive:.3,asymmetry:.045,description:'Textura harmônica suave e discreta redução de agudos. Perfil harmônico próprio deste modelo.'},
-            preControl:{label:'Pré 2.1 · linearidade',bass:0,treble:0,drive:.07,asymmetry:0,description:'Estágio de linha com baixa coloração. Tonalidade, balanço, nível do sub e seu filtro continuam sendo controles próprios deste modelo.'},
-            preDisplay:{label:'Pré central · equilíbrio',bass:.05,treble:-.1,drive:.14,asymmetry:.008,description:'Resposta quase neutra com saturação sutil, mantendo seleção, balanço e saída de subwoofer.'},
-            headphoneAmp:{label:'Amp de fones vintage · suavidade',bass:.35,treble:-.55,drive:.4,asymmetry:.035,description:'Corpo discreto e agudos suavizados, com saturação gradual nos picos.'},
-            headphoneAmpModern:{label:'Amp de fones · resposta limpa',bass:0,treble:0,drive:.08,asymmetry:0,description:'Estágio de fones com resposta plana e baixa coloração.'},
-            headphoneAmp4:{label:'Amp de fones 4 · distribuição',bass:.05,treble:-.05,drive:.15,asymmetry:0,description:'Quatro saídas com volumes próprios e coloração sutil; cada saída preserva o estéreo.'}
+            preGlass:{bass:.2,treble:-.35,drive:.38,asymmetry:.035},
+            integratedUtility:{bass:.15,treble:-.2,drive:.2,asymmetry:0},
+            prePrecision:{bass:0,treble:0,drive:.06,asymmetry:0},
+            streamIntegrated:{bass:0,treble:0,drive:.08,asymmetry:0},
+            powerValve:{bass:.8,treble:-1.5,drive:1.05,asymmetry:.11,knee:-9,ratio:1.55},
+            powerDual:{bass:0,treble:0,drive:.12,asymmetry:0},
+            powerBias:{bass:.25,treble:-.35,drive:.32,asymmetry:.025},
+            powerStereo:{bass:.1,treble:-.1,drive:.22,asymmetry:0},
+            powerVintage:{bass:.5,treble:-.8,drive:.52,asymmetry:.055},
+            integratedBlue:{bass:.2,treble:-.2,drive:.26,asymmetry:.012},
+            integratedMinimal:{bass:0,treble:0,drive:.16,asymmetry:0},
+            integratedSilver:{bass:.3,treble:-.4,drive:.36,asymmetry:.018},
+            receiver:{bass:.4,treble:-.65,drive:.42,asymmetry:.04},
+            powerAmp:{bass:0,treble:0,drive:.1,asymmetry:0},
+            preamp:{bass:0,treble:0,drive:.09,asymmetry:0},
+            preReference:{bass:.15,treble:-.25,drive:.3,asymmetry:.045},
+            preControl:{bass:0,treble:0,drive:.07,asymmetry:0},
+            preDisplay:{bass:.05,treble:-.1,drive:.14,asymmetry:.008},
+            headphoneAmp:{bass:.35,treble:-.55,drive:.4,asymmetry:.035},
+            headphoneAmpModern:{bass:0,treble:0,drive:.08,asymmetry:0},
+            headphoneAmp4:{bass:.05,treble:-.05,drive:.15,asymmetry:0}
         };
         function modelSaturationCurve(profile,size=4097){
             const curve=new Float32Array(size),drive=profile.drive,bias=profile.asymmetry||0,offset=Math.tanh(drive*bias),slope=drive*(1-offset*offset);
@@ -1834,7 +1834,20 @@ const Hardware = (() => {
         }
         function amplificationInspectorHtml(dev){
             const profile=dev.amplificationProfile;if(!profile)return '';
-            return `<section class="flex flex-col gap-2 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Comportamento sonoro</span><strong class="text-sm text-gray-200">${profile.label}</strong><p class="text-xs text-gray-400">${profile.description}</p><p class="text-xs text-gray-500">Interpretação sonora da simulação; não é uma reprodução medida do aparelho real. A coloração cresce com o nível. Usa impedâncias nominais e limites elétricos simplificados; não reproduz a curva complexa de impedância por frequência.</p></section>`;
+            // Fixed, shared ranges describe the base model rather than quality or live signal level.
+            const traits=[
+                {label:'Graves',value:profile.bass,min:-.8,max:.8,low:'Enxutos',high:'Encorpados',neutral:true},
+                {label:'Agudos',value:profile.treble,min:-1.5,max:1.5,low:'Suaves',high:'Brilhantes',neutral:true},
+                {label:'Saturação',value:profile.drive,min:0,max:1.05,low:'Sutil',high:'Marcante'},
+                {label:'Harmônicos pares',value:profile.asymmetry??0,min:0,max:.11,low:'Discretos',high:'Presentes'}
+            ];
+            const rows=traits.map(trait=>{
+                const position=Math.round(Math.max(0,Math.min(1,(trait.value-trait.min)/(trait.max-trait.min)))*6);
+                const dots=Array.from({length:7},(_,index)=>`<i class="sonic-trait-dot${index===position?' is-active':''}${trait.neutral&&index===3?' is-neutral':''}"></i>`).join('');
+                const accessible=`${trait.label}: posição ${position+1} de 7, de ${trait.low} a ${trait.high}.${trait.neutral?' Centro neutro.':''}`;
+                return `<div class="sonic-trait" role="img" aria-label="${accessible}"><span class="sonic-trait-label">${trait.label}</span><div class="sonic-trait-dots" aria-hidden="true">${dots}</div><div class="sonic-trait-extremes" aria-hidden="true"><span>${trait.low}</span><span>${trait.neutral?'Neutros':''}</span><span>${trait.high}</span></div></div>`;
+            }).join('');
+            return `<section class="sonic-profile" aria-label="Comportamento sonoro"><h3 class="sonic-profile-title">Comportamento sonoro</h3>${rows}<span class="sonic-profile-note">Perfil base · escala relativa da simulação</span></section>`;
         }
 
         // Digital samples represent instantaneous voltage; RMS is computed from samples.
@@ -6258,12 +6271,10 @@ const Hardware = (() => {
             html+=amplificationInspectorHtml(dev);
             html+=portSignalsInspectorHtml(dev);
             html+=listeningInspectorHtml(dev);
-            if(dev.setLidOpen)html+=`<button type="button" class="tt-insp-btn" id="inspector-lid" aria-pressed="${!!dev.state.lidOpen}">TAMPA</button>`;
             if(dev.el.querySelector('.speaker-grille'))html+=`<button type="button" class="tt-insp-btn" id="inspector-grille" aria-pressed="${dev.el.classList.contains('grille-off')}">GRADE</button>`;
             Hardware.sync(dev);
             inspectorContent.innerHTML = html;
             Hardware.inspector(inspectorContent);
-            document.getElementById('inspector-lid')?.addEventListener('click',event=>{dev.setLidOpen(!dev.state.lidOpen);event.currentTarget.setAttribute('aria-pressed',String(dev.state.lidOpen));event.currentTarget.classList.toggle('is-on',dev.state.lidOpen);scheduleProjectSave();});
             document.getElementById('inspector-grille')?.addEventListener('click',event=>{dev.el.querySelector(dev.el.classList.contains('grille-off')?'.grille-restore':'.speaker-grille').click();event.currentTarget.setAttribute('aria-pressed',String(dev.el.classList.contains('grille-off')));event.currentTarget.classList.toggle('is-on',dev.el.classList.contains('grille-off'));});
             queueMicrotask(setupInspectorDetents);
             bindListeningInspector(dev);
@@ -6613,7 +6624,9 @@ const Hardware = (() => {
                 const {port,io,node,signal,format}=group,info=SIGNAL_INFO[signal]||SIGNAL_INFO.unknown;
                 const groupName=port.dataset.role?.startsWith('lfe-')?'SUB/LFE mono':node.startsWith('outPhone')?'Fones '+node.replace('outPhone',''):node==='line'?'LINE OUT':node.startsWith('spkOut')||node==='speaker'?'SPEAKER':node==='inStereo'||node==='outStereo'?'Estéreo':node.replace(/^in/,'Entrada ').replace(/^out/,'Saída ').replace('Low','Graves').replace('Mid','Médios').replace('High','Agudos');
                 const channels=new Set(group.channels),channelText=channels.size===2?' · L/R':channels.size===1?' · '+[...channels][0]:'';
-                return `<div class="port-signal-row"><div><strong>${groupName|| (io==='in'?'Entrada':'Saída')}</strong><small>${format}${channelText}</small></div><span class="signal-badge" data-level="${signal}">${io==='in'?'ESPERA':'FORNECE'}<b>${portSignalLabel(port)}</b></span><p>${port.dataset.role?.startsWith('lfe-')?'Nível de linha para subwoofer; SUB/LFE descreve o conteúdo de graves, não um nível de potência.':info.description}</p></div>`;
+                const direction=io==='in'?'Entrada':'Saída';
+                const detail=port.dataset.role?.startsWith('lfe-')?'Nível de linha para subwoofer; SUB/LFE descreve o conteúdo de graves, não um nível de potência.':info.description;
+                return `<div class="port-signal-row" role="group" aria-label="${direction}: ${groupName||'áudio'}, ${format}${channelText}. ${detail}" title="${direction} · ${detail}"><div class="port-signal-identity"><strong>${groupName||direction}</strong><small>${format}${channelText}</small></div><span class="port-signal-direction" data-io="${io}" aria-hidden="true" title="${direction}"><svg viewBox="0 0 20 20"><path d="M10 3v13m-5-5 5 5 5-5"/></svg></span><span class="signal-badge" data-level="${signal}" title="${detail}"><i aria-hidden="true"></i>${portSignalLabel(port)}</span></div>`;
             });
             return rows.join('');
         }
