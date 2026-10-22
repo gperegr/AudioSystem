@@ -403,6 +403,10 @@
         .tt-insp-btn:hover { border-color:#4b5563; background:#2a3138; }
         .tt-insp-btn.is-on { border-color:#3b82f6; background:rgba(59,130,246,.18); color:#bfdbfe; }
         .tt-insp-btn:focus-visible { outline:2px solid #93c5fd; outline-offset:2px; }
+        .noise-level-buttons { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+        .noise-level-buttons--three { grid-template-columns:repeat(3,minmax(0,1fr)); }
+        .noise-level-button { min-height:40px; display:flex; align-items:center; justify-content:center; padding:7px; }
+        .noise-level-button svg { width:23px; height:23px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
         #inspector-content .listening-output-controls .tt-insp-btn {display:inline-flex;align-items:center;justify-content:center;gap:7px;}
         #inspector-content .listening-output-controls .tt-insp-btn svg {width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
         /* Receptor e Transmissor Bluetooth · frente de rack 3U (mesmo padrão do CD player e do streamer) */

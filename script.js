@@ -2899,7 +2899,13 @@ const Hardware = (() => {
             if (state.selectedDeviceId === dev.id && state.devices[dev.id]) selectDevice(dev.id, true);
         }
 
-        const VINYL_NOISE_LEVELS={low:{label:'Baixo',gain:.016},medium:{label:'Médio',gain:.035},high:{label:'Alto',gain:.07}};
+        const VINYL_NOISE_LEVELS={none:{label:'Sem ruído',gain:0},low:{label:'Ruído baixo',gain:.016},medium:{label:'Ruído médio',gain:.035},high:{label:'Ruído alto',gain:.07}};
+        function noiseLevelIcon(level){
+            if(level==='none')return '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 10v4h3l4 3V7l-4 3zM15 9l5 6m0-6-5 6"/></svg>';
+            const count={low:1,medium:2,high:3}[level]||0;
+            const waves=['M14 9a4 4 0 0 1 0 6','M16 6a8 8 0 0 1 0 12','M18 3a12 12 0 0 1 0 18'];
+            return `<svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/>${waves.slice(0,count).map(path=>`<path d="${path}"/>`).join('')}</svg>`;
+        }
         let vinylNoiseBuffer=null;
         function stopVinylNoise(dev){
             const voice=dev.vinylNoise;dev.vinylNoise=null;
@@ -3588,7 +3594,7 @@ const Hardware = (() => {
         function extraInspectorHtml(dev){
             if(dev.type==='preamp')return `<section class="flex flex-col gap-4"><label class="text-sm text-gray-300">Fonte<select id="preamp-source" class="w-full bg-gray-800 border border-gray-600 p-2 rounded">${['AUX','CD','TAPE','PHONO'].map((name,i)=>`<option value="${i+1}" ${dev.state.preSource===i+1?'selected':''}>${name}</option>`).join('')}</select></label>${[['volume','Volume',0,100,Math.round(dev.state.volume*100)],['bass','Graves (dB)',-12,12,dev.state.bass],['treble','Agudos (dB)',-12,12,dev.state.treble]].map(([key,label,min,max,value])=>`<label class="text-sm text-gray-300">${label} <output id="preamp-value-${key}">${value}</output><input type="range" data-preamp-setting="${key}" min="${min}" max="${max}" step="${key==='volume'?1:.5}" value="${value}"></label>`).join('')}<p class="text-xs text-gray-400">AUX, CD e TAPE recebem linha; PHONO recebe a cápsula MM do toca-discos. Ligue LINE OUT ao amplificador de potência. Os canais L/R permanecem separados.</p></section>`;
             if(BENCH_METER_TYPES.has(dev.type))return '<p class="text-sm text-gray-400">Ligue em série entre equipamentos de linha: entrada → medidor → saída. VU indica nível; correlação próxima de +1 indica canais semelhantes e valores negativos indicam oposição de fase. Sem sinal, a correlação não é calculada. Os VUs usam 0 VU = −18 dBFS como referência senoidal; +3 VU não indica saturação digital.</p><div class="text-sm text-gray-300">Correlação estéreo: <output id="bench-inspector-correlation">SEM SINAL</output></div>';
-            if(dev.type==='tapeDeck')return `<section class="flex flex-col gap-4">${[['tapeVolume','Nível de saída',Math.round(dev.state.tapeVolume*100)]].map(([key,label,value])=>`<label class="text-sm text-gray-300">${label} <output id="tape-value-${key}">${value}%</output><input type="range" data-tape-setting="${key}" min="0" max="100" step="1" value="${value}"></label>`).join('')}${[['tapeHiss','Ruído de fita'],['tapeWow','Oscilação da fita']].map(([key,label])=>`<div class="flex flex-col gap-3"><span class="text-sm text-gray-300">${label}</span><div class="grid grid-cols-3 gap-2" role="group" aria-label="${label}">${[[15,'Baixo'],[35,'Médio'],[65,'Alto']].map(([value,name])=>`<button type="button" class="tt-insp-btn ${dev.state[key]===value?'is-on':''}" data-tape-preset="${key}" data-value="${value}" aria-pressed="${dev.state[key]===value}">${name}</button>`).join('')}</div></div>`).join('')}</section>`;
+            if(dev.type==='tapeDeck')return `<section class="flex flex-col gap-4">${[['tapeVolume','Nível de saída',Math.round(dev.state.tapeVolume*100)]].map(([key,label,value])=>`<label class="text-sm text-gray-300">${label} <output id="tape-value-${key}">${value}%</output><input type="range" data-tape-setting="${key}" min="0" max="100" step="1" value="${value}"></label>`).join('')}${[['tapeHiss','Ruído de fita'],['tapeWow','Oscilação da fita']].map(([key,label])=>`<div class="flex flex-col gap-3"><span class="text-sm text-gray-300">${label}</span><div class="${key==='tapeHiss'?'noise-level-buttons':'grid grid-cols-3 gap-2'}" role="group" aria-label="${label}">${(key==='tapeHiss'?[[0,'none'],[15,'low'],[35,'medium'],[65,'high']]:[[15,'Baixo'],[35,'Médio'],[65,'Alto']]).map(([value,level])=>{const selected=dev.state[key]===value;if(key==='tapeWow')return `<button type="button" class="tt-insp-btn ${selected?'is-on':''}" data-tape-preset="${key}" data-value="${value}" aria-pressed="${selected}">${level}</button>`;const name=level==='none'?'Sem ruído':`Ruído ${level==='low'?'baixo':level==='medium'?'médio':'alto'}`;return `<button type="button" class="tt-insp-btn noise-level-button ${selected?'is-on':''}" data-tape-preset="${key}" data-value="${value}" aria-label="${name}" title="${name}" aria-pressed="${selected}">${noiseLevelIcon(level)}</button>`}).join('')}</div></div>`).join('')}</section>`;
             return '';
         }
         function bindExtraInspector(dev){
@@ -6244,7 +6250,7 @@ const Hardware = (() => {
                 html += `<div class="text-sm text-gray-400 mt-2">${dev.type==='hpMax'?'Conexão somente por Bluetooth. ':dev.type==='hpKubaDisco2'?'Entrada P2 estéreo na ponta do cabo, abaixo do divisor em Y. ':'Entrada P2 estéreo na parte inferior da concha esquerda. '}${BT_HP_TYPES.has(dev.type)?`Bluetooth: ${paired ? ('pareado com ' + (DEVICE_NAMES[paired.type] || paired.type)) : 'sem conexão. Clique em Parear no transmissor e neste fone.'}`:'Conecte a uma saída de fones com cabo P2.'}</div>`;
             } else if (TURNTABLE_TYPES.has(dev.type)) {
                 html += turntableInspectorHtml(dev);
-                html+=`<section class="flex flex-col gap-3 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Ruído do vinil</span><div class="grid grid-cols-3 gap-2" role="group" aria-label="Nível de ruído do vinil">${Object.entries(VINYL_NOISE_LEVELS).map(([key,level])=>`<button type="button" data-vinyl-noise="${key}" class="tt-insp-btn ${(dev.state.vinylNoiseLevel||'medium')===key?'is-on':''}" aria-pressed="${(dev.state.vinylNoiseLevel||'medium')===key}">${level.label}</button>`).join('')}</div></section>`;
+                html+=`<section class="flex flex-col gap-3 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Ruído do vinil</span><div class="noise-level-buttons" role="group" aria-label="Nível de ruído do vinil">${Object.entries(VINYL_NOISE_LEVELS).map(([key,level])=>{const selected=(dev.state.vinylNoiseLevel||'medium')===key;return `<button type="button" data-vinyl-noise="${key}" class="tt-insp-btn noise-level-button ${selected?'is-on':''}" aria-label="${level.label}" title="${level.label}" aria-pressed="${selected}">${noiseLevelIcon(key)}</button>`}).join('')}</div></section>`;
             } else if(FURNITURE_TYPES[dev.type]) {
                 const config=FURNITURE_TYPES[dev.type];
                 if(config.acoustic)html+=`<p class="text-sm text-gray-300">${config.description}</p><p class="text-xs text-gray-400">${config.width} × ${config.height} px · Arraste o painel pela espuma para posicioná-lo atrás dos equipamentos.</p>`;
@@ -7521,7 +7527,7 @@ const Hardware = (() => {
             if(TURNTABLE_TYPES.has(dev.type)){dev.restoreLinear?.();dev.ttSetPitch(clamp(s.tt.pitch,-1,1,0));dev.ttSetOutput(s.tt.output==='phono'?'phono':'line');dev.refreshTurntable();}
             if(SIGNAL_GENERATOR_TYPES.has(dev.type))configureSignalGenerator(dev);
             if(dev.applyPreamp){s.preSource=clamp(s.preSource,1,4,1);dev.applyPreamp();}
-            if(dev.applyTapeSettings){s.tapeVolume=clamp(s.tapeVolume,0,1,.8);s.tapeHiss=clamp(s.tapeHiss,1,100,35);s.tapeWow=clamp(s.tapeWow,1,100,35);dev.applyTapeSettings();}
+            if(dev.applyTapeSettings){s.tapeVolume=clamp(s.tapeVolume,0,1,.8);s.tapeHiss=clamp(s.tapeHiss,0,100,35);s.tapeWow=clamp(s.tapeWow,1,100,35);dev.applyTapeSettings();}
             dev.applyStream?.();
             if(dev.updateMatrix)dev.updateMatrix();
             if(SELECTOR_TYPES.has(dev.type)){const source=saved.selectedSource==='B'?'B':'A';dev.el.querySelector(`[data-switch-source="${source}"]`)?.click();}
