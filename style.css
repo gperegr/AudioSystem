@@ -4085,8 +4085,8 @@
 .sonic-signature-visuals {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
 .sonic-band {display:grid;justify-items:center;gap:5px;min-width:0;padding:8px 4px;border:1px solid #364451;border-radius:7px;background:#1b252e;}
 .sonic-band-name {color:#c5d2dc;font:600 10px/1.2 "Inter",sans-serif;}
-.sonic-band-dots {display:flex;align-items:center;justify-content:center;gap:5px;min-height:9px;}
-.sonic-band-dots i {display:block;width:6px;height:6px;border:1px solid #667788;border-radius:50%;background:#202a33;}
+.sonic-band-dots {display:flex;align-items:center;justify-content:center;gap:3px;min-height:9px;}
+.sonic-band-dots i {display:block;width:5px;height:5px;border:1px solid #667788;border-radius:50%;background:#202a33;}
 .sonic-band-dots i.is-neutral {border-color:#9aa8b4;}
 .sonic-band[data-tone="recuo"] .sonic-band-dots i.is-active {border-color:#a4d1e5;background:#77b4d1;box-shadow:0 0 0 2px #77b4d12a;}
 .sonic-band[data-tone="realce"] .sonic-band-dots i.is-active {border-color:#f1d293;background:#d9ab58;box-shadow:0 0 0 2px #d9ab582a;}
