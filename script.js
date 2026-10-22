@@ -4393,7 +4393,7 @@ const Hardware = (() => {
             dev.setChannelGain=(ch,value)=>{
                 const bounded=Math.max(0,Math.min(1,Number(value)||0)),level=dev.type==='powerBias'?Math.round(bounded*10)/10:bounded;dev.state.channelGain[ch]=level;gains[ch].gain.setTargetAtTime(level,ctx.currentTime,.02);
                 const knob=dev.el.querySelector(`[data-bias-gain="${ch}"]`);if(knob){knob.style.setProperty('--gain-angle',(-135+level*270)+'deg');knob.setAttribute('aria-valuenow',String(Math.round(level*10)));knob.setAttribute('aria-valuetext',Math.round(level*10)+' de 10');}
-                const slider=state.selectedDeviceId===dev.id?document.getElementById('power-gain-'+ch):null;if(slider)slider.value=level;
+                const slider=state.selectedDeviceId===dev.id?document.getElementById('power-gain-'+ch):null;if(slider){slider.value=level;syncInspectorGainVisual(slider);}
             };
             dev.el.querySelectorAll('[data-bias-gain]').forEach(knob=>{
                 const ch=knob.dataset.biasGain;dev.setChannelGain(ch,1);
@@ -4935,7 +4935,7 @@ const Hardware = (() => {
                     const knob = el.querySelector(`[data-power-channel="${ch}"]`);
                     updateKnobAngle(dev,`[data-power-channel="${ch}"]`,value,0,1);
                     knob.setAttribute('aria-valuenow',Math.round(value*100)); knob.title = `Ganho ${ch} · ${Math.round(value*100)}%`;
-                    if (state.selectedDeviceId===id) { const slider=document.getElementById('power-gain-'+ch); if(slider) slider.value=value; }
+                    if (state.selectedDeviceId===id) { const slider=document.getElementById('power-gain-'+ch); if(slider){slider.value=value;syncInspectorGainVisual(slider);} }
                     updateStereoPowerMeters(dev);
                 };
                 el.querySelectorAll('[data-power-channel]').forEach(knob => {
@@ -6116,24 +6116,39 @@ const Hardware = (() => {
             if(key!=='z'&&!redo)return;event.preventDefault();replayMovement(redo);
         });
 
+        function syncInspectorGainVisual(slider){
+            const control=slider.closest('.gain-slider-control');if(!control)return;
+            const min=Number(slider.min),max=Number(slider.max);
+            const amount=Math.max(0,Math.min(1,(Number(slider.value)-min)/(max-min)));
+            // Blend the UI blue into red without cycling through unrelated colors.
+            const color=[59,130,246].map((blue,i)=>Math.round(blue+([239,68,68][i]-blue)*amount));
+            control.style.setProperty('--gain-energy',String(amount));
+            control.style.setProperty('--gain-color',`rgb(${color.join(' ')})`);
+            control.dataset.idle=String(amount===0);
+            const index=Math.round(amount*Hardware.physics.detents);
+            slider.setAttribute('aria-valuetext',`${index} · ${Number(slider.value)}`);
+            control.nextElementSibling?.querySelectorAll('span').forEach((tick,i)=>tick.classList.toggle('is-current',i===index));
+        }
+        function setupInspectorGainVisual(slider){
+            const control=document.createElement('span');control.className='gain-slider-control';
+            const visual=document.createElement('span');visual.className='gain-slider-visual';visual.setAttribute('aria-hidden','true');
+            const particles=Array.from({length:10},(_,i)=>`<i style="--particle-x:${8+(i*23)%85}%;--particle-y:${20+(i*19)%60}%;--particle-size:${i%3===0?3:2}px;--particle-delay:${-(i*.47).toFixed(2)}s;--particle-duration:${(2.8+(i%4)*.5).toFixed(1)}s"></i>`).join('');
+            visual.innerHTML=`<span class="gain-slider-fill"><span class="gain-slider-particles">${particles}</span></span>`;
+            slider.before(control);control.append(visual,slider);
+            slider.addEventListener('input',()=>syncInspectorGainVisual(slider));
+            slider.addEventListener('change',()=>syncInspectorGainVisual(slider));
+            syncInspectorGainVisual(slider);
+        }
         // Keep physical units for the audio graph while exposing fixed detents in the inspector.
         function setupInspectorDetents() {
             inspectorContent.querySelectorAll('input[type="range"]:not(#source-progress)').forEach(slider=>{
-                if(slider.matches('.gain-spark-slider')){
-                    const updateGainVisual=()=>{
-                        const min=Number(slider.min)||0,max=Number(slider.max)||1;
-                        const amount=Math.max(0,Math.min(1,(Number(slider.value)-min)/(max-min)));
-                        slider.style.setProperty('--gain-progress',`${amount*100}%`);
-                        slider.style.setProperty('--gain-energy',amount.toFixed(3));
-                    };
-                    slider.addEventListener('input',updateGainVisual);slider.addEventListener('change',updateGainVisual);updateGainVisual();
-                }
                 if(slider.dataset.detents)return;slider.dataset.detents='true';Hardware.slider(slider);
+                if(slider.matches('.gain-spark-slider'))setupInspectorGainVisual(slider);
                 const min=Number(slider.min),max=Number(slider.max),intervals=Hardware.physics.detents;
                 if(!Number.isFinite(min)||!Number.isFinite(max)||max<=min)return;
                 const bipolar=min<0&&max>0,scale=document.createElement('div');scale.className='inspector-detent-scale';scale.setAttribute('aria-hidden','true');
                 for(let i=0;i<=intervals;i++){const tick=document.createElement('span');tick.textContent=String(bipolar?i-5:i);scale.appendChild(tick);}
-                slider.insertAdjacentElement('afterend',scale);
+                (slider.closest('.gain-slider-control')||slider).insertAdjacentElement('afterend',scale);
                 const update=()=>{const index=Math.max(0,Math.min(intervals,Math.round((Number(slider.value)-min)/(max-min)*intervals)));scale.querySelectorAll('span').forEach((tick,i)=>tick.classList.toggle('is-current',i===index));slider.setAttribute('aria-valuetext',`${bipolar?index-5:index} · ${Number(slider.value)}`);};
                 slider.addEventListener('input',update);slider.addEventListener('change',update);update();
             });
