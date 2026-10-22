@@ -3953,3 +3953,31 @@
 .device-node.headphone-equipment.device-type-hpOpenDome .headphone-cup::after,
 .device-node.headphone-equipment.device-type-hpOpenDome .headphone-cup-hardware {display:none;}
 .device-node.headphone-equipment.device-type-hpOpenDome .headphone-cup-socket {left:43px;bottom:-3px;width:13px;height:13px;border-color:#aeb7b5;border-radius:50%;background:radial-gradient(circle at 35% 30%,#e1e6e3,#545e61 48%,#090b0c 70%);box-shadow:inset 0 1px 1px #ffffff88,0 1px 2px #000c;}
+
+/* Planar headphone shells are viewed edge-on, with open grilles and deep pads. */
+.device-node.headphone-equipment.device-type-hpPlanar .headphone-object {height:302px;isolation:isolate;}
+.device-node.headphone-equipment.device-type-hpPlanar .planar-art {position:absolute;inset:0;z-index:2;width:100%;height:100%;overflow:visible;pointer-events:none;}
+.device-node.headphone-equipment.device-type-hpPlanar .headphone-band {visibility:hidden;}
+.device-node.headphone-equipment.device-type-hpPlanar .headphone-cups {top:154px;left:8px;right:8px;height:120px;z-index:3;filter:none;}
+.device-node.headphone-equipment.device-type-hpPlanar .headphone-cup,
+.device-node.headphone-equipment.device-type-hpPlanar .headphone-cup:last-child {width:84px;height:120px;border:0;border-radius:0;background:transparent;box-shadow:none;transform:none;}
+.device-node.headphone-equipment.device-type-hpPlanar .headphone-cup::before,
+.device-node.headphone-equipment.device-type-hpPlanar .headphone-cup::after,
+.device-node.headphone-equipment.device-type-hpPlanar .headphone-cup-hardware {display:none;}
+.device-node.headphone-equipment.device-type-hpPlanar .headphone-cup-socket {left:43px;bottom:-3px;width:13px;height:13px;border-color:#c1c8cb;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f1f3f3,#53595b 48%,#090b0c 70%);box-shadow:inset 0 1px 1px #ffffff88,0 1px 2px #000c;}
+
+/* Remaining over-ear models use a side profile so the shell depth and pads read clearly. */
+.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .headphone-object {height:302px;isolation:isolate;}
+.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .side-headphone-art {position:absolute;inset:0;z-index:2;width:100%;height:100%;overflow:visible;pointer-events:none;}
+.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .headphone-band {visibility:hidden;}
+.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .headphone-cups {top:154px;left:8px;right:8px;height:120px;z-index:3;filter:none;}
+.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .headphone-cup,
+.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .headphone-cup:last-child {position:relative;width:84px;height:120px;border:0;border-radius:0;background:transparent;box-shadow:none;transform:none;}
+.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .headphone-cup::before,
+.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .headphone-cup::after,
+.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .headphone-cup-hardware {display:none;}
+.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .headphone-cup-socket {left:43px;bottom:-3px;width:13px;height:13px;border-color:var(--side-metal,#b6c0c4);border-radius:50%;background:radial-gradient(circle at 35% 30%,#eef1f2,#53595d 48%,#090b0c 70%);box-shadow:inset 0 1px 1px #ffffff88,0 1px 2px #000c;}
+.device-node.headphone-equipment.device-type-hpStudio {--side-band-dark:#07121a;--side-band-mid:#152b39;--side-band-light:#889ba5;--side-pad-dark:#0a151d;--side-pad-light:#526875;--side-shell-dark:#071019;--side-shell-mid:#1a303d;--side-shell-light:#718792;--side-metal:#a8bec8;--side-texture:#b8d1dc;--side-grill-color:#9bb4c1;}
+.device-node.headphone-equipment.device-type-hpClassic {--side-band-dark:#20150d;--side-band-mid:#78502e;--side-band-light:#c39a63;--side-pad-dark:#24190f;--side-pad-light:#997348;--side-shell-dark:#21160d;--side-shell-mid:#76502e;--side-shell-light:#bd9257;--side-metal:#d6b17a;--side-texture:#f0cc91;--side-stitch-color:#edd09e;--side-grill-color:#c4a272;}
+.device-node.headphone-equipment.device-type-hpMax {--side-band-dark:#586369;--side-band-mid:#aab8bb;--side-band-light:#f2f6f5;--side-pad-dark:#899b99;--side-pad-light:#e3ece8;--side-shell-dark:#647876;--side-shell-mid:#a1b5ad;--side-shell-light:#f1f6f1;--side-metal:#f5fbf9;--side-texture:#ffffff;--side-grill-color:#f2fbf7;--side-stitch-color:#f6fffc;--side-pad-stitch:#f4faf6;}
+.device-node.headphone-equipment.device-type-hpOpenRing {--side-band-dark:#080b0e;--side-band-mid:#262e34;--side-band-light:#aab5bc;--side-pad-dark:#10171c;--side-pad-light:#606d75;--side-shell-dark:#080c10;--side-shell-mid:#222c33;--side-shell-light:#77858d;--side-metal:#c1cbd0;--side-texture:#c9d1d5;--side-grill-color:#d0d9de;}

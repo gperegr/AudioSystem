@@ -4323,8 +4323,14 @@ const Hardware = (() => {
                 el.innerHTML=furnitureMarkup(type);
             }
             if(REFERENCE_HEADPHONES[type]&&type!=='hpKubaDisco2'){
-                el.innerHTML=type==='hpOpenDome'&&tpl?tpl.innerHTML.replace(/(id="|#)dome-/g,(_,prefix)=>`${prefix}${id}-dome-`):`<div class="device-header"><span>${deviceName}</span></div><div class="headphone-body"><div class="headphone-object"><div class="headphone-band"></div><div class="headphone-cups"><div class="headphone-cup"></div><div class="headphone-cup"></div></div></div><div class="headphone-controls"><span></span><div class="port" data-type="p2" data-io="in" data-node="in" data-signal="headphone" title="Entrada de fones · P2 TRS estéreo"></div></div></div>`;
+                const customHeadphoneArt={hpOpenDome:'dome',hpPlanar:'planar'},artPrefix=customHeadphoneArt[type],artTemplate=artPrefix&&document.getElementById(`tpl-${type}`);
+                el.innerHTML=artTemplate?artTemplate.innerHTML.replace(new RegExp(`(id="|#)${artPrefix}-`,'g'),(_,prefix)=>`${prefix}${id}-${artPrefix}-`):`<div class="device-header"><span>${deviceName}</span></div><div class="headphone-body"><div class="headphone-object"><div class="headphone-band"></div><div class="headphone-cups"><div class="headphone-cup"></div><div class="headphone-cup"></div></div></div><div class="headphone-controls"><span></span><div class="port" data-type="p2" data-io="in" data-node="in" data-signal="headphone" title="Entrada de fones · P2 TRS estéreo"></div></div></div></div>`;
                 el.classList.add('reference-headphone');
+            }
+            if(['headphone','hpStudio','hpClassic','hpMax','hpOpenRing'].includes(type)){
+                const sideTemplate=document.getElementById('tpl-headphoneSide');
+                el.innerHTML=sideTemplate.innerHTML.replace(/(id="|#)side-/g,(_,prefix)=>`${prefix}${id}-side-`);
+                el.querySelector('.device-header span').textContent=deviceName;
             }
             if(type==='hpKubaDisco2'){
                 // Scope SVG paint servers so multiple headphones keep independent finishes.
@@ -4336,7 +4342,7 @@ const Hardware = (() => {
                 if(type!=='hpMax'){
                     el.classList.add('headphone-cup-input');
                     const input=el.querySelector('.headphone-controls .port'),socket=document.createElement('div');socket.className='headphone-cup-socket';
-                    input.dataset.type='p2';input.title='Entrada de fones · P2 TRS estéreo';
+                    input.dataset.type=type==='headphone'?'p10':'p2';input.title=`Entrada de fones · ${type==='headphone'?'P10':'P2'} estéreo`;
                     socket.appendChild(input);el.querySelector('.headphone-cup').appendChild(socket);
                     el.querySelector('.headphone-controls>span').textContent='BLUETOOTH';
                 } else {

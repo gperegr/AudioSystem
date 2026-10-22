@@ -387,6 +387,98 @@
         </div><div class="headphone-controls"><span></span><div class="port" data-type="p2" data-io="in" data-node="in" data-signal="headphone" title="Entrada de fones · P2 TRS estéreo"></div></div></div>
     </template>
 
+    <template id="tpl-hpPlanar">
+        <div class="device-header"><span>Fone Planar</span></div>
+        <div class="headphone-body"><div class="headphone-object">
+            <div class="headphone-band"></div>
+            <svg class="planar-art" viewBox="0 0 240 302" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                <defs>
+                    <linearGradient id="planar-band" x2="1"><stop stop-color="#111315"/><stop offset=".18" stop-color="#777b7d"/><stop offset=".38" stop-color="#25282a"/><stop offset=".62" stop-color="#55595b"/><stop offset=".82" stop-color="#222527"/><stop offset="1" stop-color="#090b0c"/></linearGradient>
+                    <linearGradient id="planar-pad" x2="0" y2="1"><stop stop-color="#444648"/><stop offset=".25" stop-color="#111314"/><stop offset=".78" stop-color="#08090a"/><stop offset="1" stop-color="#292b2c"/></linearGradient>
+                    <linearGradient id="planar-shell" x2="1"><stop stop-color="#090b0d"/><stop offset=".2" stop-color="#34393c"/><stop offset=".48" stop-color="#15191c"/><stop offset=".78" stop-color="#45494b"/><stop offset="1" stop-color="#090b0c"/></linearGradient>
+                    <linearGradient id="planar-metal" x2="1"><stop stop-color="#101315"/><stop offset=".35" stop-color="#aab0b2"/><stop offset=".5" stop-color="#41484b"/><stop offset=".75" stop-color="#d0d2d1"/><stop offset="1" stop-color="#111416"/></linearGradient>
+                    <pattern id="planar-grain" width="7" height="6" patternUnits="userSpaceOnUse"><path d="M1 1q2-1 3 1l-1 2H1zm4 3q1-1 2 0" fill="#c8ccce" opacity=".15"/></pattern>
+                    <pattern id="planar-stitch" width="5" height="7" patternUnits="userSpaceOnUse"><path d="M2.5 1v3" stroke="#c7cbcc" stroke-width=".7" opacity=".7"/><path d="M2.5 4v2" stroke="#080a0b" stroke-width=".7"/></pattern>
+                    <pattern id="planar-grill" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 2.5h5M2.5 0v5" stroke="#9ca4a7" stroke-width=".5" opacity=".5"/><circle cx="2.5" cy="2.5" r=".7" fill="#050708"/></pattern>
+                </defs>
+                <!-- Cushioned suspended headband with stitched leather and a brushed outer rail. -->
+                <path d="M20 153C27 61 65 12 120 11c55 1 93 50 100 142l-8 5C203 69 168 22 120 22S37 69 28 158Z" fill="url(#planar-band)" stroke="#080a0b" stroke-width="3"/>
+                <path d="M24 148C34 65 68 18 120 17c52 1 86 48 96 131" fill="none" stroke="#d2d5d5" stroke-width="1" opacity=".65"/>
+                <path d="M27 148C37 70 70 26 120 25c50 1 83 45 93 123" fill="none" stroke="url(#planar-grain)" stroke-width="15"/>
+                <path d="M29 150C39 77 73 34 120 33c47 1 81 44 91 117" fill="none" stroke="url(#planar-stitch)" stroke-width="2"/>
+                <path d="M39 154C47 94 78 51 120 50c42 1 73 44 81 104" fill="none" stroke="#080a0b" stroke-width="8"/>
+                <path d="M41 153C50 98 80 58 120 57c40 1 70 41 79 96" fill="none" stroke="url(#planar-pad)" stroke-width="6"/>
+                <!-- Slim steel yokes and articulated pivots connect the cups below the arch. -->
+                <path d="M31 151C28 174 34 188 52 204m157-53c3 23-3 37-21 53" fill="none" stroke="#080a0b" stroke-width="7"/>
+                <path d="M31 151C28 174 34 188 52 204m157-53c3 23-3 37-21 53" fill="none" stroke="url(#planar-metal)" stroke-width="3"/>
+                <path d="m31 163-10 30 11 10-8 17 15 14m170-71 10 30-11 10 8 17-15 14" fill="none" stroke="#080a0b" stroke-width="8" stroke-linejoin="round"/>
+                <path d="m31 163-10 30 11 10-8 17 15 14m170-71 10 30-11 10 8 17-15 14" fill="none" stroke="url(#planar-metal)" stroke-width="3" stroke-linejoin="round"/>
+                <circle cx="34" cy="210" r="6" fill="#171a1c" stroke="#d2d5d5" stroke-width="1.4"/><circle cx="206" cy="210" r="6" fill="#171a1c" stroke="#d2d5d5" stroke-width="1.4"/>
+                <circle cx="34" cy="210" r="2" fill="#080a0b"/><circle cx="206" cy="210" r="2" fill="#080a0b"/>
+                <!-- Deep oval cups are drawn edge-on, with perforated outer plates and thick pads facing inward. -->
+                <path d="M59 169q18-10 33 4 11 10 12 42v39q-2 23-17 34-15 10-34 1-25-13-27-53-1-44 13-58 8-8 20-9Z" fill="url(#planar-shell)" stroke="#050708" stroke-width="3"/>
+                <path d="M59 169q18-10 33 4 11 10 12 42v39q-2 23-17 34-15 10-34 1-25-13-27-53-1-44 13-58 8-8 20-9Z" fill="url(#planar-grain)"/>
+                <path d="M181 169q-18-10-33 4-11 10-12 42v39q2 23 17 34 15 10 34 1 25-13 27-53 1-44-13-58-8-8-20-9Z" fill="url(#planar-shell)" stroke="#050708" stroke-width="3"/>
+                <path d="M181 169q-18-10-33 4-11 10-12 42v39q2 23 17 34 15 10 34 1 25-13 27-53 1-44-13-58-8-8-20-9Z" fill="url(#planar-grain)"/>
+                <path d="M48 184q-9 34 1 72m142-72q9 34-1 72" fill="none" stroke="url(#planar-stitch)" stroke-width="2"/>
+                <path d="M54 183q-7 32 2 69m128-69q7 32-2 69" fill="none" stroke="url(#planar-grill)" stroke-width="5" opacity=".75"/>
+                <path d="M83 174q20 2 24 24v56q-3 21-19 27-13 4-18-11v-77q1-15 13-19Z" fill="url(#planar-pad)" stroke="#050607" stroke-width="2"/>
+                <path d="M157 174q-20 2-24 24v56q3 21 19 27 13 4 18-11v-77q-1-15-13-19Z" fill="url(#planar-pad)" stroke="#050607" stroke-width="2"/>
+                <path d="M84 181q13 4 15 16m-14-7q12 4 14 16m-13-7q11 4 13 15m-12-6q10 4 12 14m-10-5q9 4 10 13m-8-4q7 3 8 10" fill="none" stroke="#a4a8a8" stroke-width="1.2" opacity=".55"/>
+                <path d="M156 181q-13 4-15 16m14-7q-12 4-14 16m13-7q-11 4-13 15m12-6q-10 4-12 14m10-5q-9 4-10 13m8-4q-7 3-8 10" fill="none" stroke="#a4a8a8" stroke-width="1.2" opacity=".55"/>
+                <path d="M46 263q4 16 20 24m128-24q-4 16-20 24" fill="none" stroke="url(#planar-stitch)" stroke-width="2"/>
+                <circle cx="57" cy="278" r="4" fill="#171a1c" stroke="#c4c8c9" stroke-width="1.3"/><circle cx="183" cy="278" r="4" fill="#171a1c" stroke="#c4c8c9" stroke-width="1.3"/>
+            </svg>
+            <div class="headphone-cups"><div class="headphone-cup"></div><div class="headphone-cup"></div></div>
+        </div><div class="headphone-controls"><span></span><div class="port" data-type="p2" data-io="in" data-node="in" data-signal="headphone" title="Entrada de fones · P2 TRS estéreo"></div></div></div>
+    </template>
+
+    <template id="tpl-headphoneSide">
+        <div class="device-header"><span></span></div>
+        <div class="headphone-body"><div class="headphone-object">
+            <div class="headphone-band"></div>
+            <svg class="side-headphone-art" viewBox="0 0 240 302" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+                <defs>
+                    <linearGradient id="side-band" x2="1"><stop stop-color="var(--side-band-dark,#080a0c)"/><stop offset=".22" stop-color="var(--side-band-light,#717a7f)"/><stop offset=".48" stop-color="var(--side-band-mid,#252a2e)"/><stop offset=".76" stop-color="var(--side-band-light,#717a7f)"/><stop offset="1" stop-color="var(--side-band-dark,#080a0c)"/></linearGradient>
+                    <linearGradient id="side-leather" x2="0" y2="1"><stop stop-color="var(--side-pad-light,#555b5e)"/><stop offset=".24" stop-color="var(--side-pad-dark,#15191c)"/><stop offset=".78" stop-color="var(--side-pad-dark,#15191c)"/><stop offset="1" stop-color="var(--side-pad-light,#555b5e)"/></linearGradient>
+                    <linearGradient id="side-shell" x2="1"><stop stop-color="var(--side-shell-dark,#090b0d)"/><stop offset=".22" stop-color="var(--side-shell-light,#50585d)"/><stop offset=".48" stop-color="var(--side-shell-mid,#20262a)"/><stop offset=".77" stop-color="var(--side-shell-light,#50585d)"/><stop offset="1" stop-color="var(--side-shell-dark,#090b0d)"/></linearGradient>
+                    <linearGradient id="side-metal" x2="1"><stop stop-color="#0b0e10"/><stop offset=".32" stop-color="var(--side-metal,#aab3b7)"/><stop offset=".52" stop-color="#3b4449"/><stop offset=".76" stop-color="var(--side-metal,#aab3b7)"/><stop offset="1" stop-color="#101416"/></linearGradient>
+                    <pattern id="side-grain" width="7" height="6" patternUnits="userSpaceOnUse"><path d="M1 1q2-1 3 1l-1 2H1zm4 3q1-1 2 0" fill="var(--side-texture,#c5cacc)" opacity=".18"/></pattern>
+                    <pattern id="side-stitch" width="5" height="7" patternUnits="userSpaceOnUse"><path d="M2.5 1v3" stroke="var(--side-stitch-color,#c8cdcf)" stroke-width=".7" opacity=".72"/><path d="M2.5 4v2" stroke="#050708" stroke-width=".8"/></pattern>
+                    <pattern id="side-grill" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 2.5h5M2.5 0v5" stroke="var(--side-grill-color,#b9c1c4)" stroke-width=".55" opacity=".62"/><circle cx="2.5" cy="2.5" r=".7" fill="#050708"/></pattern>
+                </defs>
+                <!-- Soft-padded headband, stitched perimeter and polished steel support rails. -->
+                <path d="M18 154C25 59 64 10 120 9c56 1 95 50 102 145l-9 5C204 70 169 22 120 22S36 70 27 159Z" fill="url(#side-band)" stroke="#07090a" stroke-width="3"/>
+                <path d="M23 148C33 62 68 17 120 16c52 1 87 46 97 132" fill="none" stroke="#e5e8e9" stroke-width="1" opacity=".62"/>
+                <path d="M27 148C37 68 71 24 120 24c49 0 83 44 93 124" fill="none" stroke="url(#side-grain)" stroke-width="14"/>
+                <path d="M29 150C39 76 73 32 120 32s81 44 91 118" fill="none" stroke="url(#side-stitch)" stroke-width="2"/>
+                <path d="M39 154C47 93 78 49 120 48c42 1 73 45 81 106" fill="none" stroke="#060809" stroke-width="9"/>
+                <path d="M41 153C50 97 80 56 120 56s70 41 79 97" fill="none" stroke="url(#side-leather)" stroke-width="6"/>
+                <!-- Articulated yokes and hinge caps descend behind the earcups. -->
+                <path d="M31 151C28 174 34 188 52 204m157-53c3 23-3 37-21 53" fill="none" stroke="#07090a" stroke-width="7"/>
+                <path d="M31 151C28 174 34 188 52 204m157-53c3 23-3 37-21 53" fill="none" stroke="url(#side-metal)" stroke-width="3"/>
+                <path d="m31 163-10 30 11 10-8 17 15 14m170-71 10 30-11 10 8 17-15 14" fill="none" stroke="#080a0b" stroke-width="8" stroke-linejoin="round"/>
+                <path d="m31 163-10 30 11 10-8 17 15 14m170-71 10 30-11 10 8 17-15 14" fill="none" stroke="url(#side-metal)" stroke-width="3" stroke-linejoin="round"/>
+                <circle cx="34" cy="210" r="6" fill="#111416" stroke="var(--side-metal,#aab3b7)" stroke-width="1.5"/><circle cx="206" cy="210" r="6" fill="#111416" stroke="var(--side-metal,#aab3b7)" stroke-width="1.5"/>
+                <circle cx="34" cy="210" r="2" fill="#050708"/><circle cx="206" cy="210" r="2" fill="#050708"/>
+                <!-- Earcups are seen in profile: sculpted shell depth outside, soft cushions toward the head. -->
+                <path d="M59 168q19-11 35 4 10 10 11 43v40q-2 22-18 33-16 10-35 0-25-13-27-54-1-43 13-57 8-8 21-9Z" fill="url(#side-shell)" stroke="#050607" stroke-width="3"/>
+                <path d="M59 168q19-11 35 4 10 10 11 43v40q-2 22-18 33-16 10-35 0-25-13-27-54-1-43 13-57 8-8 21-9Z" fill="url(#side-grain)"/>
+                <path d="M181 168q-19-11-35 4-10 10-11 43v40q2 22 18 33 16 10 35 0 25-13 27-54 1-43-13-57-8-8-21-9Z" fill="url(#side-shell)" stroke="#050607" stroke-width="3"/>
+                <path d="M181 168q-19-11-35 4-10 10-11 43v40q2 22 18 33 16 10 35 0 25-13 27-54 1-43-13-57-8-8-21-9Z" fill="url(#side-grain)"/>
+                <path d="M48 183q-9 34 1 74m142-74q9 34-1 74" fill="none" stroke="url(#side-stitch)" stroke-width="2"/>
+                <path d="M53 181q-7 32 2 70m130-70q7 32-2 70" fill="none" stroke="url(#side-grill)" stroke-width="5" opacity=".86"/>
+                <path d="M82 174q21 2 25 25v56q-3 20-19 27-13 4-18-11v-78q1-15 12-19Z" fill="url(#side-leather)" stroke="#050607" stroke-width="2"/>
+                <path d="M158 174q-21 2-25 25v56q3 20 19 27 13 4 18-11v-78q-1-15-12-19Z" fill="url(#side-leather)" stroke="#050607" stroke-width="2"/>
+                <path d="M83 181q13 4 15 16m-14-7q12 4 14 16m-13-7q11 4 13 15m-12-6q10 4 12 14m-10-5q9 4 10 13m-8-4q7 3 8 10" fill="none" stroke="var(--side-pad-stitch,#a8adaf)" stroke-width="1.2" opacity=".56"/>
+                <path d="M157 181q-13 4-15 16m14-7q-12 4-14 16m13-7q-11 4-13 15m12-6q-10 4-12 14m10-5q-9 4-10 13m8-4q-7 3-8 10" fill="none" stroke="var(--side-pad-stitch,#a8adaf)" stroke-width="1.2" opacity=".56"/>
+                <path d="M46 263q4 16 20 24m128-24q-4 16-20 24" fill="none" stroke="url(#side-stitch)" stroke-width="2"/>
+                <circle cx="57" cy="278" r="4" fill="#121517" stroke="var(--side-metal,#aab3b7)" stroke-width="1.3"/><circle cx="183" cy="278" r="4" fill="#121517" stroke="var(--side-metal,#aab3b7)" stroke-width="1.3"/>
+            </svg>
+            <div class="headphone-cups"><div class="headphone-cup"></div><div class="headphone-cup"></div></div>
+        </div><div class="headphone-controls"><span></span><div class="port" data-type="p2" data-io="in" data-node="in" data-signal="headphone" title="Entrada de fones · P2 TRS estéreo"></div><button class="btn-bt-pair">BLUETOOTH</button></div></div>
+    </template>
+
     <template id="tpl-turntable">
         <div class="device-header"><span>Toca-discos</span></div>
         <div class="at-plinth">
