@@ -7312,7 +7312,7 @@ const Hardware = (() => {
         const PROJECT_FORMAT='audio-system-project',PROJECT_VERSION=1;
         let projectDatabase=null,projectPersistenceBlocked=false,projectRestoring=false,projectSaving=false,projectSaveAgain=false,lastProjectSignature='',knownAudioKeys=new Set();
         const projectTools=document.createElement('section');projectTools.className='project-tools';
-        projectTools.innerHTML='<div class="project-file-actions"><button type="button" id="export-project">Exportar projeto</button><button type="button" id="import-project">Abrir projeto</button></div><input id="project-file" type="file" accept=".json,application/json" hidden><p id="project-save-status" role="status" aria-live="polite">Preparando salvamento local…</p>';
+        projectTools.innerHTML='<div class="project-file-actions"><button type="button" id="export-project">Exportar projeto</button><button type="button" id="import-project">Abrir projeto</button></div><input id="project-file" type="file" accept=".json,application/json" hidden><span id="project-save-status" class="sr-only" role="status" aria-live="polite"></span>';
         clearCatalogFooter.appendChild(projectTools);
         const projectStatus=(message,error=false)=>{const node=document.getElementById('project-save-status');node.textContent=message;node.classList.toggle('is-error',error);};
         const projectJSON=value=>JSON.parse(JSON.stringify(value),(key,item)=>['__proto__','constructor','prototype'].includes(key)?undefined:item);
