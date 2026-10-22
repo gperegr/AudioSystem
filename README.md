@@ -61,7 +61,7 @@ Os rótulos acessíveis dos conectores identificam direção, conector, canal e 
 - **Use mixers e seletores** para combinar fontes ou comparar caminhos de áudio.
 - **Observe os medidores dos aparelhos** e os indicadores para acompanhar a atividade do sinal.
 
-A busca do catálogo também encontra equipamentos por função, conector ou tipo de sinal, como **entrada óptica** ou **caixa passiva**. Em **Configurações**, você pode desativar os avisos de compatibilidade e a ajuda contextual para experimentar ligações incorretas; essa opção não remove as barreiras físicas entre plugues incompatíveis. Passe o cursor ou foque um controle para ver uma dica discreta quando a ajuda estiver ativa.
+A busca do catálogo também encontra equipamentos por função, conector ou tipo de sinal, como **entrada óptica** ou **caixa passiva**. Em **Configurações**, você pode desativar os avisos de compatibilidade e a ajuda contextual para experimentar ligações incorretas; essa opção não remove as barreiras físicas entre plugues incompatíveis. Com a ajuda ativa, as dicas de mouseover aparecem após um segundo sobre o item; ao navegar pelo teclado, elas aparecem ao focar o controle.
 
 No cabeçalho de **Propriedades**, **Compacto** reduz espaços e descrições para navegar por aparelhos com muitos controles. O modo escolhido é lembrado.
 

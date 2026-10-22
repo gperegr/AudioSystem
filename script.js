@@ -3220,7 +3220,9 @@ const Hardware = (() => {
         catalogTooltip.setAttribute('role', 'tooltip');
         document.body.appendChild(catalogTooltip);
         let catalogTooltipItem = null;
+        let catalogTooltipTimer = 0;
         function hideCatalogTooltip() {
+            clearTimeout(catalogTooltipTimer);
             catalogTooltip.classList.remove('is-visible');
             catalogTooltipItem?.removeAttribute('aria-describedby');
             catalogTooltipItem = null;
@@ -3236,7 +3238,7 @@ const Hardware = (() => {
             if(!valid)return false;
             contextHelp.style.left=`${valid.x}px`;contextHelp.style.top=`${valid.y}px`;return true;
         }
-        function showContextHelp(target,delay=260){
+        function showContextHelp(target,delay=1000){
             if(!connectionGuidanceEnabled||!target)return;
             const port=target.closest('.port'),control=port?null:target.closest('button,input,select,[role="switch"],[role="slider"]'),device=target.closest('.device-node');
             let heading='',message='';
@@ -3310,7 +3312,10 @@ const Hardware = (() => {
             requestAnimationFrame(() => catalogTooltip.classList.add('is-visible'));
         }
         document.querySelectorAll('.catalog-item').forEach(item => {
-            item.addEventListener('mouseenter', () => showCatalogTooltip(item));
+            item.addEventListener('mouseenter', () => {
+                clearTimeout(catalogTooltipTimer);
+                catalogTooltipTimer=setTimeout(()=>showCatalogTooltip(item),1000);
+            });
             item.addEventListener('mouseleave', hideCatalogTooltip);
             item.addEventListener('pointerdown', hideCatalogTooltip);
         });
