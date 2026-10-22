@@ -17,6 +17,8 @@ Acesse a **[Wiki do programa](https://github.com/gperegr/AudioSystem/wiki)** par
 
 Se você recebeu um endereço da aplicação já publicada, basta abri-lo no navegador. Para uma utilização mais confortável, use um computador com mouse e uma tela ampla. Em telas de toque, há controles para abrir os painéis de equipamentos e propriedades.
 
+Em celulares e tablets, **Equipamentos** e **Propriedades** abrem painéis sobre a montagem, com botão de fechar e toque fora para dispensar. O catálogo usa duas colunas; toque no nome para adicionar e enquadrar o aparelho automaticamente, ou arraste pelo ícone. Use dois dedos para mover e ampliar o canvas. Os controles inferiores e as configurações se adaptam à orientação e ao espaço disponível com o teclado aberto. No desktop, os painéis e a interface permanecem como antes.
+
 Comece com o volume do computador baixo e aumente aos poucos. O navegador pode exigir um clique ou toque antes de liberar o som.
 
 ## Seu primeiro sistema de som
@@ -71,7 +73,7 @@ Os aparelhos Bluetooth representam conexões dentro da simulação; não substit
 
 Em **Fones de Ouvido**, o **Kuba Disco 2** é visto totalmente de frente, no mesmo suporte de madeira dos demais fones, e reproduz o arco clássico de madeira laminada, as regulagens laterais com trilhos que seguem a curvatura do arco e encaixes alinhados ao centro das conchas, as conchas com relevos concêntricos e as almofadas XL costuradas. Selecione o fone para escolher **Tauari**, **Nogueira** ou **Ébano** em **Madeira do arco**; o acabamento acompanha o projeto salvo. Conecte uma saída de fones ao **P2 na ponta do cabo**, abaixo do divisor em Y. A escuta desse modelo não acrescenta coloração tonal e não pretende reproduzir medições acústicas do produto real.
 
-O **Streamer Integrado**, em **Amplificadores integrados**, reúne uma fonte interna e amplificação nominal de **40 W por canal / 8 Ω** na simulação. A tela mostra faixa, artista, álbum e capa de arquivos MP3/FLAC quando esses metadados estão disponíveis, além do progresso, tempo, fonte e volume. Os dados de reprodução PCM correspondem ao áudio decodificado pelo navegador. O menu frontal alterna **Música** e **Linha**, e os controles permitem reproduzir, pausar e avançar ou retroceder 10 segundos. O disco superior iluminado ajusta o volume em dez passos; o duplo clique silencia. As saídas **SPEAKERS L/R** alimentam caixas passivas, **PRE OUT** tem volume variável e conectar **fones P2** silencia as caixas. A fonte interna usa demonstração ou música própria carregada; a entrada **LINE IN** recebe outra fonte por RCA.
+O **Streamer Integrado**, em **Amplificadores integrados**, reúne uma fonte interna e amplificação nominal de **40 W por canal / 8 Ω** na simulação. A tela mostra faixa, artista, álbum e capa quadrada de arquivos MP3/FLAC quando esses metadados estão disponíveis, além do progresso, tempo, fonte e volume. Os dados de reprodução PCM correspondem ao áudio decodificado pelo navegador. O menu frontal alterna **Música** e **Linha**, com ícones e legendas centralizados. Em **Linha**, dois espectros coloridos mostram as frequências reais das entradas **L** e **R** de forma independente. Os controles permitem reproduzir, pausar e avançar ou retroceder 10 segundos. O botão de play mantém o triângulo fixo e se ilumina durante a reprodução. O aparelho é visto totalmente de frente; o disco superior iluminado aparece em perfil, com ranhuras e indicador que acompanham a rotação, em uma camada atrás do housing e da face frontal, que encobrem sua parte inferior. O conjunto completo, incluindo botão e pés, respeita a altura alta de 240 px. Ele ajusta o volume em dez passos; o duplo clique silencia. As saídas **SPEAKERS L/R** alimentam caixas passivas, **PRE OUT** tem volume variável e conectar **fones P2** silencia as caixas. A fonte interna usa demonstração ou música própria carregada; a entrada **LINE IN** recebe outra fonte por RCA.
 
 O **Integrado · Essencial** tem acabamento cinza-oliva, controles de plástico e amplificação nominal de **20 W por canal / 8 Ω**. Selecione **AUX**, **TUNER**, **TAPE** ou **PHONO** e use volume, balanço, graves e agudos. **TONE DEFEAT** ignora os ajustes de tonalidade, **LOUDNESS** reforça discretamente os extremos em volumes baixos e **MONO** combina os canais. Os pequenos LEDs indicam a potência simulada entregue às caixas.
 
@@ -83,13 +85,13 @@ O **Pré · Vidro Clássico** combina vidro preto, inscrições verdes discretas
 
 No catálogo, a **Caixa Passiva Moderna** e a **Caixa Passiva Vintage** ficam em **Caixas Passivas · Bookshelf**, junto aos demais modelos dessa categoria.
 
-Arraste os equipamentos pela área de trabalho: eles acompanham o cursor com uma sombra discreta. O zoom pela roda do mouse preserva o ponto sob o cursor. Use **Centralizar** e **Ajustar para exibir tudo** para navegar com transições suaves; um novo gesto interrompe o movimento.
+Arraste os equipamentos pela área de trabalho: eles acompanham o cursor com uma sombra discreta. Em telas de toque, pressione e segure um equipamento por um instante antes de arrastá-lo; isso evita mover aparelhos ao passar fios sobre eles. O zoom pela roda do mouse preserva o ponto sob o cursor. Use **Centralizar** e **Ajustar para exibir tudo** para navegar com transições suaves; um novo gesto interrompe o movimento.
 
 Para selecionar vários aparelhos, use **Shift + clique** ou **Shift + arraste**. **Ctrl/Cmd + A** seleciona todos os equipamentos quando o foco está na área de montagem.
 
-Na categoria **Móveis**, adicione racks, nichos ou a **Mesa de Áudio** e aproxime a base de um aparelho de uma prateleira ou tampo para apoiá-lo. Os equipamentos compatíveis exibem pezinhos automáticos apenas quando há um pequeno espaço até a base de apoio. Ao encostar na base, os pezinhos automáticos desaparecem; ficam sempre atrás do aparelho, sem animação de descida. Nos toca-discos, o apoio automático se liga diretamente ao gabinete, sem deixar um vão acima dos pés.
+Na categoria **Móveis**, adicione racks, nichos ou a **Mesa de Áudio** e posicione os aparelhos nas prateleiras ou no tampo. Os móveis não atraem os aparelhos magneticamente: você pode manter o espaço desejado para os pezinhos, respeitando a grade de posicionamento. Ao arrastar um móvel, os aparelhos dentro dos vãos ou apoiados nele, com contato ou espaço de até 20 px, acompanham o movimento, assim como toda a pilha acima deles. As distâncias entre os itens são preservadas, inclusive nos limites da área de trabalho. Os equipamentos compatíveis exibem pezinhos automáticos apenas quando há um pequeno espaço até a base de apoio. Ao encostar na base, os pezinhos automáticos desaparecem; ficam sempre atrás do aparelho, sem animação de descida. Nos toca-discos, o apoio automático se liga diretamente ao gabinete, sem deixar um vão acima dos pés.
 
-Selecione a **Mesa de Áudio** e, no painel lateral, abra **Ambiente da bancada**. Escolha a superfície **Madeira**, **Feltro** ou **Estúdio**, ative ou oculte o **Fundo discreto** e combine os objetos opcionais: **Discos**, **Capas**, **CDs** e **Luminária**. Os acessórios incluem um LP com capa em proporção correspondente, CD em estojo transparente e luminária articulada. Essas escolhas acompanham o projeto salvo e exportado.
+Selecione a **Mesa de Áudio** e, no painel lateral, abra **Ambiente da bancada**. Escolha a superfície **Madeira**, **Feltro** ou **Estúdio**, ative ou oculte o **Painel acústico** e combine os objetos opcionais: **Discos**, **Capas**, **CDs** e **Luminária**. Os acessórios incluem um LP com capa em proporção correspondente, CD em estojo transparente e luminária articulada. Essas escolhas acompanham o projeto salvo e exportado.
 
 ## Experimentar a montagem
 
@@ -122,10 +124,12 @@ No Safari do iPhone e iPad, o áudio é ativado por um toque em **Reproduzir**. 
 
 O desbloqueio usa toque, clique ou teclado, mesmo com os sons de interação desligados. Em versões antigas do iOS sem a API de sessão de áudio, um áudio silencioso local mantém a rota de mídia; ele pausa quando a página fica oculta. A música continua passando pelo circuito Web Audio da montagem.
 
-Para verificar regressões de ativação e retomada, execute `node --test tests/audio-activation.test.cjs` (Node.js, sem dependências adicionais).
+Para verificar regressões de ativação e retomada, execute `node --test tests/audio-activation.test.cjs` (Node.js, sem dependências adicionais). O agrupamento de móveis e a preservação dos espaços podem ser verificados com `node --test tests/furniture-group.test.cjs`.
 
 ## Sobre a simulação
 
 O objetivo é oferecer uma experiência de exploração e aprendizado. Os equipamentos e seus comportamentos são aproximações virtuais; os medidores não representam medições de aparelhos físicos nem o volume acústico real no ambiente.
 
 Use as informações do fabricante e orientação apropriada ao montar um sistema de som real.
+
+Na categoria **Móveis**, os painéis acústicos **Horizontal** e **Vertical** medem **760 × 760 px**, seguindo a largura padrão dos equipamentos. A espuma grafite tem frisos em relevo; na Mesa de Áudio, o painel combina módulos com orientações alternadas. Os painéis ficam atrás dos aparelhos e suas posições acompanham o projeto salvo.

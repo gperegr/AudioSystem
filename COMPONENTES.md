@@ -45,7 +45,7 @@ Os estilos compartilhados ficam na seção final de `style.css`. A duração de 
 
 `Hardware.sizes` define três alturas: baixo **120 px**, médio **180 px** e alto **240 px**. As larguras são compacta **380 px** e completa **760 px**.
 
-`Hardware.layout` escolhe o formato antes de medir a colocação no canvas. Processadores, seletores e amplificadores compactos usam o formato baixo; integrados, prés completos, receivers, instrumentos e potências maiores usam o médio; a potência com válvulas expostas usa o alto. Interfaces e amplificadores de fones compactos usam a largura compacta.
+`Hardware.layout` escolhe o formato antes de medir a colocação no canvas. Processadores, seletores e amplificadores compactos usam o formato baixo; integrados, prés completos, receivers, instrumentos e potências maiores usam o médio; a potência com válvulas expostas e o Streamer Integrado usam o alto. No streamer, os 240 px incluem o botão superior, o gabinete, os conectores e os pés; a largura própria de 520 px é preservada. Interfaces e amplificadores de fones compactos usam a largura compacta.
 
 Fontes musicais, caixas, subwoofers, fones e móveis preservam as proporções próprias. Visores, gráficos, gauges e processamento de áudio continuam específicos dos equipamentos. O formato é reconstruído pelo tipo do aparelho ao abrir um projeto; não exige migração do arquivo salvo.
 

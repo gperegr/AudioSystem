@@ -48,7 +48,7 @@ const Hardware = (() => {
     // Change a size here without changing the component model or its behavior.
     const controlSizes = {
         preGlass:{'.power-btn':{width:18,height:27},'[data-pre-toggle],[data-glass-toggle],[data-integrated-direct]':{width:18,height:27},'[data-pre-rotary]':{width:58,height:58},'[data-integrated-knob="volume"]':{width:64,height:64},'[data-integrated-knob="bass"],[data-integrated-knob="treble"],[data-integrated-knob="balance"]':{width:40,height:40}},
-        streamIntegrated:{'.power-btn':{width:14,height:20},'[data-stream-action]':{width:24,height:24}},
+        streamIntegrated:{'.power-btn':{width:14,height:20},'[data-stream-action]':{width:24,height:24},'[data-stream-input]':{width:131,height:74},'[data-stream-cover]':{width:73,height:73}},
         integratedUtility:{'.power-btn':{width:18,height:27},'[data-integrated-source]':{width:28,height:17},'[data-utility-toggle],.integrated-direct':{width:33,height:17},'[data-integrated-knob="volume"]':{width:61,height:61}},
         prePrecision:{'.power-btn':{width:16,height:25},'[data-pre-toggle],[data-precision-gain]':{width:24,height:34},'[data-pre-rotary]':{width:37,height:37},'[data-integrated-knob="volume"]':{width:64,height:64},'[data-integrated-knob="balance"]':{width:26,height:26}},
         turntableLinear: {
@@ -698,6 +698,11 @@ const Hardware = (() => {
     }
     function dispose(dev){if(readoutOwner&&dev.el.contains(readoutOwner))hideKnobReadout(0);dev.el.querySelectorAll('[data-hardware-knob],[data-hardware-linear],[data-hardware-feedback]').forEach(el=>releases.get(el)?.());}
     function layout({type,el}){
+        if(type==='streamIntegrated'){
+            el.dataset.chassis='high';el.style.setProperty('--chassis-height',sizes.heights.high+'px');
+            for(const key of ['height','min-height','max-height'])el.style.setProperty(key,sizes.heights.high+'px','important');
+            return;
+        }
         if(['prePrecision','preGlass'].includes(type))return;
         if(type==='hardwareDemo'||FURNITURE_TYPES[type]||isListeningDevice({type})||(SOURCE_TYPES.has(type)&&!SIGNAL_GENERATOR_TYPES.has(type)&&!['btReceiverA','cdPlayer','streamer'].includes(type)))return;
         const compact=!!INTERFACE_DEVICES[type]||['headphoneAmp','headphoneAmpModern','btTransmitterPro','btReceiverA'].includes(type);
@@ -851,7 +856,7 @@ const Hardware = (() => {
             return event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
         };
         const cableVisibilityButton=document.createElement('button');
-        cableVisibilityButton.type='button';cableVisibilityButton.textContent='Visibilidade dos cabos';cableVisibilityButton.setAttribute('aria-pressed','false');
+        cableVisibilityButton.type='button';cableVisibilityButton.className='cable-visibility-toggle';cableVisibilityButton.textContent='Visibilidade dos cabos';cableVisibilityButton.setAttribute('aria-pressed','false');
         document.querySelector('.canvas-tools').appendChild(cableVisibilityButton);
         cableVisibilityButton.addEventListener('click',()=>{
             if(state.hideCables||state.connections.some(c=>c.hidden)){
@@ -972,10 +977,27 @@ const Hardware = (() => {
         const mobileControls=document.createElement('div');mobileControls.className='mobile-panel-controls';
         mobileControls.innerHTML='<button type="button" data-mobile-panel="catalog" aria-expanded="false">Equipamentos</button><button type="button" data-mobile-panel="properties" aria-expanded="false">Propriedades</button>';
         document.getElementById('app-topbar').lastElementChild.prepend(mobileControls);
-        function closeMobilePanels(){document.body.classList.remove('mobile-catalog-open','mobile-properties-open');mobileControls.querySelectorAll('button').forEach(button=>button.setAttribute('aria-expanded','false'));}
+        const compactLayout=matchMedia('(max-width:1000px), (hover:none) and (pointer:coarse) and (max-width:1400px)');
+        function syncCompactViewport(){
+            if(compactLayout.matches)document.body.style.setProperty('--compact-viewport-height',(window.visualViewport?.height||innerHeight)+'px');
+            else document.body.style.removeProperty('--compact-viewport-height');
+        }
+        window.visualViewport?.addEventListener('resize',syncCompactViewport);window.addEventListener('resize',syncCompactViewport);syncCompactViewport();
+        const mobileBackdrop=document.createElement('button');mobileBackdrop.type='button';mobileBackdrop.className='mobile-panel-backdrop';mobileBackdrop.hidden=true;mobileBackdrop.tabIndex=-1;mobileBackdrop.setAttribute('aria-label','Fechar painéis');document.body.appendChild(mobileBackdrop);
+        const mobileCatalogClose=document.createElement('button');mobileCatalogClose.type='button';mobileCatalogClose.className='mobile-catalog-close';mobileCatalogClose.textContent='Fechar equipamentos ×';equipmentCatalog.prepend(mobileCatalogClose);
+        function syncMobilePanels(){
+            const catalogOpen=compactLayout.matches&&document.body.classList.contains('mobile-catalog-open'),propertiesOpen=compactLayout.matches&&document.body.classList.contains('mobile-properties-open');
+            equipmentCatalog.inert=compactLayout.matches&&!catalogOpen;document.getElementById('inspector').inert=compactLayout.matches&&!propertiesOpen;
+            mobileBackdrop.hidden=!(catalogOpen||propertiesOpen);
+            mobileControls.querySelector('[data-mobile-panel="catalog"]').setAttribute('aria-expanded',String(catalogOpen));mobileControls.querySelector('[data-mobile-panel="properties"]').setAttribute('aria-expanded',String(propertiesOpen));
+        }
+        function closeMobilePanels(){document.body.classList.remove('mobile-catalog-open','mobile-properties-open');syncMobilePanels();}
+        mobileBackdrop.addEventListener('click',()=>{const key=document.body.classList.contains('mobile-catalog-open')?'catalog':'properties';closeMobilePanels();mobileControls.querySelector(`[data-mobile-panel="${key}"]`).focus();});
+        mobileCatalogClose.addEventListener('click',()=>{closeMobilePanels();mobileControls.querySelector('[data-mobile-panel="catalog"]').focus();});
+        compactLayout.addEventListener('change',()=>{syncCompactViewport();if(!compactLayout.matches)closeMobilePanels();else syncMobilePanels();});
         mobileControls.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{
             const className=button.dataset.mobilePanel==='catalog'?'mobile-catalog-open':'mobile-properties-open',open=document.body.classList.contains(className);
-            closeMobilePanels();if(!open){document.body.classList.add(className);button.setAttribute('aria-expanded','true');}
+            closeMobilePanels();if(!open){document.querySelector('.app-settings')?.removeAttribute('open');document.body.classList.add(className);syncMobilePanels();(button.dataset.mobilePanel==='catalog'?mobileCatalogClose:mobileInspectorClose).focus({preventScroll:true});}
         }));
         canvas.addEventListener('pointerdown',()=>{stopViewMotion();closeMobilePanels();},{capture:true});
         const mobileInspectorClose=document.createElement('button');mobileInspectorClose.type='button';mobileInspectorClose.className='mobile-inspector-close';mobileInspectorClose.textContent='Ocultar propriedades →';mobileInspectorClose.setAttribute('aria-label','Ocultar menu da direita');
@@ -983,10 +1005,21 @@ const Hardware = (() => {
         document.getElementById('inspector').prepend(mobileInspectorClose);
         mobileControls.querySelector('[data-mobile-panel="catalog"]').setAttribute('aria-controls','equipment-catalog');
         mobileControls.querySelector('[data-mobile-panel="properties"]').setAttribute('aria-controls','inspector');
-        new MutationObserver(()=>{mobileControls.querySelector('[data-mobile-panel="catalog"]').setAttribute('aria-expanded',String(document.body.classList.contains('mobile-catalog-open')));mobileControls.querySelector('[data-mobile-panel="properties"]').setAttribute('aria-expanded',String(document.body.classList.contains('mobile-properties-open')));}).observe(document.body,{attributes:true,attributeFilter:['class']});
+        new MutationObserver(syncMobilePanels).observe(document.body,{attributes:true,attributeFilter:['class']});
+        syncMobilePanels();
+        document.addEventListener('click',event=>{if(compactLayout.matches&&event.target.closest('.app-settings>summary'))closeMobilePanels();});
+        document.addEventListener('keydown',event=>{
+            if(!compactLayout.matches||mobileBackdrop.hidden)return;
+            const panel=document.body.classList.contains('mobile-catalog-open')?equipmentCatalog:document.getElementById('inspector');
+            if(event.key==='Escape'){event.preventDefault();const key=panel===equipmentCatalog?'catalog':'properties';closeMobilePanels();mobileControls.querySelector(`[data-mobile-panel="${key}"]`).focus();}
+            else if(event.key==='Tab'){
+                const controls=[...panel.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),[tabindex="0"]')].filter(el=>el.getClientRects().length&&!el.closest('[hidden]'));
+                const first=controls[0],last=controls.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+            }
+        });
 
         const touchHint=document.createElement('p');touchHint.className='touch-catalog-hint';touchHint.textContent='Toque no nome para adicionar. Arraste pelo ícone. No canvas, use dois dedos para mover e dar zoom.';
-        equipmentCatalog.firstElementChild.appendChild(touchHint);
+        equipmentCatalog.querySelector(':scope > .p-4').appendChild(touchHint);
 
         function syncDeviceSelection() {
             Object.values(state.devices).forEach(dev => {
@@ -1142,7 +1175,7 @@ const Hardware = (() => {
         });
 
         const DEVICE_NAMES = {
-            furnitureRack:'Rack de Áudio', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio',
+            furnitureRack:'Rack de Áudio', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio', acousticHorizontal:'Painel Acústico Horizontal', acousticVertical:'Painel Acústico Vertical',
             adapterRcaP2:'Adaptador RCA → P2', adapterP2Rca:'Adaptador P2 → RCA', adapterP10P2:'Adaptador P10 → P2', adapterP2P10:'Adaptador P2 → P10', adapterRcaP10:'Adaptador RCA → P10', adapterP10Rca:'Adaptador P10 → RCA', phonoConverter:'Conversor Phono → Linha', speakerConverter:'Conversor Amplificado → Linha',
             turntable: 'Toca-discos', turntableVintage: 'Toca-discos Vintage', turntableLinear:'Toca-discos Tangencial',
             hardwareDemo:'Modelo · Controles',signalGeneratorVintage:'Gerador de Sinais Vintage', signalGenerator:'Gerador de Sinais', cdPlayer: 'CD Player', tapeDeck:'Tape Deck de Rolo', preamp:'Pré · Slim',preReference:'Pré · Visor Verde',preControl:'Pré · Controle 2.1',preDisplay:'Pré · Tela Central', benchMeter:'Medidor de Bancada', benchMeterVintage:'Medidor de Bancada Vintage',
@@ -1206,14 +1239,24 @@ const Hardware = (() => {
             furnitureRackTall:{width:840,height:840,surfaces:[0,260,520,780],inset:20,rack:true,back:true,description:'Use os vãos mais altos para acomodar equipamentos maiores ou empilhados.'},
             furnitureRackSix:{width:840,height:960,surfaces:[0,180,360,540,720,900],inset:20,rack:true,back:true,description:'Distribua os equipamentos entre as seis prateleiras.'},
             furnitureTable:{width:1680,height:760,surfaces:[0],inset:20,description:'Apoie os equipamentos sobre o tampo. Arraste a mesa pelo tampo ou pelos pés.'},
+            acousticHorizontal:{width:Hardware.sizes.widths.full,height:Hardware.sizes.widths.full,surfaces:[],inset:0,acoustic:'horizontal',description:'Espuma acústica grafite com frisos horizontais. Painel quadrado com a largura padrão dos equipamentos.'},
+            acousticVertical:{width:Hardware.sizes.widths.full,height:Hardware.sizes.widths.full,surfaces:[],inset:0,acoustic:'vertical',description:'Espuma acústica grafite com frisos verticais. Painel quadrado com a largura padrão dos equipamentos.'},
             furnitureNiche:{width:840,height:280,surfaces:[0,260],inset:20,back:true,description:'Acomode um equipamento dentro do nicho ou sobre ele.'}
         };
         const FURNITURE_MATERIALS = {metal:'Metal',black:'Preto',lightWood:'Madeira clara',darkWood:'Madeira escura'};
+        function acousticTile(orientation){
+            return `<span class="acoustic-foam foam-${orientation}" aria-hidden="true"></span>`;
+        }
+        function benchAcousticMarkup(){
+            return Array.from({length:32},(_,i)=>acousticTile((Math.floor(i/8)+i%8)%2?'horizontal':'vertical')).join('');
+        }
         function furnitureMarkup(type){
             const config=FURNITURE_TYPES[type];
             const part=(name,x,y,width,height)=>`<div class="furniture-part ${name}" style="left:${x}px;top:${y}px;width:${width}px;height:${height}px"></div>`;
             let parts='';
-            if(type==='furnitureTable'){
+            if(config.acoustic){
+                parts=`<div class="acoustic-panel">${acousticTile(config.acoustic)}</div>`;
+            }else if(type==='furnitureTable'){
                 parts=part('furniture-top',0,0,config.width,28)+part('furniture-leg',60,28,40,config.height-28)+part('furniture-leg',config.width-100,28,40,config.height-28)+part('furniture-brace',100,80,config.width-200,20);
             }else if(config.rack){
                 const bodyHeight=config.surfaces.at(-1)+16;
@@ -1236,27 +1279,14 @@ const Hardware = (() => {
             dev.el.dataset.benchBackdrop=String(settings.benchBackdrop);
             dev.el.querySelector('.bench-scene')?.remove();
             const scene=document.createElement('div');scene.className='bench-scene';scene.setAttribute('aria-hidden','true');
-            scene.innerHTML='<div class="bench-backdrop"></div>'+settings.benchDecorations.map(key=>`<img class="bench-decoration bench-decoration-${key}" src="./assets/decorations/${BENCH_DECORATION_ASSETS[key]}.svg" alt="" draggable="false">`).join('');
+            scene.innerHTML='<div class="bench-backdrop">'+benchAcousticMarkup()+'</div>'+settings.benchDecorations.map(key=>`<img class="bench-decoration bench-decoration-${key}" src="./assets/decorations/${BENCH_DECORATION_ASSETS[key]}.svg" alt="" draggable="false">`).join('');
             dev.el.querySelector('.furniture-body').prepend(scene);
         }
         const STACK_FEET=Object.freeze({width:22,height:20,insetRatio:.1});
-        function snapOnFurniture(dev,x,y){
+        function snapOnEquipment(dev,x,y){
             if(FURNITURE_TYPES[dev.type])return{x,y};
             const width=dev.el.offsetWidth,height=dev.el.offsetHeight;
             let best=null;
-            Object.values(state.devices).forEach(furniture=>{
-                const config=FURNITURE_TYPES[furniture.type];if(!config||width>config.width-config.inset*2)return;
-                const fx=parseFloat(furniture.el.style.left)||0,fy=parseFloat(furniture.el.style.top)||0;
-                if(x+width<fx+config.inset||x>fx+config.width-config.inset)return;
-                // Inside racks, only the base is attracted to an internal shelf.
-                // Keep the horizontal position under the user's control.
-                if(config.rack&&(x<fx+config.inset||x+width>fx+config.width-config.inset))return;
-                config.surfaces.forEach((surface,index)=>{
-                    if(config.rack&&(index===0||fy+surface-height<fy+config.surfaces[index-1]+16))return;
-                    const distance=Math.abs(y+height-fy-surface);
-                    if(distance<=14/view.zoom&&(!best||distance<best.distance))best={distance,x:config.rack?x:Math.max(fx+config.inset,Math.min(fx+config.width-config.inset-width,x)),y:fy+surface-height};
-                });
-            });
             // All three chassis heights leave the same physical space for their feet.
             if(!best&&dev.el.dataset.chassis){
                 Object.values(state.devices).forEach(lower=>{
@@ -1290,7 +1320,7 @@ const Hardware = (() => {
             });
         }
         function findFreePlacement(dev,x,y) {
-            const start = snapOnFurniture(dev,Math.max(0,snapCoordinate(x)),Math.max(0,snapCoordinate(y+dev.el.offsetHeight)-dev.el.offsetHeight));
+            const start = snapOnEquipment(dev,Math.max(0,snapCoordinate(x)),Math.max(0,snapCoordinate(y+dev.el.offsetHeight)-dev.el.offsetHeight));
             if (canPlaceEquipment(dev,start.x,start.y)) return start;
             for (let radius=20;radius<=Math.max(world.offsetWidth,world.offsetHeight);radius+=20) {
                 for (let offset=-radius;offset<=radius;offset+=20) {
@@ -2910,11 +2940,11 @@ const Hardware = (() => {
             const pair = '<circle cx="13" cy="27" r="2"/><circle cx="20" cy="27" r="2"/>';
             let drawing;
             if (FURNITURE_TYPES[type]) {
-                drawing = type === 'furnitureTable' ? '<path d="M5 15h46v5H5zM10 20v20m36-20v20M12 26h32"/>' : type === 'furnitureNiche' ? '<path d="M6 10h44v28H6zM11 15h34v18H11z"/>' : '<path d="M9 5h38v34H9zM9 16h38M9 27h38M13 39v4m30-4v4"/>';
+                drawing = FURNITURE_TYPES[type].acoustic ? '<rect x="10" y="5" width="36" height="36" rx="1"/>'+Array.from({length:6},(_,i)=>FURNITURE_TYPES[type].acoustic==='horizontal'?`<path d="M12 ${9+i*5}h32"/>`:`<path d="M${14+i*5} 7v32"/>`).join('') : type === 'furnitureTable' ? '<path d="M5 15h46v5H5zM10 20v20m36-20v20M12 26h32"/>' : type === 'furnitureNiche' ? '<path d="M6 10h44v28H6zM11 15h34v18H11z"/>' : '<path d="M9 5h38v34H9zM9 16h38M9 27h38M13 39v4m30-4v4"/>';
             } else if (INTERFACE_DEVICES[type]) {
                 drawing = '<rect x="6" y="11" width="44" height="24" rx="3"/><circle cx="14" cy="23" r="3"/><circle cx="42" cy="23" r="3"/><path d="M21 23h14m-4-4 4 4-4 4"/>' + (INTERFACE_DEVICES[type].passive ? '' : '<path d="m26 13-3 6h6l-3 6"/>');
             } else if(type==='streamIntegrated'){
-                drawing='<path d="M5 14 10 6h36l5 8v25H5Z M5 14h46"/><ellipse cx="28" cy="10" rx="10" ry="4"/><ellipse cx="28" cy="10" rx="7" ry="2.5"/><rect x="17" y="19" width="23" height="14" rx="1"/><path d="m20 29 5-5 5 3 6-5m9-3v3m0 4v2M8 18v17m40-17v17"/><circle cx="11" cy="31" r="2"/>';
+                drawing='<path d="M5 12h46v27H5ZM19 12V8h18v4M5 34h46M8 15v17m40-17v17"/><rect x="17" y="17" width="23" height="14" rx="1"/><path d="m20 27 5-5 5 3 6-5m9-3v2m0 4v2M10 38h4m28 0h4"/><circle cx="11" cy="28" r="2"/>';
             } else if(type==='turntableLinear'){
                 drawing='<path d="M3 8h50v29H3zM3 24h50M7 15h35M8 21h26m-23-2h20m8-7v9m4-9v9M7 29h8m-8 4h8m6-4h2m4 0h2m6 0h12m-12 4h12"/>';
             } else if (TURNTABLE_TYPES.has(type)) {
@@ -3193,6 +3223,12 @@ const Hardware = (() => {
                         cleanup();if(event.pointerId!==start.id||Math.hypot(event.clientX-start.x,event.clientY-start.y)>8)return;
                         const rect=canvas.getBoundingClientRect(),point=screenToWorld(rect.left+rect.width/2,rect.top+rect.height/2);
                         createDevice(item.dataset.template,point.x-150,point.y-70);playUiSound('drop');closeMobilePanels();
+                        const added=state.devices[state.selectedDeviceId];
+                        if(compactLayout.matches&&added){
+                            const width=added.el.offsetWidth,height=added.el.offsetHeight,tools=canvas.querySelector('.canvas-tools'),usableHeight=Math.max(120,rect.height-tools.offsetHeight-40);
+                            const zoom=clampZoom(Math.min(view.zoom,(rect.width-32)/width,(usableHeight-32)/height));
+                            animateViewTo({zoom,x:(rect.width-width*zoom)/2-(parseFloat(added.el.style.left)||0)*zoom,y:(usableHeight-height*zoom)/2-(parseFloat(added.el.style.top)||0)*zoom});
+                        }
                     };
                     item.addEventListener('pointerup',tap);item.addEventListener('pointercancel',cleanup);return;
                 }
@@ -3629,18 +3665,37 @@ const Hardware = (() => {
             refreshSignalGeneratorControls(dev);
         }
         function expandFurnitureGroup(devices){
+            if(!devices.some(dev=>FURNITURE_TYPES[dev.type]))return devices;
             const group=new Map(devices.map(dev=>[dev.id,dev]));
-            const position=dev=>({x:parseFloat(dev.el.style.left)||0,y:parseFloat(dev.el.style.top)||0,w:dev.el.offsetWidth,h:dev.el.offsetHeight});
-            const furniture=devices.filter(dev=>FURNITURE_TYPES[dev.type]);if(!furniture.length)return devices;
-            Object.values(state.devices).forEach(dev=>{
-                if(group.has(dev.id)||FURNITURE_TYPES[dev.type])return;const box=position(dev);
-                if(furniture.some(rack=>{const config=FURNITURE_TYPES[rack.type],r=position(rack);return box.x>=r.x+config.inset-1&&box.x+box.w<=r.x+r.w-config.inset+1&&config.surfaces.some(surface=>Math.abs(box.y+box.h-r.y-surface)<=2);}))group.set(dev.id,dev);
-            });
+            const boxes=new Map(Object.values(state.devices).map(dev=>[dev.id,{
+                dev,x:parseFloat(dev.el.style.left)||0,y:parseFloat(dev.el.style.top)||0,w:dev.el.offsetWidth,h:dev.el.offsetHeight
+            }]));
+            const belongsTo=(box,support)=>{
+                const overlap=Math.min(box.x+box.w,support.x+support.w)-Math.max(box.x,support.x);
+                if(overlap<=.5)return false;
+                const config=FURNITURE_TYPES[support.dev.type];
+                if(config){
+                    // Keep every item inside a bay, including deliberately floating
+                    // placements. A table's open space below its top is not a bay.
+                    const insideWidth=box.x>=support.x+config.inset-.5&&box.x+box.w<=support.x+support.w-config.inset+.5;
+                    const insideBay=insideWidth&&(config.rack||config.back)&&config.surfaces.some((surface,i)=>i>0&&box.y>=support.y+config.surfaces[i-1]+(config.rack?16:20)-.5&&box.y+box.h<=support.y+surface+.5);
+                    if(insideBay)return true;
+                    // Include contact and the full visible-foot gap, even on a top
+                    // with a small overhang. No attraction changes that spacing.
+                    return config.surfaces.some(surface=>{const gap=support.y+surface-box.y-box.h;return gap>=-.5&&gap<=STACK_FEET.height+.5;});
+                }
+                const gap=support.y-box.y-box.h;
+                return gap>=-.5&&gap<=STACK_FEET.height+.5&&overlap>=Math.min(box.w,support.w)*.7;
+            };
             let changed=true;
-            while(changed){changed=false;Object.values(state.devices).forEach(dev=>{
-                if(group.has(dev.id)||FURNITURE_TYPES[dev.type])return;const box=position(dev);
-                if([...group.values()].some(support=>{if(FURNITURE_TYPES[support.type])return false;const b=position(support),gap=b.y-box.y-box.h;const overlap=Math.min(box.x+box.w,b.x+b.w)-Math.max(box.x,b.x);return gap>=-.5&&gap<=20&&overlap>=Math.min(box.w,b.w)*.7;})){group.set(dev.id,dev);changed=true;}
-            });}return [...group.values()];
+            while(changed){
+                changed=false;
+                for(const box of boxes.values()){
+                    if(group.has(box.dev.id))continue;
+                    if([...group.keys()].some(id=>belongsTo(box,boxes.get(id)))){group.set(box.dev.id,box.dev);changed=true;}
+                }
+            }
+            return [...group.values()];
         }
         const ROOM_PRESETS={near:{name:'Audição próxima',decay:.18,predelay:.004,tone:12500},small:{name:'Sala pequena',decay:.65,predelay:.012,tone:8500},large:{name:'Sala ampla',decay:1.7,predelay:.025,tone:6500}};
         function setupRoomAudio(){
@@ -3669,14 +3724,15 @@ const Hardware = (() => {
             const pair=(io,node,signal,kind='rca')=>`<div class="stream-port-pair">${['L','R'].map(ch=>`<div class="port" data-type="${kind==='wire'?'wire':'rca-'+ch.toLowerCase()}" data-io="${io}" data-node="${node}${ch}" data-signal="${signal}" ${kind==='wire'?'data-role="amp-speaker-out"':''} title="${signal==='amplified'?'Caixa passiva':io==='in'?'Entrada de linha':'Pré-out variável'} · ${ch}"></div>`).join('')}</div>`;
             return `<div class="device-header"><span>Streamer Integrado</span></div><section class="stream-console">
                 <div class="stream-top"><i class="stream-top-seam"></i><div class="stream-volume-well"><button data-stream-volume role="slider" aria-label="Volume principal" title="Volume · arraste ou use as setas; duplo clique para silenciar"></button><span class="stream-dial-value" aria-hidden="true"><b data-stream-volume-number>30</b><small>VOLUME</small></span></div></div>
+                <div class="stream-housing" aria-hidden="true"></div>
                 <div class="stream-heat-sink stream-heat-left"></div><div class="stream-heat-sink stream-heat-right"></div>
                 <div class="stream-glass"><div class="stream-power" data-power-slot><button class="power-btn" title="Ligar / desligar"></button></div><div class="stream-phone"><div class="port" data-type="p2" data-io="out" data-node="outPhone" data-signal="headphone" title="Fones P2 estéreo · silencia as caixas ao conectar"></div><small>PHONES</small></div>
                     <section class="stream-screen" aria-label="Tela do streamer"><header><span data-stream-source-label>DEMONSTRAÇÃO</span><span data-stream-state>PAUSADO</span></header>
                         <div class="stream-now"><button class="stream-cover" data-button-model="ui" data-stream-cover title="Informações da faixa" aria-label="Mostrar informações da faixa"><img src="assets/artwork/stream-cover.svg" alt="Capa da faixa"></button><div class="stream-track"><strong data-stream-title>Horizonte azul</strong><span data-stream-artist>Sessão de demonstração</span><span data-stream-album>Escuta tranquila</span><small data-stream-format>FONTE INTERNA</small></div></div>
                         <div class="stream-track-info" hidden><strong data-stream-info-title>Informações da reprodução</strong><p data-stream-info></p><button data-button-model="ui" data-stream-back>VOLTAR</button></div>
-                        <div class="stream-home" hidden><span>ESCOLHA A FONTE</span><button data-button-model="ui" data-stream-input="library">♫<b>Música</b><small>Arquivo / demonstração</small></button><button data-button-model="ui" data-stream-input="line">↔<b>Linha</b><small>Entrada RCA estéreo</small></button></div>
+                        <div class="stream-home" hidden><span>ESCOLHA A FONTE</span><button data-button-model="ui" data-stream-input="library" aria-label="Selecionar música interna"><span class="stream-input-icon" aria-hidden="true">${icon('<path d="M9 18V5l12-2v13M9 8l12-2"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>')}</span><b>Música</b><small>Arquivo / demonstração</small></button><button data-button-model="ui" data-stream-input="line" aria-label="Selecionar entrada de linha"><span class="stream-input-icon" aria-hidden="true">${icon('<path d="M8 3v5m8-5v5M6 8h12v4a6 6 0 0 1-12 0ZM12 18v4"/>')}</span><b>Linha</b><small>Entrada RCA estéreo</small></button></div>
                         <div class="stream-timeline"><input type="range" data-stream-seek data-hardware-slider="seek" min="0" max="180" step="0.1" value="0" aria-label="Posição da faixa"><div><time data-stream-elapsed>0:00</time><span data-stream-screen-volume>VOL 30</span><time data-stream-duration>3:00</time></div></div>
-                        <div class="stream-line-view" hidden><span>ENTRADA ANALÓGICA</span><strong>LINHA</strong><small>RCA · L / R</small><div><i data-stream-level="0"></i><i data-stream-level="1"></i></div></div>
+                        <div class="stream-line-view" hidden><div class="stream-line-heading"><strong>LINHA</strong><small>ESPECTRO · ENTRADA RCA</small></div><div class="stream-spectra">${['L','R'].map((ch,i)=>`<div class="stream-spectrum-row" data-stream-spectrum="${i}"><b>${ch}</b><svg viewBox="0 0 240 32" role="img" aria-label="Espectro de frequência da entrada ${ch}"><path class="stream-spectrum-grid" d="M0 10h240M0 20h240M0 30h240M80 0v30m80-30v30"/><path data-stream-spectrum-fill d="M0 30H240Z"/><path data-stream-spectrum-trace d="M0 30H240"/></svg></div>`).join('')}</div><div class="stream-spectrum-scale"><small>20 Hz</small><small>1 kHz</small><small>20 kHz</small></div></div>
                     </section><div class="stream-front-keys">
                         <button data-stream-action="home" data-button-model="roundKey" title="Fontes / tela de reprodução" aria-label="Abrir menu de fontes">${icon('<path d="m3 11 9-8 9 8M6 9v12h12V9M10 21v-7h4v7"/>')}</button>
                         <button data-stream-action="back" data-button-model="roundKey" title="Retroceder 10 segundos" aria-label="Retroceder 10 segundos">${icon('<path d="M5 5v14m14-14-10 7 10 7Z"/>')}</button>
@@ -3737,6 +3793,12 @@ const Hardware = (() => {
                 internal.connect(internalGate);line.connect(lineGate);internalGate.connect(bus);lineGate.connect(bus);bus.connect(volume);volume.connect(power);power.connect(speaker);power.connect(pre);power.connect(dev.nodes.outPhone,0,index);
                 dev.streamChannels.push({internalGate,lineGate,volume,speaker});dev.powerNodes.push(power);
             }
+            dev.streamSpectra=['L','R'].map((ch,i)=>{
+                const analyzer=ctx.createAnalyser();analyzer.fftSize=2048;analyzer.smoothingTimeConstant=.72;analyzer.minDecibels=-90;analyzer.maxDecibels=-10;
+                dev.nodes['line'+ch].connect(analyzer);owned.push(analyzer);
+                const row=el.querySelector(`[data-stream-spectrum="${i}"]`);
+                return {analyzer,data:new Float32Array(analyzer.frequencyBinCount),trace:row.querySelector('[data-stream-spectrum-trace]'),fill:row.querySelector('[data-stream-spectrum-fill]')};
+            });
             const q=selector=>el.querySelector(selector),position=()=>dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?ctx.currentTime-dev.demoStartedAt:0);
             dev.refreshStreamDisplay=()=>{
                 const st=dev.state,library=st.streamInput==='library',duration=dev.audioBuffer?.duration||180;
@@ -3745,6 +3807,7 @@ const Hardware = (() => {
                 el.dataset.streamPage=page;el.classList.toggle('stream-muted',!!st.streamMute);
                 q('[data-stream-volume-number]').textContent=st.streamMute?'—':volume;
                 q('[data-stream-volume]').style.setProperty('--knob-angle',`${-135+st.volume*270}deg`);q('[data-stream-volume]').style.setProperty('--hw-halo-value',`${st.volume*270}deg`);
+                const dial=q('[data-stream-volume]'),angle=(-135+st.volume*270)*Math.PI/180;dial.style.setProperty('--stream-rim-offset',`${st.volume*60}px`);dial.style.setProperty('--stream-index-offset',`${Math.sin(angle)*64}px`);dial.style.setProperty('--stream-index-visible',Math.cos(angle)>0?'1':'0');
                 q('[data-stream-source-label]').textContent=library?dev.audioBuffer?'ARQUIVO LOCAL':'DEMONSTRAÇÃO':'ENTRADA DE LINHA';
                 q('[data-stream-state]').textContent=st.streamMute?'MUTE':!library?'AUX':st.playing?'REPRODUZINDO':'PAUSADO';
                 q('[data-stream-title]').textContent=dev.audioBuffer?(dev.trackTitle||dev.fileName||'Arquivo local'):'Horizonte azul';
@@ -3756,9 +3819,9 @@ const Hardware = (() => {
                 const seek=q('[data-stream-seek]');seek.max=duration;if(document.activeElement!==seek)seek.value=seconds;
                 q('.stream-now').hidden=page!=='playing'||!library;q('.stream-timeline').hidden=page!=='playing'||!library;q('.stream-line-view').hidden=page!=='playing'||library;q('.stream-home').hidden=page!=='home';q('.stream-track-info').hidden=page!=='info';
                 q('[data-stream-info]').textContent=library?`${dev.audioBuffer?dev.fileName||'Arquivo local':'Demonstração interna'} · ${format} · ${formatAudioTime(duration)}`:'Entrada RCA estéreo · sinal de linha · volume variável';
-                q('[data-stream-action="mute"]').setAttribute('aria-pressed',String(st.streamMute));q('[data-stream-play-symbol]').setAttribute('d',st.playing?'M7 4v16m10-16v16':'m8 4 12 8-12 8Z');
+                q('[data-stream-action="mute"]').setAttribute('aria-pressed',String(st.streamMute));q('[data-stream-action="play"]').setAttribute('aria-pressed',String(dev.powered&&st.playing));
                 el.querySelectorAll('[data-stream-input]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.streamInput===st.streamInput)));
-                el.querySelectorAll('[data-stream-level]').forEach(bar=>{const level=Math.max(0,Math.min(1,(audioDb(dev.meters?.levels[Number(bar.dataset.streamLevel)]||0)+60)/60));bar.style.setProperty('--stream-level',level);});
+                if(!library&&page==='playing')drawStreamLineSpectra(dev);
                 if(state.selectedDeviceId===dev.id){const slider=document.getElementById('stream-volume');if(slider&&document.activeElement!==slider)slider.value=volume;const value=document.getElementById('stream-volume-label');if(value)value.textContent=volume+'%';document.getElementById('stream-mute')?.setAttribute('aria-pressed',String(st.streamMute));document.querySelectorAll('[data-stream-inspector-input]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.streamInspectorInput===st.streamInput)));}
             };
             dev.applyStream=()=>{
@@ -3782,9 +3845,24 @@ const Hardware = (() => {
             q('[data-stream-action="back"]').onclick=()=>seek(position()-10);q('[data-stream-action="next"]').onclick=()=>seek(position()+10);
             q('[data-stream-seek]').oninput=event=>seek(Number(event.target.value));
             el.querySelectorAll('[data-stream-input]').forEach(button=>button.onclick=()=>dev.selectStreamInput(button.dataset.streamInput));
-            Hardware.bindKnob(q('[data-stream-volume]'),{get:()=>dev.state.volume*100,set:value=>dev.setStreamVolume(value/100),min:0,max:100,model:'haloDisc',format:value=>`${Math.round(value)}%`});
+            Hardware.bindKnob(q('[data-stream-volume]'),{get:()=>dev.state.volume*100,set:value=>dev.setStreamVolume(value/100),min:0,max:100,model:'haloDisc',width:144,height:28,format:value=>`${Math.round(value)}%`});
             q('[data-stream-volume]').addEventListener('dblclick',dev.toggleStreamMute);
             dev.applyStream();
+        }
+        function drawStreamLineSpectra(dev){
+            const active=dev.powered&&state.audioCtx.state==='running',nyquist=state.audioCtx.sampleRate/2,maxHz=Math.min(20000,nyquist),points=96;
+            dev.streamSpectra.forEach(({analyzer,data,trace,fill})=>{
+                if(active)analyzer.getFloatFrequencyData(data);
+                const path=[];
+                for(let i=0;i<=points;i++){
+                    const hz=20*(maxHz/20)**(i/points),next=20*(maxHz/20)**((i+1)/points);
+                    const first=Math.min(data.length-1,Math.max(1,Math.floor(hz/nyquist*data.length))),last=Math.min(data.length-1,Math.max(first,Math.ceil(next/nyquist*data.length)-1));
+                    let peak=-90;if(active)for(let bin=first;bin<=last;bin++)peak=Math.max(peak,data[bin]);
+                    const x=i/points*240,y=30-Math.max(0,Math.min(1,(peak+90)/80))*28;
+                    path.push(`${i?'L':'M'}${x.toFixed(1)} ${y.toFixed(1)}`);
+                }
+                const d=path.join('');trace.setAttribute('d',d);fill.setAttribute('d',d+'L240 30L0 30Z');
+            });
         }
         function streamIntegratedInspector(dev){
             return `<section class="stream-inspector"><p>Fonte interna e amplificador estéreo no mesmo aparelho. A biblioteca usa a demonstração ou um arquivo carregado abaixo.</p><div>${[['library','Música interna'],['line','Entrada de linha']].map(([key,label])=>`<button type="button" class="tt-insp-btn" data-stream-inspector-input="${key}" aria-pressed="${dev.state.streamInput===key}">${label}</button>`).join('')}</div><label for="stream-volume">Volume <output id="stream-volume-label">${Math.round(dev.state.volume*100)}%</output></label><input id="stream-volume" type="range" min="0" max="100" step="10" value="${Math.round(dev.state.volume*100)}"><button id="stream-mute" class="tt-insp-btn" aria-pressed="${dev.state.streamMute}">SILENCIAR / RESTAURAR</button><p>O botão superior mantém dez passos de volume, com rotação suave entre eles. Conectar fones silencia as caixas; PRE OUT mantém o volume variável. O halo acompanha o volume e permanece estável durante a música.</p></section>`;
@@ -4240,7 +4318,8 @@ const Hardware = (() => {
                 el.innerHTML = `<div class="device-header"><span>${deviceName}</span></div><section class="interface-face"><header>${config.name}</header><div class="interface-ports"><div><small>ENTRADA · ${config.input==='rca'?'RCA L/R':config.input==='wire'?'FIO L/R':config.input==='p2'?'P2 TRS':'P10 TRS'}</small>${ports('in',config.input)}</div><span aria-hidden="true">→</span><div><small>SAÍDA · ${config.output==='rca'?'RCA L/R':config.output==='p2'?'P2 TRS':'P10 TRS'}</small>${ports('out',config.output)}</div></div><footer>${config.passive?'PASSIVO · PRESERVA O SINAL':'CONVERSÃO DE NÍVEL'}</footer></section>`;
             }
             if(FURNITURE_TYPES[type]) {
-                el.classList.add('furniture-node');el.dataset.material='black';
+                el.classList.add('furniture-node');
+                if(FURNITURE_TYPES[type].acoustic)el.classList.add('acoustic-node');el.dataset.material='black';
                 el.innerHTML=furnitureMarkup(type);
             }
             if(REFERENCE_HEADPHONES[type]&&type!=='hpKubaDisco2'){
@@ -5273,7 +5352,13 @@ const Hardware = (() => {
                 dev.el.addEventListener('pointerdown', e => {
                     if (e.button !== 0) return;
                     if (e.target.closest('button, input, select, textarea, .port, .speaker-grille, .grille-restore, [role="button"]')) return;
-                    e.preventDefault();
+                    const touchHold = e.pointerType === 'touch';
+                    // On touch screens a tap must remain available for wiring and selection.
+                    // Movement starts only after a short deliberate press, so passing a cable
+                    // across a device does not pick it up accidentally.
+                    let touchReady = !touchHold;
+                    let holdTimer = touchHold ? setTimeout(() => { touchReady = true; }, 320) : null;
+                    if (!touchHold) e.preventDefault();
                     window.getSelection()?.removeAllRanges();
                     if (e.shiftKey || e.metaKey || e.ctrlKey) toggleDeviceSelection(dev.id);
                     else if (state.selectedDeviceIds.has(dev.id)) selectDevice(dev.id, true);
@@ -5287,6 +5372,7 @@ const Hardware = (() => {
                         x:parseFloat(item.el.style.left) || 0,
                         y:parseFloat(item.el.style.top) || 0
                     }));
+                    const dragBounds={left:Math.min(...initialPositions.map(p=>p.x)),top:Math.min(...initialPositions.map(p=>p.y)),right:Math.max(...initialPositions.map(p=>p.x+p.dev.el.offsetWidth)),bottom:Math.max(...initialPositions.map(p=>p.y+p.dev.el.offsetHeight))};
                     const origin = initialPositions[0] || { x:0, y:0 };
                     const baseY = Math.max(...initialPositions.map(position => position.y + position.dev.el.offsetHeight));
                     const ignored = new Set(movingDevices.map(item => item.id));
@@ -5362,23 +5448,29 @@ const Hardware = (() => {
                     };
                     const aim = (ev,settle=false) => {
                         const rawX=(ev.clientX-startX)/view.zoom,rawY=(ev.clientY-startY)/view.zoom;
-                        const dx=settle?snapCoordinate(origin.x+rawX)-origin.x:rawX;
-                        const dy=settle?snapCoordinate(baseY+rawY)-baseY:rawY;
+                        const dx=Math.max(-dragBounds.left,Math.min(settle?snapCoordinate(origin.x+rawX)-origin.x:rawX,world.offsetWidth-dragBounds.right));
+                        const dy=Math.max(-dragBounds.top,Math.min(settle?snapCoordinate(baseY+rawY)-baseY:rawY,world.offsetHeight-dragBounds.bottom));
                         targets=initialPositions.map(p=>{
                             const x=p.x+dx,y=p.y+dy;
-                            const target=settle&&initialPositions.length===1?snapOnFurniture(p.dev,x,y):{x,y};
-                            return {dev:p.dev,x:Math.max(0,target.x),y:Math.max(0,target.y)};
+                            const target=settle&&initialPositions.length===1?snapOnEquipment(p.dev,x,y):{x,y};
+                            return {dev:p.dev,x:target.x,y:target.y};
                         });
                         if(settle)targets=settleEquipmentDrop(targets,ignored,initialPositions);
                         if(!frame){lastTime=0;frame=requestAnimationFrame(animate);}
                     };
                     const move = ev => {
+                        if (touchHold && !touchReady) {
+                            if (Math.hypot(ev.clientX-startX,ev.clientY-startY) > 8) {
+                                clearTimeout(holdTimer); holdTimer = null; touchReady = false;
+                            }
+                            return;
+                        }
                         ev.preventDefault();
                         isDragging = Math.hypot(ev.clientX-startX,ev.clientY-startY)>3||isDragging;
                         if(!isDragging)return;
                             movingDevices.forEach(item=>item.el.classList.add('equipment-dragging'));
                         aim(ev);updateDiscardPreview(ev);
-                        if(matchMedia('(max-width:1000px)').matches){
+                        if(compactLayout.matches){
                             if(ev.clientX<28)document.body.classList.add('mobile-catalog-open');
                             else if(ev.clientX>equipmentCatalog.getBoundingClientRect().right+32)document.body.classList.remove('mobile-catalog-open');
                         }
@@ -5389,6 +5481,7 @@ const Hardware = (() => {
                         equipmentCatalog.classList.toggle('return-drag-over',isOverCatalog(ev));
                     };
                     const up = ev => {
+                        clearTimeout(holdTimer); holdTimer = null;
                         if(ev.cancelled){abortDrag();return;}
                         window.removeEventListener('pointermove',move);
                         window.removeEventListener('pointerup',up);
@@ -5405,6 +5498,7 @@ const Hardware = (() => {
                     };
 
                     const abortDrag=()=>{
+                        clearTimeout(holdTimer); holdTimer = null;
                         window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);
                         window.removeEventListener('blur',abortDrag);window.removeEventListener('keydown',cancelWithEscape);
                         cancel();
@@ -5699,7 +5793,7 @@ const Hardware = (() => {
             // Listening controls and live meters alone are not equipment settings.
             return SOURCE_TYPES.has(dev.type)||EQ_TYPES.has(dev.type)||MIXER_TYPES.has(dev.type)
                 ||SELECTOR_TYPES.has(dev.type)||MATRIX_TYPES.has(dev.type)
-                ||ACTIVE_SPK.has(dev.type)||SUB_TYPES.has(dev.type)||!!FURNITURE_TYPES[dev.type]||dev.type==='hpKubaDisco2'
+                ||ACTIVE_SPK.has(dev.type)||SUB_TYPES.has(dev.type)||(!!FURNITURE_TYPES[dev.type]&&!FURNITURE_TYPES[dev.type].acoustic)||dev.type==='hpKubaDisco2'
                 ||['preamp','receiver','powerAmp','powerStereo','powerVintage','headphoneAmp','headphoneAmpModern','headphoneAmp4'].includes(dev.type);
         }
         async function restoreDeviceSettings(dev) {
@@ -5918,8 +6012,9 @@ const Hardware = (() => {
                 html+=`<section class="flex flex-col gap-3 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Ruído do vinil</span><div class="grid grid-cols-3 gap-2" role="group" aria-label="Nível de ruído do vinil">${Object.entries(VINYL_NOISE_LEVELS).map(([key,level])=>`<button type="button" data-vinyl-noise="${key}" class="tt-insp-btn ${(dev.state.vinylNoiseLevel||'medium')===key?'is-on':''}" aria-pressed="${(dev.state.vinylNoiseLevel||'medium')===key}">${level.label}</button>`).join('')}</div></section>`;
             } else if(FURNITURE_TYPES[dev.type]) {
                 const config=FURNITURE_TYPES[dev.type];
-                html += `<div class="flex flex-col gap-3"><label class="text-sm text-gray-300" for="furniture-material">Material</label><select id="furniture-material" class="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700">${Object.entries(FURNITURE_MATERIALS).map(([key,name])=>`<option value="${key}" ${dev.state.material===key?'selected':''}>${name}</option>`).join('')}</select><p class="text-xs text-gray-400">${config.description}</p><p class="text-xs text-gray-400">Aproxime a base do equipamento de uma prateleira para apoiá-lo. Arraste o móvel pelas partes sólidas.${config.rack?' Os equipamentos apoiados nas prateleiras e empilhados acompanham o rack.':''}</p></div>`;
-                if(dev.type==='furnitureTable')html+=`<fieldset class="bench-options"><legend>Ambiente da bancada</legend><label for="bench-surface">Superfície</label><select id="bench-surface">${Object.entries(BENCH_SURFACES).map(([key,label])=>`<option value="${key}" ${dev.state.benchSurface===key?'selected':''}>${label}</option>`).join('')}</select><label><input type="checkbox" id="bench-backdrop" ${dev.state.benchBackdrop!==false?'checked':''}> Fundo discreto</label><span>Objetos decorativos</span>${Object.entries(BENCH_DECORATIONS).map(([key,label])=>`<label><input type="checkbox" data-bench-decoration="${key}" ${dev.state.benchDecorations?.includes(key)?'checked':''}> ${label}</label>`).join('')}</fieldset>`;
+                if(config.acoustic)html+=`<p class="text-sm text-gray-300">${config.description}</p><p class="text-xs text-gray-400">${config.width} × ${config.height} px · Arraste o painel pela espuma para posicioná-lo atrás dos equipamentos.</p>`;
+                else html += `<div class="flex flex-col gap-3"><label class="text-sm text-gray-300" for="furniture-material">Material</label><select id="furniture-material" class="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700">${Object.entries(FURNITURE_MATERIALS).map(([key,name])=>`<option value="${key}" ${dev.state.material===key?'selected':''}>${name}</option>`).join('')}</select><p class="text-xs text-gray-400">${config.description}</p><p class="text-xs text-gray-400">Aproxime a base do equipamento de uma prateleira para apoiá-lo. Arraste o móvel pelas partes sólidas.${config.rack?' Os equipamentos apoiados nas prateleiras e empilhados acompanham o rack.':''}</p></div>`;
+                if(dev.type==='furnitureTable')html+=`<fieldset class="bench-options"><legend>Ambiente da bancada</legend><label for="bench-surface">Superfície</label><select id="bench-surface">${Object.entries(BENCH_SURFACES).map(([key,label])=>`<option value="${key}" ${dev.state.benchSurface===key?'selected':''}>${label}</option>`).join('')}</select><label><input type="checkbox" id="bench-backdrop" ${dev.state.benchBackdrop!==false?'checked':''}> Painel acústico</label><span>Objetos decorativos</span>${Object.entries(BENCH_DECORATIONS).map(([key,label])=>`<label><input type="checkbox" data-bench-decoration="${key}" ${dev.state.benchDecorations?.includes(key)?'checked':''}> ${label}</label>`).join('')}</fieldset>`;
                 if(config.back)html+=`<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Fundo do móvel</span><button id="furniture-back" class="tt-insp-btn ${dev.state.hasBack?'is-on':''}" aria-pressed="${!!dev.state.hasBack}">FUNDO DO MÓVEL</button><p class="text-xs text-gray-400">O fundo acompanha o material do móvel, com acabamento escurecido pela sombra.</p></div>`;
             } else if (INTERFACE_DEVICES[dev.type]) {
                 html += `<p class="text-sm text-gray-400">${INTERFACE_DEVICES[dev.type].description}</p>`;
@@ -5982,7 +6077,7 @@ const Hardware = (() => {
             document.querySelectorAll('[data-bench-decoration]').forEach(input=>input.addEventListener('change',()=>{
                 dev.state.benchDecorations=[...document.querySelectorAll('[data-bench-decoration]:checked')].map(item=>item.dataset.benchDecoration);updateBenchAppearance(dev);
             }));
-            if(FURNITURE_TYPES[dev.type])document.getElementById('furniture-material').addEventListener('change',event=>{dev.state.material=event.target.value;dev.el.dataset.material=event.target.value;});
+            if(FURNITURE_TYPES[dev.type])document.getElementById('furniture-material')?.addEventListener('change',event=>{dev.state.material=event.target.value;dev.el.dataset.material=event.target.value;});
             document.getElementById('furniture-back')?.addEventListener('click',event=>{
                 dev.state.hasBack=!dev.state.hasBack;dev.el.dataset.back=String(dev.state.hasBack);
                 event.currentTarget.classList.toggle('is-on',dev.state.hasBack);
