@@ -1837,6 +1837,14 @@
         #canvas .device-node,#canvas .port,#canvas input[type=range] {touch-action:none;}
         button,select {touch-action:manipulation;}
         #equipment-catalog,#inspector {overscroll-behavior:contain;}
+        /* Keep sidebar scrolling native so touch momentum and the browser's
+           subtle edge elasticity remain available on phones and tablets. */
+        #equipment-catalog .overflow-y-auto,
+        #inspector-content,
+        #inspector-empty {
+            -webkit-overflow-scrolling:touch;
+            overscroll-behavior-y:auto;
+        }
         .catalog-item {touch-action:pan-y;}
         .catalog-item>div:first-child {touch-action:none;}
         .mobile-panel-controls,.touch-catalog-hint {display:none;}
