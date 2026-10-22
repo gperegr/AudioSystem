@@ -50,6 +50,8 @@ Os nomes dos conectores ajudam a escolher o caminho correto:
 
 **Caixas ativas** têm amplificação própria e recebem sinal de linha. **Caixas passivas** precisam de uma saída amplificada. O formato do plugue, sozinho, não garante que os sinais sejam compatíveis.
 
+As caixas passivas de três vias, disponíveis em acabamentos preto e laranja, exibem tweeter, dois transdutores de médios e woofer, além de crossover passivo interno. Conecte **SPEAKER OUT** do amplificador à entrada **SPEAKER IN** da caixa por fio.
+
 Os rótulos acessíveis dos conectores identificam direção, conector, canal e sinal em um formato consistente. Observe os avisos apresentados ao conectar equipamentos. O simulador pode alertar ou bloquear ligações inadequadas e representar sobrecarga, proteção e danos simulados; a barreira física do plugue continua ativa.
 
 ## Operando os aparelhos

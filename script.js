@@ -1245,8 +1245,8 @@ const Hardware = (() => {
             speaker: 'Caixa Passiva',
             shelfCoax:'Bookshelf · Coaxial',shelfWood:'Bookshelf · Madeira',shelfTop:'Bookshelf · Tweeter Superior',spkPassiveWood: 'Caixa Passiva Vintage',floorDiamond:'Caixa de Piso · Tweeter Superior',floorCoax:'Caixa de Piso · Coaxial',floorFlax:'Caixa de Piso · Cones Naturais',
             spkPassiveCarbon: 'Caixa Passiva Moderna',
-            spkPassiveGridBlack: 'Caixa Passiva Preta',
-            spkPassiveGridOrange: 'Caixa Passiva Laranja',
+            spkPassiveGridBlack: 'Caixa Passiva · 3 Vias Preta',
+            spkPassiveGridOrange: 'Caixa Passiva · 3 Vias Laranja',
             spkActiveMonitor: 'Caixa Ativa Vintage',
             spkActiveRounded:'Caixa Ativa · Precisão',spkActiveBookshelf: 'Caixa Ativa Moderna', spkActiveCompact:'Caixa Ativa Compacta',
             subwoofer: 'Subwoofer Ativo',
@@ -2976,8 +2976,8 @@ const Hardware = (() => {
             crossoverVintage: 'Crossover vintage que separa o áudio em três faixas de frequência.',
             spkPassiveWood: 'Caixa passiva: recebe sinal amplificado do receiver ou amplificador por fio.',
             spkPassiveCarbon: 'Caixa passiva: recebe sinal amplificado do receiver ou amplificador por fio.',
-            spkPassiveGridBlack: 'Caixa passiva de três vias com gabinete de madeira, grade preta removível, woofer claro e duto frontal. Impedância nominal de 4 Ω e amplificação recomendada até 200 W.',
-            spkPassiveGridOrange: 'Caixa passiva de três vias com gabinete de madeira, grade laranja removível, woofer claro e duto frontal. Impedância nominal de 4 Ω e amplificação recomendada até 200 W.',
+            spkPassiveGridBlack: 'Caixa passiva de três vias com tweeter, dois transdutores de médios, woofer, crossover interno e grade preta removível. Impedância nominal de 4 Ω; amplificação recomendada até 200 W.',
+            spkPassiveGridOrange: 'Caixa passiva de três vias com tweeter, dois transdutores de médios, woofer, crossover interno e grade laranja removível. Impedância nominal de 4 Ω; amplificação recomendada até 200 W.',
             spkActiveMonitor: 'Caixa ativa: recebe sinal de linha RCA mono, com volume próprio; o lado L/R vem da saída conectada.',
             spkActiveCompact:'Caixa ativa compacta com RCA L/R e AUX P2 de linha, controle de volume e assinatura sonora própria. Preserva os canais estéreo.',
             spkActiveRounded:'Monitor ativo de duas vias, gabinete arredondado, guia de ondas e apoio isolante. Entrada mono P10 de linha adaptada para o simulador, volume e alimentação próprios. Use duas unidades para estéreo.',
@@ -3183,7 +3183,8 @@ const Hardware = (() => {
             ['Adaptadores & Conversores',type=>!!INTERFACE_DEVICES[type]],
             ['Caixas Ativas',type=>ACTIVE_SPK.has(type)],
             ['Caixas Passivas · Bookshelf',type=>!!BOOKSHELF_SPEAKERS[type]||['spkPassiveCarbon','spkPassiveWood'].includes(type)],
-            ['Caixas Passivas · Piso',type=>!!FLOOR_SPEAKERS[type]||['spkPassiveGridBlack','spkPassiveGridOrange'].includes(type)],
+            ['Caixas Passivas · Três vias',type=>['spkPassiveGridBlack','spkPassiveGridOrange'].includes(type)],
+            ['Caixas Passivas · Piso',type=>!!FLOOR_SPEAKERS[type]],
             ['Caixas Passivas',type=>PASSIVE_SPK.has(type)],
             ['Subwoofers',type=>SUB_TYPES.has(type)||PASSIVE_SUB_TYPES.has(type)],
             ['Fones de ouvido',type=>HP_TYPES.has(type)],
@@ -4345,6 +4346,7 @@ const Hardware = (() => {
             if(tpl) el.innerHTML = tpl.innerHTML;
             else { el.innerHTML = `<div class="device-header"><span>${type}</span></div><div class="p-4"><span class="text-[8px] font-bold">INPUT · RCA R</span><div class="port" data-type="rca-r" data-io="in" data-node="in" title="Entrada RCA direita R"></div></div>`; }
             if (type === 'turntableVintage') el.querySelector('.device-header span').textContent = deviceName;
+            if(['spkPassiveGridBlack','spkPassiveGridOrange'].includes(type))el.querySelector('.device-header span').textContent=deviceName;
             if(type==='turntableLinear')el.innerHTML=tpl.innerHTML.replaceAll('linear-art-',`${id}-art-`);
             
             if(type==='hardwareDemo')el.innerHTML=Hardware.demoMarkup();
