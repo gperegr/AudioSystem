@@ -1762,6 +1762,7 @@ const Hardware = (() => {
             powerDual:{watts:300,finish:'dual',description:'Potência estéreo de frente preta robusta, alças e LEDs independentes L/R. Conexões RCA e fio de caixa simplificadas para o simulador.'},
             powerBias:{watts:250,finish:'bias',description:'Potência estéreo prateada, dissipadores laterais e visor circular azul. O ponteiro mostra a potência de saída simulada do canal com maior nível; ganhos A/B ajustáveis no menu lateral.'}
         };
+        const DEFAULT_POWER_GAIN=.5;
         // Individual simulation voicings.
         const AMPLIFICATION_VOICINGS={
             preGlass:{bass:.2,treble:-.35,drive:.38,asymmetry:.035},
@@ -4358,7 +4359,7 @@ const Hardware = (() => {
             return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><section class="custom-power-face power-finish-${config.finish}"><div class="custom-power-main">${type==='powerValve'?valveArt:type==='powerBias'?biasArt:dualArt}</div>${connectorRow}</section>`;
         }
         function configureCustomPower(dev){
-            const ctx=state.audioCtx,gains={};dev.powerNodes=[];dev.state.channelGain={L:1,R:1};
+            const ctx=state.audioCtx,gains={};dev.powerNodes=[];dev.state.channelGain={L:DEFAULT_POWER_GAIN,R:DEFAULT_POWER_GAIN};
             ['L','R'].forEach(ch=>{
                 const input=dev.nodes['in'+ch]=ctx.createGain(),gain=gains[ch]=ctx.createGain(),power=ctx.createGain(),stage=ctx.createGain(),output=dev.nodes['out'+ch]=ctx.createGain();
                 stage.gain.value=1.35;input.connect(gain);gain.connect(power);power.connect(stage);stage.connect(output);dev.powerNodes.push(power);
@@ -4368,9 +4369,10 @@ const Hardware = (() => {
                 const knob=dev.el.querySelector(`[data-bias-gain="${ch}"]`);if(knob){knob.style.setProperty('--gain-angle',(-135+level*270)+'deg');knob.setAttribute('aria-valuenow',String(Math.round(level*10)));knob.setAttribute('aria-valuetext',Math.round(level*10)+' de 10');}
                 const slider=state.selectedDeviceId===dev.id?document.getElementById('power-gain-'+ch):null;if(slider){slider.value=level;syncInspectorGainVisual(slider);}
             };
-            dev.el.querySelectorAll('[data-bias-gain]').forEach(knob=>{
-                const ch=knob.dataset.biasGain;dev.setChannelGain(ch,1);
-                Hardware.bindKnob(knob,{get:()=>dev.state.channelGain[ch],set:value=>dev.setChannelGain(ch,value)});
+            ['L','R'].forEach(ch=>{
+                const knob=dev.el.querySelector(`[data-bias-gain="${ch}"]`);
+                dev.setChannelGain(ch,DEFAULT_POWER_GAIN);
+                if(knob)Hardware.bindKnob(knob,{get:()=>dev.state.channelGain[ch],set:value=>dev.setChannelGain(ch,value)});
             });
         }
         let lastCustomPowerDisplay=0;
@@ -4886,7 +4888,7 @@ const Hardware = (() => {
                 Hardware.bindKnob(level,{get:()=>dev.state.eqLevel,set:dev.setEqLevel});
                 dev.setEqLevel(1);
             } else if (['powerStereo','powerVintage'].includes(type)) {
-                dev.state.channelGain = {L:.8,R:.8};
+                dev.state.channelGain = {L:DEFAULT_POWER_GAIN,R:DEFAULT_POWER_GAIN};
                 dev.powerNodes = [];
                 const gains = {};
                 ['L','R'].forEach(ch => {
@@ -4915,7 +4917,7 @@ const Hardware = (() => {
                     const ch=knob.dataset.powerChannel;
                     knob.setAttribute('role','slider'); knob.setAttribute('aria-valuemin','0'); knob.setAttribute('aria-valuemax','100');
                     Hardware.bindKnob(knob,{get:()=>dev.state.channelGain[ch],set:value=>dev.setChannelGain(ch,value)});
-                    dev.setChannelGain(ch,.8);
+                    dev.setChannelGain(ch,DEFAULT_POWER_GAIN);
                 });
             } else if (type === 'powerAmp') {
                 dev.nodes.inR = state.audioCtx.createGain();
@@ -6034,8 +6036,7 @@ const Hardware = (() => {
             if(MIXER_TYPES.has(dev.type))[0,1,2].forEach(channel=>setMixerVolume(dev,channel,.8));
             if(dev.type==='headphoneAmp4')[0,1,2,3].forEach(channel=>setHeadphoneAmp4Volume(dev,channel,.8));
             if(['headphoneAmp','headphoneAmpModern'].includes(dev.type))dev.setPhoneVolume(.8);
-            if(CUSTOM_POWER_AMPS[dev.type])['L','R'].forEach(channel=>dev.setChannelGain(channel,1));
-            if(['powerStereo','powerVintage'].includes(dev.type))['L','R'].forEach(channel=>dev.setChannelGain(channel,.8));
+            if(CUSTOM_POWER_AMPS[dev.type]||['powerStereo','powerVintage'].includes(dev.type))['L','R'].forEach(channel=>dev.setChannelGain(channel,DEFAULT_POWER_GAIN));
             if(dev.type==='powerAmp')dev.setAmplifierVolume(1);
             if(ACTIVE_SPK.has(dev.type)||SUB_TYPES.has(dev.type))dev.setSpeakerVolume(.8);
             if(MATRIX_TYPES.has(dev.type)){dev.state.matrixInput=1;dev.state.matrixOutputs=[true,false,false,false];dev.updateMatrix();}
@@ -7515,7 +7516,7 @@ const Hardware = (() => {
             if(dev.setPhoneVolume)dev.setPhoneVolume(s.volume);
             if(dev.setAmplifierVolume)dev.setAmplifierVolume(s.volume);
             if(dev.setSpeakerVolume)dev.setSpeakerVolume(s.volume);
-            if(dev.setChannelGain)['L','R'].forEach(ch=>dev.setChannelGain(ch,clamp(s.channelGain?.[ch],0,1,CUSTOM_POWER_AMPS[dev.type]?1:.8)));
+            if(dev.setChannelGain)['L','R'].forEach(ch=>dev.setChannelGain(ch,clamp(s.channelGain?.[ch],0,1,DEFAULT_POWER_GAIN)));
             if(MIXER_TYPES.has(dev.type))Array.from({length:3},(_,i)=>setMixerVolume(dev,i,clamp(s.channelVolumes?.[i],0,1,.8)));
             if(dev.type==='headphoneAmp4')Array.from({length:4},(_,i)=>setHeadphoneAmp4Volume(dev,i,clamp(s.channelVolumes?.[i],0,1,.8)));
             if(EQ_TYPES.has(dev.type)){
