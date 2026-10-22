@@ -807,14 +807,13 @@ const Hardware = (() => {
         function readAppPreferences(){try{const value=JSON.parse(localStorage.getItem(APP_PREFERENCES_KEY)||'{}');return value&&typeof value==='object'?value:{};}catch{return {};}}
         const savedAppPreferences=readAppPreferences();
         let connectionGuidanceEnabled=savedAppPreferences.connectionGuidanceEnabled!==false;
-        let compactInspectorEnabled=savedAppPreferences.compactInspectorEnabled===true;
         let appPreferencesSaveTimer=0;
         function scheduleAppPreferencesSave(){
             clearTimeout(appPreferencesSaveTimer);
             appPreferencesSaveTimer=setTimeout(()=>{
                 if(!canvas.clientWidth||!canvas.clientHeight)return;
                 const focusX=(canvas.clientWidth/2-view.x)/view.zoom,focusY=(canvas.clientHeight/2-view.y)/view.zoom;
-                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,atmosphere:state.atmosphere,connectionGuidanceEnabled,compactInspectorEnabled,zoom:view.zoom,focusX,focusY}));}catch{}
+                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,atmosphere:state.atmosphere,connectionGuidanceEnabled,zoom:view.zoom,focusX,focusY}));}catch{}
             },450);
         }
         const appDialog=document.getElementById('app-confirm-dialog');
@@ -867,21 +866,7 @@ const Hardware = (() => {
         const svgLayer = document.getElementById('cables-layer');
         const inspectorEmpty = document.getElementById('inspector-empty');
         const inspectorContent = document.getElementById('inspector-content');
-        const inspector=document.getElementById('inspector'),inspectorDensityToggle=document.getElementById('inspector-density-toggle');
-        function setInspectorDensity(compact){compactInspectorEnabled=!!compact;inspector.classList.toggle('inspector-compact',compactInspectorEnabled);inspectorDensityToggle.setAttribute('aria-pressed',String(compactInspectorEnabled));const label=compactInspectorEnabled?'Usar espaçamento confortável':'Ativar modo compacto';inspectorDensityToggle.setAttribute('aria-label',label);inspectorDensityToggle.title=label;}
-        let inspectorDensityAnimation;
-        inspectorDensityToggle.addEventListener('click',()=>{
-            inspectorDensityAnimation?.cancel();
-            setInspectorDensity(!compactInspectorEnabled);
-            if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
-                inspectorDensityAnimation=document.getElementById('inspector-content').animate(
-                    [{transform:`scale(${compactInspectorEnabled?1.035:.965})`},{transform:'scale(1)'}],
-                    {duration:180,easing:'cubic-bezier(.2,.75,.25,1)'}
-                );
-            }
-            scheduleAppPreferencesSave();
-        });
-        setInspectorDensity(compactInspectorEnabled);
+        document.getElementById('inspector').classList.add('inspector-compact');
         const equipmentCatalog = document.getElementById('equipment-catalog');
         const wheelScrollMotions=new WeakMap();
         function enableWheelMomentumScroll(element){

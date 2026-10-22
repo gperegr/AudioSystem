@@ -65,7 +65,7 @@ Os rótulos acessíveis dos conectores identificam direção, conector, canal e 
 
 A busca do catálogo também encontra equipamentos por função, conector ou tipo de sinal, como **entrada óptica** ou **caixa passiva**. Em **Configurações**, você pode desativar os avisos de compatibilidade e a ajuda contextual para experimentar ligações incorretas; essa opção não remove as barreiras físicas entre plugues incompatíveis. Com a ajuda ativa, as dicas de mouseover aparecem após um segundo sobre o item; ao navegar pelo teclado, elas aparecem ao focar o controle.
 
-No cabeçalho de **Propriedades**, o botão com ícone de espaçamento alterna entre os modos confortável e compacto para navegar por aparelhos com muitos controles. A mudança anima suavemente o tamanho do conteúdo e dos textos; o ícone também anima, e o modo escolhido é lembrado. O botão fica oculto enquanto o painel está recolhido.
+O painel de **Propriedades** usa espaçamento compacto para facilitar a navegação por aparelhos com muitos controles. O inspetor permanece nesse modo também em telas menores.
 
 No desktop, use as setas dos cabeçalhos para recolher ou expandir as laterais. Os menus deslizam para fora da tela sem comprimir seu conteúdo e deixam uma alça visível para reabri-los.
 
