@@ -4027,9 +4027,16 @@
 .sidebar-toggle:focus-visible {outline:2px solid #8fc7e4;outline-offset:2px;}
 .inspector-panel-header {display:flex;align-items:center;justify-content:space-between;min-height:60px;padding:0 14px 0 20px;border-bottom:1px solid #303944;color:#cbd5df;font:600 12px/1.2 "Inter",sans-serif;}
 .inspector-header-actions {display:flex;align-items:center;gap:8px;}
-.inspector-density-toggle {min-height:34px;padding:0 10px;border:1px solid #46515e;border-radius:6px;background:#253140;color:#cbd5df;font:600 11px/1 "Inter",sans-serif;cursor:pointer;}
+.inspector-density-toggle {display:grid;place-items:center;width:36px;min-width:36px;min-height:36px;padding:0;border:1px solid #46515e;border-radius:6px;background:#253140;color:#cbd5df;cursor:pointer;}
+.inspector-density-toggle svg {width:19px;height:19px;overflow:visible;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;transition:color .2s ease;}
+.inspector-density-toggle svg g {transform-box:view-box;transform-origin:center;transition:opacity .2s ease,transform .24s cubic-bezier(.2,.75,.25,1);}
+.inspector-density-toggle .density-icon-relaxed {opacity:1;transform:scaleY(1);}
+.inspector-density-toggle .density-icon-compact {opacity:0;transform:scaleY(.72);}
 .inspector-density-toggle[aria-pressed="true"] {background:#344153;border-color:#708399;color:#f1f5f9;}
+.inspector-density-toggle[aria-pressed="true"] .density-icon-relaxed {opacity:0;transform:scaleY(.72);}
+.inspector-density-toggle[aria-pressed="true"] .density-icon-compact {opacity:1;transform:scaleY(1);}
 .inspector-density-toggle:focus-visible {outline:2px solid #60a5fa;outline-offset:2px;}
+@media(prefers-reduced-motion:reduce){.inspector-density-toggle svg,.inspector-density-toggle svg g{transition:none;}}
 .inspector-compact #inspector-content {gap:12px!important;padding:12px!important;}
 .inspector-compact #inspector-content>div,.inspector-compact #inspector-content>section {gap:8px!important;padding:10px!important;}
 .inspector-compact #inspector-content :is(p,.text-xs,.text-sm,small) {font-size:11px!important;line-height:1.35!important;}

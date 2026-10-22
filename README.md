@@ -65,7 +65,7 @@ Os rótulos acessíveis dos conectores identificam direção, conector, canal e 
 
 A busca do catálogo também encontra equipamentos por função, conector ou tipo de sinal, como **entrada óptica** ou **caixa passiva**. Em **Configurações**, você pode desativar os avisos de compatibilidade e a ajuda contextual para experimentar ligações incorretas; essa opção não remove as barreiras físicas entre plugues incompatíveis. Com a ajuda ativa, as dicas de mouseover aparecem após um segundo sobre o item; ao navegar pelo teclado, elas aparecem ao focar o controle.
 
-No cabeçalho de **Propriedades**, **Compacto** reduz espaços e descrições para navegar por aparelhos com muitos controles. O modo escolhido é lembrado.
+No cabeçalho de **Propriedades**, o botão com ícone de espaçamento reduz espaços e descrições para navegar por aparelhos com muitos controles. O ícone se anima ao alternar, e o modo escolhido é lembrado.
 
 O botão **Restaurar Configurações** aparece apenas nos modelos com ajustes restauráveis. Alguns ajustes aparecem apenas no painel lateral. Na **Potência · Visor Circular**, por exemplo, os ganhos A/B são ajustados por esse painel.
 

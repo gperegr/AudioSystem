@@ -868,7 +868,7 @@ const Hardware = (() => {
         const inspectorEmpty = document.getElementById('inspector-empty');
         const inspectorContent = document.getElementById('inspector-content');
         const inspector=document.getElementById('inspector'),inspectorDensityToggle=document.getElementById('inspector-density-toggle');
-        function setInspectorDensity(compact){compactInspectorEnabled=!!compact;inspector.classList.toggle('inspector-compact',compactInspectorEnabled);inspectorDensityToggle.setAttribute('aria-pressed',String(compactInspectorEnabled));inspectorDensityToggle.textContent=compactInspectorEnabled?'Conforto':'Compacto';inspectorDensityToggle.title=compactInspectorEnabled?'Usar espaçamento confortável':'Usar espaçamento compacto';}
+        function setInspectorDensity(compact){compactInspectorEnabled=!!compact;inspector.classList.toggle('inspector-compact',compactInspectorEnabled);inspectorDensityToggle.setAttribute('aria-pressed',String(compactInspectorEnabled));const label=compactInspectorEnabled?'Usar espaçamento confortável':'Ativar modo compacto';inspectorDensityToggle.setAttribute('aria-label',label);inspectorDensityToggle.title=label;}
         inspectorDensityToggle.addEventListener('click',()=>{setInspectorDensity(!compactInspectorEnabled);scheduleAppPreferencesSave();});
         setInspectorDensity(compactInspectorEnabled);
         const equipmentCatalog = document.getElementById('equipment-catalog');
