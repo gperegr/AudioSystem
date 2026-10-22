@@ -20,7 +20,7 @@
             </div>
         </div>
         
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 topbar-controls">
 
         </div>
     </div>
@@ -28,11 +28,12 @@
     <div class="flex flex-1 overflow-hidden">
         
         <div id="equipment-catalog" class="w-64 md:w-72 bg-[#181d23] border-r border-gray-800 flex flex-col shrink-0 z-30 shadow-xl">
-            <div class="p-4 border-b border-gray-800">
-                <div class="bg-[#22282e] border border-gray-700 rounded flex items-center px-3 py-2">
+            <div class="catalog-panel-header p-4 border-b border-gray-800">
+                <div class="catalog-search bg-[#22282e] border border-gray-700 rounded flex items-center px-3 py-2">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-500"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <input id="equipment-search" type="search" aria-label="Buscar equipamentos" placeholder="Buscar equipamentos..." class="bg-transparent border-none outline-none text-sm ml-2 w-full text-gray-300">
+                    <input id="equipment-search" type="search" aria-label="Buscar equipamentos por nome, função, conector ou sinal" placeholder="Nome, função, conector ou sinal..." class="bg-transparent border-none outline-none text-sm ml-2 w-full text-gray-300">
                 </div>
+                <button id="catalog-sidebar-toggle" class="sidebar-toggle" type="button" aria-label="Recolher equipamentos" aria-expanded="true" title="Recolher equipamentos">‹</button>
             </div>
             
             <div class="flex-1 overflow-y-auto p-4 pt-2">
@@ -237,6 +238,7 @@
                     <button id="zoom-in" type="button" title="Aumentar zoom" aria-label="Aumentar zoom">+</button>
                 </div>
                 <button id="fit-canvas" type="button" title="Ajustar para exibir tudo">Ajustar para exibir tudo</button>
+                <button id="touch-move-mode" class="touch-move-mode" type="button" aria-label="Modo para mover equipamentos" aria-pressed="false">Mover</button>
                 <span id="selection-count" aria-live="polite" title="Shift+clique ou Shift+arraste para selecionar vários; Ctrl/Cmd+A seleciona todos"></span>
                 <span id="connection-guidance" aria-live="polite"></span>
                 <span class="selection-hint">Shift+clique/arraste</span>
@@ -250,6 +252,7 @@
         </div>
 
         <div class="w-72 bg-[#181d23] border-l border-gray-800 flex flex-col shrink-0 z-30 shadow-xl overflow-y-auto" id="inspector">
+            <div class="inspector-panel-header"><span>Propriedades</span><div class="inspector-header-actions"><button id="inspector-density-toggle" class="inspector-density-toggle" type="button" aria-pressed="false" title="Usar espaçamento compacto">Compacto</button><button id="inspector-sidebar-toggle" class="sidebar-toggle" type="button" aria-label="Recolher propriedades" aria-expanded="true" title="Recolher propriedades">›</button></div></div>
             <div class="p-6 flex flex-col items-center justify-center h-full text-center text-gray-500" id="inspector-empty">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="mb-4 opacity-50"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                 <p class="text-sm">Selecione um equipamento<br>para ver suas propriedades</p>
@@ -258,6 +261,18 @@
             <div id="inspector-content" class="hidden p-5 flex flex-col gap-6"></div>
         </div>
     </div>
+
+    <dialog id="app-confirm-dialog" class="app-confirm-dialog" aria-labelledby="app-confirm-title" aria-describedby="app-confirm-message">
+        <form method="dialog" class="app-confirm-card">
+            <span class="app-confirm-kicker">Audio System</span>
+            <h2 id="app-confirm-title"></h2>
+            <p id="app-confirm-message"></p>
+            <div class="app-confirm-actions">
+                <button type="button" data-dialog-cancel>Cancelar</button>
+                <button type="button" data-dialog-accept>Continuar</button>
+            </div>
+        </form>
+    </dialog>
 
     <template id="tpl-turntableLinear">
         <div class="device-header"><span>Toca-discos Tangencial</span></div>
@@ -436,46 +451,7 @@
     <template id="tpl-headphoneSide">
         <div class="device-header"><span></span></div>
         <div class="headphone-body"><div class="headphone-object">
-            <div class="headphone-band"></div>
-            <svg class="side-headphone-art" viewBox="0 0 240 302" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-                <defs>
-                    <linearGradient id="side-band" x2="1"><stop stop-color="var(--side-band-dark,#080a0c)"/><stop offset=".22" stop-color="var(--side-band-light,#717a7f)"/><stop offset=".48" stop-color="var(--side-band-mid,#252a2e)"/><stop offset=".76" stop-color="var(--side-band-light,#717a7f)"/><stop offset="1" stop-color="var(--side-band-dark,#080a0c)"/></linearGradient>
-                    <linearGradient id="side-leather" x2="0" y2="1"><stop stop-color="var(--side-pad-light,#555b5e)"/><stop offset=".24" stop-color="var(--side-pad-dark,#15191c)"/><stop offset=".78" stop-color="var(--side-pad-dark,#15191c)"/><stop offset="1" stop-color="var(--side-pad-light,#555b5e)"/></linearGradient>
-                    <linearGradient id="side-shell" x2="1"><stop stop-color="var(--side-shell-dark,#090b0d)"/><stop offset=".22" stop-color="var(--side-shell-light,#50585d)"/><stop offset=".48" stop-color="var(--side-shell-mid,#20262a)"/><stop offset=".77" stop-color="var(--side-shell-light,#50585d)"/><stop offset="1" stop-color="var(--side-shell-dark,#090b0d)"/></linearGradient>
-                    <linearGradient id="side-metal" x2="1"><stop stop-color="#0b0e10"/><stop offset=".32" stop-color="var(--side-metal,#aab3b7)"/><stop offset=".52" stop-color="#3b4449"/><stop offset=".76" stop-color="var(--side-metal,#aab3b7)"/><stop offset="1" stop-color="#101416"/></linearGradient>
-                    <pattern id="side-grain" width="7" height="6" patternUnits="userSpaceOnUse"><path d="M1 1q2-1 3 1l-1 2H1zm4 3q1-1 2 0" fill="var(--side-texture,#c5cacc)" opacity=".18"/></pattern>
-                    <pattern id="side-stitch" width="5" height="7" patternUnits="userSpaceOnUse"><path d="M2.5 1v3" stroke="var(--side-stitch-color,#c8cdcf)" stroke-width=".7" opacity=".72"/><path d="M2.5 4v2" stroke="#050708" stroke-width=".8"/></pattern>
-                    <pattern id="side-grill" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 2.5h5M2.5 0v5" stroke="var(--side-grill-color,#b9c1c4)" stroke-width=".55" opacity=".62"/><circle cx="2.5" cy="2.5" r=".7" fill="#050708"/></pattern>
-                </defs>
-                <!-- Soft-padded headband, stitched perimeter and polished steel support rails. -->
-                <path d="M18 154C25 59 64 10 120 9c56 1 95 50 102 145l-9 5C204 70 169 22 120 22S36 70 27 159Z" fill="url(#side-band)" stroke="#07090a" stroke-width="3"/>
-                <path d="M23 148C33 62 68 17 120 16c52 1 87 46 97 132" fill="none" stroke="#e5e8e9" stroke-width="1" opacity=".62"/>
-                <path d="M27 148C37 68 71 24 120 24c49 0 83 44 93 124" fill="none" stroke="url(#side-grain)" stroke-width="14"/>
-                <path d="M29 150C39 76 73 32 120 32s81 44 91 118" fill="none" stroke="url(#side-stitch)" stroke-width="2"/>
-                <path d="M39 154C47 93 78 49 120 48c42 1 73 45 81 106" fill="none" stroke="#060809" stroke-width="9"/>
-                <path d="M41 153C50 97 80 56 120 56s70 41 79 97" fill="none" stroke="url(#side-leather)" stroke-width="6"/>
-                <!-- Articulated yokes and hinge caps descend behind the earcups. -->
-                <path d="M31 151C28 174 34 188 52 204m157-53c3 23-3 37-21 53" fill="none" stroke="#07090a" stroke-width="7"/>
-                <path d="M31 151C28 174 34 188 52 204m157-53c3 23-3 37-21 53" fill="none" stroke="url(#side-metal)" stroke-width="3"/>
-                <path d="m31 163-10 30 11 10-8 17 15 14m170-71 10 30-11 10 8 17-15 14" fill="none" stroke="#080a0b" stroke-width="8" stroke-linejoin="round"/>
-                <path d="m31 163-10 30 11 10-8 17 15 14m170-71 10 30-11 10 8 17-15 14" fill="none" stroke="url(#side-metal)" stroke-width="3" stroke-linejoin="round"/>
-                <circle cx="34" cy="210" r="6" fill="#111416" stroke="var(--side-metal,#aab3b7)" stroke-width="1.5"/><circle cx="206" cy="210" r="6" fill="#111416" stroke="var(--side-metal,#aab3b7)" stroke-width="1.5"/>
-                <circle cx="34" cy="210" r="2" fill="#050708"/><circle cx="206" cy="210" r="2" fill="#050708"/>
-                <!-- Earcups are seen in profile: sculpted shell depth outside, soft cushions toward the head. -->
-                <path d="M59 168q19-11 35 4 10 10 11 43v40q-2 22-18 33-16 10-35 0-25-13-27-54-1-43 13-57 8-8 21-9Z" fill="url(#side-shell)" stroke="#050607" stroke-width="3"/>
-                <path d="M59 168q19-11 35 4 10 10 11 43v40q-2 22-18 33-16 10-35 0-25-13-27-54-1-43 13-57 8-8 21-9Z" fill="url(#side-grain)"/>
-                <path d="M181 168q-19-11-35 4-10 10-11 43v40q2 22 18 33 16 10 35 0 25-13 27-54 1-43-13-57-8-8-21-9Z" fill="url(#side-shell)" stroke="#050607" stroke-width="3"/>
-                <path d="M181 168q-19-11-35 4-10 10-11 43v40q2 22 18 33 16 10 35 0 25-13 27-54 1-43-13-57-8-8-21-9Z" fill="url(#side-grain)"/>
-                <path d="M48 183q-9 34 1 74m142-74q9 34-1 74" fill="none" stroke="url(#side-stitch)" stroke-width="2"/>
-                <path d="M53 181q-7 32 2 70m130-70q7 32-2 70" fill="none" stroke="url(#side-grill)" stroke-width="5" opacity=".86"/>
-                <path d="M82 174q21 2 25 25v56q-3 20-19 27-13 4-18-11v-78q1-15 12-19Z" fill="url(#side-leather)" stroke="#050607" stroke-width="2"/>
-                <path d="M158 174q-21 2-25 25v56q3 20 19 27 13 4 18-11v-78q-1-15-12-19Z" fill="url(#side-leather)" stroke="#050607" stroke-width="2"/>
-                <path d="M83 181q13 4 15 16m-14-7q12 4 14 16m-13-7q11 4 13 15m-12-6q10 4 12 14m-10-5q9 4 10 13m-8-4q7 3 8 10" fill="none" stroke="var(--side-pad-stitch,#a8adaf)" stroke-width="1.2" opacity=".56"/>
-                <path d="M157 181q-13 4-15 16m14-7q-12 4-14 16m13-7q-11 4-13 15m12-6q-10 4-12 14m10-5q-9 4-10 13m8-4q-7 3-8 10" fill="none" stroke="var(--side-pad-stitch,#a8adaf)" stroke-width="1.2" opacity=".56"/>
-                <path d="M46 263q4 16 20 24m128-24q-4 16-20 24" fill="none" stroke="url(#side-stitch)" stroke-width="2"/>
-                <circle cx="57" cy="278" r="4" fill="#121517" stroke="var(--side-metal,#aab3b7)" stroke-width="1.3"/><circle cx="183" cy="278" r="4" fill="#121517" stroke="var(--side-metal,#aab3b7)" stroke-width="1.3"/>
-            </svg>
-            <div class="headphone-cups"><div class="headphone-cup"></div><div class="headphone-cup"></div></div>
+            <img class="headphone-artwork" src="./assets/headphones/over-ear.svg" alt="" draggable="false" aria-hidden="true">
         </div><div class="headphone-controls"><span></span><div class="port" data-type="p2" data-io="in" data-node="in" data-signal="headphone" title="Entrada de fones · P2 TRS estéreo"></div><button class="btn-bt-pair">BLUETOOTH</button></div></div>
     </template>
 

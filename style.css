@@ -2311,12 +2311,6 @@
         .device-family-vintage .fabric-grille {background-color:#74694f;border-color:#4b4131;}
         .grille-off .fabric-grille {opacity:0;transform:translateY(-6px);pointer-events:none;}
         .spk-woofer,.classic-box-woofer {transform-origin:center;transition:transform .075s linear;}
-        #contemplate-mode {width:100%;margin-top:12px;}
-        body.contemplation #app-topbar,body.contemplation #equipment-catalog,body.contemplation #inspector,body.contemplation .canvas-tools,body.contemplation .mobile-panel-controls,body.contemplation #catalog-tooltip {display:none!important;}
-        body.contemplation :is(#audio-world,.equipment-preview-world) {background-image:none!important;}
-        body.contemplation #canvas {background-image:none!important;cursor:default;}
-        body.contemplation .device-header,body.contemplation .grille-restore,body.contemplation .tt-lid-button,body.contemplation .source-play-button {visibility:hidden!important;}
-        body.contemplation .device-node {outline:none!important;}
         @media(prefers-reduced-motion:reduce){.device-type-turntable .at-deck::after,.fabric-grille,.spk-woofer,.classic-box-woofer {transition:none;}}
         .device-node.device-type-turntable .at-deck {overflow:visible;}
         .device-node .reel-metal {animation:none!important;transition:transform .08s linear;}
@@ -2989,8 +2983,8 @@
         .device-type-spkActiveRounded .sp-panel span {font-size:6px;}
         .device-type-spkActiveRounded .sp-body::after {content:'';position:absolute;bottom:0;left:27px;right:27px;height:19px;border-radius:10px 10px 6px 6px;background:linear-gradient(#151d20,#070d10);box-shadow:inset 0 2px #5b666a,0 3px 4px #0005;z-index:-1;}
 
-        /* Readable sans serif UI, with serif accents reserved for headings. */
-        :root {--font-ui:"Inter",sans-serif;--font-readout:"Inter",sans-serif;--font-accent:"EB Garamond",serif;}
+        /* One clear sans-serif family keeps interface labels consistent. */
+        :root {--font-ui:"Inter",sans-serif;--font-readout:"Inter",sans-serif;--font-accent:"Inter",sans-serif;}
         html,body {font-family:var(--font-ui);font-weight:500;}
         button,input,select,textarea {font-family:inherit;}
         .font-sans {font-family:var(--font-ui)!important;}
@@ -3003,7 +2997,7 @@
         #app-topbar button,#app-topbar summary {font-family:var(--font-ui);font-weight:600;}
 
         .app-brand {font-family:var(--font-accent);font-size:24px;font-weight:600;letter-spacing:-.02em;}
-        #equipment-catalog h3 {font-family:var(--font-accent);font-size:17px;font-weight:600;letter-spacing:.01em;text-transform:none;line-height:1.2;}
+        #equipment-catalog h3 {font-family:var(--font-ui);font-size:15px;font-weight:650;letter-spacing:.015em;text-transform:none;line-height:1.25;}
 
 /* Shared hardware: equipment chooses a component model; geometry and motion live here. */
 :root {--hw-motion:140ms;--hw-press:90ms;--hw-ease:cubic-bezier(.2,.75,.25,1);--hw-control-border:#62717e;}
@@ -3873,13 +3867,19 @@
     #equipment-catalog {box-shadow:8px 0 28px #0005;}
     #inspector {box-shadow:-8px 0 28px #0005;}
     .mobile-panel-backdrop:not([hidden]) {display:block;position:fixed;inset:var(--compact-header-height) 0 0;z-index:65;margin:0;padding:0;border:0;border-radius:0;background:#07101a55;touch-action:manipulation;}
-    .mobile-catalog-close,.mobile-inspector-close {display:block;flex:none;align-self:stretch;min-height:44px;margin:10px 12px 0;padding:10px 12px;border:1px solid #475569;border-radius:6px;background:#253140;color:#dbe5f1;font:600 13px/1.4 "Inter",sans-serif;cursor:pointer;text-align:center;}
+    .mobile-catalog-close,.mobile-inspector-close {position:sticky;top:0;z-index:12;display:block;flex:none;align-self:stretch;min-height:44px;margin:0;padding:10px 12px;border:0;border-bottom:1px solid #475569;border-radius:0;background:#202a36;color:#dbe5f1;font:600 13px/1.4 "Inter",sans-serif;cursor:pointer;text-align:center;box-shadow:0 3px 10px #0003;}
+    .mobile-catalog-close:focus-visible,.mobile-inspector-close:focus-visible {outline:2px solid #60a5fa;outline-offset:-3px;}
+    #inspector>.inspector-panel-header {position:sticky;top:44px;z-index:10;min-height:52px;padding:0 10px 0 14px;background:#181d23;}
+    #inspector .inspector-density-toggle {min-height:36px;padding:0 8px;font-size:10px;}
     #equipment-catalog>.overflow-y-auto {min-height:0;overscroll-behavior:contain;padding-bottom:24px;}
     #equipment-catalog .grid-cols-2 {grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
     #equipment-catalog .catalog-item {min-width:0;min-height:110px;box-sizing:border-box;}
     #equipment-catalog .catalog-item>span {overflow-wrap:anywhere;}
     #equipment-catalog input[type=search] {font-size:16px;min-width:0;}
     #inspector-content {min-width:0;padding:16px;gap:20px;}
+    #inspector.inspector-compact #inspector-content {gap:10px!important;padding:12px!important;}
+    #inspector.inspector-compact #inspector-content>div,#inspector.inspector-compact #inspector-content>section {gap:7px!important;padding:9px!important;}
+    #inspector.inspector-compact #inspector-content button {min-height:38px!important;}
     #inspector-content>div,#inspector-content>section {min-width:0;max-width:100%;}
     #inspector-content button {min-height:44px!important;max-height:none!important;}
     #inspector-content input[type=range] {min-height:36px;}
@@ -3931,53 +3931,148 @@
 }
 .device-node.headphone-equipment.device-type-hpMonitor .headphone-cup:last-child::after {left:-5px;right:auto;}
 .device-node.headphone-equipment.device-type-hpMonitor .headphone-model-detail {display:none;}
-.device-node.headphone-equipment.device-type-hpMonitor .headphone-object {height:302px;isolation:isolate;}
-.device-node.headphone-equipment.device-type-hpMonitor .monitor-art {position:absolute;inset:0;z-index:2;width:100%;height:100%;overflow:visible;pointer-events:none;}
-.device-node.headphone-equipment.device-type-hpMonitor .headphone-band {visibility:hidden;}
-.device-node.headphone-equipment.device-type-hpMonitor .headphone-cups {top:144px;left:18px;right:18px;height:120px;z-index:3;filter:none;}
-.device-node.headphone-equipment.device-type-hpMonitor .headphone-cup,
-.device-node.headphone-equipment.device-type-hpMonitor .headphone-cup:last-child {width:65px;height:120px;border:0;background:transparent;box-shadow:none;}
-.device-node.headphone-equipment.device-type-hpMonitor .headphone-cup::before,
-.device-node.headphone-equipment.device-type-hpMonitor .headphone-cup::after {display:none;}
-.device-node.headphone-equipment.device-type-hpMonitor .headphone-cup-input .headphone-cup-socket,
-.device-node.headphone-equipment.device-type-hpMonitor .headphone-cup-socket {left:22px;bottom:2px;width:13px;height:13px;border-color:#ad8950;border-radius:50%;background:radial-gradient(circle at 35% 30%,#e1c17c,#55472a 48%,#090a09 68%);box-shadow:inset 0 1px 1px #f7e2ae66,0 1px 2px #000c;}
+/* Frontal headphone artwork shares the reference model's 480 × 572 envelope.
+   The padded arch, articulated cup and cable each keep their natural scale. */
+.device-node.headphone-equipment:not(.kuba-headphone) .headphone-object {height:286px;isolation:isolate;}
+.device-node.headphone-equipment:not(.kuba-headphone) .headphone-artwork {position:absolute;inset:0;z-index:1;display:block;width:100%;height:100%;max-width:none;object-fit:contain;pointer-events:none;user-select:none;}
+.device-node.headphone-equipment:not(.kuba-headphone) .headphone-cable-input {position:absolute;left:50%;top:256px;z-index:3;display:grid;place-items:center;width:20px;height:20px;transform:translate(-50%,-50%);}
+.device-node.headphone-equipment:not(.kuba-headphone) .headphone-cable-input .port {margin:0;zoom:.7142857143;}
+/* The Bluetooth control belongs to the right shell, with a generous invisible hit area. */
+:is(#audio-world,.equipment-preview-world) .device-node.headphone-equipment:not(.kuba-headphone) button.headphone-bt-button.hw-button[data-button-model] {position:absolute;left:186px!important;top:151px!important;z-index:3;width:22px!important;height:22px!important;min-width:22px!important;min-height:22px!important;margin:0;padding:6px!important;border:0!important;border-radius:50%!important;background:transparent!important;box-shadow:none!important;color:#83999f!important;transform:none!important;}
+:is(#audio-world,.equipment-preview-world) .device-node.headphone-equipment:not(.kuba-headphone) .headphone-bt-button::before,
+:is(#audio-world,.equipment-preview-world) .device-node.headphone-equipment:not(.kuba-headphone) .headphone-bt-button::after {content:none!important;}
+:is(#audio-world,.equipment-preview-world) .device-node.headphone-equipment:not(.kuba-headphone) .headphone-bt-button .hw-plunger-face {inset:6px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;}
+.device-node.headphone-equipment:not(.kuba-headphone) .headphone-bt-button .hw-plunger-legend {color:inherit!important;}
+.device-node.headphone-equipment:not(.kuba-headphone) .headphone-bt-button svg {width:10px;height:10px;}
+:is(#audio-world,.equipment-preview-world) .device-node.headphone-equipment:not(.kuba-headphone) .headphone-bt-button:focus-visible {outline:1px solid #9cbbc4;outline-offset:1px;}
+:is(#audio-world,.equipment-preview-world) .device-node.headphone-equipment:not(.kuba-headphone) .headphone-bt-button[data-pairing="search"] {color:#b8dcdf!important;}
 
-/* Open dome headphones show the large ventilated shells from the side. */
-.device-node.headphone-equipment.device-type-hpOpenDome .headphone-object {height:302px;isolation:isolate;}
-.device-node.headphone-equipment.device-type-hpOpenDome .open-dome-art {position:absolute;inset:0;z-index:2;width:100%;height:100%;overflow:visible;pointer-events:none;}
-.device-node.headphone-equipment.device-type-hpOpenDome .headphone-band {visibility:hidden;}
-.device-node.headphone-equipment.device-type-hpOpenDome .headphone-cups {top:154px;left:8px;right:8px;height:120px;z-index:3;filter:none;}
-.device-node.headphone-equipment.device-type-hpOpenDome .headphone-cup,
-.device-node.headphone-equipment.device-type-hpOpenDome .headphone-cup:last-child {width:84px;height:120px;border:0;border-radius:0;background:transparent;box-shadow:none;transform:none;}
-.device-node.headphone-equipment.device-type-hpOpenDome .headphone-cup::before,
-.device-node.headphone-equipment.device-type-hpOpenDome .headphone-cup::after,
-.device-node.headphone-equipment.device-type-hpOpenDome .headphone-cup-hardware {display:none;}
-.device-node.headphone-equipment.device-type-hpOpenDome .headphone-cup-socket {left:43px;bottom:-3px;width:13px;height:13px;border-color:#aeb7b5;border-radius:50%;background:radial-gradient(circle at 35% 30%,#e1e6e3,#545e61 48%,#090b0c 70%);box-shadow:inset 0 1px 1px #ffffff88,0 1px 2px #000c;}
+/* Mensagens de conexão ficam dentro da bancada, sempre no mesmo canto. */
+#canvas #connection-guidance {position:absolute;right:16px;bottom:16px;z-index:90;box-sizing:border-box;width:min(370px,calc(100% - 32px));max-height:min(34vh,230px);overflow:auto;padding:10px 12px;border:1px solid #c6b79e;border-radius:8px;background:#f2e9d8f5;color:#554837;box-shadow:0 5px 18px #3125162b;font:500 12px/1.5 var(--font-ui,"Inter",sans-serif);pointer-events:none;}
+#canvas #connection-guidance.is-active {display:block;}
+#canvas #connection-guidance.is-invalid {border-color:#d28b67;background:#4a2922f2;color:#ffe2d0;font-weight:600;}
+#canvas[data-theme="graphite"] #connection-guidance,#canvas[data-theme="midnight"] #connection-guidance {border-color:#536474;background:#1b2733f5;color:#d7e0e7;box-shadow:0 5px 18px #0005;}
+#canvas[data-theme="graphite"] #connection-guidance.is-invalid,#canvas[data-theme="midnight"] #connection-guidance.is-invalid {border-color:#9b5b53;background:#342322f5;color:#f4d3cc;}
 
-/* Planar headphone shells are viewed edge-on, with open grilles and deep pads. */
-.device-node.headphone-equipment.device-type-hpPlanar .headphone-object {height:302px;isolation:isolate;}
-.device-node.headphone-equipment.device-type-hpPlanar .planar-art {position:absolute;inset:0;z-index:2;width:100%;height:100%;overflow:visible;pointer-events:none;}
-.device-node.headphone-equipment.device-type-hpPlanar .headphone-band {visibility:hidden;}
-.device-node.headphone-equipment.device-type-hpPlanar .headphone-cups {top:154px;left:8px;right:8px;height:120px;z-index:3;filter:none;}
-.device-node.headphone-equipment.device-type-hpPlanar .headphone-cup,
-.device-node.headphone-equipment.device-type-hpPlanar .headphone-cup:last-child {width:84px;height:120px;border:0;border-radius:0;background:transparent;box-shadow:none;transform:none;}
-.device-node.headphone-equipment.device-type-hpPlanar .headphone-cup::before,
-.device-node.headphone-equipment.device-type-hpPlanar .headphone-cup::after,
-.device-node.headphone-equipment.device-type-hpPlanar .headphone-cup-hardware {display:none;}
-.device-node.headphone-equipment.device-type-hpPlanar .headphone-cup-socket {left:43px;bottom:-3px;width:13px;height:13px;border-color:#c1c8cb;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f1f3f3,#53595b 48%,#090b0c 70%);box-shadow:inset 0 1px 1px #ffffff88,0 1px 2px #000c;}
+/* Equipamentos sem qualquer porta livre compatível recuam visualmente ao selecionar um cabo. */
+:is(#audio-world,.equipment-preview-world) .device-node.no-cable-compatibility {opacity:.3!important;filter:grayscale(.85) saturate(.25)!important;transition:opacity 140ms ease,filter 140ms ease;}
 
-/* Remaining over-ear models use a side profile so the shell depth and pads read clearly. */
-.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .headphone-object {height:302px;isolation:isolate;}
-.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .side-headphone-art {position:absolute;inset:0;z-index:2;width:100%;height:100%;overflow:visible;pointer-events:none;}
-.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .headphone-band {visibility:hidden;}
-.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .headphone-cups {top:154px;left:8px;right:8px;height:120px;z-index:3;filter:none;}
-.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .headphone-cup,
-.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .headphone-cup:last-child {position:relative;width:84px;height:120px;border:0;border-radius:0;background:transparent;box-shadow:none;transform:none;}
-.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .headphone-cup::before,
-.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .headphone-cup::after,
-.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .headphone-cup-hardware {display:none;}
-.device-node.headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic,.device-type-hpMax,.device-type-hpOpenRing) .headphone-cup-socket {left:43px;bottom:-3px;width:13px;height:13px;border-color:var(--side-metal,#b6c0c4);border-radius:50%;background:radial-gradient(circle at 35% 30%,#eef1f2,#53595d 48%,#090b0c 70%);box-shadow:inset 0 1px 1px #ffffff88,0 1px 2px #000c;}
-.device-node.headphone-equipment.device-type-hpStudio {--side-band-dark:#07121a;--side-band-mid:#152b39;--side-band-light:#889ba5;--side-pad-dark:#0a151d;--side-pad-light:#526875;--side-shell-dark:#071019;--side-shell-mid:#1a303d;--side-shell-light:#718792;--side-metal:#a8bec8;--side-texture:#b8d1dc;--side-grill-color:#9bb4c1;}
-.device-node.headphone-equipment.device-type-hpClassic {--side-band-dark:#20150d;--side-band-mid:#78502e;--side-band-light:#c39a63;--side-pad-dark:#24190f;--side-pad-light:#997348;--side-shell-dark:#21160d;--side-shell-mid:#76502e;--side-shell-light:#bd9257;--side-metal:#d6b17a;--side-texture:#f0cc91;--side-stitch-color:#edd09e;--side-grill-color:#c4a272;}
-.device-node.headphone-equipment.device-type-hpMax {--side-band-dark:#586369;--side-band-mid:#aab8bb;--side-band-light:#f2f6f5;--side-pad-dark:#899b99;--side-pad-light:#e3ece8;--side-shell-dark:#647876;--side-shell-mid:#a1b5ad;--side-shell-light:#f1f6f1;--side-metal:#f5fbf9;--side-texture:#ffffff;--side-grill-color:#f2fbf7;--side-stitch-color:#f6fffc;--side-pad-stitch:#f4faf6;}
-.device-node.headphone-equipment.device-type-hpOpenRing {--side-band-dark:#080b0e;--side-band-mid:#262e34;--side-band-light:#aab5bc;--side-pad-dark:#10171c;--side-pad-light:#606d75;--side-shell-dark:#080c10;--side-shell-mid:#222c33;--side-shell-light:#77858d;--side-metal:#c1cbd0;--side-texture:#c9d1d5;--side-grill-color:#d0d9de;}
+/* Confirmações e avisos críticos usam o acabamento da interface do simulador. */
+.app-confirm-dialog {width:min(480px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 32px);margin:auto;padding:0;overflow:auto;border:1px solid #566777;border-radius:12px;background:#1a232c;color:#e7edf1;box-shadow:0 22px 70px #0009;}
+.app-confirm-dialog::backdrop {background:#07101acc;backdrop-filter:blur(3px);}
+.app-confirm-card {display:flex;flex-direction:column;gap:13px;padding:22px;}
+.app-confirm-kicker {color:#93a9b7;font:700 10px/1 var(--font-ui,"Inter",sans-serif);letter-spacing:.13em;text-transform:uppercase;}
+.app-confirm-card h2 {margin:0;color:#f1f5f7;font:600 20px/1.25 var(--font-ui,"Inter",sans-serif);}
+.app-confirm-card p {margin:0;color:#c4ced5;font:400 14px/1.6 var(--font-ui,"Inter",sans-serif);white-space:pre-line;}
+.app-confirm-actions {display:flex;justify-content:flex-end;gap:10px;margin-top:5px;}
+.app-confirm-actions button {min-width:96px;min-height:42px;padding:9px 14px;border:1px solid #51616e;border-radius:6px;background:#27333d;color:#e0e8ed;font:600 13px/1 var(--font-ui,"Inter",sans-serif);cursor:pointer;}
+.app-confirm-actions button:hover {background:#334450;}
+.app-confirm-actions [data-dialog-accept] {border-color:#52778a;background:#365365;color:#f0f7fa;}
+.app-confirm-actions [data-dialog-accept].is-danger {border-color:#945c4c;background:#63392e;color:#fff0e9;}
+.app-confirm-actions button:focus-visible {outline:2px solid #a6d0e7;outline-offset:3px;}
+
+/* Explicit equipment movement mode appears only on touch input. */
+.touch-move-mode {display:none;}
+@media(pointer:coarse) {
+    #canvas .touch-move-mode {display:inline-flex;align-items:center;justify-content:center;min-width:52px;min-height:44px;padding:8px 12px;border:1px solid #c6b79e;border-radius:5px;background:#e9dfcc;color:#4e4438;font:600 12px/1.2 "Inter",sans-serif;}
+    #canvas[data-theme="graphite"] .touch-move-mode,#canvas[data-theme="midnight"] .touch-move-mode {border-color:#475569;background:#253140;color:#dbe5f1;}
+    #canvas .touch-move-mode[aria-pressed="true"] {border-color:#4d866d;background:#d6e8d8;color:#214d37;box-shadow:inset 0 0 0 1px #4d866d55;}
+    #canvas[data-theme="graphite"] .touch-move-mode[aria-pressed="true"],#canvas[data-theme="midnight"] .touch-move-mode[aria-pressed="true"] {border-color:#4d866d;background:#203c32;color:#d7f2df;}
+    #canvas .port::before {inset:calc(-14px * var(--canvas-inverse-zoom,1));}
+    :is(#audio-world,.equipment-preview-world) .hw-knob::after {content:""!important;position:absolute!important;inset:-10px!important;z-index:3!important;border:0!important;border-radius:50%!important;background:transparent!important;box-shadow:none!important;pointer-events:auto!important;}
+    :is(#audio-world,.equipment-preview-world) .hw-slider[data-hardware-slider="vertical"] {width:32px!important;}
+    #inspector input[type="range"],#inspector select,#inspector button {min-height:44px;}
+}
+@media(max-width:600px) {
+    #canvas .canvas-tools #touch-move-mode {grid-column:1/-1;min-height:44px;}
+    #canvas #connection-guidance {right:10px;bottom:calc(145px + env(safe-area-inset-bottom,0px));width:min(370px,calc(100% - 20px));max-height:24vh;}
+}
+@media(min-width:601px) and (max-width:1000px) {
+    #canvas #connection-guidance {right:12px;bottom:68px;width:min(370px,calc(100% - 24px));}
+}
+
+/* Canvas tools live in the header, leaving more uninterrupted workspace. */
+#app-topbar {overflow:visible;}
+#app-topbar>.topbar-controls {min-width:0;flex:1;justify-content:flex-end;}
+#app-topbar .canvas-tools {position:static;z-index:auto;min-width:0;max-width:100%;flex:0 1 auto;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;box-sizing:border-box;}
+#app-topbar .canvas-tools::-webkit-scrollbar {display:none;}
+.canvas-tools[data-theme="sepia"] {border-color:#baaa90;background:#e9dfccf5;color:#554b3f;box-shadow:0 3px 12px #6b57351a;}
+.canvas-tools[data-theme="sepia"] button:hover {background:#d7cab0;color:#3f372d;}
+.canvas-tools[data-theme="sepia"] kbd {background:#eee5d3;border-color:#c7b99e;color:#75664f;}
+.canvas-tools[data-theme="graphite"],.canvas-tools[data-theme="midnight"] {border-color:#475569;background:#1e293bf5;color:#d4deea;box-shadow:0 3px 12px #0004;}
+.canvas-tools[data-theme="graphite"] button:hover,.canvas-tools[data-theme="midnight"] button:hover {background:#334155;color:#f1f5f9;}
+
+/* Sidebars collapse to narrow handles and restore without shifting the canvas abruptly. */
+#equipment-catalog,#inspector {transition:width 240ms cubic-bezier(.22,.7,.2,1),flex-basis 240ms cubic-bezier(.22,.7,.2,1),min-width 240ms cubic-bezier(.22,.7,.2,1),opacity 180ms ease;}
+.catalog-panel-header {display:flex;align-items:center;gap:8px;}
+.catalog-search {flex:1;min-width:0;}
+.sidebar-toggle {display:grid;place-items:center;flex:none;width:36px;height:36px;border:1px solid #45515b;border-radius:6px;background:#242c33;color:#d4dce1;font:500 24px/1 "Inter",sans-serif;cursor:pointer;transition:background 150ms,color 150ms;}
+.sidebar-toggle:hover {background:#33414b;color:#fff;}
+.sidebar-toggle:focus-visible {outline:2px solid #8fc7e4;outline-offset:2px;}
+.inspector-panel-header {display:flex;align-items:center;justify-content:space-between;min-height:60px;padding:0 14px 0 20px;border-bottom:1px solid #303944;color:#cbd5df;font:600 12px/1.2 "Inter",sans-serif;}
+.inspector-header-actions {display:flex;align-items:center;gap:8px;}
+.inspector-density-toggle {min-height:34px;padding:0 10px;border:1px solid #46515e;border-radius:6px;background:#253140;color:#cbd5df;font:600 11px/1 "Inter",sans-serif;cursor:pointer;}
+.inspector-density-toggle[aria-pressed="true"] {background:#344153;border-color:#708399;color:#f1f5f9;}
+.inspector-density-toggle:focus-visible {outline:2px solid #60a5fa;outline-offset:2px;}
+.inspector-compact #inspector-content {gap:12px!important;padding:12px!important;}
+.inspector-compact #inspector-content>div,.inspector-compact #inspector-content>section {gap:8px!important;padding:10px!important;}
+.inspector-compact #inspector-content :is(p,.text-xs,.text-sm,small) {font-size:11px!important;line-height:1.35!important;}
+.inspector-compact #inspector-content p {margin-block:2px!important;}
+.inspector-compact #inspector-content :is(label,.flex-col) {gap:5px!important;}
+.inspector-compact #inspector-content :is(button,select,input[type=text],input[type=number]) {min-height:34px!important;padding-top:6px!important;padding-bottom:6px!important;}
+body.catalog-collapsed #equipment-catalog {width:48px;min-width:48px;flex:0 0 48px;padding:0;overflow:hidden;box-sizing:border-box;}
+body.catalog-collapsed #equipment-catalog .catalog-panel-header {justify-content:center;padding:6px;border:0;}
+body.catalog-collapsed #equipment-catalog .catalog-search,body.catalog-collapsed #equipment-catalog>.overflow-y-auto {display:none!important;}
+body.catalog-collapsed #equipment-catalog .sidebar-toggle {width:36px;}
+body.inspector-collapsed #inspector {width:48px;min-width:48px;flex:0 0 48px;padding:0;overflow:hidden;box-sizing:border-box;}
+body.inspector-collapsed #inspector>.inspector-panel-header {min-height:100%;padding:8px 6px;flex-direction:column;justify-content:flex-start;gap:12px;border:0;}
+body.inspector-collapsed #inspector>.inspector-panel-header>span,body.inspector-collapsed #inspector>#inspector-empty,body.inspector-collapsed #inspector>#inspector-content {display:none!important;}
+body.inspector-collapsed #inspector .sidebar-toggle {width:36px;}
+@media(prefers-reduced-motion:reduce){#equipment-catalog,#inspector,.sidebar-toggle{transition:none!important;}}
+
+@media(max-width:1000px),(hover:none) and (pointer:coarse) and (max-width:1400px) {
+    #app-topbar>.topbar-controls {gap:5px;}
+    #app-topbar .canvas-tools {flex:1 1 0;width:0;max-width:none;gap:2px;padding:3px;}
+    #app-topbar .canvas-tools button {padding:6px;}
+    #app-topbar .canvas-tools kbd,.canvas-tools .selection-hint {display:none;}
+    #app-topbar .canvas-tools #center-devices {font-size:0;}
+    #app-topbar .canvas-tools #center-devices::after {content:"⌖";font-size:18px;}
+    #app-topbar .canvas-tools #fit-canvas {font-size:0;}
+    #app-topbar .canvas-tools #fit-canvas::after {content:"Ajustar";font-size:10px;}
+    #app-topbar .canvas-tools #touch-move-mode {font-size:0;}
+    #app-topbar .canvas-tools #touch-move-mode {display:inline-flex;align-items:center;justify-content:center;min-width:42px;min-height:40px;padding:6px 8px;border:1px solid #c6b79e;border-radius:5px;background:#e9dfcc;color:#4e4438;font:600 10px/1.2 "Inter",sans-serif;}
+    #app-topbar .canvas-tools #touch-move-mode::after {content:"Mover";font-size:10px;}
+    #app-topbar .canvas-tools #touch-move-mode[aria-pressed="true"] {border-color:#4d866d;background:#d6e8d8;color:#214d37;box-shadow:inset 0 0 0 1px #4d866d55;}
+    .mobile-panel-controls {position:static;display:flex;flex:none;gap:3px;z-index:auto;}
+    .mobile-panel-controls button {min-width:38px;min-height:40px;padding:6px;border:1px solid #4b5563;border-radius:6px;background:#22282e;color:#e5e7eb;font:600 10px/1.1 "Inter",sans-serif;}
+    .mobile-panel-controls button[aria-expanded=true] {border-color:#60a5fa;color:#bfdbfe;}
+    .app-settings {flex:none;}
+    #app-topbar .canvas-tools .canvas-zoom-group {gap:0;}
+    #app-topbar .canvas-tools #zoom-label {min-width:32px;}
+    #equipment-catalog,#inspector {transition:transform 240ms cubic-bezier(.22,.7,.2,1),visibility 240ms,width 240ms;}
+    .catalog-panel-header .sidebar-toggle,.inspector-panel-header .sidebar-toggle {display:none;}
+    body.catalog-collapsed #equipment-catalog,body.inspector-collapsed #inspector {width:min(360px,calc(100vw - 24px));min-width:0;flex:initial;}
+    body.catalog-collapsed #equipment-catalog .catalog-search {display:flex!important;}
+    body.catalog-collapsed #equipment-catalog>.overflow-y-auto {display:block!important;}
+    body.inspector-collapsed #inspector>.inspector-panel-header {min-height:60px;padding:0 14px 0 20px;flex-direction:row;justify-content:space-between;}
+    body.inspector-collapsed #inspector>.inspector-panel-header>span {display:inline!important;}
+    body.inspector-collapsed #inspector>#inspector-empty {display:flex!important;}
+}
+@media(max-width:420px) {
+    #app-topbar {gap:4px;}
+    #app-topbar>.topbar-controls {gap:3px;}
+    #app-topbar .app-brand {gap:0;}
+    .mobile-panel-controls button {min-width:34px;padding:5px;font-size:9px;}
+}
+
+.connection-help-setting {display:flex;align-items:flex-start;gap:10px;padding:11px 12px;border:1px solid #394857;border-radius:7px;background:#202a34;color:#dbe5ed;cursor:pointer;}
+.connection-help-setting input {width:18px;height:18px;flex:none;margin:2px 0 0;accent-color:#78a9c2;cursor:pointer;}
+.connection-help-setting span {display:flex;flex-direction:column;gap:4px;}
+.connection-help-setting strong {font:600 12px/1.35 "Inter",sans-serif;}
+.connection-help-setting small {color:#aebbc5;font:400 11px/1.45 "Inter",sans-serif;}
+.device-node .port:focus-visible {outline:2px solid #b8e3fb!important;outline-offset:3px!important;z-index:30;}
+.context-help {position:fixed;z-index:1001;display:flex;flex-direction:column;gap:5px;width:min(300px,calc(100vw - 24px));max-height:min(180px,calc(100dvh - 24px));box-sizing:border-box;overflow:auto;padding:10px 12px;border:1px solid #526170;border-radius:7px;background:rgba(20,26,33,.97);color:#dce6ec;box-shadow:0 8px 22px #0006;font-family:"Inter",sans-serif;pointer-events:none;opacity:0;visibility:hidden;transform:translateY(3px);transition:opacity 120ms ease,transform 120ms ease,visibility 120ms;}
+.context-help.is-visible {opacity:1;visibility:visible;transform:translateY(0);}
+.context-help strong {color:#f0f5f7;font-size:11px;line-height:1.3;font-weight:700;}
+.context-help span {color:#bdc9d1;font-size:11px;line-height:1.45;}
+@media(prefers-reduced-motion:reduce){.context-help{transition:none;}}

@@ -17,7 +17,7 @@ Acesse a **[Wiki do programa](https://github.com/gperegr/AudioSystem/wiki)** par
 
 Se você recebeu um endereço da aplicação já publicada, basta abri-lo no navegador. Para uma utilização mais confortável, use um computador com mouse e uma tela ampla. Em telas de toque, há controles para abrir os painéis de equipamentos e propriedades.
 
-Em celulares e tablets, **Equipamentos** e **Propriedades** abrem painéis sobre a montagem, com botão de fechar e toque fora para dispensar. O catálogo usa duas colunas; toque no nome para adicionar e enquadrar o aparelho automaticamente, ou arraste pelo ícone. Use dois dedos para mover e ampliar o canvas. Os controles inferiores e as configurações se adaptam à orientação e ao espaço disponível com o teclado aberto. No desktop, os painéis e a interface permanecem como antes.
+Em celulares e tablets, **Equipamentos** e **Propriedades** abrem painéis sobre a montagem, com botão de fechar sempre acessível e toque fora para dispensar. O catálogo usa duas colunas; toque no nome para adicionar e enquadrar o aparelho automaticamente, ou arraste pelo ícone. Pressione e segure um equipamento por um instante para movê-lo sem confundir o gesto com a passagem de cabos; o botão **Mover** ativa o arraste imediato. Use dois dedos para mover e ampliar o canvas. Os controles inferiores e as configurações se adaptam à orientação e ao espaço disponível com o teclado aberto. No desktop, os painéis e a interface permanecem como antes.
 
 Comece com o volume do computador baixo e aumente aos poucos. O navegador pode exigir um clique ou toque antes de liberar o som.
 
@@ -50,7 +50,7 @@ Os nomes dos conectores ajudam a escolher o caminho correto:
 
 **Caixas ativas** têm amplificação própria e recebem sinal de linha. **Caixas passivas** precisam de uma saída amplificada. O formato do plugue, sozinho, não garante que os sinais sejam compatíveis.
 
-Observe os avisos apresentados ao conectar equipamentos. O simulador pode alertar ou bloquear ligações inadequadas e representar sobrecarga, proteção e danos simulados.
+Os rótulos acessíveis dos conectores identificam direção, conector, canal e sinal em um formato consistente. Observe os avisos apresentados ao conectar equipamentos. O simulador pode alertar ou bloquear ligações inadequadas e representar sobrecarga, proteção e danos simulados; a barreira física do plugue continua ativa.
 
 ## Operando os aparelhos
 
@@ -60,6 +60,10 @@ Observe os avisos apresentados ao conectar equipamentos. O simulador pode alerta
 - **Experimente os equalizadores** para modificar graves, médios e agudos. Cada fader atua na frequência indicada abaixo dele.
 - **Use mixers e seletores** para combinar fontes ou comparar caminhos de áudio.
 - **Observe os medidores dos aparelhos** e os indicadores para acompanhar a atividade do sinal.
+
+A busca do catálogo também encontra equipamentos por função, conector ou tipo de sinal, como **entrada óptica** ou **caixa passiva**. Em **Configurações**, você pode desativar os avisos de compatibilidade e a ajuda contextual para experimentar ligações incorretas; essa opção não remove as barreiras físicas entre plugues incompatíveis. Passe o cursor ou foque um controle para ver uma dica discreta quando a ajuda estiver ativa.
+
+No cabeçalho de **Propriedades**, **Compacto** reduz espaços e descrições para navegar por aparelhos com muitos controles. O modo escolhido é lembrado.
 
 O botão **Restaurar Configurações** aparece apenas nos modelos com ajustes restauráveis. Alguns ajustes aparecem apenas no painel lateral. Na **Potência · Visor Circular**, por exemplo, os ganhos A/B são ajustados por esse painel.
 
@@ -73,9 +77,9 @@ Os aparelhos Bluetooth representam conexões dentro da simulação; não substit
 
 Em **Fones de Ouvido**, o **Kuba Disco 2** é visto totalmente de frente, no mesmo suporte de madeira dos demais fones, e reproduz o arco clássico de madeira laminada, as regulagens laterais com trilhos que seguem a curvatura do arco e encaixes alinhados ao centro das conchas, as conchas com relevos concêntricos e as almofadas XL costuradas. Selecione o fone para escolher **Tauari**, **Nogueira** ou **Ébano** em **Madeira do arco**; o acabamento acompanha o projeto salvo. Conecte uma saída de fones ao **P2 na ponta do cabo**, abaixo do divisor em Y. A escuta desse modelo não acrescenta coloração tonal e não pretende reproduzir medições acústicas do produto real.
 
-O **Fone Aberto · Cúpula** mostra as conchas de lado, com grades metálicas abertas, aros, almofadas espessas e texturas de couro e metal.
+Os fones usam uma vista frontal com conchas em perfil e almofadas voltadas para dentro, mantendo proporções compactas no suporte de madeira. Cada modelo tem construção própria: arco duplo e tecido no **Studio**, madeira e couro marrom no **Clássico Vinyl**, couro com pregas e hastes articuladas no **Monitor**, alumínio e malha no **Max**, aros e almofadas segmentadas no **Aberto · Anelar**, colmeias e suspensão no **Aberto · Cúpula**, grades horizontais e arco acolchoado no **Planar**.
 
-Os fones **Over-Ear**, **Over-Ear Studio**, **Clássico Vinyl**, **Max** e **Aberto · Anelar** também mostram as conchas de lado, com cascos, articulações, grades e almofadas detalhadas em acabamentos próprios para cada modelo.
+Nos modelos com fio, a conexão fica na ponta do cabo, abaixo do divisor em Y: **P10** no **Over-Ear** e **P2** nos demais. **Over-Ear**, **Studio** e **Max** também permitem parear Bluetooth; o **Max** usa exclusivamente essa conexão sem fio.
 
 O **Streamer Integrado**, em **Amplificadores integrados**, reúne uma fonte interna e amplificação nominal de **40 W por canal / 8 Ω** na simulação. A tela mostra faixa, artista, álbum e capa quadrada de arquivos MP3/FLAC quando esses metadados estão disponíveis, além do progresso, tempo, fonte e volume. Os dados de reprodução PCM correspondem ao áudio decodificado pelo navegador. O menu frontal alterna **Música** e **Linha**, com ícones e legendas centralizados. Em **Linha**, dois espectros coloridos mostram as frequências reais das entradas **L** e **R** de forma independente. Os controles permitem reproduzir, pausar e avançar ou retroceder 10 segundos. O botão de play mantém o triângulo fixo e se ilumina durante a reprodução. O aparelho é visto totalmente de frente; o disco superior iluminado aparece em perfil, com ranhuras e indicador que acompanham a rotação, em uma camada atrás do housing e da face frontal, que encobrem sua parte inferior. O conjunto completo, incluindo botão e pés, respeita a altura alta de 240 px. Ele ajusta o volume em dez passos; o duplo clique silencia. As saídas **SPEAKERS L/R** alimentam caixas passivas, **PRE OUT** tem volume variável e conectar **fones P2** silencia as caixas. A fonte interna usa demonstração ou música própria carregada; a entrada **LINE IN** recebe outra fonte por RCA.
 
@@ -93,7 +97,7 @@ Arraste os equipamentos pela área de trabalho: eles acompanham o cursor com uma
 
 Para selecionar vários aparelhos, use **Shift + clique** ou **Shift + arraste**. **Ctrl/Cmd + A** seleciona todos os equipamentos quando o foco está na área de montagem.
 
-Na categoria **Móveis**, adicione racks, nichos ou a **Mesa de Áudio** e posicione os aparelhos nas prateleiras ou no tampo. Os móveis não atraem os aparelhos magneticamente: você pode manter o espaço desejado para os pezinhos, respeitando a grade de posicionamento. Ao arrastar um móvel, os aparelhos dentro dos vãos ou apoiados nele, com contato ou espaço de até 20 px, acompanham o movimento, assim como toda a pilha acima deles. As distâncias entre os itens são preservadas, inclusive nos limites da área de trabalho. Os equipamentos compatíveis exibem pezinhos automáticos apenas quando há um pequeno espaço até a base de apoio. Ao encostar na base, os pezinhos automáticos desaparecem; ficam sempre atrás do aparelho, sem animação de descida. Nos toca-discos, o apoio automático se liga diretamente ao gabinete, sem deixar um vão acima dos pés.
+Na categoria **Móveis**, adicione racks, nichos ou a **Mesa de Áudio** e posicione os aparelhos nas prateleiras ou no tampo. **Rack de Áudio** e **Rack com 6 Prateleiras** têm vãos livres de 194 px para equipamentos baixos e médios; **Rack com Vãos Altos** tem quatro vãos de 244 px; **Rack com Vãos Altos · 6 Prateleiras** oferece seis vãos nessa altura para equipamentos médios e altos. Os móveis não atraem os aparelhos magneticamente: você pode manter o espaço desejado para os pezinhos, respeitando a grade de posicionamento. Ao arrastar um móvel, os aparelhos dentro dos vãos ou apoiados nele, com contato ou espaço de até 20 px, acompanham o movimento, assim como toda a pilha acima deles. As distâncias entre os itens são preservadas, inclusive nos limites da área de trabalho. Os equipamentos compatíveis exibem pezinhos automáticos apenas quando há um pequeno espaço até a base de apoio. Ao encostar na base, os pezinhos automáticos desaparecem; ficam sempre atrás do aparelho, sem animação de descida. Nos toca-discos, o apoio automático se liga diretamente ao gabinete, sem deixar um vão acima dos pés.
 
 Selecione a **Mesa de Áudio** e, no painel lateral, abra **Ambiente da bancada**. Escolha a superfície **Madeira**, **Feltro** ou **Estúdio**, ative ou oculte o **Painel acústico** e combine os objetos opcionais: **Discos**, **Capas**, **CDs** e **Luminária**. Os acessórios incluem um LP com capa em proporção correspondente, CD em estojo transparente e luminária articulada. Essas escolhas acompanham o projeto salvo e exportado.
 
@@ -101,7 +105,7 @@ Selecione a **Mesa de Áudio** e, no painel lateral, abra **Ambiente da bancada*
 
 Para explorar um componente de cada vez, comece com uma fonte, um amplificador e um par de caixas. Depois acrescente um equalizador, compare seletores ou experimente um subwoofer. O gerador de sinais e os medidores ajudam a investigar o comportamento da montagem.
 
-Novas montagens começam com **Luz neutra**, fundo **Sépia** e grade de **Pontos**. A opção **Luz quente**, em **Configurações → Iluminação**, oferece uma iluminação suave e estável. Em **Configurações**, você pode alterar a iluminação, o fundo e a grade da área de trabalho, ajustar os sons da interface e experimentar o **Ambiente sonoro**. Com intensidade zero, a escuta permanece sem a reverberação desse ambiente. O **Modo contemplação** permite observar a montagem com menos elementos na tela; pressione **Esc** para sair.
+Novas montagens começam com **Luz neutra**, fundo **Sépia** e grade de **Pontos**. A opção **Luz quente**, em **Configurações → Iluminação**, oferece uma iluminação suave e estável. A iluminação, o fundo, a grade, o zoom e a posição da montagem são lembrados para a próxima visita. Em **Configurações**, você também pode ajustar o volume dos sons de interação e experimentar o **Ambiente sonoro**. Os sons de interação começam em um nível mais alto e podem ser ajustados ou silenciados. Com intensidade zero, a escuta permanece sem a reverberação do ambiente sonoro.
 
 ## Salvar, continuar e compartilhar
 
