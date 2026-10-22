@@ -4038,15 +4038,17 @@ body.inspector-collapsed #inspector .sidebar-toggle {width:36px;}
 @media(prefers-reduced-motion:reduce){#equipment-catalog,#inspector,.sidebar-toggle{transition:none!important;}}
 
 @media(max-width:1000px),(hover:none) and (pointer:coarse) and (max-width:1400px) {
-    #app-topbar>.topbar-controls {gap:5px;}
-    #app-topbar .canvas-tools {position:static;left:auto;top:auto;transform:none;flex:1 1 0;width:0;max-width:none;gap:2px;padding:0;overflow-x:auto;}
+    #app-topbar>.topbar-controls {flex:1 1 0;min-width:0;justify-content:flex-start;gap:5px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;}
+    #app-topbar>.topbar-controls::-webkit-scrollbar {display:none;}
+    #app-topbar .canvas-tools {position:static;left:auto;top:auto;transform:none;flex:0 0 auto;width:max-content;max-width:none;gap:2px;padding:0;overflow:visible;}
     #app-topbar .canvas-tools button {width:44px;height:44px;min-width:44px;padding:9px;border-radius:8px;}
     #app-topbar .canvas-tools kbd {display:none;}
     #app-topbar .canvas-tools #touch-move-mode {display:none;}
     #app-topbar .canvas-tools #touch-move-mode[aria-pressed="true"] {color:#a8e0bc;background:#24583d;box-shadow:inset 0 0 0 1px #4d866d;}
     .mobile-panel-controls {position:static;display:flex;flex:none;gap:3px;z-index:auto;}
-    .mobile-panel-controls button {min-width:38px;min-height:40px;padding:6px;border:1px solid #4b5563;border-radius:6px;background:#22282e;color:#e5e7eb;font:600 10px/1.1 "Inter",sans-serif;}
-    .mobile-panel-controls button[aria-expanded=true] {border-color:#60a5fa;color:#bfdbfe;}
+    .mobile-panel-controls button {display:grid;place-items:center;width:44px;min-width:44px;min-height:44px;padding:8px;border:1px solid #4b5563;border-radius:8px;background:#22282e;color:#e5e7eb;}
+    .mobile-panel-controls button svg {display:block;width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+    .mobile-panel-controls button[aria-expanded=true] {border-color:#60a5fa;color:#bfdbfe;background:#29394b;}
     .app-settings {flex:none;}
     #app-topbar .canvas-tools .canvas-zoom-group {gap:0;padding:0 2px;}
     #app-topbar .canvas-tools #zoom-label {min-width:34px;}
@@ -4068,7 +4070,7 @@ body.inspector-collapsed #inspector .sidebar-toggle {width:36px;}
     #app-topbar {gap:4px;}
     #app-topbar>.topbar-controls {gap:3px;}
     #app-topbar .app-brand {gap:0;}
-    .mobile-panel-controls button {min-width:34px;padding:5px;font-size:9px;}
+    .mobile-panel-controls button {width:44px;min-width:44px;padding:5px;}
 }
 
 .connection-help-setting {display:flex;align-items:flex-start;gap:10px;padding:11px 12px;border:1px solid #394857;border-radius:7px;background:#202a34;color:#dbe5ed;cursor:pointer;}
