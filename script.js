@@ -4323,7 +4323,7 @@ const Hardware = (() => {
                 el.innerHTML=furnitureMarkup(type);
             }
             if(REFERENCE_HEADPHONES[type]&&type!=='hpKubaDisco2'){
-                el.innerHTML=`<div class="device-header"><span>${deviceName}</span></div><div class="headphone-body"><div class="headphone-object"><div class="headphone-band"></div><div class="headphone-cups"><div class="headphone-cup"></div><div class="headphone-cup"></div></div></div><div class="headphone-controls"><span></span><div class="port" data-type="p2" data-io="in" data-node="in" data-signal="headphone" title="Entrada de fones · P2 TRS estéreo"></div></div></div>`;
+                el.innerHTML=type==='hpOpenDome'&&tpl?tpl.innerHTML.replace(/(id="|#)dome-/g,(_,prefix)=>`${prefix}${id}-dome-`):`<div class="device-header"><span>${deviceName}</span></div><div class="headphone-body"><div class="headphone-object"><div class="headphone-band"></div><div class="headphone-cups"><div class="headphone-cup"></div><div class="headphone-cup"></div></div></div><div class="headphone-controls"><span></span><div class="port" data-type="p2" data-io="in" data-node="in" data-signal="headphone" title="Entrada de fones · P2 TRS estéreo"></div></div></div>`;
                 el.classList.add('reference-headphone');
             }
             if(type==='hpKubaDisco2'){
