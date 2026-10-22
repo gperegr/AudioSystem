@@ -4124,12 +4124,6 @@
 .sonic-band[data-tone="neutro"] .sonic-band-state {color:#b9decf;}
 .sonic-curve-figure {margin:0;padding:8px;border:1px solid #374151;border-radius:8px;background:#11182780;}
 .sonic-curve-graph {display:block;width:100%;}
-.sonic-curve-legend {display:flex;align-items:center;justify-content:flex-end;gap:10px;min-height:18px;color:#aab6c5;font:400 9px/1.2 "Inter",sans-serif;}
-.sonic-curve-legend>span {display:inline-flex;align-items:center;gap:4px;}
-.sonic-curve-swatch,.sonic-neutral-swatch {display:inline-block;width:12px;height:0;border-top:2px solid #60a5fa;}
-.sonic-neutral-swatch {border-top:1px dashed #9aa8b4;}
-.sonic-stereo-tag {padding:2px 5px;border:1px solid #405060;border-radius:999px;color:#c3d5e2;}
-.sonic-curve-help {display:grid;place-items:center;width:14px;height:14px;border:1px solid #536273;border-radius:50%;color:#9fb2c3;font-size:9px;cursor:help;}
 .inspector-compact #inspector-content {gap:12px!important;padding:12px!important;}
 .inspector-compact #inspector-content>div,.inspector-compact #inspector-content>section {gap:8px!important;padding:10px!important;}
 .inspector-compact #inspector-content :is(p,.text-xs,.text-sm,small) {font-size:11px!important;line-height:1.35!important;}
