@@ -3325,18 +3325,6 @@ const Hardware = (() => {
             const oldIcon = item.firstElementChild;
             if (oldIcon) oldIcon.outerHTML = catalogIcon(item.dataset.template);
         });
-        const catalogTooltip = document.createElement('div');
-        catalogTooltip.id = 'catalog-tooltip';
-        catalogTooltip.setAttribute('role', 'tooltip');
-        document.body.appendChild(catalogTooltip);
-        let catalogTooltipItem = null;
-        let catalogTooltipTimer = 0;
-        function hideCatalogTooltip() {
-            clearTimeout(catalogTooltipTimer);
-            catalogTooltip.classList.remove('is-visible');
-            catalogTooltipItem?.removeAttribute('aria-describedby');
-            catalogTooltipItem = null;
-        }
         const contextHelp=document.createElement('aside');contextHelp.id='context-help';contextHelp.className='context-help';contextHelp.setAttribute('role','status');contextHelp.setAttribute('aria-live','polite');contextHelp.innerHTML='<strong></strong><span></span>';document.body.appendChild(contextHelp);
         let contextHelpTarget=null,contextHelpTimer=0,contextHelpPreviousDescription=null;
         function hideContextHelp(){clearTimeout(contextHelpTimer);contextHelp.classList.remove('is-visible');if(contextHelpTarget){if(contextHelpPreviousDescription)contextHelpTarget.setAttribute('aria-describedby',contextHelpPreviousDescription);else contextHelpTarget.removeAttribute('aria-describedby');}contextHelpTarget=null;contextHelpPreviousDescription=null;}
@@ -3350,11 +3338,10 @@ const Hardware = (() => {
         }
         function showContextHelp(target,delay=1000){
             if(!connectionGuidanceEnabled||!target)return;
-            const port=target.closest('.port'),control=port?null:target.closest('button,input,select,[role="switch"],[role="slider"]'),device=target.closest('.device-node');
+            const port=target.closest('.port'),control=port?null:target.closest('button,input,select,[role="switch"],[role="slider"]');
             let heading='',message='';
             if(port){heading=port.dataset.baseTitle||port.getAttribute('aria-label')||'Conector';message=port.getAttribute('title')||`${port.dataset.io==='out'?'Saída':'Entrada'} ${port.dataset.format||port.dataset.type||'de áudio'} · sinal ${signalName(getPortSignal(port))}.`;}
             else if(control){heading=control.getAttribute('aria-label')||control.labels?.[0]?.textContent?.trim()||control.title||control.textContent.trim()||'Controle';message=control.title||control.getAttribute('aria-description')||control.labels?.[0]?.textContent?.trim()||'Ajuste este controle para configurar o equipamento.';}
-            else if(device){const type=device.dataset.equipmentType;heading=DEVICE_NAMES[type]||device.querySelector('.device-header span')?.textContent.trim()||'Equipamento';message=catalogDescriptions[type]||'Equipamento de áudio da bancada. Selecione-o para ver seus controles e conexões.';}
             else return;
             if(!message||contextHelpTarget===target)return;
             hideContextHelp();contextHelpTarget=target;contextHelpPreviousDescription=target.getAttribute('aria-describedby');target.setAttribute('aria-describedby',[contextHelpPreviousDescription,'context-help'].filter(Boolean).join(' '));
@@ -3384,7 +3371,6 @@ const Hardware = (() => {
         catalogSections[0]?.parentElement.appendChild(searchEmpty);
         const normalizeSearch = text => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
         equipmentSearch.addEventListener('input', () => {
-            hideCatalogTooltip();
             const terms = normalizeSearch(equipmentSearch.value).split(/\s+/).filter(Boolean);
             let total = 0;
             catalogSections.forEach(section => {
@@ -3402,34 +3388,6 @@ const Hardware = (() => {
         equipmentSearch.addEventListener('keydown', event => {
             if (event.key === 'Escape') { equipmentSearch.value = ''; equipmentSearch.dispatchEvent(new Event('input')); }
         });
-        function showCatalogTooltip(item) {
-            if(!connectionGuidanceEnabled)return;
-            const description = catalogDescriptions[item.dataset.template];
-            if (!description) return;
-            catalogTooltip.textContent = description;
-            catalogTooltip.classList.remove('is-visible');
-            catalogTooltip.style.left = '0px';
-            catalogTooltip.style.top = '0px';
-            const itemRect = item.getBoundingClientRect();
-            const tipRect = catalogTooltip.getBoundingClientRect();
-            const candidates=[{left:itemRect.right+10,top:itemRect.top+(itemRect.height-tipRect.height)/2},{left:itemRect.left-tipRect.width-10,top:itemRect.top+(itemRect.height-tipRect.height)/2},{left:itemRect.left+(itemRect.width-tipRect.width)/2,top:itemRect.bottom+10},{left:itemRect.left+(itemRect.width-tipRect.width)/2,top:itemRect.top-tipRect.height-10}];
-            const overlaps=({left,top})=>left<itemRect.right&&left+tipRect.width>itemRect.left&&top<itemRect.bottom&&top+tipRect.height>itemRect.top;
-            const position=candidates.find(({left,top})=>left>=8&&left+tipRect.width<=innerWidth-8&&top>=8&&top+tipRect.height<=innerHeight-8&&!overlaps({left,top}));
-            if(!position)return;
-            catalogTooltipItem = item;item.setAttribute('aria-describedby', 'catalog-tooltip');
-            catalogTooltip.style.left = `${position.left}px`;
-            catalogTooltip.style.top = `${position.top}px`;
-            requestAnimationFrame(() => catalogTooltip.classList.add('is-visible'));
-        }
-        document.querySelectorAll('.catalog-item').forEach(item => {
-            item.addEventListener('mouseenter', () => {
-                clearTimeout(catalogTooltipTimer);
-                catalogTooltipTimer=setTimeout(()=>showCatalogTooltip(item),1000);
-            });
-            item.addEventListener('mouseleave', hideCatalogTooltip);
-            item.addEventListener('pointerdown', hideCatalogTooltip);
-        });
-
         document.querySelectorAll('.catalog-item').forEach(item => {
             item.addEventListener('dragstart', e => e.preventDefault());
             item.addEventListener('pointerdown', e => {
@@ -6154,6 +6112,20 @@ const Hardware = (() => {
             });
         }
 
+        function conciseEquipmentInspector(html){
+            const template=document.createElement('template');template.innerHTML=html;
+            template.content.querySelectorAll('p:not([id]):not([role="status"]):not([role="alert"])').forEach(text=>text.remove());
+            template.content.querySelectorAll('div[class*="text-gray-400"],div[class*="text-gray-500"]').forEach(text=>{
+                if(text.id||text.getAttribute('role')||text.querySelector('button,input,select,textarea,output,svg,canvas,[role]'))return;
+                if(!text.children.length&&text.textContent.trim())text.remove();
+            });
+            [...template.content.querySelectorAll('div,section')].reverse().forEach(group=>{
+                if(group.id||group.getAttribute('role')||group.querySelector('[id],[role="status"],[role="alert"],button,input,select,textarea,output,svg,canvas')||group.textContent.trim())return;
+                group.remove();
+            });
+            return template.innerHTML;
+        }
+
         function selectDevice(id, preserveSelection = false) {
             if (id && state.selectedConnection) selectCable(null);
             disposeSpectrum();
@@ -6312,7 +6284,7 @@ const Hardware = (() => {
             html+=listeningInspectorHtml(dev);
             if(dev.el.querySelector('.speaker-grille'))html+=`<button type="button" class="tt-insp-btn" id="inspector-grille" aria-pressed="${dev.el.classList.contains('grille-off')}">GRADE</button>`;
             Hardware.sync(dev);
-            inspectorContent.innerHTML = html;
+            inspectorContent.innerHTML = conciseEquipmentInspector(html);
             Hardware.inspector(inspectorContent);
             document.getElementById('inspector-grille')?.addEventListener('click',event=>{dev.el.querySelector(dev.el.classList.contains('grille-off')?'.grille-restore':'.speaker-grille').click();event.currentTarget.setAttribute('aria-pressed',String(dev.el.classList.contains('grille-off')));event.currentTarget.classList.toggle('is-on',dev.el.classList.contains('grille-off'));});
             queueMicrotask(setupInspectorDetents);
@@ -7651,7 +7623,7 @@ const Hardware = (() => {
         const themeSection=document.createElement('section');themeSection.className='settings-theme-section';themeSection.appendChild(canvasThemeControl);themeSection.appendChild(canvasGridControl);themeSection.appendChild(atmosphereControl);setCanvasGrid('dots');
         const connectionHelpSetting=document.createElement('label');connectionHelpSetting.className='connection-help-setting';connectionHelpSetting.innerHTML='<input id="connection-help-enabled" type="checkbox"><span><strong>Orientação de conexões</strong><small>Mostra dicas e impede ligações incompatíveis. Desative para permitir erros quando os plugues encaixarem.</small></span>';
         const connectionHelpCheckbox=connectionHelpSetting.querySelector('input');connectionHelpCheckbox.checked=connectionGuidanceEnabled;themeSection.appendChild(connectionHelpSetting);
-        connectionHelpCheckbox.addEventListener('change',()=>{connectionGuidanceEnabled=connectionHelpCheckbox.checked;hideContextHelp();hideCatalogTooltip();updatePortGuidance(true);scheduleAppPreferencesSave();});
+        connectionHelpCheckbox.addEventListener('change',()=>{connectionGuidanceEnabled=connectionHelpCheckbox.checked;hideContextHelp();updatePortGuidance(true);scheduleAppPreferencesSave();});
         clearCatalogFooter.insertBefore(themeSection,soundControls);
 
         const roomSection=document.createElement('section');roomSection.className='room-settings';

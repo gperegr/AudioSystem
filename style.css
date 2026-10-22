@@ -60,15 +60,6 @@
         }
         .catalog-item:hover { border-color: #4b5563; background: #2a3138; }
         .catalog-item:active { cursor: grabbing; }
-        #catalog-tooltip {
-            position:fixed; z-index:1000; width:max-content; max-width:230px; padding:9px 11px;
-            border:1px solid #526170; border-radius:6px; color:#e5edf5; background:rgba(20,26,33,.97);
-            box-shadow:0 8px 22px rgba(0,0,0,.42); font:500 11px/1.4 "Inter",sans-serif;
-            pointer-events:none; opacity:0; visibility:hidden; transform:translateY(3px);
-            transition:opacity .12s ease,transform .12s ease,visibility .12s;
-        }
-        #catalog-tooltip.is-visible { opacity:1; visibility:visible; transform:translateY(0); }
-
         .device-node {
             position: absolute;
             background: transparent;
@@ -2376,7 +2367,7 @@
         :is(#audio-world,.equipment-preview-world) .device-node .device-header::before,:is(#audio-world,.equipment-preview-world) .device-node .device-header::after {content:none!important;}
         .discard-cloud {position:fixed;width:0;height:0;z-index:10001;pointer-events:none;}
         .discard-cloud i {position:absolute;left:0;top:0;border-radius:50%;background:radial-gradient(circle at 40% 35%,#e7dfd1e0,#a9a59899 65%,#8b928500);filter:blur(1px);pointer-events:none;}
-        body.dragging-over-discard .device-header,body.dragging-over-discard #catalog-tooltip {display:none!important;visibility:hidden!important;opacity:0!important;}
+        body.dragging-over-discard .device-header {display:none!important;visibility:hidden!important;opacity:0!important;}
         .device-type-turntable .at-deck::after {top:auto;bottom:23px;left:0;right:0;height:77px;transform:none;transform-origin:50% 100%;transition:height .55s cubic-bezier(.22,.7,.2,1),opacity .55s,border-radius .55s;border-bottom:3px solid #7e959b88;}
         .device-type-turntable.lid-open .at-deck::after {height:var(--lid-depth,460px);transform:none;opacity:.85;border-radius:8px 8px 2px 2px;}
         .tt-lid-button {position:absolute;top:6px;right:6px;z-index:8;display:grid;place-items:center;width:24px;height:22px;padding:2px;border:1px solid #91a6ae66;border-radius:3px;background:#23323999;color:#d4e2e6;cursor:pointer;}
