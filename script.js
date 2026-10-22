@@ -6146,6 +6146,7 @@ const Hardware = (() => {
             state.selectedDeviceId = id;
             syncDeviceSelection();
             if(!id) {
+                document.getElementById('inspector-title').textContent='Selecione um equipamento';
                 inspectorEmpty.classList.remove('hidden'); inspectorContent.classList.add('hidden');
                 return;
             }
@@ -6153,6 +6154,7 @@ const Hardware = (() => {
             const dev = state.devices[id];
             if (!dev) {
                 state.selectedDeviceId = null;
+                document.getElementById('inspector-title').textContent='Selecione um equipamento';
                 inspectorEmpty.classList.remove('hidden'); inspectorContent.classList.add('hidden');
                 return;
             }
@@ -6161,18 +6163,11 @@ const Hardware = (() => {
             inspectorContent.classList.remove('hidden');
             
             const names = DEVICE_NAMES;
+            const equipmentName=dev.el.querySelector('.device-header > span')?.textContent.trim()||names[dev.type]||dev.type;
+            document.getElementById('inspector-title').textContent=equipmentName;
 
             const hasPowerControl = !!dev.el.querySelector('.power-btn');
-            let html = `${dev.state.damage?'<div class="equipment-damage-notice" role="status">DANIFICADO · Sobrecarga elétrica simulada. Substitua o equipamento por outro do catálogo.</div>':''}
-                <div class="flex flex-col gap-2 border-b border-gray-700 pb-4">
-                    <div class="flex items-center justify-between">
-                        <label class="text-xs text-gray-400 font-bold uppercase tracking-wider">Equipamento</label>
-                        ${hasPowerControl ? `<span id="lbl-power-status" class="${dev.powered ? 'text-xs text-emerald-400 font-bold' : 'text-xs text-red-400 font-bold'}">${dev.powered ? 'LIGADO' : 'DESLIGADO'}</span>` : ''}
-                    </div>
-                    <div class="bg-[#22282e] p-3 rounded border border-gray-700 font-medium text-sm text-gray-200">
-                        <span>${names[dev.type] || dev.type.toUpperCase()}</span>
-                    </div>
-                </div>`;
+            let html=dev.state.damage?'<div class="equipment-damage-notice" role="status">DANIFICADO · Sobrecarga elétrica simulada. Substitua o equipamento por outro do catálogo.</div>':'';
 
             html+=amplificationInspectorHtml(dev);
                 
@@ -7652,6 +7647,7 @@ const Hardware = (() => {
         settingsMenu.appendChild(clearCatalogFooter);
         const topbarControls=document.getElementById('app-topbar').lastElementChild;
         topbarControls.appendChild(settingsMenu);
+        topbarControls.appendChild(document.getElementById('inspector-sidebar-toggle'));
         topbarControls.insertBefore(document.querySelector('.canvas-tools'),settingsMenu);
         document.addEventListener('pointerdown',event=>{if(settingsMenu.open&&!settingsMenu.contains(event.target)&&!event.target.closest('.app-select-popup'))settingsMenu.open=false;});
         document.addEventListener('keydown',event=>{if(event.key==='Escape'&&settingsMenu.open){settingsMenu.open=false;settingsMenu.querySelector('summary').focus();}});
