@@ -1730,15 +1730,16 @@ const Hardware = (() => {
             const vertical=[[20,'20'],[100,'100'],[1000,'1k'],[10000,'10k'],[20000,'20k']].map(([hz,label])=>`<line x1="${x(hz)}" x2="${x(hz)}" y1="${top}" y2="${bottom}" stroke="#303c49"/><text x="${x(hz)}" y="${bottom+18}" text-anchor="middle" fill="#aab6c5" font-size="10">${label}</text>`).join('');
             const bands=[['Graves',60,200],['Médios',300,2500],['Agudos',5000,12000]].map(([label,low,high])=>{
                 const samples=Array.from(response,(db,index)=>({db,frequency:frequencies[index]})).filter(sample=>sample.frequency>=low&&sample.frequency<=high);
-                const levelOffset=dev.listeningProfile.headroomDb??-4;
-                const meanDb=samples.length?samples.reduce((sum,sample)=>sum+sample.db,0)/samples.length-levelOffset:0;
+                // The response above includes only filters: the global gain trim is
+                // already excluded, so indicators share the graph's 0 dB reference.
+                const meanDb=samples.length?samples.reduce((sum,sample)=>sum+sample.db,0)/samples.length:0;
                 const state=meanDb<=-4?'recuo-forte':meanDb< -1?'recuo-leve':meanDb<=1?'neutro':meanDb<4?'realce-leve':'realce-forte';
                 const position={'recuo-forte':0,'recuo-leve':1,neutro:2,'realce-leve':3,'realce-forte':4}[state];
                 const stateLabel={'recuo-forte':'Recuo forte','recuo-leve':'Recuo leve',neutro:'Neutro','realce-leve':'Realce leve','realce-forte':'Realce forte'}[state];
                 const dots=Array.from({length:5},(_,index)=>`<i class="${index===2?'is-neutral ':''}${index===position?'is-active':''}"></i>`).join('');
-                return `<div class="sonic-band" data-tone="${state}" role="img" aria-label="${label}: ${stateLabel.toLowerCase()}."><span class="sonic-band-name">${label}</span><span class="sonic-band-dots" title="Escala de recuo, centro neutro" aria-hidden="true">${dots}</span><span class="sonic-band-state">${stateLabel}</span></div>`;
+                return `<div class="sonic-band" data-tone="${state}" role="img" aria-label="${label}: ${stateLabel.toLowerCase()}. Média da curva entre ${low} e ${high} Hz."><span class="sonic-band-name">${label}</span><span class="sonic-band-dots" title="Média entre ${low} e ${high} Hz · escala de recuo a realce, centro neutro" aria-hidden="true">${dots}</span><span class="sonic-band-state">${stateLabel}</span></div>`;
             }).join('');
-            const legend='O gráfico mostra o perfil tonal aplicado, igual em L/R. A linha de 0 dB é neutra. Os marcadores resumem o balanço tonal sem a compensação global de nível; a compensação de volume e os equalizadores da cadeia não aparecem nesta curva.';
+            const legend='O gráfico mostra o perfil tonal aplicado, igual em L/R. Os indicadores usam a média em dB da mesma curva: graves de 60 a 200 Hz, médios de 300 a 2500 Hz e agudos de 5000 a 12000 Hz. O centro é neutro entre -1 e +1 dB; recuo ou realce forte começa em 4 dB de desvio. A compensação global de volume e os equalizadores da cadeia não aparecem nesta curva.';
             return `<div class="sonic-signature-visuals">${bands}</div><figure class="sonic-curve-figure"><svg viewBox="0 0 ${width} ${height}" class="sonic-curve-graph" role="img" aria-label="Curva da assinatura sonora: ${dev.listeningProfile.label}. Frequência de 20 Hz a 20 kHz; ganho relativo entre ${minDb} e mais ${maxDb} decibéis." style="font-family:Inter,sans-serif"><text x="${left}" y="10" fill="#aab6c5" font-size="9">dB</text>${horizontal}${vertical}<path d="${path}" fill="none" stroke="#60a5fa" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><text x="${right}" y="${height-2}" text-anchor="end" fill="#aab6c5" font-size="9">Hz</text></svg><figcaption class="sonic-curve-legend"><span><i class="sonic-curve-swatch" aria-hidden="true"></i>Perfil</span><span><i class="sonic-neutral-swatch" aria-hidden="true"></i>0 dB neutro</span><span class="sonic-stereo-tag">L = R</span><span class="sonic-curve-help" role="note" aria-label="${legend}" title="${legend}">i</span></figcaption></figure>`;
         }
 

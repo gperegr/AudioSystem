@@ -73,6 +73,8 @@ As listas de equipamentos e propriedades mantêm a rolagem com toque e também o
 
 Em **Comportamento sonoro**, as bolinhas comparam graves, agudos, saturação e harmônicos pares entre os modelos de amplificação. A bolinha preenchida indica a posição na escala, e o centro representa a resposta neutra em graves e agudos. Os limites são os mesmos para todos os aparelhos; os indicadores descrevem o perfil base da simulação.
 
+Em **Assinatura sonora**, nos fones e caixas, os indicadores de graves, médios e agudos usam a média em dB da mesma curva exibida no gráfico: **60–200 Hz**, **300–2.500 Hz** e **5.000–12.000 Hz**, respectivamente. A bolinha central significa resposta neutra entre **−1 e +1 dB**; fora desse intervalo há recuo ou realce leve, tornando-se forte a partir de **4 dB** de desvio. Um pico ou vale localizado pode diferir da média da faixa. A redução global de volume usada para reservar margem de áudio não altera o gráfico nem os indicadores.
+
 O botão **Restaurar Configurações** aparece apenas nos modelos com ajustes restauráveis. Alguns ajustes aparecem apenas no painel lateral. Na **Potência · Visor Circular**, por exemplo, os ganhos A/B são ajustados por esse painel.
 
 Os toca-discos de braço articulado são vistos de frente, com o prato e o disco em perfil e o braço visível acima deles. O slider **PITCH**, no painel frontal, ajusta a velocidade de reprodução; arraste para alterar e dê duplo clique para zerar. Use o botão **Abrir tampa / Fechar tampa** para movimentar a tampa de acrílico, que abre para trás a partir das dobradiças traseiras.
