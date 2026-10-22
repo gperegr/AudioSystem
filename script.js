@@ -2901,10 +2901,15 @@ const Hardware = (() => {
 
         const VINYL_NOISE_LEVELS={none:{label:'Sem ruído',gain:0},low:{label:'Ruído baixo',gain:.016},medium:{label:'Ruído médio',gain:.035},high:{label:'Ruído alto',gain:.07}};
         function noiseLevelIcon(level){
-            if(level==='none')return '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 10v4h3l4 3V7l-4 3zM15 9l5 6m0-6-5 6"/></svg>';
-            const count={low:1,medium:2,high:3}[level]||0;
-            const waves=['M14 9a4 4 0 0 1 0 6','M16 6a8 8 0 0 1 0 12','M18 3a12 12 0 0 1 0 18'];
-            return `<svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/>${waves.slice(0,count).map(path=>`<path d="${path}"/>`).join('')}</svg>`;
+            const waveforms={
+                low:'M2 12h2l1.5-1.5 2 3 2.5-4 2 5 2-4 2 3 2-2 1.5 .5H22',
+                medium:'M2 12h2l1.5-3 2 6 2.5-8 2 10 2-8 2 6 2-4 1.5 1H22',
+                high:'M2 12h2l1.5-5 2 10 2.5-13 2 16 2-13 2 10 2-6 1.5 1H22'
+            };
+            const symbol=level==='none'
+                ? '<circle cx="12" cy="12" r="8.25"/><path d="m6.25 17.75 11.5-11.5"/>'
+                : `<path class="noise-level-axis" d="M2 12h20"/><path d="${waveforms[level]||waveforms.low}"/>`;
+            return `<svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">${symbol}</svg>`;
         }
         let vinylNoiseBuffer=null;
         function stopVinylNoise(dev){
