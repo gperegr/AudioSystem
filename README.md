@@ -1,153 +1,133 @@
 # Audio System Simulator
 
-Monte um sistema de som virtual, conecte os equipamentos e ouça o resultado diretamente no navegador.
+Monte um sistema de som virtual, conecte os equipamentos e ouça o resultado no navegador. Explore fontes, amplificadores, equalizadores, caixas e fones com estilos vintage, de estúdio e modernos.
 
-O **Audio System Simulator** é um simulador interativo de áudio para experimentar combinações de aparelhos, entender o percurso do sinal e explorar ajustes de reprodução. O catálogo reúne equipamentos com estilos vintage, de estúdio e modernos: toca-discos, CD players, streamers, receivers, amplificadores, equalizadores, mixers, seletores, caixas, subwoofers, fones e instrumentos de áudio.
+![Interface atual: catálogo à esquerda, sistema estéreo no centro e ajustes do integrado à direita](docs/images/visao-geral.png)
 
-## Wiki e guias de uso
+**[Wiki e guias completos](https://github.com/gperegr/AudioSystem/wiki)** · **[Exemplos de montagem](https://github.com/gperegr/AudioSystem/wiki/Exemplos-de-montagem)** · **[Solução de problemas](https://github.com/gperegr/AudioSystem/wiki/Problemas-frequentes)**
 
-Acesse a **[Wiki do programa](https://github.com/gperegr/AudioSystem/wiki)** para consultar guias por categoria de equipamento, exemplos de montagem, conceitos de áudio e solução de problemas.
+## Abrir e ouvir
 
-## Como começar
+1. Baixe o repositório em **Code → Download ZIP** e extraia todo o conteúdo.
+2. Abra **index.html** em Chrome, Edge ou outro navegador atualizado, mantendo as pastas juntas.
+3. Mantenha internet disponível para os recursos externos de estilo e as fontes da interface.
+4. Clique ou toque no programa para liberar o áudio. Comece com o volume do computador baixo.
 
-1. Neste repositório, clique em **Code → Download ZIP**.
-2. Extraia o arquivo inteiro, mantendo as pastas e os arquivos juntos.
-3. Abra **index.html** em um navegador atualizado, preferencialmente Chrome ou Edge.
-4. Mantenha acesso à internet para carregar os estilos e as fontes externas usados pela interface.
+Se você recebeu o endereço da aplicação publicada, abra-o diretamente. O programa não exige instalar Node.js para ser usado.
 
-Se você recebeu um endereço da aplicação já publicada, basta abri-lo no navegador. Para uma utilização mais confortável, use um computador com mouse e uma tela ampla. Em telas de toque, há controles para abrir os painéis de equipamentos e propriedades.
+## Sua primeira montagem
 
-Em celulares e tablets, os ícones de **Equipamentos** e **Propriedades** abrem painéis sobre a montagem, com botão de fechar sempre acessível e toque fora para dispensar. Em barras superiores estreitas, deslize horizontalmente para acessar todos os controles. O catálogo usa duas colunas; toque no nome para adicionar e enquadrar o aparelho automaticamente, ou arraste pelo ícone. Pressione e segure um equipamento por um instante para movê-lo sem confundir o gesto com a passagem de cabos; **Modo Touch** ativa o arraste imediato. Essa opção também aparece em computadores com tela sensível ao toque. Use dois dedos para mover e ampliar o canvas. Os controles inferiores e as configurações se adaptam à orientação e ao espaço disponível com o teclado aberto. Computadores sem tela sensível ao toque mantêm os controles usuais do desktop.
+Adicione um **CD Player**, um **Integrado · Visores Azuis** e duas **Caixas Passivas Vintage**. Arraste do catálogo; no toque, toque no nome para adicionar.
 
-Comece com o volume do computador baixo e aumente aos poucos. O navegador pode exigir um clique ou toque antes de liberar o som.
+```mermaid
+flowchart LR
+    CD["CD Player"] -->|"RCA L/R · linha"| INT["Integrado · entrada Linha 1"]
+    INT -->|"SPEAKERS L · amplificado"| L["Caixa passiva esquerda"]
+    INT -->|"SPEAKERS R · amplificado"| R["Caixa passiva direita"]
+```
 
-## Seu primeiro sistema de som
+1. Ligue RCA OUT L/R do CD à entrada **Linha 1 L/R** do integrado.
+2. Ligue uma caixa a **SPEAKERS L** e a outra a **SPEAKERS R**.
+3. Confira a alimentação dos aparelhos, selecione **Linha 1** e inicie a reprodução no CD.
+4. Ajuste o volume do integrado gradualmente.
 
-Uma montagem simples para começar é:
+As fontes musicais oferecem demonstração quando não há música própria. Para ouvir um arquivo local, selecione a fonte e use **Música própria → CARREGAR ÁUDIO**. MP3 e WAV são opções comuns; a compatibilidade depende do navegador. O Streamer Integrado também lê metadados e capa de MP3/FLAC quando disponíveis.
 
-**CD Player → Amplificador Integrado → duas Caixas Passivas Vintage**
+## Entradas, saídas e níveis
 
-1. Encontre os aparelhos no catálogo usando a busca e arraste-os para a área de montagem. Em telas de toque, toque no nome do equipamento para adicioná-lo.
-2. Ligue as saídas **RCA L/R** do CD Player a uma das entradas **LINE L/R** do integrado. Arraste de um conector até o conector de destino.
-3. Ligue a saída **SPEAKERS L** do integrado à entrada da caixa esquerda e **SPEAKERS R** à entrada da caixa direita.
-4. Confira se os aparelhos estão ligados e selecione no integrado a entrada que recebeu o CD Player.
-5. Inicie a reprodução na fonte e ajuste o volume do integrado gradualmente.
+| Sinal | Origem | Destino |
+| --- | --- | --- |
+| Linha / LINE | CD, streamer, pré ou processador | LINE de amplificador, processador ou caixa ativa |
+| PHONO | Toca-discos em PHONO | Entrada PHONO ou conversor PHONO → LINHA |
+| PHONES | Amplificador ou saída de fones | Fones compatíveis |
+| Amplificado / SPEAKERS | Potência, integrado ou receiver | Caixa ou subwoofer passivo |
+| SUB / LFE | Saída de graves em nível de linha | Subwoofer ativo |
 
-As fontes musicais oferecem som de demonstração quando não há arquivo próprio carregado. Você também pode selecionar a fonte, abrir **Música própria → CARREGAR ÁUDIO** no painel lateral e escolher uma música do seu dispositivo. A compatibilidade dos formatos depende do navegador.
+Preserve **L e R**. P2/P10 podem reunir estéreo, mas há entradas mono, como a P10 da **Caixa Ativa · Precisão**. Confira os rótulos: o formato do plugue sozinho não determina o sinal. Adaptadores passivos mudam conectores e canais; conversores alteram o nível ou a preparação do áudio.
 
-## Entendendo as conexões
+Os avisos explicam níveis incorretos, carga e possíveis danos simulados. Desativar a ajuda em Configurações não permite encaixar plugues de formatos diferentes. Consulte [Sinais e conexões](https://github.com/gperegr/AudioSystem/wiki/Sinais-e-conexoes).
 
-Os nomes dos conectores ajudam a escolher o caminho correto:
+## Navegação e controles
 
-| Indicação | Para que serve |
+| Ação | Como fazer |
 | --- | --- |
-| **LINE / RCA / AUX** | Conectar fontes a entradas de linha de amplificadores, processadores ou caixas ativas. |
-| **PHONO** | Receber o sinal de um toca-discos em modo Phono. Use uma entrada Phono ou um conversor adequado. |
-| **SPEAKERS / SPEAKER IN** | Ligar a saída de potência de um amplificador a caixas passivas. |
-| **PHONES** | Conectar fones de ouvido. |
-| **SUB / LFE** | Encaminhar sinal de linha para a entrada correspondente de um subwoofer. |
-| **L / R** | Identificar os canais esquerdo e direito. Preserve a correspondência entre eles. |
+| Ajustar um aparelho | Selecione-o; o painel direito mostra seu nome e os controles disponíveis. |
+| Recolher o painel direito | Use a seta ao lado de **Configurações**, na barra superior. A largura é fixa entre equipamentos e o painel desliza ao abrir/fechar. |
+| Recolher o catálogo | Use a seta no cabeçalho do catálogo; a alça permite reabri-lo. |
+| Procurar equipamentos | Busque por nome, função, conector ou sinal. |
+| Ajustar knobs e faders | Arraste; controles compatíveis aceitam teclado e mostram o valor durante o ajuste. |
+| Selecionar vários | **Shift + clique/arraste**; **Ctrl/Cmd + A** seleciona todos quando o foco está na montagem. |
+| Navegar na montagem | Use zoom, **Centralizar** e **Ajustar para exibir tudo**. |
+| Desfazer/refazer movimento | Use as setas da barra ou **Ctrl/Cmd + Z** / **Ctrl/Cmd + Shift + Z**. Esse histórico é de posições. |
+| Organizar cabos | Selecione um cabo para ajustar etiqueta, cor, visibilidade e folga. Ocultar não corta o áudio. |
 
-**Caixas ativas** têm amplificação própria e recebem sinal de linha. **Caixas passivas** precisam de uma saída amplificada. O formato do plugue, sozinho, não garante que os sinais sejam compatíveis.
+Os controles de ajuste usam passos discretos; seletores e sintonia têm escalas próprias. **Restaurar Configurações** aparece nos aparelhos com ajustes restauráveis. Nas potências, o ganho padrão é **5/10**; projetos com ganhos próprios preservam seus valores. Isso não significa metade da potência nominal em watts.
 
-As caixas passivas de três vias, disponíveis em acabamentos preto e laranja, exibem tweeter, dois transdutores de médios e woofer, além de crossover passivo interno. Conecte **SPEAKER OUT** do amplificador à entrada **SPEAKER IN** da caixa por fio.
+### Celulares e tablets
 
-Os rótulos acessíveis dos conectores identificam direção, conector, canal e sinal em um formato consistente. Observe os avisos apresentados ao conectar equipamentos. O simulador pode alertar ou bloquear ligações inadequadas e representar sobrecarga, proteção e danos simulados; a barreira física do plugue continua ativa.
+Os ícones **Equipamentos** e **Propriedades** abrem gavetas sobre a montagem. Feche pelo botão fixo ou tocando fora. Em telas estreitas, deslize a barra superior horizontalmente. Use dois dedos para mover/ampliar o canvas; pressione e segure antes de mover um aparelho, ou ative **Modo Touch** para arraste imediato.
 
-## Operando os aparelhos
+<img src="docs/images/painel-mobile.png" alt="Painel de ajustes aberto em celular, com nome do integrado e botão para ocultar propriedades" width="320">
 
-- **Selecione um equipamento** para abrir seus ajustes no painel lateral.
-- **Arraste os knobs e faders** para ajustar volume, ganho, tonalidade e outros parâmetros. Os knobs de ajuste mantêm dez passos fixos, com rotação suave entre eles e valor numérico durante a interação. Seletores e sintonia preservam seus passos específicos. Os controles compatíveis também respondem ao teclado quando estão em foco.
-- **Escolha a entrada correta** em receivers, integrados e seletores. Nos modelos com botões iluminados, a luz identifica a opção selecionada.
-- **Experimente os equalizadores** para modificar graves, médios e agudos. Cada fader atua na frequência indicada abaixo dele.
-- **Use mixers e seletores** para combinar fontes ou comparar caminhos de áudio.
-- **Observe os medidores dos aparelhos** e os indicadores para acompanhar a atividade do sinal.
+### Ruído, assinatura sonora e comparação
 
-A busca do catálogo também encontra equipamentos por função, conector ou tipo de sinal, como **entrada óptica** ou **caixa passiva**. Em **Configurações**, você pode desativar os avisos de compatibilidade e a ajuda contextual para experimentar ligações incorretas; essa opção não remove as barreiras físicas entre plugues incompatíveis. Com a ajuda ativa, as dicas de mouseover aparecem após um segundo sobre o item; ao navegar pelo teclado, elas aparecem ao focar o controle.
+Nos toca-discos, os quatro ícones de **Ruído do vinil** escolhem sem ruído, baixo, médio ou alto. No tape deck, **Ruído de fita** usa os mesmos quatro níveis; as três ondas em **Oscilação da fita** escolhem baixa, média ou alta. O botão ativo fica iluminado e os nomes aparecem nas dicas e na navegação acessível.
 
-O painel de **Propriedades** usa espaçamento compacto para facilitar a navegação por aparelhos com muitos controles. O inspetor permanece nesse modo também em telas menores.
+![Painel do tape deck com os ícones de ruído e oscilação da fita](docs/images/tape-controles.png)
 
-No desktop, use as setas dos cabeçalhos para recolher ou expandir as laterais. Os menus deslizam para fora da tela sem comprimir seu conteúdo e deixam uma alça visível para reabri-los.
+Nos fones e caixas com **Assinatura sonora**, os indicadores resumem a mesma curva do gráfico: graves em **60–200 Hz**, médios em **300–2.500 Hz** e agudos em **5.000–12.000 Hz**. O centro é neutro entre **−1 e +1 dB**; recuo/realce forte começa em **4 dB** de desvio. Um pico localizado pode diferir da média da faixa. A redução global de volume para reservar margem não desloca os indicadores.
 
-As listas de equipamentos e propriedades mantêm a rolagem com toque e também oferecem suavidade, inércia e retorno elástico dos itens nas bordas ao usar a roda do mouse. Ao rolar o catálogo de equipamentos, um som leve de engrenamento acompanha a velocidade e a desaceleração da lista. Ele respeita o volume dos sons de interação e pode ser silenciado em **Configurações**.
+![Exemplo: realce dos agudos da Bookshelf · Tweeter Superior, coerente com a curva](docs/images/assinatura-agudos.png)
 
-Em **Comportamento sonoro**, as bolinhas comparam graves, agudos, saturação e harmônicos pares entre os modelos de amplificação. A bolinha preenchida indica a posição na escala, e o centro representa a resposta neutra em graves e agudos. Os limites são os mesmos para todos os aparelhos; os indicadores descrevem o perfil base da simulação.
+Em amplificadores, **Comportamento sonoro** usa outra escala: compara o perfil base de graves, agudos, saturação e harmônicos pares. Para comparar saídas, mantenha níveis próximos e use **SOLO** e **MUTE** no painel de escuta. A assinatura é um perfil tonal do modelo; o espectro mostra o conteúdo do sinal naquele ponto.
 
-Em **Assinatura sonora**, nos fones e caixas, os indicadores de graves, médios e agudos usam a média em dB da mesma curva exibida no gráfico: **60–200 Hz**, **300–2.500 Hz** e **5.000–12.000 Hz**, respectivamente. A bolinha central significa resposta neutra entre **−1 e +1 dB**; fora desse intervalo há recuo ou realce leve, tornando-se forte a partir de **4 dB** de desvio. Um pico ou vale localizado pode diferir da média da faixa. A redução global de volume usada para reservar margem de áudio não altera o gráfico nem os indicadores.
+## Guias por assunto
 
-O botão **Restaurar Configurações** aparece apenas nos modelos com ajustes restauráveis. Alguns ajustes aparecem apenas no painel lateral. Na **Potência · Visor Circular**, por exemplo, os ganhos A/B são ajustados por esse painel.
+| Guia da wiki | Conteúdo |
+| --- | --- |
+| [Fontes de áudio](https://github.com/gperegr/AudioSystem/wiki/Fontes-de-audio) | Toca-discos articulados e tangencial, tape, CD, streamer, rádio e Bluetooth virtual |
+| [Amplificação](https://github.com/gperegr/AudioSystem/wiki/Amplificacao) | Prés, integrados, receivers, potências e saídas de fones |
+| [Caixas, subwoofers e fones](https://github.com/gperegr/AudioSystem/wiki/Caixas-subwoofers-e-fones) | Ativos/passivos, grades, modelos de fones e impedância |
+| [Assinatura sonora](https://github.com/gperegr/AudioSystem/wiki/Assinatura-sonora) | Referência de 0 dB, indicadores, faixas e exemplos visuais |
+| [Processadores](https://github.com/gperegr/AudioSystem/wiki/Processadores-de-audio) | EQ de sete bandas, mixers e crossovers |
+| [Seletores e adaptadores](https://github.com/gperegr/AudioSystem/wiki/Seletores-e-adaptadores) | Caminhos A/B, matriz e conversão de níveis |
+| [Geradores e medidores](https://github.com/gperegr/AudioSystem/wiki/Geradores-e-medidores) | Senoide, varredura, ruído rosa e medições do sinal |
+| [Configurações e projetos](https://github.com/gperegr/AudioSystem/wiki/Configuracoes-e-projetos) | Móveis, bancada, apresentação, áudio, salvamento e exportação |
 
-Os toca-discos de braço articulado são vistos de frente, com o prato e o disco em perfil e o braço visível acima deles. O slider **PITCH**, no painel frontal, ajusta a velocidade de reprodução; arraste para alterar e dê duplo clique para zerar. Use o botão **Abrir tampa / Fechar tampa** para movimentar a tampa de acrílico, que abre para trás a partir das dobradiças traseiras.
+Bluetooth e rádio são virtuais; o programa não faz pareamento com aparelhos físicos nem recebe emissoras por uma antena do computador. Compare o mesmo trecho e um componente de cada vez.
 
-O **Toca-discos Tangencial** é visto totalmente de frente, com prato e disco em perfil, carro de leitura linear e os dois braços paralelos vistos pela extremidade. Os comandos ficam na face frontal. No painel lateral, escolha **30 cm · LP**, **17 cm · Single** ou **Sem disco**. **INICIAR** detecta o diâmetro simulado, seleciona **33⅓** ou **45 rpm** e baixa a agulha antes de liberar o áudio; sem disco, retorna ao repouso. As teclas de velocidade permitem alterar a rotação durante a escuta, e os dois ajustes finos frontais guardam correções independentes de até ±3%. **Elevar / baixar agulha** pausa ou retoma a leitura mantendo o prato em movimento. Segure as setas para mover o carro com a agulha elevada; **Shift** acelera o deslocamento. **PARAR**, ou o fim do lado, eleva a agulha, retorna o carro e desliga o motor. A saída oferece **LINE** ou **PHONO**, e a tampa abre para trás. Disco, velocidade, ajustes finos e tampa acompanham o projeto; a reprodução é restaurada em repouso.
+## Salvar e compartilhar
 
-Os ponteiros dos medidores respondem com inércia e retorno suave. Os rolos do tape deck giram durante a reprodução, e o prato do toca-discos desacelera gradualmente ao parar. Os movimentos respeitam a preferência de movimento reduzido do sistema ou navegador.
+O salvamento automático usa o armazenamento local, quando disponível. Confira o status na interface; os dados pertencem ao navegador e ao endereço usados.
 
-Os aparelhos Bluetooth representam conexões dentro da simulação; não substituem o pareamento Bluetooth do seu computador ou celular.
+```mermaid
+flowchart LR
+    M["Montagem atual"] -->|"Automático"| N["Armazenamento deste navegador"]
+    M -->|"Exportar projeto"| A["Arquivo com montagem e áudios disponíveis"]
+    A -->|"Abrir projeto"| R["Montagem restaurada · fontes pausadas"]
+```
 
-Em **Fones de Ouvido**, o **Kuba Disco 2** é visto totalmente de frente, no mesmo suporte de madeira dos demais fones, e reproduz o arco clássico de madeira laminada, as regulagens laterais com trilhos que seguem a curvatura do arco e encaixes alinhados ao centro das conchas, as conchas com relevos concêntricos e as almofadas XL costuradas. Selecione o fone para escolher **Tauari**, **Nogueira** ou **Ébano** em **Madeira do arco**; o acabamento acompanha o projeto salvo. Conecte uma saída de fones ao **P2 na ponta do cabo**, abaixo do divisor em Y. A escuta desse modelo não acrescenta coloração tonal e não pretende reproduzir medições acústicas do produto real.
+**Exportar projeto** baixa uma cópia com posições, cabos, ajustes e músicas disponíveis. **Abrir projeto** substitui a montagem atual; exporte antes o que quiser preservar. Limpar dados, mudar de navegador/endereço ou usar navegação privada pode impedir recuperar o salvamento local. Exporte os projetos importantes.
 
-Os fones usam uma vista frontal com conchas em perfil e almofadas voltadas para dentro, mantendo proporções compactas no suporte de madeira. Cada modelo tem construção própria: arco duplo e tecido no **Studio**, madeira e couro marrom no **Clássico Vinyl**, couro com pregas e hastes articuladas no **Monitor**, alumínio e malha no **Max**, aros e almofadas segmentadas no **Aberto · Anelar**, colmeias e suspensão no **Aberto · Cúpula**, grades horizontais e arco acolchoado no **Planar**.
+## Se não houver som
 
-Nos modelos com fio, a conexão fica na ponta do cabo, abaixo do divisor em Y: **P10** no **Over-Ear** e **P2** nos demais. **Over-Ear**, **Studio** e **Max** também permitem parear Bluetooth; o **Max** usa exclusivamente essa conexão sem fio.
+1. Clique/toque na aplicação e inicie a fonte; projetos restaurados começam pausados.
+2. Confira o volume de mídia, a saída do dispositivo e se a aba está silenciada.
+3. Verifique alimentação, volume/ganho, entrada selecionada, SOLO e MUTE.
+4. Siga a cadeia da fonte à escuta, conferindo L/R, tipo de sinal e avisos de carga.
+5. Para música própria, teste outro arquivo compatível, como MP3 ou WAV.
 
-O **Streamer Integrado**, em **Amplificadores integrados**, reúne uma fonte interna e amplificação nominal de **40 W por canal / 8 Ω** na simulação. A tela mostra faixa, artista, álbum e capa quadrada de arquivos MP3/FLAC quando esses metadados estão disponíveis, além do progresso, tempo, fonte e volume. Os dados de reprodução PCM correspondem ao áudio decodificado pelo navegador. O menu frontal alterna **Música** e **Linha**, com ícones e legendas centralizados. Em **Linha**, dois espectros coloridos mostram as frequências reais das entradas **L** e **R** de forma independente. Os controles permitem reproduzir, pausar e avançar ou retroceder 10 segundos. O botão de play mantém o triângulo fixo e se ilumina durante a reprodução. O aparelho é visto totalmente de frente; o disco superior iluminado aparece em perfil, com ranhuras e indicador que acompanham a rotação, em uma camada atrás do housing e da face frontal, que encobrem sua parte inferior. O conjunto completo, incluindo botão e pés, respeita a altura alta de 240 px. Ele ajusta o volume em dez passos; o duplo clique silencia. As saídas **SPEAKERS L/R** alimentam caixas passivas, **PRE OUT** tem volume variável e conectar **fones P2** silencia as caixas. A fonte interna usa demonstração ou música própria carregada; a entrada **LINE IN** recebe outra fonte por RCA.
+No Safari de iPhone/iPad, toque em Reproduzir. Ao voltar de outra aba, a sessão já ativada tenta retomar; se necessário, toque novamente. Veja [Problemas frequentes](https://github.com/gperegr/AudioSystem/wiki/Problemas-frequentes).
 
-O **Integrado · Essencial** tem acabamento cinza-oliva, controles de plástico e amplificação nominal de **20 W por canal / 8 Ω**. Selecione **AUX**, **TUNER**, **TAPE** ou **PHONO** e use volume, balanço, graves e agudos. **TONE DEFEAT** ignora os ajustes de tonalidade, **LOUDNESS** reforça discretamente os extremos em volumes baixos e **MONO** combina os canais. Os pequenos LEDs indicam a potência simulada entregue às caixas.
+## Desenvolvimento e referências
 
-O **Pré · Precisão** oferece quatro entradas de linha e **LINE OUT** para uma potência ou caixas ativas. O modulômetro mede as saídas reais em **dBFS**, com agulha preta para L e vermelha para R, ambas com inércia. A chave **GAIN** alterna **0, +6 e +12 dB**; as demais chaves controlam **MUTE**, **MONO** e **PHASE** (inversão de polaridade). Seleção rotativa, volume e balanço também são funcionais. Esses ajustes acompanham o projeto salvo e podem ser restaurados pelo painel lateral.
+A aplicação é composta de HTML, CSS e JavaScript; os testes abaixo exigem Node.js, sem dependências adicionais:
 
-O **Pré · Vidro Clássico** combina vidro preto, inscrições verdes discretas, laterais de alumínio escovado, knobs prateados canelados e oito alavancas metálicas. O seletor escolhe **AUX**, **TUNER**, **TAPE** ou **PHONO**; PHONO aplica ganho e equalização RIAA. **LINE OUT** tem volume variável e alimenta uma potência ou caixas ativas. Graves, agudos e balanço são funcionais. **MONO** combina os canais, **PHASE** inverte a polaridade e **MUTE** silencia. **LOW FILTER** atenua abaixo de **35 Hz**, **HIGH FILTER** acima de **7 kHz** e **LOUDNESS** reforça graves e agudos em volumes baixos. **TONE DEFEAT** ignora os ajustes de graves/agudos, mantendo filtros e loudness. Seleção, knobs e chaves acompanham o projeto salvo e o comando de restaurar configurações. A coloração suave é uma interpretação sonora da simulação.
+```sh
+node --check script.js
+node --test tests/*.test.cjs
+```
 
-## Organizando a montagem
+A suíte cobre ativação/retomada do áudio, movimento de grupos em móveis e coerência dos indicadores de assinatura sonora. Consulte [modelo de sinais e limites elétricos](REVISAO-SINAIS.md), [biblioteca de controles](COMPONENTES.md) e [fontes dos equipamentos](assets/fonts/README.md).
 
-No catálogo, a **Caixa Passiva Moderna** e a **Caixa Passiva Vintage** ficam em **Caixas Passivas · Bookshelf**, junto aos demais modelos dessa categoria.
-
-Arraste os equipamentos pela área de trabalho: eles acompanham o cursor com uma sombra discreta. Em telas de toque, pressione e segure um equipamento por um instante antes de arrastá-lo; isso evita mover aparelhos ao passar fios sobre eles. O zoom pela roda do mouse preserva o ponto sob o cursor. Use **Centralizar** e **Ajustar para exibir tudo** para navegar com transições suaves; um novo gesto interrompe o movimento.
-
-Para selecionar vários aparelhos, use **Shift + clique** ou **Shift + arraste**. **Ctrl/Cmd + A** seleciona todos os equipamentos quando o foco está na área de montagem.
-
-Na categoria **Móveis**, adicione racks, nichos ou a **Mesa de Áudio** e posicione os aparelhos nas prateleiras ou no tampo. **Rack de Áudio** e **Rack com 6 Prateleiras** têm vãos livres de 194 px para equipamentos baixos e médios; **Rack com Vãos Altos** tem quatro vãos de 244 px; **Rack com Vãos Altos · 6 Prateleiras** oferece seis vãos nessa altura para equipamentos médios e altos. Os móveis não atraem os aparelhos magneticamente: você pode manter o espaço desejado para os pezinhos, respeitando a grade de posicionamento. Ao arrastar um móvel, os aparelhos dentro dos vãos ou apoiados nele, com contato ou espaço de até 20 px, acompanham o movimento, assim como toda a pilha acima deles. As distâncias entre os itens são preservadas, inclusive nos limites da área de trabalho. Os equipamentos compatíveis exibem pezinhos automáticos apenas quando há um pequeno espaço até a base de apoio. Ao encostar na base, os pezinhos automáticos desaparecem; ficam sempre atrás do aparelho, sem animação de descida. Nos toca-discos, o apoio automático se liga diretamente ao gabinete, sem deixar um vão acima dos pés.
-
-Selecione a **Mesa de Áudio** e, no painel lateral, abra **Ambiente da bancada**. Escolha a superfície **Madeira**, **Feltro** ou **Estúdio**, ative ou oculte o **Painel acústico** e combine os objetos opcionais: **Discos**, **Capas**, **CDs** e **Luminária**. Os acessórios incluem um LP com capa em proporção correspondente, CD em estojo transparente e luminária articulada. Essas escolhas acompanham o projeto salvo e exportado.
-
-## Experimentar a montagem
-
-Para explorar um componente de cada vez, comece com uma fonte, um amplificador e um par de caixas. Depois acrescente um equalizador, compare seletores ou experimente um subwoofer. O gerador de sinais e os medidores ajudam a investigar o comportamento da montagem.
-
-Novas montagens começam com **Luz neutra**, fundo **Sépia** e grade de **Pontos**. A opção **Luz quente**, em **Configurações → Iluminação**, oferece uma iluminação suave e estável. A iluminação, o fundo, a grade, o zoom e a posição da montagem são lembrados para a próxima visita. Em **Configurações**, você também pode ajustar o volume dos sons de interação e experimentar o **Ambiente sonoro**. Os sons de interação começam em um nível mais alto e podem ser ajustados ou silenciados. Com intensidade zero, a escuta permanece sem a reverberação do ambiente sonoro.
-
-## Salvar, continuar e compartilhar
-
-O programa salva a montagem automaticamente no armazenamento local do navegador, quando esse recurso está disponível. Confira a mensagem de salvamento na interface.
-
-- **Exportar projeto:** baixa uma cópia da montagem, incluindo os arquivos de áudio carregados que estiverem disponíveis. Projetos com músicas podem gerar arquivos grandes.
-- **Abrir projeto:** restaura uma cópia exportada. Essa ação substitui a montagem atual; exporte-a antes se quiser preservá-la.
-
-Ao restaurar uma montagem, as fontes ficam pausadas. Inicie a reprodução quando estiver pronto para ouvir.
-
-O salvamento local pertence ao navegador e ao endereço em que você abriu a aplicação. Ele pode não estar disponível em navegação privada ou ao abrir arquivos locais, e pode ser perdido ao limpar os dados do navegador. **Exporte os projetos que deseja guardar ou compartilhar.**
-
-## Se não estiver saindo som
-
-1. Clique ou toque na aplicação e inicie a reprodução na fonte.
-2. Confira o volume de mídia e a saída de áudio do dispositivo, além de verificar se a aba do navegador está silenciada.
-3. Verifique se os equipamentos estão ligados, com volume ou ganho acima de zero e sem mute ativo.
-4. Confirme a entrada selecionada no amplificador, receiver ou seletor.
-5. Siga o caminho dos cabos: fonte → processamento ou amplificação → caixas ou fones.
-6. Confira os avisos de conexão, os medidores dos aparelhos e os indicadores de sinal.
-7. Se um arquivo não reproduzir, tente outro formato aceito pelo navegador, como MP3 ou WAV.
-
-No Safari do iPhone e iPad, o áudio é ativado por um toque em **Reproduzir**. A aplicação configura a sessão para reprodução de mídia e tenta retomar uma sessão já ativada ao voltar de outra aba ou após desbloquear a tela. Se o sistema exigir uma nova interação, toque em Reproduzir novamente. Abrir ou restaurar um projeto mantém as fontes pausadas.
-
-O desbloqueio usa toque, clique ou teclado, mesmo com os sons de interação desligados. Em versões antigas do iOS sem a API de sessão de áudio, um áudio silencioso local mantém a rota de mídia; ele pausa quando a página fica oculta. A música continua passando pelo circuito Web Audio da montagem.
-
-Para verificar regressões de ativação e retomada, execute `node --test tests/audio-activation.test.cjs` (Node.js, sem dependências adicionais). O agrupamento de móveis e a preservação dos espaços podem ser verificados com `node --test tests/furniture-group.test.cjs`.
-
-## Sobre a simulação
-
-O objetivo é oferecer uma experiência de exploração e aprendizado. Os equipamentos e seus comportamentos são aproximações virtuais; os medidores não representam medições de aparelhos físicos nem o volume acústico real no ambiente.
-
-Use as informações do fabricante e orientação apropriada ao montar um sistema de som real.
-
-Na categoria **Móveis**, os painéis acústicos **Horizontal** e **Vertical** medem **760 × 760 px**, seguindo a largura padrão dos equipamentos. A espuma grafite tem frisos em relevo; na Mesa de Áudio, o painel combina módulos com orientações alternadas. Os painéis ficam atrás dos aparelhos e suas posições acompanham o projeto salvo.
+As [imagens da documentação](docs/images/README.md) são capturas do simulador; os diagramas mostram percursos de sinal. Os modelos são aproximações virtuais: W, Ω, dB e os gráficos não são medições de equipamentos físicos nem previsão do volume acústico na sala. Para um sistema real, consulte as especificações dos fabricantes.

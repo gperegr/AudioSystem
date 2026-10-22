@@ -1,0 +1,8 @@
+flowchart TD
+    E["Sinal de entrada"] --> G["Volume e ganho"]
+    G --> S["Tensão de saída dentro dos limites do modelo"]
+    C["Carga nominal por canal"] --> P["Potência estimada: tensão RMS² / carga"]
+    S --> P
+    C --> V{"Carga abaixo do mínimo?"}
+    V -->|"Sim"| R["Proteção pode silenciar o canal"]
+    V -->|"Não"| N["Operação conforme os limites simulados"]

@@ -1,0 +1,6 @@
+flowchart LR
+    A["Fonte 1"] -->|"Linha · canal 1"| M["Mixer"]
+    B["Fonte 2"] -->|"Linha · canal 2"| M
+    M -->|"Linha L/R"| EQ["Equalizador"]
+    EQ -->|"Linha L/R"| I["Integrado"]
+    I -->|"Amplificado"| C["Caixas passivas"]
