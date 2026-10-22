@@ -2121,7 +2121,7 @@ const Hardware = (() => {
         }
         function listeningInspectorHtml(dev){
             let html='';
-            if(isListeningDevice(dev))html+=`<section class="flex flex-col gap-2 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Escuta desta saída</span><div class="flex gap-2"><button id="listening-solo" class="tt-insp-btn flex-1 ${dev.state.solo?'is-on':''}" aria-pressed="${!!dev.state.solo}">SOLO</button><button id="listening-mute" class="tt-insp-btn flex-1 ${dev.state.muted?'is-on':''}" aria-pressed="${!!dev.state.muted}">MUTE</button></div><button id="clear-listening" class="tt-insp-btn">LIMPAR SOLO E MUTE</button><p class="text-xs text-gray-400">Solo mantém apenas as saídas selecionadas e suas cadeias audíveis. Mute silencia esta saída, preservando cabos e reprodução.</p></section>`;
+            if(isListeningDevice(dev))html+=`<section class="listening-output-controls flex flex-col gap-2 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Escuta desta saída</span><div class="flex gap-2"><button id="listening-solo" class="tt-insp-btn flex-1 ${dev.state.solo?'is-on':''}" aria-label="Solo" aria-pressed="${!!dev.state.solo}"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v18m-5-4V7m10 10V7M3 10v4m18-4v4"/></svg><span>SOLO</span></button><button id="listening-mute" class="tt-insp-btn flex-1 ${dev.state.muted?'is-on':''}" aria-label="Mute" aria-pressed="${!!dev.state.muted}"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4zM16 9l5 6m0-6-5 6"/></svg><span>MUTE</span></button></div></section>`;
             if(HEADPHONE_OUTPUT_SPECS[dev.type]){const spec=HEADPHONE_OUTPUT_SPECS[dev.type];html+=`<section class="headphone-output-specs" aria-label="Saída de fones"><div class="headphone-output-heading"><span>Saída de fones</span><span aria-hidden="true">♫</span></div><dl><div><dt>Tensão máx.</dt><dd>${spec.voltsRms} V RMS</dd></div><div><dt>Corrente · canal</dt><dd>${Math.round(spec.currentRms*1000)} mA RMS</dd></div><div><dt>Resistência saída</dt><dd>${spec.outputOhms} Ω</dd></div></dl></section>`;}
             if(HP_TYPES.has(dev.type)&&dev.type!=='hpMax')html+=`<p class="text-sm text-gray-300">Impedância fixa: ${dev.state.headphoneOhms} Ω. A impedância, a resistência de saída e os limites de tensão/corrente do amplificador afetam o sinal.</p>`;
             const amp=POWER_OUTPUT_TYPES.has(dev.type),passive=isPassiveLoad(dev);
@@ -2140,9 +2140,6 @@ const Hardware = (() => {
                 document.getElementById(key==='solo'?'listening-solo':'listening-mute')?.addEventListener('click',()=>{
                     dev.state[key]=!dev.state[key];updateListeningControls();selectDevice(dev.id,true);
                 });
-            });
-            document.getElementById('clear-listening')?.addEventListener('click',()=>{
-                Object.values(state.devices).forEach(item=>{item.state.solo=false;item.state.muted=false;});updateListeningControls();selectDevice(dev.id,true);
             });
             updateListeningControls();
         }
