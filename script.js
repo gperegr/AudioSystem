@@ -1333,7 +1333,8 @@ const Hardware = (() => {
         const canvas = document.getElementById('canvas');
         const world = document.getElementById('audio-world');
         const ROOM_SIDE_INSET=202;
-        const ROOM_FLOOR_OVERLAP=196;
+        const ROOM_FLOOR_OVERLAP=180;
+        const floorPlacementBottom=()=>Math.floor((world.offsetHeight-ROOM_FLOOR_OVERLAP)/Hardware.sizes.grid)*Hardware.sizes.grid;
         document.documentElement.classList.add('lighting-demo-enabled');
         const roomBackdrop=document.createElement('div');roomBackdrop.id='room-backdrop';roomBackdrop.setAttribute('aria-hidden','true');
         roomBackdrop.innerHTML=['far','mid','near'].map(layer=>`<img class="room-scene-image room-layer-${layer}" data-room-layer="${layer}" alt="" draggable="false">`).join('')+'<i class="room-depth-room"></i><i class="room-side-wall wall-left"></i><i class="room-side-wall wall-right"></i><i class="room-grid-overlay"></i>';
@@ -1352,7 +1353,7 @@ const Hardware = (() => {
             if(theme==='scene')Object.values(state.devices).forEach(dev=>{
                 if(dev.type==='lightPoint')return;
                 dev.el.style.left=Math.max(ROOM_SIDE_INSET,Math.min(world.offsetWidth-dev.el.offsetWidth-ROOM_SIDE_INSET,dev.el.offsetLeft))+'px';
-                dev.el.style.top=Math.max(0,Math.min(world.offsetHeight-(canvas.dataset.floor==='none'?0:ROOM_FLOOR_OVERLAP)-dev.el.offsetHeight,dev.el.offsetTop))+'px';
+                dev.el.style.top=Math.max(0,Math.min(canvas.dataset.floor==='none'?world.offsetHeight-dev.el.offsetHeight:floorPlacementBottom()-dev.el.offsetHeight,dev.el.offsetTop))+'px';
             });
             document.querySelector('.canvas-tools').dataset.theme=theme;
             document.getElementById('canvas-theme').value=theme;
@@ -1936,7 +1937,7 @@ const Hardware = (() => {
             Hardware.updateLightingDemo();
         }
         const STACK_FEET=Object.freeze({width:22,height:20,insetRatio:.1});
-        const maxEquipmentBottom=()=>world.offsetHeight-(canvas.dataset.theme!=='scene'||canvas.dataset.floor==='none'?0:ROOM_FLOOR_OVERLAP);
+        const maxEquipmentBottom=()=>canvas.dataset.theme==='scene'&&canvas.dataset.floor!=='none'?floorPlacementBottom():world.offsetHeight;
         const sceneSideInset=()=>canvas.dataset.theme==='scene'?ROOM_SIDE_INSET:0;
         function snapOnEquipment(dev,x,y){
             if(FURNITURE_TYPES[dev.type])return{x,y};
@@ -8213,7 +8214,10 @@ const Hardware = (() => {
                     ids.set(saved.id,dev.id);restored.push([saved,dev]);
                     const inset=dev.type==='lightPoint'?0:sceneSideInset(),bottom=dev.type==='lightPoint'?world.offsetHeight:maxEquipmentBottom();
                     if(saved.x>=inset&&saved.x+dev.el.offsetWidth<=world.offsetWidth-inset)dev.el.style.left=`${saved.x}px`;
-                    if(saved.y>=0&&saved.y+dev.el.offsetHeight<=bottom)dev.el.style.top=`${saved.y}px`;
+                    if(saved.y>=0&&saved.y+dev.el.offsetHeight<=bottom){
+                        const oldFloorBottom=world.offsetHeight-196;
+                        dev.el.style.top=canvas.dataset.theme==='scene'&&canvas.dataset.floor!=='none'&&Math.abs(saved.y+dev.el.offsetHeight-oldFloorBottom)<1?`${bottom-dev.el.offsetHeight}px`:`${saved.y}px`;
+                    }
                     applySavedDevice(dev,saved);
                     dev.fileName=typeof saved.fileName==='string'?saved.fileName:'';dev.trackTitle=typeof saved.trackTitle==='string'?saved.trackTitle:'';
                     if(saved.mediaKey){
