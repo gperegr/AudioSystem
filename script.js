@@ -1340,6 +1340,8 @@ const Hardware = (() => {
         roomBackdrop.innerHTML=['far','mid','near'].map(layer=>`<img class="room-scene-image room-layer-${layer}" data-room-layer="${layer}" alt="" draggable="false">`).join('')+'<i class="room-depth-room"></i><i class="room-side-wall wall-left"></i><i class="room-side-wall wall-right"></i><i class="room-grid-overlay"></i>';
         const windowLayers=document.createElement('div');windowLayers.className='room-window-layers';
         roomBackdrop.appendChild(windowLayers);
+        const roomMotes=document.createElement('div');roomMotes.className='room-motes';roomMotes.setAttribute('aria-hidden','true');
+        roomBackdrop.appendChild(roomMotes);
         world.prepend(roomBackdrop);
         const floorShadows=document.createElement('canvas');floorShadows.className='room-floor-shadows';floorShadows.setAttribute('aria-hidden','true');
         world.insertBefore(floorShadows,document.getElementById('cables-layer'));
@@ -1379,6 +1381,23 @@ const Hardware = (() => {
         const canvasTimeControl=document.createElement('label');canvasTimeControl.className='canvas-theme-control';
         canvasTimeControl.innerHTML='<span>Hora do dia</span><select id="canvas-time" aria-label="Hora do dia">'+Object.entries(canvasTimeModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
         const roomSceneCache=new Map();
+        function updateRoomMotes(mode,time){
+            const daylight=time==='dawn';
+            roomMotes.innerHTML=RoomScenes.lights(mode,time).map((light,index)=>{
+                const windowLight=light.shape==='rect';
+                const count=windowLight?9:6;
+                const x=(240+light.cx*.8)/24,y=(268+light.cy*.8)/16;
+                const color=light.rgb.join(' ');
+                const strength=Math.min(1,light.strength*(windowLight?(daylight?1.15:time==='night'?.28:.8):.8));
+                const particles=Array.from({length:count},(_,particle)=>{
+                    const seed=index*37+particle*17;
+                    const px=12+(seed*43)%76,py=9+(seed*29)%82;
+                    const size=particle%5===0?3:particle%3===0?2:1.4;
+                    return `<i class="room-mote" style="--mote-x:${px}%;--mote-y:${py}%;--mote-size:${size}px;--mote-delay:-${((seed%41)*.43).toFixed(2)}s;--mote-duration:${(11+seed%9).toFixed(1)}s;--mote-drift:${(seed%2?-1:1)*(13+seed%19)}px"></i>`;
+                }).join('');
+                return `<div class="room-mote-beam ${windowLight?'room-mote-window':'room-mote-lamp'} room-mote-${light.layer||'far'}" style="--beam-x:${x}%;--beam-y:${y}%;--beam-color:${color};--beam-strength:${strength.toFixed(2)}">${particles}</div>`;
+            }).join('');
+        }
         function setCanvasBackdrop(mode){
             mode=legacyBackdrops[mode]||mode;
             mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studio';state.canvasBackdrop=mode;canvas.dataset.backdrop=mode;canvasBackdropControl.querySelector('select').value=mode;
@@ -1397,6 +1416,7 @@ const Hardware = (() => {
                 windowLayers.dataset.scene=mode;windowLayers.dataset.time=state.canvasTime;
             }
             state.canvasFloor=RoomScenes.scenes[mode].floor;canvas.dataset.floor=state.canvasFloor;
+            updateRoomMotes(mode,state.canvasTime);
             Hardware.updateLightingDemo();
         }
         function setCanvasTime(time){
