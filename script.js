@@ -1510,6 +1510,11 @@ const Hardware = (() => {
         view.y=Math.min(0,canvas.clientHeight-world.offsetHeight*view.zoom);
         const snapCoordinate = value => Math.round(value / Hardware.sizes.grid) * Hardware.sizes.grid;
         let viewAnimation=0;
+        let viewLightingTimer=0;
+        function scheduleViewLighting(){
+            clearTimeout(viewLightingTimer);
+            viewLightingTimer=setTimeout(()=>{viewLightingTimer=0;Hardware.updateLightingDemo();},120);
+        }
         function stopViewMotion(){cancelAnimationFrame(viewAnimation);viewAnimation=0;}
         function animateViewTo(target){
             stopViewMotion();
@@ -1526,8 +1531,10 @@ const Hardware = (() => {
             view.zoom = clampZoom(view.zoom);
             view.x = Math.max(Math.min(0, canvas.clientWidth - world.offsetWidth * view.zoom), Math.min(0, view.x));
             view.y = Math.max(Math.min(0, canvas.clientHeight - world.offsetHeight * view.zoom), Math.min(0, view.y));
-            world.style.setProperty('--canvas-zoom', view.zoom);
-            world.style.setProperty('--canvas-inverse-zoom', 1 / view.zoom);
+            if(world.style.getPropertyValue('--canvas-zoom')!==String(view.zoom)){
+                world.style.setProperty('--canvas-zoom', view.zoom);
+                world.style.setProperty('--canvas-inverse-zoom', 1 / view.zoom);
+            }
             const farX=Math.max(-90,Math.min(90,-view.x/view.zoom*.09)),farY=Math.max(-55,Math.min(55,-view.y/view.zoom*.06));
             const farScale=Math.max(.9,Math.min(1.08,1-(view.zoom-1)*.08));
             const floorScale=Math.max(.94,Math.min(1.04,1-(view.zoom-1)*.04));
@@ -1537,7 +1544,8 @@ const Hardware = (() => {
             world.style.setProperty('--floor-parallax-scale',floorScale.toFixed(3));
             world.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.zoom})`;
             document.getElementById('zoom-label').textContent = `${Math.round(view.zoom * 100)}%`;
-            updateCables();
+            // Os cabos pertencem ao mundo transformado e acompanham o zoom sem redesenho.
+            scheduleViewLighting();
             scheduleAppPreferencesSave();
         }
         new ResizeObserver(() => {stopViewMotion();applyView();}).observe(canvas);
