@@ -1388,14 +1388,14 @@ const Hardware = (() => {
         function updateRoomMotes(mode,time){
             const daylight=time==='dawn';
             roomMotes.innerHTML=RoomScenes.lights(mode,time).map((light,index)=>{
-                const count=9;
+                const count=32;
                 const x=(240+light.cx*.8)/24,y=(268+light.cy*.8)/16;
                 const color=light.rgb.join(' ');
                 const strength=Math.min(1,light.strength*(daylight?1.15:time==='night'?.28:.8));
                 const particles=Array.from({length:count},(_,particle)=>{
                     const seed=index*37+particle*17;
                     const px=12+(seed*43)%76,py=9+(seed*29)%82;
-                    const size=particle%5===0?3:particle%3===0?2:1.4;
+                    const size=particle%7===0?5:particle%3===0?3.6:2.5;
                     return `<i class="room-mote" style="--mote-x:${px}%;--mote-y:${py}%;--mote-size:${size}px;--mote-delay:-${((seed%41)*.43).toFixed(2)}s;--mote-duration:${(11+seed%9).toFixed(1)}s;--mote-drift:${(seed%2?-1:1)*(13+seed%19)}px"></i>`;
                 }).join('');
                 return `<div class="room-mote-beam room-mote-window" style="--beam-x:${x}%;--beam-y:${y}%;--beam-color:${color};--beam-strength:${strength.toFixed(2)}">${particles}</div>`;
