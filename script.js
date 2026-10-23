@@ -1307,13 +1307,14 @@ const Hardware = (() => {
         function readAppPreferences(){try{const value=JSON.parse(localStorage.getItem(APP_PREFERENCES_KEY)||'{}');return value&&typeof value==='object'?value:{};}catch{return {};}}
         const savedAppPreferences=readAppPreferences();
         let connectionGuidanceEnabled=savedAppPreferences.connectionGuidanceEnabled!==false;
+        let developerModeEnabled=savedAppPreferences.developerMode===true;
         let appPreferencesSaveTimer=0;
         function scheduleAppPreferencesSave(){
             clearTimeout(appPreferencesSaveTimer);
             appPreferencesSaveTimer=setTimeout(()=>{
                 if(!canvas.clientWidth||!canvas.clientHeight)return;
                 const focusX=(canvas.clientWidth/2-view.x)/view.zoom,focusY=(canvas.clientHeight/2-view.y)/view.zoom;
-                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,backdrop:state.canvasBackdrop,time:state.canvasTime,connectionGuidanceEnabled,zoom:view.zoom,focusX,focusY}));}catch{}
+                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,backdrop:state.canvasBackdrop,time:state.canvasTime,connectionGuidanceEnabled,developerMode:developerModeEnabled,zoom:view.zoom,focusX,focusY}));}catch{}
             },450);
         }
         const appDialog=document.getElementById('app-confirm-dialog');
@@ -3972,6 +3973,8 @@ const Hardware = (() => {
         // Keep future, uncategorized equipment visible until it receives a dedicated group.
         appendCatalogGroup('Outros equipamentos',catalogItems.filter(item=>!catalogAssigned.has(item)));
         previousCatalogSections.forEach(section=>section.remove());
+        const debugCatalogSection=[...catalogContainer.querySelectorAll('.catalog-category')].find(section=>section.querySelector('[data-template="hardwareDemo"]'));
+        debugCatalogSection.hidden=!developerModeEnabled;
         document.querySelectorAll('.catalog-item[data-template]').forEach(item => {
             const oldIcon = item.firstElementChild;
             if (oldIcon) oldIcon.outerHTML = catalogIcon(item.dataset.template);
@@ -4051,6 +4054,7 @@ const Hardware = (() => {
             const terms = normalizeSearch(equipmentSearch.value).split(/\s+/).filter(Boolean);
             let total = 0;
             catalogSections.forEach(section => {
+                if(section===debugCatalogSection&&!developerModeEnabled){section.hidden=true;return;}
                 let visible = 0;
                 section.querySelectorAll('.catalog-item').forEach(item => {
                     const text = catalogSearchText(item);
@@ -8391,6 +8395,9 @@ const Hardware = (() => {
         const connectionHelpSetting=document.createElement('label');connectionHelpSetting.className='connection-help-setting';connectionHelpSetting.innerHTML='<input id="connection-help-enabled" type="checkbox"><span><strong>Orientação de conexões</strong><small>Mostra dicas e impede ligações incompatíveis. Desative para permitir erros quando os plugues encaixarem.</small></span>';
         const connectionHelpCheckbox=connectionHelpSetting.querySelector('input');connectionHelpCheckbox.checked=connectionGuidanceEnabled;themeSection.appendChild(connectionHelpSetting);
         connectionHelpCheckbox.addEventListener('change',()=>{connectionGuidanceEnabled=connectionHelpCheckbox.checked;hideContextHelp();updatePortGuidance(true);scheduleAppPreferencesSave();});
+        const developerModeSetting=document.createElement('label');developerModeSetting.className='connection-help-setting';developerModeSetting.innerHTML='<input id="developer-mode-enabled" type="checkbox"><span><strong>Modo desenvolvedor</strong><small>Mostra a categoria DEBUG e os modelos de teste no catálogo.</small></span>';
+        const developerModeCheckbox=developerModeSetting.querySelector('input');developerModeCheckbox.checked=developerModeEnabled;themeSection.appendChild(developerModeSetting);
+        developerModeCheckbox.addEventListener('change',()=>{developerModeEnabled=developerModeCheckbox.checked;equipmentSearch.dispatchEvent(new Event('input'));scheduleAppPreferencesSave();});
         clearCatalogFooter.insertBefore(themeSection,soundControls);
         setCanvasTheme(state.canvasTheme);
 
