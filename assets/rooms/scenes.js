@@ -2,10 +2,11 @@
 (function () {
     'use strict';
 
+    // Horizon positions use the images' equivalent 720 px height; rendering aligns each one to y=550.
     const scenes=Object.freeze({
-        studio:{image:'studio',floor:'carpet',windows:[{x:1200,y:520,w:900,h:250}]},
-        listening:{image:'listening',floor:'wood',windows:[{x:90,y:450,w:420,h:650}]},
-        loft:{image:'loft',floor:'concrete',windows:[{x:185,y:470,w:590,h:650},{x:1200,y:470,w:590,h:650},{x:2215,y:470,w:590,h:650}]}
+        studio:{image:'studio',floor:'carpet',horizon:{dawn:544,dusk:543,night:543},windows:[{x:1200,y:520,w:900,h:250}]},
+        listening:{image:'listening',floor:'wood',horizon:{dawn:557,dusk:557,night:557},windows:[{x:90,y:450,w:420,h:650}]},
+        loft:{image:'loft',floor:'concrete',horizon:{dawn:536,dusk:536,night:532},windows:[{x:185,y:470,w:590,h:650},{x:1200,y:470,w:590,h:650},{x:2215,y:470,w:590,h:650}]}
     });
     const times=Object.freeze({
         dawn:{rgb:[255,222,177],strength:1.1},

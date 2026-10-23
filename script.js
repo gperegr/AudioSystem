@@ -815,6 +815,7 @@ const Hardware = (() => {
     let floorShadowKey='';
     function positionedSceneLights(scene,time,world){
         const imageDrop=parseFloat(world.style.getPropertyValue('--room-image-drop'))||0;
+        const horizonShift=parseFloat(world.style.getPropertyValue('--room-horizon-shift'))||0;
         return RoomScenes.lights(scene,time).map(source=>{
             const depth=source.layer==='near'?'near':source.layer==='mid'?'mid':'far';
             const farX=parseFloat(world.style.getPropertyValue(`--room-${depth}-x`))||0;
@@ -822,7 +823,7 @@ const Hardware = (() => {
             const scale=parseFloat(world.style.getPropertyValue(`--room-${depth}-scale`))||1;
             const rawX=world.offsetWidth*(-.06+1.12*(240+source.cx*.8)/2400);
             const rawY=world.offsetHeight*(-.1+1.1*(268+source.cy*.8)/1600);
-            return {...source,x:world.offsetWidth/2+(rawX-world.offsetWidth/2)*scale+farX,y:world.offsetHeight+(rawY-world.offsetHeight)*scale+farY+imageDrop,width:source.w*.8*1.12*world.offsetWidth/2400*scale,height:source.h*.8*1.1*world.offsetHeight/1600*scale,reach:2100*world.offsetWidth/2736};
+            return {...source,x:world.offsetWidth/2+(rawX-world.offsetWidth/2)*scale+farX,y:world.offsetHeight+(rawY-world.offsetHeight)*scale+farY+imageDrop+horizonShift,width:source.w*.8*1.12*world.offsetWidth/2400*scale,height:source.h*.8*1.1*world.offsetHeight/1600*scale,reach:2100*world.offsetWidth/2736};
         });
     }
     function positionedObjectLights(world){
@@ -1339,6 +1340,7 @@ const Hardware = (() => {
         const world = document.getElementById('audio-world');
         const ROOM_SIDE_INSET=202;
         const ROOM_FLOOR_OVERLAP=180;
+        const ROOM_HORIZON_IMAGE_Y=550;
         const wallPlacementBottom=()=>world.offsetHeight-450;
         const floorPlacementBottom=()=>Math.floor((world.offsetHeight-ROOM_FLOOR_OVERLAP)/Hardware.sizes.grid)*Hardware.sizes.grid;
         document.documentElement.classList.add('lighting-demo-enabled');
@@ -1406,8 +1408,9 @@ const Hardware = (() => {
             mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studio';state.canvasBackdrop=mode;canvas.dataset.backdrop=mode;canvasBackdropControl.querySelector('select').value=mode;
             const image=roomBackdrop.querySelector('.room-scene-image');
             const imageName=RoomScenes.scenes[mode].image+(state.canvasTime==='dusk'?'':'-'+state.canvasTime);
-            const src=`./assets/rooms/${imageName}.webp`;
+            const src=`./assets/rooms/${imageName}.webp?v=aligned-floor`;
             if(image.getAttribute('src')!==src)image.src=src;
+            requestAnimationFrame(applyView);
             state.canvasFloor=RoomScenes.scenes[mode].floor;canvas.dataset.floor=state.canvasFloor;
             updateRoomMotes(mode,state.canvasTime);
             Hardware.updateLightingDemo();
@@ -1538,8 +1541,11 @@ const Hardware = (() => {
             const farX=Math.max(-90,Math.min(90,-view.x/view.zoom*.09)),farY=Math.max(-55,Math.min(55,-view.y/view.zoom*.06));
             const farScale=Math.max(.9,Math.min(1.08,1-(view.zoom-1)*.08));
             const floorScale=Math.max(.94,Math.min(1.04,1-(view.zoom-1)*.04));
+            const scene=RoomScenes.scenes[state.canvasBackdrop];
+            const horizonShift=(ROOM_HORIZON_IMAGE_Y-(scene?.horizon?.[state.canvasTime]??ROOM_HORIZON_IMAGE_Y))*world.offsetHeight*1.1/720*farScale;
             world.style.setProperty('--room-far-x',farX.toFixed(1)+'px');world.style.setProperty('--room-far-y',farY.toFixed(1)+'px');
             world.style.setProperty('--room-far-scale',farScale.toFixed(3));
+            world.style.setProperty('--room-horizon-shift',horizonShift.toFixed(1)+'px');
             world.style.setProperty('--floor-parallax-x',(farX*.28).toFixed(1)+'px');
             world.style.setProperty('--floor-parallax-scale',floorScale.toFixed(3));
             world.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.zoom})`;
