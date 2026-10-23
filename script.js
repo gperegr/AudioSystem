@@ -2727,19 +2727,19 @@ const Hardware = (() => {
             if(!panel){panel=document.createElement('section');panel.id='cable-properties';panel.className='p-5 border-t border-gray-700 flex flex-col gap-3';document.getElementById('inspector').appendChild(panel);}
             const connection=state.selectedConnection;panel.hidden=!connection;
             if(!connection)return;
-            panel.innerHTML='<h3 class="text-sm font-semibold text-gray-200">Organizar cabo</h3><label class="text-sm text-gray-300 flex flex-col gap-2">Etiqueta<input id="cable-label" type="text" maxlength="60" class="p-2 rounded bg-gray-800 border border-gray-600 text-gray-100" placeholder="Ex.: CD → Equalizador"></label><div class="flex flex-col gap-3"><div class="flex items-center justify-between"><span class="text-sm text-gray-300">Cor</span><button id="cable-color-reset" type="button" class="text-xs text-blue-300">Padrão</button></div><div id="cable-color-palette" class="cable-color-palette" role="group" aria-label="Cor do cabo"></div></div><button id="cable-visibility" class="tt-insp-btn"></button><p class="text-xs text-gray-400">Ocultar altera apenas o visual; o áudio continua passando.</p>';
+            panel.innerHTML='<label for="cable-label" class="text-sm text-gray-300">Etiqueta</label><div class="cable-label-row"><input id="cable-label" type="text" maxlength="60" class="p-2 rounded bg-gray-800 border border-gray-600 text-gray-100" placeholder="Nome do cabo"><button id="cable-visibility" type="button" aria-description="Ocultar altera apenas o visual; o áudio continua passando." data-tooltip="Ocultar altera apenas o visual; o áudio continua passando."><svg viewBox="0 0 24 24" aria-hidden="true"><path class="cable-eye-open" d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle class="cable-eye-open" cx="12" cy="12" r="2.8"/><path class="cable-eye-closed" d="M2 13c3-3 6-4 10-4s7 1 10 4M6 16l-2 2m8-1v3m6-4 2 2"/></svg></button></div><div class="flex flex-col gap-3"><div class="flex items-center justify-between"><span class="text-sm text-gray-300">Cor</span><button id="cable-color-reset" type="button" class="text-xs text-blue-300">Padrão</button></div><div id="cable-color-palette" class="cable-color-palette" role="group" aria-label="Cor do cabo"></div></div>';
             const out=document.getElementById(connection.outId),input=document.getElementById(connection.inId);
-            if(out&&input){const info=document.createElement('p');info.className='cable-signal-summary';info.textContent=connection.miswired?'Ligação entre portas da mesma direção. O cabo está encaixado, mas não transporta áudio; há risco de dano em equipamentos reais.':`Transporta ${portSignalLabel(out)} → entrada espera ${portSignalLabel(input)}. ${getPortCompatibility(out,input).reason}`;panel.insertBefore(info,panel.children[1]);}
+            if(out&&input){const info=document.createElement('p');info.className='cable-signal-summary';info.textContent=connection.miswired?'Ligação entre portas da mesma direção. O cabo está encaixado, mas não transporta áudio; há risco de dano em equipamentos reais.':`Transporta ${portSignalLabel(out)} → entrada espera ${portSignalLabel(input)}. ${getPortCompatibility(out,input).reason}`;panel.appendChild(info);}
             const slackControl=document.createElement('div');slackControl.className='flex flex-col gap-3';
             slackControl.innerHTML='<span class="text-sm text-gray-300">Folga</span><div class="grid grid-cols-3 gap-2" role="group" aria-label="Folga do cabo"></div>';
             const slackGroup=slackControl.querySelector('[role="group"]');
             const currentSlack=(connection.slack??5)<=2?0:(connection.slack??5)>=8?10:5;
-            [[0,'Esticado'],[5,'Normal'],[10,'Solto']].forEach(([value,name])=>{
-                const button=document.createElement('button');button.type='button';button.className='tt-insp-btn'+(currentSlack===value?' is-on':'');button.textContent=name;button.setAttribute('aria-pressed',String(currentSlack===value));
+            [[0,'Esticado','M3 11c5 0 13 0 18 0'],[5,'Normal','M3 8c4 0 4 8 9 8s5-8 9-8'],[10,'Solto','M3 5c4 0 3 15 9 15s5-15 9-15']].forEach(([value,name,path])=>{
+                const button=document.createElement('button');button.type='button';button.className='tt-insp-btn cable-slack-choice'+(currentSlack===value?' is-on':'');button.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="3" cy="${value===0?11:value===5?8:5}" r="1.7"/><path d="${path}"/><circle cx="21" cy="${value===0?11:value===5?8:5}" r="1.7"/></svg>`;button.setAttribute('aria-label',name);button.title=name;button.setAttribute('aria-pressed',String(currentSlack===value));
                 button.addEventListener('click',()=>{connection.slack=value;[...slackGroup.children].forEach(item=>{const active=item===button;item.classList.toggle('is-on',active);item.setAttribute('aria-pressed',String(active));});updateCables();scheduleProjectSave();});slackGroup.appendChild(button);
             });panel.appendChild(slackControl);
             const label=panel.querySelector('#cable-label');label.value=connection.label||'';
-            label.addEventListener('input',()=>{connection.label=label.value;applyCableAppearance(connection);});
+            label.addEventListener('input',()=>{connection.label=label.value;document.getElementById('inspector-title').textContent=connection.label||'Cabo';applyCableAppearance(connection);scheduleProjectSave();});
             const colors=[['Vermelho','#ef4444'],['Laranja','#f97316'],['Amarelo','#facc15'],['Verde','#22c55e'],['Azul','#60a5fa'],['Violeta','#a78bfa'],['Branco','#e5e7eb'],['Cinza','#64748b']];
             const palette=panel.querySelector('#cable-color-palette');
             colors.forEach(([name,color])=>{
@@ -2753,8 +2753,8 @@ const Hardware = (() => {
                 palette.appendChild(button);
             });
             panel.querySelector('#cable-color-reset').onclick=()=>{delete connection.color;applyCableAppearance(connection);renderCableProperties();};
-            const visibility=panel.querySelector('#cable-visibility');visibility.textContent='VISIBILIDADE DO CABO';visibility.setAttribute('aria-pressed',String(!connection.hidden));visibility.classList.toggle('is-on',!connection.hidden);
-            visibility.onclick=()=>{connection.hidden=!connection.hidden;applyCableAppearance(connection);renderCableProperties();};
+            const visibility=panel.querySelector('#cable-visibility');const syncVisibility=()=>{visibility.setAttribute('aria-pressed',String(!connection.hidden));visibility.setAttribute('aria-label',connection.hidden?'Mostrar cabo':'Ocultar cabo');};syncVisibility();
+            visibility.onclick=()=>{connection.hidden=!connection.hidden;applyCableAppearance(connection);syncVisibility();scheduleProjectSave();};
         }
 
         function wireSpeakerIn(dev, stereo = false) {
@@ -6810,7 +6810,7 @@ const Hardware = (() => {
         }
 
         function selectDevice(id, preserveSelection = false) {
-            if (id && state.selectedConnection) selectCable(null);
+            if (id && state.selectedConnection) selectCable(null,false);
             disposeSpectrum();
             if (!preserveSelection) state.selectedDeviceIds = new Set(id ? [id] : []);
             state.selectedDeviceId = id;
@@ -7799,10 +7799,12 @@ const Hardware = (() => {
             updatePortGuidance(true);
         }
 
-        function selectCable(connection) {
+        function selectCable(connection,restoreInspector=true) {
             state.selectedConnection?.el?.classList.remove('selected');
             state.selectedConnection = connection || null;
             state.selectedConnection?.el?.classList.add('selected');
+            if(connection){inspectorEmpty.classList.add('hidden');inspectorContent.classList.add('hidden');document.getElementById('inspector-title').textContent=connection.label||'Cabo';}
+            else if(restoreInspector){if(state.selectedDeviceId)selectDevice(state.selectedDeviceId,true);else{inspectorContent.classList.add('hidden');inspectorEmpty.classList.remove('hidden');document.getElementById('inspector-title').textContent='Selecione um equipamento';}}
             renderCableProperties();
             updatePortGuidance();
         }

@@ -4403,3 +4403,20 @@ body.inspector-collapsed #inspector>.inspector-panel-header,body.inspector-colla
 .app-select-room-icon svg {display:block;width:22px;height:22px;}
 .app-select-option:has(.app-select-room-icon) .app-select-option-label {flex:1;min-width:0;}
 .app-select-option[aria-selected="true"] .app-select-room-icon {color:#d2e7f5;}
+
+#cable-properties .cable-label-row {display:flex;align-items:center;gap:8px;min-width:0;}
+#cable-properties .cable-label-row input {flex:1;min-width:0;}
+#cable-properties #cable-visibility {position:relative;flex:none;display:grid;place-items:center;width:38px;height:38px;padding:0;border:1px solid #586879;border-radius:7px;background:#263442;color:#b9d5e5;cursor:pointer;}
+#cable-properties #cable-visibility:hover,#cable-properties #cable-visibility:focus-visible {border-color:#86b4d2;background:#34495a;}
+#cable-properties #cable-visibility:focus-visible {outline:2px solid #93c5fd;outline-offset:2px;}
+#cable-properties #cable-visibility svg {width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+#cable-properties #cable-visibility .cable-eye-open,#cable-properties #cable-visibility .cable-eye-closed {transform-origin:12px 12px;transition:opacity .22s,transform .28s cubic-bezier(.2,.9,.3,1.15);}
+#cable-properties #cable-visibility .cable-eye-closed {opacity:0;transform:scaleY(.25);}
+#cable-properties #cable-visibility[aria-pressed="false"] .cable-eye-open {opacity:0;transform:scaleY(.2);}
+#cable-properties #cable-visibility[aria-pressed="false"] .cable-eye-closed {opacity:1;transform:scaleY(1);}
+#cable-properties #cable-visibility::after {content:attr(data-tooltip);position:absolute;right:0;top:calc(100% + 8px);z-index:5;box-sizing:border-box;width:220px;padding:9px 11px;border:1px solid #61768b;border-radius:7px;background:#1b2834;color:#e3edf5;box-shadow:0 8px 18px #0008;font:500 11px/1.45 "Inter",sans-serif;text-align:left;pointer-events:none;opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .15s,transform .15s,visibility .15s;}
+#cable-properties #cable-visibility:is(:hover,:focus-visible)::after {opacity:1;visibility:visible;transform:translateY(0);}
+#cable-properties .cable-slack-choice {display:grid;place-items:center;min-height:42px;padding:5px;}
+#cable-properties .cable-slack-choice svg {display:block;width:34px;height:25px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;}
+#cable-properties .cable-slack-choice circle {fill:currentColor;stroke:none;}
+@media(prefers-reduced-motion:reduce){#cable-properties #cable-visibility .cable-eye-open,#cable-properties #cable-visibility .cable-eye-closed,#cable-properties #cable-visibility::after {transition:none;}}
