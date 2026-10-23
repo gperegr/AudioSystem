@@ -4362,3 +4362,16 @@ body.inspector-collapsed #inspector>.inspector-panel-header,body.inspector-colla
 @keyframes catalog-amp-pop {0%{opacity:0;transform:scale(.72)}62%{opacity:1;transform:scale(1.075)}82%{transform:scale(.975)}100%{opacity:1;transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){#catalog-amp-tooltip.is-visible {animation:none;transform:scale(1);}}
 .cable-group[data-miswired="true"] .cable-path {stroke-dasharray:6 5;}
+
+/* File action stays beside its name; the lid responds to hover and keyboard focus. */
+#inspector-content .source-file-row {display:flex;align-items:center;gap:8px;min-width:0;}
+#inspector-content .source-file-row #source-file-name {flex:1;min-width:0;margin:0;}
+#inspector-content #source-remove-audio {flex:none;display:grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid #56616d;border-radius:7px;background:#27313b;color:#b8c7d2;cursor:pointer;transition:background .18s,border-color .18s,color .18s,transform .18s;}
+#inspector-content #source-remove-audio[hidden] {display:none;}
+#inspector-content #source-remove-audio:hover,#inspector-content #source-remove-audio:focus-visible {background:#4b292d;border-color:#b96b72;color:#ffe2e0;transform:translateY(-1px);}
+#inspector-content #source-remove-audio:focus-visible {outline:2px solid #f5aaa8;outline-offset:2px;}
+#inspector-content #source-remove-audio svg {width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+#inspector-content #source-remove-audio .source-trash-lid {transform-origin:15px 7px;transition:transform .22s cubic-bezier(.2,1.4,.5,1);}
+#inspector-content #source-remove-audio:is(:hover,:focus-visible) .source-trash-lid {transform:rotate(24deg) translateY(-1px);}
+#inspector-content #source-remove-audio:active svg {transform:scale(.88);}
+@media (prefers-reduced-motion:reduce){#inspector-content #source-remove-audio,#inspector-content #source-remove-audio .source-trash-lid {transition:none;}}
