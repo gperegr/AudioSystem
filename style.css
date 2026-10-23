@@ -4388,3 +4388,12 @@ body.inspector-collapsed #inspector>.inspector-panel-header,body.inspector-colla
 #inspector-content .linear-disc-choices .linear-disc-hole {fill:#dce4df;stroke:none;}
 #inspector-content .linear-disc-choices button[aria-pressed="true"] {border-color:#9bb58e;background:#344832;box-shadow:inset 0 1px 4px #0007;}
 #inspector-content .linear-disc-choices button[aria-pressed="true"] .linear-disc-label {fill:#c69a67;}
+
+/* Shared menu range: the same thin track and round thumb as Ambiente sonoro · Intensidade. */
+:root {--menu-slider-track:#374151;--menu-slider-thumb:#3b82f6;--menu-slider-thumb-size:16px;--menu-slider-track-size:4px;}
+:is(#inspector-content,.app-settings-content) input.app-menu-slider[type="range"] {appearance:none;-webkit-appearance:none;box-sizing:border-box;display:block;width:100%;height:44px!important;min-height:44px!important;margin:0;padding:0;border:0;background:transparent!important;cursor:pointer;touch-action:pan-y;}
+:is(#inspector-content,.app-settings-content) input.app-menu-slider[type="range"]::-webkit-slider-runnable-track {box-sizing:border-box;width:100%;height:var(--menu-slider-track-size);border:0;border-radius:999px;background:var(--menu-slider-track);box-shadow:none;cursor:pointer;}
+:is(#inspector-content,.app-settings-content) input.app-menu-slider[type="range"]::-webkit-slider-thumb {appearance:none;-webkit-appearance:none;box-sizing:border-box;width:var(--menu-slider-thumb-size);height:var(--menu-slider-thumb-size);margin-top:calc((var(--menu-slider-track-size) - var(--menu-slider-thumb-size))/2);border:0;border-radius:50%;background:var(--menu-slider-thumb);box-shadow:0 2px 4px #0008;cursor:pointer;}
+:is(#inspector-content,.app-settings-content) input.app-menu-slider[type="range"]::-moz-range-track {box-sizing:border-box;width:100%;height:var(--menu-slider-track-size);border:0;border-radius:999px;background:var(--menu-slider-track);box-shadow:none;cursor:pointer;}
+:is(#inspector-content,.app-settings-content) input.app-menu-slider[type="range"]::-moz-range-thumb {box-sizing:border-box;width:var(--menu-slider-thumb-size);height:var(--menu-slider-thumb-size);border:0;border-radius:50%;background:var(--menu-slider-thumb);box-shadow:0 2px 4px #0008;cursor:pointer;}
+:is(#inspector-content,.app-settings-content) input.app-menu-slider[type="range"]:focus-visible {outline:2px solid #93c5fd;outline-offset:2px;border-radius:5px;}

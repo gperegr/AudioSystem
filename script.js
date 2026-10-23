@@ -6771,6 +6771,14 @@ const Hardware = (() => {
             slider.addEventListener('change',()=>syncInspectorGainVisual(slider));
             syncInspectorGainVisual(slider);
         }
+        const MenuSlider={
+            mount(root){
+                root.querySelectorAll('input[type="range"]:not(.gain-spark-slider)').forEach(slider=>{
+                    slider.classList.add('app-menu-slider');
+                    slider.dataset.menuSlider='standard';
+                });
+            }
+        };
         // Keep physical units for the audio graph while exposing fixed detents in the inspector.
         function setupInspectorDetents() {
             inspectorContent.querySelectorAll('input[type="range"]:not(#source-progress)').forEach(slider=>{
@@ -6957,6 +6965,7 @@ const Hardware = (() => {
             Hardware.sync(dev);
             inspectorContent.innerHTML = conciseEquipmentInspector(html);
             Hardware.inspector(inspectorContent);
+            MenuSlider.mount(inspectorContent);
             document.getElementById('inspector-grille')?.addEventListener('click',event=>{dev.el.querySelector(dev.el.classList.contains('grille-off')?'.grille-restore':'.speaker-grille').click();event.currentTarget.setAttribute('aria-pressed',String(dev.el.classList.contains('grille-off')));event.currentTarget.classList.toggle('is-on',dev.el.classList.contains('grille-off'));});
             queueMicrotask(setupInspectorDetents);
             bindListeningInspector(dev);
@@ -8349,6 +8358,7 @@ const Hardware = (() => {
         setRoomSettings(state.environment);
 
         settingsMenu.appendChild(clearCatalogFooter);
+        MenuSlider.mount(settingsMenu);
         const topbarControls=document.getElementById('app-topbar').lastElementChild;
         topbarControls.appendChild(settingsMenu);
         topbarControls.appendChild(document.getElementById('inspector-sidebar-toggle'));
