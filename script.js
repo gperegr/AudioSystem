@@ -833,7 +833,7 @@ const Hardware = (() => {
         });
         const pendants=[...world.querySelectorAll('.device-type-pendantLamp .pendant-filament')].map(filament=>{
             const rect=filament.getBoundingClientRect();
-            return {x:(rect.left+rect.width/2-worldRect.left)/scale,y:(rect.top+rect.height/2-worldRect.top)/scale,width:28,height:36,shape:'point',rgb:[255,192,82],strength:1.9,elevation:220,reach:1550,shade:{opening:1.2,penumbra:.2}};
+            return {x:(rect.left+rect.width/2-worldRect.left)/scale,y:(rect.top+rect.height/2-worldRect.top)/scale,width:28,height:36,shape:'point',rgb:[255,192,82],strength:1.9,elevation:220,reach:1550,shade:{opening:1.2,penumbra:.2},animated:true};
         });
         return [...bench,...pendants];
     }
@@ -948,7 +948,7 @@ const Hardware = (() => {
         const sceneName=viewport&&document.getElementById('canvas').dataset.theme==='scene'?document.getElementById('canvas').dataset.backdrop:'';
         const sceneTime=document.getElementById('canvas').dataset.time;
         const sceneEmitters=[...positionedSceneLights(sceneName,sceneTime,world),...positionedObjectLights(world)];
-        const sceneEmitterKey=sceneTime+':'+sceneEmitters.map(source=>Math.round(source.x/8)+','+Math.round(source.y/8)).join(';');
+        const sceneEmitterKey=sceneTime+':'+sceneEmitters.map(source=>{const step=source.animated?4:8;return Math.round(source.x/step)+','+Math.round(source.y/step);}).join(';');
         const furnitureKey=furnitureBodies.map(body=>{const node=body.closest('.furniture-node');return node.id+':'+node.style.left+':'+node.style.top;}).join('|');
         if(furnitureLightingGeometry.key!==furnitureKey){
             const worldRect=world.getBoundingClientRect(),worldScale=worldRect.width/world.offsetWidth;
@@ -8015,8 +8015,19 @@ const Hardware = (() => {
             state.connections.push({outId:output.id,inId:input.id,el,type,wps:[]});from.nodes[nodeOut].connect(to.nodes[nodeIn]);output.classList.add('connected');input.classList.add('connected');
         }
 
+        let pendantLightTick=0,pendantLightSignature='';
         function renderVisuals() {
             requestAnimationFrame(renderVisuals);
+            const now=performance.now();
+            if(now-pendantLightTick>=90){
+                pendantLightTick=now;
+                const filaments=world.querySelectorAll('.device-type-pendantLamp .pendant-filament');
+                if(filaments.length&&document.visibilityState==='visible'){
+                    const worldRect=world.getBoundingClientRect(),scale=worldRect.width/world.offsetWidth;
+                    const signature=powerMotionPreference.matches?'still':[...filaments].map(filament=>{const rect=filament.getBoundingClientRect();return Math.round((rect.left+rect.width/2-worldRect.left)/scale/3)+','+Math.round((rect.top+rect.height/2-worldRect.top)/scale/3);}).join(';');
+                    if(signature!==pendantLightSignature){pendantLightSignature=signature;Hardware.updateLightingDemo();}
+                }else pendantLightSignature='';
+            }
             if(state.connections.some(connection=>connection.seatStarted!=null))updateCables();
             updateRealtimePanels(performance.now());
             updateTransportMotion(performance.now());
