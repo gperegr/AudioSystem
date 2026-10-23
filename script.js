@@ -1252,7 +1252,7 @@ const Hardware = (() => {
         const ROOM_FLOOR_OVERLAP=196;
         document.documentElement.classList.add('lighting-demo-enabled');
         const roomBackdrop=document.createElement('div');roomBackdrop.id='room-backdrop';roomBackdrop.setAttribute('aria-hidden','true');
-        roomBackdrop.innerHTML=['far','mid','near'].map(layer=>`<img class="room-scene-image room-layer-${layer}" data-room-layer="${layer}" alt="" draggable="false">`).join('')+'<i class="room-depth-room"></i><i class="room-side-wall wall-left"></i><i class="room-side-wall wall-right"></i>';
+        roomBackdrop.innerHTML=['far','mid','near'].map(layer=>`<img class="room-scene-image room-layer-${layer}" data-room-layer="${layer}" alt="" draggable="false">`).join('')+'<i class="room-depth-room"></i><i class="room-side-wall wall-left"></i><i class="room-side-wall wall-right"></i><i class="room-grid-overlay"></i>';
         const windowLayers=document.createElement('div');windowLayers.className='room-window-layers';
         roomBackdrop.appendChild(windowLayers);
         world.prepend(roomBackdrop);
