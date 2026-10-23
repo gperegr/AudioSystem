@@ -812,17 +812,12 @@ const Hardware = (() => {
     let lightingDemoFrame=0;
     const lightingGeometry=new WeakMap();
     let furnitureLightingGeometry={key:'',items:[]};
-    const sceneLightSources={
-        studio:[{cx:350,cy:500,w:48,h:130,shape:'bar',rgb:[121,196,223],strength:.52},{cx:2030,cy:500,w:48,h:130,shape:'bar',rgb:[121,196,223],strength:.46},{cx:1200,cy:520,w:720,h:520,shape:'rect',rgb:[176,216,228],strength:.28}],
-        listening:[{cx:550,cy:430,w:48,h:130,shape:'bar',rgb:[255,193,122],strength:.57},{cx:1850,cy:430,w:48,h:130,shape:'bar',rgb:[255,193,122],strength:.52},{cx:1200,cy:535,w:420,h:570,shape:'rect',rgb:[214,224,190],strength:.25}],
-        loft:[{cx:480,cy:485,w:115,h:60,shape:'rect',rgb:[255,222,166],strength:.43},{cx:1200,cy:485,w:115,h:60,shape:'rect',rgb:[255,222,166],strength:.43},{cx:1920,cy:485,w:115,h:60,shape:'rect',rgb:[255,222,166],strength:.43},{cx:480,cy:655,w:520,h:930,shape:'rect',rgb:[206,231,229],strength:.22},{cx:1190,cy:655,w:520,h:930,shape:'rect',rgb:[206,231,229],strength:.22},{cx:1900,cy:655,w:520,h:930,shape:'rect',rgb:[206,231,229],strength:.22}],
-        library:[{cx:710,cy:300,w:48,h:130,shape:'bar',rgb:[255,224,162],strength:.54},{cx:1690,cy:300,w:48,h:130,shape:'bar',rgb:[255,224,162],strength:.54},{cx:1195,cy:585,w:460,h:490,shape:'rect',rgb:[187,210,180],strength:.15}],
-        night:[{cx:320,cy:365,w:48,h:130,shape:'bar',rgb:[240,140,175],strength:.51},{cx:2080,cy:365,w:48,h:130,shape:'bar',rgb:[143,191,255],strength:.51},{cx:1200,cy:635,w:2160,h:1010,shape:'rect',rgb:[157,178,231],strength:.28}]
-    };
     function positionedSceneLights(scene,world){
-        const farX=parseFloat(world.style.getPropertyValue('--room-far-x'))||0,farY=parseFloat(world.style.getPropertyValue('--room-far-y'))||0;
-        const scale=parseFloat(world.style.getPropertyValue('--room-far-scale'))||1;
-        return (sceneLightSources[scene]||[]).map(source=>{
+        return RoomScenes.lights(scene).map(source=>{
+            const depth=source.layer==='near'?'near':source.layer==='mid'?'mid':'far';
+            const farX=parseFloat(world.style.getPropertyValue(`--room-${depth}-x`))||0;
+            const farY=parseFloat(world.style.getPropertyValue(`--room-${depth}-y`))||0;
+            const scale=parseFloat(world.style.getPropertyValue(`--room-${depth}-scale`))||1;
             const rawX=world.offsetWidth*(-.06+1.12*(240+source.cx*.8)/2400);
             const rawY=world.offsetHeight*(-.1+1.1*(268+source.cy*.8)/1600);
             return {...source,x:world.offsetWidth/2+(rawX-world.offsetWidth/2)*scale+farX,y:world.offsetHeight+(rawY-world.offsetHeight)*scale+farY,width:source.w*.8*1.12*world.offsetWidth/2400*scale,height:source.h*.8*1.1*world.offsetHeight/1600*scale};
@@ -1223,7 +1218,7 @@ const Hardware = (() => {
             appPreferencesSaveTimer=setTimeout(()=>{
                 if(!canvas.clientWidth||!canvas.clientHeight)return;
                 const focusX=(canvas.clientWidth/2-view.x)/view.zoom,focusY=(canvas.clientHeight/2-view.y)/view.zoom;
-                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,floor:state.canvasFloor,backdrop:state.canvasBackdrop,connectionGuidanceEnabled,zoom:view.zoom,focusX,focusY}));}catch{}
+                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,floor:state.canvasFloor,floorAuto:floorFollowsScene,backdrop:state.canvasBackdrop,connectionGuidanceEnabled,zoom:view.zoom,focusX,focusY}));}catch{}
             },450);
         }
         const appDialog=document.getElementById('app-confirm-dialog');
@@ -1245,34 +1240,8 @@ const Hardware = (() => {
         const ROOM_SIDE_INSET=110;
         document.documentElement.classList.add('lighting-demo-enabled');
         const roomBackdrop=document.createElement('div');roomBackdrop.id='room-backdrop';roomBackdrop.setAttribute('aria-hidden','true');
-        roomBackdrop.innerHTML=['studio','listening','loft','library','night'].map(name=>`<img class="room-scene-image room-scene-${name}" src="./assets/rooms/${name}.svg" alt="" draggable="false">`).join('')+'<i class="room-depth-room"></i><i class="room-depth-shelf"></i><i class="room-practical-light light-left"></i><i class="room-practical-light light-center"></i><i class="room-practical-light light-right"></i><i class="room-side-wall wall-left"></i><i class="room-side-wall wall-right"></i>';
-        const roomWindows={
-            studio:[{x:840,y:260,w:720,h:520,kind:'city'}],
-            listening:[{x:990,y:250,w:420,h:570,kind:'garden'}],
-            loft:[{x:220,y:190,w:520,h:930,kind:'city'},{x:930,y:190,w:520,h:930,kind:'city'},{x:1640,y:190,w:520,h:930,kind:'city'}],
-            library:[{x:965,y:350,w:460,h:490,kind:'garden'}],
-            night:[{x:120,y:130,w:2160,h:1010,kind:'night'}]
-        };
-        const windowPalettes={city:['#55798b','#162f42','#263d4c','#172734','#88c2ca'],garden:['#9cafa0','#485d55','#314b45','#182d30','#d5c68b'],night:['#292f58','#111a3c','#22294b','#10182d','#edbd85']};
-        function windowScenery(kind,index,layer){
-            const [sky,horizon,building,near,lit]=windowPalettes[kind];
-            const stars=kind==='night'?Array.from({length:27},(_,i)=>`<circle cx="${(i*173+index*37)%640}" cy="${(i*71+index*19)%210+12}" r="${i%4===0?2:1}" fill="#d8e0ed" opacity="${i%3===0?.7:.35}"/>`).join(''):'';
-            const towers=Array.from({length:13},(_,i)=>{
-                const x=i*53-20+(index*19)%27,h=72+(i*37+index*29)%125,y=450-h;
-                const windows=Array.from({length:Math.floor(h/23)-1},(_,row)=>`<path d="M${x+12} ${y+16+row*22}h7m14 0h7" stroke="${lit}" stroke-width="3" opacity="${kind==='night'?.44:.22}"/>`).join('');
-                return `<rect x="${x}" y="${y}" width="47" height="${h}" fill="${i%3===0?building:near}"/><path d="M${x+4} ${y+4}h39M${x+7} ${y+2}v${h-8}" stroke="${sky}" stroke-opacity=".17" stroke-width="2"/>${i%3===0?`<path d="M${x+23} ${y}v-18" stroke="${lit}" stroke-opacity=".27" stroke-width="2"/>`:''}${windows}`;
-            }).join('');
-            const trees=Array.from({length:11},(_,i)=>{const x=i*66-14+(index*31)%37,y=365+(i*17)%60;return `<path d="M${x} 450v-${450-y+35}" stroke="${near}" stroke-width="7"/><circle cx="${x-10}" cy="${y+4}" r="${18+i%3*5}" fill="${building}"/><circle cx="${x+10}" cy="${y-6}" r="${20+i%3*7}" fill="${i%2?building:near}"/>`;}).join('');
-            const clouds=kind==='night'?'':`<path d="M-30 114Q75 89 165 111T360 96T675 110M-20 162Q110 139 230 163T465 151T670 166" fill="none" stroke="${lit}" stroke-opacity=".12" stroke-width="13"/>`;
-            const far=`<defs><linearGradient id="sky" x2=".15" y2="1"><stop stop-color="${sky}"/><stop offset="1" stop-color="${horizon}"/></linearGradient></defs><rect width="640" height="450" fill="url(#sky)"/>${stars}${clouds}<path d="M0 285Q80 245 155 282T320 272T480 260T640 283V450H0Z" fill="${horizon}" opacity=".75"/><path d="M0 340Q95 295 195 336T400 315T640 330V450H0Z" fill="${building}" opacity=".64"/>`;
-            const mid=kind==='garden'?`${trees}<path d="M0 425Q140 375 280 420T640 405V450H0Z" fill="${near}"/><path d="M0 415h640M65 415v35m130-35v35m130-35v35m130-35v35m130-35v35" stroke="${lit}" stroke-opacity=".18" stroke-width="3"/>`:towers;
-            return `<svg viewBox="0 0 640 450" preserveAspectRatio="xMidYMax slice" aria-hidden="true">${layer==='far'?far:mid}</svg>`;
-        }
+        roomBackdrop.innerHTML=['far','mid','near'].map(layer=>`<img class="room-scene-image room-layer-${layer}" data-room-layer="${layer}" alt="" draggable="false">`).join('')+'<i class="room-depth-room"></i><i class="room-side-wall wall-left"></i><i class="room-side-wall wall-right"></i>';
         const windowLayers=document.createElement('div');windowLayers.className='room-window-layers';
-        windowLayers.innerHTML=Object.entries(roomWindows).flatMap(([scene,windows])=>windows.map((pane,index)=>{
-            const left=(240+pane.x*.8)/24,top=(268+pane.y*.8)/16,width=pane.w*.8/24,height=pane.h*.8/16;
-            return `<div class="room-window-pane room-window-${scene}" style="left:${left}%;top:${top}%;width:${width}%;height:${height}%"><div class="room-window-far">${windowScenery(pane.kind,index,'far')}</div><div class="room-window-mid">${windowScenery(pane.kind,index,'mid')}</div><i class="room-window-glass"></i><i class="room-window-mullion"></i></div>`;
-        })).join('');
         roomBackdrop.appendChild(windowLayers);
         world.prepend(roomBackdrop);
         canvas.appendChild(document.getElementById('connection-guidance'));
@@ -1306,16 +1275,30 @@ const Hardware = (() => {
         const canvasFloorModes={wood:'Madeira',carpet:'Carpete',concrete:'Concreto',none:'Sem piso'};
         const canvasFloorControl=document.createElement('label');canvasFloorControl.className='canvas-theme-control';
         canvasFloorControl.innerHTML='<span>Piso</span><select id="canvas-floor" aria-label="Acabamento do piso">'+Object.entries(canvasFloorModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
+        let floorFollowsScene=savedAppPreferences.floorAuto===true||!savedAppPreferences.floor;
         function setCanvasFloor(mode){
             mode=Object.hasOwn(canvasFloorModes,mode)?mode:'wood';state.canvasFloor=mode;canvas.dataset.floor=mode;canvasFloorControl.querySelector('select').value=mode;
         }
-        canvasFloorControl.querySelector('select').addEventListener('change',event=>{setCanvasFloor(event.target.value);scheduleProjectSave();scheduleAppPreferencesSave();});
-        setCanvasFloor(savedAppPreferences.floor||'wood');
+        canvasFloorControl.querySelector('select').addEventListener('change',event=>{floorFollowsScene=false;setCanvasFloor(event.target.value);scheduleProjectSave();scheduleAppPreferencesSave();});
+        setCanvasFloor(savedAppPreferences.floor||RoomScenes.scenes[savedAppPreferences.backdrop||'studio']?.floor||'wood');
         const canvasBackdropModes={studio:'Estúdio',listening:'Sala de audição',loft:'Loft',library:'Biblioteca Hi-Fi',night:'Sala noturna'};
         const canvasBackdropControl=document.createElement('label');canvasBackdropControl.className='canvas-theme-control';
         canvasBackdropControl.innerHTML='<span>Cenário</span><select id="canvas-backdrop" aria-label="Cenário de fundo">'+Object.entries(canvasBackdropModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
+        const roomSceneCache=new Map();
         function setCanvasBackdrop(mode){
             mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studio';state.canvasBackdrop=mode;canvas.dataset.backdrop=mode;canvasBackdropControl.querySelector('select').value=mode;
+            roomBackdrop.querySelectorAll('[data-room-layer]').forEach(image=>{
+                const layer=image.dataset.roomLayer,key=mode+':'+layer;
+                if(!roomSceneCache.has(key))roomSceneCache.set(key,'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(RoomScenes.renderLayer(mode,layer)));
+                const src=roomSceneCache.get(key);
+                if(image.getAttribute('src')!==src)image.src=src;
+            });
+            if(windowLayers.dataset.scene!==mode){
+                windowLayers.className='room-window-layers room-window-'+mode;
+                windowLayers.innerHTML=RoomScenes.windowPanes(mode);
+                windowLayers.dataset.scene=mode;
+            }
+            if(floorFollowsScene)setCanvasFloor(RoomScenes.scenes[mode].floor);
             Hardware.updateLightingDemo();
         }
         canvasBackdropControl.querySelector('select').addEventListener('change',event=>{setCanvasBackdrop(event.target.value);updateCables();scheduleProjectSave();scheduleAppPreferencesSave();});
@@ -1476,6 +1459,8 @@ const Hardware = (() => {
             world.style.setProperty('--room-far-scale',farScale.toFixed(3));
             world.style.setProperty('--room-mid-x',(farX*.55).toFixed(1)+'px');world.style.setProperty('--room-mid-y',(farY*.55).toFixed(1)+'px');
             world.style.setProperty('--room-mid-scale',(1+(farScale-1)*.55).toFixed(3));
+            world.style.setProperty('--room-near-x',(farX*.25).toFixed(1)+'px');world.style.setProperty('--room-near-y',(farY*.25).toFixed(1)+'px');
+            world.style.setProperty('--room-near-scale',(1+(farScale-1)*.25).toFixed(3));
             world.style.setProperty('--room-window-far-x',(farX*.75).toFixed(1)+'px');world.style.setProperty('--room-window-far-y',(farY*.75).toFixed(1)+'px');
             world.style.setProperty('--room-window-mid-x',(farX*.3).toFixed(1)+'px');world.style.setProperty('--room-window-mid-y',(farY*.3).toFixed(1)+'px');
             world.style.setProperty('--floor-parallax-x',(farX*.28).toFixed(1)+'px');
@@ -8020,7 +8005,7 @@ const Hardware = (() => {
             const catalogScroll=equipmentCatalog.querySelector('.overflow-y-auto');
             return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{
                 environment:{...(state.environment||{preset:'near',intensity:0})},
-                canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'scene',canvasFloor:state.canvasFloor||'wood',canvasBackdrop:state.canvasBackdrop||'studio',
+                canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'scene',canvasFloor:state.canvasFloor||'wood',canvasFloorAuto:floorFollowsScene,canvasBackdrop:state.canvasBackdrop||'studio',
                 soundVolume:state.uiSoundVolume??.9,hideCables:!!state.hideCables,
                 selected:[...state.selectedDeviceIds],selectedCable:state.connections.indexOf(state.selectedConnection),
                 search:document.getElementById('equipment-search').value,catalogScroll:catalogScroll?.scrollTop||0,inspectorScroll:inspectorContent.scrollTop
@@ -8129,7 +8114,7 @@ const Hardware = (() => {
             try{
                 stopViewMotion();cancelCableDrag();Object.values(state.devices).forEach(deleteDevice);
                 world.style.removeProperty('min-width');world.style.removeProperty('min-height');
-                const ui=snapshot.ui||{};setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setCanvasFloor(ui.canvasFloor);setCanvasBackdrop(ui.canvasBackdrop);
+                const ui=snapshot.ui||{};floorFollowsScene=ui.canvasFloorAuto===true;setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setCanvasFloor(ui.canvasFloor);setCanvasBackdrop(ui.canvasBackdrop);
                 for(const saved of snapshot.devices){
                     const before=new Set(Object.keys(state.devices));createDevice(saved.type,Math.min(saved.x,world.offsetWidth-150),Math.min(saved.y,maxEquipmentBottom()-150));
                     const dev=Object.values(state.devices).find(item=>!before.has(item.id));if(!dev)throw new Error('Não foi possível restaurar um equipamento.');
