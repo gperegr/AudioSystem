@@ -33,8 +33,7 @@
             windowAt(990,250,420,570,'garden',{light:{shape:'rect',strength:.25,rgb:[223,223,177]}}),
             art(140,240,340,420,{kind:'geometric'}),art(1910,235,350,420,{kind:'landscape'}),
             lamp(550,430,'bar',{w:48,h:130,rgb:[255,193,122],strength:.57}),
-            lamp(1850,430,'bar',{w:48,h:130,rgb:[255,193,122],strength:.52}),
-            object('plant',140,1092,{size:230,layer:'near'})
+            lamp(1850,430,'bar',{w:48,h:130,rgb:[255,193,122],strength:.52})
         ]},
         loft:{material:'loft',floor:'concrete',objects:[
             object('brick',0,120,{w:2400,h:1130,layer:'far'}),
@@ -43,8 +42,7 @@
             windowAt(1640,190,520,930,'city',{light:{shape:'rect',strength:.20,rgb:[224,224,204]}}),
             lamp(480,485,'pendant',{w:115,h:60,rgb:[255,216,155],strength:.49}),
             lamp(1200,485,'pendant',{w:115,h:60,rgb:[255,216,155],strength:.49}),
-            lamp(1920,485,'pendant',{w:115,h:60,rgb:[255,216,155],strength:.49}),
-            object('plant',2140,1122,{size:200,layer:'near'})
+            lamp(1920,485,'pendant',{w:115,h:60,rgb:[255,216,155],strength:.49})
         ]}
     };
 
@@ -71,7 +69,6 @@
             ?`<path d="M${x} 75v${y-125}" stroke="${m.metal}" stroke-opacity=".75" stroke-width="7"/><ellipse cx="${x}" cy="${y+8}" rx="175" ry="135" fill="url(#glow-${x}-${y})"/><path d="M${x-82} ${y-84}h164l-33 86h-98z" fill="${m.wood}" stroke="${m.trim}" stroke-opacity=".68" stroke-width="7"/><path d="M${x-49} ${y+3}h98" stroke="${m.metal}" stroke-width="8"/><ellipse cx="${x}" cy="${y+10}" rx="44" ry="16" fill="${color}" opacity=".65"/>`
             :`<ellipse cx="${x}" cy="${y}" rx="210" ry="295" fill="url(#glow-${x}-${y})"/><rect x="${x-w*.77}" y="${y-h*.65}" width="${w*1.54}" height="${h*1.3}" rx="${w*.55}" fill="${m.wood}" stroke="${m.trim}" stroke-opacity=".54" stroke-width="5"/><rect x="${x-w*.42}" y="${y-h*.48}" width="${w*.84}" height="${h*.96}" rx="${w*.42}" fill="url(#shade-${x}-${y})"/><path d="M${x-w*.55} ${y-h*.52}h${w*1.1}M${x-w*.55} ${y+h*.52}h${w*1.1}" stroke="url(#metal)" stroke-width="6" stroke-linecap="round"/><path d="M${x} ${y-h*.44}v${h*.88}" stroke="#fff5d3" stroke-opacity=".36" stroke-width="3"/>`);},
         art(o,m){const {x,y,w,h}=o,landscape=o.kind==='landscape';return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${m.wood}" stroke="${m.trim}" stroke-opacity=".48" stroke-width="9"/><rect x="${x+18}" y="${y+18}" width="${w-36}" height="${h-36}" fill="${m.wallDark}"/>${landscape?`<circle cx="${x+w*.69}" cy="${y+h*.34}" r="${Math.min(w,h)*.11}" fill="${m.light}" opacity=".52"/><path d="M${x+19} ${y+h*.75}Q${x+w*.24} ${y+h*.43} ${x+w*.48} ${y+h*.66}T${x+w-19} ${y+h*.54}V${y+h-19}H${x+19}Z" fill="${m.woodLight}" opacity=".58"/><path d="M${x+19} ${y+h*.83}Q${x+w*.39} ${y+h*.68} ${x+w-19} ${y+h*.79}V${y+h-19}H${x+19}Z" fill="${m.wall}"/>`:`<path d="M${x+w*.2} ${y+h*.83}V${y+h*.43}a${w*.3} ${h*.29} 0 0 1 ${w*.6} 0v${h*.4}z" fill="${m.woodLight}" opacity=".65"/><path d="M${x+w*.36} ${y+h*.82}V${y+h*.47}a${w*.14} ${h*.14} 0 0 1 ${w*.28} 0v${h*.35}z" fill="${m.wallDark}" opacity=".75"/><rect x="${x+w*.16}" y="${y+h*.22}" width="${w*.68}" height="${h*.05}" fill="${m.light}" opacity=".4"/>`}`;},
-        plant(o,m){const s=o.size,x=o.x,y=o.y;return `<path d="M${x-s*.22} ${y+s*.58}h${s*.44}l-${s*.055} ${s*.42}h-${s*.33}z" fill="url(#wood)" stroke="${m.trim}" stroke-opacity=".6" stroke-width="5"/><path d="M${x} ${y+s*.58}v-${s*.48}m0 ${s*.3}l-${s*.28}-${s*.32}m${s*.28} ${s*.27}l${s*.27}-${s*.4}" stroke="#314b3b" stroke-width="8" fill="none"/>${[-2,-1,0,1,2].map(i=>`<path d="M${x+i*s*.07} ${y+s*.25}q${i*s*.13} -${s*.3} ${i*s*.13} -${s*.36}q${s*.18} ${s*.27} ${-i*s*.13} ${s*.36}" fill="${i%2?'#466b52':'#64846a'}" stroke="#274533" stroke-width="2"/>`).join('')}<path d="M${x-s*.18} ${y+s*.61}h${s*.36}" stroke="${m.metal}" stroke-width="6"/>`;}
     };
 
     function renderLayer(sceneName,layer,time='dusk'){
