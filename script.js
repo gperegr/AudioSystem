@@ -1339,7 +1339,7 @@ const Hardware = (() => {
         const floorPlacementBottom=()=>Math.floor((world.offsetHeight-ROOM_FLOOR_OVERLAP)/Hardware.sizes.grid)*Hardware.sizes.grid;
         document.documentElement.classList.add('lighting-demo-enabled');
         const roomBackdrop=document.createElement('div');roomBackdrop.id='room-backdrop';roomBackdrop.setAttribute('aria-hidden','true');
-        roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far" alt="" draggable="false"><canvas class="room-fixture-glow"></canvas><i class="room-grid-overlay"></i>';
+        roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far is-visible" alt="" draggable="false"><canvas class="room-fixture-glow"></canvas><i class="room-grid-overlay"></i>';
         const roomMotes=document.createElement('div');roomMotes.className='room-motes';roomMotes.setAttribute('aria-hidden','true');
         roomBackdrop.appendChild(roomMotes);
         world.style.setProperty('--room-image-drop','260px');
@@ -1380,6 +1380,34 @@ const Hardware = (() => {
         canvasBackdropControl.innerHTML='<span>Cenário</span><select id="canvas-backdrop" aria-label="Cenário de fundo">'+Object.entries(canvasBackdropModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
         const canvasTimeControl=document.createElement('label');canvasTimeControl.className='canvas-theme-control';
         canvasTimeControl.innerHTML='<span>Hora do dia</span><select id="canvas-time" aria-label="Hora do dia">'+Object.entries(canvasTimeModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
+        const roomImageBrightness={dawn:'1.08',dusk:'.91',night:'.95'};
+        let roomImageRequest=0,roomImageTarget='';
+        function showRoomImage(src,time){
+            if(src===roomImageTarget)return;
+            roomImageTarget=src;
+            const request=++roomImageRequest,images=[...roomBackdrop.querySelectorAll('.room-scene-image')];
+            const brightness=roomImageBrightness[time]||roomImageBrightness.dusk;
+            if(!images[0].getAttribute('src')||state.restoringProject||matchMedia('(prefers-reduced-motion: reduce)').matches){
+                images.slice(1).forEach(image=>image.remove());
+                images[0].style.setProperty('--room-image-brightness',brightness);
+                images[0].src=src;images[0].classList.add('is-visible');
+                return;
+            }
+            const next=document.createElement('img');
+            next.className='room-scene-image room-layer-far';next.alt='';next.draggable=false;
+            next.style.setProperty('--room-image-brightness',brightness);next.src=src;
+            next.decode().then(()=>{
+                if(request!==roomImageRequest)return;
+                const previous=[...roomBackdrop.querySelectorAll('.room-scene-image')];
+                roomBackdrop.insertBefore(next,roomBackdrop.querySelector('.room-fixture-glow'));
+                void next.offsetWidth;
+                requestAnimationFrame(()=>{
+                    if(request!==roomImageRequest){next.remove();return;}
+                    next.classList.add('is-visible');previous.forEach(image=>image.classList.remove('is-visible'));
+                    setTimeout(()=>previous.forEach(image=>image.remove()),700);
+                });
+            }).catch(()=>{});
+        }
         function updateRoomMotes(mode,time){
             const daylight=time==='dawn';
             const dusk=time==='dusk';
@@ -1401,10 +1429,9 @@ const Hardware = (() => {
         function setCanvasBackdrop(mode){
             mode=legacyBackdrops[mode]||mode;
             mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studio';state.canvasBackdrop=mode;canvas.dataset.backdrop=mode;canvasBackdropControl.querySelector('select').value=mode;
-            const image=roomBackdrop.querySelector('.room-scene-image');
             const imageName=RoomScenes.scenes[mode].image+(state.canvasTime==='dusk'?'':'-'+state.canvasTime);
             const src=`./assets/rooms/${imageName}.webp?v=aligned-floor`;
-            if(image.getAttribute('src')!==src)image.src=src;
+            showRoomImage(src,state.canvasTime);
             requestAnimationFrame(applyView);
             state.canvasFloor=RoomScenes.scenes[mode].floor;canvas.dataset.floor=state.canvasFloor;
             updateRoomMotes(mode,state.canvasTime);
