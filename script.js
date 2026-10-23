@@ -1830,7 +1830,7 @@ const Hardware = (() => {
             if(dev.type!=='furnitureTable')return;
             const settings=dev.state;
             settings.benchSurface=Object.hasOwn(BENCH_SURFACES,settings.benchSurface)?settings.benchSurface:'wood';
-            settings.benchBackdrop=settings.benchBackdrop!==false;
+            settings.benchBackdrop=settings.benchBackdrop===true;
             settings.benchDecorations=Array.isArray(settings.benchDecorations)?Object.keys(BENCH_DECORATIONS).filter(key=>settings.benchDecorations.includes(key)):[];
             dev.el.dataset.benchSurface=settings.benchSurface;
             dev.el.dataset.benchBackdrop=String(settings.benchBackdrop);
@@ -6564,7 +6564,7 @@ const Hardware = (() => {
             if(ACTIVE_SPK.has(dev.type)||SUB_TYPES.has(dev.type))dev.setSpeakerVolume(.8);
             if(MATRIX_TYPES.has(dev.type)){dev.state.matrixInput=1;dev.state.matrixOutputs=[true,false,false,false];dev.updateMatrix();}
             if(SELECTOR_TYPES.has(dev.type))dev.el.querySelector('[data-switch-source="A"]').click();
-            if(dev.type==='furnitureTable'){Object.assign(dev.state,{benchSurface:'wood',benchBackdrop:true,benchDecorations:[]});updateBenchAppearance(dev);}
+            if(dev.type==='furnitureTable'){Object.assign(dev.state,{benchSurface:'wood',benchBackdrop:false,benchDecorations:[]});updateBenchAppearance(dev);}
             if(FURNITURE_TYPES[dev.type]){dev.state.material='black';dev.el.dataset.material='black';if(FURNITURE_TYPES[dev.type].back){dev.state.hasBack=true;dev.el.dataset.back='true';}}
             if(dev.meters)dev.meters.clipUntil=0;
             if(state.selectedDeviceId===dev.id){selectDevice(dev.id,true);document.getElementById('restore-settings-status').textContent=message;}
@@ -6783,7 +6783,7 @@ const Hardware = (() => {
                 const config=FURNITURE_TYPES[dev.type];
                 if(config.acoustic)html+=`<p class="text-sm text-gray-300">${config.description}</p><p class="text-xs text-gray-400">${config.width} × ${config.height} px · Arraste o painel pela espuma para posicioná-lo atrás dos equipamentos.</p>`;
                 else html += `<div class="flex flex-col gap-3"><label class="text-sm text-gray-300" for="furniture-material">Material</label><select id="furniture-material" class="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700">${Object.entries(FURNITURE_MATERIALS).map(([key,name])=>`<option value="${key}" ${dev.state.material===key?'selected':''}>${name}</option>`).join('')}</select><p class="text-xs text-gray-400">${config.description}</p><p class="text-xs text-gray-400">Aproxime a base do equipamento de uma prateleira para apoiá-lo. Arraste o móvel pelas partes sólidas.${config.rack?' Os equipamentos apoiados nas prateleiras e empilhados acompanham o rack.':''}</p></div>`;
-                if(dev.type==='furnitureTable')html+=`<fieldset class="bench-options"><legend>Ambiente da bancada</legend><label for="bench-surface">Superfície</label><select id="bench-surface">${Object.entries(BENCH_SURFACES).map(([key,label])=>`<option value="${key}" ${dev.state.benchSurface===key?'selected':''}>${label}</option>`).join('')}</select><label><input type="checkbox" id="bench-backdrop" ${dev.state.benchBackdrop!==false?'checked':''}> Painel acústico</label><span>Objetos decorativos</span>${Object.entries(BENCH_DECORATIONS).map(([key,label])=>`<label><input type="checkbox" data-bench-decoration="${key}" ${dev.state.benchDecorations?.includes(key)?'checked':''}> ${label}</label>`).join('')}</fieldset>`;
+                if(dev.type==='furnitureTable')html+=`<fieldset class="bench-options"><legend>Ambiente da bancada</legend><label for="bench-surface">Superfície</label><select id="bench-surface">${Object.entries(BENCH_SURFACES).map(([key,label])=>`<option value="${key}" ${dev.state.benchSurface===key?'selected':''}>${label}</option>`).join('')}</select><label><input type="checkbox" id="bench-backdrop" ${dev.state.benchBackdrop===true?'checked':''}> Painel acústico</label><span>Objetos decorativos</span>${Object.entries(BENCH_DECORATIONS).map(([key,label])=>`<label><input type="checkbox" data-bench-decoration="${key}" ${dev.state.benchDecorations?.includes(key)?'checked':''}> ${label}</label>`).join('')}</fieldset>`;
                 if(config.back)html+=`<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Fundo do móvel</span><button id="furniture-back" class="tt-insp-btn ${dev.state.hasBack?'is-on':''}" aria-pressed="${!!dev.state.hasBack}">FUNDO DO MÓVEL</button><p class="text-xs text-gray-400">O fundo acompanha o material do móvel, com acabamento escurecido pela sombra.</p></div>`;
             } else if (INTERFACE_DEVICES[dev.type]) {
                 html += `<p class="text-sm text-gray-400">${INTERFACE_DEVICES[dev.type].description}</p>`;
