@@ -6,7 +6,6 @@
  <linearGradient id="base" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#7a8c7b"/><stop offset=".5" stop-color="#3c5148"/><stop offset="1" stop-color="#1f322c"/></linearGradient>
 </defs>
 <ellipse cx="143" cy="651" rx="106" ry="4" fill="#000" opacity=".25"/>
-<path d="M228 640q40 0 42-38t-13-46" fill="none" stroke="#152322" stroke-width="3"/>
 <path d="M141 628 206 288 147 146" fill="none" stroke="#22332e" stroke-width="16" stroke-linejoin="round"/>
 <path d="M140 625 204 288 145 147" fill="none" stroke="url(#metal)" stroke-width="11" stroke-linejoin="round"/>
 <circle cx="205" cy="288" r="17" fill="url(#metal)" stroke="#263c32" stroke-width="2"/>
