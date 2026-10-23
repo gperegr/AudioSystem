@@ -1877,7 +1877,7 @@ const Hardware = (() => {
         });
 
         const DEVICE_NAMES = {
-            furnitureRack:'Rack de Áudio', furnitureHairpin:'Rack Vintage · Alfinete', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureRackSixTall:'Rack com Vãos Altos · 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio', pendantLamp:'Luminária pendente', wallLampCage:'Arandela industrial', wallLampDome:'Arandela de prato', wallLampBare:'Arandela de filamento', acousticHorizontal:'Painel Acústico Horizontal', acousticVertical:'Painel Acústico Vertical',
+            furnitureRack:'Rack de Áudio', furnitureHairpin:'Rack Vintage · Alfinete', furnitureRecordOne:'Rack para Discos · 1 Coluna', furnitureRecordThree:'Rack para Discos · 3 Colunas', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureRackSixTall:'Rack com Vãos Altos · 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio', pendantLamp:'Luminária pendente', wallLampCage:'Arandela industrial', wallLampDome:'Arandela de prato', wallLampBare:'Arandela de filamento', acousticHorizontal:'Painel Acústico Horizontal', acousticVertical:'Painel Acústico Vertical',
             adapterRcaP2:'Adaptador RCA → P2', adapterP2Rca:'Adaptador P2 → RCA', adapterP10P2:'Adaptador P10 → P2', adapterP2P10:'Adaptador P2 → P10', adapterRcaP10:'Adaptador RCA → P10', adapterP10Rca:'Adaptador P10 → RCA', phonoConverter:'Conversor Phono → Linha', speakerConverter:'Conversor Amplificado → Linha',
             turntable: 'Toca-discos', turntableVintage: 'Toca-discos Vintage', turntableLinear:'Toca-discos Tangencial',
             hardwareDemo:'Modelo · Controles',lightPoint:'Ponto de luz · Teste',signalGeneratorVintage:'Gerador de Sinais Vintage', signalGenerator:'Gerador de Sinais', cdPlayer: 'CD Player', tapeDeck:'Tape Deck de Rolo', preamp:'Pré · Slim',preReference:'Pré · Visor Verde',preControl:'Pré · Controle 2.1',preDisplay:'Pré · Tela Central', benchMeter:'Medidor de Bancada', benchMeterVintage:'Medidor de Bancada Vintage',
@@ -1942,6 +1942,8 @@ const Hardware = (() => {
             furnitureRackSix:{width:840,height:1120,surfaces:[0,210,420,630,840,1050],inset:20,rack:true,back:true,description:'Seis vãos de 194 px para equipamentos baixos e médios.'},
             furnitureRackSixTall:{width:840,height:1370,surfaces:[0,260,520,780,1040,1300],inset:20,rack:true,back:true,description:'Seis vãos de 244 px para acomodar equipamentos médios e altos.'},
             furnitureHairpin:{width:1320,height:610,surfaces:[0,238,456],inset:24,rack:true,back:true,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack baixo de madeira com dois vãos centrais, nichos laterais e pés alfinete de metal.'},
+            furnitureRecordOne:{width:840,height:800,surfaces:[0,300,730],inset:26,rack:true,back:true,recordColumns:1,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack de madeira com nicho para aparelhos, espaço inferior para discos e pequenos rodízios.'},
+            furnitureRecordThree:{width:2040,height:800,surfaces:[0,300,730],inset:26,rack:true,back:true,recordColumns:3,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack de madeira com nicho superior para aparelhos e três compartimentos inferiores para discos.'},
             furnitureTable:{width:1680,height:760,surfaces:[0],inset:20,description:'Apoie os equipamentos sobre o tampo. Arraste a mesa pelo tampo ou pelos pés.'},
             acousticHorizontal:{width:Hardware.sizes.widths.full,height:Hardware.sizes.widths.full,surfaces:[],inset:0,acoustic:'horizontal',description:'Espuma acústica grafite com frisos horizontais. Painel quadrado com a largura padrão dos equipamentos.'},
             acousticVertical:{width:Hardware.sizes.widths.full,height:Hardware.sizes.widths.full,surfaces:[],inset:0,acoustic:'vertical',description:'Espuma acústica grafite com frisos verticais. Painel quadrado com a largura padrão dos equipamentos.'},
@@ -1968,13 +1970,19 @@ const Hardware = (() => {
             }else if(type==='furnitureHairpin'){
                 const pin='<svg viewBox="0 0 80 130" aria-hidden="true"><path d="M9 3 28 115Q34 129 40 115L61 3M20 3 32 108Q34 116 36 108L50 3"/><path class="hairpin-glint" d="M12 5 30 114M58 5 39 114"/></svg>';
                 parts=part('furniture-top',0,0,1320,28)+part('furniture-shelf',264,238,792,24)+part('furniture-shelf',0,456,1320,24)+part('furniture-side',0,28,24,428)+part('furniture-side',1296,28,24,428)+part('furniture-side furniture-divider',244,28,20,428)+part('furniture-side furniture-divider',1056,28,20,428)+part('furniture-hairpin-leg',38,480,80,130,pin)+part('furniture-hairpin-leg',1202,480,80,130,pin);
+            }else if(config.recordColumns){
+                const width=config.width,interior=width-52;
+                parts=part('furniture-top',0,0,width,28)+part('furniture-shelf',26,300,interior,24)+part('furniture-shelf',0,730,width,30)+part('furniture-side',0,28,26,702)+part('furniture-side',width-26,28,26,702);
+                for(let column=1;column<config.recordColumns;column++)parts+=part('furniture-side furniture-divider',26+column*interior/config.recordColumns-12,324,24,406);
+                const caster='<span class="caster-stem"></span><span class="caster-wheel"></span>';
+                parts+=part('furniture-caster',42,760,42,40,caster)+part('furniture-caster',width-84,760,42,40,caster);
             }else if(config.rack){
                 const bodyHeight=config.surfaces.at(-1)+16;
                 parts=config.surfaces.map(y=>part('furniture-shelf',20,y,config.width-40,16)).join('')+part('furniture-leg',28,bodyHeight,20,44)+part('furniture-leg',config.width-48,bodyHeight,20,44)+part('furniture-side',0,0,20,bodyHeight)+part('furniture-side',config.width-20,0,20,bodyHeight);
             }else{
                 parts=part('furniture-side',0,0,20,280)+part('furniture-side',820,0,20,280)+part('furniture-top',0,0,840,20)+part('furniture-shelf',0,260,840,20);
             }
-            return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><div class="furniture-body ${config.back?'rack-body':''} ${config.rack?'furniture-rack':''}" style="width:${config.width}px;height:${config.height}px;--back-top:${type==='furnitureHairpin'?28:config.rack?16:20}px;--back-bottom:${type==='furnitureHairpin'?130:config.rack?60:20}px">${parts}</div>`;
+            return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><div class="furniture-body ${config.back?'rack-body':''} ${config.rack?'furniture-rack':''}" style="width:${config.width}px;height:${config.height}px;--back-top:${type==='furnitureHairpin'||config.recordColumns?28:config.rack?16:20}px;--back-bottom:${type==='furnitureHairpin'?130:config.recordColumns?70:config.rack?60:20}px">${parts}</div>`;
         }
         const BENCH_SURFACES={wood:'Madeira',felt:'Feltro',studio:'Estúdio'};
         const BENCH_DECORATIONS={records:'Discos',covers:'Capas',cds:'CDs',lamp:'Luminária'};
@@ -3860,6 +3868,7 @@ const Hardware = (() => {
             if(['spkPassiveGridBlack','spkPassiveGridOrange'].includes(type))drawing='<rect x="14" y="2" width="28" height="36" rx="1"/><path d="M18 6v28m7-28v28m6-28v28m7-28v28M17 11h22M17 18h22M17 25h22M17 32h22M18 39v4h20v-4"/>';
             if(FURNITURE_TYPES[type]?.rack){const count=type==='furnitureRackSix'||type==='furnitureRackSixTall'?6:4;drawing='<path d="M8 3h40v38H8zM12 41v3m32-3v3"/>'+Array.from({length:count},(_,i)=>`<path d="M10 ${5+i*34/(count-1)}h36"/>`).join('');}
             if(type==='furnitureHairpin')drawing='<path d="M4 14h48v20H4zM7 14v20m10-20v20m22-20v20m10-20v20M17 24h22M7 34l3 9 3-9m30 0 3 9 3-9"/>';
+            if(FURNITURE_TYPES[type]?.recordColumns){const columns=FURNITURE_TYPES[type].recordColumns;drawing='<path d="M6 7h44v32H6zM6 20h44"/>'+Array.from({length:columns-1},(_,i)=>`<path d="M${6+(i+1)*44/columns} 20v19"/>`).join('')+'<circle cx="11" cy="42" r="2"/><circle cx="45" cy="42" r="2"/>';}
             if(type==='turntableVintage')drawing='<path d="M5 7h46v32H5zM8 10v26m40-26v26"/><circle cx="24" cy="22" r="12"/><circle cx="24" cy="22" r="3"/><path d="M43 12v12l-6 6M12 35h6"/>';
             if(type==='eqVintage')drawing=rack+'<path d="M8 12v20m40-20v20M14 15v14m7-14v14m7-14v14m7-14v14m7-14v14M12 22h4m3-4h4m3 7h4m3-5h4m3 4h4"/>';
             if(type==='mixerVintage')drawing=rack+'<path d="M8 12v20m40-20v20M15 22v8m9-8v8m9-8v8m9-8v8M13 26h4m5-2h4m5 3h4m5-2h4"/>'+[15,24,33,42].map(x=>`<circle cx="${x}" cy="17" r="2"/>`).join('');
@@ -3876,7 +3885,7 @@ const Hardware = (() => {
                 headphoneAmp:'#c6ab87',headphoneAmpModern:'#91b7c7',headphoneAmp4:'#a1b7c0',eqStudio:'#9eb7c5',eqVintage:'#c5ad86',mixer:'#a4b6c6',mixerVintage:'#bfa385',
                 crossover:'#93b8bf',crossoverVintage:'#c3ae8b',btReceiverA:'#8abac8',btTransmitterPro:'#99b7cc',
                 rcaSwitch:'#a4b5c1',rcaSwitchVintage:'#bda98a',speakerSwitch:'#9eb8bc',speakerSwitchVintage:'#c1a785',rcaMatrix:'#9bacc3',rcaMatrixVintage:'#b9a88b',
-                furnitureRack:'#a5b3ad',furnitureHairpin:'#b99470',furnitureRackTall:'#a0b1ab',furnitureRackSix:'#9baaa6',furnitureRackSixTall:'#92a5a0',furnitureTable:'#baa48a',furnitureNiche:'#b7a58d',pendantLamp:'#e6b674',wallLampCage:'#d8b879',wallLampDome:'#d9ae75',wallLampBare:'#e1b874'
+                furnitureRack:'#a5b3ad',furnitureHairpin:'#b99470',furnitureRecordOne:'#c19a71',furnitureRecordThree:'#c19a71',furnitureRackTall:'#a0b1ab',furnitureRackSix:'#9baaa6',furnitureRackSixTall:'#92a5a0',furnitureTable:'#baa48a',furnitureNiche:'#b7a58d',pendantLamp:'#e6b674',wallLampCage:'#d8b879',wallLampDome:'#d9ae75',wallLampBare:'#e1b874'
             };
             const color=colors[type]||(INTERFACE_DEVICES[type]?.passive?'#b6b5aa':DEVICE_FAMILIES[type]==='vintage'?'#c0ab8a':'#a0b8c4');
             drawing=drawing.replace(/ opacity="[^"]*"/g,'');
@@ -3962,7 +3971,7 @@ const Hardware = (() => {
             const section=document.createElement('section');section.className='mb-6 catalog-category';
             const heading=document.createElement('h3');heading.className='text-[10px] font-bold text-gray-400 mb-3 tracking-wider uppercase';heading.textContent=title;
             const grid=document.createElement('div');grid.className='grid grid-cols-2 gap-3';
-            const rackOrder=['furnitureRack','furnitureHairpin','furnitureRackSix','furnitureRackTall','furnitureRackSixTall'];
+            const rackOrder=['furnitureRack','furnitureHairpin','furnitureRecordOne','furnitureRecordThree','furnitureRackSix','furnitureRackTall','furnitureRackSixTall'];
             items.sort((a,b)=>{
                 if(title==='Móveis'){
                     const ai=rackOrder.indexOf(a.dataset.template),bi=rackOrder.indexOf(b.dataset.template);
