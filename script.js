@@ -4748,6 +4748,7 @@ const Hardware = (() => {
             dev.applyIntegrated=()=>{
                 const st=dev.state;st.precisionGain=[0,6,12].includes(st.precisionGain)?st.precisionGain:0;apply();
                 dev.el.querySelector('[data-precision-gain]').dataset.togglePosition=String(st.precisionGain/6);dev.el.querySelector('[data-precision-gain]').setAttribute('aria-label',`Ganho de saída: ${st.precisionGain} dB. Clique para alternar 0, 6 e 12 dB.`);dev.el.querySelector('[data-precision-gain-label]').textContent=(st.precisionGain?'+':'')+st.precisionGain+' dB';
+                if(state.selectedDeviceId===dev.id){const slider=inspectorContent.querySelector('[data-precision-inspector-gain]');if(slider){slider.value=String(st.precisionGain);syncInspectorGainVisual(slider);const value=inspectorContent.querySelector('[data-precision-gain-value]');if(value)value.textContent=(st.precisionGain?'+':'')+st.precisionGain+' dB';}}
                 dev.el.querySelectorAll('[data-pre-toggle]').forEach(button=>button.dataset.togglePosition=st[button.dataset.preToggle]?'2':'0');
             };
             dev.el.querySelector('[data-precision-gain]').onclick=()=>{dev.state.precisionGain=(dev.state.precisionGain+6)%18;dev.applyIntegrated();scheduleProjectSave();};dev.applyIntegrated();
@@ -4919,14 +4920,14 @@ const Hardware = (() => {
         }
         function customPreampInspectorHtml(dev){
             if(dev.type==='preGlass')return glassPreampInspector(dev);
-            if(dev.type==='prePrecision')return `<div class="precision-inspector-options">${[['preMuted','Mute'],['preMono','Mono'],['preInvert','Inverter polaridade']].map(([key,name])=>`<button class="tt-insp-btn" data-pre-inspector-toggle="${key}" aria-pressed="${!!dev.state[key]}">${name}</button>`).join('')}<button class="tt-insp-btn" data-precision-inspector-gain>GANHO: ${dev.state.precisionGain} dB · ALTERNAR</button><p>O modulômetro acompanha as saídas L/R reais em dBFS. A agulha preta representa L e a vermelha representa R; o ganho selecionado atua antes das saídas.</p></div>`;
+            if(dev.type==='prePrecision')return `<div class="precision-inspector-options">${[['preMuted','Mute'],['preMono','Mono'],['preInvert','Inverter polaridade']].map(([key,name])=>`<button class="tt-insp-btn" data-pre-inspector-toggle="${key}" aria-pressed="${!!dev.state[key]}">${name}</button>`).join('')}<label class="flex flex-col gap-2 text-sm text-gray-300"><span>Ganho de saída <output data-precision-gain-value>${dev.state.precisionGain?'+':''}${dev.state.precisionGain} dB</output></span><input class="gain-spark-slider" data-precision-inspector-gain data-gain-steps="3" type="range" min="0" max="12" step="6" value="${dev.state.precisionGain}" aria-label="Ganho de saída" aria-valuetext="${dev.state.precisionGain?'+':''}${dev.state.precisionGain} dB"></label><p>O modulômetro acompanha as saídas L/R reais em dBFS. A agulha preta representa L e a vermelha representa R; o ganho selecionado atua antes das saídas.</p></div>`;
             const config=CUSTOM_PREAMPS[dev.type];
             return `<div class="flex flex-col gap-3">${[['preMuted','Mute'],...(dev.type==='preReference'?[['preMono','Mono'],['preInvert','Inverter polaridade']]:[])].map(([key,name])=>`<button class="tt-insp-btn ${dev.state[key]?'is-on':''}" data-pre-inspector-toggle="${key}" aria-pressed="${!!dev.state[key]}">${name}</button>`).join('')}${config.crossover?`<label class="flex flex-col gap-2 text-sm text-gray-300"><span>Subwoofer <output>${Math.round(dev.state.subLevel*10)}/10</output></span><input type="range" data-custom-pre-setting="subLevel" min="0" max="1" step=".1" value="${dev.state.subLevel}"></label><label class="flex flex-col gap-2 text-sm text-gray-300"><span>Corte do subwoofer <output>${dev.state.subFrequency} Hz</output></span><input type="range" data-custom-pre-setting="subFrequency" min="40" max="200" step="16" value="${dev.state.subFrequency}"></label>`:''}</div>`;
         }
         function bindCustomPreampInspector(dev){
             if(!CUSTOM_PREAMPS[dev.type])return;
             inspectorContent.querySelectorAll('[data-glass-inspector-toggle]').forEach(button=>button.addEventListener('click',()=>dev.el.querySelector(`[data-glass-toggle="${button.dataset.glassInspectorToggle}"]`).click()));
-            inspectorContent.querySelector('[data-precision-inspector-gain]')?.addEventListener('click',()=>{dev.el.querySelector('[data-precision-gain]').click();selectDevice(dev.id,true);});
+            inspectorContent.querySelector('[data-precision-inspector-gain]')?.addEventListener('input',event=>{dev.state.precisionGain=Number(event.target.value);dev.applyIntegrated();inspectorContent.querySelector('[data-precision-gain-value]').textContent=(dev.state.precisionGain?'+':'')+dev.state.precisionGain+' dB';scheduleProjectSave();});
             inspectorContent.querySelectorAll('[data-pre-inspector-toggle]').forEach(button=>button.addEventListener('click',()=>dev.el.querySelector(`[data-pre-toggle="${button.dataset.preInspectorToggle}"]`).click()));
             inspectorContent.querySelectorAll('[data-custom-pre-setting]').forEach(input=>input.addEventListener('input',()=>{const key=input.dataset.customPreSetting;dev.state[key]=Number(input.value);dev.applyIntegrated();input.previousElementSibling.querySelector('output').textContent=key==='subLevel'?Math.round(dev.state[key]*10)+'/10':dev.state[key]+' Hz';scheduleProjectSave();}));
         }
@@ -6767,8 +6768,9 @@ const Hardware = (() => {
             control.style.setProperty('--gain-energy',String(energy));
             control.style.setProperty('--gain-color',energy===0?'var(--accent)':`rgb(${color.join(' ')})`);
             control.dataset.idle=String(energy===0);
-            const index=Math.round(amount*Hardware.physics.detents);
-            slider.setAttribute('aria-valuetext',`${index} · ${Number(slider.value)}`);
+            const intervals=slider.dataset.gainSteps?Number(slider.dataset.gainSteps)-1:Hardware.physics.detents;
+            const index=Math.round(amount*intervals);
+            slider.setAttribute('aria-valuetext',slider.dataset.gainSteps?`${Number(slider.value)?'+':''}${Number(slider.value)} dB`:`${index} · ${Number(slider.value)}`);
             control.nextElementSibling?.querySelectorAll('span').forEach((tick,i)=>tick.classList.toggle('is-current',i===index));
         }
         function setupInspectorGainVisual(slider){
@@ -6785,13 +6787,14 @@ const Hardware = (() => {
         function setupInspectorDetents() {
             inspectorContent.querySelectorAll('input[type="range"]:not(#source-progress)').forEach(slider=>{
                 if(slider.dataset.detents)return;slider.dataset.detents='true';Hardware.slider(slider);
+                if(slider.dataset.gainSteps)slider.step=String((Number(slider.max)-Number(slider.min))/(Number(slider.dataset.gainSteps)-1));
                 if(slider.matches('.gain-spark-slider'))setupInspectorGainVisual(slider);
-                const min=Number(slider.min),max=Number(slider.max),intervals=Hardware.physics.detents;
+                const min=Number(slider.min),max=Number(slider.max),intervals=slider.dataset.gainSteps?Number(slider.dataset.gainSteps)-1:Hardware.physics.detents;
                 if(!Number.isFinite(min)||!Number.isFinite(max)||max<=min)return;
                 const bipolar=min<0&&max>0,scale=document.createElement('div');scale.className='inspector-detent-scale';scale.setAttribute('aria-hidden','true');
-                for(let i=0;i<=intervals;i++){const tick=document.createElement('span');tick.textContent=String(bipolar?i-5:i);scale.appendChild(tick);}
+                for(let i=0;i<=intervals;i++){const tick=document.createElement('span');tick.textContent=slider.dataset.gainSteps?`${i?'+':''}${min+(max-min)*i/intervals} dB`:String(bipolar?i-5:i);scale.appendChild(tick);}
                 (slider.closest('.gain-slider-control')||slider).insertAdjacentElement('afterend',scale);
-                const update=()=>{const index=Math.max(0,Math.min(intervals,Math.round((Number(slider.value)-min)/(max-min)*intervals)));scale.querySelectorAll('span').forEach((tick,i)=>tick.classList.toggle('is-current',i===index));slider.setAttribute('aria-valuetext',`${bipolar?index-5:index} · ${Number(slider.value)}`);};
+                const update=()=>{const index=Math.max(0,Math.min(intervals,Math.round((Number(slider.value)-min)/(max-min)*intervals)));scale.querySelectorAll('span').forEach((tick,i)=>tick.classList.toggle('is-current',i===index));slider.setAttribute('aria-valuetext',slider.dataset.gainSteps?`${Number(slider.value)?'+':''}${Number(slider.value)} dB`:`${bipolar?index-5:index} · ${Number(slider.value)}`);};
                 slider.addEventListener('input',update);slider.addEventListener('change',update);update();
             });
         }
