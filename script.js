@@ -1877,7 +1877,7 @@ const Hardware = (() => {
         });
 
         const DEVICE_NAMES = {
-            furnitureRack:'Rack de Áudio', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureRackSixTall:'Rack com Vãos Altos · 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio', pendantLamp:'Luminária pendente', wallLampCage:'Arandela industrial', wallLampDome:'Arandela de prato', wallLampBare:'Arandela de filamento', acousticHorizontal:'Painel Acústico Horizontal', acousticVertical:'Painel Acústico Vertical',
+            furnitureRack:'Rack de Áudio', furnitureHairpin:'Rack Vintage · Alfinete', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureRackSixTall:'Rack com Vãos Altos · 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio', pendantLamp:'Luminária pendente', wallLampCage:'Arandela industrial', wallLampDome:'Arandela de prato', wallLampBare:'Arandela de filamento', acousticHorizontal:'Painel Acústico Horizontal', acousticVertical:'Painel Acústico Vertical',
             adapterRcaP2:'Adaptador RCA → P2', adapterP2Rca:'Adaptador P2 → RCA', adapterP10P2:'Adaptador P10 → P2', adapterP2P10:'Adaptador P2 → P10', adapterRcaP10:'Adaptador RCA → P10', adapterP10Rca:'Adaptador P10 → RCA', phonoConverter:'Conversor Phono → Linha', speakerConverter:'Conversor Amplificado → Linha',
             turntable: 'Toca-discos', turntableVintage: 'Toca-discos Vintage', turntableLinear:'Toca-discos Tangencial',
             hardwareDemo:'Modelo · Controles',lightPoint:'Ponto de luz · Teste',signalGeneratorVintage:'Gerador de Sinais Vintage', signalGenerator:'Gerador de Sinais', cdPlayer: 'CD Player', tapeDeck:'Tape Deck de Rolo', preamp:'Pré · Slim',preReference:'Pré · Visor Verde',preControl:'Pré · Controle 2.1',preDisplay:'Pré · Tela Central', benchMeter:'Medidor de Bancada', benchMeterVintage:'Medidor de Bancada Vintage',
@@ -1941,6 +1941,7 @@ const Hardware = (() => {
             furnitureRackTall:{width:840,height:840,surfaces:[0,260,520,780],inset:20,rack:true,back:true,description:'Use os vãos mais altos para acomodar equipamentos maiores ou empilhados.'},
             furnitureRackSix:{width:840,height:1120,surfaces:[0,210,420,630,840,1050],inset:20,rack:true,back:true,description:'Seis vãos de 194 px para equipamentos baixos e médios.'},
             furnitureRackSixTall:{width:840,height:1370,surfaces:[0,260,520,780,1040,1300],inset:20,rack:true,back:true,description:'Seis vãos de 244 px para acomodar equipamentos médios e altos.'},
+            furnitureHairpin:{width:1320,height:610,surfaces:[0,238,456],inset:24,rack:true,back:true,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack baixo de madeira com dois vãos centrais, nichos laterais e pés alfinete de metal.'},
             furnitureTable:{width:1680,height:760,surfaces:[0],inset:20,description:'Apoie os equipamentos sobre o tampo. Arraste a mesa pelo tampo ou pelos pés.'},
             acousticHorizontal:{width:Hardware.sizes.widths.full,height:Hardware.sizes.widths.full,surfaces:[],inset:0,acoustic:'horizontal',description:'Espuma acústica grafite com frisos horizontais. Painel quadrado com a largura padrão dos equipamentos.'},
             acousticVertical:{width:Hardware.sizes.widths.full,height:Hardware.sizes.widths.full,surfaces:[],inset:0,acoustic:'vertical',description:'Espuma acústica grafite com frisos verticais. Painel quadrado com a largura padrão dos equipamentos.'},
@@ -1948,6 +1949,8 @@ const Hardware = (() => {
         };
         const WALL_LAMP_TYPES=Object.freeze({wallLampCage:'cage',wallLampDome:'dome',wallLampBare:'bare'});
         const FURNITURE_MATERIALS = {metal:'Metal',black:'Preto',lightWood:'Madeira clara',darkWood:'Madeira escura'};
+        const furnitureMaterialsFor=type=>Object.fromEntries(Object.entries(FURNITURE_MATERIALS).filter(([key])=>!FURNITURE_TYPES[type]?.materials||FURNITURE_TYPES[type].materials.includes(key)));
+        const furnitureMaterialFor=(type,value)=>Object.hasOwn(furnitureMaterialsFor(type),value)?value:(FURNITURE_TYPES[type]?.defaultMaterial||'black');
         function acousticTile(orientation){
             return `<span class="acoustic-foam foam-${orientation}" aria-hidden="true"></span>`;
         }
@@ -1956,19 +1959,22 @@ const Hardware = (() => {
         }
         function furnitureMarkup(type){
             const config=FURNITURE_TYPES[type];
-            const part=(name,x,y,width,height)=>`<div class="furniture-part ${name}" style="left:${x}px;top:${y}px;width:${width}px;height:${height}px"></div>`;
+            const part=(name,x,y,width,height,content='')=>`<div class="furniture-part ${name}" style="left:${x}px;top:${y}px;width:${width}px;height:${height}px">${content}</div>`;
             let parts='';
             if(config.acoustic){
                 parts=`<div class="acoustic-panel">${acousticTile(config.acoustic)}</div>`;
             }else if(type==='furnitureTable'){
                 parts=part('furniture-top',0,0,config.width,28)+part('furniture-leg',60,28,40,config.height-28)+part('furniture-leg',config.width-100,28,40,config.height-28)+part('furniture-brace',100,80,config.width-200,20);
+            }else if(type==='furnitureHairpin'){
+                const pin='<svg viewBox="0 0 80 130" aria-hidden="true"><path d="M9 3 28 115Q34 129 40 115L61 3M20 3 32 108Q34 116 36 108L50 3"/><path class="hairpin-glint" d="M12 5 30 114M58 5 39 114"/></svg>';
+                parts=part('furniture-top',0,0,1320,28)+part('furniture-shelf',264,238,792,24)+part('furniture-shelf',0,456,1320,24)+part('furniture-side',0,28,24,428)+part('furniture-side',1296,28,24,428)+part('furniture-side furniture-divider',244,28,20,428)+part('furniture-side furniture-divider',1056,28,20,428)+part('furniture-hairpin-leg',38,480,80,130,pin)+part('furniture-hairpin-leg',1202,480,80,130,pin);
             }else if(config.rack){
                 const bodyHeight=config.surfaces.at(-1)+16;
                 parts=config.surfaces.map(y=>part('furniture-shelf',20,y,config.width-40,16)).join('')+part('furniture-leg',28,bodyHeight,20,44)+part('furniture-leg',config.width-48,bodyHeight,20,44)+part('furniture-side',0,0,20,bodyHeight)+part('furniture-side',config.width-20,0,20,bodyHeight);
             }else{
                 parts=part('furniture-side',0,0,20,280)+part('furniture-side',820,0,20,280)+part('furniture-top',0,0,840,20)+part('furniture-shelf',0,260,840,20);
             }
-            return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><div class="furniture-body ${config.back?'rack-body':''} ${config.rack?'furniture-rack':''}" style="width:${config.width}px;height:${config.height}px;--back-top:${config.rack?16:20}px;--back-bottom:${config.rack?60:20}px">${parts}</div>`;
+            return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><div class="furniture-body ${config.back?'rack-body':''} ${config.rack?'furniture-rack':''}" style="width:${config.width}px;height:${config.height}px;--back-top:${type==='furnitureHairpin'?28:config.rack?16:20}px;--back-bottom:${type==='furnitureHairpin'?130:config.rack?60:20}px">${parts}</div>`;
         }
         const BENCH_SURFACES={wood:'Madeira',felt:'Feltro',studio:'Estúdio'};
         const BENCH_DECORATIONS={records:'Discos',covers:'Capas',cds:'CDs',lamp:'Luminária'};
@@ -3853,6 +3859,7 @@ const Hardware = (() => {
             if(details[type])drawing=details[type];
             if(['spkPassiveGridBlack','spkPassiveGridOrange'].includes(type))drawing='<rect x="14" y="2" width="28" height="36" rx="1"/><path d="M18 6v28m7-28v28m6-28v28m7-28v28M17 11h22M17 18h22M17 25h22M17 32h22M18 39v4h20v-4"/>';
             if(FURNITURE_TYPES[type]?.rack){const count=type==='furnitureRackSix'||type==='furnitureRackSixTall'?6:4;drawing='<path d="M8 3h40v38H8zM12 41v3m32-3v3"/>'+Array.from({length:count},(_,i)=>`<path d="M10 ${5+i*34/(count-1)}h36"/>`).join('');}
+            if(type==='furnitureHairpin')drawing='<path d="M4 14h48v20H4zM7 14v20m10-20v20m22-20v20m10-20v20M17 24h22M7 34l3 9 3-9m30 0 3 9 3-9"/>';
             if(type==='turntableVintage')drawing='<path d="M5 7h46v32H5zM8 10v26m40-26v26"/><circle cx="24" cy="22" r="12"/><circle cx="24" cy="22" r="3"/><path d="M43 12v12l-6 6M12 35h6"/>';
             if(type==='eqVintage')drawing=rack+'<path d="M8 12v20m40-20v20M14 15v14m7-14v14m7-14v14m7-14v14m7-14v14M12 22h4m3-4h4m3 7h4m3-5h4m3 4h4"/>';
             if(type==='mixerVintage')drawing=rack+'<path d="M8 12v20m40-20v20M15 22v8m9-8v8m9-8v8m9-8v8M13 26h4m5-2h4m5 3h4m5-2h4"/>'+[15,24,33,42].map(x=>`<circle cx="${x}" cy="17" r="2"/>`).join('');
@@ -3869,7 +3876,7 @@ const Hardware = (() => {
                 headphoneAmp:'#c6ab87',headphoneAmpModern:'#91b7c7',headphoneAmp4:'#a1b7c0',eqStudio:'#9eb7c5',eqVintage:'#c5ad86',mixer:'#a4b6c6',mixerVintage:'#bfa385',
                 crossover:'#93b8bf',crossoverVintage:'#c3ae8b',btReceiverA:'#8abac8',btTransmitterPro:'#99b7cc',
                 rcaSwitch:'#a4b5c1',rcaSwitchVintage:'#bda98a',speakerSwitch:'#9eb8bc',speakerSwitchVintage:'#c1a785',rcaMatrix:'#9bacc3',rcaMatrixVintage:'#b9a88b',
-                furnitureRack:'#a5b3ad',furnitureRackTall:'#a0b1ab',furnitureRackSix:'#9baaa6',furnitureRackSixTall:'#92a5a0',furnitureTable:'#baa48a',furnitureNiche:'#b7a58d',pendantLamp:'#e6b674',wallLampCage:'#d8b879',wallLampDome:'#d9ae75',wallLampBare:'#e1b874'
+                furnitureRack:'#a5b3ad',furnitureHairpin:'#b99470',furnitureRackTall:'#a0b1ab',furnitureRackSix:'#9baaa6',furnitureRackSixTall:'#92a5a0',furnitureTable:'#baa48a',furnitureNiche:'#b7a58d',pendantLamp:'#e6b674',wallLampCage:'#d8b879',wallLampDome:'#d9ae75',wallLampBare:'#e1b874'
             };
             const color=colors[type]||(INTERFACE_DEVICES[type]?.passive?'#b6b5aa':DEVICE_FAMILIES[type]==='vintage'?'#c0ab8a':'#a0b8c4');
             drawing=drawing.replace(/ opacity="[^"]*"/g,'');
@@ -3955,7 +3962,7 @@ const Hardware = (() => {
             const section=document.createElement('section');section.className='mb-6 catalog-category';
             const heading=document.createElement('h3');heading.className='text-[10px] font-bold text-gray-400 mb-3 tracking-wider uppercase';heading.textContent=title;
             const grid=document.createElement('div');grid.className='grid grid-cols-2 gap-3';
-            const rackOrder=['furnitureRack','furnitureRackSix','furnitureRackTall','furnitureRackSixTall'];
+            const rackOrder=['furnitureRack','furnitureHairpin','furnitureRackSix','furnitureRackTall','furnitureRackSixTall'];
             items.sort((a,b)=>{
                 if(title==='Móveis'){
                     const ai=rackOrder.indexOf(a.dataset.template),bi=rackOrder.indexOf(b.dataset.template);
@@ -5248,7 +5255,7 @@ const Hardware = (() => {
             }
             if(FURNITURE_TYPES[type]) {
                 el.classList.add('furniture-node');
-                if(FURNITURE_TYPES[type].acoustic)el.classList.add('acoustic-node');el.dataset.material='black';
+                if(FURNITURE_TYPES[type].acoustic)el.classList.add('acoustic-node');el.dataset.material=furnitureMaterialFor(type);
                 el.innerHTML=furnitureMarkup(type);
             }
             if(HP_TYPES.has(type)&&type!=='hpKubaDisco2'){
@@ -5350,7 +5357,7 @@ const Hardware = (() => {
             dev.powerGain.gain.value = 1.0;
 
             if (FURNITURE_TYPES[type]) {
-                dev.state.material='black';
+                dev.state.material=furnitureMaterialFor(type);
                 updateBenchAppearance(dev);
                 if(FURNITURE_TYPES[type].back){dev.state.hasBack=true;el.dataset.back='true';}
             } else if (INTERFACE_DEVICES[type]) {
@@ -6776,7 +6783,7 @@ const Hardware = (() => {
             if(MATRIX_TYPES.has(dev.type)){dev.state.matrixInput=1;dev.state.matrixOutputs=[true,false,false,false];dev.updateMatrix();}
             if(SELECTOR_TYPES.has(dev.type))dev.el.querySelector('[data-switch-source="A"]').click();
             if(dev.type==='furnitureTable'){Object.assign(dev.state,{benchSurface:'wood',benchBackdrop:false,benchDecorations:[]});updateBenchAppearance(dev);}
-            if(FURNITURE_TYPES[dev.type]){dev.state.material='black';dev.el.dataset.material='black';if(FURNITURE_TYPES[dev.type].back){dev.state.hasBack=true;dev.el.dataset.back='true';}}
+            if(FURNITURE_TYPES[dev.type]){dev.state.material=furnitureMaterialFor(dev.type);dev.el.dataset.material=dev.state.material;if(FURNITURE_TYPES[dev.type].back){dev.state.hasBack=true;dev.el.dataset.back='true';}}
             if(dev.meters)dev.meters.clipUntil=0;
             if(state.selectedDeviceId===dev.id){selectDevice(dev.id,true);document.getElementById('restore-settings-status').textContent=message;}
             updateCableFlows();
@@ -7006,7 +7013,7 @@ const Hardware = (() => {
             } else if(FURNITURE_TYPES[dev.type]) {
                 const config=FURNITURE_TYPES[dev.type];
                 if(config.acoustic)html+=`<p class="text-sm text-gray-300">${config.description}</p><p class="text-xs text-gray-400">${config.width} × ${config.height} px · Arraste o painel pela espuma para posicioná-lo atrás dos equipamentos.</p>`;
-                else html += `<div class="flex flex-col gap-3"><label class="text-sm text-gray-300" for="furniture-material">Material</label><select id="furniture-material" class="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700">${Object.entries(FURNITURE_MATERIALS).map(([key,name])=>`<option value="${key}" ${dev.state.material===key?'selected':''}>${name}</option>`).join('')}</select><p class="text-xs text-gray-400">${config.description}</p><p class="text-xs text-gray-400">Aproxime a base do equipamento de uma prateleira para apoiá-lo. Arraste o móvel pelas partes sólidas.${config.rack?' Os equipamentos apoiados nas prateleiras e empilhados acompanham o rack.':''}</p></div>`;
+                else html += `<div class="flex flex-col gap-3"><label class="text-sm text-gray-300" for="furniture-material">Material</label><select id="furniture-material" class="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700">${Object.entries(furnitureMaterialsFor(dev.type)).map(([key,name])=>`<option value="${key}" ${dev.state.material===key?'selected':''}>${name}</option>`).join('')}</select><p class="text-xs text-gray-400">${config.description}</p><p class="text-xs text-gray-400">Aproxime a base do equipamento de uma prateleira para apoiá-lo. Arraste o móvel pelas partes sólidas.${config.rack?' Os equipamentos apoiados nas prateleiras e empilhados acompanham o rack.':''}</p></div>`;
                 if(dev.type==='furnitureTable')html+=`<fieldset class="bench-options"><legend>Ambiente da bancada</legend><label for="bench-surface">Superfície</label><select id="bench-surface">${Object.entries(BENCH_SURFACES).map(([key,label])=>`<option value="${key}" ${dev.state.benchSurface===key?'selected':''}>${label}</option>`).join('')}</select><label><input type="checkbox" id="bench-backdrop" ${dev.state.benchBackdrop===true?'checked':''}> Painel acústico</label><span>Objetos decorativos</span>${Object.entries(BENCH_DECORATIONS).map(([key,label])=>`<label><input type="checkbox" data-bench-decoration="${key}" ${dev.state.benchDecorations?.includes(key)?'checked':''}> ${label}</label>`).join('')}</fieldset>`;
                 if(config.back)html+=`<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Fundo do móvel</span><button id="furniture-back" class="tt-insp-btn ${dev.state.hasBack?'is-on':''}" aria-pressed="${!!dev.state.hasBack}">FUNDO DO MÓVEL</button><p class="text-xs text-gray-400">O fundo acompanha o material do móvel, com acabamento escurecido pela sombra.</p></div>`;
             } else if (INTERFACE_DEVICES[dev.type]) {
@@ -7068,7 +7075,7 @@ const Hardware = (() => {
             document.querySelectorAll('[data-bench-decoration]').forEach(input=>input.addEventListener('change',()=>{
                 dev.state.benchDecorations=[...document.querySelectorAll('[data-bench-decoration]:checked')].map(item=>item.dataset.benchDecoration);updateBenchAppearance(dev);
             }));
-            if(FURNITURE_TYPES[dev.type])document.getElementById('furniture-material')?.addEventListener('change',event=>{dev.state.material=event.target.value;dev.el.dataset.material=event.target.value;});
+            if(FURNITURE_TYPES[dev.type])document.getElementById('furniture-material')?.addEventListener('change',event=>{dev.state.material=furnitureMaterialFor(dev.type,event.target.value);dev.el.dataset.material=dev.state.material;});
             document.getElementById('furniture-back')?.addEventListener('click',event=>{
                 dev.state.hasBack=!dev.state.hasBack;dev.el.dataset.back=String(dev.state.hasBack);
                 event.currentTarget.classList.toggle('is-on',dev.state.hasBack);
@@ -8319,7 +8326,7 @@ const Hardware = (() => {
             if(dev.updateMatrix)dev.updateMatrix();
             if(SELECTOR_TYPES.has(dev.type)){const source=saved.selectedSource==='B'?'B':'A';dev.el.querySelector(`[data-switch-source="${source}"]`)?.click();}
             updateBenchAppearance(dev);
-            if(FURNITURE_TYPES[dev.type]){dev.el.dataset.material=Object.hasOwn(FURNITURE_MATERIALS,s.material)?s.material:'black';dev.el.dataset.back=String(s.hasBack!==false);}
+            if(FURNITURE_TYPES[dev.type]){s.material=furnitureMaterialFor(dev.type,s.material);dev.el.dataset.material=s.material;dev.el.dataset.back=String(s.hasBack!==false);}
             if(controlAmpConfig(dev.type)){s.integratedSource=clamp(s.integratedSource,0,3,0);s.integratedSource=Math.round(s.integratedSource);s.direct=!!s.direct;s.subLevel=clamp(s.subLevel,0,1,.8);s.subFrequency=clamp(s.subFrequency,40,200,80);s.preMuted=!!s.preMuted;s.preMono=!!s.preMono;s.preInvert=!!s.preInvert;dev.applyIntegrated();}
             dev.setLidOpen?.(!!dev.state.lidOpen);
             dev.setTrayOpen?.(!!dev.state.trayOpen);

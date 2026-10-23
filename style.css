@@ -1812,6 +1812,16 @@
         .furniture-node[data-material="lightWood"] .furniture-part {border-color:#ac8758;background:repeating-linear-gradient(2deg,#ffffff10 0 1px,transparent 1px 7px,#80532312 7px 9px),linear-gradient(100deg,#e6c697,#c9a374 50%,#dfbc87);box-shadow:inset 0 1px #fff5,inset -1px -2px #76512d55,0 3px 5px #0003;}
         .furniture-node[data-material="darkWood"] .furniture-part {border-color:#51331f;background:repeating-linear-gradient(2deg,#dba26e12 0 1px,transparent 1px 6px,#1c100913 6px 8px),linear-gradient(100deg,#785135,#4c301e 52%,#65412a);box-shadow:inset 0 1px #d8b18333,inset -1px -2px #21110777,0 3px 5px #0003;}
         .furniture-node .furniture-leg {border-radius:0 0 3px 3px;}
+        .furniture-node.device-type-furnitureHairpin {--hairpin-back:#332115;}
+        .furniture-node.device-type-furnitureHairpin[data-material="lightWood"] {--hairpin-back:#987653;}
+        .furniture-node.device-type-furnitureHairpin[data-back="true"] .rack-body::before {inset:28px 24px 130px;background:repeating-linear-gradient(2deg,#fff9e408 0 1px,transparent 1px 8px),linear-gradient(180deg,#08090988,var(--hairpin-back) 29%,var(--hairpin-back) 76%,#08090966);box-shadow:inset 0 18px 27px #0008,inset 11px 0 20px #0005,inset -11px 0 20px #0005;}
+        .device-type-furnitureHairpin .furniture-top {border-radius:3px 3px 0 0;box-shadow:inset 0 2px #fff5,inset 0 -4px 6px #0005,0 4px 6px #0004;}
+        .device-type-furnitureHairpin .furniture-shelf {box-shadow:inset 0 1px #fff4,inset 0 -4px 7px #0006,0 6px 8px #0004;}
+        .device-type-furnitureHairpin .furniture-divider {box-shadow:inset 2px 0 3px #fff2,inset -3px 0 5px #0007,3px 0 5px #0003;}
+        .furniture-node.device-type-furnitureHairpin .furniture-hairpin-leg {border:0!important;background:transparent!important;box-shadow:none!important;}
+        .device-type-furnitureHairpin .furniture-hairpin-leg svg {display:block;width:100%;height:100%;overflow:visible;fill:none;stroke:#151919;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(2px 3px 2px #0007);}
+        .device-type-furnitureHairpin .furniture-hairpin-leg .hairpin-glint {stroke:#a7aaa1;stroke-width:.85;opacity:.62;}
+        :root.lighting-demo-enabled .device-type-furnitureHairpin .furniture-hairpin-leg::after {display:none;}
         .furniture-node .device-header {pointer-events:none;}
         .device-node.device-type-cdPlayer.rack-standard > .cd-player-face.rack-face {display:grid!important;grid-template-columns:230px minmax(0,1fr) 50px 88px 28px!important;gap:12px!important;align-items:center!important;padding:14px 18px!important;background:linear-gradient(#414a50,#242d33 18%,#1a2227)!important;}
         .cd-drive {display:flex;flex-direction:column;align-items:center;gap:8px;color:#9caab3;}.cd-drive>span {font:700 8px/1 "Inter",sans-serif;letter-spacing:.13em;}.cd-drive small {font:600 5px/1 "Inter",sans-serif;letter-spacing:.18em;}.cd-tray {position:relative;width:100%;height:21px;border:1px solid #0c1216;border-radius:2px;background:linear-gradient(#39434a,#1e282e);box-shadow:inset 0 1px #ffffff15,0 1px #ffffff10;}.cd-tray i {position:absolute;left:8px;right:8px;bottom:4px;height:1px;background:#7d8990;}
