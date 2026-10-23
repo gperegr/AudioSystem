@@ -1371,7 +1371,7 @@ const Hardware = (() => {
         }
         canvasGridControl.querySelector('select').addEventListener('change',event=>{setCanvasGrid(event.target.value);scheduleProjectSave();scheduleAppPreferencesSave();});
         setCanvasGrid(savedAppPreferences.grid||'dots');
-        const canvasBackdropModes={studio:'Estúdio',listening:'Sala de audição',loft:'Loft'};
+        const canvasBackdropModes={studio:'Estúdio',listening:'Sala de audição',loft:'Loft',loftPhoto:'Loft industrial · imagem'};
         const legacyBackdrops={library:'listening',night:'loft'};
         const canvasTimeModes={dawn:'Nascer do dia',dusk:'Fim de tarde',night:'Noite'};
         const canvasBackdropControl=document.createElement('label');canvasBackdropControl.className='canvas-theme-control';
@@ -1383,14 +1383,17 @@ const Hardware = (() => {
             mode=legacyBackdrops[mode]||mode;
             mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studio';state.canvasBackdrop=mode;canvas.dataset.backdrop=mode;canvasBackdropControl.querySelector('select').value=mode;
             roomBackdrop.querySelectorAll('[data-room-layer]').forEach(image=>{
-                const layer=image.dataset.roomLayer,key=mode+':'+state.canvasTime+':'+layer;
-                if(!roomSceneCache.has(key))roomSceneCache.set(key,'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(RoomScenes.renderLayer(mode,layer,state.canvasTime)));
+                const layer=image.dataset.roomLayer;
+                image.hidden=mode==='loftPhoto'&&layer!=='far';
+                if(image.hidden){image.removeAttribute('src');return;}
+                const key=mode+':'+state.canvasTime+':'+layer;
+                if(!roomSceneCache.has(key))roomSceneCache.set(key,mode==='loftPhoto'?'./assets/rooms/industrial-loft.webp':'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(RoomScenes.renderLayer(mode,layer,state.canvasTime)));
                 const src=roomSceneCache.get(key);
                 if(image.getAttribute('src')!==src)image.src=src;
             });
             if(windowLayers.dataset.scene!==mode||windowLayers.dataset.time!==state.canvasTime){
                 windowLayers.className='room-window-layers room-window-'+mode;
-                windowLayers.innerHTML=RoomScenes.windowPanes(mode,state.canvasTime);
+                windowLayers.innerHTML=mode==='loftPhoto'?'':RoomScenes.windowPanes(mode,state.canvasTime);
                 windowLayers.dataset.scene=mode;windowLayers.dataset.time=state.canvasTime;
             }
             state.canvasFloor=RoomScenes.scenes[mode].floor;canvas.dataset.floor=state.canvasFloor;
@@ -2526,7 +2529,7 @@ const Hardware = (() => {
         const isSignalPassthrough=dev=>!!INTERFACE_DEVICES[dev.type]?.passive||RCA_SWITCH_TYPES.has(dev.type)||MATRIX_TYPES.has(dev.type)||SPEAKER_SWITCH_TYPES.has(dev.type);
         function prospectiveConnections(prospective){
             if(!prospective)return state.connections;
-            return [...state.connections.filter(c=>c.inId!==prospective.input.id&&c.outId!==prospective.output.id),{outId:prospective.output.id,inId:prospective.input.id}];
+            return [...state.connections.filter(c=>!c.miswired&&c.inId!==prospective.input.id&&c.outId!==prospective.output.id),{outId:prospective.output.id,inId:prospective.input.id}];
         }
         function routedInputPorts(dev,output,channelHint=''){
             const channel=portChannel(output)||channelHint;
@@ -2617,10 +2620,10 @@ const Hardware = (() => {
             if(POWER_OUTPUT_TYPES.has(dev.type)&&getPortSignal(output)==='amplified')return [{amp:dev,channel,key:dev.id+':'+channel}];
             if(!isSignalPassthrough(dev))return [];
             const next=new Set(seen);next.add(output.id);const inputs=routedInputPorts(dev,output,channel);
-            return state.connections.filter(c=>inputs.some(port=>port.id===c.inId)).flatMap(c=>amplifierOrigins(document.getElementById(c.outId),next,portChannel(document.getElementById(c.inId))||channel));
+            return state.connections.filter(c=>!c.miswired&&inputs.some(port=>port.id===c.inId)).flatMap(c=>amplifierOrigins(document.getElementById(c.outId),next,portChannel(document.getElementById(c.inId))||channel));
         }
         function amplifierRoutes(dev){
-            const routes=state.connections.filter(c=>document.getElementById(c.inId)?.closest('.device-node')?.id===dev.id).flatMap(c=>amplifierOrigins(document.getElementById(c.outId)));
+            const routes=state.connections.filter(c=>!c.miswired&&document.getElementById(c.inId)?.closest('.device-node')?.id===dev.id).flatMap(c=>amplifierOrigins(document.getElementById(c.outId)));
             return [...new Map(routes.map(route=>[route.key,route])).values()];
         }
         function updateListeningControls(){
@@ -2726,7 +2729,7 @@ const Hardware = (() => {
             if(!connection)return;
             panel.innerHTML='<h3 class="text-sm font-semibold text-gray-200">Organizar cabo</h3><label class="text-sm text-gray-300 flex flex-col gap-2">Etiqueta<input id="cable-label" type="text" maxlength="60" class="p-2 rounded bg-gray-800 border border-gray-600 text-gray-100" placeholder="Ex.: CD → Equalizador"></label><div class="flex flex-col gap-3"><div class="flex items-center justify-between"><span class="text-sm text-gray-300">Cor</span><button id="cable-color-reset" type="button" class="text-xs text-blue-300">Padrão</button></div><div id="cable-color-palette" class="cable-color-palette" role="group" aria-label="Cor do cabo"></div></div><button id="cable-visibility" class="tt-insp-btn"></button><p class="text-xs text-gray-400">Ocultar altera apenas o visual; o áudio continua passando.</p>';
             const out=document.getElementById(connection.outId),input=document.getElementById(connection.inId);
-            if(out&&input){const info=document.createElement('p');info.className='cable-signal-summary';info.textContent=`Transporta ${portSignalLabel(out)} → entrada espera ${portSignalLabel(input)}. ${getPortCompatibility(out,input).reason}`;panel.insertBefore(info,panel.children[1]);}
+            if(out&&input){const info=document.createElement('p');info.className='cable-signal-summary';info.textContent=connection.miswired?'Ligação entre portas da mesma direção. O cabo está encaixado, mas não transporta áudio; há risco de dano em equipamentos reais.':`Transporta ${portSignalLabel(out)} → entrada espera ${portSignalLabel(input)}. ${getPortCompatibility(out,input).reason}`;panel.insertBefore(info,panel.children[1]);}
             const slackControl=document.createElement('div');slackControl.className='flex flex-col gap-3';
             slackControl.innerHTML='<span class="text-sm text-gray-300">Folga</span><div class="grid grid-cols-3 gap-2" role="group" aria-label="Folga do cabo"></div>';
             const slackGroup=slackControl.querySelector('[role="group"]');
@@ -3907,6 +3910,32 @@ const Hardware = (() => {
             const oldIcon = item.firstElementChild;
             if (oldIcon) oldIcon.outerHTML = catalogIcon(item.dataset.template);
         });
+        const catalogAmpTip=document.createElement('aside');catalogAmpTip.id='catalog-amp-tooltip';catalogAmpTip.setAttribute('role','tooltip');document.body.appendChild(catalogAmpTip);
+        let catalogAmpTimer=0,catalogAmpTarget=null;
+        const hideCatalogAmpTip=()=>{clearTimeout(catalogAmpTimer);catalogAmpTarget=null;catalogAmpTip.classList.remove('is-visible');};
+        const showCatalogAmpTip=(item,delay)=>{
+            if(!item||!AMPLIFICATION_VOICINGS[item.dataset.template])return;
+            if(item===catalogAmpTarget)return;
+            hideCatalogAmpTip();catalogAmpTarget=item;
+            catalogAmpTimer=setTimeout(()=>{
+                if(!item.isConnected||item.getClientRects().length===0)return;
+                const type=item.dataset.template,spec=FIXED_AMP_SPECS[type];
+                const title=DEVICE_NAMES[type]||item.textContent.trim();
+                catalogAmpTip.innerHTML=`<h2>${title}</h2><p class="catalog-amp-power">${spec?`${spec.watts} W por canal · 8 Ω`:/^pre/i.test(type)?'Pré-amplificador · sem potência para caixas':'Amplificação para fones'}</p>${amplificationInspectorHtml({amplificationProfile:AMPLIFICATION_VOICINGS[type]})}`;
+                const rect=item.getBoundingClientRect(),w=catalogAmpTip.offsetWidth,h=catalogAmpTip.offsetHeight;
+                catalogAmpTip.style.left=Math.min(innerWidth-w-10,rect.right+14)+'px';
+                catalogAmpTip.style.top=Math.max(8,Math.min(innerHeight-h-8,rect.top+(rect.height-h)/2))+'px';
+                catalogAmpTip.classList.remove('is-visible');void catalogAmpTip.offsetWidth;catalogAmpTip.classList.add('is-visible');
+            },delay);
+        };
+        catalogItems.filter(item=>AMPLIFICATION_VOICINGS[item.dataset.template]).forEach(item=>{
+            item.addEventListener('pointerenter',event=>{if(event.pointerType!=='touch')showCatalogAmpTip(item,500);});
+            item.addEventListener('pointerleave',hideCatalogAmpTip);
+            item.addEventListener('focusin',()=>showCatalogAmpTip(item,0));
+            item.addEventListener('focusout',hideCatalogAmpTip);
+        });
+        equipmentCatalog.addEventListener('scroll',()=>{if(catalogAmpTip.classList.contains('is-visible'))hideCatalogAmpTip();},true);
+        equipmentCatalog.addEventListener('pointerdown',hideCatalogAmpTip);
         const contextHelp=document.createElement('aside');contextHelp.id='context-help';contextHelp.className='context-help';contextHelp.setAttribute('role','status');contextHelp.setAttribute('aria-live','polite');contextHelp.innerHTML='<strong></strong><span></span>';document.body.appendChild(contextHelp);
         let contextHelpTarget=null,contextHelpTimer=0,contextHelpPreviousDescription=null;
         function hideContextHelp(){clearTimeout(contextHelpTimer);contextHelp.classList.remove('is-visible');if(contextHelpTarget){if(contextHelpPreviousDescription)contextHelpTarget.setAttribute('aria-describedby',contextHelpPreviousDescription);else contextHelpTarget.removeAttribute('aria-describedby');}contextHelpTarget=null;contextHelpPreviousDescription=null;}
@@ -5017,7 +5046,18 @@ const Hardware = (() => {
             const el=document.createElement('div');
             el.id=id;el.className='device-node device-type-pendantLamp';el.dataset.equipmentType='pendantLamp';
             el.tabIndex=0;el.setAttribute('aria-label','Luminária pendente. Arraste pela cúpula para mover.');
-            el.innerHTML=`<div class="device-header" aria-hidden="true"></div><div class="pendant-suspension" aria-hidden="true"><i class="pendant-cord"></i><div class="pendant-fixture"><i class="pendant-strain"></i><i class="pendant-socket"><i class="pendant-socket-grip"></i></i><i class="pendant-bulb"><i class="pendant-glass-stem"></i><i class="pendant-filament"></i><i class="pendant-filament-wire"></i></i><svg class="pendant-shade" viewBox="0 0 420 110" aria-hidden="true"><defs><linearGradient id="${id}-shade" x1="0" y1="0" x2="1" y2=".55"><stop offset="0" stop-color="#5e6862"/><stop offset=".12" stop-color="#252d2c"/><stop offset=".42" stop-color="#10191a"/><stop offset=".74" stop-color="#0b1113"/><stop offset="1" stop-color="#34312b"/></linearGradient><linearGradient id="${id}-rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a59169"/><stop offset=".34" stop-color="#333731"/><stop offset="1" stop-color="#080d0e"/></linearGradient><radialGradient id="${id}-inside"><stop offset="0" stop-color="#c6a46b"/><stop offset=".46" stop-color="#594932"/><stop offset="1" stop-color="#111617"/></radialGradient></defs><path d="M193 5 Q183 6 175 15 C141 51 91 72 15 87 Q10 89 12 94 C91 100 329 100 408 94 Q410 89 405 87 C329 72 279 51 245 15 Q237 6 227 5Z" fill="url(#${id}-shade)" stroke="#0a1011" stroke-width="2"/><path d="M193 8 Q180 25 151 45 C117 67 72 79 22 89" fill="none" stroke="#bac2aa" stroke-opacity=".31" stroke-width="2"/><path d="M229 8 Q242 25 270 45 C305 67 350 80 399 89" fill="none" stroke="#b8a080" stroke-opacity=".16" stroke-width="2"/><path d="M16 92 C85 96 335 96 404 92" fill="none" stroke="url(#${id}-rim)" stroke-width="6" stroke-linecap="round"/><path d="M37 95 Q210 114 383 95 Q210 104 37 95Z" fill="url(#${id}-inside)" opacity=".85"/><path d="M22 94 C105 99 315 99 398 94" fill="none" stroke="#c5a979" stroke-opacity=".46" stroke-width="1.2"/></svg><i class="pendant-shade-rivets"></i></div></div>`;
+            const shadeShape='M193 5 Q183 7 175 16 C140 51 89 73 16 87 Q10 89 12 93 Q100 99 210 98 Q320 99 408 93 Q410 89 404 87 C331 73 280 51 245 16 Q237 7 227 5Z';
+            const shadeSvg=`<svg class="pendant-shade" viewBox="0 0 420 110" aria-hidden="true"><defs>
+                <linearGradient id="${id}-iron" x1="0" y1="0" x2=".73" y2="1"><stop stop-color="#4e5450"/><stop offset=".16" stop-color="#303633"/><stop offset=".54" stop-color="#1b211f"/><stop offset=".85" stop-color="#141918"/><stop offset="1" stop-color="#3b3830"/></linearGradient>
+                <radialGradient id="${id}-sheen" cx=".29" cy=".08" r=".8"><stop stop-color="#c0bdae" stop-opacity=".3"/><stop offset=".43" stop-color="#868a81" stop-opacity=".09"/><stop offset="1" stop-color="#070b0b" stop-opacity=".28"/></radialGradient>
+                <linearGradient id="${id}-edge" x2="0" y2="1"><stop stop-color="#77796b"/><stop offset=".46" stop-color="#323832"/><stop offset="1" stop-color="#131716"/></linearGradient>
+                <radialGradient id="${id}-underside"><stop stop-color="#ac8350" stop-opacity=".72"/><stop offset=".65" stop-color="#4d4030"/><stop offset="1" stop-color="#111715"/></radialGradient>
+                <filter id="${id}-texture"><feTurbulence type="fractalNoise" baseFrequency=".35" numOctaves="2" seed="6" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
+                <clipPath id="${id}-shade-clip"><path d="${shadeShape}"/></clipPath>
+            </defs><path d="${shadeShape}" fill="url(#${id}-iron)"/><path d="${shadeShape}" fill="url(#${id}-sheen)"/>
+            <g clip-path="url(#${id}-shade-clip)"><rect width="420" height="106" filter="url(#${id}-texture)" opacity=".12" style="mix-blend-mode:soft-light"/><path d="M21 86 Q118 65 175 16 Q147 63 18 92Z" fill="#b5b8a8" opacity=".08"/></g>
+            <path d="M13 91 Q210 100 407 91 Q318 103 210 102 Q102 103 13 91Z" fill="url(#${id}-edge)"/><path d="M37 97 Q210 111 383 97 Q210 105 37 97Z" fill="url(#${id}-underside)"/><path d="M27 94 Q210 101 393 94" fill="none" stroke="#b0a58a" stroke-opacity=".2" stroke-width=".8"/></svg>`;
+            el.innerHTML=`<div class="device-header" aria-hidden="true"></div><div class="pendant-suspension" aria-hidden="true"><i class="pendant-cord"></i><div class="pendant-fixture"><i class="pendant-strain"></i><i class="pendant-socket"><i class="pendant-socket-grip"></i></i><i class="pendant-bulb"><i class="pendant-glass-stem"></i><i class="pendant-filament"></i><i class="pendant-filament-wire"></i></i>${shadeSvg}</div></div>`;
             el.style.left=Math.max(sceneSideInset(),Math.min(world.offsetWidth-504-sceneSideInset(),x))+'px';
             el.style.top=Math.max(0,Math.min(maxEquipmentBottom()-276,y))+'px';
             world.appendChild(el);
@@ -7312,7 +7352,7 @@ const Hardware = (() => {
                 if(visited.has(dev.id))return 'unknown';
                 const next=new Set(visited);next.add(dev.id);
                 const routed=routedInputPorts(dev,port,channelHint),accepts=input=>!!input&&routed.includes(input);
-                const sources=state.connections.filter(c=>c.inId!==prospective?.input?.id&&accepts(document.getElementById(c.inId))).map(c=>({output:document.getElementById(c.outId),input:document.getElementById(c.inId)})).filter(link=>link.output);
+                const sources=state.connections.filter(c=>!c.miswired&&c.inId!==prospective?.input?.id&&accepts(document.getElementById(c.inId))).map(c=>({output:document.getElementById(c.outId),input:document.getElementById(c.inId)})).filter(link=>link.output);
                 if(accepts(prospective?.input))sources.push(prospective);
                 const signals=new Set(sources.map(link=>getPortSignal(link.output,next,prospective,portChannel(link.input)||portChannel(port)||channelHint)).filter(signal=>signal!=='unknown'));
                 return signals.size>1?'mixed':signals.values().next().value||'unknown';
@@ -7421,6 +7461,7 @@ const Hardware = (() => {
                 const id=pending.pop();if(id===origin)return {compatible:false,reason:'Esta ligação fecha um ciclo de realimentação. Mantenha o percurso da fonte até a saída de escuta.'};
                 if(seen.has(id))continue;seen.add(id);
                 for(const cable of state.connections){
+                    if(cable.miswired)continue;
                     if(cable.inId===input.id||cable.outId===output.id)continue;
                     const from=document.getElementById(cable.outId)?.closest('.device-node')?.id;
                     if(from===id){const to=document.getElementById(cable.inId)?.closest('.device-node')?.id;if(to)pending.push(to);}
@@ -7702,7 +7743,9 @@ const Hardware = (() => {
 
                     tempCableEl.classList.remove('active');
                     const connType = outP.dataset.type || inP.dataset.type;
-                    const connection={outId:outP.id,inId:inP.id,el:tempCableEl,type:connType,wps:[]};
+                    const miswired=outP.dataset.io!=='out'||inP.dataset.io!=='in';
+                    const connection={outId:outP.id,inId:inP.id,el:tempCableEl,type:connType,wps:[],miswired};
+                    if(miswired)tempCableEl.dataset.miswired='true';
                     state.connections.push(connection);animateCableSeat(connection,tPort);
                     playUiSound('connect');
                     outP.classList.add('connected'); inP.classList.add('connected');
@@ -7710,7 +7753,7 @@ const Hardware = (() => {
                     
                     const devOut = state.devices[outP.closest('.device-node').id];
                     const devIn = state.devices[inP.closest('.device-node').id];
-                    if (devOut && devIn && devOut.nodes[outP.dataset.node] && devIn.nodes[inP.dataset.node]) {
+                    if (!miswired && devOut && devIn && devOut.nodes[outP.dataset.node] && devIn.nodes[inP.dataset.node]) {
                         try{devOut.nodes[outP.dataset.node].connect(devIn.nodes[inP.dataset.node]);}catch{}
                     }
                     
@@ -7746,7 +7789,7 @@ const Hardware = (() => {
             const o = document.getElementById(c.outId); const i = document.getElementById(c.inId);
             if(o) o.classList.remove('connected'); if(i) i.classList.remove('connected');
             
-            if(o && i) {
+            if(o && i && !c.miswired) {
                 const dO = state.devices[o.closest('.device-node').id]; const dI = state.devices[i.closest('.device-node').id];
                 if(dO && dI && dO.nodes[o.dataset.node] && dI.nodes[i.dataset.node]) {
                     try { dO.nodes[o.dataset.node].disconnect(dI.nodes[i.dataset.node]); } catch(e){}
@@ -7859,6 +7902,7 @@ const Hardware = (() => {
                 changed = false;
                 iterations++;
                 state.connections.forEach(c => {
+                    if(c.miswired)return;
                     const outPortEl = document.getElementById(c.outId);
                     const inPortEl = document.getElementById(c.inId);
                     if (!outPortEl || !inPortEl) return;
@@ -7930,7 +7974,7 @@ const Hardware = (() => {
                 const devOut = outDevEl ? state.devices[outDevEl.id] : null;
 
                 // O cabo só tem fluxo se a fonte estiver ligada e com áudio ativo alcançando essa saída
-                const isCarryingSignal = !!(devOut && devOut.powered && activeDevices.has(devOut.id) && portCarriesSignal(devOut, outPortEl));
+                const isCarryingSignal = !!(!c.miswired && devOut && devOut.powered && activeDevices.has(devOut.id) && portCarriesSignal(devOut, outPortEl));
                 c.el.classList.toggle('signal-idle', !isCarryingSignal);
                 c.el.dataset.signal = isCarryingSignal ? 'ativo' : 'sem sinal';
                 c.el.setAttribute('aria-label', `${c.el.querySelector('title')?.textContent || 'Cabo de áudio'} · ${isCarryingSignal ? 'sinal ativo' : 'sem sinal'}`);
@@ -8012,7 +8056,8 @@ const Hardware = (() => {
             if(!output||!input||!getPortCompatibility(output,input).compatible)throw new Error('Ligação do projeto incompatível.');
             const el=document.createElementNS('http://www.w3.org/2000/svg','g');el.setAttribute('class','cable-group');svgLayer.appendChild(el);
             const type=output.dataset.type;drawCable(el,getPortCenter(output),getPortCenter(input),[],type);
-            state.connections.push({outId:output.id,inId:input.id,el,type,wps:[]});from.nodes[nodeOut].connect(to.nodes[nodeIn]);output.classList.add('connected');input.classList.add('connected');
+            const miswired=output.dataset.io!=='out'||input.dataset.io!=='in';
+            state.connections.push({outId:output.id,inId:input.id,el,type,wps:[],miswired});if(miswired)el.dataset.miswired='true';else from.nodes[nodeOut].connect(to.nodes[nodeIn]);output.classList.add('connected');input.classList.add('connected');
         }
 
         let pendantLightTick=0,pendantLightSignature='';

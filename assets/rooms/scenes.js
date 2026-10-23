@@ -35,6 +35,12 @@
             lamp(550,430,'bar',{w:48,h:130,rgb:[255,193,122],strength:.57}),
             lamp(1850,430,'bar',{w:48,h:130,rgb:[255,193,122],strength:.52})
         ]},
+        loftPhoto:{material:'loft',floor:'concrete',objects:[
+            // Emitters align with the two sconces and the large window in the photograph.
+            lamp(405,265,'bar',{w:55,h:85,rgb:[255,187,96],strength:1.05,layer:'far'}),
+            lamp(1995,265,'bar',{w:55,h:85,rgb:[255,187,96],strength:1.05,layer:'far'}),
+            windowAt(780,105,840,780,'city',{light:{shape:'rect',strength:.30,rgb:[195,207,222]}})
+        ]},
         loft:{material:'loft',floor:'concrete',objects:[
             object('brick',0,-300,{w:2400,h:1700,layer:'far'}),
             windowAt(220,190,520,930,'city',{light:{shape:'rect',strength:.20,rgb:[224,224,204]}}),
