@@ -901,7 +901,7 @@ const Hardware = (() => {
             if(floorShadowKey){layer.getContext('2d').clearRect(0,0,layer.width,layer.height);floorShadowKey='';}
             return;
         }
-        const furniture=[...world.querySelectorAll('.furniture-node:not(.acoustic-node)')].map(el=>({el,x:el.offsetLeft,y:el.offsetTop,width:el.offsetWidth,height:el.offsetHeight,furniture:true}));
+        const furniture=[...world.querySelectorAll('.furniture-node')].map(el=>({el,x:el.offsetLeft,y:el.offsetTop,width:el.offsetWidth,height:el.offsetHeight,furniture:true}));
         const allCasters=[...furniture,...equipment.map(box=>({...box,furniture:false}))];
         const worldHeight=world.offsetHeight,visibleTop=worldHeight-313;
         const worldRect=world.getBoundingClientRect(),viewRect=canvas.getBoundingClientRect(),viewScale=worldRect.width/world.offsetWidth;
@@ -999,7 +999,7 @@ const Hardware = (() => {
             const key=sceneName+'|'+sceneEmitterKey+'|'+node.offsetLeft+'|'+node.offsetTop+'|'+node.dataset.back;
             if(node.dataset.lightPaintKey===key)return;
             node.dataset.lightPaintKey=key;
-            node.querySelectorAll('.furniture-part,.acoustic-panel').forEach(part=>{
+            node.querySelectorAll('.furniture-part').forEach(part=>{
                 const box=part.getBoundingClientRect(),scale=rect.width/node.offsetWidth;
                 const x=(box.left-rect.left)/scale+node.offsetLeft,y=(box.top-rect.top)/scale+node.offsetTop;
                 const source=sceneEmitters.map(item=>sampleSceneLight(item,x+box.width/scale/2,y+box.height/scale/2)).sort((a,b)=>b.weight-a.weight)[0];
@@ -1862,7 +1862,7 @@ const Hardware = (() => {
         });
 
         const DEVICE_NAMES = {
-            furnitureRack:'Rack de Áudio', furnitureHairpin:'Rack Vintage · Alfinete', furnitureRecordOne:'Rack para Discos · 1 Coluna', furnitureRecordThree:'Rack para Discos · 3 Colunas', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureRackSixTall:'Rack com Vãos Altos · 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio', pendantLamp:'Luminária pendente', wallLampCage:'Arandela industrial', wallLampDome:'Arandela de prato', wallLampBare:'Arandela de filamento', acousticHorizontal:'Painel Acústico Horizontal', acousticVertical:'Painel Acústico Vertical',
+            furnitureRack:'Rack de Áudio', furnitureHairpin:'Rack Vintage · Alfinete', furnitureRecordOne:'Rack para Discos · 1 Coluna', furnitureRecordThree:'Rack para Discos · 3 Colunas', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureRackSixTall:'Rack com Vãos Altos · 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio', pendantLamp:'Luminária pendente', wallLampCage:'Arandela industrial', wallLampDome:'Arandela de prato', wallLampBare:'Arandela de filamento',
             adapterRcaP2:'Adaptador RCA → P2', adapterP2Rca:'Adaptador P2 → RCA', adapterP10P2:'Adaptador P10 → P2', adapterP2P10:'Adaptador P2 → P10', adapterRcaP10:'Adaptador RCA → P10', adapterP10Rca:'Adaptador P10 → RCA', phonoConverter:'Conversor Phono → Linha', speakerConverter:'Conversor Amplificado → Linha',
             turntable: 'Toca-discos', turntableVintage: 'Toca-discos Vintage', turntableLinear:'Toca-discos Tangencial',
             hardwareDemo:'Modelo · Controles',signalGeneratorVintage:'Gerador de Sinais Vintage', signalGenerator:'Gerador de Sinais', cdPlayer: 'CD Player', tapeDeck:'Tape Deck de Rolo', preamp:'Pré · Slim',preReference:'Pré · Visor Verde',preControl:'Pré · Controle 2.1',preDisplay:'Pré · Tela Central', benchMeter:'Medidor de Bancada', benchMeterVintage:'Medidor de Bancada Vintage',
@@ -1930,8 +1930,6 @@ const Hardware = (() => {
             furnitureRecordOne:{width:840,height:800,surfaces:[0,300,730],inset:26,rack:true,back:true,recordColumns:1,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack de madeira com nicho para aparelhos, espaço inferior para discos e pequenos rodízios.'},
             furnitureRecordThree:{width:2040,height:800,surfaces:[0,300,730],inset:26,rack:true,back:true,recordColumns:3,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack de madeira com nicho superior para aparelhos e três compartimentos inferiores para discos.'},
             furnitureTable:{width:1680,height:760,surfaces:[0],inset:20,description:'Apoie os equipamentos sobre o tampo. Arraste a mesa pelo tampo ou pelos pés.'},
-            acousticHorizontal:{width:Hardware.sizes.widths.full,height:Hardware.sizes.widths.full,surfaces:[],inset:0,acoustic:'horizontal',description:'Espuma acústica grafite com frisos horizontais. Painel quadrado com a largura padrão dos equipamentos.'},
-            acousticVertical:{width:Hardware.sizes.widths.full,height:Hardware.sizes.widths.full,surfaces:[],inset:0,acoustic:'vertical',description:'Espuma acústica grafite com frisos verticais. Painel quadrado com a largura padrão dos equipamentos.'},
             furnitureNiche:{width:840,height:280,surfaces:[0,260],inset:20,back:true,description:'Acomode um equipamento dentro do nicho ou sobre ele.'}
         };
         const WALL_LAMP_TYPES=Object.freeze({wallLampCage:'cage',wallLampDome:'dome',wallLampBare:'bare'});
@@ -1948,9 +1946,7 @@ const Hardware = (() => {
             const config=FURNITURE_TYPES[type];
             const part=(name,x,y,width,height,content='')=>`<div class="furniture-part ${name}" style="left:${x}px;top:${y}px;width:${width}px;height:${height}px">${content}</div>`;
             let parts='';
-            if(config.acoustic){
-                parts=`<div class="acoustic-panel">${acousticTile(config.acoustic)}</div>`;
-            }else if(type==='furnitureTable'){
+            if(type==='furnitureTable'){
                 parts=part('furniture-top',0,0,config.width,28)+part('furniture-leg',60,28,40,config.height-28)+part('furniture-leg',config.width-100,28,40,config.height-28)+part('furniture-brace',100,80,config.width-200,20);
             }else if(type==='furnitureHairpin'){
                 const pin='<svg viewBox="0 0 80 130" aria-hidden="true"><path d="M9 3 28 115Q34 129 40 115L61 3M20 3 32 108Q34 116 36 108L50 3"/><path class="hairpin-glint" d="M12 5 30 114M58 5 39 114"/></svg>';
@@ -3751,9 +3747,13 @@ const Hardware = (() => {
             if(type==='pendantLamp'){
                 drawing='<path d="M28 3v19M13 27q15-12 30 0H13m-15 0h60M24 29v9q4 8 8 0v-9m-6 5h4"/>';
             } else if(WALL_LAMP_TYPES[type]){
-                drawing=type==='wallLampCage'?'<ellipse cx="44" cy="17" rx="6" ry="11"/><path d="M44 17H20V9h-7v27h19V16H20m-7 4h19m-19 8h19M18 12v22m9-22v22"/>':type==='wallLampDome'?'<circle cx="10" cy="19" r="6"/><path d="M16 18h13v7m-23 3q15-14 30 0H6m16 1v11q4 5 8 0V29"/>':'<circle cx="43" cy="25" r="7"/><path d="M36 25H24v9m-9-13c0-9 14-9 14 0v7q-7 9-14 0zM18 16h8"/>';
+                drawing={
+                    wallLampCage:'<ellipse cx="28" cy="6" rx="9" ry="3"/><path d="M28 9v4m-6 0h12l2 6H20zM17 19h22v17q-3 8-11 8t-11-8zM17 26h22M18 35h20M22 20v20m12-20v20"/><path d="M24 22q-2 11 4 15 6-4 4-15m-6 6 2-3 2 3-2 3"/>',
+                    wallLampDome:'<ellipse cx="28" cy="6" rx="9" ry="3"/><path d="M28 9v9m-5 0h10l2 4H21zM5 31q10-10 23-10t23 10q-23 8-46 0zM23 33v6q0 5 5 5t5-5v-6m-7 3 2-2 2 2-2 3"/>',
+                    wallLampBare:'<circle cx="28" cy="32" r="11"/><circle cx="20" cy="31" r="1"/><circle cx="36" cy="31" r="1"/><path d="M22 30h12v9H22zM28 28v2M21 26q-3-5-2-10 1-9 9-10 8 1 9 10 1 5-2 10zM24 16l4 4 4-4m-4 4v5M24 39h8"/>'
+                }[type];
             } else if (FURNITURE_TYPES[type]) {
-                drawing = FURNITURE_TYPES[type].acoustic ? '<rect x="10" y="5" width="36" height="36" rx="1"/>'+Array.from({length:6},(_,i)=>FURNITURE_TYPES[type].acoustic==='horizontal'?`<path d="M12 ${9+i*5}h32"/>`:`<path d="M${14+i*5} 7v32"/>`).join('') : type === 'furnitureTable' ? '<path d="M5 15h46v5H5zM10 20v20m36-20v20M12 26h32"/>' : type === 'furnitureNiche' ? '<path d="M6 10h44v28H6zM11 15h34v18H11z"/>' : '<path d="M9 5h38v34H9zM9 16h38M9 27h38M13 39v4m30-4v4"/>';
+                drawing = type === 'furnitureTable' ? '<path d="M5 15h46v5H5zM10 20v20m36-20v20M12 26h32"/>' : type === 'furnitureNiche' ? '<path d="M6 10h44v28H6zM11 15h34v18H11z"/>' : '<path d="M9 5h38v34H9zM9 16h38M9 27h38M13 39v4m30-4v4"/>';
             } else if (INTERFACE_DEVICES[type]) {
                 drawing = '<rect x="6" y="11" width="44" height="24" rx="3"/><circle cx="14" cy="23" r="3"/><circle cx="42" cy="23" r="3"/><path d="M21 23h14m-4-4 4 4-4 4"/>' + (INTERFACE_DEVICES[type].passive ? '' : '<path d="m26 13-3 6h6l-3 6"/>');
             } else if(type==='streamIntegrated'){
@@ -5212,7 +5212,7 @@ const Hardware = (() => {
             }
             if(FURNITURE_TYPES[type]) {
                 el.classList.add('furniture-node');
-                if(FURNITURE_TYPES[type].acoustic)el.classList.add('acoustic-node');el.dataset.material=furnitureMaterialFor(type);
+                el.dataset.material=furnitureMaterialFor(type);
                 el.innerHTML=furnitureMarkup(type);
             }
             if(HP_TYPES.has(type)&&type!=='hpKubaDisco2'){
@@ -6689,7 +6689,7 @@ const Hardware = (() => {
             // Listening controls and live meters alone are not equipment settings.
             return SOURCE_TYPES.has(dev.type)||EQ_TYPES.has(dev.type)||MIXER_TYPES.has(dev.type)
                 ||SELECTOR_TYPES.has(dev.type)||MATRIX_TYPES.has(dev.type)
-                ||ACTIVE_SPK.has(dev.type)||SUB_TYPES.has(dev.type)||(!!FURNITURE_TYPES[dev.type]&&!FURNITURE_TYPES[dev.type].acoustic)||dev.type==='hpKubaDisco2'
+                ||ACTIVE_SPK.has(dev.type)||SUB_TYPES.has(dev.type)||!!FURNITURE_TYPES[dev.type]||dev.type==='hpKubaDisco2'
                 ||['preamp','receiver','powerAmp','powerStereo','powerVintage','headphoneAmp','headphoneAmpModern','headphoneAmp4'].includes(dev.type);
         }
         async function restoreDeviceSettings(dev) {
@@ -6968,8 +6968,7 @@ const Hardware = (() => {
                 html+=`<p class="text-sm text-gray-400">${catalogDescriptions[dev.type]} Arraste para posicionar na parede. A fonte de luz acompanha a luminária e projeta sombras nos equipamentos.</p>`;
             } else if(FURNITURE_TYPES[dev.type]) {
                 const config=FURNITURE_TYPES[dev.type];
-                if(config.acoustic)html+=`<p class="text-sm text-gray-300">${config.description}</p><p class="text-xs text-gray-400">${config.width} × ${config.height} px · Arraste o painel pela espuma para posicioná-lo atrás dos equipamentos.</p>`;
-                else html += `<div class="flex flex-col gap-3"><label class="text-sm text-gray-300" for="furniture-material">Material</label><select id="furniture-material" class="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700">${Object.entries(furnitureMaterialsFor(dev.type)).map(([key,name])=>`<option value="${key}" ${dev.state.material===key?'selected':''}>${name}</option>`).join('')}</select><p class="text-xs text-gray-400">${config.description}</p><p class="text-xs text-gray-400">Aproxime a base do equipamento de uma prateleira para apoiá-lo. Arraste o móvel pelas partes sólidas.${config.rack?' Os equipamentos apoiados nas prateleiras e empilhados acompanham o rack.':''}</p></div>`;
+                html += `<div class="flex flex-col gap-3"><label class="text-sm text-gray-300" for="furniture-material">Material</label><select id="furniture-material" class="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700">${Object.entries(furnitureMaterialsFor(dev.type)).map(([key,name])=>`<option value="${key}" ${dev.state.material===key?'selected':''}>${name}</option>`).join('')}</select><p class="text-xs text-gray-400">${config.description}</p><p class="text-xs text-gray-400">Aproxime a base do equipamento de uma prateleira para apoiá-lo. Arraste o móvel pelas partes sólidas.${config.rack?' Os equipamentos apoiados nas prateleiras e empilhados acompanham o rack.':''}</p></div>`;
                 if(dev.type==='furnitureTable')html+=`<fieldset class="bench-options"><legend>Ambiente da bancada</legend><label for="bench-surface">Superfície</label><select id="bench-surface">${Object.entries(BENCH_SURFACES).map(([key,label])=>`<option value="${key}" ${dev.state.benchSurface===key?'selected':''}>${label}</option>`).join('')}</select><label><input type="checkbox" id="bench-backdrop" ${dev.state.benchBackdrop===true?'checked':''}> Painel acústico</label><span>Objetos decorativos</span>${Object.entries(BENCH_DECORATIONS).map(([key,label])=>`<label><input type="checkbox" data-bench-decoration="${key}" ${dev.state.benchDecorations?.includes(key)?'checked':''}> ${label}</label>`).join('')}</fieldset>`;
                 if(config.back)html+=`<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Fundo do móvel</span><button id="furniture-back" class="tt-insp-btn ${dev.state.hasBack?'is-on':''}" aria-pressed="${!!dev.state.hasBack}">FUNDO DO MÓVEL</button><p class="text-xs text-gray-400">O fundo acompanha o material do móvel, com acabamento escurecido pela sombra.</p></div>`;
             } else if (INTERFACE_DEVICES[dev.type]) {
@@ -8195,9 +8194,10 @@ const Hardware = (() => {
         function projectValidate(value){
             if(!value||value.format!==PROJECT_FORMAT||value.version!==PROJECT_VERSION||!Array.isArray(value.devices)||!Array.isArray(value.connections))throw new Error('Arquivo de projeto inválido ou versão incompatível.');
             if(value.devices.length>500||value.connections.length>4000)throw new Error('O projeto excede a quantidade de equipamentos ou cabos suportada.');
+            const retiredTypes=new Set(['lightPoint','acousticHorizontal','acousticVertical']);
             const ids=new Set();
             value.devices.forEach(dev=>{
-                if(!dev||typeof dev.id!=='string'||ids.has(dev.id)||(!Object.hasOwn(DEVICE_NAMES,dev.type)&&dev.type!=='lightPoint')||!Number.isFinite(dev.x)||!Number.isFinite(dev.y)||dev.x<0||dev.y<0||dev.x>20000||dev.y>20000)throw new Error('O projeto contém um equipamento inválido.');
+                if(!dev||typeof dev.id!=='string'||ids.has(dev.id)||(!Object.hasOwn(DEVICE_NAMES,dev.type)&&!retiredTypes.has(dev.type))||!Number.isFinite(dev.x)||!Number.isFinite(dev.y)||dev.x<0||dev.y<0||dev.x>20000||dev.y>20000)throw new Error('O projeto contém um equipamento inválido.');
                 ids.add(dev.id);
                 if(!dev.settings||typeof dev.settings!=='object'||Array.isArray(dev.settings))throw new Error('Configurações inválidas.');
                 for(const key of ['eq','channelVolumes','matrixOutputs'])if(dev.settings[key]!=null&&!Array.isArray(dev.settings[key]))throw new Error('Ajustes de canais inválidos.');
@@ -8297,7 +8297,7 @@ const Hardware = (() => {
                 world.style.removeProperty('min-width');world.style.removeProperty('min-height');
                 const ui=snapshot.ui||{};setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setCanvasTime(ui.canvasTime||(ui.canvasBackdrop==='night'?'night':'dusk'));setCanvasBackdrop(ui.canvasBackdrop);
                 for(const saved of snapshot.devices){
-                    if(saved.type==='lightPoint')continue; // Legacy test lights are discarded when loading older projects.
+                    if(['lightPoint','acousticHorizontal','acousticVertical'].includes(saved.type))continue; // Discard retired items from older projects.
                     const before=new Set(Object.keys(state.devices));createDevice(saved.type,Math.min(saved.x,world.offsetWidth-150),Math.min(saved.y,maxEquipmentBottom()-150));
                     const dev=Object.values(state.devices).find(item=>!before.has(item.id));if(!dev)throw new Error('Não foi possível restaurar um equipamento.');
                     ids.set(saved.id,dev.id);restored.push([saved,dev]);

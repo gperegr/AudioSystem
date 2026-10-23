@@ -3885,12 +3885,6 @@
 .foam-horizontal {--foam-angle:0deg;}
 .acoustic-foam::after {content:'';position:absolute;inset:0;opacity:.25;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23aaa' filter='url(%23grain)' opacity='.7' d='M0 0h160v160H0z'/%3E%3C/svg%3E");mix-blend-mode:soft-light;}
 .bench-backdrop>.acoustic-foam {position:relative;--foam-pitch:32px;}
-:is(#audio-world,.equipment-preview-world) .device-node.furniture-node.acoustic-node,
-:is(#audio-world,.equipment-preview-world) .device-node.furniture-node.acoustic-node.selected {z-index:0!important;}
-.acoustic-panel {position:absolute;inset:0;pointer-events:auto;cursor:grab;box-shadow:3px 5px 9px #0005;}
-.acoustic-panel:active {cursor:grabbing;}
-.acoustic-panel>.acoustic-foam {width:100%;height:100%;}
-.acoustic-node.selected .acoustic-panel {outline:2px solid #60a5fa99;outline-offset:2px;}
 [data-bench-backdrop="false"] .bench-backdrop {display:none;}
 .device-node[data-bench-surface="wood"] .furniture-top {border-color:#785437;background:repeating-linear-gradient(2deg,#dfb98518 0 2px,transparent 2px 9px,#33201414 9px 11px),linear-gradient(100deg,#a77a4c,#745033 55%,#b58a59);box-shadow:inset 0 2px #efd5ac55,0 4px 8px #0005;}
 .device-node[data-bench-surface="felt"] .furniture-top {border-color:#354a41;background:repeating-linear-gradient(35deg,#ffffff08 0 1px,transparent 1px 3px),repeating-linear-gradient(-35deg,#0000000b 0 1px,transparent 1px 4px),linear-gradient(#50665a,#35483e);box-shadow:inset 0 2px 3px #ffffff16,0 3px 6px #0005;}
@@ -4325,7 +4319,7 @@ body.inspector-collapsed #inspector>.inspector-panel-header,body.inspector-colla
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .furniture-node[data-back="true"] .rack-body>.lighting-furniture-interior.is-active {position:absolute;inset:0;z-index:0;display:block;width:100%;height:100%;pointer-events:none;}
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .furniture-node[data-back="true"] .rack-body>.furniture-part {z-index:1;}
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .furniture-node[data-back="true"] .rack-body>.furniture-side {z-index:2;}
-:root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .furniture-node.lighting-demo-target :is(.furniture-part,.acoustic-panel)::after {content:"";position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse 100% 140% at var(--demo-scene-light-x,50%) var(--demo-scene-light-y,50%),rgb(var(--demo-scene-light-rgb,0 0 0)/calc(.30 * var(--demo-scene-light-strength,0))),transparent 100%);}
+:root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .furniture-node.lighting-demo-target .furniture-part::after {content:"";position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse 100% 140% at var(--demo-scene-light-x,50%) var(--demo-scene-light-y,50%),rgb(var(--demo-scene-light-rgb,0 0 0)/calc(.30 * var(--demo-scene-light-strength,0))),transparent 100%);}
 /* The receiver source well is part of the chassis; its keys sit above the projected shadows. */
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .device-type-powerAmp>.poweramp-body.lighting-shadow-surface::before {content:"";position:absolute;left:82px;right:169px;top:82px;height:34px;box-sizing:border-box;border:1px solid #11191d;border-radius:3px;background:linear-gradient(#10171b,#263138);box-shadow:inset 0 2px 4px #000a,0 1px #ffffff24;pointer-events:none;z-index:0;}
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .device-type-powerAmp>.poweramp-body.lighting-shadow-surface>* {z-index:2;}
