@@ -828,7 +828,7 @@ const Hardware = (() => {
         if(!scale)return [];
         return [...world.querySelectorAll('.device-type-furnitureTable .bench-decoration-lamp')].map(lamp=>{
             const rect=lamp.getBoundingClientRect();
-            return {x:(rect.left+rect.width*135/284-worldRect.left)/scale,y:(rect.top+rect.height*187/656-worldRect.top)/scale,width:110,height:24,shape:'bar',rgb:[255,205,105],strength:1.45,elevation:135,reach:1100};
+            return {x:(rect.left+rect.width*135/284-worldRect.left)/scale,y:(rect.top+rect.height*187/656-worldRect.top)/scale,width:110,height:24,shape:'bar',rgb:[255,205,105],strength:1.45,elevation:135,reach:1100,shade:{opening:1.22,penumbra:.24}};
         });
     }
     function sampleSceneLight(source,x,y){
@@ -837,7 +837,10 @@ const Hardware = (() => {
         const nearestY=Math.max(emitterY-source.height/2,Math.min(emitterY+source.height/2,y));
         const distance=Math.hypot(nearestX-x,nearestY-y);
         const inside=!distance,sx=inside?emitterX:nearestX,sy=inside?emitterY:nearestY;
-        return {...source,emitterX,emitterY,x:sx,y:sy,weight:source.strength*Math.max(0,1-distance/(source.reach||2100)),spread:source.shape==='rect'?7:source.shape==='bar'?4:2};
+        // A cúpula cobre o bulbo por cima: só a abertura inferior deixa a luz escapar.
+        const angle=Math.atan2(Math.abs(x-emitterX),y-emitterY);
+        const shade=source.shade?Math.max(0,Math.min(1,(source.shade.opening-angle)/source.shade.penumbra)):1;
+        return {...source,emitterX,emitterY,x:sx,y:sy,weight:source.strength*shade*Math.max(0,1-distance/(source.reach||2100)),spread:source.shape==='rect'?7:source.shape==='bar'?4:2};
     }
     function sceneLightAt(x,y){
         const canvas=document.getElementById('canvas');
@@ -929,7 +932,7 @@ const Hardware = (() => {
             const reach=Math.max(geometry.width,geometry.height)*1.8+180;
             const falloff=Math.max(0,1-Math.hypot(lx-centerX,ly-centerY)/reach);
             const localScene=sceneEmitters.map(source=>sampleSceneLight(source,centerX,centerY)).sort((a,b)=>b.weight-a.weight);
-            const shadowScene=localScene[0];
+            const shadowScene=localScene.find(source=>source.weight>.01);
             const shadowX=intensity?lx:shadowScene?.x||0,shadowY=intensity?ly:shadowScene?.y||0,shadowStrength=intensity||shadowScene?.weight||0;
             device.style.setProperty('--demo-panel-light-x',(50+dx*40).toFixed(1)+'%');
             device.style.setProperty('--demo-panel-light-y',(50+dy*40).toFixed(1)+'%');
