@@ -823,6 +823,14 @@ const Hardware = (() => {
             return {...source,x:world.offsetWidth/2+(rawX-world.offsetWidth/2)*scale+farX,y:world.offsetHeight+(rawY-world.offsetHeight)*scale+farY,width:source.w*.8*1.12*world.offsetWidth/2400*scale,height:source.h*.8*1.1*world.offsetHeight/1600*scale,reach:2100*world.offsetWidth/2736};
         });
     }
+    function positionedBenchLights(world){
+        const worldRect=world.getBoundingClientRect(),scale=worldRect.width/world.offsetWidth;
+        if(!scale)return [];
+        return [...world.querySelectorAll('.device-type-furnitureTable .bench-decoration-lamp')].map(lamp=>{
+            const rect=lamp.getBoundingClientRect();
+            return {x:(rect.left+rect.width*135/284-worldRect.left)/scale,y:(rect.top+rect.height*187/656-worldRect.top)/scale,width:110,height:24,shape:'bar',rgb:[255,205,105],strength:1.45,elevation:135,reach:1100};
+        });
+    }
     function sampleSceneLight(source,x,y){
         const emitterX=source.emitterX??source.x,emitterY=source.emitterY??source.y;
         const nearestX=Math.max(emitterX-source.width/2,Math.min(emitterX+source.width/2,x));
@@ -832,9 +840,10 @@ const Hardware = (() => {
         return {...source,emitterX,emitterY,x:sx,y:sy,weight:source.strength*Math.max(0,1-distance/(source.reach||2100)),spread:source.shape==='rect'?7:source.shape==='bar'?4:2};
     }
     function sceneLightAt(x,y){
-        const canvas=document.getElementById('canvas');if(canvas.dataset.theme!=='scene')return null;
+        const canvas=document.getElementById('canvas');
         const world=document.getElementById('audio-world');
-        return positionedSceneLights(canvas.dataset.backdrop,canvas.dataset.time,world).map(source=>sampleSceneLight(source,x,y)).reduce((best,source)=>source.weight>(best?.weight||0)?source:best,null);
+        const roomLights=canvas.dataset.theme==='scene'?positionedSceneLights(canvas.dataset.backdrop,canvas.dataset.time,world):[];
+        return [...roomLights,...positionedBenchLights(world)].map(source=>sampleSceneLight(source,x,y)).reduce((best,source)=>source.weight>(best?.weight||0)?source:best,null);
     }
     function updateLightingDemo(){
         if(lightingDemoFrame)return;
@@ -855,7 +864,7 @@ const Hardware = (() => {
         const furnitureBodies=[...world.querySelectorAll('.furniture-node .rack-body')];
         const sceneName=viewport&&document.getElementById('canvas').dataset.theme==='scene'?document.getElementById('canvas').dataset.backdrop:'';
         const sceneTime=document.getElementById('canvas').dataset.time;
-        const sceneEmitters=positionedSceneLights(sceneName,sceneTime,world);
+        const sceneEmitters=[...positionedSceneLights(sceneName,sceneTime,world),...positionedBenchLights(world)];
         const sceneEmitterKey=sceneTime+':'+sceneEmitters.map(source=>Math.round(source.x/8)+','+Math.round(source.y/8)).join(';');
         const furnitureKey=furnitureBodies.map(body=>{const node=body.closest('.furniture-node');return node.id+':'+node.style.left+':'+node.style.top;}).join('|');
         if(furnitureLightingGeometry.key!==furnitureKey){
@@ -1838,6 +1847,7 @@ const Hardware = (() => {
             const scene=document.createElement('div');scene.className='bench-scene';scene.setAttribute('aria-hidden','true');
             scene.innerHTML='<div class="bench-backdrop">'+benchAcousticMarkup()+'</div>'+settings.benchDecorations.map(key=>`<img class="bench-decoration bench-decoration-${key}" src="./assets/decorations/${BENCH_DECORATION_ASSETS[key]}.svg" alt="" draggable="false">`).join('');
             dev.el.querySelector('.furniture-body').prepend(scene);
+            Hardware.updateLightingDemo();
         }
         const STACK_FEET=Object.freeze({width:22,height:20,insetRatio:.1});
         const maxEquipmentBottom=()=>world.offsetHeight-(canvas.dataset.theme!=='scene'||canvas.dataset.floor==='none'?0:ROOM_FLOOR_OVERLAP);
