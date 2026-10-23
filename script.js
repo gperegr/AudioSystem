@@ -813,20 +813,33 @@ const Hardware = (() => {
     const lightingGeometry=new WeakMap();
     let furnitureLightingGeometry={key:'',items:[]};
     const sceneLightSources={
-        studio:[{x:.145,y:.31,rgb:[121,196,223],strength:.48},{x:.846,y:.31,rgb:[121,196,223],strength:.42}],
-        listening:[{x:.23,y:.27,rgb:[255,193,122],strength:.56},{x:.77,y:.27,rgb:[255,193,122],strength:.5}],
-        loft:[{x:.2,y:.3,rgb:[224,237,216],strength:.38},{x:.5,y:.3,rgb:[224,237,216],strength:.38},{x:.8,y:.3,rgb:[224,237,216],strength:.38}],
-        library:[{x:.30,y:.19,rgb:[255,224,162],strength:.53},{x:.70,y:.19,rgb:[255,224,162],strength:.53}],
-        night:[{x:.133,y:.23,rgb:[240,140,175],strength:.48},{x:.866,y:.23,rgb:[143,191,255],strength:.48}]
+        studio:[{cx:350,cy:500,w:48,h:130,shape:'bar',rgb:[121,196,223],strength:.52},{cx:2030,cy:500,w:48,h:130,shape:'bar',rgb:[121,196,223],strength:.46},{cx:1200,cy:520,w:720,h:520,shape:'rect',rgb:[176,216,228],strength:.28}],
+        listening:[{cx:550,cy:430,w:48,h:130,shape:'bar',rgb:[255,193,122],strength:.57},{cx:1850,cy:430,w:48,h:130,shape:'bar',rgb:[255,193,122],strength:.52},{cx:1200,cy:535,w:420,h:570,shape:'rect',rgb:[214,224,190],strength:.25}],
+        loft:[{cx:480,cy:485,w:115,h:60,shape:'rect',rgb:[255,222,166],strength:.43},{cx:1200,cy:485,w:115,h:60,shape:'rect',rgb:[255,222,166],strength:.43},{cx:1920,cy:485,w:115,h:60,shape:'rect',rgb:[255,222,166],strength:.43},{cx:480,cy:655,w:520,h:930,shape:'rect',rgb:[206,231,229],strength:.22},{cx:1190,cy:655,w:520,h:930,shape:'rect',rgb:[206,231,229],strength:.22},{cx:1900,cy:655,w:520,h:930,shape:'rect',rgb:[206,231,229],strength:.22}],
+        library:[{cx:710,cy:300,w:48,h:130,shape:'bar',rgb:[255,224,162],strength:.54},{cx:1690,cy:300,w:48,h:130,shape:'bar',rgb:[255,224,162],strength:.54},{cx:1195,cy:585,w:460,h:490,shape:'rect',rgb:[187,210,180],strength:.15}],
+        night:[{cx:320,cy:365,w:48,h:130,shape:'bar',rgb:[240,140,175],strength:.51},{cx:2080,cy:365,w:48,h:130,shape:'bar',rgb:[143,191,255],strength:.51},{cx:1200,cy:635,w:2160,h:1010,shape:'rect',rgb:[157,178,231],strength:.28}]
     };
+    function positionedSceneLights(scene,world){
+        const farX=parseFloat(world.style.getPropertyValue('--room-far-x'))||0,farY=parseFloat(world.style.getPropertyValue('--room-far-y'))||0;
+        const scale=parseFloat(world.style.getPropertyValue('--room-far-scale'))||1;
+        return (sceneLightSources[scene]||[]).map(source=>{
+            const rawX=world.offsetWidth*(-.06+1.12*(240+source.cx*.8)/2400);
+            const rawY=world.offsetHeight*(-.1+1.1*(268+source.cy*.8)/1600);
+            return {...source,x:world.offsetWidth/2+(rawX-world.offsetWidth/2)*scale+farX,y:world.offsetHeight+(rawY-world.offsetHeight)*scale+farY,width:source.w*.8*1.12*world.offsetWidth/2400*scale,height:source.h*.8*1.1*world.offsetHeight/1600*scale};
+        });
+    }
+    function sampleSceneLight(source,x,y){
+        const emitterX=source.emitterX??source.x,emitterY=source.emitterY??source.y;
+        const nearestX=Math.max(emitterX-source.width/2,Math.min(emitterX+source.width/2,x));
+        const nearestY=Math.max(emitterY-source.height/2,Math.min(emitterY+source.height/2,y));
+        const distance=Math.hypot(nearestX-x,nearestY-y);
+        const inside=!distance,sx=inside?emitterX:nearestX,sy=inside?emitterY:nearestY;
+        return {...source,emitterX,emitterY,x:sx,y:sy,weight:source.strength*Math.max(0,1-distance/2100),spread:source.shape==='rect'?7:source.shape==='bar'?4:2};
+    }
     function sceneLightAt(x,y){
         const canvas=document.getElementById('canvas');if(canvas.dataset.theme!=='scene')return null;
         const world=document.getElementById('audio-world');
-        return (sceneLightSources[canvas.dataset.backdrop]||[]).reduce((best,source)=>{
-            const sx=source.x*world.offsetWidth,sy=source.y*world.offsetHeight;
-            const weight=source.strength*Math.max(0,1-Math.hypot(sx-x,sy-y)/2100);
-            return weight>(best?.weight||0)?{x:sx,y:sy,weight}:best;
-        },null);
+        return positionedSceneLights(canvas.dataset.backdrop,world).map(source=>sampleSceneLight(source,x,y)).reduce((best,source)=>source.weight>(best?.weight||0)?source:best,null);
     }
     function updateLightingDemo(){
         if(lightingDemoFrame)return;
@@ -845,7 +858,8 @@ const Hardware = (() => {
         const viewport=document.getElementById('canvas').getBoundingClientRect();
         const furnitureBodies=[...world.querySelectorAll('.furniture-node .rack-body')];
         const sceneName=viewport&&document.getElementById('canvas').dataset.theme==='scene'?document.getElementById('canvas').dataset.backdrop:'';
-        const sceneEmitters=(sceneLightSources[sceneName]||[]).map(source=>({...source,x:source.x*world.offsetWidth,y:source.y*world.offsetHeight}));
+        const sceneEmitters=positionedSceneLights(sceneName,world);
+        const sceneEmitterKey=sceneEmitters.map(source=>Math.round(source.x/8)+','+Math.round(source.y/8)).join(';');
         const furnitureKey=furnitureBodies.map(body=>{const node=body.closest('.furniture-node');return node.id+':'+node.style.left+':'+node.style.top;}).join('|');
         if(furnitureLightingGeometry.key!==furnitureKey){
             const worldRect=world.getBoundingClientRect(),worldScale=worldRect.width/world.offsetWidth;
@@ -861,7 +875,7 @@ const Hardware = (() => {
         world.querySelectorAll('.furniture-node.lighting-demo-target').forEach(node=>{
             const rect=node.getBoundingClientRect();
             if(rect.right<viewport.left||rect.left>viewport.right||rect.bottom<viewport.top||rect.top>viewport.bottom)return;
-            const key=lx+'|'+ly+'|'+color+'|'+intensity+'|'+sceneName+'|'+node.offsetLeft+'|'+node.offsetTop+'|'+node.dataset.back;
+            const key=lx+'|'+ly+'|'+color+'|'+intensity+'|'+sceneName+'|'+sceneEmitterKey+'|'+node.offsetLeft+'|'+node.offsetTop+'|'+node.dataset.back;
             if(node.dataset.lightPaintKey===key)return;
             node.dataset.lightPaintKey=key;
             node.style.setProperty('--demo-light-rgb',rgb.join(' '));node.style.setProperty('--demo-light-strength',intensity);
@@ -870,16 +884,13 @@ const Hardware = (() => {
                 const x=(box.left-rect.left)/scale+node.offsetLeft,y=(box.top-rect.top)/scale+node.offsetTop;
                 part.style.setProperty('--demo-part-light-x',((lx-x)/((box.width/scale)||1)*100).toFixed(1)+'%');
                 part.style.setProperty('--demo-part-light-y',((ly-y)/((box.height/scale)||1)*100).toFixed(1)+'%');
-                const source=sceneEmitters.map(item=>({...item,falloff:Math.max(0,1-Math.hypot(item.x-x-box.width/scale/2,item.y-y-box.height/scale/2)/2000)})).sort((a,b)=>b.strength*b.falloff-a.strength*a.falloff)[0];
-                part.style.setProperty('--demo-scene-light-strength',((source?.strength||0)*(source?.falloff||0)).toFixed(3));
+                const source=sceneEmitters.map(item=>sampleSceneLight(item,x+box.width/scale/2,y+box.height/scale/2)).sort((a,b)=>b.weight-a.weight)[0];
+                part.style.setProperty('--demo-scene-light-strength',(source?.weight||0).toFixed(3));
                 if(source){part.style.setProperty('--demo-scene-light-rgb',source.rgb.join(' '));part.style.setProperty('--demo-scene-light-x',((source.x-x)/((box.width/scale)||1)*100).toFixed(1)+'%');part.style.setProperty('--demo-scene-light-y',((source.y-y)/((box.height/scale)||1)*100).toFixed(1)+'%');}
             });
             const rack=furniture.find(item=>item.id===node.id);
             if(rack){
-                const source=sceneEmitters.reduce((best,item)=>{
-                    const weight=item.strength*Math.max(0,1-Math.hypot(item.x-rack.x-rack.width/2,item.y-rack.y-rack.height/2)/2100);
-                    return weight>(best?.weight||0)?{...item,weight}:best;
-                },null);
+                const source=sceneEmitters.map(item=>sampleSceneLight(item,rack.x+rack.width/2,rack.y+rack.height/2)).reduce((best,item)=>item.weight>(best?.weight||0)?item:best,null);
                 drawFurnitureInteriorShadows(node,rack,intensity?lx:source?.x||0,intensity?ly:source?.y||0,intensity||source?.weight||0);
             }
         });
@@ -904,27 +915,29 @@ const Hardware = (() => {
             const rack=furniture.find(item=>centerX>item.x+16&&centerX<item.x+item.width-16&&centerY>item.y+16&&centerY<item.y+item.height-16);
             const stackedAbove=stackTops.filter(upper=>upper.el!==device&&deviceY-upper.y-upper.height>=-.5&&deviceY-upper.y-upper.height<=20.5&&Math.min(deviceX+geometry.width,upper.x+upper.width)-Math.max(deviceX,upper.x)>=Math.min(geometry.width,upper.width)*.7);
             const stackKey=stackedAbove.map(upper=>upper.el.id+':'+upper.x+':'+upper.y).join('|');
-            const positionKey=lx+'|'+ly+'|'+color+'|'+intensity+'|'+sceneName+'|'+deviceX+'|'+deviceY+'|'+zoom+'|'+(rack?.id||'')+'|'+(rack?.x||0)+'|'+(rack?.y||0)+'|'+stackKey;
+            const positionKey=lx+'|'+ly+'|'+color+'|'+intensity+'|'+sceneName+'|'+sceneEmitterKey+'|'+deviceX+'|'+deviceY+'|'+(intensity?zoom.toFixed(2):0)+'|'+(rack?.id||'')+'|'+(rack?.x||0)+'|'+(rack?.y||0)+'|'+stackKey;
             if(geometry.lastPosition===positionKey)return;
             geometry.lastPosition=positionKey;
             const dx=clamp((lx-deviceX-geometry.width/2)/(geometry.width*.7),1);
             const dy=clamp((ly-deviceY-geometry.height/2)/(geometry.height*1.5),1);
             const reach=Math.max(geometry.width,geometry.height)*1.8+180;
             const falloff=Math.max(0,1-Math.hypot(lx-centerX,ly-centerY)/reach);
-            const localScene=sceneEmitters.map(source=>({...source,weight:source.strength*Math.max(0,1-Math.hypot(source.x-centerX,source.y-centerY)/2100)}));
-            const shadowScene=localScene.reduce((best,source)=>source.weight>(best?.weight||0)?source:best,null);
+            const localScene=sceneEmitters.map(source=>sampleSceneLight(source,centerX,centerY)).sort((a,b)=>b.weight-a.weight);
+            const shadowScene=localScene[0];
             const shadowX=intensity?lx:shadowScene?.x||0,shadowY=intensity?ly:shadowScene?.y||0,shadowStrength=intensity||shadowScene?.weight||0;
             device.style.setProperty('--demo-panel-light-x',(50+dx*40).toFixed(1)+'%');
             device.style.setProperty('--demo-panel-light-y',(50+dy*40).toFixed(1)+'%');
             device.style.setProperty('--demo-light-rgb',rgb.join(' '));
             device.style.setProperty('--demo-light-strength',intensity);
             device.style.setProperty('--demo-incident-strength',(intensity*falloff).toFixed(3));
-            localScene.forEach((source,index)=>{
+            localScene.slice(0,3).forEach((source,index)=>{
                 const suffix=['a','b','c'][index];
                 device.style.setProperty('--scene-light-'+suffix+'-rgb',source.rgb.join(' '));
                 device.style.setProperty('--scene-light-'+suffix+'-x',((source.x-deviceX)/geometry.width*100).toFixed(1)+'%');
                 device.style.setProperty('--scene-light-'+suffix+'-y',((source.y-deviceY)/geometry.height*100).toFixed(1)+'%');
                 device.style.setProperty('--scene-light-'+suffix+'-strength',source.weight.toFixed(3));
+                device.style.setProperty('--scene-light-'+suffix+'-radius-x',source.shape==='rect'?'90%':source.shape==='bar'?'38%':'52%');
+                device.style.setProperty('--scene-light-'+suffix+'-radius-y',source.shape==='rect'?'85%':source.shape==='bar'?'75%':'70%');
             });
             if(!localScene[0])device.style.setProperty('--scene-light-a-strength','0');
             if(!localScene[1])device.style.setProperty('--scene-light-b-strength','0');
@@ -944,11 +957,15 @@ const Hardware = (() => {
                     // The streamer's top dial sits behind the front rim, so it cannot cast onto the face.
                     if(intensity&&(!device.classList.contains('device-type-streamIntegrated')||!control.matches('[data-stream-volume]')))
                         frontShadows.push({x,y,width,height:controlHeight,sx,sy,knob:knob||(plug&&control.dataset.type!=='wire'),plug,slider,handle,weight:intensity});
-                    if(shadowScene?.weight>.16&&(!device.classList.contains('device-type-streamIntegrated')||!control.matches('[data-stream-volume]'))){
-                        let sceneX=(cx-shadowScene.x)*height/230,sceneY=(cy-shadowScene.y)*height/230;
-                        const travel=Math.hypot(sceneX,sceneY),limit=Math.min(maxProjection,12);
-                        if(travel>limit){sceneX*=limit/travel;sceneY*=limit/travel;}
-                        frontShadows.push({x,y,width,height:controlHeight,sx:sceneX,sy:sceneY,knob:knob||(plug&&control.dataset.type!=='wire'),plug,slider,handle,weight:shadowScene.weight*.38});
+                    if(!device.classList.contains('device-type-streamIntegrated')||!control.matches('[data-stream-volume]')){
+                        localScene.slice(0,2).forEach(scene=>{
+                            if(scene.weight<=.16)return;
+                            const source=sampleSceneLight(scene,cx,cy);
+                            let sceneX=(cx-source.x)*height/230,sceneY=(cy-source.y)*height/230;
+                            const travel=Math.hypot(sceneX,sceneY),limit=Math.min(maxProjection,12);
+                            if(travel>limit){sceneX*=limit/travel;sceneY*=limit/travel;}
+                            frontShadows.push({x,y,width,height:controlHeight,sx:sceneX,sy:sceneY,knob:knob||(plug&&control.dataset.type!=='wire'),plug,slider,handle,weight:scene.weight*.28,softness:scene.spread});
+                        });
                     }
                     const highlightX=intensity?lx:shadowScene?.x||cx,highlightY=intensity?ly:shadowScene?.y||cy;
                     const direction=Math.max(70,Math.hypot(cx-highlightX,cy-highlightY));
@@ -1093,7 +1110,7 @@ const Hardware = (() => {
             const travel=Math.hypot(shadow.sx,shadow.sy);
             if(travel>1){
                 const start=.55,tip={...shadow,x:shadow.x+shadow.sx*start,y:shadow.y+shadow.sy*start,sx:shadow.sx*(1-start),sy:shadow.sy*(1-start)};
-                drawSweptShadow(ctx,tip,Math.min(shadow.plug?2:5,1+travel*.24),shadowAlpha(shadow.plug?.035:.075));
+                drawSweptShadow(ctx,tip,Math.min(shadow.plug?2:8,1+travel*.24+(shadow.softness||0)*.4),shadowAlpha(shadow.plug?.035:.075));
             }
             drawSweptShadow(ctx,{...shadow,sx:0,sy:0},shadow.plug?1.1:shadow.slider?1.3:2.2,shadowAlpha(shadow.plug?.18:.28));
             const {x,y,sx,sy}=shadow,gradient=ctx.createLinearGradient(x,y,x+sx+.01,y+sy+.01);
@@ -1229,6 +1246,34 @@ const Hardware = (() => {
         document.documentElement.classList.add('lighting-demo-enabled');
         const roomBackdrop=document.createElement('div');roomBackdrop.id='room-backdrop';roomBackdrop.setAttribute('aria-hidden','true');
         roomBackdrop.innerHTML=['studio','listening','loft','library','night'].map(name=>`<img class="room-scene-image room-scene-${name}" src="./assets/rooms/${name}.svg" alt="" draggable="false">`).join('')+'<i class="room-depth-room"></i><i class="room-depth-shelf"></i><i class="room-practical-light light-left"></i><i class="room-practical-light light-center"></i><i class="room-practical-light light-right"></i><i class="room-side-wall wall-left"></i><i class="room-side-wall wall-right"></i>';
+        const roomWindows={
+            studio:[{x:840,y:260,w:720,h:520,kind:'city'}],
+            listening:[{x:990,y:250,w:420,h:570,kind:'garden'}],
+            loft:[{x:220,y:190,w:520,h:930,kind:'city'},{x:930,y:190,w:520,h:930,kind:'city'},{x:1640,y:190,w:520,h:930,kind:'city'}],
+            library:[{x:965,y:350,w:460,h:490,kind:'garden'}],
+            night:[{x:120,y:130,w:2160,h:1010,kind:'night'}]
+        };
+        const windowPalettes={city:['#55798b','#162f42','#263d4c','#172734','#88c2ca'],garden:['#9cafa0','#485d55','#314b45','#182d30','#d5c68b'],night:['#292f58','#111a3c','#22294b','#10182d','#edbd85']};
+        function windowScenery(kind,index,layer){
+            const [sky,horizon,building,near,lit]=windowPalettes[kind];
+            const stars=kind==='night'?Array.from({length:27},(_,i)=>`<circle cx="${(i*173+index*37)%640}" cy="${(i*71+index*19)%210+12}" r="${i%4===0?2:1}" fill="#d8e0ed" opacity="${i%3===0?.7:.35}"/>`).join(''):'';
+            const towers=Array.from({length:13},(_,i)=>{
+                const x=i*53-20+(index*19)%27,h=72+(i*37+index*29)%125,y=450-h;
+                const windows=Array.from({length:Math.floor(h/23)-1},(_,row)=>`<path d="M${x+12} ${y+16+row*22}h7m14 0h7" stroke="${lit}" stroke-width="3" opacity="${kind==='night'?.44:.22}"/>`).join('');
+                return `<rect x="${x}" y="${y}" width="47" height="${h}" fill="${i%3===0?building:near}"/><path d="M${x+4} ${y+4}h39M${x+7} ${y+2}v${h-8}" stroke="${sky}" stroke-opacity=".17" stroke-width="2"/>${i%3===0?`<path d="M${x+23} ${y}v-18" stroke="${lit}" stroke-opacity=".27" stroke-width="2"/>`:''}${windows}`;
+            }).join('');
+            const trees=Array.from({length:11},(_,i)=>{const x=i*66-14+(index*31)%37,y=365+(i*17)%60;return `<path d="M${x} 450v-${450-y+35}" stroke="${near}" stroke-width="7"/><circle cx="${x-10}" cy="${y+4}" r="${18+i%3*5}" fill="${building}"/><circle cx="${x+10}" cy="${y-6}" r="${20+i%3*7}" fill="${i%2?building:near}"/>`;}).join('');
+            const clouds=kind==='night'?'':`<path d="M-30 114Q75 89 165 111T360 96T675 110M-20 162Q110 139 230 163T465 151T670 166" fill="none" stroke="${lit}" stroke-opacity=".12" stroke-width="13"/>`;
+            const far=`<defs><linearGradient id="sky" x2=".15" y2="1"><stop stop-color="${sky}"/><stop offset="1" stop-color="${horizon}"/></linearGradient></defs><rect width="640" height="450" fill="url(#sky)"/>${stars}${clouds}<path d="M0 285Q80 245 155 282T320 272T480 260T640 283V450H0Z" fill="${horizon}" opacity=".75"/><path d="M0 340Q95 295 195 336T400 315T640 330V450H0Z" fill="${building}" opacity=".64"/>`;
+            const mid=kind==='garden'?`${trees}<path d="M0 425Q140 375 280 420T640 405V450H0Z" fill="${near}"/><path d="M0 415h640M65 415v35m130-35v35m130-35v35m130-35v35m130-35v35" stroke="${lit}" stroke-opacity=".18" stroke-width="3"/>`:towers;
+            return `<svg viewBox="0 0 640 450" preserveAspectRatio="xMidYMax slice" aria-hidden="true">${layer==='far'?far:mid}</svg>`;
+        }
+        const windowLayers=document.createElement('div');windowLayers.className='room-window-layers';
+        windowLayers.innerHTML=Object.entries(roomWindows).flatMap(([scene,windows])=>windows.map((pane,index)=>{
+            const left=(240+pane.x*.8)/24,top=(268+pane.y*.8)/16,width=pane.w*.8/24,height=pane.h*.8/16;
+            return `<div class="room-window-pane room-window-${scene}" style="left:${left}%;top:${top}%;width:${width}%;height:${height}%"><div class="room-window-far">${windowScenery(pane.kind,index,'far')}</div><div class="room-window-mid">${windowScenery(pane.kind,index,'mid')}</div><i class="room-window-glass"></i><i class="room-window-mullion"></i></div>`;
+        })).join('');
+        roomBackdrop.appendChild(windowLayers);
         world.prepend(roomBackdrop);
         canvas.appendChild(document.getElementById('connection-guidance'));
         const canvasThemes={light:'Claro',graphite:'Grafite',midnight:'Azul noturno',sepia:'Sépia',scene:'Cenário'};
@@ -1339,7 +1384,7 @@ const Hardware = (() => {
             function update(){
                 frame=0;
                 const bounds=region.getBoundingClientRect(), zone=Math.max(36,Math.min(72,bounds.height*.14));
-                const targets=getTargets().flatMap(element=>collect(element));
+                const targets=getTargets(region).flatMap(element=>collect(element));
                 const current=new Set(targets);
                 previousTargets.forEach(element=>{if(!current.has(element)){element.classList.remove('sidebar-edge-item');element.style.removeProperty('--sidebar-edge-opacity');element.style.removeProperty('--sidebar-edge-blur');}});
                 targets.forEach(element=>{
@@ -1431,6 +1476,8 @@ const Hardware = (() => {
             world.style.setProperty('--room-far-scale',farScale.toFixed(3));
             world.style.setProperty('--room-mid-x',(farX*.55).toFixed(1)+'px');world.style.setProperty('--room-mid-y',(farY*.55).toFixed(1)+'px');
             world.style.setProperty('--room-mid-scale',(1+(farScale-1)*.55).toFixed(3));
+            world.style.setProperty('--room-window-far-x',(farX*.75).toFixed(1)+'px');world.style.setProperty('--room-window-far-y',(farY*.75).toFixed(1)+'px');
+            world.style.setProperty('--room-window-mid-x',(farX*.3).toFixed(1)+'px');world.style.setProperty('--room-window-mid-y',(farY*.3).toFixed(1)+'px');
             world.style.setProperty('--floor-parallax-x',(farX*.28).toFixed(1)+'px');
             world.style.setProperty('--floor-parallax-scale',floorScale.toFixed(3));
             world.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.zoom})`;
