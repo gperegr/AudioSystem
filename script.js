@@ -1408,7 +1408,7 @@ const Hardware = (() => {
                 requestAnimationFrame(()=>{
                     if(request!==roomImageRequest){next.remove();return;}
                     next.classList.add('is-visible');previous.forEach(image=>image.classList.remove('is-visible'));
-                    setTimeout(()=>previous.forEach(image=>image.remove()),700);
+                    setTimeout(()=>previous.forEach(image=>image.remove()),1050);
                 });
             }).catch(()=>{});
         }
