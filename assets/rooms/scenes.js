@@ -6,7 +6,6 @@
     const object=(type,x,y,extra={})=>({type,x,y,layer:'mid',...extra});
     const windowAt=(x,y,w,h,vista,extra={})=>object('window',x,y,{w,h,vista,layer:'far',...extra});
     const lamp=(x,y,shape='bar',extra={})=>object('lamp',x,y,{shape,layer:'near',...extra});
-    const shelf=(x,y,w,extra={})=>object('shelf',x,y,{w,layer:'mid',...extra});
     const art=(x,y,w,h,extra={})=>object('art',x,y,{w,h,layer:'mid',...extra});
 
     const materials={
@@ -30,21 +29,16 @@
             object('foam',80,170,{w:650,h:890,cols:7,rows:3,layer:'far'}),
             object('foam',1670,170,{w:650,h:890,cols:7,rows:3,layer:'far'}),
             windowAt(840,260,720,520,'city',{light:{shape:'rect',strength:.20,rgb:[195,220,221]}}),
-            art(940,95,520,105,{kind:'wave',layer:'near'}),
             lamp(350,500,'bar',{w:48,h:130,rgb:[255,193,123],strength:.53}),
-            lamp(2030,500,'bar',{w:48,h:130,rgb:[255,193,123],strength:.48}),
-            shelf(190,1040,2020,{kind:'vinyl',rows:2,layer:'mid'}),
-            object('console',850,1110,{w:700,h:175,layer:'near'})
+            lamp(2030,500,'bar',{w:48,h:130,rgb:[255,193,123],strength:.48})
         ]},
         listening:{material:'listening',floor:'wood',objects:[
             object('woodPanels',0,120,{w:2400,h:1210,layer:'far'}),
             windowAt(990,250,420,570,'garden',{light:{shape:'rect',strength:.25,rgb:[223,223,177]}}),
-            art(140,240,340,420,{kind:'disc'}),art(1910,235,350,420,{kind:'wave'}),
+            art(140,240,340,420,{kind:'geometric'}),art(1910,235,350,420,{kind:'landscape'}),
             lamp(550,430,'bar',{w:48,h:130,rgb:[255,193,122],strength:.57}),
             lamp(1850,430,'bar',{w:48,h:130,rgb:[255,193,122],strength:.52}),
-            shelf(145,940,2110,{kind:'books',rows:3,layer:'mid'}),
-            object('plant',110,710,{size:230,layer:'near'}),
-            object('console',855,1090,{w:690,h:190,layer:'near'})
+            object('plant',140,1092,{size:230,layer:'near'})
         ]},
         loft:{material:'loft',floor:'concrete',objects:[
             object('brick',0,120,{w:2400,h:1130,layer:'far'}),
@@ -54,28 +48,23 @@
             lamp(480,485,'pendant',{w:115,h:60,rgb:[255,216,155],strength:.49}),
             lamp(1200,485,'pendant',{w:115,h:60,rgb:[255,216,155],strength:.49}),
             lamp(1920,485,'pendant',{w:115,h:60,rgb:[255,216,155],strength:.49}),
-            shelf(390,1200,1620,{kind:'vinyl',rows:1,layer:'near'}),
-            object('plant',2140,1050,{size:200,layer:'near'})
+            object('plant',2140,1122,{size:200,layer:'near'})
         ]},
         library:{material:'library',floor:'wood',objects:[
             object('woodPanels',0,120,{w:2400,h:1200,layer:'far'}),
-            shelf(115,200,680,{kind:'books',rows:5,layer:'mid'}),
-            shelf(1600,200,680,{kind:'books',rows:5,layer:'mid'}),
             windowAt(965,350,460,490,'gardenDusk',{light:{shape:'rect',strength:.17,rgb:[206,193,152]}}),
-            art(1030,900,350,240,{kind:'disc'}),
+            art(230,260,380,380,{kind:'landscape'}),
+            art(1780,260,380,380,{kind:'geometric'}),
             lamp(710,300,'bar',{w:48,h:130,rgb:[255,224,162],strength:.54}),
             lamp(1690,300,'bar',{w:48,h:130,rgb:[255,224,162],strength:.54}),
-            object('console',820,1130,{w:760,h:145,layer:'near'}),
-            object('plant',2200,1080,{size:180,layer:'near'})
+            object('plant',2200,1142,{size:180,layer:'near'})
         ]},
         night:{material:'night',floor:'wood',objects:[
             object('brick',0,100,{w:2400,h:1200,layer:'far'}),
             windowAt(120,130,2160,1010,'night',{light:{shape:'rect',strength:.24,rgb:[153,174,224]}}),
             object('woodPanels',60,1090,{w:2280,h:280,layer:'mid'}),
-            shelf(250,1180,1900,{kind:'vinyl',rows:1,layer:'near'}),
             lamp(320,365,'bar',{w:48,h:130,rgb:[255,178,144],strength:.54}),
-            lamp(2080,365,'bar',{w:48,h:130,rgb:[181,188,255],strength:.50}),
-            art(1070,1160,260,120,{kind:'wave',layer:'near'})
+            lamp(2080,365,'bar',{w:48,h:130,rgb:[181,188,255],strength:.50})
         ]}
     };
 
@@ -90,15 +79,6 @@
       <pattern id="brick" width="150" height="78" patternUnits="userSpaceOnUse"><rect width="150" height="78" fill="${m.wallDark}"/><path d="M0 1h148v35H0zM-75 40H73v36H-75zm152 0h148v36H77z" fill="${m.brick}" stroke="#43362f" stroke-opacity=".35" stroke-width="3"/><path d="M5 9h122M16 17h41M93 20h39M3 49h58M82 60h60" stroke="#eed1b1" stroke-opacity=".09" stroke-width="2"/></pattern>
     </defs>`;}
 
-    function records(x,y,w,h,kind){
-        const count=Math.max(1,Math.floor((w-40)/(kind==='vinyl'?16:14)));
-        const colors=['#927a68','#6d7c78','#aa9476','#806f60','#52676a','#a47f69','#84918a'];
-        return Array.from({length:count},(_,i)=>{
-            const bw=(w-40)/count,xx=x+20+i*bw,hh=h*(.65+((i*7)%11)/35),yy=y+h-hh;
-            return `<rect x="${xx.toFixed(1)}" y="${yy.toFixed(1)}" width="${(bw-1.8).toFixed(1)}" height="${hh.toFixed(1)}" rx="1.5" fill="${colors[i%colors.length]}" opacity=".73"/><path d="M${(xx+2).toFixed(1)} ${yy+6}v${Math.max(0,hh-12).toFixed(1)}" stroke="#f3e5cc" stroke-opacity=".19" stroke-width="1.6"/>`;
-        }).join('');
-    }
-
     const renderers={
         woodPanels(o,m){return `<rect x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" fill="url(#wood)" opacity=".5"/><rect x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" fill="url(#grain)"/>${Array.from({length:Math.floor(o.w/190)},(_,i)=>`<path d="M${o.x+i*190} ${o.y}v${o.h}" stroke="#30251e" stroke-opacity=".16" stroke-width="6"/><path d="M${o.x+i*190+5} ${o.y}v${o.h}" stroke="#fff" stroke-opacity=".07" stroke-width="2"/>`).join('')}<path d="M${o.x} ${o.y+o.h*.74}h${o.w}m-${o.w} 12h${o.w}" stroke="${m.trim}" stroke-opacity=".17" stroke-width="4"/>`;},
         brick(o){return `<rect x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" fill="url(#brick)"/><path d="M${o.x} ${o.y+o.h-12}h${o.w}" stroke="#182127" stroke-width="24" opacity=".55"/>`;},
@@ -109,10 +89,8 @@
             return glow+(o.shape==='pendant'
             ?`<path d="M${x} 75v${y-125}" stroke="${m.metal}" stroke-opacity=".75" stroke-width="7"/><ellipse cx="${x}" cy="${y+8}" rx="175" ry="135" fill="url(#glow-${x}-${y})"/><path d="M${x-82} ${y-84}h164l-33 86h-98z" fill="${m.wood}" stroke="${m.trim}" stroke-opacity=".68" stroke-width="7"/><path d="M${x-49} ${y+3}h98" stroke="${m.metal}" stroke-width="8"/><ellipse cx="${x}" cy="${y+10}" rx="44" ry="16" fill="${color}" opacity=".65"/>`
             :`<ellipse cx="${x}" cy="${y}" rx="210" ry="295" fill="url(#glow-${x}-${y})"/><rect x="${x-w*.77}" y="${y-h*.65}" width="${w*1.54}" height="${h*1.3}" rx="${w*.55}" fill="${m.wood}" stroke="${m.trim}" stroke-opacity=".54" stroke-width="5"/><rect x="${x-w*.42}" y="${y-h*.48}" width="${w*.84}" height="${h*.96}" rx="${w*.42}" fill="url(#shade-${x}-${y})"/><path d="M${x-w*.55} ${y-h*.52}h${w*1.1}M${x-w*.55} ${y+h*.52}h${w*1.1}" stroke="url(#metal)" stroke-width="6" stroke-linecap="round"/><path d="M${x} ${y-h*.44}v${h*.88}" stroke="#fff5d3" stroke-opacity=".36" stroke-width="3"/>`);},
-        shelf(o,m){const rows=o.rows||2,rowH=o.kind==='vinyl'?125:110,h=rowH*rows+45;return `<rect x="${o.x}" y="${o.y}" width="${o.w}" height="${h}" rx="11" fill="${m.wood}" stroke="${m.trim}" stroke-opacity=".52" stroke-width="8"/><rect x="${o.x+10}" y="${o.y+8}" width="${o.w-20}" height="${h-18}" fill="#252522" opacity=".22"/>${Array.from({length:rows},(_,r)=>{const yy=o.y+20+r*rowH;return `<rect x="${o.x+16}" y="${yy}" width="${o.w-32}" height="${rowH-10}" fill="#222522" opacity=".22"/>${records(o.x+20,yy+8,o.w-40,rowH-24,o.kind)}<path d="M${o.x+5} ${yy+rowH}h${o.w-10}" stroke="${m.woodLight}" stroke-opacity=".68" stroke-width="13"/>`;}).join('')}<rect x="${o.x}" y="${o.y}" width="${o.w}" height="${h}" fill="url(#grain)" opacity=".32"/>`;},
-        art(o,m){const {x,y,w,h}=o,disc=o.kind==='disc';return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${m.wood}" stroke="${m.trim}" stroke-opacity=".48" stroke-width="9"/><rect x="${x+18}" y="${y+18}" width="${w-36}" height="${h-36}" fill="${disc?m.wallDark:m.wood}"/>${disc?`<circle cx="${x+w/2}" cy="${y+h/2}" r="${Math.min(w,h)*.31}" fill="#28302e" stroke="${m.trim}" stroke-opacity=".6" stroke-width="3"/><circle cx="${x+w/2}" cy="${y+h/2}" r="${Math.min(w,h)*.13}" fill="${m.light}" opacity=".57"/><circle cx="${x+w/2}" cy="${y+h/2}" r="4" fill="#39423d"/>`:`<path d="M${x+26} ${y+h*.58}q${w*.12} -${h*.9} ${w*.24} 0t${w*.24} 0t${w*.24} 0t${w*.24} 0" fill="none" stroke="${m.light}" stroke-width="6" opacity=".56"/><path d="M${x+26} ${y+h*.78}h${w-52}" stroke="${m.metal}" stroke-opacity=".4" stroke-width="3"/>`}`;},
-        plant(o,m){const s=o.size,x=o.x,y=o.y;return `<path d="M${x-s*.22} ${y+s*.58}h${s*.44}l-${s*.055} ${s*.42}h-${s*.33}z" fill="url(#wood)" stroke="${m.trim}" stroke-opacity=".6" stroke-width="5"/><path d="M${x} ${y+s*.58}v-${s*.48}m0 ${s*.3}l-${s*.28}-${s*.32}m${s*.28} ${s*.27}l${s*.27}-${s*.4}" stroke="#314b3b" stroke-width="8" fill="none"/>${[-2,-1,0,1,2].map(i=>`<path d="M${x+i*s*.07} ${y+s*.25}q${i*s*.13} -${s*.3} ${i*s*.13} -${s*.36}q${s*.18} ${s*.27} ${-i*s*.13} ${s*.36}" fill="${i%2?'#466b52':'#64846a'}" stroke="#274533" stroke-width="2"/>`).join('')}<path d="M${x-s*.18} ${y+s*.61}h${s*.36}" stroke="${m.metal}" stroke-width="6"/>`;},
-        console(o,m){return `<path d="M${o.x+42} ${o.y+o.h-8}l-12 57h24l20-57m${o.w-116} 0l20 57h24l-12-57" fill="${m.wood}" stroke="${m.trim}" stroke-opacity=".28" stroke-width="4"/><rect x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" rx="15" fill="url(#wood)" stroke="${m.trim}" stroke-opacity=".55" stroke-width="7"/><rect x="${o.x+17}" y="${o.y+17}" width="${o.w-34}" height="${o.h-34}" fill="url(#grain)" opacity=".54"/>${[1,2,3].map(i=>`<path d="M${o.x+o.w*i/4} ${o.y+17}v${o.h-34}" stroke="#34271f" stroke-opacity=".32" stroke-width="4"/><path d="M${o.x+o.w*(i-.5)/4-13} ${o.y+o.h*.55}h26" stroke="url(#metal)" stroke-opacity=".72" stroke-width="5" stroke-linecap="round"/>`).join('')}`;}
+        art(o,m){const {x,y,w,h}=o,landscape=o.kind==='landscape';return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${m.wood}" stroke="${m.trim}" stroke-opacity=".48" stroke-width="9"/><rect x="${x+18}" y="${y+18}" width="${w-36}" height="${h-36}" fill="${m.wallDark}"/>${landscape?`<circle cx="${x+w*.69}" cy="${y+h*.34}" r="${Math.min(w,h)*.11}" fill="${m.light}" opacity=".52"/><path d="M${x+19} ${y+h*.75}Q${x+w*.24} ${y+h*.43} ${x+w*.48} ${y+h*.66}T${x+w-19} ${y+h*.54}V${y+h-19}H${x+19}Z" fill="${m.woodLight}" opacity=".58"/><path d="M${x+19} ${y+h*.83}Q${x+w*.39} ${y+h*.68} ${x+w-19} ${y+h*.79}V${y+h-19}H${x+19}Z" fill="${m.wall}"/>`:`<path d="M${x+w*.2} ${y+h*.83}V${y+h*.43}a${w*.3} ${h*.29} 0 0 1 ${w*.6} 0v${h*.4}z" fill="${m.woodLight}" opacity=".65"/><path d="M${x+w*.36} ${y+h*.82}V${y+h*.47}a${w*.14} ${h*.14} 0 0 1 ${w*.28} 0v${h*.35}z" fill="${m.wallDark}" opacity=".75"/><rect x="${x+w*.16}" y="${y+h*.22}" width="${w*.68}" height="${h*.05}" fill="${m.light}" opacity=".4"/>`}`;},
+        plant(o,m){const s=o.size,x=o.x,y=o.y;return `<path d="M${x-s*.22} ${y+s*.58}h${s*.44}l-${s*.055} ${s*.42}h-${s*.33}z" fill="url(#wood)" stroke="${m.trim}" stroke-opacity=".6" stroke-width="5"/><path d="M${x} ${y+s*.58}v-${s*.48}m0 ${s*.3}l-${s*.28}-${s*.32}m${s*.28} ${s*.27}l${s*.27}-${s*.4}" stroke="#314b3b" stroke-width="8" fill="none"/>${[-2,-1,0,1,2].map(i=>`<path d="M${x+i*s*.07} ${y+s*.25}q${i*s*.13} -${s*.3} ${i*s*.13} -${s*.36}q${s*.18} ${s*.27} ${-i*s*.13} ${s*.36}" fill="${i%2?'#466b52':'#64846a'}" stroke="#274533" stroke-width="2"/>`).join('')}<path d="M${x-s*.18} ${y+s*.61}h${s*.36}" stroke="${m.metal}" stroke-width="6"/>`;}
     };
 
     function renderLayer(sceneName,layer){

@@ -1281,7 +1281,7 @@ const Hardware = (() => {
         }
         canvasFloorControl.querySelector('select').addEventListener('change',event=>{floorFollowsScene=false;setCanvasFloor(event.target.value);scheduleProjectSave();scheduleAppPreferencesSave();});
         setCanvasFloor(savedAppPreferences.floor||RoomScenes.scenes[savedAppPreferences.backdrop||'studio']?.floor||'wood');
-        const canvasBackdropModes={studio:'Estúdio',listening:'Sala de audição',loft:'Loft',library:'Biblioteca Hi-Fi',night:'Sala noturna'};
+        const canvasBackdropModes={studio:'Estúdio',listening:'Sala de audição',loft:'Loft',library:'Sala verde-oliva',night:'Sala noturna'};
         const canvasBackdropControl=document.createElement('label');canvasBackdropControl.className='canvas-theme-control';
         canvasBackdropControl.innerHTML='<span>Cenário</span><select id="canvas-backdrop" aria-label="Cenário de fundo">'+Object.entries(canvasBackdropModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
         const roomSceneCache=new Map();
