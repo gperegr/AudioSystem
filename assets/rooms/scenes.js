@@ -11,16 +11,12 @@
     const materials={
         studio:{wall:'#39454a',wallDark:'#253039',trim:'#98a09a',wood:'#665342',woodLight:'#94775a',metal:'#9a9c95',foam:'#353f42',brick:'#766158',light:'#f3bf85'},
         listening:{wall:'#9d8b74',wallDark:'#625747',trim:'#c8ad85',wood:'#624b36',woodLight:'#9c7956',metal:'#a99f8c',foam:'#625846',brick:'#896c58',light:'#f7bf80'},
-        loft:{wall:'#987765',wallDark:'#594b43',trim:'#baa998',wood:'#5c493a',woodLight:'#98785b',metal:'#969b98',foam:'#514942',brick:'#a07964',light:'#f8c98d'},
-        library:{wall:'#6b745f',wallDark:'#414b3f',trim:'#b8a982',wood:'#51402e',woodLight:'#8c704c',metal:'#a29f8c',foam:'#465143',brick:'#786654',light:'#f4c788'},
-        night:{wall:'#444856',wallDark:'#292e3d',trim:'#9b948d',wood:'#594740',woodLight:'#896b58',metal:'#929496',foam:'#363a48',brick:'#755e59',light:'#f2b783'}
+        loft:{wall:'#987765',wallDark:'#594b43',trim:'#baa998',wood:'#5c493a',woodLight:'#98785b',metal:'#969b98',foam:'#514942',brick:'#a07964',light:'#f8c98d'}
     };
-    const views={
-        city:{sky:['#81949a','#b7b4a3'],ridge:'#829196',far:'#697d82',near:'#4e646d',glow:'#dbc6a4'},
-        dusk:{sky:['#7e8990','#c6ad8f'],ridge:'#89858a',far:'#687b80',near:'#4d626b',glow:'#e7c59c'},
-        garden:{sky:['#b3c2b2','#ddd9bc'],ridge:'#91a08c',far:'#69846e',near:'#526f60',glow:'#dfd0a8'},
-        gardenDusk:{sky:['#9da997','#d1bc9b'],ridge:'#81917c',far:'#607963',near:'#435e51',glow:'#e6c18d'},
-        night:{sky:['#39485e','#67627a'],ridge:'#505a70',far:'#3f4e65',near:'#304056',glow:'#d7b8a1'}
+    const times={
+        dawn:{lamp:.36,window:1.65,windowRgb:[255,216,168],sky:['#748fa8','#efd3ae'],gardenSky:['#a9bdba','#f3dcc0'],ridge:'#9ba9a3',far:'#8194a0',near:'#607b80',glow:'#ffd9a5'},
+        dusk:{lamp:1,window:1.1,windowRgb:[255,175,112],sky:['#777d9d','#e6ae82'],gardenSky:['#adb6a1','#e9b890'],ridge:'#9c8588',far:'#797d89',near:'#5b6976',glow:'#ffca90'},
+        night:{lamp:1.35,window:.34,windowRgb:[118,153,211],sky:['#1d2a46','#4c476b'],gardenSky:['#243547','#57516a'],ridge:'#495373',far:'#394963',near:'#2d3c54',glow:'#d8b9a7'}
     };
 
     // Each room lists the same kinds of objects. Layer controls blur and canvas parallax.
@@ -42,29 +38,13 @@
         ]},
         loft:{material:'loft',floor:'concrete',objects:[
             object('brick',0,120,{w:2400,h:1130,layer:'far'}),
-            windowAt(220,190,520,930,'dusk',{light:{shape:'rect',strength:.20,rgb:[224,224,204]}}),
-            windowAt(930,190,520,930,'dusk',{light:{shape:'rect',strength:.21,rgb:[224,224,204]}}),
-            windowAt(1640,190,520,930,'dusk',{light:{shape:'rect',strength:.20,rgb:[224,224,204]}}),
+            windowAt(220,190,520,930,'city',{light:{shape:'rect',strength:.20,rgb:[224,224,204]}}),
+            windowAt(930,190,520,930,'city',{light:{shape:'rect',strength:.21,rgb:[224,224,204]}}),
+            windowAt(1640,190,520,930,'city',{light:{shape:'rect',strength:.20,rgb:[224,224,204]}}),
             lamp(480,485,'pendant',{w:115,h:60,rgb:[255,216,155],strength:.49}),
             lamp(1200,485,'pendant',{w:115,h:60,rgb:[255,216,155],strength:.49}),
             lamp(1920,485,'pendant',{w:115,h:60,rgb:[255,216,155],strength:.49}),
             object('plant',2140,1122,{size:200,layer:'near'})
-        ]},
-        library:{material:'library',floor:'wood',objects:[
-            object('woodPanels',0,120,{w:2400,h:1200,layer:'far'}),
-            windowAt(965,350,460,490,'gardenDusk',{light:{shape:'rect',strength:.17,rgb:[206,193,152]}}),
-            art(230,260,380,380,{kind:'landscape'}),
-            art(1780,260,380,380,{kind:'geometric'}),
-            lamp(710,300,'bar',{w:48,h:130,rgb:[255,224,162],strength:.54}),
-            lamp(1690,300,'bar',{w:48,h:130,rgb:[255,224,162],strength:.54}),
-            object('plant',2200,1142,{size:180,layer:'near'})
-        ]},
-        night:{material:'night',floor:'wood',objects:[
-            object('brick',0,100,{w:2400,h:1200,layer:'far'}),
-            windowAt(120,130,2160,1010,'night',{light:{shape:'rect',strength:.24,rgb:[153,174,224]}}),
-            object('woodPanels',60,1090,{w:2280,h:280,layer:'mid'}),
-            lamp(320,365,'bar',{w:48,h:130,rgb:[255,178,144],strength:.54}),
-            lamp(2080,365,'bar',{w:48,h:130,rgb:[181,188,255],strength:.50})
         ]}
     };
 
@@ -84,8 +64,9 @@
         brick(o){return `<rect x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" fill="url(#brick)"/><path d="M${o.x} ${o.y+o.h-12}h${o.w}" stroke="#182127" stroke-width="24" opacity=".55"/>`;},
         foam(o,m){return `<rect x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" rx="8" fill="#121d23" stroke="${m.metal}" stroke-opacity=".25" stroke-width="12"/>${Array.from({length:o.rows},(_,r)=>Array.from({length:o.cols},(_,c)=>{const pw=o.w/o.cols-13,ph=o.h/o.rows-14,x=o.x+c*(o.w/o.cols)+7,y=o.y+r*(o.h/o.rows)+7;return `<rect x="${x}" y="${y}" width="${pw}" height="${ph}" rx="5" fill="url(#foam)" stroke="#a9b2ae" stroke-opacity=".1" stroke-width="3"/>`;}).join('')).join('')}`;},
         window(o,m){const {x,y,w,h}=o;return `<rect x="${x-22}" y="${y-22}" width="${w+44}" height="${h+44}" rx="12" fill="${m.wood}" stroke="${m.trim}" stroke-opacity=".44" stroke-width="8"/><rect x="${x-9}" y="${y-9}" width="${w+18}" height="${h+18}" rx="4" fill="#344047" stroke="url(#metal)" stroke-opacity=".53" stroke-width="5"/><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#glass)"/><path d="M${x+w/2} ${y}v${h}M${x} ${y+h/2}h${w}" stroke="#303c3e" stroke-width="17"/><path d="M${x+22} ${y+17}h${w*.44}L${x+45} ${y+h-20}" fill="#f0e8cf" opacity=".055"/><path d="M${x-30} ${y+h+17}h${w+60}" stroke="${m.woodLight}" stroke-opacity=".72" stroke-width="15"/>`;},
-        lamp(o,m){const {x,y}=o,w=o.w||48,h=o.h||130,color=o.rgb?`rgb(${o.rgb.join(' ')})`:m.light;
-            const glow=`<defs><radialGradient id="glow-${x}-${y}"><stop stop-color="${color}" stop-opacity=".4"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></radialGradient><linearGradient id="shade-${x}-${y}"><stop stop-color="${m.woodLight}"/><stop offset=".3" stop-color="${color}" stop-opacity=".88"/><stop offset=".7" stop-color="${color}" stop-opacity=".88"/><stop offset="1" stop-color="${m.woodLight}"/></linearGradient></defs>`;
+        lamp(o,m,time){const {x,y}=o,w=o.w||48,h=o.h||130,color=o.rgb?`rgb(${o.rgb.join(' ')})`:m.light,brightness=times[time].lamp;
+            const shadeOpacity=Math.min(.96,.18+.55*brightness).toFixed(2);
+            const glow=`<defs><radialGradient id="glow-${x}-${y}"><stop stop-color="${color}" stop-opacity="${(.4*brightness).toFixed(2)}"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></radialGradient><linearGradient id="shade-${x}-${y}"><stop stop-color="${m.woodLight}"/><stop offset=".3" stop-color="${color}" stop-opacity="${shadeOpacity}"/><stop offset=".7" stop-color="${color}" stop-opacity="${shadeOpacity}"/><stop offset="1" stop-color="${m.woodLight}"/></linearGradient></defs>`;
             return glow+(o.shape==='pendant'
             ?`<path d="M${x} 75v${y-125}" stroke="${m.metal}" stroke-opacity=".75" stroke-width="7"/><ellipse cx="${x}" cy="${y+8}" rx="175" ry="135" fill="url(#glow-${x}-${y})"/><path d="M${x-82} ${y-84}h164l-33 86h-98z" fill="${m.wood}" stroke="${m.trim}" stroke-opacity=".68" stroke-width="7"/><path d="M${x-49} ${y+3}h98" stroke="${m.metal}" stroke-width="8"/><ellipse cx="${x}" cy="${y+10}" rx="44" ry="16" fill="${color}" opacity=".65"/>`
             :`<ellipse cx="${x}" cy="${y}" rx="210" ry="295" fill="url(#glow-${x}-${y})"/><rect x="${x-w*.77}" y="${y-h*.65}" width="${w*1.54}" height="${h*1.3}" rx="${w*.55}" fill="${m.wood}" stroke="${m.trim}" stroke-opacity=".54" stroke-width="5"/><rect x="${x-w*.42}" y="${y-h*.48}" width="${w*.84}" height="${h*.96}" rx="${w*.42}" fill="url(#shade-${x}-${y})"/><path d="M${x-w*.55} ${y-h*.52}h${w*1.1}M${x-w*.55} ${y+h*.52}h${w*1.1}" stroke="url(#metal)" stroke-width="6" stroke-linecap="round"/><path d="M${x} ${y-h*.44}v${h*.88}" stroke="#fff5d3" stroke-opacity=".36" stroke-width="3"/>`);},
@@ -93,35 +74,38 @@
         plant(o,m){const s=o.size,x=o.x,y=o.y;return `<path d="M${x-s*.22} ${y+s*.58}h${s*.44}l-${s*.055} ${s*.42}h-${s*.33}z" fill="url(#wood)" stroke="${m.trim}" stroke-opacity=".6" stroke-width="5"/><path d="M${x} ${y+s*.58}v-${s*.48}m0 ${s*.3}l-${s*.28}-${s*.32}m${s*.28} ${s*.27}l${s*.27}-${s*.4}" stroke="#314b3b" stroke-width="8" fill="none"/>${[-2,-1,0,1,2].map(i=>`<path d="M${x+i*s*.07} ${y+s*.25}q${i*s*.13} -${s*.3} ${i*s*.13} -${s*.36}q${s*.18} ${s*.27} ${-i*s*.13} ${s*.36}" fill="${i%2?'#466b52':'#64846a'}" stroke="#274533" stroke-width="2"/>`).join('')}<path d="M${x-s*.18} ${y+s*.61}h${s*.36}" stroke="${m.metal}" stroke-width="6"/>`;}
     };
 
-    function renderLayer(sceneName,layer){
+    function renderLayer(sceneName,layer,time='dusk'){
+        time=times[time]?time:'dusk';
         const scene=scenes[sceneName],m=materials[scene.material];
         const background=layer==='far'?`<rect width="2400" height="1600" fill="url(#wall)"/>`:'';
-        const objects=scene.objects.filter(item=>item.layer===layer).map(item=>renderers[item.type](item,m)).join('');
-        const atmosphere=layer==='far'?scene.objects.filter(item=>item.type==='lamp').map(item=>`<ellipse cx="${item.x}" cy="${item.y+45}" rx="${item.shape==='pendant'?330:380}" ry="${item.shape==='pendant'?300:420}" fill="url(#ambient)"/>`).join(''):'';
+        const objects=scene.objects.filter(item=>item.layer===layer).map(item=>renderers[item.type](item,m,time)).join('');
+        const atmosphere=layer==='far'?scene.objects.filter(item=>item.type==='lamp').map(item=>`<ellipse cx="${item.x}" cy="${item.y+45}" rx="${item.shape==='pendant'?330:380}" ry="${item.shape==='pendant'?300:420}" fill="url(#ambient)" opacity="${Math.min(1,times[time].lamp).toFixed(2)}"/>`).join(''):'';
         const trim=layer==='far'?`<path d="M0 112h2400M0 1322h2400" stroke="${m.trim}" stroke-opacity=".25" stroke-width="8"/><path d="M0 1329h2400" stroke="${m.wood}" stroke-opacity=".55" stroke-width="16"/>`:'';
         return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 1600" preserveAspectRatio="none">${defs(m)}${background}<g transform="translate(240 268) scale(.8)">${objects}${atmosphere}${trim}</g></svg>`;
     }
 
-    function renderVista(vista,index,layer){
-        const p=views[vista],night=vista==='night';
+    function renderVista(vista,index,layer,time='dusk'){
+        const p=times[time]||times.dusk,night=time==='night',garden=vista==='garden';
         const skyline=Array.from({length:15},(_,i)=>{const x=i*47-20+(index*17)%23,h=85+(i*41)%150,y=450-h;return `<rect x="${x}" y="${y}" width="42" height="${h}" fill="${i%3?p.near:p.far}"/><path d="M${x+10} ${y+18}v${h-34}m10-${h-34}v${h-34}m10-${h-34}v${h-34}" stroke="${p.glow}" stroke-opacity="${night?.35:.15}" stroke-width="2" stroke-dasharray="4 16"/>`;}).join('');
         const trees=Array.from({length:12},(_,i)=>{const x=i*58-4+(index*29)%33,y=325+(i*19)%55;return `<path d="M${x} ${y+28}v96" stroke="${p.near}" stroke-width="8"/><circle cx="${x-12}" cy="${y+7}" r="27" fill="${p.far}"/><circle cx="${x+11}" cy="${y}" r="30" fill="${p.near}"/>`;}).join('');
         const stars=night?Array.from({length:24},(_,i)=>`<circle cx="${(i*179+index*31)%640}" cy="${(i*83)%210+9}" r="${i%5?1:2}" fill="#e3e7e5" opacity=".5"/>`).join(''):'';
-        return `<svg viewBox="0 0 640 450" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs><linearGradient id="sky" x2=".2" y2="1"><stop stop-color="${p.sky[0]}"/><stop offset="1" stop-color="${p.sky[1]}"/></linearGradient></defs>${layer==='far'?`<rect width="640" height="450" fill="url(#sky)"/>${stars}<path d="M0 285Q105 235 213 284T420 263T640 278V450H0Z" fill="${p.ridge}" opacity=".75"/><path d="M0 338Q130 295 280 327T640 316V450H0Z" fill="${p.far}" opacity=".55"/>`:(vista.startsWith('garden')?trees:skyline)}</svg>`;
+        const sky=garden?p.gardenSky:p.sky;
+        return `<svg viewBox="0 0 640 450" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs><linearGradient id="sky" x2=".2" y2="1"><stop stop-color="${sky[0]}"/><stop offset="1" stop-color="${sky[1]}"/></linearGradient></defs>${layer==='far'?`<rect width="640" height="450" fill="url(#sky)"/>${stars}<path d="M0 285Q105 235 213 284T420 263T640 278V450H0Z" fill="${p.ridge}" opacity=".75"/><path d="M0 338Q130 295 280 327T640 316V450H0Z" fill="${p.far}" opacity=".55"/>`:(garden?trees:skyline)}</svg>`;
     }
 
-    function windowPanes(name){return (scenes[name]?.objects||[]).filter(item=>item.type==='window').map((pane,index)=>{
+    function windowPanes(name,time='dusk'){return (scenes[name]?.objects||[]).filter(item=>item.type==='window').map((pane,index)=>{
         const left=(240+pane.x*.8)/24,top=(268+pane.y*.8)/16,width=pane.w*.8/24,height=pane.h*.8/16;
-        return `<div class="room-window-pane" style="left:${left}%;top:${top}%;width:${width}%;height:${height}%"><div class="room-window-far">${renderVista(pane.vista,index,'far')}</div><div class="room-window-mid">${renderVista(pane.vista,index,'mid')}</div><i class="room-window-glass"></i><i class="room-window-mullion"></i></div>`;
+        return `<div class="room-window-pane" style="left:${left}%;top:${top}%;width:${width}%;height:${height}%"><div class="room-window-far">${renderVista(pane.vista,index,'far',time)}</div><div class="room-window-mid">${renderVista(pane.vista,index,'mid',time)}</div><i class="room-window-glass"></i><i class="room-window-mullion"></i></div>`;
     }).join('');}
 
     const lightCache=new Map();
-    function lights(name){if(lightCache.has(name))return lightCache.get(name);
+    function lights(name,time='dusk'){time=times[time]?time:'dusk';const key=name+':'+time;if(lightCache.has(key))return lightCache.get(key);
         const sources=(scenes[name]?.objects||[]).filter(item=>item.light||item.type==='lamp').map((item,index)=>{
         const custom=item.light||{},w=custom.w||item.w||48,h=custom.h||item.h||130;
+        const daylight=item.type==='window',profile=times[time];
         // Invisible light-point objects share the equipment-lighting pipeline with the test light.
-        return {id:`${name}-light-${index}`,type:'lightPoint',visible:false,cx:item.x+(item.type==='window'?item.w/2:0),cy:item.y+(item.type==='window'?item.h/2:0),w,h,shape:custom.shape||item.shape||'rect',rgb:custom.rgb||item.rgb,strength:custom.strength||item.strength,elevation:item.type==='window'?260:170,layer:item.layer};
-    });lightCache.set(name,sources);return sources;}
+        return {id:`${name}-light-${index}`,type:'lightPoint',visible:false,cx:item.x+(daylight?item.w*(time==='dawn'?.3:time==='dusk'?.7:.5):0),cy:item.y+(daylight?item.h/2:0),w,h,shape:custom.shape||item.shape||'rect',rgb:daylight?profile.windowRgb:custom.rgb||item.rgb,strength:(custom.strength||item.strength)*(daylight?profile.window:profile.lamp),elevation:daylight?260:170,layer:item.layer};
+    });lightCache.set(key,sources);return sources;}
 
-    window.RoomScenes={scenes,materials,renderLayer,windowPanes,lights};
+    window.RoomScenes={scenes,materials,times,renderLayer,windowPanes,lights};
 })();

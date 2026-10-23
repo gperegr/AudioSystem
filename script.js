@@ -812,8 +812,8 @@ const Hardware = (() => {
     let lightingDemoFrame=0;
     const lightingGeometry=new WeakMap();
     let furnitureLightingGeometry={key:'',items:[]};
-    function positionedSceneLights(scene,world){
-        return RoomScenes.lights(scene).map(source=>{
+    function positionedSceneLights(scene,time,world){
+        return RoomScenes.lights(scene,time).map(source=>{
             const depth=source.layer==='near'?'near':source.layer==='mid'?'mid':'far';
             const farX=parseFloat(world.style.getPropertyValue(`--room-${depth}-x`))||0;
             const farY=parseFloat(world.style.getPropertyValue(`--room-${depth}-y`))||0;
@@ -834,7 +834,7 @@ const Hardware = (() => {
     function sceneLightAt(x,y){
         const canvas=document.getElementById('canvas');if(canvas.dataset.theme!=='scene')return null;
         const world=document.getElementById('audio-world');
-        return positionedSceneLights(canvas.dataset.backdrop,world).map(source=>sampleSceneLight(source,x,y)).reduce((best,source)=>source.weight>(best?.weight||0)?source:best,null);
+        return positionedSceneLights(canvas.dataset.backdrop,canvas.dataset.time,world).map(source=>sampleSceneLight(source,x,y)).reduce((best,source)=>source.weight>(best?.weight||0)?source:best,null);
     }
     function updateLightingDemo(){
         if(lightingDemoFrame)return;
@@ -853,8 +853,9 @@ const Hardware = (() => {
         const viewport=document.getElementById('canvas').getBoundingClientRect();
         const furnitureBodies=[...world.querySelectorAll('.furniture-node .rack-body')];
         const sceneName=viewport&&document.getElementById('canvas').dataset.theme==='scene'?document.getElementById('canvas').dataset.backdrop:'';
-        const sceneEmitters=positionedSceneLights(sceneName,world);
-        const sceneEmitterKey=sceneEmitters.map(source=>Math.round(source.x/8)+','+Math.round(source.y/8)).join(';');
+        const sceneTime=document.getElementById('canvas').dataset.time;
+        const sceneEmitters=positionedSceneLights(sceneName,sceneTime,world);
+        const sceneEmitterKey=sceneTime+':'+sceneEmitters.map(source=>Math.round(source.x/8)+','+Math.round(source.y/8)).join(';');
         const furnitureKey=furnitureBodies.map(body=>{const node=body.closest('.furniture-node');return node.id+':'+node.style.left+':'+node.style.top;}).join('|');
         if(furnitureLightingGeometry.key!==furnitureKey){
             const worldRect=world.getBoundingClientRect(),worldScale=worldRect.width/world.offsetWidth;
@@ -1218,7 +1219,7 @@ const Hardware = (() => {
             appPreferencesSaveTimer=setTimeout(()=>{
                 if(!canvas.clientWidth||!canvas.clientHeight)return;
                 const focusX=(canvas.clientWidth/2-view.x)/view.zoom,focusY=(canvas.clientHeight/2-view.y)/view.zoom;
-                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,floor:state.canvasFloor,floorAuto:floorFollowsScene,backdrop:state.canvasBackdrop,connectionGuidanceEnabled,zoom:view.zoom,focusX,focusY}));}catch{}
+                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,floor:state.canvasFloor,floorAuto:floorFollowsScene,backdrop:state.canvasBackdrop,time:state.canvasTime,connectionGuidanceEnabled,zoom:view.zoom,focusX,focusY}));}catch{}
             },450);
         }
         const appDialog=document.getElementById('app-confirm-dialog');
@@ -1261,6 +1262,7 @@ const Hardware = (() => {
             document.getElementById('canvas-theme').value=theme;
             document.getElementById('canvas-floor')?.closest('label')?.toggleAttribute('hidden',theme!=='scene');
             document.getElementById('canvas-backdrop')?.closest('label')?.toggleAttribute('hidden',theme!=='scene');
+            document.getElementById('canvas-time')?.closest('label')?.toggleAttribute('hidden',theme!=='scene');
             Hardware.updateLightingDemo();
         }
         document.getElementById('canvas-theme').addEventListener('change',event=>{setCanvasTheme(event.target.value);updateCables();scheduleProjectSave();scheduleAppPreferencesSave();});
@@ -1282,27 +1284,38 @@ const Hardware = (() => {
         }
         canvasFloorControl.querySelector('select').addEventListener('change',event=>{floorFollowsScene=false;setCanvasFloor(event.target.value);scheduleProjectSave();scheduleAppPreferencesSave();});
         setCanvasFloor(savedAppPreferences.floor||RoomScenes.scenes[savedAppPreferences.backdrop||'studio']?.floor||'wood');
-        const canvasBackdropModes={studio:'Estúdio',listening:'Sala de audição',loft:'Loft',library:'Sala verde-oliva',night:'Sala noturna'};
+        const canvasBackdropModes={studio:'Estúdio',listening:'Sala de audição',loft:'Loft'};
+        const legacyBackdrops={library:'listening',night:'loft'};
+        const canvasTimeModes={dawn:'Nascer do dia',dusk:'Fim de tarde',night:'Noite'};
         const canvasBackdropControl=document.createElement('label');canvasBackdropControl.className='canvas-theme-control';
         canvasBackdropControl.innerHTML='<span>Cenário</span><select id="canvas-backdrop" aria-label="Cenário de fundo">'+Object.entries(canvasBackdropModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
+        const canvasTimeControl=document.createElement('label');canvasTimeControl.className='canvas-theme-control';
+        canvasTimeControl.innerHTML='<span>Hora do dia</span><select id="canvas-time" aria-label="Hora do dia">'+Object.entries(canvasTimeModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
         const roomSceneCache=new Map();
         function setCanvasBackdrop(mode){
+            mode=legacyBackdrops[mode]||mode;
             mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studio';state.canvasBackdrop=mode;canvas.dataset.backdrop=mode;canvasBackdropControl.querySelector('select').value=mode;
             roomBackdrop.querySelectorAll('[data-room-layer]').forEach(image=>{
-                const layer=image.dataset.roomLayer,key=mode+':'+layer;
-                if(!roomSceneCache.has(key))roomSceneCache.set(key,'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(RoomScenes.renderLayer(mode,layer)));
+                const layer=image.dataset.roomLayer,key=mode+':'+state.canvasTime+':'+layer;
+                if(!roomSceneCache.has(key))roomSceneCache.set(key,'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(RoomScenes.renderLayer(mode,layer,state.canvasTime)));
                 const src=roomSceneCache.get(key);
                 if(image.getAttribute('src')!==src)image.src=src;
             });
-            if(windowLayers.dataset.scene!==mode){
+            if(windowLayers.dataset.scene!==mode||windowLayers.dataset.time!==state.canvasTime){
                 windowLayers.className='room-window-layers room-window-'+mode;
-                windowLayers.innerHTML=RoomScenes.windowPanes(mode);
-                windowLayers.dataset.scene=mode;
+                windowLayers.innerHTML=RoomScenes.windowPanes(mode,state.canvasTime);
+                windowLayers.dataset.scene=mode;windowLayers.dataset.time=state.canvasTime;
             }
             if(floorFollowsScene)setCanvasFloor(RoomScenes.scenes[mode].floor);
             Hardware.updateLightingDemo();
         }
+        function setCanvasTime(time){
+            time=Object.hasOwn(canvasTimeModes,time)?time:'dusk';state.canvasTime=time;canvas.dataset.time=time;canvasTimeControl.querySelector('select').value=time;
+            setCanvasBackdrop(state.canvasBackdrop||'studio');
+        }
         canvasBackdropControl.querySelector('select').addEventListener('change',event=>{setCanvasBackdrop(event.target.value);updateCables();scheduleProjectSave();scheduleAppPreferencesSave();});
+        canvasTimeControl.querySelector('select').addEventListener('change',event=>{setCanvasTime(event.target.value);updateCables();scheduleProjectSave();scheduleAppPreferencesSave();});
+        state.canvasTime=Object.hasOwn(canvasTimeModes,savedAppPreferences.time)?savedAppPreferences.time:savedAppPreferences.backdrop==='night'?'night':'dusk';canvas.dataset.time=state.canvasTime;canvasTimeControl.querySelector('select').value=state.canvasTime;
         setCanvasBackdrop(savedAppPreferences.backdrop||'studio');
         setCanvasTheme(state.canvasTheme);
 
@@ -7964,7 +7977,7 @@ const Hardware = (() => {
             const catalogScroll=equipmentCatalog.querySelector('.overflow-y-auto');
             return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{
                 environment:{...(state.environment||{preset:'near',intensity:0})},
-                canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'scene',canvasFloor:state.canvasFloor||'wood',canvasFloorAuto:floorFollowsScene,canvasBackdrop:state.canvasBackdrop||'studio',
+                canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'scene',canvasFloor:state.canvasFloor||'wood',canvasFloorAuto:floorFollowsScene,canvasBackdrop:state.canvasBackdrop||'studio',canvasTime:state.canvasTime||'dusk',
                 soundVolume:state.uiSoundVolume??.9,hideCables:!!state.hideCables,
                 selected:[...state.selectedDeviceIds],selectedCable:state.connections.indexOf(state.selectedConnection),
                 search:document.getElementById('equipment-search').value,catalogScroll:catalogScroll?.scrollTop||0,inspectorScroll:inspectorContent.scrollTop
@@ -8073,7 +8086,7 @@ const Hardware = (() => {
             try{
                 stopViewMotion();cancelCableDrag();Object.values(state.devices).forEach(deleteDevice);
                 world.style.removeProperty('min-width');world.style.removeProperty('min-height');
-                const ui=snapshot.ui||{};floorFollowsScene=ui.canvasFloorAuto===true;setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setCanvasFloor(ui.canvasFloor);setCanvasBackdrop(ui.canvasBackdrop);
+                const ui=snapshot.ui||{};floorFollowsScene=ui.canvasFloorAuto===true;setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setCanvasFloor(ui.canvasFloor);setCanvasTime(ui.canvasTime||(ui.canvasBackdrop==='night'?'night':'dusk'));setCanvasBackdrop(ui.canvasBackdrop);
                 for(const saved of snapshot.devices){
                     const before=new Set(Object.keys(state.devices));createDevice(saved.type,Math.min(saved.x,world.offsetWidth-150),Math.min(saved.y,maxEquipmentBottom()-150));
                     const dev=Object.values(state.devices).find(item=>!before.has(item.id));if(!dev)throw new Error('Não foi possível restaurar um equipamento.');
@@ -8157,11 +8170,12 @@ const Hardware = (() => {
         const settingsMenu=document.createElement('details');settingsMenu.className='app-settings';
         settingsMenu.innerHTML='<summary aria-label="Abrir configurações"><svg class="settings-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7.1"/><circle cx="12" cy="12" r="2.7"/><path d="M12 1.8v3.1m0 14.2v3.1M1.8 12h3.1m14.2 0h3.1M4.3 4.3l2.2 2.2m11 11 2.2 2.2m0-15.4-2.2 2.2m-11 11-2.2 2.2"/></svg><span>Configurações</span></summary>';
         clearCatalogFooter.className='app-settings-content';
-        const themeSection=document.createElement('section');themeSection.className='settings-theme-section';themeSection.appendChild(canvasThemeControl);themeSection.appendChild(canvasGridControl);themeSection.appendChild(canvasFloorControl);themeSection.appendChild(canvasBackdropControl);setCanvasGrid('dots');
+        const themeSection=document.createElement('section');themeSection.className='settings-theme-section';themeSection.appendChild(canvasThemeControl);themeSection.appendChild(canvasGridControl);themeSection.appendChild(canvasFloorControl);themeSection.appendChild(canvasBackdropControl);themeSection.appendChild(canvasTimeControl);setCanvasGrid('dots');
         const connectionHelpSetting=document.createElement('label');connectionHelpSetting.className='connection-help-setting';connectionHelpSetting.innerHTML='<input id="connection-help-enabled" type="checkbox"><span><strong>Orientação de conexões</strong><small>Mostra dicas e impede ligações incompatíveis. Desative para permitir erros quando os plugues encaixarem.</small></span>';
         const connectionHelpCheckbox=connectionHelpSetting.querySelector('input');connectionHelpCheckbox.checked=connectionGuidanceEnabled;themeSection.appendChild(connectionHelpSetting);
         connectionHelpCheckbox.addEventListener('change',()=>{connectionGuidanceEnabled=connectionHelpCheckbox.checked;hideContextHelp();updatePortGuidance(true);scheduleAppPreferencesSave();});
         clearCatalogFooter.insertBefore(themeSection,soundControls);
+        setCanvasTheme(state.canvasTheme);
 
         const roomSection=document.createElement('section');roomSection.className='room-settings';
         roomSection.innerHTML='<label>Ambiente sonoro<select id="room-preset">'+Object.entries(ROOM_PRESETS).map(([key,value])=>`<option value="${key}">${value.name}</option>`).join('')+'</select></label><label for="room-intensity">Intensidade <output id="room-intensity-value">0/10</output></label><input id="room-intensity" type="range" min="0" max="10" step="1" value="0"><p>Reverberação estéreo na escuta final. Em zero, o áudio permanece seco.</p>';
