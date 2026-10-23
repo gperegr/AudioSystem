@@ -2,7 +2,7 @@
 
 Monte um sistema de som virtual, conecte os equipamentos e ouça o resultado no navegador. Explore fontes, amplificadores, equalizadores, caixas e fones com estilos vintage, de estúdio e modernos.
 
-![Interface atual: catálogo à esquerda, sistema estéreo no centro e ajustes do integrado à direita](docs/images/visao-geral.png)
+![Exemplo de montagem: catálogo à esquerda, sistema estéreo no centro e ajustes do integrado à direita](docs/images/visao-geral.png)
 
 **[Wiki e guias completos](https://github.com/gperegr/AudioSystem/wiki)** · **[Exemplos de montagem](https://github.com/gperegr/AudioSystem/wiki/Exemplos-de-montagem)** · **[Solução de problemas](https://github.com/gperegr/AudioSystem/wiki/Problemas-frequentes)**
 
@@ -62,6 +62,16 @@ Os avisos explicam níveis incorretos, carga e possíveis danos simulados. Desat
 | Organizar cabos | Selecione um cabo para ajustar etiqueta, cor, visibilidade e folga. Ocultar não corta o áudio. |
 
 Os controles de ajuste usam passos discretos; seletores e sintonia têm escalas próprias. **Restaurar Configurações** aparece nos aparelhos com ajustes restauráveis. Nas potências, o ganho padrão é **5/10**; projetos com ganhos próprios preservam seus valores. Isso não significa metade da potência nominal em watts.
+
+### Cenário, piso e iluminação
+
+Em **Configurações → Fundo**, escolha **Cenário** para mostrar a sala ilustrada. O menu então oferece cinco ambientes: **Estúdio**, **Sala de audição**, **Loft**, **Biblioteca Hi-Fi** e **Sala noturna**. Escolha o piso **Madeira**, **Carpete**, **Concreto** ou **Sem piso**. Os outros fundos (Claro, Grafite, Azul noturno e Sépia) continuam disponíveis sem cenário. Fundo, cenário, piso, grade e zoom são lembrados no navegador e acompanham o projeto salvo.
+
+Os ambientes têm luzes próprias, com cor e intensidade ligadas à ilustração. Elas alteram reflexos e sombras dos equipamentos, controles, conectores e móveis. Knobs, teclas, sliders e plugues têm sombras de contato e alturas diferentes; prateleiras e laterais criam sombras no interior dos móveis. Os aparelhos ficam visualmente à frente do fundo do rack. A vista permanece frontal; áudio, conexões e funcionamento dos controles não dependem dos efeitos visuais.
+
+Ao deslocar ou ampliar o canvas, cenário, detalhes da sala e piso se movem em velocidades diferentes dos equipamentos, criando paralaxe. Mover somente o cursor não altera esse efeito. A junção entre parede e piso permanece fixa, e os aparelhos podem avançar um pouco sobre o piso para parecerem apoiados nele.
+
+O catálogo inclui a categoria **DEBUG**, com **Modelo · Controles** e **Ponto de luz · Teste**. A luz de teste aparece somente depois de adicionada; arraste-a para comparar a incidência, ajuste cor e intensidade no próprio objeto e dê um clique duplo para alterná-la. Ela serve para experimentar o visual e não participa do circuito de áudio. Em caixas com grade removível, um pequeno botão quadrado com ícone permite recolocá-la.
 
 ### Celulares e tablets
 

@@ -329,6 +329,7 @@ const Hardware = (() => {
         const merge=values=>{for(const axis of ['width','height']){const value=sizeValue(values?.[axis]);if(value!==undefined)resolved[axis]=value;}};
         const device=el.closest('.device-node'),rules=controlSizes[device?.dataset.equipmentType];
         for(const [selector,dimensions]of Object.entries(rules||{})){if(el.matches(selector))merge(dimensions);}
+        if(el.matches('.grille-restore'))merge({width:24,height:24});
         merge({width:el.dataset.controlWidth,height:el.dataset.controlHeight});merge(entry.overrides);
         for(const axis of ['width','height']){
             const value=sizeValue(resolved[axis]);
@@ -727,7 +728,399 @@ const Hardware = (() => {
             el.dataset.ledModel=model;el.classList.add('hw-led');el.style.setProperty('--hw-led-color',spec.color);el.style.setProperty('--hw-led-size',spec.size+'px');
         });
         dev.el.querySelectorAll('.port').forEach(el=>{el.dataset.socketModel=el.dataset.type;});
+        if(!['hardwareDemo','lightPoint'].includes(dev.type))mountLightingDemo(dev.el);
         sync(dev);
+    }
+    function mountLightingDemo(device){
+        const furniture=device.classList.contains('furniture-node');
+        const projectedParts='.hw-knob,.hw-button,.hw-linear,.port,.pre-handle,.dual-handle,.bench-handle,.graphic-eq-handle,.mixer-rack-handle';
+        const controls=[...device.querySelectorAll(projectedParts)].filter(control=>control.getClientRects().length);
+        const surfaces=new Set();
+        controls.forEach(control=>{
+            let surface=control;
+            while(surface.parentElement&&surface.parentElement!==device)surface=surface.parentElement;
+            if(surface.parentElement===device&&surface!==control&&surface.clientWidth&&surface.clientHeight)surfaces.add(surface);
+        });
+        if(!furniture&&!surfaces.size){
+            const face=[...device.children].find(child=>child.classList.contains('furniture-body')||(!child.classList.contains('device-header')&&!child.classList.contains('auto-stack-foot')&&child.clientWidth&&child.clientHeight));
+            if(face)surfaces.add(face);
+        }
+        if(!furniture&&!surfaces.size)return;
+        device.classList.add('lighting-demo-target');
+        surfaces.forEach(surface=>{
+            surface.classList.add('lighting-shadow-surface');
+            if(getComputedStyle(surface).position==='static')surface.style.position='relative';
+            if(surface.querySelector(':scope > .lighting-shadow-canvas'))return;
+            const canvas=document.createElement('canvas');canvas.className='lighting-shadow-canvas';canvas.setAttribute('aria-hidden','true');surface.appendChild(canvas);
+        });
+        if(!furniture&&!device.querySelector(':scope > .lighting-incident-overlay')){
+            const overlay=document.createElement('div');overlay.className='lighting-incident-overlay';overlay.setAttribute('aria-hidden','true');device.appendChild(overlay);
+        }
+        mountLightingSilhouette(device);
+        updateLightingDemo();
+    }
+    function mountLightingSilhouette(device){
+        if(!device.matches('.device-type-powerValve,.device-type-turntable,.device-type-turntableVintage,.device-type-turntableLinear,.device-type-streamIntegrated,.headphone-equipment,.floorstanding-speaker,.bookshelf-speaker')&&!device.querySelector('.sp-cab'))return;
+        const width=device.offsetWidth,height=device.offsetHeight,deviceRect=device.getBoundingClientRect();
+        if(!width||!height||!deviceRect.width)return;
+        const scale=width/deviceRect.width,mask=document.createElement('canvas');mask.width=width;mask.height=height;
+        const ctx=mask.getContext('2d');if(!ctx)return;
+        ctx.fillStyle='#fff';
+        const box=element=>{const rect=element.getBoundingClientRect();return{x:(rect.left-deviceRect.left)*scale,y:(rect.top-deviceRect.top)*scale,width:rect.width*scale,height:rect.height*scale};};
+        const fill=(rect,radius=0)=>{if(!rect||rect.width<=0||rect.height<=0)return;ctx.beginPath();ctx.roundRect(rect.x,rect.y,rect.width,rect.height,Math.min(radius,rect.width/2,rect.height/2));ctx.fill();};
+        if(device.classList.contains('device-type-powerValve')){
+            const svg=device.querySelector('.valve-assembly');
+            if(svg){
+                const svgBox=box(svg);
+                fill({x:svgBox.x,y:svgBox.y+svgBox.height*160/184,width:svgBox.width,height:svgBox.height*24/184});
+                svg.querySelectorAll(':scope > g').forEach(group=>fill(box(group),group.getBBox().width<100?12:7));
+            }
+            fill(box(device.querySelector('.custom-power-connections')),4);
+        }else if(device.classList.contains('device-type-streamIntegrated')){
+            device.querySelectorAll('.stream-housing,.stream-heat-sink,.stream-glass,.stream-service-rail,.stream-foot,[data-stream-volume]').forEach(part=>fill(box(part),3));
+        }else if(device.classList.contains('headphone-equipment')){
+            const art=device.querySelector('.headphone-artwork,.kuba-art');
+            if(art){
+                let image=art.tagName.toLowerCase()==='img'?art:art._lightingMaskImage;
+                if(!image&&art.tagName.toLowerCase()==='svg'){
+                    image=new Image();art._lightingMaskImage=image;
+                    image.addEventListener('load',()=>mountLightingSilhouette(device),{once:true});
+                    image.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(art));
+                }
+                if(image.complete&&image.naturalWidth){const rect=box(art);ctx.drawImage(image,rect.x,rect.y,rect.width,rect.height);}
+                else if(art.tagName.toLowerCase()==='img')art.addEventListener('load',()=>mountLightingSilhouette(device),{once:true});
+            }
+            device.querySelectorAll('.headphone-stand-post,.headphone-stand-cradle,.headphone-stand-base').forEach(part=>fill(box(part),parseFloat(getComputedStyle(part).borderTopLeftRadius)||2));
+        }else if(device.classList.contains('floorstanding-speaker')||device.classList.contains('bookshelf-speaker')||device.querySelector('.sp-cab')){
+            device.querySelectorAll('.sp-cab,.bookshelf-cabinet,.tower-cabinet,.tower-plinth,.tower-foot,.tower-top-tweeter,.shelf-top-tweeter').forEach(part=>fill(box(part),parseFloat(getComputedStyle(part).borderTopLeftRadius)||3));
+        }else if(device.classList.contains('device-type-turntableLinear')){
+            const art=device.querySelector('.linear-art');
+            if(art){
+                const rect=box(art),unitX=rect.width/660,unitY=rect.height/252;
+                const part=(x,y,w,h,r=0)=>fill({x:rect.x+x*unitX,y:rect.y+y*unitY,width:w*unitX,height:h*unitY},r);
+                part(4,122,652,116,3);part(37,237,37,15,3);part(586,237,37,15,3);
+                part(35,102,380,18,3);part(41,40,511,9,2);part(559,56,69,66,2);
+            }
+        }else{
+            const plinth=device.querySelector('.at-plinth');
+            if(plinth){const rect=box(plinth),deckHeight=parseFloat(getComputedStyle(device).getPropertyValue('--tt-deck-height'))||120;fill({x:rect.x,y:rect.y+deckHeight,width:rect.width,height:Math.max(0,rect.height-deckHeight)},5);}
+            const platter=device.querySelector('.at-front-mechanism .at-platter');if(platter)fill(box(platter),4);
+        }
+        device.style.setProperty('--lighting-silhouette-mask',`url("${mask.toDataURL()}")`);
+        device.classList.add('lighting-shaped-silhouette');
+    }
+    let lightingDemoFrame=0;
+    const lightingGeometry=new WeakMap();
+    let furnitureLightingGeometry={key:'',items:[]};
+    const sceneLightSources={
+        studio:[{x:.145,y:.31,rgb:[121,196,223],strength:.48},{x:.846,y:.31,rgb:[121,196,223],strength:.42}],
+        listening:[{x:.23,y:.27,rgb:[255,193,122],strength:.56},{x:.77,y:.27,rgb:[255,193,122],strength:.5}],
+        loft:[{x:.2,y:.3,rgb:[224,237,216],strength:.38},{x:.5,y:.3,rgb:[224,237,216],strength:.38},{x:.8,y:.3,rgb:[224,237,216],strength:.38}],
+        library:[{x:.30,y:.19,rgb:[255,224,162],strength:.53},{x:.70,y:.19,rgb:[255,224,162],strength:.53}],
+        night:[{x:.133,y:.23,rgb:[240,140,175],strength:.48},{x:.866,y:.23,rgb:[143,191,255],strength:.48}]
+    };
+    function sceneLightAt(x,y){
+        const canvas=document.getElementById('canvas');if(canvas.dataset.theme!=='scene')return null;
+        const world=document.getElementById('audio-world');
+        return (sceneLightSources[canvas.dataset.backdrop]||[]).reduce((best,source)=>{
+            const sx=source.x*world.offsetWidth,sy=source.y*world.offsetHeight;
+            const weight=source.strength*Math.max(0,1-Math.hypot(sx-x,sy-y)/2100);
+            return weight>(best?.weight||0)?{x:sx,y:sy,weight}:best;
+        },null);
+    }
+    function updateLightingDemo(){
+        if(lightingDemoFrame)return;
+        lightingDemoFrame=requestAnimationFrame(()=>{lightingDemoFrame=0;paintLightingDemo();});
+    }
+    function paintLightingDemo(){
+        const light=document.querySelector('#audio-world .lighting-demo-light');
+        const lx=light?light.offsetLeft+light.offsetWidth/2:0,ly=light?light.offsetTop+light.offsetHeight/2:0,lightHeight=170;
+        const color=light?.querySelector('input[type="color"]')?.value||'#e4f4ff';
+        const intensity=light?Number(light.querySelector('input[type="range"]')?.value||0)/100:0;
+        const rgb=[1,3,5].map(index=>parseInt(color.slice(index,index+2),16));
+        if(light){light.style.setProperty('--demo-light-color',color);light.style.setProperty('--demo-light-strength',intensity);}
+        const world=document.getElementById('audio-world');
+        const zoom=Number(world.style.getPropertyValue('--canvas-zoom'))||1;
+        const clamp=(value,limit)=>Math.max(-limit,Math.min(limit,value));
+        const viewport=document.getElementById('canvas').getBoundingClientRect();
+        const furnitureBodies=[...world.querySelectorAll('.furniture-node .rack-body')];
+        const sceneName=viewport&&document.getElementById('canvas').dataset.theme==='scene'?document.getElementById('canvas').dataset.backdrop:'';
+        const sceneEmitters=(sceneLightSources[sceneName]||[]).map(source=>({...source,x:source.x*world.offsetWidth,y:source.y*world.offsetHeight}));
+        const furnitureKey=furnitureBodies.map(body=>{const node=body.closest('.furniture-node');return node.id+':'+node.style.left+':'+node.style.top;}).join('|');
+        if(furnitureLightingGeometry.key!==furnitureKey){
+            const worldRect=world.getBoundingClientRect(),worldScale=worldRect.width/world.offsetWidth;
+            const rectInWorld=element=>{const rect=element.getBoundingClientRect();return{x:(rect.left-worldRect.left)/worldScale,y:(rect.top-worldRect.top)/worldScale,width:rect.width/worldScale,height:rect.height/worldScale};};
+            furnitureLightingGeometry={key:furnitureKey,items:furnitureBodies.map(body=>({
+                id:body.closest('.furniture-node').id,...rectInWorld(body),
+                parts:[...body.querySelectorAll('.furniture-side,.furniture-shelf,.furniture-top')].map(part=>({...rectInWorld(part),kind:part.classList.contains('furniture-side')?'side':part.classList.contains('furniture-top')?'top':'shelf'}))
+            }))};
+        }
+        const furniture=furnitureLightingGeometry.items;
+        const stackBoxes=[...world.querySelectorAll('.device-node:not(.furniture-node):not(.lighting-demo-light)')].filter(el=>el.style.visibility!=='hidden').map(el=>({el,x:el.offsetLeft,y:el.offsetTop,width:el.offsetWidth,height:el.offsetHeight}));
+        const stackTops=stackBoxes.filter(box=>box.width>=300&&(box.height<box.width*.8||box.el.classList.contains('device-type-tapeDeck')));
+        world.querySelectorAll('.furniture-node.lighting-demo-target').forEach(node=>{
+            const rect=node.getBoundingClientRect();
+            if(rect.right<viewport.left||rect.left>viewport.right||rect.bottom<viewport.top||rect.top>viewport.bottom)return;
+            const key=lx+'|'+ly+'|'+color+'|'+intensity+'|'+sceneName+'|'+node.offsetLeft+'|'+node.offsetTop+'|'+node.dataset.back;
+            if(node.dataset.lightPaintKey===key)return;
+            node.dataset.lightPaintKey=key;
+            node.style.setProperty('--demo-light-rgb',rgb.join(' '));node.style.setProperty('--demo-light-strength',intensity);
+            node.querySelectorAll('.furniture-part,.acoustic-panel').forEach(part=>{
+                const box=part.getBoundingClientRect(),scale=rect.width/node.offsetWidth;
+                const x=(box.left-rect.left)/scale+node.offsetLeft,y=(box.top-rect.top)/scale+node.offsetTop;
+                part.style.setProperty('--demo-part-light-x',((lx-x)/((box.width/scale)||1)*100).toFixed(1)+'%');
+                part.style.setProperty('--demo-part-light-y',((ly-y)/((box.height/scale)||1)*100).toFixed(1)+'%');
+                const source=sceneEmitters.map(item=>({...item,falloff:Math.max(0,1-Math.hypot(item.x-x-box.width/scale/2,item.y-y-box.height/scale/2)/2000)})).sort((a,b)=>b.strength*b.falloff-a.strength*a.falloff)[0];
+                part.style.setProperty('--demo-scene-light-strength',((source?.strength||0)*(source?.falloff||0)).toFixed(3));
+                if(source){part.style.setProperty('--demo-scene-light-rgb',source.rgb.join(' '));part.style.setProperty('--demo-scene-light-x',((source.x-x)/((box.width/scale)||1)*100).toFixed(1)+'%');part.style.setProperty('--demo-scene-light-y',((source.y-y)/((box.height/scale)||1)*100).toFixed(1)+'%');}
+            });
+            const rack=furniture.find(item=>item.id===node.id);
+            if(rack){
+                const source=sceneEmitters.reduce((best,item)=>{
+                    const weight=item.strength*Math.max(0,1-Math.hypot(item.x-rack.x-rack.width/2,item.y-rack.y-rack.height/2)/2100);
+                    return weight>(best?.weight||0)?{...item,weight}:best;
+                },null);
+                drawFurnitureInteriorShadows(node,rack,intensity?lx:source?.x||0,intensity?ly:source?.y||0,intensity||source?.weight||0);
+            }
+        });
+        document.querySelectorAll('#audio-world .lighting-demo-target').forEach(device=>{
+            if(device.classList.contains('furniture-node'))return;
+            const visibleRect=device.getBoundingClientRect();
+            if(visibleRect.right<viewport.left||visibleRect.left>viewport.right||visibleRect.bottom<viewport.top||visibleRect.top>viewport.bottom)return;
+            let geometry=lightingGeometry.get(device);
+            if(!geometry){
+                const scale=visibleRect.width/device.offsetWidth;
+                geometry={width:device.offsetWidth,height:device.offsetHeight,lastPosition:'',surfaces:[...device.querySelectorAll(':scope > .lighting-shadow-surface')].map(face=>{
+                    const faceRect=face.getBoundingClientRect();
+                    return {face,canvas:face.querySelector(':scope > .lighting-shadow-canvas'),x:(faceRect.left-visibleRect.left)/scale,y:(faceRect.top-visibleRect.top)/scale,controls:[...face.querySelectorAll('.hw-knob,.hw-button,.hw-linear,.port,.pre-handle,.dual-handle,.bench-handle,.graphic-eq-handle,.mixer-rack-handle')].filter(control=>control.getClientRects().length).map(control=>{
+                        const rect=control.getBoundingClientRect();
+                        return {el:control,x:(rect.left+rect.width/2-visibleRect.left)/scale,y:(rect.top+rect.height/2-visibleRect.top)/scale,faceX:(rect.left+rect.width/2-faceRect.left)/scale,faceY:(rect.top+rect.height/2-faceRect.top)/scale,width:rect.width/scale,height:rect.height/scale,last:''};
+                    })};
+                })};
+                lightingGeometry.set(device,geometry);
+            }
+            const deviceX=device.offsetLeft,deviceY=device.offsetTop;
+            const centerX=deviceX+geometry.width/2,centerY=deviceY+geometry.height/2;
+            const rack=furniture.find(item=>centerX>item.x+16&&centerX<item.x+item.width-16&&centerY>item.y+16&&centerY<item.y+item.height-16);
+            const stackedAbove=stackTops.filter(upper=>upper.el!==device&&deviceY-upper.y-upper.height>=-.5&&deviceY-upper.y-upper.height<=20.5&&Math.min(deviceX+geometry.width,upper.x+upper.width)-Math.max(deviceX,upper.x)>=Math.min(geometry.width,upper.width)*.7);
+            const stackKey=stackedAbove.map(upper=>upper.el.id+':'+upper.x+':'+upper.y).join('|');
+            const positionKey=lx+'|'+ly+'|'+color+'|'+intensity+'|'+sceneName+'|'+deviceX+'|'+deviceY+'|'+zoom+'|'+(rack?.id||'')+'|'+(rack?.x||0)+'|'+(rack?.y||0)+'|'+stackKey;
+            if(geometry.lastPosition===positionKey)return;
+            geometry.lastPosition=positionKey;
+            const dx=clamp((lx-deviceX-geometry.width/2)/(geometry.width*.7),1);
+            const dy=clamp((ly-deviceY-geometry.height/2)/(geometry.height*1.5),1);
+            const reach=Math.max(geometry.width,geometry.height)*1.8+180;
+            const falloff=Math.max(0,1-Math.hypot(lx-centerX,ly-centerY)/reach);
+            const localScene=sceneEmitters.map(source=>({...source,weight:source.strength*Math.max(0,1-Math.hypot(source.x-centerX,source.y-centerY)/2100)}));
+            const shadowScene=localScene.reduce((best,source)=>source.weight>(best?.weight||0)?source:best,null);
+            const shadowX=intensity?lx:shadowScene?.x||0,shadowY=intensity?ly:shadowScene?.y||0,shadowStrength=intensity||shadowScene?.weight||0;
+            device.style.setProperty('--demo-panel-light-x',(50+dx*40).toFixed(1)+'%');
+            device.style.setProperty('--demo-panel-light-y',(50+dy*40).toFixed(1)+'%');
+            device.style.setProperty('--demo-light-rgb',rgb.join(' '));
+            device.style.setProperty('--demo-light-strength',intensity);
+            device.style.setProperty('--demo-incident-strength',(intensity*falloff).toFixed(3));
+            localScene.forEach((source,index)=>{
+                const suffix=['a','b','c'][index];
+                device.style.setProperty('--scene-light-'+suffix+'-rgb',source.rgb.join(' '));
+                device.style.setProperty('--scene-light-'+suffix+'-x',((source.x-deviceX)/geometry.width*100).toFixed(1)+'%');
+                device.style.setProperty('--scene-light-'+suffix+'-y',((source.y-deviceY)/geometry.height*100).toFixed(1)+'%');
+                device.style.setProperty('--scene-light-'+suffix+'-strength',source.weight.toFixed(3));
+            });
+            if(!localScene[0])device.style.setProperty('--scene-light-a-strength','0');
+            if(!localScene[1])device.style.setProperty('--scene-light-b-strength','0');
+            if(!localScene[2])device.style.setProperty('--scene-light-c-strength','0');
+            drawFurnitureOcclusion(device,geometry,rack,deviceX,deviceY,shadowX,shadowY,shadowStrength);
+            drawStackOcclusion(device,geometry,stackedAbove,deviceX,deviceY,shadowX,shadowY,shadowStrength);
+            const frontShadows=[];
+            geometry.surfaces.forEach(surface=>{
+                surface.controls.forEach(entry=>{
+                    const {el:control,x,y,width,height:controlHeight}=entry;
+                    const cx=deviceX+x,cy=deviceY+y,knob=control.classList.contains('hw-knob'),plug=control.classList.contains('port'),slider=control.classList.contains('hw-linear'),handle=control.matches('.pre-handle,.dual-handle,.bench-handle,.graphic-eq-handle,.mixer-rack-handle');
+                    const finish=control.dataset.knobFinish,buttonModel=control.dataset.buttonModel;
+                    const height=handle?18:plug?1.8:slider?3:knob?(finish==='disc'?5:finish==='recessed'?7:finish==='halo'?13:11):['chromeLever','industrialToggle','powerLarge'].includes(buttonModel)?8:['flushMetal','membrane','plainKey'].includes(buttonModel)?2.5:5;
+                    let sx=(cx-lx)*height/lightHeight,sy=(cy-ly)*height/lightHeight;
+                    const projection=Math.hypot(sx,sy),maxProjection=handle?30:plug?Math.min(4,Math.min(width,controlHeight)*.4+1):Math.min(18,Math.min(width,controlHeight)*.8+4);
+                    if(projection>maxProjection){sx*=maxProjection/projection;sy*=maxProjection/projection;}
+                    // The streamer's top dial sits behind the front rim, so it cannot cast onto the face.
+                    if(intensity&&(!device.classList.contains('device-type-streamIntegrated')||!control.matches('[data-stream-volume]')))
+                        frontShadows.push({x,y,width,height:controlHeight,sx,sy,knob:knob||(plug&&control.dataset.type!=='wire'),plug,slider,handle,weight:intensity});
+                    if(shadowScene?.weight>.16&&(!device.classList.contains('device-type-streamIntegrated')||!control.matches('[data-stream-volume]'))){
+                        let sceneX=(cx-shadowScene.x)*height/230,sceneY=(cy-shadowScene.y)*height/230;
+                        const travel=Math.hypot(sceneX,sceneY),limit=Math.min(maxProjection,12);
+                        if(travel>limit){sceneX*=limit/travel;sceneY*=limit/travel;}
+                        frontShadows.push({x,y,width,height:controlHeight,sx:sceneX,sy:sceneY,knob:knob||(plug&&control.dataset.type!=='wire'),plug,slider,handle,weight:shadowScene.weight*.38});
+                    }
+                    const highlightX=intensity?lx:shadowScene?.x||cx,highlightY=intensity?ly:shadowScene?.y||cy;
+                    const direction=Math.max(70,Math.hypot(cx-highlightX,cy-highlightY));
+                    const values=[(50+clamp((highlightX-cx)/direction,-1)*34).toFixed(0)+'%',(50+clamp((highlightY-cy)/direction,-1)*34).toFixed(0)+'%'];
+                    const key=values.join('|');if(entry.last===key)return;
+                    entry.last=key;
+                    control.style.setProperty('--demo-highlight-x',values[0]);
+                    control.style.setProperty('--demo-highlight-y',values[1]);
+                });
+                drawLightingShadows(surface,lx-deviceX-surface.x,ly-deviceY-surface.y,zoom,rgb,intensity);
+            });
+            if(frontShadows.length)drawFrontControlShadows(device,geometry,frontShadows,intensity);
+        });
+    }
+    function drawFrontControlShadows(device,geometry,shadows,intensity){
+        let canvas=device.querySelector(':scope > .lighting-control-shadow');
+        if(!canvas){canvas=document.createElement('canvas');canvas.className='lighting-control-shadow';canvas.setAttribute('aria-hidden','true');device.appendChild(canvas);}
+        const width=geometry.width,height=geometry.height,ratio=Math.min(1,Math.sqrt(160000/(width*height)));
+        const pixelWidth=Math.max(1,Math.round(width*ratio)),pixelHeight=Math.max(1,Math.round(height*ratio));
+        if(canvas.width!==pixelWidth||canvas.height!==pixelHeight){canvas.width=pixelWidth;canvas.height=pixelHeight;}
+        const ctx=canvas.getContext('2d');if(!ctx)return;
+        ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,width,height);
+        paintControlShadows(ctx,shadows,intensity);
+        ctx.globalCompositeOperation='destination-out';
+        for(const shadow of shadows)drawSweptShadow(ctx,{...shadow,sx:0,sy:0},0,'#000');
+        ctx.globalCompositeOperation='source-over';
+    }
+    function drawStackOcclusion(device,geometry,uppers,deviceX,deviceY,lightX,lightY,intensity){
+        let canvas=device.querySelector(':scope > .lighting-stack-shadow');
+        if(!uppers.length||!intensity){canvas?.classList.remove('is-active');return;}
+        if(!canvas){canvas=document.createElement('canvas');canvas.className='lighting-stack-shadow';canvas.setAttribute('aria-hidden','true');device.appendChild(canvas);}
+        canvas.classList.add('is-active');
+        const width=geometry.width,height=geometry.height,ratio=Math.min(1,Math.sqrt(100000/(width*height)));
+        const pixelWidth=Math.max(1,Math.round(width*ratio)),pixelHeight=Math.max(1,Math.round(height*ratio));
+        if(canvas.width!==pixelWidth||canvas.height!==pixelHeight){canvas.width=pixelWidth;canvas.height=pixelHeight;}
+        const ctx=canvas.getContext('2d');if(!ctx)return;
+        ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,width,height);
+        for(const upper of uppers){
+            const left=Math.max(0,upper.x-deviceX),right=Math.min(width,upper.x+upper.width-deviceX);
+            const gap=Math.max(0,deviceY-upper.y-upper.height);
+            const fromAbove=Math.max(0,Math.min(1,(deviceY-lightY+160)/320));
+            const reach=4+fromAbove*18+Math.max(0,12-gap)*.15;
+            const shift=Math.max(-14,Math.min(14,(upper.x+upper.width/2-lightX)*.025));
+            const shade=ctx.createLinearGradient(0,0,0,reach);
+            shade.addColorStop(0,`rgba(0,4,8,${Math.min(.26,intensity*.23)})`);
+            shade.addColorStop(.35,`rgba(0,4,8,${Math.min(.14,intensity*.11)})`);
+            shade.addColorStop(1,'rgba(0,4,8,0)');
+            ctx.fillStyle=shade;ctx.beginPath();ctx.moveTo(left,0);ctx.lineTo(right,0);ctx.lineTo(right+shift,reach);ctx.lineTo(left+shift,reach);ctx.closePath();ctx.fill();
+        }
+    }
+    function drawFurnitureOcclusion(device,geometry,rack,deviceX,deviceY,lightX,lightY,intensity){
+        let canvas=device.querySelector(':scope > .lighting-furniture-shadow');
+        if(!rack||!intensity){canvas?.classList.remove('is-active');return;}
+        if(!canvas){canvas=document.createElement('canvas');canvas.className='lighting-furniture-shadow';canvas.setAttribute('aria-hidden','true');device.appendChild(canvas);}
+        canvas.classList.add('is-active');
+        const width=geometry.width,height=geometry.height;
+        const ratio=Math.min(.5,Math.sqrt(160000/(width*height)));
+        const pixelWidth=Math.max(1,Math.round(width*ratio)),pixelHeight=Math.max(1,Math.round(height*ratio));
+        if(canvas.width!==pixelWidth||canvas.height!==pixelHeight){canvas.width=pixelWidth;canvas.height=pixelHeight;}
+        const ctx=canvas.getContext('2d');if(!ctx)return;
+        ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,width,height);
+        const shade=Math.min(.17,intensity*.12);
+        const edge=(x,y,w,h,x1,y1,x2,y2,alpha)=>{
+            const gradient=ctx.createLinearGradient(x1,y1,x2,y2);
+            gradient.addColorStop(0,`rgba(0,4,8,${alpha})`);gradient.addColorStop(1,'rgba(0,4,8,0)');
+            ctx.fillStyle=gradient;ctx.fillRect(x,y,w,h);
+        };
+        const shelves=rack.parts.filter(part=>part.kind==='shelf'||part.kind==='top');
+        const above=shelves.filter(part=>part.y+part.height<=deviceY+2).sort((a,b)=>b.y-a.y)[0];
+        if(above&&deviceY-above.y-above.height<42){
+            const reach=6+Math.max(0,Math.min(1,(deviceY-lightY)/350))*10;
+            edge(0,0,width,reach,0,0,0,reach,shade);
+        }
+        const below=shelves.filter(part=>part.y>=deviceY+height-2).sort((a,b)=>a.y-b.y)[0];
+        if(below&&below.y-deviceY-height<22&&lightY>deviceY+height){
+            const reach=6;edge(0,height-reach,width,reach,0,height,0,height-reach,shade*.6);
+        }
+        const sides=rack.parts.filter(part=>part.kind==='side').sort((a,b)=>a.x-b.x);
+        const left=sides[0],right=sides.at(-1);
+        if(left&&deviceX-left.x-left.width<36){
+            const reach=5+Math.max(0,Math.min(1,(deviceX-lightX)/350))*9;
+            edge(0,0,reach,height,0,0,reach,0,shade*.75);
+        }
+        if(right&&right.x-deviceX-width<36){
+            const reach=5+Math.max(0,Math.min(1,(lightX-deviceX-width)/350))*9;
+            edge(width-reach,0,reach,height,width,0,width-reach,0,shade*.75);
+        }
+    }
+    function drawFurnitureInteriorShadows(node,rack,lightX,lightY,intensity){
+        const body=node.querySelector('.rack-body');if(!body)return;
+        let canvas=body.querySelector(':scope > .lighting-furniture-interior');
+        if(!intensity||node.dataset.back!=='true'){canvas?.classList.remove('is-active');return;}
+        if(!canvas){canvas=document.createElement('canvas');canvas.className='lighting-furniture-interior';canvas.setAttribute('aria-hidden','true');body.appendChild(canvas);}
+        canvas.classList.add('is-active');
+        const width=body.clientWidth,height=body.clientHeight,ratio=Math.min(.5,Math.sqrt(160000/(width*height)));
+        const pixelWidth=Math.max(1,Math.round(width*ratio)),pixelHeight=Math.max(1,Math.round(height*ratio));
+        if(canvas.width!==pixelWidth||canvas.height!==pixelHeight){canvas.width=pixelWidth;canvas.height=pixelHeight;}
+        const ctx=canvas.getContext('2d');if(!ctx)return;
+        ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,width,height);
+        const top=parseFloat(getComputedStyle(body).getPropertyValue('--back-top'))||16;
+        const bottom=parseFloat(getComputedStyle(body).getPropertyValue('--back-bottom'))||20;
+        ctx.save();ctx.beginPath();ctx.rect(20,top,width-40,height-top-bottom);ctx.clip();
+        paintFurnitureBoardShadows(ctx,rack,rack.x,rack.y,lightX,lightY,intensity,width,height);
+        ctx.restore();
+    }
+    function paintFurnitureBoardShadows(ctx,rack,originX,originY,lightX,lightY,intensity,width,height){
+        const shadeAlpha=value=>`rgba(0,4,8,${Math.min(.7,value*intensity)})`;
+        // The boards form one rigid frame, so their projected edges must share a displacement.
+        const frameX=rack.x+rack.width/2,frameY=rack.y+rack.height/2;
+        let sx=(frameX-lightX)*68/170,sy=(frameY-lightY)*68/170;
+        const travel=Math.hypot(sx,sy),limit=125;
+        if(travel>limit){sx*=limit/travel;sy*=limit/travel;}
+        for(const board of rack.parts){
+            const centerX=board.x+board.width/2,centerY=board.y+board.height/2;
+            const shadow={x:centerX-originX,y:centerY-originY,width:board.width,height:board.height,sx,sy,knob:false};
+            if(shadow.x+shadow.width/2+Math.max(0,sx)<-18||shadow.x-shadow.width/2+Math.min(0,sx)>width+18||shadow.y+shadow.height/2+Math.max(0,sy)<-18||shadow.y-shadow.height/2+Math.min(0,sy)>height+18)continue;
+            drawSweptShadow(ctx,shadow,14,shadeAlpha(.035));
+            drawSweptShadow(ctx,shadow,7,shadeAlpha(.06));
+            const gradient=ctx.createLinearGradient(shadow.x,shadow.y,shadow.x+sx+.01,shadow.y+sy+.01);
+            gradient.addColorStop(0,shadeAlpha(.22));gradient.addColorStop(1,shadeAlpha(.07));
+            drawSweptShadow(ctx,shadow,0,gradient);
+        }
+    }
+    function drawLightingShadows(geometry,lightX,lightY,zoom,rgb,intensity){
+        const {canvas,face}=geometry;if(!canvas)return;
+        if(!intensity){if(canvas.width&&canvas.height)canvas.getContext('2d')?.clearRect(0,0,canvas.width,canvas.height);return;}
+        const width=face.clientWidth,height=face.clientHeight;
+        if(!width||!height)return;
+        const ratio=Math.min(Math.max(.35,Math.min((window.devicePixelRatio||1)*zoom,1.25)),Math.sqrt(400000/(width*height)));
+        const pixelWidth=Math.round(width*ratio),pixelHeight=Math.round(height*ratio);
+        if(canvas.width!==pixelWidth||canvas.height!==pixelHeight){canvas.width=pixelWidth;canvas.height=pixelHeight;}
+        const ctx=canvas.getContext('2d');if(!ctx)return;
+        ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,width,height);
+        const radius=Math.max(width,height)*.8,glow=ctx.createRadialGradient(lightX,lightY,0,lightX,lightY,radius);
+        glow.addColorStop(0,`rgba(${rgb.join(',')},${Math.min(.65,.2*intensity)})`);glow.addColorStop(.55,`rgba(${rgb.join(',')},${Math.min(.25,.07*intensity)})`);glow.addColorStop(1,`rgba(${rgb.join(',')},0)`);
+        ctx.fillStyle=glow;ctx.fillRect(0,0,width,height);
+    }
+    function paintControlShadows(ctx,shadows,intensity){
+        const shadowAlpha=value=>`rgba(0,4,8,${Math.min(.85,value*Math.max(1,intensity))})`;
+        for(const shadow of shadows){
+            ctx.globalAlpha=Math.min(1,shadow.weight??intensity);
+            const travel=Math.hypot(shadow.sx,shadow.sy);
+            if(travel>1){
+                const start=.55,tip={...shadow,x:shadow.x+shadow.sx*start,y:shadow.y+shadow.sy*start,sx:shadow.sx*(1-start),sy:shadow.sy*(1-start)};
+                drawSweptShadow(ctx,tip,Math.min(shadow.plug?2:5,1+travel*.24),shadowAlpha(shadow.plug?.035:.075));
+            }
+            drawSweptShadow(ctx,{...shadow,sx:0,sy:0},shadow.plug?1.1:shadow.slider?1.3:2.2,shadowAlpha(shadow.plug?.18:.28));
+            const {x,y,sx,sy}=shadow,gradient=ctx.createLinearGradient(x,y,x+sx+.01,y+sy+.01);
+            gradient.addColorStop(0,shadowAlpha(shadow.plug?.20:.4));
+            gradient.addColorStop(1,shadowAlpha(shadow.plug?.055:.11));
+            drawSweptShadow(ctx,shadow,0,gradient);
+        }
+        ctx.globalAlpha=1;
+    }
+    function drawSweptShadow(ctx,{x,y,sx,sy,width,height,knob},grow,fill){
+        ctx.beginPath();ctx.fillStyle=fill;
+        if(knob){
+            ctx.lineCap='round';ctx.lineWidth=Math.max(width,height)+grow*2;
+            ctx.moveTo(x,y);ctx.lineTo(x+sx,y+sy);ctx.strokeStyle=fill;ctx.stroke();
+            return;
+        }
+        const halfW=width/2+grow,halfH=height/2+grow;
+        const points=[];
+        for(const [ox,oy] of [[0,0],[sx,sy]])for(const px of [-halfW,halfW])for(const py of [-halfH,halfH])points.push([x+ox+px,y+oy+py]);
+        points.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+        const cross=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+        const lower=[],upper=[];
+        for(const point of points){while(lower.length>1&&cross(lower.at(-2),lower.at(-1),point)<=0)lower.pop();lower.push(point);}
+        for(const point of points.reverse()){while(upper.length>1&&cross(upper.at(-2),upper.at(-1),point)<=0)upper.pop();upper.push(point);}
+        const hull=lower.slice(0,-1).concat(upper.slice(0,-1));
+        hull.forEach(([px,py],index)=>index?ctx.lineTo(px,py):ctx.moveTo(px,py));
+        ctx.closePath();ctx.fill();
     }
     function sync(dev){dev.syncHardwareDemo?.();dev.el.querySelectorAll('[data-hardware-knob],[data-hardware-linear]').forEach(paintKnob);}
     function inspector(root){root.dataset.hardwarePanel='';root.style.setProperty('--hw-ui-height',buttons.ui.height+'px');root.querySelectorAll('button').forEach(el=>skinButton(el,'ui'));root.querySelectorAll('input[type="range"]').forEach(slider);}
@@ -787,7 +1180,7 @@ const Hardware = (() => {
         if(spec.kind==='jack')return `<g transform="scale(${spec.scale})"><path d="M0 0 3 -2h12v4H3Z" fill="#ddbc77" stroke="#887044" stroke-width=".7"/><path d="M6 -2v4M11 -2v4" stroke="#20252a" stroke-width="1.1"/><rect x="15" y="-4" width="13" height="8" rx="2" fill="#363f45" stroke="#85949c" stroke-width="1"/><path d="M18 -3v6m3-6v6" stroke="#5d6c74"/></g>`;
         return `<path d="M0 0h7" stroke="#e2c283" stroke-width="2.5" stroke-linecap="round"/><rect x="5" y="-4" width="7" height="8" rx="1" fill="#bac2c5" stroke="#677780" stroke-width=".8"/><rect x="12" y="-5" width="13" height="10" rx="2" fill="#262e33" stroke="#788790" stroke-width=".8"/><rect x="14" y="-5" width="4" height="10" rx=".6" fill="${spec.color||'#cf4545'}"/>`;
     }
-    return Object.freeze({knobs,buttons,controlSizes,setControlSize,buttonSounds,movementSounds,movementSound,sliders,leds,plugs,accents,sizes,physics,updateAccents,demoMarkup,bindDemo,sourceTransport,setButtonLabel,button:skinButton,bindKnob,bindLinear,slider,setLed,layout,mount,sync,dispose,inspector,plugMarkup});
+    return Object.freeze({knobs,buttons,controlSizes,setControlSize,buttonSounds,movementSounds,movementSound,sliders,leds,plugs,accents,sizes,physics,updateAccents,updateLightingDemo,sceneLightAt,demoMarkup,bindDemo,sourceTransport,setButtonLabel,button:skinButton,bindKnob,bindLinear,slider,setLed,layout,mount,sync,dispose,inspector,plugMarkup});
 })();
 
         const state = {
@@ -813,7 +1206,7 @@ const Hardware = (() => {
             appPreferencesSaveTimer=setTimeout(()=>{
                 if(!canvas.clientWidth||!canvas.clientHeight)return;
                 const focusX=(canvas.clientWidth/2-view.x)/view.zoom,focusY=(canvas.clientHeight/2-view.y)/view.zoom;
-                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,atmosphere:state.atmosphere,connectionGuidanceEnabled,zoom:view.zoom,focusX,focusY}));}catch{}
+                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,floor:state.canvasFloor,backdrop:state.canvasBackdrop,connectionGuidanceEnabled,zoom:view.zoom,focusX,focusY}));}catch{}
             },450);
         }
         const appDialog=document.getElementById('app-confirm-dialog');
@@ -832,27 +1225,31 @@ const Hardware = (() => {
 
         const canvas = document.getElementById('canvas');
         const world = document.getElementById('audio-world');
+        const ROOM_SIDE_INSET=110;
+        document.documentElement.classList.add('lighting-demo-enabled');
+        const roomBackdrop=document.createElement('div');roomBackdrop.id='room-backdrop';roomBackdrop.setAttribute('aria-hidden','true');
+        roomBackdrop.innerHTML=['studio','listening','loft','library','night'].map(name=>`<img class="room-scene-image room-scene-${name}" src="./assets/rooms/${name}.svg" alt="" draggable="false">`).join('')+'<i class="room-depth-room"></i><i class="room-depth-shelf"></i><i class="room-practical-light light-left"></i><i class="room-practical-light light-center"></i><i class="room-practical-light light-right"></i><i class="room-side-wall wall-left"></i><i class="room-side-wall wall-right"></i>';
+        world.prepend(roomBackdrop);
         canvas.appendChild(document.getElementById('connection-guidance'));
-        const canvasThemes={light:'Claro',graphite:'Grafite',midnight:'Azul noturno',sepia:'Sépia'};
+        const canvasThemes={light:'Claro',graphite:'Grafite',midnight:'Azul noturno',sepia:'Sépia',scene:'Cenário'};
         const canvasThemeControl=document.createElement('label');canvasThemeControl.className='canvas-theme-control';
         canvasThemeControl.innerHTML='<span>Fundo</span><select id="canvas-theme" aria-label="Cor do fundo do canvas">'+Object.entries(canvasThemes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
         document.querySelector('.canvas-tools').appendChild(canvasThemeControl);
         function setCanvasTheme(theme){
-            theme=Object.hasOwn(canvasThemes,theme)?theme:'sepia';state.canvasTheme=theme;canvas.dataset.theme=theme;
+            theme=Object.hasOwn(canvasThemes,theme)?theme:'scene';state.canvasTheme=theme;canvas.dataset.theme=theme;
+            if(theme==='scene')Object.values(state.devices).forEach(dev=>{
+                if(dev.type==='lightPoint')return;
+                dev.el.style.left=Math.max(ROOM_SIDE_INSET,Math.min(world.offsetWidth-dev.el.offsetWidth-ROOM_SIDE_INSET,dev.el.offsetLeft))+'px';
+                dev.el.style.top=Math.max(0,Math.min(world.offsetHeight-(canvas.dataset.floor==='none'?0:105)-dev.el.offsetHeight,dev.el.offsetTop))+'px';
+            });
             document.querySelector('.canvas-tools').dataset.theme=theme;
             document.getElementById('canvas-theme').value=theme;
+            document.getElementById('canvas-floor')?.closest('label')?.toggleAttribute('hidden',theme!=='scene');
+            document.getElementById('canvas-backdrop')?.closest('label')?.toggleAttribute('hidden',theme!=='scene');
+            Hardware.updateLightingDemo();
         }
-        document.getElementById('canvas-theme').addEventListener('change',event=>{setCanvasTheme(event.target.value);scheduleProjectSave();scheduleAppPreferencesSave();});
-        setCanvasTheme(savedAppPreferences.theme||'sepia');
-        const atmospherePresets={neutral:'Luz neutra',warm:'Luz quente',sunset:'Fim de tarde',night:'Bancada à noite',sunday:'Sala de domingo'};
-        const atmosphereControl=document.createElement('label');atmosphereControl.className='canvas-theme-control';
-        atmosphereControl.innerHTML='<span>Iluminação</span><select id="canvas-atmosphere" aria-label="Iluminação do ambiente">'+Object.entries(atmospherePresets).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
-        function setAtmosphere(preset){
-            preset=Object.hasOwn(atmospherePresets,preset)?preset:'neutral';state.atmosphere=preset;canvas.dataset.atmosphere=preset;
-            atmosphereControl.querySelector('select').value=preset;
-        }
-        atmosphereControl.querySelector('select').addEventListener('change',event=>{setAtmosphere(event.target.value);const theme={sunset:'sepia',night:'midnight',sunday:'light'}[state.atmosphere];if(theme)setCanvasTheme(theme);scheduleProjectSave();scheduleAppPreferencesSave();});
-        setAtmosphere(savedAppPreferences.atmosphere||'neutral');
+        document.getElementById('canvas-theme').addEventListener('change',event=>{setCanvasTheme(event.target.value);updateCables();scheduleProjectSave();scheduleAppPreferencesSave();});
+        setCanvasTheme(savedAppPreferences.theme||'scene');
         const canvasGridModes={dots:'Pontos',lines:'Linhas',hidden:'Invisível'};
         const canvasGridControl=document.createElement('label');canvasGridControl.className='canvas-theme-control';
         canvasGridControl.innerHTML='<span>Grade</span><select id="canvas-grid" aria-label="Visual da grade">'+Object.entries(canvasGridModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
@@ -861,6 +1258,24 @@ const Hardware = (() => {
         }
         canvasGridControl.querySelector('select').addEventListener('change',event=>{setCanvasGrid(event.target.value);scheduleProjectSave();scheduleAppPreferencesSave();});
         setCanvasGrid(savedAppPreferences.grid||'dots');
+        const canvasFloorModes={wood:'Madeira',carpet:'Carpete',concrete:'Concreto',none:'Sem piso'};
+        const canvasFloorControl=document.createElement('label');canvasFloorControl.className='canvas-theme-control';
+        canvasFloorControl.innerHTML='<span>Piso</span><select id="canvas-floor" aria-label="Acabamento do piso">'+Object.entries(canvasFloorModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
+        function setCanvasFloor(mode){
+            mode=Object.hasOwn(canvasFloorModes,mode)?mode:'wood';state.canvasFloor=mode;canvas.dataset.floor=mode;canvasFloorControl.querySelector('select').value=mode;
+        }
+        canvasFloorControl.querySelector('select').addEventListener('change',event=>{setCanvasFloor(event.target.value);scheduleProjectSave();scheduleAppPreferencesSave();});
+        setCanvasFloor(savedAppPreferences.floor||'wood');
+        const canvasBackdropModes={studio:'Estúdio',listening:'Sala de audição',loft:'Loft',library:'Biblioteca Hi-Fi',night:'Sala noturna'};
+        const canvasBackdropControl=document.createElement('label');canvasBackdropControl.className='canvas-theme-control';
+        canvasBackdropControl.innerHTML='<span>Cenário</span><select id="canvas-backdrop" aria-label="Cenário de fundo">'+Object.entries(canvasBackdropModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
+        function setCanvasBackdrop(mode){
+            mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studio';state.canvasBackdrop=mode;canvas.dataset.backdrop=mode;canvasBackdropControl.querySelector('select').value=mode;
+            Hardware.updateLightingDemo();
+        }
+        canvasBackdropControl.querySelector('select').addEventListener('change',event=>{setCanvasBackdrop(event.target.value);updateCables();scheduleProjectSave();scheduleAppPreferencesSave();});
+        setCanvasBackdrop(savedAppPreferences.backdrop||'studio');
+        setCanvasTheme(state.canvasTheme);
 
 
         const svgLayer = document.getElementById('cables-layer');
@@ -868,6 +1283,7 @@ const Hardware = (() => {
         const inspectorContent = document.getElementById('inspector-content');
         document.getElementById('inspector').classList.add('inspector-compact');
         const equipmentCatalog = document.getElementById('equipment-catalog');
+        equipmentCatalog.querySelector('[data-template="hardwareDemo"]').insertAdjacentHTML('afterend','<div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="lightPoint"><div><svg width="52" height="36" viewBox="0 0 52 36" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="26" cy="18" r="7"/><path d="M26 2v6m0 20v6M10 18h7m18 0h7M15 7l5 5m12 12 5 5M37 7l-5 5M20 24l-5 5"/></svg></div><span class="text-xs text-center text-gray-300">Ponto de luz · Teste</span></div>');
         const wheelScrollMotions=new WeakMap();
         function enableWheelMomentumScroll(element){
             if(!element)return;
@@ -986,10 +1402,8 @@ const Hardware = (() => {
             const minimum = Math.max(MIN_CANVAS_ZOOM, canvas.clientWidth / Math.max(1, world.offsetWidth), canvas.clientHeight / Math.max(1, world.offsetHeight));
             return Math.max(minimum, Math.min(MAX_CANVAS_ZOOM, zoom));
         };
-        if(Number.isFinite(savedAppPreferences.focusX)&&Number.isFinite(savedAppPreferences.focusY)){
-            view.x=canvas.clientWidth/2-savedAppPreferences.focusX*view.zoom;
-            view.y=canvas.clientHeight/2-savedAppPreferences.focusY*view.zoom;
-        }
+        view.zoom=clampZoom(view.zoom);
+        view.y=Math.min(0,canvas.clientHeight-world.offsetHeight*view.zoom);
         const snapCoordinate = value => Math.round(value / Hardware.sizes.grid) * Hardware.sizes.grid;
         let viewAnimation=0;
         function stopViewMotion(){cancelAnimationFrame(viewAnimation);viewAnimation=0;}
@@ -1010,6 +1424,15 @@ const Hardware = (() => {
             view.y = Math.max(Math.min(0, canvas.clientHeight - world.offsetHeight * view.zoom), Math.min(0, view.y));
             world.style.setProperty('--canvas-zoom', view.zoom);
             world.style.setProperty('--canvas-inverse-zoom', 1 / view.zoom);
+            const farX=Math.max(-90,Math.min(90,-view.x/view.zoom*.09)),farY=Math.max(-55,Math.min(55,-view.y/view.zoom*.06));
+            const farScale=Math.max(.9,Math.min(1.08,1-(view.zoom-1)*.08));
+            const floorScale=Math.max(.94,Math.min(1.04,1-(view.zoom-1)*.04));
+            world.style.setProperty('--room-far-x',farX.toFixed(1)+'px');world.style.setProperty('--room-far-y',farY.toFixed(1)+'px');
+            world.style.setProperty('--room-far-scale',farScale.toFixed(3));
+            world.style.setProperty('--room-mid-x',(farX*.55).toFixed(1)+'px');world.style.setProperty('--room-mid-y',(farY*.55).toFixed(1)+'px');
+            world.style.setProperty('--room-mid-scale',(1+(farScale-1)*.55).toFixed(3));
+            world.style.setProperty('--floor-parallax-x',(farX*.28).toFixed(1)+'px');
+            world.style.setProperty('--floor-parallax-scale',floorScale.toFixed(3));
             world.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.zoom})`;
             document.getElementById('zoom-label').textContent = `${Math.round(view.zoom * 100)}%`;
             updateCables();
@@ -1305,7 +1728,7 @@ const Hardware = (() => {
             furnitureRack:'Rack de Áudio', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureRackSixTall:'Rack com Vãos Altos · 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio', acousticHorizontal:'Painel Acústico Horizontal', acousticVertical:'Painel Acústico Vertical',
             adapterRcaP2:'Adaptador RCA → P2', adapterP2Rca:'Adaptador P2 → RCA', adapterP10P2:'Adaptador P10 → P2', adapterP2P10:'Adaptador P2 → P10', adapterRcaP10:'Adaptador RCA → P10', adapterP10Rca:'Adaptador P10 → RCA', phonoConverter:'Conversor Phono → Linha', speakerConverter:'Conversor Amplificado → Linha',
             turntable: 'Toca-discos', turntableVintage: 'Toca-discos Vintage', turntableLinear:'Toca-discos Tangencial',
-            hardwareDemo:'Modelo · Controles',signalGeneratorVintage:'Gerador de Sinais Vintage', signalGenerator:'Gerador de Sinais', cdPlayer: 'CD Player', tapeDeck:'Tape Deck de Rolo', preamp:'Pré · Slim',preReference:'Pré · Visor Verde',preControl:'Pré · Controle 2.1',preDisplay:'Pré · Tela Central', benchMeter:'Medidor de Bancada', benchMeterVintage:'Medidor de Bancada Vintage',
+            hardwareDemo:'Modelo · Controles',lightPoint:'Ponto de luz · Teste',signalGeneratorVintage:'Gerador de Sinais Vintage', signalGenerator:'Gerador de Sinais', cdPlayer: 'CD Player', tapeDeck:'Tape Deck de Rolo', preamp:'Pré · Slim',preReference:'Pré · Visor Verde',preControl:'Pré · Controle 2.1',preDisplay:'Pré · Tela Central', benchMeter:'Medidor de Bancada', benchMeterVintage:'Medidor de Bancada Vintage',
             streamer: 'Streamer Hi-Fi',streamIntegrated:'Streamer Integrado',
             receiver: 'Receiver Vintage',powerValve:'Potência · Valvulado',powerDual:'Potência · Duplo Canal',powerBias:'Potência · Visor Circular',
             integratedBlue:'Integrado · Visores Azuis',integratedMinimal:'Integrado · Minimalista',integratedSilver:'Integrado · Prateado',
@@ -1411,6 +1834,8 @@ const Hardware = (() => {
             dev.el.querySelector('.furniture-body').prepend(scene);
         }
         const STACK_FEET=Object.freeze({width:22,height:20,insetRatio:.1});
+        const maxEquipmentBottom=()=>world.offsetHeight-(canvas.dataset.theme!=='scene'||canvas.dataset.floor==='none'?0:105);
+        const sceneSideInset=()=>canvas.dataset.theme==='scene'?ROOM_SIDE_INSET:0;
         function snapOnEquipment(dev,x,y){
             if(FURNITURE_TYPES[dev.type])return{x,y};
             const width=dev.el.offsetWidth,height=dev.el.offsetHeight;
@@ -1433,13 +1858,15 @@ const Hardware = (() => {
         }
 
         function placementShapes(dev, x, y) {
+            if(dev.type==='lightPoint')return [];
             if (FURNITURE_TYPES[dev.type]) return [...dev.el.querySelectorAll('.furniture-part')].map(part => ({
                 x:x + part.offsetLeft, y:y + part.offsetTop, width:part.offsetWidth, height:part.offsetHeight
             }));
             return [{x,y,width:dev.el.offsetWidth,height:dev.el.offsetHeight}];
         }
         function canPlaceEquipment(dev, x, y, ignored = new Set()) {
-            if (x < 0 || y < 0 || x + dev.el.offsetWidth > world.offsetWidth || y + dev.el.offsetHeight > world.offsetHeight) return false;
+            const inset=dev.type==='lightPoint'?0:sceneSideInset();
+            if (x < inset || y < 0 || x + dev.el.offsetWidth > world.offsetWidth-inset || y + dev.el.offsetHeight > maxEquipmentBottom()) return false;
             const shapes = placementShapes(dev,x,y);
             return !Object.values(state.devices).some(other => {
                 if (other.id === dev.id || ignored.has(other.id)) return false;
@@ -1466,7 +1893,8 @@ const Hardware = (() => {
             const shapes=targets.map(p=>({p,parts:placementShapes(p.dev,0,0)}));
             const fits=(dx,dy)=>shapes.every(({p,parts})=>{
                 const x=p.x+dx,y=p.y+dy;
-                if(x<0||y<0||x+p.dev.el.offsetWidth>world.offsetWidth||y+p.dev.el.offsetHeight>world.offsetHeight)return false;
+                const inset=p.dev.type==='lightPoint'?0:sceneSideInset();
+                if(x<inset||y<0||x+p.dev.el.offsetWidth>world.offsetWidth-inset||y+p.dev.el.offsetHeight>(p.dev.type==='lightPoint'?world.offsetHeight:maxEquipmentBottom()))return false;
                 return parts.every(a=>!obstacles.some(b=>x+a.x<b.x+b.width-.5&&x+a.x+a.width>b.x+.5&&y+a.y<b.y+b.height-.5&&y+a.y+a.height>b.y+.5));
             });
             if(fits(0,0))return targets;
@@ -3355,7 +3783,8 @@ const Hardware = (() => {
             ['Caixas Passivas',type=>PASSIVE_SPK.has(type)],
             ['Subwoofers',type=>SUB_TYPES.has(type)||PASSIVE_SUB_TYPES.has(type)],
             ['Fones de ouvido',type=>HP_TYPES.has(type)],
-            ['Móveis',type=>!!FURNITURE_TYPES[type]]
+            ['Móveis',type=>!!FURNITURE_TYPES[type]],
+            ['DEBUG',type=>['hardwareDemo','lightPoint'].includes(type)]
         ];
         const catalogAssigned=new Set();
         const catalogItemName=item=>item.querySelector(':scope > span')?.textContent.trim()||DEVICE_NAMES[item.dataset.template]||item.dataset.template;
@@ -4452,7 +4881,44 @@ const Hardware = (() => {
             const drivers=type==='floorDiamond'?driver('mid',140,38)+driver('bass',172,270)+driver('bass',172,502):type==='floorCoax'?driver('bass',160,50)+driver('bass',160,255)+driver('coax',128,511)+driver('bass',160,735)+driver('bass',160,940):driver('mid',166,20)+driver('tweeter',52,214)+driver('bass',166,300)+driver('bass',166,498)+driver('bass',166,696);
             return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><section class="tower-body tower-${config.finish}">${type==='floorDiamond'?'<div class="tower-top-tweeter" aria-hidden="true"><i><b></b></i></div>':''}<div class="tower-cabinet"><div class="tower-baffle">${drivers}${type==='floorFlax'?'<div class="tower-front-vent" aria-hidden="true"></div>':''}<div class="tower-terminal"><div class="port" data-type="wire" data-io="in" data-node="in" data-signal="amplified" title="Entrada amplificada para caixa passiva"></div><small>SPEAKER IN</small></div></div></div><div class="tower-plinth" aria-hidden="true"></div><i class="tower-foot foot-left" aria-hidden="true"></i><i class="tower-foot foot-right" aria-hidden="true"></i></section>`;
         }
+        function syncLightPoint(dev){
+            const color=/^#[0-9a-f]{6}$/i.test(dev.state.lightColor||'')?dev.state.lightColor:'#e4f4ff';
+            const intensity=Math.max(0,Math.min(200,Number(dev.state.lightIntensity)||0));
+            dev.state.lightColor=color;dev.state.lightIntensity=intensity;
+            const colorInput=dev.el.querySelector('input[type="color"]'),range=dev.el.querySelector('input[type="range"]');
+            colorInput.value=color;range.value=String(intensity);dev.el.querySelector('output').value=intensity+'%';
+            dev.el.style.setProperty('--demo-light-color',color);dev.el.style.setProperty('--demo-light-strength',intensity/100);
+            document.documentElement.classList.toggle('lighting-demo-enabled',dev.state.lightEnabled!==false);
+            dev.el.setAttribute('aria-checked',String(dev.state.lightEnabled!==false));
+            Hardware.updateLightingDemo();
+        }
+        function createLightPoint(x,y){
+            const existing=Object.values(state.devices).find(dev=>dev.type==='lightPoint');
+            if(existing){existing.el.style.left=Math.max(0,Math.min(world.offsetWidth-52,x))+'px';existing.el.style.top=Math.max(0,Math.min(world.offsetHeight-52,y))+'px';selectDevice(existing.id);updateCables();scheduleProjectSave();return;}
+            const id='dev_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+            const el=document.createElement('div');el.id=id;el.className='device-node device-type-lightPoint lighting-demo-light';el.dataset.equipmentType='lightPoint';
+            el.tabIndex=0;el.setAttribute('role','switch');el.setAttribute('aria-label','Ponto de luz de teste. Arraste para mover; use as setas para ajustar. Clique duplo, Enter ou espaço alternam a comparação visual.');
+            el.title='Arraste para mover · clique duplo para comparar';
+            el.innerHTML='<div class="device-header" aria-hidden="true"><span>Ponto de luz · Teste</span></div><span class="lighting-demo-orb" aria-hidden="true">☀</span><small>LUZ · TESTE</small><div class="lighting-demo-settings"><label>Cor <input type="color" value="#e4f4ff" aria-label="Cor da luz de teste"></label><label>Intensidade <input type="range" min="0" max="200" value="100" aria-label="Intensidade da luz de teste"><output>100%</output></label></div>';
+            el.style.left=Math.max(0,Math.min(world.offsetWidth-52,x))+'px';el.style.top=Math.max(0,Math.min(world.offsetHeight-52,y))+'px';world.appendChild(el);
+            const dev={id,type:'lightPoint',el,nodes:{},state:{lightColor:'#e4f4ff',lightIntensity:100,lightEnabled:true},powered:true};
+            state.devices[id]=dev;
+            const settings=el.querySelector('.lighting-demo-settings'),color=settings.querySelector('input[type="color"]'),range=settings.querySelector('input[type="range"]');
+            settings.addEventListener('pointerdown',event=>event.stopPropagation());
+            color.addEventListener('input',()=>{dev.state.lightColor=color.value;syncLightPoint(dev);scheduleProjectSave();});
+            range.addEventListener('input',()=>{dev.state.lightIntensity=Number(range.value);syncLightPoint(dev);updateCables();scheduleProjectSave();});
+            const toggle=()=>{dev.state.lightEnabled=dev.state.lightEnabled===false;syncLightPoint(dev);updateCables();scheduleProjectSave();};
+            el.addEventListener('dblclick',event=>{if(event.target.closest('.lighting-demo-settings'))return;event.stopPropagation();toggle();});
+            el.addEventListener('keydown',event=>{
+                if(event.target!==el)return;
+                if(event.key==='Enter'||event.key===' '){event.preventDefault();toggle();return;}
+                const step=event.shiftKey?20:5,delta={ArrowLeft:[-step,0],ArrowRight:[step,0],ArrowUp:[0,-step],ArrowDown:[0,step]}[event.key];
+                if(!delta)return;event.preventDefault();el.style.left=Math.max(0,Math.min(world.offsetWidth-el.offsetWidth,el.offsetLeft+delta[0]))+'px';el.style.top=Math.max(0,Math.min(world.offsetHeight-el.offsetHeight,el.offsetTop+delta[1]))+'px';updateCables();scheduleProjectSave();
+            });
+            bindDeviceEvents(dev);syncLightPoint(dev);selectDevice(id);updateCables();scheduleProjectSave();
+        }
         function createDevice(type, x, y) {
+            if(type==='lightPoint')return createLightPoint(x,y);
             initAudio();
             const id = 'dev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
             const el = document.createElement('div');
@@ -4643,7 +5109,10 @@ const Hardware = (() => {
             world.appendChild(el);
 
             const dev = { id, type, el, nodes: {}, state: { volume: 0.8, bass: 0, treble: 0, eq: [0, 0, 0, 0, 0] }, powered: true };
-            const placement = findFreePlacement(dev,x,y);
+            const placement = state.restoringProject?{
+                x:Math.max(sceneSideInset(),Math.min(world.offsetWidth-el.offsetWidth-sceneSideInset(),x)),
+                y:Math.max(0,Math.min(maxEquipmentBottom()-el.offsetHeight,y))
+            }:findFreePlacement(dev,x,y);
             if (!placement) { el.remove(); return; }
             el.style.left = `${placement.x}px`;
             el.style.top = `${placement.y}px`;
@@ -5499,6 +5968,11 @@ const Hardware = (() => {
                     grille.setAttribute('aria-label', removed ? 'Recolocar grade da caixa' : 'Remover grade da caixa');scheduleProjectSave();
                 };
                 const restore = dev.el.querySelector('.grille-restore');
+                if(restore){
+                    const label=restore.title||'Recolocar grade';
+                    restore.setAttribute('aria-label',label);
+                    restore.innerHTML='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 4v16M12 4v16M16 4v16"/></svg>';
+                }
                 restore.addEventListener('pointerdown', e => e.stopPropagation());
                 restore.addEventListener('click', toggleGrille);
                 grille.addEventListener('pointerdown', e => e.stopPropagation());
@@ -5688,8 +6162,10 @@ const Hardware = (() => {
                     };
                     const aim = (ev,settle=false) => {
                         const rawX=(ev.clientX-startX)/view.zoom,rawY=(ev.clientY-startY)/view.zoom;
-                        const dx=Math.max(-dragBounds.left,Math.min(settle?snapCoordinate(origin.x+rawX)-origin.x:rawX,world.offsetWidth-dragBounds.right));
-                        const dy=Math.max(-dragBounds.top,Math.min(settle?snapCoordinate(baseY+rawY)-baseY:rawY,world.offsetHeight-dragBounds.bottom));
+                        const sideInset=movingDevices.every(item=>item.type==='lightPoint')?0:sceneSideInset();
+                        const dx=Math.max(sideInset-dragBounds.left,Math.min(settle?snapCoordinate(origin.x+rawX)-origin.x:rawX,world.offsetWidth-sideInset-dragBounds.right));
+                        const bottomLimit=movingDevices.every(item=>item.type==='lightPoint')?world.offsetHeight:maxEquipmentBottom();
+                        const dy=Math.max(-dragBounds.top,Math.min(settle?snapCoordinate(baseY+rawY)-baseY:rawY,bottomLimit-dragBounds.bottom));
                         targets=initialPositions.map(p=>{
                             const x=p.x+dx,y=p.y+dy;
                             const target=settle&&initialPositions.length===1?snapOnEquipment(p.dev,x,y):{x,y};
@@ -5878,6 +6354,7 @@ const Hardware = (() => {
             }
             dev.el.remove();
             delete state.devices[dev.id];
+            if(dev.type==='lightPoint')document.documentElement.classList.add('lighting-demo-enabled');
             updateMovementHistoryButtons();
             if (state.selectedDeviceIds.has(dev.id)) {
                 const remaining = [...state.selectedDeviceIds].filter(id => id !== dev.id);
@@ -6179,7 +6656,7 @@ const Hardware = (() => {
                 if(!text.children.length&&text.textContent.trim())text.remove();
             });
             [...template.content.querySelectorAll('div,section')].reverse().forEach(group=>{
-                if(group.id||group.getAttribute('role')||group.querySelector('[id],[role="status"],[role="alert"],button,input,select,textarea,output,svg,canvas')||group.textContent.trim())return;
+                if(group.id||group.getAttribute('role')||group.classList.contains('sonic-trait-dots')||group.querySelector('[id],[role="status"],[role="alert"],button,input,select,textarea,output,svg,canvas')||group.textContent.trim())return;
                 group.remove();
             });
             return template.innerHTML;
@@ -6540,6 +7017,15 @@ const Hardware = (() => {
                 plug.style.opacity=container.dataset.seating==='true'?container.dataset.seatOpacity||'1':'1';
                 const {tip,angle,rear}=endpoints[index];
                 plug.setAttribute('transform', `translate(${tip.x} ${tip.y}) rotate(${angle})`);
+                const candidate=document.querySelector('#audio-world .lighting-demo-light');
+                const light=candidate&&candidate.querySelector('input[type="range"]').value>0&&candidate.getAttribute('aria-checked')==='true'?candidate:null;
+                const sceneLight=light?null:Hardware.sceneLightAt(tip.x,tip.y);
+                if(light||sceneLight){
+                    const sourceX=light?light.offsetLeft+light.offsetWidth/2:sceneLight.x,sourceY=light?light.offsetTop+light.offsetHeight/2:sceneLight.y;
+                    const dx=tip.x-sourceX,dy=tip.y-sourceY,length=Math.hypot(dx,dy),factor=Math.min(1,3/(length*1.8/170||1));
+                    plug.style.setProperty('--plug-shadow-x',(dx*1.8/170*factor).toFixed(1)+'px');
+                    plug.style.setProperty('--plug-shadow-y',(dy*1.8/170*factor).toFixed(1)+'px');
+                }else{plug.style.setProperty('--plug-shadow-x','0px');plug.style.setProperty('--plug-shadow-y','0px');}
                 if(cableType!=='wire'){
                     let boot=plug.querySelector('.plug-strain-relief');
                     if(!boot){boot=document.createElementNS('http://www.w3.org/2000/svg','path');boot.setAttribute('class','plug-strain-relief');(body||plug).insertBefore(boot,(body||plug).firstChild);}
@@ -7186,6 +7672,7 @@ const Hardware = (() => {
         }
 
         function updateCables() {
+            Hardware.updateLightingDemo();
             updateStackFeet();
             state.connections.forEach(c => {
                 const p1 = document.getElementById(c.outId); const p2 = document.getElementById(c.inId);
@@ -7486,7 +7973,7 @@ const Hardware = (() => {
             const catalogScroll=equipmentCatalog.querySelector('.overflow-y-auto');
             return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{
                 environment:{...(state.environment||{preset:'near',intensity:0})},
-                canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'sepia',atmosphere:state.atmosphere||'neutral',
+                canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'scene',canvasFloor:state.canvasFloor||'wood',canvasBackdrop:state.canvasBackdrop||'studio',
                 soundVolume:state.uiSoundVolume??.9,hideCables:!!state.hideCables,
                 selected:[...state.selectedDeviceIds],selectedCable:state.connections.indexOf(state.selectedConnection),
                 search:document.getElementById('equipment-search').value,catalogScroll:catalogScroll?.scrollTop||0,inspectorScroll:inspectorContent.scrollTop
@@ -7549,6 +8036,7 @@ const Hardware = (() => {
             const clean=projectJSON(saved.settings||{}),tt=clean.tt;delete clean.tt;
             clean.damage=['speaker-level-overload','speaker-thermal-overload'].includes(clean.damage?.kind)?{kind:clean.damage.kind}:null;
             Object.assign(dev.state,clean);dev.state.playing=false;
+            if(dev.type==='lightPoint'){syncLightPoint(dev);return;}
             if(tt&&dev.state.tt)Object.assign(dev.state.tt,tt,{running:false});
             const s=dev.state,clamp=(number,min,max,fallback)=>typeof number==='number'&&Number.isFinite(number)?Math.max(min,Math.min(max,number)):fallback;
             updateKubaAppearance(dev);
@@ -7593,14 +8081,16 @@ const Hardware = (() => {
             const ids=new Map(),restored=[],warnings=[];
             try{
                 stopViewMotion();cancelCableDrag();Object.values(state.devices).forEach(deleteDevice);
-                const maxX=Math.max(2400,...snapshot.devices.map(dev=>dev.x+1100)),maxY=Math.max(1600,...snapshot.devices.map(dev=>dev.y+1100));
-                world.style.minWidth=`${Math.min(22000,Math.max(maxX,Math.min(22000,snapshot.world?.width||0)))}px`;
-                world.style.minHeight=`${Math.min(22000,Math.max(maxY,Math.min(22000,snapshot.world?.height||0)))}px`;
+                world.style.removeProperty('min-width');world.style.removeProperty('min-height');
+                const ui=snapshot.ui||{};setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setCanvasFloor(ui.canvasFloor);setCanvasBackdrop(ui.canvasBackdrop);
                 for(const saved of snapshot.devices){
-                    const before=new Set(Object.keys(state.devices));createDevice(saved.type,saved.x,saved.y);
+                    const before=new Set(Object.keys(state.devices));createDevice(saved.type,Math.min(saved.x,world.offsetWidth-150),Math.min(saved.y,maxEquipmentBottom()-150));
                     const dev=Object.values(state.devices).find(item=>!before.has(item.id));if(!dev)throw new Error('Não foi possível restaurar um equipamento.');
                     ids.set(saved.id,dev.id);restored.push([saved,dev]);
-                    dev.el.style.left=`${saved.x}px`;dev.el.style.top=`${saved.y}px`;applySavedDevice(dev,saved);
+                    const inset=dev.type==='lightPoint'?0:sceneSideInset(),bottom=dev.type==='lightPoint'?world.offsetHeight:maxEquipmentBottom();
+                    if(saved.x>=inset&&saved.x+dev.el.offsetWidth<=world.offsetWidth-inset)dev.el.style.left=`${saved.x}px`;
+                    if(saved.y>=0&&saved.y+dev.el.offsetHeight<=bottom)dev.el.style.top=`${saved.y}px`;
+                    applySavedDevice(dev,saved);
                     dev.fileName=typeof saved.fileName==='string'?saved.fileName:'';dev.trackTitle=typeof saved.trackTitle==='string'?saved.trackTitle:'';
                     if(saved.mediaKey){
                         try{const blob=await mediaReader(saved.mediaKey);if(!(blob instanceof Blob))throw new Error('Arquivo de áudio ausente.');const bytes=await blob.arrayBuffer(),metadata=dev.type==='streamIntegrated'?readStreamMetadata(bytes):null;dev.audioBuffer=await state.audioCtx.decodeAudioData(bytes);dev.mediaBlob=blob;dev.mediaKey=saved.mediaKey;dev.fileOffset=Math.max(0,Math.min(Number(saved.position)||0,dev.audioBuffer.duration));if(metadata)dev.setStreamMetadata(metadata);}
@@ -7617,12 +8107,14 @@ const Hardware = (() => {
                     connection.label=typeof saved.label==='string'?saved.label.slice(0,60):'';connection.color=/^#[0-9a-f]{6}$/i.test(saved.color||'')?saved.color:undefined;connection.hidden=!!saved.hidden;connection.slack=Number.isFinite(saved.slack)?Math.max(0,Math.min(10,Math.round(saved.slack))):5;links.push(connection);
                 });
                 restored.forEach(([saved,dev])=>{const other=state.devices[ids.get(saved.pairedId)];if(other&&BT_TX_TYPES.has(dev.type)&&canPair(dev,other))pairDevices(dev,other);});
-                const ui=snapshot.ui||{};setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setAtmosphere(ui.atmosphere);setRoomSettings(ui.environment);
+                setRoomSettings(ui.environment);
                 cableVisibilityButton.setAttribute('aria-pressed',String(!!ui.hideCables));
                 state.uiSoundVolume=typeof ui.soundVolume==='number'?Math.max(0,Math.min(1,ui.soundVolume)):.9;state.hideCables=!!ui.hideCables;
                 const sound=document.getElementById('ui-sound-volume');sound.value=Math.round(state.uiSoundVolume*100);document.getElementById('ui-sound-value').textContent=state.uiSoundVolume?`${sound.value}%`:'desligados';uiEffectsGain?.gain.setValueAtTime(interactionGain(state.uiSoundVolume),state.audioCtx.currentTime);
                 const search=document.getElementById('equipment-search');search.value=typeof ui.search==='string'?ui.search:'';search.dispatchEvent(new Event('input'));
-                if(snapshot.view){view.zoom=clampZoom(Number(snapshot.view.zoom)||1);view.x=Number(snapshot.view.x)||0;view.y=Number(snapshot.view.y)||0;}applyView();
+                if(snapshot.view&&snapshot.devices.length){view.zoom=clampZoom(Number(snapshot.view.zoom)||1);view.x=Number(snapshot.view.x)||0;view.y=Number(snapshot.view.y)||0;}
+                else view.y=Math.min(0,canvas.clientHeight-world.offsetHeight*view.zoom);
+                applyView();
                 setDeviceSelection((ui.selected||[]).map(id=>ids.get(id)).filter(Boolean));if(links[ui.selectedCable])selectCable(links[ui.selectedCable]);else selectCable(null);
                 const scroll=equipmentCatalog.querySelector('.overflow-y-auto');if(scroll)scroll.scrollTop=Number(ui.catalogScroll)||0;inspectorContent.scrollTop=Number(ui.inspectorScroll)||0;
                 updateCables();updateCableFlows();
@@ -7674,7 +8166,7 @@ const Hardware = (() => {
         const settingsMenu=document.createElement('details');settingsMenu.className='app-settings';
         settingsMenu.innerHTML='<summary aria-label="Abrir configurações"><svg class="settings-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7.1"/><circle cx="12" cy="12" r="2.7"/><path d="M12 1.8v3.1m0 14.2v3.1M1.8 12h3.1m14.2 0h3.1M4.3 4.3l2.2 2.2m11 11 2.2 2.2m0-15.4-2.2 2.2m-11 11-2.2 2.2"/></svg><span>Configurações</span></summary>';
         clearCatalogFooter.className='app-settings-content';
-        const themeSection=document.createElement('section');themeSection.className='settings-theme-section';themeSection.appendChild(canvasThemeControl);themeSection.appendChild(canvasGridControl);themeSection.appendChild(atmosphereControl);setCanvasGrid('dots');
+        const themeSection=document.createElement('section');themeSection.className='settings-theme-section';themeSection.appendChild(canvasThemeControl);themeSection.appendChild(canvasGridControl);themeSection.appendChild(canvasFloorControl);themeSection.appendChild(canvasBackdropControl);setCanvasGrid('dots');
         const connectionHelpSetting=document.createElement('label');connectionHelpSetting.className='connection-help-setting';connectionHelpSetting.innerHTML='<input id="connection-help-enabled" type="checkbox"><span><strong>Orientação de conexões</strong><small>Mostra dicas e impede ligações incompatíveis. Desative para permitir erros quando os plugues encaixarem.</small></span>';
         const connectionHelpCheckbox=connectionHelpSetting.querySelector('input');connectionHelpCheckbox.checked=connectionGuidanceEnabled;themeSection.appendChild(connectionHelpSetting);
         connectionHelpCheckbox.addEventListener('change',()=>{connectionGuidanceEnabled=connectionHelpCheckbox.checked;hideContextHelp();updatePortGuidance(true);scheduleAppPreferencesSave();});
