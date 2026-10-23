@@ -4375,3 +4375,7 @@ body.inspector-collapsed #inspector>.inspector-panel-header,body.inspector-colla
 #inspector-content #source-remove-audio:is(:hover,:focus-visible) .source-trash-lid {transform:rotate(24deg) translateY(-1px);}
 #inspector-content #source-remove-audio:active svg {transform:scale(.88);}
 @media (prefers-reduced-motion:reduce){#inspector-content #source-remove-audio,#inspector-content #source-remove-audio .source-trash-lid {transition:none;}}
+
+#inspector-content .audio-transport .transport-buttons button {display:grid;place-items:center;min-height:36px;}
+#inspector-content .audio-transport .transport-buttons svg {width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;}
+#inspector-content .audio-transport .transport-buttons svg text {fill:currentColor;stroke:none;font:700 7px "Inter",sans-serif;}
