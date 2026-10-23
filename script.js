@@ -728,7 +728,7 @@ const Hardware = (() => {
             el.dataset.ledModel=model;el.classList.add('hw-led');el.style.setProperty('--hw-led-color',spec.color);el.style.setProperty('--hw-led-size',spec.size+'px');
         });
         dev.el.querySelectorAll('.port').forEach(el=>{el.dataset.socketModel=el.dataset.type;});
-        if(!['hardwareDemo','lightPoint'].includes(dev.type))mountLightingDemo(dev.el);
+        if(dev.type!=='hardwareDemo')mountLightingDemo(dev.el);
         sync(dev);
     }
     function mountLightingDemo(device){
@@ -750,8 +750,6 @@ const Hardware = (() => {
         surfaces.forEach(surface=>{
             surface.classList.add('lighting-shadow-surface');
             if(getComputedStyle(surface).position==='static')surface.style.position='relative';
-            if(surface.querySelector(':scope > .lighting-shadow-canvas'))return;
-            const canvas=document.createElement('canvas');canvas.className='lighting-shadow-canvas';canvas.setAttribute('aria-hidden','true');surface.appendChild(canvas);
         });
         if(!furniture&&!device.querySelector(':scope > .lighting-incident-overlay')){
             const overlay=document.createElement('div');overlay.className='lighting-incident-overlay';overlay.setAttribute('aria-hidden','true');device.appendChild(overlay);
@@ -896,7 +894,7 @@ const Hardware = (() => {
         if(lightingDemoFrame)return;
         lightingDemoFrame=requestAnimationFrame(()=>{lightingDemoFrame=0;paintLightingDemo();});
     }
-    function paintFloorShadows(world,roomLights,equipment,testLight){
+    function paintFloorShadows(world,roomLights,equipment){
         const layer=world.querySelector(':scope > .room-floor-shadows'),canvas=document.getElementById('canvas');
         if(!layer)return;
         if(canvas.dataset.theme!=='scene'||canvas.dataset.floor==='none'){
@@ -909,7 +907,7 @@ const Hardware = (() => {
         const worldRect=world.getBoundingClientRect(),viewRect=canvas.getBoundingClientRect(),viewScale=worldRect.width/world.offsetWidth;
         const minX=(viewRect.left-worldRect.left)/viewScale-700,maxX=(viewRect.right-worldRect.left)/viewScale+700;
         const casters=allCasters.filter(box=>box.x+box.width>=minX&&box.x<=maxX&&box.y+box.height>=visibleTop-620);
-        const lights=testLight?[...roomLights,testLight]:roomLights;
+        const lights=roomLights;
         const floorShift=parseFloat(world.style.getPropertyValue('--floor-parallax-x'))||0;
         const floorScale=parseFloat(world.style.getPropertyValue('--floor-parallax-scale'))||1;
         const key=[world.offsetWidth,world.offsetHeight,canvas.dataset.floor,floorShift.toFixed(1),floorScale.toFixed(3),Math.round(minX/30),Math.round(maxX/30),...lights.map(light=>[Math.round(light.x/3),Math.round(light.y/3),light.strength.toFixed(2)]),...allCasters.map(box=>[box.el.id,Math.round(box.x),Math.round(box.y),box.width,box.height,box.el.style.visibility])].join('|');
@@ -971,14 +969,7 @@ const Hardware = (() => {
         });
     }
     function paintLightingDemo(){
-        const light=document.querySelector('#audio-world .lighting-demo-light');
-        const lx=light?light.offsetLeft+light.offsetWidth/2:0,ly=light?light.offsetTop+light.offsetHeight/2:0,lightHeight=170;
-        const color=light?.querySelector('input[type="color"]')?.value||'#e4f4ff';
-        const intensity=light&&light.getAttribute('aria-checked')!=='false'?Number(light.querySelector('input[type="range"]')?.value||0)/100:0;
-        const rgb=[1,3,5].map(index=>parseInt(color.slice(index,index+2),16));
-        if(light){light.style.setProperty('--demo-light-color',color);light.style.setProperty('--demo-light-strength',intensity);}
         const world=document.getElementById('audio-world');
-        const zoom=Number(world.style.getPropertyValue('--canvas-zoom'))||1;
         const clamp=(value,limit)=>Math.max(-limit,Math.min(limit,value));
         const incidentPosition=(source,origin,size)=>(Math.max(12,Math.min(88,(source-origin)/Math.max(1,size)*100))).toFixed(1)+'%';
         const viewport=document.getElementById('canvas').getBoundingClientRect();
@@ -987,7 +978,7 @@ const Hardware = (() => {
         const sceneTime=document.getElementById('canvas').dataset.time;
         const fixtureEmitters=positionedObjectLights(world);
         const sceneEmitters=[...positionedSceneLights(sceneName,sceneTime,world),...fixtureEmitters];
-        paintRoomFixtureLight(world,intensity?[...fixtureEmitters,{x:lx,y:ly,fixture:'debug',rgb,strength:intensity}]:fixtureEmitters,sceneName,sceneTime);
+        paintRoomFixtureLight(world,fixtureEmitters,sceneName,sceneTime);
         const sceneEmitterKey=sceneTime+':'+sceneEmitters.map(source=>{const step=source.animated?4:8;return Math.round(source.x/step)+','+Math.round(source.y/step);}).join(';');
         const furnitureKey=furnitureBodies.map(body=>{const node=body.closest('.furniture-node');return node.id+':'+node.style.left+':'+node.style.top;}).join('|');
         if(furnitureLightingGeometry.key!==furnitureKey){
@@ -999,21 +990,18 @@ const Hardware = (() => {
             }))};
         }
         const furniture=furnitureLightingGeometry.items;
-        const stackBoxes=[...world.querySelectorAll('.device-node:not(.furniture-node):not(.lighting-demo-light):not(.device-type-pendantLamp):not(.wall-lamp-node)')].filter(el=>el.style.visibility!=='hidden').map(el=>({el,x:el.offsetLeft,y:el.offsetTop,width:el.offsetWidth,height:el.offsetHeight}));
+        const stackBoxes=[...world.querySelectorAll('.device-node:not(.furniture-node):not(.device-type-pendantLamp):not(.wall-lamp-node)')].filter(el=>el.style.visibility!=='hidden').map(el=>({el,x:el.offsetLeft,y:el.offsetTop,width:el.offsetWidth,height:el.offsetHeight}));
         const stackTops=stackBoxes.filter(box=>box.width>=300&&(box.height<box.width*.8||box.el.classList.contains('device-type-tapeDeck')));
-        paintFloorShadows(world,sceneEmitters,stackBoxes,intensity?{x:lx,y:ly,width:20,height:20,strength:intensity,elevation:170,reach:1500,rgb}:null);
+        paintFloorShadows(world,sceneEmitters,stackBoxes);
         world.querySelectorAll('.furniture-node.lighting-demo-target').forEach(node=>{
             const rect=node.getBoundingClientRect();
             if(rect.right<viewport.left||rect.left>viewport.right||rect.bottom<viewport.top||rect.top>viewport.bottom)return;
-            const key=lx+'|'+ly+'|'+color+'|'+intensity+'|'+sceneName+'|'+sceneEmitterKey+'|'+node.offsetLeft+'|'+node.offsetTop+'|'+node.dataset.back;
+            const key=sceneName+'|'+sceneEmitterKey+'|'+node.offsetLeft+'|'+node.offsetTop+'|'+node.dataset.back;
             if(node.dataset.lightPaintKey===key)return;
             node.dataset.lightPaintKey=key;
-            node.style.setProperty('--demo-light-rgb',rgb.join(' '));node.style.setProperty('--demo-light-strength',intensity);
             node.querySelectorAll('.furniture-part,.acoustic-panel').forEach(part=>{
                 const box=part.getBoundingClientRect(),scale=rect.width/node.offsetWidth;
                 const x=(box.left-rect.left)/scale+node.offsetLeft,y=(box.top-rect.top)/scale+node.offsetTop;
-                part.style.setProperty('--demo-part-light-x',((lx-x)/((box.width/scale)||1)*100).toFixed(1)+'%');
-                part.style.setProperty('--demo-part-light-y',((ly-y)/((box.height/scale)||1)*100).toFixed(1)+'%');
                 const source=sceneEmitters.map(item=>sampleSceneLight(item,x+box.width/scale/2,y+box.height/scale/2)).sort((a,b)=>b.weight-a.weight)[0];
                 part.style.setProperty('--demo-scene-light-strength',(source?.weight||0).toFixed(3));
                 if(source){part.style.setProperty('--demo-scene-light-rgb',source.rgb.join(' '));part.style.setProperty('--demo-scene-light-x',incidentPosition(source.x,x,box.width/scale));part.style.setProperty('--demo-scene-light-y',incidentPosition(source.y,y,box.height/scale));}
@@ -1021,7 +1009,7 @@ const Hardware = (() => {
             const rack=furniture.find(item=>item.id===node.id);
             if(rack){
                 const source=sceneEmitters.map(item=>sampleSceneLight(item,rack.x+rack.width/2,rack.y+rack.height/2)).reduce((best,item)=>item.weight>(best?.weight||0)?item:best,null);
-                drawFurnitureInteriorShadows(node,rack,intensity?lx:source?.x||0,intensity?ly:source?.y||0,intensity||source?.weight||0);
+                drawFurnitureInteriorShadows(node,rack,source?.x||0,source?.y||0,source?.weight||0);
             }
         });
         document.querySelectorAll('#audio-world .lighting-demo-target').forEach(device=>{
@@ -1033,7 +1021,7 @@ const Hardware = (() => {
                 const scale=visibleRect.width/device.offsetWidth;
                 geometry={width:device.offsetWidth,height:device.offsetHeight,lastPosition:'',surfaces:[...device.querySelectorAll(':scope > .lighting-shadow-surface')].map(face=>{
                     const faceRect=face.getBoundingClientRect();
-                    return {face,canvas:face.querySelector(':scope > .lighting-shadow-canvas'),x:(faceRect.left-visibleRect.left)/scale,y:(faceRect.top-visibleRect.top)/scale,controls:[...face.querySelectorAll('.hw-knob,.hw-button,.hw-linear,.port,.pre-handle,.dual-handle,.bench-handle,.graphic-eq-handle,.mixer-rack-handle')].filter(control=>control.getClientRects().length).map(control=>{
+                    return {face,x:(faceRect.left-visibleRect.left)/scale,y:(faceRect.top-visibleRect.top)/scale,controls:[...face.querySelectorAll('.hw-knob,.hw-button,.hw-linear,.port,.pre-handle,.dual-handle,.bench-handle,.graphic-eq-handle,.mixer-rack-handle')].filter(control=>control.getClientRects().length).map(control=>{
                         const rect=control.getBoundingClientRect();
                         return {el:control,x:(rect.left+rect.width/2-visibleRect.left)/scale,y:(rect.top+rect.height/2-visibleRect.top)/scale,faceX:(rect.left+rect.width/2-faceRect.left)/scale,faceY:(rect.top+rect.height/2-faceRect.top)/scale,width:rect.width/scale,height:rect.height/scale,last:''};
                     })};
@@ -1045,21 +1033,12 @@ const Hardware = (() => {
             const rack=furniture.find(item=>centerX>item.x+16&&centerX<item.x+item.width-16&&centerY>item.y+16&&centerY<item.y+item.height-16);
             const stackedAbove=stackTops.filter(upper=>upper.el!==device&&deviceY-upper.y-upper.height>=-.5&&deviceY-upper.y-upper.height<=20.5&&Math.min(deviceX+geometry.width,upper.x+upper.width)-Math.max(deviceX,upper.x)>=Math.min(geometry.width,upper.width)*.7);
             const stackKey=stackedAbove.map(upper=>upper.el.id+':'+upper.x+':'+upper.y).join('|');
-            const positionKey=lx+'|'+ly+'|'+color+'|'+intensity+'|'+sceneName+'|'+sceneEmitterKey+'|'+deviceX+'|'+deviceY+'|'+(intensity?zoom.toFixed(2):0)+'|'+(rack?.id||'')+'|'+(rack?.x||0)+'|'+(rack?.y||0)+'|'+stackKey;
+            const positionKey=sceneName+'|'+sceneEmitterKey+'|'+deviceX+'|'+deviceY+'|'+(rack?.id||'')+'|'+(rack?.x||0)+'|'+(rack?.y||0)+'|'+stackKey;
             if(geometry.lastPosition===positionKey)return;
             geometry.lastPosition=positionKey;
-            const dx=clamp((lx-deviceX-geometry.width/2)/(geometry.width*.7),1);
-            const dy=clamp((ly-deviceY-geometry.height/2)/(geometry.height*1.5),1);
-            const reach=Math.max(geometry.width,geometry.height)*1.8+180;
-            const falloff=Math.max(0,1-Math.hypot(lx-centerX,ly-centerY)/reach);
             const localScene=sceneEmitters.map(source=>sampleSceneLight(source,centerX,centerY)).sort((a,b)=>b.weight-a.weight);
             const shadowScene=localScene.find(source=>source.weight>.01);
-            const shadowX=intensity?lx:shadowScene?.x||0,shadowY=intensity?ly:shadowScene?.y||0,shadowStrength=intensity||shadowScene?.weight||0;
-            device.style.setProperty('--demo-panel-light-x',(50+dx*40).toFixed(1)+'%');
-            device.style.setProperty('--demo-panel-light-y',(50+dy*40).toFixed(1)+'%');
-            device.style.setProperty('--demo-light-rgb',rgb.join(' '));
-            device.style.setProperty('--demo-light-strength',intensity);
-            device.style.setProperty('--demo-incident-strength',(intensity*falloff).toFixed(3));
+            const shadowX=shadowScene?.x||0,shadowY=shadowScene?.y||0,shadowStrength=shadowScene?.weight||0;
             localScene.slice(0,3).forEach((source,index)=>{
                 const suffix=['a','b','c'][index];
                 device.style.setProperty('--scene-light-'+suffix+'-rgb',source.rgb.join(' '));
@@ -1081,12 +1060,8 @@ const Hardware = (() => {
                     const cx=deviceX+x,cy=deviceY+y,knob=control.classList.contains('hw-knob'),plug=control.classList.contains('port'),slider=control.classList.contains('hw-linear'),handle=control.matches('.pre-handle,.dual-handle,.bench-handle,.graphic-eq-handle,.mixer-rack-handle');
                     const finish=control.dataset.knobFinish,buttonModel=control.dataset.buttonModel;
                     const height=handle?18:plug?1.8:slider?3:knob?(finish==='disc'?5:finish==='recessed'?7:finish==='halo'?13:11):['chromeLever','industrialToggle','powerLarge'].includes(buttonModel)?8:['flushMetal','membrane','plainKey'].includes(buttonModel)?2.5:5;
-                    let sx=(cx-lx)*height/lightHeight,sy=(cy-ly)*height/lightHeight;
-                    const projection=Math.hypot(sx,sy),maxProjection=handle?30:plug?Math.min(4,Math.min(width,controlHeight)*.4+1):Math.min(18,Math.min(width,controlHeight)*.8+4);
-                    if(projection>maxProjection){sx*=maxProjection/projection;sy*=maxProjection/projection;}
+                    const maxProjection=handle?30:plug?Math.min(4,Math.min(width,controlHeight)*.4+1):Math.min(18,Math.min(width,controlHeight)*.8+4);
                     // The streamer's top dial sits behind the front rim, so it cannot cast onto the face.
-                    if(intensity&&(!device.classList.contains('device-type-streamIntegrated')||!control.matches('[data-stream-volume]')))
-                        frontShadows.push({x,y,width,height:controlHeight,sx,sy,knob:knob||(plug&&control.dataset.type!=='wire'),plug,slider,handle,weight:intensity});
                     if(!device.classList.contains('device-type-streamIntegrated')||!control.matches('[data-stream-volume]')){
                         localScene.slice(0,2).forEach(scene=>{
                             if(scene.weight<=.08)return;
@@ -1097,7 +1072,7 @@ const Hardware = (() => {
                             frontShadows.push({x,y,width,height:controlHeight,sx:sceneX,sy:sceneY,knob:knob||(plug&&control.dataset.type!=='wire'),plug,slider,handle,weight:scene.weight*.95,softness:scene.spread});
                         });
                     }
-                    const highlightX=intensity?lx:shadowScene?.x||cx,highlightY=intensity?ly:shadowScene?.y||cy;
+                    const highlightX=shadowScene?.x||cx,highlightY=shadowScene?.y||cy;
                     const direction=Math.max(70,Math.hypot(cx-highlightX,cy-highlightY));
                     const values=[(50+clamp((highlightX-cx)/direction,-1)*34).toFixed(0)+'%',(50+clamp((highlightY-cy)/direction,-1)*34).toFixed(0)+'%'];
                     const key=values.join('|');if(entry.last===key)return;
@@ -1105,9 +1080,8 @@ const Hardware = (() => {
                     control.style.setProperty('--demo-highlight-x',values[0]);
                     control.style.setProperty('--demo-highlight-y',values[1]);
                 });
-                drawLightingShadows(surface,lx-deviceX-surface.x,ly-deviceY-surface.y,zoom,rgb,intensity);
             });
-            if(frontShadows.length)drawFrontControlShadows(device,geometry,frontShadows,intensity);
+            if(frontShadows.length||device.querySelector(':scope > .lighting-control-shadow'))drawFrontControlShadows(device,geometry,frontShadows,0);
         });
     }
     function drawFrontControlShadows(device,geometry,shadows,intensity){
@@ -1218,20 +1192,6 @@ const Hardware = (() => {
             gradient.addColorStop(0,shadeAlpha(.22));gradient.addColorStop(1,shadeAlpha(.07));
             drawSweptShadow(ctx,shadow,0,gradient);
         }
-    }
-    function drawLightingShadows(geometry,lightX,lightY,zoom,rgb,intensity){
-        const {canvas,face}=geometry;if(!canvas)return;
-        if(!intensity){if(canvas.width&&canvas.height)canvas.getContext('2d')?.clearRect(0,0,canvas.width,canvas.height);return;}
-        const width=face.clientWidth,height=face.clientHeight;
-        if(!width||!height)return;
-        const ratio=Math.min(Math.max(.35,Math.min((window.devicePixelRatio||1)*zoom,1.25)),Math.sqrt(400000/(width*height)));
-        const pixelWidth=Math.round(width*ratio),pixelHeight=Math.round(height*ratio);
-        if(canvas.width!==pixelWidth||canvas.height!==pixelHeight){canvas.width=pixelWidth;canvas.height=pixelHeight;}
-        const ctx=canvas.getContext('2d');if(!ctx)return;
-        ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,width,height);
-        const radius=Math.max(width,height)*.8,glow=ctx.createRadialGradient(lightX,lightY,0,lightX,lightY,radius);
-        glow.addColorStop(0,`rgba(${rgb.join(',')},${Math.min(.65,.2*intensity)})`);glow.addColorStop(.55,`rgba(${rgb.join(',')},${Math.min(.25,.07*intensity)})`);glow.addColorStop(1,`rgba(${rgb.join(',')},0)`);
-        ctx.fillStyle=glow;ctx.fillRect(0,0,width,height);
     }
     function paintControlShadows(ctx,shadows,intensity){
         const shadowAlpha=value=>`rgba(0,4,8,${Math.min(.85,value*Math.max(1,intensity))})`;
@@ -1394,7 +1354,6 @@ const Hardware = (() => {
         function setCanvasTheme(theme){
             theme=Object.hasOwn(canvasThemes,theme)?theme:'scene';state.canvasTheme=theme;canvas.dataset.theme=theme;
             if(theme==='scene')Object.values(state.devices).forEach(dev=>{
-                if(dev.type==='lightPoint')return;
                 dev.el.style.left=Math.max(ROOM_SIDE_INSET,Math.min(world.offsetWidth-dev.el.offsetWidth-ROOM_SIDE_INSET,dev.el.offsetLeft))+'px';
                 dev.el.style.top=Math.max(0,Math.min((dev.el.classList.contains('wall-lamp-node')?wallPlacementBottom():floorPlacementBottom())-dev.el.offsetHeight,dev.el.offsetTop))+'px';
             });
@@ -1467,7 +1426,6 @@ const Hardware = (() => {
         const inspectorContent = document.getElementById('inspector-content');
         document.getElementById('inspector').classList.add('inspector-compact');
         const equipmentCatalog = document.getElementById('equipment-catalog');
-        equipmentCatalog.querySelector('[data-template="hardwareDemo"]').insertAdjacentHTML('afterend','<div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="lightPoint"><div><svg width="52" height="36" viewBox="0 0 52 36" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="26" cy="18" r="7"/><path d="M26 2v6m0 20v6M10 18h7m18 0h7M15 7l5 5m12 12 5 5M37 7l-5 5M20 24l-5 5"/></svg></div><span class="text-xs text-center text-gray-300">Ponto de luz · Teste</span></div>');
         const wheelScrollMotions=new WeakMap();
         function enableWheelMomentumScroll(element){
             if(!element)return;
@@ -1880,7 +1838,7 @@ const Hardware = (() => {
             furnitureRack:'Rack de Áudio', furnitureHairpin:'Rack Vintage · Alfinete', furnitureRecordOne:'Rack para Discos · 1 Coluna', furnitureRecordThree:'Rack para Discos · 3 Colunas', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureRackSixTall:'Rack com Vãos Altos · 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio', pendantLamp:'Luminária pendente', wallLampCage:'Arandela industrial', wallLampDome:'Arandela de prato', wallLampBare:'Arandela de filamento', acousticHorizontal:'Painel Acústico Horizontal', acousticVertical:'Painel Acústico Vertical',
             adapterRcaP2:'Adaptador RCA → P2', adapterP2Rca:'Adaptador P2 → RCA', adapterP10P2:'Adaptador P10 → P2', adapterP2P10:'Adaptador P2 → P10', adapterRcaP10:'Adaptador RCA → P10', adapterP10Rca:'Adaptador P10 → RCA', phonoConverter:'Conversor Phono → Linha', speakerConverter:'Conversor Amplificado → Linha',
             turntable: 'Toca-discos', turntableVintage: 'Toca-discos Vintage', turntableLinear:'Toca-discos Tangencial',
-            hardwareDemo:'Modelo · Controles',lightPoint:'Ponto de luz · Teste',signalGeneratorVintage:'Gerador de Sinais Vintage', signalGenerator:'Gerador de Sinais', cdPlayer: 'CD Player', tapeDeck:'Tape Deck de Rolo', preamp:'Pré · Slim',preReference:'Pré · Visor Verde',preControl:'Pré · Controle 2.1',preDisplay:'Pré · Tela Central', benchMeter:'Medidor de Bancada', benchMeterVintage:'Medidor de Bancada Vintage',
+            hardwareDemo:'Modelo · Controles',signalGeneratorVintage:'Gerador de Sinais Vintage', signalGenerator:'Gerador de Sinais', cdPlayer: 'CD Player', tapeDeck:'Tape Deck de Rolo', preamp:'Pré · Slim',preReference:'Pré · Visor Verde',preControl:'Pré · Controle 2.1',preDisplay:'Pré · Tela Central', benchMeter:'Medidor de Bancada', benchMeterVintage:'Medidor de Bancada Vintage',
             streamer: 'Streamer Hi-Fi',streamIntegrated:'Streamer Integrado',
             receiver: 'Receiver Vintage',powerValve:'Potência · Valvulado',powerDual:'Potência · Duplo Canal',powerBias:'Potência · Visor Circular',
             integratedBlue:'Integrado · Visores Azuis',integratedMinimal:'Integrado · Minimalista',integratedSilver:'Integrado · Prateado',
@@ -2026,14 +1984,13 @@ const Hardware = (() => {
         }
 
         function placementShapes(dev, x, y) {
-            if(dev.type==='lightPoint')return [];
             if (FURNITURE_TYPES[dev.type]) return [...dev.el.querySelectorAll('.furniture-part')].map(part => ({
                 x:x + part.offsetLeft, y:y + part.offsetTop, width:part.offsetWidth, height:part.offsetHeight
             }));
             return [{x,y,width:dev.el.offsetWidth,height:dev.el.offsetHeight}];
         }
         function canPlaceEquipment(dev, x, y, ignored = new Set()) {
-            const inset=dev.type==='lightPoint'?0:sceneSideInset();
+            const inset=sceneSideInset();
             if (x < inset || y < 0 || x + dev.el.offsetWidth > world.offsetWidth-inset || y + dev.el.offsetHeight > maxEquipmentBottom()) return false;
             const shapes = placementShapes(dev,x,y);
             return !Object.values(state.devices).some(other => {
@@ -2061,8 +2018,8 @@ const Hardware = (() => {
             const shapes=targets.map(p=>({p,parts:placementShapes(p.dev,0,0)}));
             const fits=(dx,dy)=>shapes.every(({p,parts})=>{
                 const x=p.x+dx,y=p.y+dy;
-                const inset=p.dev.type==='lightPoint'?0:sceneSideInset();
-                if(x<inset||y<0||x+p.dev.el.offsetWidth>world.offsetWidth-inset||y+p.dev.el.offsetHeight>(p.dev.type==='lightPoint'?world.offsetHeight:maxEquipmentBottom()))return false;
+                const inset=sceneSideInset();
+                if(x<inset||y<0||x+p.dev.el.offsetWidth>world.offsetWidth-inset||y+p.dev.el.offsetHeight>maxEquipmentBottom())return false;
                 return parts.every(a=>!obstacles.some(b=>x+a.x<b.x+b.width-.5&&x+a.x+a.width>b.x+.5&&y+a.y<b.y+b.height-.5&&y+a.y+a.height>b.y+.5));
             });
             if(fits(0,0))return targets;
@@ -3962,7 +3919,7 @@ const Hardware = (() => {
             ['Subwoofers',type=>SUB_TYPES.has(type)||PASSIVE_SUB_TYPES.has(type)],
             ['Fones de ouvido',type=>HP_TYPES.has(type)],
             ['Móveis',type=>!!FURNITURE_TYPES[type]||type==='pendantLamp'||!!WALL_LAMP_TYPES[type]],
-            ['DEBUG',type=>['hardwareDemo','lightPoint'].includes(type)]
+            ['DEBUG',type=>type==='hardwareDemo']
         ];
         const catalogAssigned=new Set();
         const catalogItemName=item=>item.querySelector(':scope > span')?.textContent.trim()||DEVICE_NAMES[item.dataset.template]||item.dataset.template;
@@ -5086,41 +5043,6 @@ const Hardware = (() => {
             const drivers=type==='floorDiamond'?driver('mid',140,38)+driver('bass',172,270)+driver('bass',172,502):type==='floorCoax'?driver('bass',160,50)+driver('bass',160,255)+driver('coax',128,511)+driver('bass',160,735)+driver('bass',160,940):driver('mid',166,20)+driver('tweeter',52,214)+driver('bass',166,300)+driver('bass',166,498)+driver('bass',166,696);
             return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><section class="tower-body tower-${config.finish}">${type==='floorDiamond'?'<div class="tower-top-tweeter" aria-hidden="true"><i><b></b></i></div>':''}<div class="tower-cabinet"><div class="tower-baffle">${drivers}${type==='floorFlax'?'<div class="tower-front-vent" aria-hidden="true"></div>':''}<div class="tower-terminal"><div class="port" data-type="wire" data-io="in" data-node="in" data-signal="amplified" title="Entrada amplificada para caixa passiva"></div><small>SPEAKER IN</small></div></div></div><div class="tower-plinth" aria-hidden="true"></div><i class="tower-foot foot-left" aria-hidden="true"></i><i class="tower-foot foot-right" aria-hidden="true"></i></section>`;
         }
-        function syncLightPoint(dev){
-            const color=/^#[0-9a-f]{6}$/i.test(dev.state.lightColor||'')?dev.state.lightColor:'#e4f4ff';
-            const intensity=Math.max(0,Math.min(200,Number(dev.state.lightIntensity)||0));
-            dev.state.lightColor=color;dev.state.lightIntensity=intensity;
-            const colorInput=dev.el.querySelector('input[type="color"]'),range=dev.el.querySelector('input[type="range"]');
-            colorInput.value=color;range.value=String(intensity);dev.el.querySelector('output').value=intensity+'%';
-            dev.el.style.setProperty('--demo-light-color',color);dev.el.style.setProperty('--demo-light-strength',intensity/100);
-            dev.el.setAttribute('aria-checked',String(dev.state.lightEnabled!==false));
-            Hardware.updateLightingDemo();
-        }
-        function createLightPoint(x,y){
-            const existing=Object.values(state.devices).find(dev=>dev.type==='lightPoint');
-            if(existing){existing.el.style.left=Math.max(0,Math.min(world.offsetWidth-52,x))+'px';existing.el.style.top=Math.max(0,Math.min(world.offsetHeight-52,y))+'px';selectDevice(existing.id);updateCables();scheduleProjectSave();return;}
-            const id='dev_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
-            const el=document.createElement('div');el.id=id;el.className='device-node device-type-lightPoint lighting-demo-light';el.dataset.equipmentType='lightPoint';
-            el.tabIndex=0;el.setAttribute('role','switch');el.setAttribute('aria-label','Ponto de luz de teste. Arraste para mover; use as setas para ajustar. Clique duplo, Enter ou espaço alternam a comparação visual.');
-            el.title='Arraste para mover · clique duplo para comparar';
-            el.innerHTML='<div class="device-header" aria-hidden="true"><span>Ponto de luz · Teste</span></div><span class="lighting-demo-orb" aria-hidden="true">☀</span><small>LUZ · TESTE</small><div class="lighting-demo-settings"><label>Cor <input type="color" value="#e4f4ff" aria-label="Cor da luz de teste"></label><label>Intensidade <input type="range" min="0" max="200" value="100" aria-label="Intensidade da luz de teste"><output>100%</output></label></div>';
-            el.style.left=Math.max(0,Math.min(world.offsetWidth-52,x))+'px';el.style.top=Math.max(0,Math.min(world.offsetHeight-52,y))+'px';world.appendChild(el);
-            const dev={id,type:'lightPoint',el,nodes:{},state:{lightColor:'#e4f4ff',lightIntensity:100,lightEnabled:true},powered:true};
-            state.devices[id]=dev;
-            const settings=el.querySelector('.lighting-demo-settings'),color=settings.querySelector('input[type="color"]'),range=settings.querySelector('input[type="range"]');
-            settings.addEventListener('pointerdown',event=>event.stopPropagation());
-            color.addEventListener('input',()=>{dev.state.lightColor=color.value;syncLightPoint(dev);scheduleProjectSave();});
-            range.addEventListener('input',()=>{dev.state.lightIntensity=Number(range.value);syncLightPoint(dev);updateCables();scheduleProjectSave();});
-            const toggle=()=>{dev.state.lightEnabled=dev.state.lightEnabled===false;syncLightPoint(dev);updateCables();scheduleProjectSave();};
-            el.addEventListener('dblclick',event=>{if(event.target.closest('.lighting-demo-settings'))return;event.stopPropagation();toggle();});
-            el.addEventListener('keydown',event=>{
-                if(event.target!==el)return;
-                if(event.key==='Enter'||event.key===' '){event.preventDefault();toggle();return;}
-                const step=event.shiftKey?20:5,delta={ArrowLeft:[-step,0],ArrowRight:[step,0],ArrowUp:[0,-step],ArrowDown:[0,step]}[event.key];
-                if(!delta)return;event.preventDefault();el.style.left=Math.max(0,Math.min(world.offsetWidth-el.offsetWidth,el.offsetLeft+delta[0]))+'px';el.style.top=Math.max(0,Math.min(world.offsetHeight-el.offsetHeight,el.offsetTop+delta[1]))+'px';updateCables();scheduleProjectSave();
-            });
-            bindDeviceEvents(dev);syncLightPoint(dev);selectDevice(id);updateCables();scheduleProjectSave();
-        }
         function createPendantLamp(x,y){
             const id='dev_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
             const el=document.createElement('div');
@@ -5160,7 +5082,6 @@ const Hardware = (() => {
             state.devices[id]=dev;bindDeviceEvents(dev);selectDevice(id);updateCables();scheduleProjectSave();
         }
         function createDevice(type, x, y) {
-            if(type==='lightPoint')return createLightPoint(x,y);
             if(type==='pendantLamp')return createPendantLamp(x,y);
             if(WALL_LAMP_TYPES[type])return createWallLamp(type,x,y);
             initAudio();
@@ -6394,9 +6315,9 @@ const Hardware = (() => {
                     };
                     const aim = (ev,settle=false) => {
                         const rawX=(ev.clientX-startX)/view.zoom,rawY=(ev.clientY-startY)/view.zoom;
-                        const sideInset=movingDevices.every(item=>item.type==='lightPoint')?0:sceneSideInset();
+                        const sideInset=sceneSideInset();
                         const dx=Math.max(sideInset-dragBounds.left,Math.min(settle?snapCoordinate(origin.x+rawX)-origin.x:rawX,world.offsetWidth-sideInset-dragBounds.right));
-                        const bottomLimit=movingDevices.every(item=>item.type==='lightPoint')?world.offsetHeight:movingDevices.some(item=>WALL_LAMP_TYPES[item.type])?wallPlacementBottom():maxEquipmentBottom();
+                        const bottomLimit=movingDevices.some(item=>WALL_LAMP_TYPES[item.type])?wallPlacementBottom():maxEquipmentBottom();
                         const dy=Math.max(-dragBounds.top,Math.min(settle?snapCoordinate(baseY+rawY)-baseY:rawY,bottomLimit-dragBounds.bottom));
                         targets=initialPositions.map(p=>{
                             const x=p.x+dx,y=p.y+dy;
@@ -6586,7 +6507,6 @@ const Hardware = (() => {
             }
             dev.el.remove();
             delete state.devices[dev.id];
-            if(dev.type==='lightPoint')document.documentElement.classList.add('lighting-demo-enabled');
             updateMovementHistoryButtons();
             if (state.selectedDeviceIds.has(dev.id)) {
                 const remaining = [...state.selectedDeviceIds].filter(id => id !== dev.id);
@@ -7263,11 +7183,9 @@ const Hardware = (() => {
                 plug.style.opacity=container.dataset.seating==='true'?container.dataset.seatOpacity||'1':'1';
                 const {tip,angle,rear}=endpoints[index];
                 plug.setAttribute('transform', `translate(${tip.x} ${tip.y}) rotate(${angle})`);
-                const candidate=document.querySelector('#audio-world .lighting-demo-light');
-                const light=candidate&&candidate.querySelector('input[type="range"]').value>0&&candidate.getAttribute('aria-checked')==='true'?candidate:null;
-                const sceneLight=light?null:Hardware.sceneLightAt(tip.x,tip.y);
-                if(light||sceneLight){
-                    const sourceX=light?light.offsetLeft+light.offsetWidth/2:sceneLight.x,sourceY=light?light.offsetTop+light.offsetHeight/2:sceneLight.y;
+                const sceneLight=Hardware.sceneLightAt(tip.x,tip.y);
+                if(sceneLight){
+                    const sourceX=sceneLight.x,sourceY=sceneLight.y;
                     const dx=tip.x-sourceX,dy=tip.y-sourceY,length=Math.hypot(dx,dy),factor=Math.min(1,3/(length*1.8/170||1));
                     plug.style.setProperty('--plug-shadow-x',(dx*1.8/170*factor).toFixed(1)+'px');
                     plug.style.setProperty('--plug-shadow-y',(dy*1.8/170*factor).toFixed(1)+'px');
@@ -8252,7 +8170,7 @@ const Hardware = (() => {
             if(value.devices.length>500||value.connections.length>4000)throw new Error('O projeto excede a quantidade de equipamentos ou cabos suportada.');
             const ids=new Set();
             value.devices.forEach(dev=>{
-                if(!dev||typeof dev.id!=='string'||ids.has(dev.id)||!Object.hasOwn(DEVICE_NAMES,dev.type)||!Number.isFinite(dev.x)||!Number.isFinite(dev.y)||dev.x<0||dev.y<0||dev.x>20000||dev.y>20000)throw new Error('O projeto contém um equipamento inválido.');
+                if(!dev||typeof dev.id!=='string'||ids.has(dev.id)||(!Object.hasOwn(DEVICE_NAMES,dev.type)&&dev.type!=='lightPoint')||!Number.isFinite(dev.x)||!Number.isFinite(dev.y)||dev.x<0||dev.y<0||dev.x>20000||dev.y>20000)throw new Error('O projeto contém um equipamento inválido.');
                 ids.add(dev.id);
                 if(!dev.settings||typeof dev.settings!=='object'||Array.isArray(dev.settings))throw new Error('Configurações inválidas.');
                 for(const key of ['eq','channelVolumes','matrixOutputs'])if(dev.settings[key]!=null&&!Array.isArray(dev.settings[key]))throw new Error('Ajustes de canais inválidos.');
@@ -8304,7 +8222,6 @@ const Hardware = (() => {
             const clean=projectJSON(saved.settings||{}),tt=clean.tt;delete clean.tt;
             clean.damage=['speaker-level-overload','speaker-thermal-overload'].includes(clean.damage?.kind)?{kind:clean.damage.kind}:null;
             Object.assign(dev.state,clean);dev.state.playing=false;
-            if(dev.type==='lightPoint'){syncLightPoint(dev);return;}
             if(dev.type==='pendantLamp'||WALL_LAMP_TYPES[dev.type])return;
             if(tt&&dev.state.tt)Object.assign(dev.state.tt,tt,{running:false});
             const s=dev.state,clamp=(number,min,max,fallback)=>typeof number==='number'&&Number.isFinite(number)?Math.max(min,Math.min(max,number)):fallback;
@@ -8353,10 +8270,11 @@ const Hardware = (() => {
                 world.style.removeProperty('min-width');world.style.removeProperty('min-height');
                 const ui=snapshot.ui||{};setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setCanvasTime(ui.canvasTime||(ui.canvasBackdrop==='night'?'night':'dusk'));setCanvasBackdrop(ui.canvasBackdrop);
                 for(const saved of snapshot.devices){
+                    if(saved.type==='lightPoint')continue; // Legacy test lights are discarded when loading older projects.
                     const before=new Set(Object.keys(state.devices));createDevice(saved.type,Math.min(saved.x,world.offsetWidth-150),Math.min(saved.y,maxEquipmentBottom()-150));
                     const dev=Object.values(state.devices).find(item=>!before.has(item.id));if(!dev)throw new Error('Não foi possível restaurar um equipamento.');
                     ids.set(saved.id,dev.id);restored.push([saved,dev]);
-                    const inset=dev.type==='lightPoint'?0:sceneSideInset(),bottom=dev.type==='lightPoint'?world.offsetHeight:WALL_LAMP_TYPES[dev.type]?wallPlacementBottom():maxEquipmentBottom();
+                    const inset=sceneSideInset(),bottom=WALL_LAMP_TYPES[dev.type]?wallPlacementBottom():maxEquipmentBottom();
                     if(saved.x>=inset&&saved.x+dev.el.offsetWidth<=world.offsetWidth-inset)dev.el.style.left=`${saved.x}px`;
                     if(saved.y>=0){
                         const oldFloorBottom=world.offsetHeight-196;

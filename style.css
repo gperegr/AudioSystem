@@ -4300,32 +4300,17 @@ body.inspector-collapsed #inspector>.inspector-panel-header,body.inspector-colla
 .context-help strong {color:#f0f5f7;font-size:11px;line-height:1.3;font-weight:700;}
 .context-help span {color:#bdc9d1;font-size:11px;line-height:1.45;}
 @media(prefers-reduced-motion:reduce){.context-help{transition:none;}}
-/* One movable world-space light; shadows are drawn on each equipment surface. */
-#audio-world .lighting-demo-light {position:absolute;z-index:90;display:grid;place-items:center;width:52px;height:52px;padding:0;border:2px solid #ffe9a3;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fffdeb,var(--demo-light-color,#f5c75f) 42%,#86531b 76%);color:#423016;box-shadow:0 0 0 6px color-mix(in srgb,var(--demo-light-color,#ffd56a) 20%,transparent),0 0 calc(22px * var(--demo-light-strength,1)) 10px color-mix(in srgb,var(--demo-light-color,#ffd56a) 48%,transparent),0 3px 8px #0008;cursor:grab;touch-action:none;user-select:none;}
-#audio-world .lighting-demo-light .device-header {display:none;}
-#audio-world .lighting-demo-light.equipment-dragging {cursor:grabbing;}
-#audio-world .lighting-demo-light .lighting-demo-orb {font-size:25px;line-height:1;pointer-events:none;}
-#audio-world .lighting-demo-light small {position:absolute;top:52px;padding:2px 5px;border-radius:3px;background:#14222bee;color:#fff4cf;font:700 10px Inter,sans-serif;letter-spacing:.12em;pointer-events:none;}
-#audio-world .lighting-demo-light:focus-visible {outline:3px solid #fff;outline-offset:8px;}
-#audio-world .lighting-demo-settings {position:absolute;z-index:91;display:flex;gap:9px;align-items:center;left:100%;top:50%;transform:translate(8px,-50%);padding:6px 9px;border:1px solid #71808a;border-radius:6px;background:#14222bf2;color:#e6edf0;box-shadow:0 3px 10px #0008;font:600 9px/1 Inter,sans-serif;white-space:nowrap;touch-action:auto;}
-#audio-world .lighting-demo-settings label {display:flex;align-items:center;gap:5px;}
-#audio-world .lighting-demo-settings input[type="color"] {width:23px;height:22px;padding:0;border:0;background:none;cursor:pointer;}
-#audio-world .lighting-demo-settings input[type="range"] {width:75px;accent-color:#a7d8eb;cursor:pointer;}
-#audio-world .lighting-demo-settings output {min-width:28px;text-align:right;}
-
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .lighting-demo-target .integrated-face.finish-blue {
     position:relative;
     border-top-color:#788b96;border-bottom-color:#0b151c;
-    background:radial-gradient(ellipse 68% 125% at var(--demo-panel-light-x,32%) var(--demo-panel-light-y,28%),rgb(var(--demo-light-rgb,228 244 255)/calc(.34 * var(--demo-light-strength,1))) 0%,rgb(var(--demo-light-rgb,228 244 255)/calc(.18 * var(--demo-light-strength,1))) 27%,#1b35404d 54%,#03090de0 100%),linear-gradient(110deg,#263943,#071015 65%,#101b20)!important;
+    background:radial-gradient(ellipse 68% 125% at 32% 28%,transparent 0%,transparent 27%,#1b35404d 54%,#03090de0 100%),linear-gradient(110deg,#263943,#071015 65%,#101b20)!important;
     box-shadow:inset 0 2px 2px #d7ecfa4d,inset 0 -5px 6px #000a,0 4px 0 #263942,0 9px 11px #0009;
 }
 :root.lighting-demo-enabled .lighting-demo-target .lighting-shadow-surface {isolation:isolate;}
-:root.lighting-demo-enabled .lighting-demo-target .lighting-shadow-surface>.lighting-shadow-canvas {position:absolute;inset:0;z-index:-1;width:100%;height:100%;pointer-events:none;}
 .lighting-incident-overlay {display:none;}
-:root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .lighting-demo-target>.lighting-incident-overlay {position:absolute;inset:0;z-index:35;display:block;pointer-events:none;background:linear-gradient(var(--room-equipment-shade,transparent),var(--room-equipment-shade,transparent)),radial-gradient(ellipse 60% 95% at var(--demo-panel-light-x,50%) var(--demo-panel-light-y,50%),rgb(var(--demo-light-rgb,228 244 255)/calc(.24 * var(--demo-incident-strength,0))) 0%,rgb(var(--demo-light-rgb,228 244 255)/calc(.08 * var(--demo-incident-strength,0))) 42%,transparent 100%);}
+:root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .lighting-demo-target>.lighting-incident-overlay {position:absolute;inset:0;z-index:35;display:block;pointer-events:none;background:var(--room-equipment-shade,transparent);}
 :root.lighting-demo-enabled #canvas .lighting-demo-target>.lighting-incident-overlay::before {content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse var(--scene-light-a-radius-x,52%) var(--scene-light-a-radius-y,70%) at var(--scene-light-a-x,50%) var(--scene-light-a-y,50%),rgb(var(--scene-light-a-rgb,0 0 0)/calc(.44 * var(--scene-light-a-strength,0))),transparent 100%),radial-gradient(ellipse var(--scene-light-b-radius-x,52%) var(--scene-light-b-radius-y,70%) at var(--scene-light-b-x,50%) var(--scene-light-b-y,50%),rgb(var(--scene-light-b-rgb,0 0 0)/calc(.44 * var(--scene-light-b-strength,0))),transparent 100%),radial-gradient(ellipse var(--scene-light-c-radius-x,52%) var(--scene-light-c-radius-y,70%) at var(--scene-light-c-x,50%) var(--scene-light-c-y,50%),rgb(var(--scene-light-c-rgb,0 0 0)/calc(.44 * var(--scene-light-c-strength,0))),transparent 100%);}
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .lighting-shaped-silhouette>:is(.lighting-incident-overlay,.lighting-furniture-shadow) {mask-image:var(--lighting-silhouette-mask);mask-size:100% 100%;mask-repeat:no-repeat;}
-:root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .lighting-shaped-silhouette>.lighting-shadow-surface>.lighting-shadow-canvas {mask-image:var(--lighting-silhouette-mask);mask-size:100% 100%;mask-repeat:no-repeat;}
 .lighting-control-shadow {display:none;}
 .lighting-stack-shadow {display:none;}
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .lighting-demo-target>.lighting-stack-shadow.is-active {position:absolute;inset:0;z-index:33;display:block;width:100%;height:100%;pointer-events:none;}
@@ -4338,20 +4323,12 @@ body.inspector-collapsed #inspector>.inspector-panel-header,body.inspector-colla
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .furniture-node[data-back="true"] .rack-body>.lighting-furniture-interior.is-active {position:absolute;inset:0;z-index:0;display:block;width:100%;height:100%;pointer-events:none;}
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .furniture-node[data-back="true"] .rack-body>.furniture-part {z-index:1;}
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .furniture-node[data-back="true"] .rack-body>.furniture-side {z-index:2;}
-:root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .furniture-node.lighting-demo-target :is(.furniture-part,.acoustic-panel)::after {content:"";position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse 100% 140% at var(--demo-scene-light-x,50%) var(--demo-scene-light-y,50%),rgb(var(--demo-scene-light-rgb,0 0 0)/calc(.30 * var(--demo-scene-light-strength,0))),transparent 100%),radial-gradient(ellipse var(--demo-material-width,120%) 140% at var(--demo-part-light-x,50%) var(--demo-part-light-y,50%),rgb(var(--demo-light-rgb,228 244 255)/calc(var(--demo-material-reflect,.22) * var(--demo-light-strength,1))) 0%,rgb(var(--demo-light-rgb,228 244 255)/calc(var(--demo-material-reflect,.22) * var(--demo-light-strength,1) * .26)) 48%,transparent 100%);}
-:root.lighting-demo-enabled .furniture-node[data-material="metal"] .furniture-part {--demo-material-width:48%;--demo-material-reflect:.38;}
-:root.lighting-demo-enabled .furniture-node:is([data-material="lightWood"],[data-material="darkWood"]) .furniture-part {--demo-material-width:150%;--demo-material-reflect:.12;}
-:root.lighting-demo-enabled .furniture-node[data-material="black"] .furniture-part {--demo-material-width:115%;--demo-material-reflect:.19;}
+:root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .furniture-node.lighting-demo-target :is(.furniture-part,.acoustic-panel)::after {content:"";position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse 100% 140% at var(--demo-scene-light-x,50%) var(--demo-scene-light-y,50%),rgb(var(--demo-scene-light-rgb,0 0 0)/calc(.30 * var(--demo-scene-light-strength,0))),transparent 100%);}
 /* The receiver source well is part of the chassis; its keys sit above the projected shadows. */
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .device-type-powerAmp>.poweramp-body.lighting-shadow-surface::before {content:"";position:absolute;left:82px;right:169px;top:82px;height:34px;box-sizing:border-box;border:1px solid #11191d;border-radius:3px;background:linear-gradient(#10171b,#263138);box-shadow:inset 0 2px 4px #000a,0 1px #ffffff24;pointer-events:none;z-index:0;}
-:root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .device-type-powerAmp>.poweramp-body.lighting-shadow-surface>.lighting-shadow-canvas {z-index:1;}
-:root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .device-type-powerAmp>.poweramp-body.lighting-shadow-surface>:not(.lighting-shadow-canvas) {z-index:2;}
+:root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .device-type-powerAmp>.poweramp-body.lighting-shadow-surface>* {z-index:2;}
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .device-type-powerAmp .poweramp-control-panel>:is(.poweramp-screen,.poweramp-level,.poweramp-power-slot,.receiver-tuning-control) {z-index:2;}
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .device-type-powerAmp .receiver-source-buttons {border-color:transparent;background:transparent;box-shadow:none;}
-.lighting-demo-target .lighting-shadow-canvas {display:none;}
-:root.lighting-demo-enabled .lighting-demo-target .lighting-shadow-canvas {display:block;}
-:root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .lighting-demo-target:is(.headphone-equipment,.floorstanding-speaker,.bookshelf-speaker) .lighting-shadow-canvas,
-:root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .lighting-demo-target:has(.sp-cab) .lighting-shadow-canvas {display:none;}
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .lighting-demo-target.device-type-integratedBlue .hw-knob {
     filter:none!important;
     box-shadow:0 2px 0 #81949d,0 4px 0 #344954,inset 0 1px 2px #ffffffe0!important;
