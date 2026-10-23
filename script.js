@@ -1954,7 +1954,12 @@ const Hardware = (() => {
                 parts=part('furniture-top',0,0,config.width,28)+part('furniture-leg',60,28,40,config.height-28)+part('furniture-leg',config.width-100,28,40,config.height-28)+part('furniture-brace',100,80,config.width-200,20);
             }else if(type==='furnitureHairpin'){
                 const pin='<svg viewBox="0 0 80 130" aria-hidden="true"><path d="M9 3 28 115Q34 129 40 115L61 3M20 3 32 108Q34 116 36 108L50 3"/><path class="hairpin-glint" d="M12 5 30 114M58 5 39 114"/></svg>';
-                parts=part('furniture-top',0,0,1320,28)+part('furniture-shelf',264,238,792,24)+part('furniture-shelf',0,456,1320,24)+part('furniture-side',0,28,24,428)+part('furniture-side',1296,28,24,428)+part('furniture-side furniture-divider',244,28,20,428)+part('furniture-side furniture-divider',1056,28,20,428)+part('furniture-hairpin-leg',38,480,80,130,pin)+part('furniture-hairpin-leg',1202,480,80,130,pin);
+                const sleeves=[
+                    [[4,14,307,-7,'#bd9668'],[19,13,318,-4,'#435e66'],[33,16,310,-6,'#a26d51'],[50,12,322,2,'#c7b68d'],[63,15,315,-2,'#474f49'],[79,13,309,17,'#8d634b'],[93,16,326,3,'#ad9b78'],[110,11,306,-3,'#344858'],[122,15,314,5,'#b2785b'],[139,13,320,-15,'#d2b38b'],[153,16,307,8,'#5b6458'],[173,14,316,10,'#a28a6f']],
+                    [[7,15,312,-10,'#6b7780'],[25,13,321,-4,'#b78d67'],[41,16,308,-7,'#4b6255'],[58,12,315,1,'#d3b996'],[70,15,323,16,'#8a5544'],[86,13,306,-3,'#a7a086'],[101,16,317,3,'#374d5e'],[119,12,313,-2,'#c09263'],[133,15,326,-13,'#55554c'],[150,13,310,8,'#b4a181'],[166,16,319,10,'#846452']]
+                ];
+                const recordBay=(side,x)=>`<div class="hairpin-record-bay" style="left:${x}px" aria-hidden="true">${sleeves[side].map(([left,width,height,angle,color])=>`<span class="hairpin-record-sleeve" style="--sleeve-x:${left}px;--sleeve-width:${width}px;--sleeve-height:${height}px;--sleeve-angle:${angle}deg;--sleeve-color:${color}"></span>`).join('')}</div>`;
+                parts=recordBay(0,24)+recordBay(1,1076)+part('furniture-top',0,0,1320,28)+part('furniture-shelf',264,238,792,24)+part('furniture-shelf',0,456,1320,24)+part('furniture-side',0,28,24,428)+part('furniture-side',1296,28,24,428)+part('furniture-side furniture-divider',244,28,20,428)+part('furniture-side furniture-divider',1056,28,20,428)+part('furniture-hairpin-leg',38,480,80,130,pin)+part('furniture-hairpin-leg',1202,480,80,130,pin);
             }else if(config.recordColumns){
                 const width=config.width,interior=width-52;
                 parts=part('furniture-top',0,0,width,28)+part('furniture-shelf',26,300,interior,24)+part('furniture-shelf',0,730,width,30)+part('furniture-side',0,28,26,702)+part('furniture-side',width-26,28,26,702);
