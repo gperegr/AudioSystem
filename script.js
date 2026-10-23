@@ -3964,14 +3964,8 @@ const Hardware = (() => {
             const section=document.createElement('section');section.className='mb-6 catalog-category';
             const heading=document.createElement('h3');heading.className='text-[10px] font-bold text-gray-400 mb-3 tracking-wider uppercase';heading.textContent=title;
             const grid=document.createElement('div');grid.className='grid grid-cols-2 gap-3';
-            const rackOrder=['furnitureRack','furnitureHairpin','furnitureRecordOne','furnitureRecordThree','furnitureRackSix','furnitureRackTall','furnitureRackSixTall'];
-            items.sort((a,b)=>{
-                if(title==='Móveis'){
-                    const ai=rackOrder.indexOf(a.dataset.template),bi=rackOrder.indexOf(b.dataset.template);
-                    if(ai!==-1||bi!==-1){if(ai===-1)return 1;if(bi===-1)return-1;return ai-bi;}
-                }
-                return catalogItemName(a).localeCompare(catalogItemName(b),'pt-BR',{sensitivity:'base',numeric:true});
-            }).forEach(item=>{catalogAssigned.add(item);item.dataset.catalogCategory=title;grid.appendChild(item);});
+            items.sort((a,b)=>catalogItemName(a).localeCompare(catalogItemName(b),'pt-BR',{sensitivity:'base',numeric:true}))
+                .forEach(item=>{catalogAssigned.add(item);item.dataset.catalogCategory=title;grid.appendChild(item);});
             section.append(heading,grid);catalogContainer.appendChild(section);
         };
         catalogGroups.forEach(([title,matches])=>appendCatalogGroup(title,catalogItems.filter(item=>!catalogAssigned.has(item)&&matches(item.dataset.template))));
