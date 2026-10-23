@@ -4397,3 +4397,9 @@ body.inspector-collapsed #inspector>.inspector-panel-header,body.inspector-colla
 :is(#inspector-content,.app-settings-content) input.app-menu-slider[type="range"]::-moz-range-track {box-sizing:border-box;width:100%;height:var(--menu-slider-track-size);border:0;border-radius:999px;background:var(--menu-slider-track);box-shadow:none;cursor:pointer;}
 :is(#inspector-content,.app-settings-content) input.app-menu-slider[type="range"]::-moz-range-thumb {box-sizing:border-box;width:var(--menu-slider-thumb-size);height:var(--menu-slider-thumb-size);border:0;border-radius:50%;background:var(--menu-slider-thumb);box-shadow:0 2px 4px #0008;cursor:pointer;}
 :is(#inspector-content,.app-settings-content) input.app-menu-slider[type="range"]:focus-visible {outline:2px solid #93c5fd;outline-offset:2px;border-radius:5px;}
+
+.app-select-caption:has(.app-select-room-icon),.app-select-option:has(.app-select-room-icon) {display:flex;align-items:center;gap:9px;}
+.app-select-room-icon {flex:none;display:grid;place-items:center;width:22px;height:22px;color:#a9c6d7;}
+.app-select-room-icon svg {display:block;width:22px;height:22px;}
+.app-select-option:has(.app-select-room-icon) .app-select-option-label {flex:1;min-width:0;}
+.app-select-option[aria-selected="true"] .app-select-room-icon {color:#d2e7f5;}

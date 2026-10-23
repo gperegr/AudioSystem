@@ -8367,6 +8367,12 @@ const Hardware = (() => {
         document.addEventListener('keydown',event=>{if(event.key==='Escape'&&settingsMenu.open){settingsMenu.open=false;settingsMenu.querySelector('summary').focus();}});
         function setupAppDropdowns(){
             const widgets=new WeakMap();let active=null,sequence=0,typeBuffer='',typeTime=0;
+            const roomIcons={
+                near:'<path d="M4 13V11a8 8 0 0 1 16 0v2"/><rect x="3" y="12" width="4" height="7" rx="1.5"/><rect x="17" y="12" width="4" height="7" rx="1.5"/><path d="M7 19c1 2 3 2 5 2h2"/>',
+                small:'<path d="M4 20V5h16v15M4 20h16M8 9v7m8-7v7M10 12h4"/><circle cx="12" cy="12" r="1"/>',
+                large:'<path d="M2 20V4h20v16H2ZM7 8v9m10-9v9M10 11h4m-4 4h4M5 4l2 4m12-4-2 4"/>'
+            };
+            const roomIcon=key=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${roomIcons[key]||''}</svg>`;
             const valueDescriptor=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value'),indexDescriptor=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'selectedIndex'),disabledDescriptor=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'disabled');
             function close(restoreFocus=false){
                 if(!active)return;const current=active;active=null;current.popup.remove();current.button.setAttribute('aria-expanded','false');current.button.removeAttribute('aria-activedescendant');if(restoreFocus&&current.button.isConnected)current.button.focus();
@@ -8394,7 +8400,7 @@ const Hardware = (() => {
                 if(!active)return;const current=active;current.popup.replaceChildren();current.choices=[];
                 [...current.select.options].forEach((option,index)=>{
                     const item=document.createElement('div');item.id=current.popup.id+'-'+index;item.className='app-select-option';item.setAttribute('role','option');item.setAttribute('aria-selected',String(index===current.select.selectedIndex));item.setAttribute('aria-disabled',String(option.disabled||!!option.parentElement.disabled));
-                    const label=document.createElement('span');label.textContent=option.label||option.textContent;const check=document.createElement('span');check.className='app-select-check';check.textContent=index===current.select.selectedIndex?'✓':'';check.setAttribute('aria-hidden','true');item.append(label,check);
+                    const label=document.createElement('span');label.className='app-select-option-label';label.textContent=option.label||option.textContent;const check=document.createElement('span');check.className='app-select-check';check.textContent=index===current.select.selectedIndex?'✓':'';check.setAttribute('aria-hidden','true');if(current.select.id==='room-preset'){const icon=document.createElement('span');icon.className='app-select-room-icon';icon.setAttribute('aria-hidden','true');icon.innerHTML=roomIcon(option.value);item.append(icon);}item.append(label,check);
                     item.addEventListener('pointermove',event=>{if(event.pointerType!=='touch'&&item.getAttribute('aria-disabled')!=='true')highlight(index);});
                     item.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();choose(index);});current.choices.push(item);current.popup.appendChild(item);
                 });
@@ -8417,7 +8423,7 @@ const Hardware = (() => {
                 select.before(wrapper);wrapper.append(select,button);select.classList.add('app-select-native');select.tabIndex=-1;select.setAttribute('aria-hidden','true');
                 const widget={select,wrapper,button,caption,popupId};widgets.set(select,widget);
                 const refresh=()=>{
-                    const option=select.options[select.selectedIndex];caption.textContent=option?.label||option?.textContent||'Selecionar';button.disabled=select.disabled||!select.options.length;
+                    const option=select.options[select.selectedIndex];caption.textContent=option?.label||option?.textContent||'Selecionar';if(select.id==='room-preset'&&option){const icon=document.createElement('span'),label=document.createElement('span');icon.className='app-select-room-icon';icon.setAttribute('aria-hidden','true');icon.innerHTML=roomIcon(option.value);label.textContent=caption.textContent;caption.replaceChildren(icon,label);}button.disabled=select.disabled||!select.options.length;
                     const label=select.getAttribute('aria-label')||[...(select.labels||[])].map(label=>[...label.childNodes].filter(node=>node.nodeType===Node.TEXT_NODE).map(node=>node.textContent).join(' ').trim()).filter(Boolean).join(' ')||'Selecionar opção';button.setAttribute('aria-label',label);button.title=caption.textContent;
                     if(active?.select===select){if(button.disabled)close();else buildOptions();}
                 };
