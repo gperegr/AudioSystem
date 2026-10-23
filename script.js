@@ -812,6 +812,7 @@ const Hardware = (() => {
     let lightingDemoFrame=0;
     const lightingGeometry=new WeakMap();
     let furnitureLightingGeometry={key:'',items:[]};
+    let floorShadowKey='';
     function positionedSceneLights(scene,time,world){
         return RoomScenes.lights(scene,time).map(source=>{
             const depth=source.layer==='near'?'near':source.layer==='mid'?'mid':'far';
@@ -857,6 +858,80 @@ const Hardware = (() => {
         if(lightingDemoFrame)return;
         lightingDemoFrame=requestAnimationFrame(()=>{lightingDemoFrame=0;paintLightingDemo();});
     }
+    function paintFloorShadows(world,roomLights,equipment,testLight){
+        const layer=world.querySelector(':scope > .room-floor-shadows'),canvas=document.getElementById('canvas');
+        if(!layer)return;
+        if(canvas.dataset.theme!=='scene'||canvas.dataset.floor==='none'){
+            if(floorShadowKey){layer.getContext('2d').clearRect(0,0,layer.width,layer.height);floorShadowKey='';}
+            return;
+        }
+        const furniture=[...world.querySelectorAll('.furniture-node:not(.acoustic-node)')].map(el=>({el,x:el.offsetLeft,y:el.offsetTop,width:el.offsetWidth,height:el.offsetHeight,furniture:true}));
+        const allCasters=[...furniture,...equipment.map(box=>({...box,furniture:false}))];
+        const worldHeight=world.offsetHeight,visibleTop=worldHeight-313;
+        const worldRect=world.getBoundingClientRect(),viewRect=canvas.getBoundingClientRect(),viewScale=worldRect.width/world.offsetWidth;
+        const minX=(viewRect.left-worldRect.left)/viewScale-700,maxX=(viewRect.right-worldRect.left)/viewScale+700;
+        const casters=allCasters.filter(box=>box.x+box.width>=minX&&box.x<=maxX&&box.y+box.height>=visibleTop-620);
+        const lights=testLight?[...roomLights,testLight]:roomLights;
+        const floorShift=parseFloat(world.style.getPropertyValue('--floor-parallax-x'))||0;
+        const floorScale=parseFloat(world.style.getPropertyValue('--floor-parallax-scale'))||1;
+        const key=[world.offsetWidth,world.offsetHeight,canvas.dataset.floor,floorShift.toFixed(1),floorScale.toFixed(3),Math.round(minX/30),Math.round(maxX/30),...lights.map(light=>[Math.round(light.x/3),Math.round(light.y/3),light.strength.toFixed(2)]),...allCasters.map(box=>[box.el.id,Math.round(box.x),Math.round(box.y),box.width,box.height,box.el.style.visibility])].join('|');
+        if(key===floorShadowKey)return;
+        floorShadowKey=key;
+        const width=world.offsetWidth*1.16,height=560,resolution=.5;
+        if(layer.width!==Math.round(width*resolution)||layer.height!==height*resolution){layer.width=Math.round(width*resolution);layer.height=height*resolution;}
+        const ctx=layer.getContext('2d');ctx.setTransform(resolution,0,0,resolution,0,0);ctx.clearRect(0,0,width,height);
+        if(!casters.length)return;
+        const point=(x,y)=>{
+            const displayDistance=Math.max(0,Math.min(312,worldHeight-y));
+            const depth=displayDistance/(Math.cos(.6632)-displayDistance*Math.sin(.6632)/850);
+            const perspective=1/(1+depth*Math.sin(.6632)/850);
+            return {x:width/2+(x-world.offsetWidth/2-floorShift)/(floorScale*perspective),y:height-depth};
+        };
+        const ellipse=(x,y,rx,ry,alpha)=>{
+            if(alpha<=0||rx<=0||ry<=0)return;
+            ctx.save();ctx.translate(x,y);ctx.scale(rx,ry);
+            const fade=ctx.createRadialGradient(0,0,.16,0,0,1);
+            fade.addColorStop(0,`rgba(17,14,13,${Math.min(.42,alpha).toFixed(3)})`);
+            fade.addColorStop(.62,`rgba(19,16,15,${(alpha*.57).toFixed(3)})`);
+            fade.addColorStop(1,'rgba(19,16,15,0)');
+            ctx.fillStyle=fade;ctx.fillRect(-1,-1,2,2);ctx.restore();
+        };
+        const inPath=(light,x,y,box)=>{
+            if(box.x<=light.x&&light.x<=box.x+box.width&&box.y<=light.y&&light.y<=box.y+box.height)return false;
+            let start=0,end=1,dx=x-light.x,dy=y-light.y;
+            for(const [origin,delta,min,max] of [[light.x,dx,box.x+12,box.x+box.width-12],[light.y,dy,box.y+12,box.y+box.height-12]]){
+                if(Math.abs(delta)<.001){if(origin<min||origin>max)return false;continue;}
+                const a=(min-origin)/delta,b=(max-origin)/delta;
+                start=Math.max(start,Math.min(a,b));end=Math.min(end,Math.max(a,b));
+                if(start>end)return false;
+            }
+            return start>.04&&start<.88;
+        };
+        casters.forEach(box=>{
+            if(box.el.style.visibility==='hidden'||box.width<15||box.height<15)return;
+            const centerX=box.x+box.width/2,bottom=box.y+box.height;
+            if(!box.furniture&&furniture.some(item=>centerX>item.x+20&&centerX<item.x+item.width-20&&bottom<item.y+item.height-20&&bottom>item.y-40))return;
+            const heightFade=Math.max(0,1-Math.max(0,visibleTop-bottom)/620);
+            if(heightFade<=0)return;
+            const baseY=Math.max(visibleTop+8,Math.min(worldHeight-12,bottom));
+            const base=point(centerX,baseY),edge=point(centerX+box.width/2,baseY);
+            const radius=Math.min(540,Math.abs(edge.x-base.x));
+            ellipse(base.x,base.y,Math.max(18,radius),box.furniture?35:20,(box.furniture ? .23 : .13)*heightFade);
+            const samples=lights.map(light=>sampleSceneLight(light,centerX,box.y+box.height*.55)).filter(light=>light.weight>.08).sort((a,b)=>b.weight-a.weight).slice(0,2);
+            const total=samples.reduce((sum,light)=>sum+light.weight,0)+.45;
+            samples.forEach(light=>{
+                if(allCasters.some(other=>other!==box&&(other.furniture||other.height>box.height*.55)&&inPath(light,centerX,box.y+box.height*.55,other)))return;
+                const physicalHeight=Math.min(180,Math.max(12,box.height*(box.furniture ? .22 : .18)));
+                const ratio=physicalHeight/(light.elevation+physicalHeight);
+                const shiftX=Math.max(-350,Math.min(350,(centerX-light.x)*ratio));
+                const shiftY=Math.max(-230,Math.min(230,(baseY-light.y)*ratio));
+                const tip=point(centerX+shiftX,Math.min(worldHeight-5,baseY+shiftY));
+                const alpha=(box.furniture ? .38 : .27)*heightFade*light.weight/total;
+                ellipse(base.x+(tip.x-base.x)*.45,base.y+(tip.y-base.y)*.45,Math.max(18,radius*.82),box.furniture?52:31,alpha);
+                ellipse(tip.x,tip.y,Math.max(15,radius*.65),box.furniture?57:35,alpha*.65);
+            });
+        });
+    }
     function paintLightingDemo(){
         const light=document.querySelector('#audio-world .lighting-demo-light');
         const lx=light?light.offsetLeft+light.offsetWidth/2:0,ly=light?light.offsetTop+light.offsetHeight/2:0,lightHeight=170;
@@ -886,6 +961,7 @@ const Hardware = (() => {
         const furniture=furnitureLightingGeometry.items;
         const stackBoxes=[...world.querySelectorAll('.device-node:not(.furniture-node):not(.lighting-demo-light):not(.device-type-pendantLamp)')].filter(el=>el.style.visibility!=='hidden').map(el=>({el,x:el.offsetLeft,y:el.offsetTop,width:el.offsetWidth,height:el.offsetHeight}));
         const stackTops=stackBoxes.filter(box=>box.width>=300&&(box.height<box.width*.8||box.el.classList.contains('device-type-tapeDeck')));
+        paintFloorShadows(world,sceneEmitters,stackBoxes,intensity?{x:lx,y:ly,width:20,height:20,strength:intensity,elevation:170,reach:1500,rgb}:null);
         world.querySelectorAll('.furniture-node.lighting-demo-target').forEach(node=>{
             const rect=node.getBoundingClientRect();
             if(rect.right<viewport.left||rect.left>viewport.right||rect.bottom<viewport.top||rect.top>viewport.bottom)return;
@@ -1264,6 +1340,8 @@ const Hardware = (() => {
         const windowLayers=document.createElement('div');windowLayers.className='room-window-layers';
         roomBackdrop.appendChild(windowLayers);
         world.prepend(roomBackdrop);
+        const floorShadows=document.createElement('canvas');floorShadows.className='room-floor-shadows';floorShadows.setAttribute('aria-hidden','true');
+        world.insertBefore(floorShadows,document.getElementById('cables-layer'));
         canvas.appendChild(document.getElementById('connection-guidance'));
         const canvasThemes={light:'Claro',graphite:'Grafite',midnight:'Azul noturno',sepia:'Sépia',scene:'Cenário'};
         const canvasThemeControl=document.createElement('label');canvasThemeControl.className='canvas-theme-control';
