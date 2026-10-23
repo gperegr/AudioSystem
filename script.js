@@ -1313,7 +1313,7 @@ const Hardware = (() => {
             appPreferencesSaveTimer=setTimeout(()=>{
                 if(!canvas.clientWidth||!canvas.clientHeight)return;
                 const focusX=(canvas.clientWidth/2-view.x)/view.zoom,focusY=(canvas.clientHeight/2-view.y)/view.zoom;
-                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,floor:state.canvasFloor,floorAuto:floorFollowsScene,backdrop:state.canvasBackdrop,time:state.canvasTime,connectionGuidanceEnabled,zoom:view.zoom,focusX,focusY}));}catch{}
+                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,backdrop:state.canvasBackdrop,time:state.canvasTime,connectionGuidanceEnabled,zoom:view.zoom,focusX,focusY}));}catch{}
             },450);
         }
         const appDialog=document.getElementById('app-confirm-dialog');
@@ -1353,11 +1353,10 @@ const Hardware = (() => {
             if(theme==='scene')Object.values(state.devices).forEach(dev=>{
                 if(dev.type==='lightPoint')return;
                 dev.el.style.left=Math.max(ROOM_SIDE_INSET,Math.min(world.offsetWidth-dev.el.offsetWidth-ROOM_SIDE_INSET,dev.el.offsetLeft))+'px';
-                dev.el.style.top=Math.max(0,Math.min(canvas.dataset.floor==='none'?world.offsetHeight-dev.el.offsetHeight:floorPlacementBottom()-dev.el.offsetHeight,dev.el.offsetTop))+'px';
+                dev.el.style.top=Math.max(0,Math.min(floorPlacementBottom()-dev.el.offsetHeight,dev.el.offsetTop))+'px';
             });
             document.querySelector('.canvas-tools').dataset.theme=theme;
             document.getElementById('canvas-theme').value=theme;
-            document.getElementById('canvas-floor')?.closest('label')?.toggleAttribute('hidden',theme!=='scene');
             document.getElementById('canvas-backdrop')?.closest('label')?.toggleAttribute('hidden',theme!=='scene');
             document.getElementById('canvas-time')?.closest('label')?.toggleAttribute('hidden',theme!=='scene');
             Hardware.updateLightingDemo();
@@ -1372,15 +1371,6 @@ const Hardware = (() => {
         }
         canvasGridControl.querySelector('select').addEventListener('change',event=>{setCanvasGrid(event.target.value);scheduleProjectSave();scheduleAppPreferencesSave();});
         setCanvasGrid(savedAppPreferences.grid||'dots');
-        const canvasFloorModes={wood:'Madeira',carpet:'Carpete',concrete:'Concreto',none:'Sem piso'};
-        const canvasFloorControl=document.createElement('label');canvasFloorControl.className='canvas-theme-control';
-        canvasFloorControl.innerHTML='<span>Piso</span><select id="canvas-floor" aria-label="Acabamento do piso">'+Object.entries(canvasFloorModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
-        let floorFollowsScene=savedAppPreferences.floorAuto===true||!savedAppPreferences.floor;
-        function setCanvasFloor(mode){
-            mode=Object.hasOwn(canvasFloorModes,mode)?mode:'wood';state.canvasFloor=mode;canvas.dataset.floor=mode;canvasFloorControl.querySelector('select').value=mode;
-        }
-        canvasFloorControl.querySelector('select').addEventListener('change',event=>{floorFollowsScene=false;setCanvasFloor(event.target.value);scheduleProjectSave();scheduleAppPreferencesSave();});
-        setCanvasFloor(savedAppPreferences.floor||RoomScenes.scenes[savedAppPreferences.backdrop||'studio']?.floor||'wood');
         const canvasBackdropModes={studio:'Estúdio',listening:'Sala de audição',loft:'Loft'};
         const legacyBackdrops={library:'listening',night:'loft'};
         const canvasTimeModes={dawn:'Nascer do dia',dusk:'Fim de tarde',night:'Noite'};
@@ -1403,7 +1393,7 @@ const Hardware = (() => {
                 windowLayers.innerHTML=RoomScenes.windowPanes(mode,state.canvasTime);
                 windowLayers.dataset.scene=mode;windowLayers.dataset.time=state.canvasTime;
             }
-            if(floorFollowsScene)setCanvasFloor(RoomScenes.scenes[mode].floor);
+            state.canvasFloor=RoomScenes.scenes[mode].floor;canvas.dataset.floor=state.canvasFloor;
             Hardware.updateLightingDemo();
         }
         function setCanvasTime(time){
@@ -1937,7 +1927,7 @@ const Hardware = (() => {
             Hardware.updateLightingDemo();
         }
         const STACK_FEET=Object.freeze({width:22,height:20,insetRatio:.1});
-        const maxEquipmentBottom=()=>canvas.dataset.theme==='scene'&&canvas.dataset.floor!=='none'?floorPlacementBottom():world.offsetHeight;
+        const maxEquipmentBottom=()=>canvas.dataset.theme==='scene'?floorPlacementBottom():world.offsetHeight;
         const sceneSideInset=()=>canvas.dataset.theme==='scene'?ROOM_SIDE_INSET:0;
         function snapOnEquipment(dev,x,y){
             if(FURNITURE_TYPES[dev.type])return{x,y};
@@ -8097,7 +8087,7 @@ const Hardware = (() => {
             const catalogScroll=equipmentCatalog.querySelector('.overflow-y-auto');
             return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{
                 environment:{...(state.environment||{preset:'near',intensity:0})},
-                canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'scene',canvasFloor:state.canvasFloor||'wood',canvasFloorAuto:floorFollowsScene,canvasBackdrop:state.canvasBackdrop||'studio',canvasTime:state.canvasTime||'dusk',
+                canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'scene',canvasBackdrop:state.canvasBackdrop||'studio',canvasTime:state.canvasTime||'dusk',
                 soundVolume:state.uiSoundVolume??.9,hideCables:!!state.hideCables,
                 selected:[...state.selectedDeviceIds],selectedCable:state.connections.indexOf(state.selectedConnection),
                 search:document.getElementById('equipment-search').value,catalogScroll:catalogScroll?.scrollTop||0,inspectorScroll:inspectorContent.scrollTop
@@ -8207,16 +8197,17 @@ const Hardware = (() => {
             try{
                 stopViewMotion();cancelCableDrag();Object.values(state.devices).forEach(deleteDevice);
                 world.style.removeProperty('min-width');world.style.removeProperty('min-height');
-                const ui=snapshot.ui||{};floorFollowsScene=ui.canvasFloorAuto===true;setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setCanvasFloor(ui.canvasFloor);setCanvasTime(ui.canvasTime||(ui.canvasBackdrop==='night'?'night':'dusk'));setCanvasBackdrop(ui.canvasBackdrop);
+                const ui=snapshot.ui||{};setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setCanvasTime(ui.canvasTime||(ui.canvasBackdrop==='night'?'night':'dusk'));setCanvasBackdrop(ui.canvasBackdrop);
                 for(const saved of snapshot.devices){
                     const before=new Set(Object.keys(state.devices));createDevice(saved.type,Math.min(saved.x,world.offsetWidth-150),Math.min(saved.y,maxEquipmentBottom()-150));
                     const dev=Object.values(state.devices).find(item=>!before.has(item.id));if(!dev)throw new Error('Não foi possível restaurar um equipamento.');
                     ids.set(saved.id,dev.id);restored.push([saved,dev]);
                     const inset=dev.type==='lightPoint'?0:sceneSideInset(),bottom=dev.type==='lightPoint'?world.offsetHeight:maxEquipmentBottom();
                     if(saved.x>=inset&&saved.x+dev.el.offsetWidth<=world.offsetWidth-inset)dev.el.style.left=`${saved.x}px`;
-                    if(saved.y>=0&&saved.y+dev.el.offsetHeight<=bottom){
+                    if(saved.y>=0){
                         const oldFloorBottom=world.offsetHeight-196;
-                        dev.el.style.top=canvas.dataset.theme==='scene'&&canvas.dataset.floor!=='none'&&Math.abs(saved.y+dev.el.offsetHeight-oldFloorBottom)<1?`${bottom-dev.el.offsetHeight}px`:`${saved.y}px`;
+                        const targetY=canvas.dataset.theme==='scene'&&Math.abs(saved.y+dev.el.offsetHeight-oldFloorBottom)<1?bottom-dev.el.offsetHeight:saved.y;
+                        dev.el.style.top=`${Math.max(0,Math.min(bottom-dev.el.offsetHeight,targetY))}px`;
                     }
                     applySavedDevice(dev,saved);
                     dev.fileName=typeof saved.fileName==='string'?saved.fileName:'';dev.trackTitle=typeof saved.trackTitle==='string'?saved.trackTitle:'';
@@ -8294,7 +8285,7 @@ const Hardware = (() => {
         const settingsMenu=document.createElement('details');settingsMenu.className='app-settings';
         settingsMenu.innerHTML='<summary aria-label="Abrir configurações"><svg class="settings-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7.1"/><circle cx="12" cy="12" r="2.7"/><path d="M12 1.8v3.1m0 14.2v3.1M1.8 12h3.1m14.2 0h3.1M4.3 4.3l2.2 2.2m11 11 2.2 2.2m0-15.4-2.2 2.2m-11 11-2.2 2.2"/></svg><span>Configurações</span></summary>';
         clearCatalogFooter.className='app-settings-content';
-        const themeSection=document.createElement('section');themeSection.className='settings-theme-section';themeSection.appendChild(canvasThemeControl);themeSection.appendChild(canvasGridControl);themeSection.appendChild(canvasFloorControl);themeSection.appendChild(canvasBackdropControl);themeSection.appendChild(canvasTimeControl);setCanvasGrid('dots');
+        const themeSection=document.createElement('section');themeSection.className='settings-theme-section';themeSection.appendChild(canvasThemeControl);themeSection.appendChild(canvasGridControl);themeSection.appendChild(canvasBackdropControl);themeSection.appendChild(canvasTimeControl);setCanvasGrid('dots');
         const connectionHelpSetting=document.createElement('label');connectionHelpSetting.className='connection-help-setting';connectionHelpSetting.innerHTML='<input id="connection-help-enabled" type="checkbox"><span><strong>Orientação de conexões</strong><small>Mostra dicas e impede ligações incompatíveis. Desative para permitir erros quando os plugues encaixarem.</small></span>';
         const connectionHelpCheckbox=connectionHelpSetting.querySelector('input');connectionHelpCheckbox.checked=connectionGuidanceEnabled;themeSection.appendChild(connectionHelpSetting);
         connectionHelpCheckbox.addEventListener('change',()=>{connectionGuidanceEnabled=connectionHelpCheckbox.checked;hideContextHelp();updatePortGuidance(true);scheduleAppPreferencesSave();});
