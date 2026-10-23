@@ -3897,6 +3897,24 @@
 .bench-decoration-cds {left:582px;width:250px;height:224px;}
 .bench-decoration-covers {right:288px;width:548px;height:552px;}
 .bench-decoration-lamp {right:12px;width:284px;height:656px;}
+.device-type-pendantLamp {width:420px;height:230px;overflow:visible;cursor:grab;}
+.device-type-pendantLamp:active {cursor:grabbing;}
+.pendant-suspension {position:absolute;left:0;right:0;top:calc(-1 * var(--pendant-drop,170px));height:calc(var(--pendant-drop,170px) + 230px);transform-origin:50% 8px;animation:pendant-sway 8s ease-in-out infinite alternate;pointer-events:none;}
+.pendant-canopy {position:absolute;top:0;left:calc(50% - 51px);width:102px;height:18px;border-radius:50% 50% 30% 30%;background:linear-gradient(#4e4c47,#171b1b 65%,#060808);border:2px solid #0e1111;box-shadow:inset 0 2px #a59b8555,0 4px 8px #0007;}
+.pendant-canopy::after {content:"";position:absolute;left:calc(50% - 12px);bottom:-9px;width:24px;height:12px;border-radius:0 0 5px 5px;background:linear-gradient(90deg,#101413,#41413a,#101413);}
+.pendant-cord {position:absolute;top:16px;bottom:184px;left:calc(50% - 2px);width:4px;background:linear-gradient(90deg,#070a0b,#47504b 50%,#101717);box-shadow:2px 0 3px #0005;}
+.pendant-fixture {position:absolute;left:0;right:0;bottom:0;height:190px;pointer-events:auto;cursor:grab;}
+.pendant-fixture:active {cursor:grabbing;}
+.pendant-socket {position:absolute;left:calc(50% - 28px);top:4px;width:56px;height:74px;border-radius:12px 12px 5px 5px;background:repeating-linear-gradient(90deg,#5c2c1e 0 5px,#a25e30 6px 10px,#6d311e 11px 15px);border:3px solid #2a1b18;box-shadow:inset 5px 0 7px #ecc5875c,inset -7px 0 7px #160e0ba8,0 4px 8px #0008;z-index:3;}
+.pendant-socket::after {content:"";position:absolute;left:-13px;right:-13px;bottom:-7px;height:13px;border-radius:50%;background:linear-gradient(#78513b,#221b18);border:2px solid #191919;}
+.pendant-bulb {position:absolute;left:calc(50% - 31px);top:88px;width:62px;height:97px;border:2px solid #f4d9a09c;border-radius:44% 44% 48% 48%/23% 23% 65% 65%;background:radial-gradient(ellipse at 50% 42%,#fff3c3b8,#ffbc5370 42%,#8f582e33 75%,#fff5cf7a);box-shadow:inset 8px 0 8px #fff9d58c,inset -9px 0 13px #8a542b7a,0 0 28px 12px #ffb6387a,0 0 80px 34px #ffc25830;z-index:1;}
+.pendant-bulb::after {content:"";position:absolute;left:9px;top:10px;width:9px;height:47px;border-radius:50%;background:#fff9da9e;filter:blur(5px);}
+.pendant-filament {position:absolute;left:calc(50% - 10px);top:23px;width:20px;height:34px;border-left:3px solid #ffe9a0;border-right:3px solid #ffe9a0;border-bottom:3px solid #ffca58;border-radius:0 0 45% 45%;box-shadow:0 0 7px 3px #fff1af,0 0 24px 9px #ffc04b;}
+.pendant-filament::before {content:"";position:absolute;left:5px;top:7px;width:4px;height:19px;background:repeating-linear-gradient(0deg,#fff9d0 0 3px,#ec8f32 3px 5px);box-shadow:0 0 7px 3px #fff1a4;}
+.pendant-shade {position:absolute;left:8px;right:8px;top:42px;height:84px;clip-path:polygon(43% 0,57% 0,65% 20%,83% 66%,100% 96%,100% 100%,0 100%,0 96%,17% 66%,35% 20%);background:linear-gradient(176deg,#59615b 0%,#303333 12%,#0e1516 62%,#050809 89%,#4a3b2a 96%,#151415 100%);box-shadow:inset 0 4px #9ca39655;z-index:4;}
+.pendant-shade::after {content:"";position:absolute;left:2%;right:2%;bottom:0;height:7px;background:linear-gradient(90deg,#272c2a,#aa956d 49%,#272c2a);border-radius:50%;}
+@keyframes pendant-sway {from {transform:rotate(-.22deg);}to {transform:rotate(.22deg);}}
+@media(prefers-reduced-motion:reduce){.pendant-suspension {animation:none;}}
 .bench-options {display:flex;flex-direction:column;gap:10px;margin-top:16px;padding:14px;border:1px solid #45515c;border-radius:8px;}
 .bench-options legend {padding:0 6px;font-weight:600;}
 .bench-options label {display:flex;align-items:center;gap:8px;cursor:pointer;}

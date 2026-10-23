@@ -73,7 +73,7 @@ A direção visual combina interiores mid-century modernos com ilustração veto
 
 Ao deslocar ou ampliar o canvas, cenário, detalhes da sala e piso se movem em velocidades diferentes dos equipamentos, criando paralaxe. Mover somente o cursor não altera esse efeito. A arte da sala e do piso cobre uma área maior para permitir zoom-out de 50% em telas amplas, sem redimensionar móveis ou equipamentos. A junção entre parede e piso permanece fixa, e os aparelhos podem avançar um pouco sobre o piso para parecerem apoiados nele.
 
-O catálogo inclui a categoria **DEBUG**, com **Modelo · Controles** e **Ponto de luz · Teste**. A luz de teste aparece somente depois de adicionada; arraste-a para comparar a incidência, ajuste cor e intensidade no próprio objeto e dê um clique duplo para alterná-la. Ela serve para experimentar o visual e não participa do circuito de áudio. Em caixas com grade removível, um pequeno botão quadrado com ícone permite recolocá-la.
+A categoria **Móveis** inclui a **Luminária pendente**, que acompanha a altura do teto com o cabo, balança discretamente e ilumina equipamentos com uma lâmpada de filamento amarela; a cúpula bloqueia a luz fora da abertura inferior. O catálogo inclui a categoria **DEBUG**, com **Modelo · Controles** e **Ponto de luz · Teste**. A luz de teste aparece somente depois de adicionada; arraste-a para comparar a incidência, ajuste cor e intensidade no próprio objeto e dê um clique duplo para alterná-la. Ela serve para experimentar o visual e não participa do circuito de áudio. Em caixas com grade removível, um pequeno botão quadrado com ícone permite recolocá-la.
 
 ### Celulares e tablets
 
