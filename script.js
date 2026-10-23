@@ -2413,7 +2413,7 @@ const Hardware = (() => {
         }
 
         // Digital samples represent instantaneous voltage; RMS is computed from samples.
-        const ELECTRICAL_MODEL=Object.freeze({lineVoltsPerUnit:Math.SQRT2*2,speakerVoltsPerUnit:20,phonoGain:100,converterRatio:.1,lineInputOhms:47000,converterInputOhms:20000});
+        const ELECTRICAL_MODEL=Object.freeze({lineVoltsPerUnit:Math.SQRT2*2,speakerVoltsPerUnit:100,phonoGain:100,converterRatio:.1,lineInputOhms:47000,converterInputOhms:20000});
         const HEADPHONE_SPECS=Object.freeze({headphone:{ohms:32},hpStudio:{ohms:64},hpClassic:{ohms:80},hpMonitor:{ohms:32},hpMax:{ohms:32},...REFERENCE_HEADPHONES});
         const HEADPHONE_OUTPUT_SPECS=Object.freeze({
             streamIntegrated:{voltsRms:2,currentRms:.07,outputOhms:2},
@@ -2497,7 +2497,7 @@ const Hardware = (() => {
             if(dev.speakerOverloaded)noteText.push('Sobrecarga: reduza o nível. Esta caixa passiva não possui limitador automático.');
             if(state==='waiting'&&!noteText.length)noteText.push('Conecte caixas passivas para calcular a carga por canal.');
             const current=Number(dev.simulatedInputWatts)||0;
-            const currentMarkup=current>0?`<span class="electrical-current" title="Potência atual estimada">${current.toFixed(2)} W <small>ATUAL</small></span>`:'';
+            const currentMarkup=current>0?`<span class="electrical-current" title="Potência RMS estimada do áudio neste instante; a potência nominal do amplificador é sua capacidade máxima">${current.toFixed(2)} W <small>ATUAL</small></span>`:'';
             return `<div class="electrical-status" data-state="${state}" role="status" aria-label="${[...channels.map(channel=>`${channel.channel}: ${channel.label}`),labels[state],...noteText].join('. ')}">${channelMarkup}<span class="electrical-status-badge" data-state="${state}" title="${noteText.join(' ')}"><i aria-hidden="true"></i>${labels[state]}</span>${currentMarkup}</div>`;
         }
         function applySpeakerLoadDynamics(dev){

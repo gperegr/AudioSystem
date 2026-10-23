@@ -52,7 +52,7 @@ Os avisos são apresentados antes de instalar uma ligação potencialmente inade
 | Grandeza | Referência da simulação |
 | --- | --- |
 | Amostra de linha/fones | 1 unidade instantânea = `2 × √2` volts |
-| Amostra SPEAKER | 1 unidade instantânea = 20 volts |
+| Amostra SPEAKER | 1 unidade instantânea = 100 volts |
 | Ganho de reprodução PHONO MM | 100 vezes em tensão, ou 40 dB |
 | Entrada de linha padrão | 47 kΩ |
 
@@ -61,13 +61,15 @@ Essas referências pertencem ao simulador. Não calibram a tensão da placa de s
 A potência usa tensão **RMS**, enquanto o teto do waveshaper usa tensão **de pico**:
 
 ```text
-V_rms = RMS das amostras SPEAKER × 20
+V_rms = RMS das amostras SPEAKER × 100
 P = V_rms² / R
-limite_de_pico_normalizado = √(2 × P_nominal × R) / 20
+limite_de_pico_normalizado = √(2 × P_nominal × R) / 100
 R_paralelo = 1 / soma(1 / R_de_cada_carga)
 ```
 
 `wattsAtLoad`, `peakLimitForWatts` e `parallelOhms` centralizam essas relações. `ampPowerAtLoad` estima a potência disponível a partir dos pontos fixos do modelo; valores intermediários e extrapolações não são medições adicionais.
+
+A escala de 100 V por unidade permite que uma saída digital próxima do limite represente centenas de watts em 8 Ω. O valor **ATUAL** no painel da caixa é a potência RMS estimada do áudio em reprodução e varia com o nível do sinal; a potência nominal do amplificador indica sua capacidade máxima, não a potência entregue continuamente.
 
 ### Regras de carga
 
