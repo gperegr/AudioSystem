@@ -5804,7 +5804,7 @@ const Hardware = (() => {
                 if(state.selectedDeviceId===dev.id){
                     const q=id=>document.getElementById(id);
                     if(q('linear-status'))q('linear-status').textContent=status;
-                    if(q('linear-disc'))q('linear-disc').value=tt.disc;
+                    q('linear-disc-group')?.querySelectorAll('[data-linear-disc-choice]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.linearDiscChoice===tt.disc)));
                     [33,45].forEach(speed=>{
                         q('linear-speed-'+speed)?.setAttribute('aria-pressed',String(tt.speed===speed));
                         const slider=q('linear-trim-'+speed),value=Math.round(tt['trim'+speed]*30)/10;
@@ -5812,8 +5812,6 @@ const Hardware = (() => {
                         if(q('linear-trim-value-'+speed))q('linear-trim-value-'+speed).textContent=`${value>0?'+':''}${value.toFixed(1)}%`;
                     });
                     q('linear-lift')?.setAttribute('aria-pressed',String(mechanism.phase==='raised'));
-                    q('tt-insp-power')?.setAttribute('aria-pressed',String(dev.powered));
-                    ['line','phono'].forEach(mode=>q('tt-insp-out-'+mode)?.classList.toggle('is-on',tt.output===mode));
                 }
             };
             dev.refreshTurntable=refresh;
@@ -5875,7 +5873,7 @@ const Hardware = (() => {
                 else changeRate(()=>{tt['trim'+speed]=trimmed;});
             };
             dev.ttSetPitch=value=>dev.linearSetTrim(tt.speed,value);
-            dev.ttSetOutput=mode=>{tt.output=mode==='phono'?'phono':'line';dev.setOutputMode(tt.output);revalidateSignalConnections();refresh();updateCableFlows();};
+            dev.ttSetOutput=()=>{tt.output='line';dev.setOutputMode('line');revalidateSignalConnections();refresh();updateCableFlows();};
             dev.linearSetDisc=disc=>{
                 dev.linearStop();tt.disc=Object.hasOwn(LINEAR_DISC_TYPES,disc)?disc:'lp';
                 tt.speed=tt.disc==='single'?45:33;tt.pitch=tt['trim'+tt.speed];mechanism.message='';refresh();scheduleProjectSave();
@@ -5936,26 +5934,23 @@ const Hardware = (() => {
         function linearTurntableInspector(dev){
             const tt=dev.state.tt;
             return `<section class="linear-inspector"><p>O carro move os dois braços em linha reta. O sensor detecta o diâmetro escolhido e só baixa a agulha quando há disco.</p>
-                <label for="linear-disc">Disco sobre o prato</label><select id="linear-disc">${Object.entries(LINEAR_DISC_TYPES).map(([key,label])=>`<option value="${key}" ${tt.disc===key?'selected':''}>${label}</option>`).join('')}</select>
+                <span>Disco sobre o prato</span><div id="linear-disc-group" class="linear-disc-choices" role="group" aria-label="Tamanho do disco">${[['lp','LP · 30 cm'],['single','Single · 17 cm']].map(([key,label])=>`<button type="button" data-linear-disc-choice="${key}" class="tt-insp-btn" aria-label="${label}. Clique novamente para retirar o disco" title="${label} · clique novamente para retirar" aria-pressed="${tt.disc===key}"><svg viewBox="0 0 64 64" aria-hidden="true"><circle class="linear-disc-record" cx="32" cy="32" r="${key==='lp'?26:18}"/><circle class="linear-disc-label" cx="32" cy="32" r="${key==='lp'?10:7}"/><circle class="linear-disc-hole" cx="32" cy="32" r="2.2"/><path d="M32 ${key==='lp'?9:17}a${key==='lp'?23:15} ${key==='lp'?23:15} 0 0 1 ${key==='lp'?20:13} ${key==='lp'?12:8}"/></svg></button>`).join('')}</div>
                 <output id="linear-status" role="status">${dev.el.querySelector('[data-linear-status]').textContent}</output>
                 <div class="linear-inspector-row"><button id="linear-start" class="tt-insp-btn">INICIAR</button><button id="linear-stop" class="tt-insp-btn">PARAR / RETORNAR</button></div>
                 <button id="linear-lift" class="tt-insp-btn" aria-pressed="${dev.linear.phase==='raised'}">ELEVAR / BAIXAR AGULHA</button>
                 <div class="linear-inspector-row">${[33,45].map(speed=>`<button id="linear-speed-${speed}" class="tt-insp-btn" aria-pressed="${tt.speed===speed}">${speed===33?'33⅓':'45'} RPM</button>`).join('')}</div>
                 ${[33,45].map(speed=>`<label for="linear-trim-${speed}">Ajuste fino · ${speed===33?'33⅓':'45'} rpm <output id="linear-trim-value-${speed}">${(tt['trim'+speed]*3).toFixed(1)}%</output></label><input id="linear-trim-${speed}" type="range" min="-3" max="3" step="0.1" value="${tt['trim'+speed]*3}">`).join('')}
                 <p>Mantenha as setas do aparelho pressionadas para mover o carro com a agulha elevada. Shift acelera o movimento. Use ELEVAR / BAIXAR para retomar a escuta. Ao fim do lado, o braço retorna e o motor para.</p>
-                <label>Saída</label><div class="linear-inspector-row">${['line','phono'].map(mode=>`<button id="tt-insp-out-${mode}" class="tt-insp-btn ${tt.output===mode?'is-on':''}">${mode.toUpperCase()}</button>`).join('')}</div>
-                <p>LINE inclui pré interno na simulação. PHONO exige entrada PHONO ou pré externo com RIAA.</p><button id="tt-insp-power" class="tt-insp-btn" aria-pressed="${dev.powered}">LIGAR / DESLIGAR</button></section>`;
+                </section>`;
         }
         function bindLinearInspector(dev){
             const q=id=>document.getElementById(id);
-            q('linear-disc').addEventListener('change',event=>dev.linearSetDisc(event.target.value));
+            q('linear-disc-group').querySelectorAll('[data-linear-disc-choice]').forEach(button=>button.addEventListener('click',()=>dev.linearSetDisc(dev.state.tt.disc===button.dataset.linearDiscChoice?'none':button.dataset.linearDiscChoice)));
             q('linear-start').onclick=dev.linearStart;q('linear-stop').onclick=dev.linearStop;q('linear-lift').onclick=dev.linearLift;
             for(const speed of [33,45]){
                 q('linear-speed-'+speed).onclick=()=>dev.linearSetSpeed(speed);
                 q('linear-trim-'+speed).oninput=event=>dev.linearSetTrim(speed,Number(event.target.value)/3);
             }
-            for(const mode of ['line','phono'])q('tt-insp-out-'+mode).onclick=()=>dev.ttSetOutput(mode);
-            q('tt-insp-power').onclick=()=>toggleDevicePower(dev);
         }
 
         function setupTurntable(dev) {
@@ -5986,8 +5981,6 @@ const Hardware = (() => {
                 // Painel de propriedades (se este aparelho estiver selecionado)
                 if (state.selectedDeviceId === dev.id) {
                     const q = id => document.getElementById(id);
-                    const pw = q('tt-insp-power');
-                    if (pw) { pw.setAttribute('aria-pressed', String(dev.powered)); pw.classList.toggle('is-on', dev.powered); }
                     const run = q('tt-insp-run');
                     if (run) { run.setAttribute('aria-pressed', String(tt.running)); run.classList.toggle('is-on', tt.running); }
                     ['line', 'phono'].forEach(m => q('tt-insp-out-' + m)?.classList.toggle('is-on', tt.output === m));
@@ -6034,10 +6027,6 @@ const Hardware = (() => {
             return `
                 <div class="flex flex-col gap-4">
                     <div class="flex flex-col gap-2">
-                        <span class="text-sm text-gray-300">Power</span>
-                        <button id="tt-insp-power" type="button" class="tt-insp-btn ${dev.powered ? 'is-on' : ''}" aria-pressed="${dev.powered}">LIGAR / DESLIGAR</button>
-                    </div>
-                    <div class="flex flex-col gap-2">
                         <span class="text-sm text-gray-300">Start / Stop</span>
                         <button id="tt-insp-run" type="button" class="tt-insp-btn ${tt.running ? 'is-on' : ''}" aria-pressed="${tt.running}">INICIAR / PARAR</button>
                     </div>
@@ -6059,7 +6048,6 @@ const Hardware = (() => {
         function bindTurntableInspector(dev) {
             if(dev.type==='turntableLinear'){bindLinearInspector(dev);return;}
             const q = id => document.getElementById(id);
-            q('tt-insp-power').addEventListener('click', () => toggleDevicePower(dev));
             q('tt-insp-run').addEventListener('click', () => dev.ttToggleRun());
             q('tt-insp-out-line').addEventListener('click', () => dev.ttSetOutput('line'));
             q('tt-insp-out-phono').addEventListener('click', () => dev.ttSetOutput('phono'));
@@ -6841,13 +6829,12 @@ const Hardware = (() => {
             document.getElementById('inspector-title').textContent=equipmentName;
 
             const hasPowerControl = !!dev.el.querySelector('.power-btn');
-            let html=dev.state.damage?'<div class="equipment-damage-notice" role="status">DANIFICADO · Sobrecarga elétrica simulada. Substitua o equipamento por outro do catálogo.</div>':'';
-
-            html+=amplificationInspectorHtml(dev);
-                
-            if (hasPowerControl && !TURNTABLE_TYPES.has(dev.type)) {
+            let html='';
+            if (hasPowerControl) {
                 html += `<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Power</span><button id="inspector-power-toggle" type="button" aria-label="Ligar ou desligar equipamento" aria-pressed="${dev.powered}" class="tt-insp-btn w-full ${dev.powered ? 'is-on' : ''}">LIGAR / DESLIGAR</button></div>`;
             }
+            if(dev.state.damage)html+='<div class="equipment-damage-notice" role="status">DANIFICADO · Sobrecarga elétrica simulada. Substitua o equipamento por outro do catálogo.</div>';
+            html+=amplificationInspectorHtml(dev);
 
             if(dev.type==='streamIntegrated'){html+=streamIntegratedInspector(dev);
             }else if(SIGNAL_GENERATOR_TYPES.has(dev.type)){html+=signalInspectorHtml(dev);

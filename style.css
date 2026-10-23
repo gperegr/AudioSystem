@@ -4379,3 +4379,12 @@ body.inspector-collapsed #inspector>.inspector-panel-header,body.inspector-colla
 #inspector-content .audio-transport .transport-buttons button {display:grid;place-items:center;min-height:36px;}
 #inspector-content .audio-transport .transport-buttons svg {width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;}
 #inspector-content .audio-transport .transport-buttons svg text {fill:currentColor;stroke:none;font:700 7px "Inter",sans-serif;}
+
+#inspector-content .linear-disc-choices {display:flex;gap:10px;}
+#inspector-content .linear-disc-choices button {flex:1;display:grid;place-items:center;height:62px;padding:5px;}
+#inspector-content .linear-disc-choices svg {display:block;width:48px;height:48px;fill:none;stroke:currentColor;stroke-width:1.2;}
+#inspector-content .linear-disc-choices .linear-disc-record {fill:#1a1c1c;stroke:#8d9891;stroke-width:1.8;}
+#inspector-content .linear-disc-choices .linear-disc-label {fill:#a87956;stroke:#cfaa81;}
+#inspector-content .linear-disc-choices .linear-disc-hole {fill:#dce4df;stroke:none;}
+#inspector-content .linear-disc-choices button[aria-pressed="true"] {border-color:#9bb58e;background:#344832;box-shadow:inset 0 1px 4px #0007;}
+#inspector-content .linear-disc-choices button[aria-pressed="true"] .linear-disc-label {fill:#c69a67;}
