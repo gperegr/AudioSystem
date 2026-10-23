@@ -1373,7 +1373,7 @@ const Hardware = (() => {
         }
         canvasGridControl.querySelector('select').addEventListener('change',event=>{setCanvasGrid(event.target.value);scheduleProjectSave();scheduleAppPreferencesSave();});
         setCanvasGrid(savedAppPreferences.grid||'dots');
-        const canvasBackdropModes={studio:'Estúdio',listening:'Sala de audição',loft:'Loft industrial'};
+        const canvasBackdropModes={studio:'Estúdio',listening:'Sala de audição',loft:'Loft industrial',studioIllustrated:'Estúdio · Ilustrado',listeningIllustrated:'Sala de audição · Ilustrada',loftIllustrated:'Loft industrial · Ilustrado'};
         const legacyBackdrops={library:'listening',night:'loft',loftPhoto:'loft'};
         const canvasTimeModes={dawn:'Nascer do dia',dusk:'Fim de tarde',night:'Noite'};
         const canvasBackdropControl=document.createElement('label');canvasBackdropControl.className='canvas-theme-control';
@@ -1382,20 +1382,23 @@ const Hardware = (() => {
         canvasTimeControl.innerHTML='<span>Hora do dia</span><select id="canvas-time" aria-label="Hora do dia">'+Object.entries(canvasTimeModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
         const roomImageBrightness={dawn:'1.08',dusk:'.91',night:'.95'};
         let roomImageRequest=0,roomImageTarget='';
-        function showRoomImage(src,time){
-            if(src===roomImageTarget)return;
-            roomImageTarget=src;
+        function showRoomImage(src,time,illustrated=false){
+            const target=src+(illustrated?'|'+time:'');
+            if(target===roomImageTarget)return;
+            roomImageTarget=target;
             const request=++roomImageRequest,images=[...roomBackdrop.querySelectorAll('.room-scene-image')];
             const brightness=roomImageBrightness[time]||roomImageBrightness.dusk;
+            const timeFilter=illustrated?({dawn:'hue-rotate(-8deg) saturate(.95) brightness(1.04)',dusk:'brightness(1)',night:'sepia(.18) hue-rotate(175deg) saturate(.62) brightness(.5)'}[time]||'brightness(1)'):'brightness(1)';
             if(!images[0].getAttribute('src')||state.restoringProject||matchMedia('(prefers-reduced-motion: reduce)').matches){
                 images.slice(1).forEach(image=>image.remove());
                 images[0].style.setProperty('--room-image-brightness',brightness);
+                images[0].style.setProperty('--room-image-time-filter',timeFilter);
                 images[0].src=src;images[0].classList.add('is-visible');
                 return;
             }
             const next=document.createElement('img');
             next.className='room-scene-image room-layer-far';next.alt='';next.draggable=false;
-            next.style.setProperty('--room-image-brightness',brightness);next.src=src;
+            next.style.setProperty('--room-image-brightness',brightness);next.style.setProperty('--room-image-time-filter',timeFilter);next.src=src;
             next.decode().then(()=>{
                 if(request!==roomImageRequest)return;
                 const previous=[...roomBackdrop.querySelectorAll('.room-scene-image')];
@@ -1429,11 +1432,12 @@ const Hardware = (() => {
         function setCanvasBackdrop(mode){
             mode=legacyBackdrops[mode]||mode;
             mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studio';state.canvasBackdrop=mode;canvas.dataset.backdrop=mode;canvasBackdropControl.querySelector('select').value=mode;
-            const imageName=RoomScenes.scenes[mode].image+(state.canvasTime==='dusk'?'':'-'+state.canvasTime);
+            const scene=RoomScenes.scenes[mode];
+            const imageName=scene.image+(scene.timeImages===false||state.canvasTime==='dusk'?'':'-'+state.canvasTime);
             const src=`./assets/rooms/${imageName}.webp?v=aligned-floor`;
-            showRoomImage(src,state.canvasTime);
+            showRoomImage(src,state.canvasTime,scene.timeImages===false);
             requestAnimationFrame(applyView);
-            state.canvasFloor=RoomScenes.scenes[mode].floor;canvas.dataset.floor=state.canvasFloor;
+            state.canvasFloor=scene.floor;canvas.dataset.floor=state.canvasFloor;
             updateRoomMotes(mode,state.canvasTime);
             Hardware.updateLightingDemo();
         }
