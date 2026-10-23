@@ -850,6 +850,7 @@ const Hardware = (() => {
         const world=document.getElementById('audio-world');
         const zoom=Number(world.style.getPropertyValue('--canvas-zoom'))||1;
         const clamp=(value,limit)=>Math.max(-limit,Math.min(limit,value));
+        const incidentPosition=(source,origin,size)=>(Math.max(12,Math.min(88,(source-origin)/Math.max(1,size)*100))).toFixed(1)+'%';
         const viewport=document.getElementById('canvas').getBoundingClientRect();
         const furnitureBodies=[...world.querySelectorAll('.furniture-node .rack-body')];
         const sceneName=viewport&&document.getElementById('canvas').dataset.theme==='scene'?document.getElementById('canvas').dataset.backdrop:'';
@@ -882,7 +883,7 @@ const Hardware = (() => {
                 part.style.setProperty('--demo-part-light-y',((ly-y)/((box.height/scale)||1)*100).toFixed(1)+'%');
                 const source=sceneEmitters.map(item=>sampleSceneLight(item,x+box.width/scale/2,y+box.height/scale/2)).sort((a,b)=>b.weight-a.weight)[0];
                 part.style.setProperty('--demo-scene-light-strength',(source?.weight||0).toFixed(3));
-                if(source){part.style.setProperty('--demo-scene-light-rgb',source.rgb.join(' '));part.style.setProperty('--demo-scene-light-x',((source.x-x)/((box.width/scale)||1)*100).toFixed(1)+'%');part.style.setProperty('--demo-scene-light-y',((source.y-y)/((box.height/scale)||1)*100).toFixed(1)+'%');}
+                if(source){part.style.setProperty('--demo-scene-light-rgb',source.rgb.join(' '));part.style.setProperty('--demo-scene-light-x',incidentPosition(source.x,x,box.width/scale));part.style.setProperty('--demo-scene-light-y',incidentPosition(source.y,y,box.height/scale));}
             });
             const rack=furniture.find(item=>item.id===node.id);
             if(rack){
@@ -929,8 +930,8 @@ const Hardware = (() => {
             localScene.slice(0,3).forEach((source,index)=>{
                 const suffix=['a','b','c'][index];
                 device.style.setProperty('--scene-light-'+suffix+'-rgb',source.rgb.join(' '));
-                device.style.setProperty('--scene-light-'+suffix+'-x',((source.x-deviceX)/geometry.width*100).toFixed(1)+'%');
-                device.style.setProperty('--scene-light-'+suffix+'-y',((source.y-deviceY)/geometry.height*100).toFixed(1)+'%');
+                device.style.setProperty('--scene-light-'+suffix+'-x',incidentPosition(source.x,deviceX,geometry.width));
+                device.style.setProperty('--scene-light-'+suffix+'-y',incidentPosition(source.y,deviceY,geometry.height));
                 device.style.setProperty('--scene-light-'+suffix+'-strength',source.weight.toFixed(3));
                 device.style.setProperty('--scene-light-'+suffix+'-radius-x',source.shape==='rect'?'90%':source.shape==='bar'?'38%':'52%');
                 device.style.setProperty('--scene-light-'+suffix+'-radius-y',source.shape==='rect'?'85%':source.shape==='bar'?'75%':'70%');
@@ -960,7 +961,7 @@ const Hardware = (() => {
                             let sceneX=(cx-source.x)*height/source.elevation,sceneY=(cy-source.y)*height/source.elevation;
                             const travel=Math.hypot(sceneX,sceneY),limit=Math.min(maxProjection,12);
                             if(travel>limit){sceneX*=limit/travel;sceneY*=limit/travel;}
-                            frontShadows.push({x,y,width,height:controlHeight,sx:sceneX,sy:sceneY,knob:knob||(plug&&control.dataset.type!=='wire'),plug,slider,handle,weight:scene.weight*.8,softness:scene.spread});
+                            frontShadows.push({x,y,width,height:controlHeight,sx:sceneX,sy:sceneY,knob:knob||(plug&&control.dataset.type!=='wire'),plug,slider,handle,weight:scene.weight*.95,softness:scene.spread});
                         });
                     }
                     const highlightX=intensity?lx:shadowScene?.x||cx,highlightY=intensity?ly:shadowScene?.y||cy;
