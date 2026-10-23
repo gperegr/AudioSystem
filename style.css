@@ -3802,10 +3802,10 @@
 .room-grid-overlay {position:absolute;inset:0;z-index:5;pointer-events:none;}
 #canvas[data-theme="scene"][data-grid="dots"] .room-grid-overlay {background:radial-gradient(circle,#dce7df66 1px,transparent 1.5px) 0 0/20px 20px;}
 #canvas[data-theme="scene"][data-grid="lines"] .room-grid-overlay {background:linear-gradient(to right,#dce7df30 1px,transparent 1px),linear-gradient(to bottom,#dce7df30 1px,transparent 1px);background-size:20px 20px;}
-.room-scene-image {position:absolute;inset:-10% -6% 0;width:112%;max-width:none;height:110%;display:block;object-fit:fill;filter:blur(2.5px) saturate(.88) contrast(.92) brightness(var(--room-image-brightness,1));opacity:.91;transform-origin:50% 100%;transform:translate(var(--room-far-x,0px),var(--room-far-y,0px)) scale(var(--room-far-scale,1));}
+.room-scene-image {position:absolute;inset:-10% -6% 0;width:112%;max-width:none;height:110%;display:block;object-fit:fill;filter:blur(1.3px) saturate(.88) contrast(.93) brightness(var(--room-image-brightness,1));opacity:.91;transform-origin:50% 100%;transform:translate(var(--room-far-x,0px),var(--room-far-y,0px)) scale(var(--room-far-scale,1));}
 .room-scene-image.room-layer-far {z-index:0;}
-.room-scene-image.room-layer-mid {filter:blur(1.5px) saturate(.9) contrast(.93) brightness(var(--room-image-brightness,1));opacity:.93;transform:translate(var(--room-mid-x,0px),var(--room-mid-y,0px)) scale(var(--room-mid-scale,1));}
-.room-scene-image.room-layer-near {filter:blur(.65px) saturate(.92) contrast(.95) brightness(var(--room-near-brightness,1));opacity:.95;transform:translate(var(--room-near-x,0px),var(--room-near-y,0px)) scale(var(--room-near-scale,1));}
+.room-scene-image.room-layer-mid {filter:blur(.8px) saturate(.9) contrast(.94) brightness(var(--room-image-brightness,1));opacity:.93;transform:translate(var(--room-mid-x,0px),var(--room-mid-y,0px)) scale(var(--room-mid-scale,1));}
+.room-scene-image.room-layer-near {filter:blur(.35px) saturate(.92) contrast(.95) brightness(var(--room-near-brightness,1));opacity:.95;transform:translate(var(--room-near-x,0px),var(--room-near-y,0px)) scale(var(--room-near-scale,1));}
 .room-scene-image.room-layer-mid {z-index:2;}
 .room-scene-image.room-layer-near {z-index:3;}
 .room-window-layers {position:absolute;inset:-10% -6% 0;width:112%;height:110%;z-index:1;pointer-events:none;transform-origin:50% 100%;transform:translate(var(--room-far-x,0px),var(--room-far-y,0px)) scale(var(--room-far-scale,1));}
