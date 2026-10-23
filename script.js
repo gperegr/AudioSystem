@@ -1383,7 +1383,14 @@ const Hardware = (() => {
         canvasTimeControl.innerHTML='<span>Hora do dia</span><select id="canvas-time" aria-label="Hora do dia">'+Object.entries(canvasTimeModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
         const roomImageBrightness={dawn:'1.08',dusk:'.91',night:'.95'};
         let roomImageRequest=0,roomImageTarget='';
-        function showRoomImage(src,time,illustrated=false){
+        function positionRoomImage(image,horizon){
+            const imageHorizon=Number.isFinite(horizon)?horizon:Number(image.dataset.roomHorizon);
+            if(!Number.isFinite(imageHorizon))return;
+            image.dataset.roomHorizon=String(imageHorizon);
+            const farScale=parseFloat(world.style.getPropertyValue('--room-far-scale'))||1;
+            image.style.setProperty('--room-horizon-shift',((ROOM_HORIZON_IMAGE_Y-imageHorizon)*world.offsetHeight*1.1/720*farScale).toFixed(1)+'px');
+        }
+        function showRoomImage(src,time,illustrated=false,horizon=ROOM_HORIZON_IMAGE_Y){
             const target=src+(illustrated?'|'+time:'');
             if(target===roomImageTarget)return;
             roomImageTarget=target;
@@ -1394,12 +1401,14 @@ const Hardware = (() => {
                 images.slice(1).forEach(image=>image.remove());
                 images[0].style.setProperty('--room-image-brightness',brightness);
                 images[0].style.setProperty('--room-image-time-filter',timeFilter);
+                positionRoomImage(images[0],horizon);
                 images[0].src=src;images[0].classList.add('is-visible');
                 return;
             }
             const next=document.createElement('img');
             next.className='room-scene-image room-layer-far';next.alt='';next.draggable=false;
             next.style.setProperty('--room-image-brightness',brightness);next.style.setProperty('--room-image-time-filter',timeFilter);next.src=src;
+            positionRoomImage(next,horizon);
             next.decode().then(()=>{
                 if(request!==roomImageRequest)return;
                 const previous=[...roomBackdrop.querySelectorAll('.room-scene-image')];
@@ -1407,7 +1416,7 @@ const Hardware = (() => {
                 void next.offsetWidth;
                 requestAnimationFrame(()=>{
                     if(request!==roomImageRequest){next.remove();return;}
-                    next.classList.add('is-visible');previous.forEach(image=>image.classList.remove('is-visible'));
+                    next.classList.add('is-visible');
                     setTimeout(()=>previous.forEach(image=>image.remove()),1050);
                 });
             }).catch(()=>{});
@@ -1436,7 +1445,7 @@ const Hardware = (() => {
             const scene=RoomScenes.scenes[mode];
             const imageName=scene.image+(scene.timeImages===false||state.canvasTime==='dusk'?'':'-'+state.canvasTime);
             const src=`./assets/rooms/${imageName}.webp?v=aligned-floor`;
-            showRoomImage(src,state.canvasTime,scene.timeImages===false);
+            showRoomImage(src,state.canvasTime,scene.timeImages===false,scene.horizon?.[state.canvasTime]);
             requestAnimationFrame(applyView);
             state.canvasFloor=scene.floor;canvas.dataset.floor=state.canvasFloor;
             updateRoomMotes(mode,state.canvasTime);
@@ -1572,6 +1581,7 @@ const Hardware = (() => {
             world.style.setProperty('--room-far-x',farX.toFixed(1)+'px');world.style.setProperty('--room-far-y',farY.toFixed(1)+'px');
             world.style.setProperty('--room-far-scale',farScale.toFixed(3));
             world.style.setProperty('--room-horizon-shift',horizonShift.toFixed(1)+'px');
+            roomBackdrop.querySelectorAll('.room-scene-image').forEach(image=>positionRoomImage(image));
             world.style.setProperty('--floor-parallax-x',(farX*.28).toFixed(1)+'px');
             world.style.setProperty('--floor-parallax-scale',floorScale.toFixed(3));
             world.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.zoom})`;
