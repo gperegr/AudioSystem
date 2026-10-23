@@ -820,7 +820,7 @@ const Hardware = (() => {
             const scale=parseFloat(world.style.getPropertyValue(`--room-${depth}-scale`))||1;
             const rawX=world.offsetWidth*(-.06+1.12*(240+source.cx*.8)/2400);
             const rawY=world.offsetHeight*(-.1+1.1*(268+source.cy*.8)/1600);
-            return {...source,x:world.offsetWidth/2+(rawX-world.offsetWidth/2)*scale+farX,y:world.offsetHeight+(rawY-world.offsetHeight)*scale+farY,width:source.w*.8*1.12*world.offsetWidth/2400*scale,height:source.h*.8*1.1*world.offsetHeight/1600*scale};
+            return {...source,x:world.offsetWidth/2+(rawX-world.offsetWidth/2)*scale+farX,y:world.offsetHeight+(rawY-world.offsetHeight)*scale+farY,width:source.w*.8*1.12*world.offsetWidth/2400*scale,height:source.h*.8*1.1*world.offsetHeight/1600*scale,reach:2100*world.offsetWidth/2736};
         });
     }
     function sampleSceneLight(source,x,y){
@@ -829,7 +829,7 @@ const Hardware = (() => {
         const nearestY=Math.max(emitterY-source.height/2,Math.min(emitterY+source.height/2,y));
         const distance=Math.hypot(nearestX-x,nearestY-y);
         const inside=!distance,sx=inside?emitterX:nearestX,sy=inside?emitterY:nearestY;
-        return {...source,emitterX,emitterY,x:sx,y:sy,weight:source.strength*Math.max(0,1-distance/2100),spread:source.shape==='rect'?7:source.shape==='bar'?4:2};
+        return {...source,emitterX,emitterY,x:sx,y:sy,weight:source.strength*Math.max(0,1-distance/(source.reach||2100)),spread:source.shape==='rect'?7:source.shape==='bar'?4:2};
     }
     function sceneLightAt(x,y){
         const canvas=document.getElementById('canvas');if(canvas.dataset.theme!=='scene')return null;
@@ -1238,8 +1238,8 @@ const Hardware = (() => {
 
         const canvas = document.getElementById('canvas');
         const world = document.getElementById('audio-world');
-        const ROOM_SIDE_INSET=132;
-        const ROOM_FLOOR_OVERLAP=126;
+        const ROOM_SIDE_INSET=202;
+        const ROOM_FLOOR_OVERLAP=196;
         document.documentElement.classList.add('lighting-demo-enabled');
         const roomBackdrop=document.createElement('div');roomBackdrop.id='room-backdrop';roomBackdrop.setAttribute('aria-hidden','true');
         roomBackdrop.innerHTML=['far','mid','near'].map(layer=>`<img class="room-scene-image room-layer-${layer}" data-room-layer="${layer}" alt="" draggable="false">`).join('')+'<i class="room-depth-room"></i><i class="room-side-wall wall-left"></i><i class="room-side-wall wall-right"></i>';
