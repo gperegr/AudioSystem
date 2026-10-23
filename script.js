@@ -831,17 +831,49 @@ const Hardware = (() => {
         if(!scale)return [];
         const bench=[...world.querySelectorAll('.device-type-furnitureTable .bench-decoration-lamp')].map(lamp=>{
             const rect=lamp.getBoundingClientRect();
-            return {x:(rect.left+rect.width*135/284-worldRect.left)/scale,y:(rect.top+rect.height*187/656-worldRect.top)/scale,width:110,height:24,shape:'bar',rgb:[255,205,105],strength:1.45,elevation:135,reach:1100,shade:{opening:1.22,penumbra:.24}};
+            return {x:(rect.left+rect.width*135/284-worldRect.left)/scale,y:(rect.top+rect.height*187/656-worldRect.top)/scale,width:110,height:24,shape:'bar',fixture:'table',rgb:[255,205,105],strength:1.45,elevation:135,reach:1100,shade:{opening:1.22,penumbra:.24}};
         });
         const pendants=[...world.querySelectorAll('.device-type-pendantLamp .pendant-filament')].map(filament=>{
             const rect=filament.getBoundingClientRect();
-            return {x:(rect.left+rect.width/2-worldRect.left)/scale,y:(rect.top+rect.height/2-worldRect.top)/scale,width:28,height:36,shape:'point',rgb:[255,192,82],strength:1.9,elevation:220,reach:1550,shade:{opening:1.2,penumbra:.2},animated:true};
+            return {x:(rect.left+rect.width/2-worldRect.left)/scale,y:(rect.top+rect.height/2-worldRect.top)/scale,width:28,height:36,shape:'point',fixture:'pendant',rgb:[255,192,82],strength:1.9,elevation:220,reach:1550,shade:{opening:1.2,penumbra:.2},animated:true};
         });
         const wallLamps=[...world.querySelectorAll('.wall-lamp-node .wall-lamp-filament')].map(filament=>{
             const rect=filament.getBoundingClientRect(),model=filament.closest('.wall-lamp-node').dataset.lampModel;
-            return {x:(rect.left+rect.width/2-worldRect.left)/scale,y:(rect.top+rect.height/2-worldRect.top)/scale,width:26,height:32,shape:'point',rgb:model==='cage'?[255,194,110]:[255,200,123],strength:model==='bare'?1.55:model==='dome'?1.75:1.35,elevation:165,reach:1300,...(model==='dome'?{shade:{opening:1.18,penumbra:.25}}:{})};
+            return {x:(rect.left+rect.width/2-worldRect.left)/scale,y:(rect.top+rect.height/2-worldRect.top)/scale,width:26,height:32,shape:'point',fixture:model,rgb:model==='cage'?[255,194,110]:[255,200,123],strength:model==='bare'?1.55:model==='dome'?1.75:1.35,elevation:165,reach:1300,...(model==='dome'?{shade:{opening:1.18,penumbra:.25}}:{})};
         });
         return [...bench,...pendants,...wallLamps];
+    }
+    let roomFixtureLightKey='';
+    function paintRoomFixtureLight(world,sources,scene,time){
+        const layer=world.querySelector('.room-fixture-glow');
+        if(!layer)return;
+        const key=[scene,time,world.offsetWidth,world.offsetHeight,...sources.map(source=>`${source.fixture}:${Math.round(source.x/3)},${Math.round(source.y/3)}:${source.strength.toFixed(2)}:${source.rgb.join(',')}`)].join('|');
+        if(key===roomFixtureLightKey)return;
+        roomFixtureLightKey=key;
+        const resolution=.33,width=world.offsetWidth,height=world.offsetHeight;
+        if(layer.width!==Math.round(width*resolution)||layer.height!==Math.round(height*resolution)){
+            layer.width=Math.round(width*resolution);layer.height=Math.round(height*resolution);
+        }
+        const ctx=layer.getContext('2d');ctx.setTransform(resolution,0,0,resolution,0,0);ctx.clearRect(0,0,width,height);
+        if(!scene)return;
+        const glow=(source,x,y,rx,ry,alpha)=>{
+            ctx.save();ctx.translate(x,y);ctx.scale(rx,ry);
+            const gradient=ctx.createRadialGradient(0,0,.02,0,0,1),color=source.rgb.join(',');
+            gradient.addColorStop(0,`rgba(${color},${Math.min(.65,alpha).toFixed(3)})`);
+            gradient.addColorStop(.38,`rgba(${color},${(alpha*.48).toFixed(3)})`);
+            gradient.addColorStop(1,`rgba(${color},0)`);
+            ctx.fillStyle=gradient;ctx.fillRect(-1,-1,2,2);ctx.restore();
+        };
+        const timeStrength=time==='night'?1.3:time==='dawn'?0.85:1;
+        sources.forEach(source=>{
+            const shaded=['dome','pendant','table'].includes(source.fixture);
+            const radius=source.fixture==='pendant'?760:source.fixture==='table'?520:source.fixture==='dome'?560:490;
+            const alpha=(shaded?0.35:0.29)*source.strength*timeStrength;
+            if(shaded){
+                glow(source,source.x,source.y+radius*.42,radius*.9,radius*.78,alpha);
+                glow(source,source.x,source.y+85,radius*.48,radius*.44,alpha*.43);
+            }else glow(source,source.x,source.y,radius,radius*.82,alpha);
+        });
     }
     function sampleSceneLight(source,x,y){
         const emitterX=source.emitterX??source.x,emitterY=source.emitterY??source.y;
@@ -953,7 +985,9 @@ const Hardware = (() => {
         const furnitureBodies=[...world.querySelectorAll('.furniture-node .rack-body')];
         const sceneName=viewport&&document.getElementById('canvas').dataset.theme==='scene'?document.getElementById('canvas').dataset.backdrop:'';
         const sceneTime=document.getElementById('canvas').dataset.time;
-        const sceneEmitters=[...positionedSceneLights(sceneName,sceneTime,world),...positionedObjectLights(world)];
+        const fixtureEmitters=positionedObjectLights(world);
+        const sceneEmitters=[...positionedSceneLights(sceneName,sceneTime,world),...fixtureEmitters];
+        paintRoomFixtureLight(world,intensity?[...fixtureEmitters,{x:lx,y:ly,fixture:'debug',rgb,strength:intensity}]:fixtureEmitters,sceneName,sceneTime);
         const sceneEmitterKey=sceneTime+':'+sceneEmitters.map(source=>{const step=source.animated?4:8;return Math.round(source.x/step)+','+Math.round(source.y/step);}).join(';');
         const furnitureKey=furnitureBodies.map(body=>{const node=body.closest('.furniture-node');return node.id+':'+node.style.left+':'+node.style.top;}).join('|');
         if(furnitureLightingGeometry.key!==furnitureKey){
@@ -1345,7 +1379,7 @@ const Hardware = (() => {
         const floorPlacementBottom=()=>Math.floor((world.offsetHeight-ROOM_FLOOR_OVERLAP)/Hardware.sizes.grid)*Hardware.sizes.grid;
         document.documentElement.classList.add('lighting-demo-enabled');
         const roomBackdrop=document.createElement('div');roomBackdrop.id='room-backdrop';roomBackdrop.setAttribute('aria-hidden','true');
-        roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far" alt="" draggable="false"><i class="room-grid-overlay"></i>';
+        roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far" alt="" draggable="false"><canvas class="room-fixture-glow"></canvas><i class="room-grid-overlay"></i>';
         const roomMotes=document.createElement('div');roomMotes.className='room-motes';roomMotes.setAttribute('aria-hidden','true');
         roomBackdrop.appendChild(roomMotes);
         world.style.setProperty('--room-image-drop','260px');
@@ -5101,7 +5135,7 @@ const Hardware = (() => {
             el.id=id;el.className=`device-node wall-lamp-node device-type-${type}`;
             el.dataset.equipmentType=type;el.dataset.lampModel=model;
             el.tabIndex=0;el.setAttribute('aria-label',`${DEVICE_NAMES[type]}. Arraste pela luminária para posicionar.`);
-            const shade=model==='dome'?'<svg class="wall-lamp-dome-shade" viewBox="0 0 420 110" aria-hidden="true"><defs><linearGradient id="wall-shade-'+id+'" x2=".8" y2="1"><stop stop-color="#74726b"/><stop offset=".23" stop-color="#3a3c39"/><stop offset=".75" stop-color="#1a1d1b"/><stop offset="1" stop-color="#35342e"/></linearGradient></defs><path d="M193 5 Q183 7 175 16 C140 51 89 73 16 87 Q10 89 12 93 Q100 99 210 98 Q320 99 408 93 Q410 89 404 87 C331 73 280 51 245 16 Q237 7 227 5Z" fill="url(#wall-shade-'+id+')"/><path d="M13 92Q210 103 407 92" fill="none" stroke="#9a937f" stroke-opacity=".5" stroke-width="5"/><path d="M40 97Q210 111 380 97" fill="none" stroke="#bb925e" stroke-opacity=".35" stroke-width="5"/></svg>':'';
+            const shade=model==='dome'?'<svg class="wall-lamp-dome-shade" viewBox="0 0 420 110" aria-hidden="true"><defs><linearGradient id="wall-shade-'+id+'" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#171b1a"/><stop offset=".19" stop-color="#303532"/><stop offset=".5" stop-color="#515550"/><stop offset=".81" stop-color="#303532"/><stop offset="1" stop-color="#171b1a"/></linearGradient><pattern id="wall-brush-'+id+'" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 1h5M0 4h5" stroke="#c9c2ac" stroke-opacity=".1" stroke-width=".5"/></pattern></defs><path d="M193 5 Q183 7 175 16 C140 51 89 73 16 87 Q10 89 12 93 Q100 99 210 98 Q320 99 408 93 Q410 89 404 87 C331 73 280 51 245 16 Q237 7 227 5Z" fill="url(#wall-shade-'+id+')"/><path d="M193 5 Q183 7 175 16 C140 51 89 73 16 87 Q10 89 12 93 Q100 99 210 98 Q320 99 408 93 Q410 89 404 87 C331 73 280 51 245 16 Q237 7 227 5Z" fill="url(#wall-brush-'+id+')"/><path d="M173 19Q210 25 247 19M45 84Q210 95 375 84" fill="none" stroke="#b5b3a3" stroke-opacity=".24" stroke-width="1"/><path d="M13 92Q210 103 407 92" fill="none" stroke="#9a937f" stroke-opacity=".55" stroke-width="5"/><path d="M40 97Q210 111 380 97" fill="none" stroke="#bb925e" stroke-opacity=".4" stroke-width="5"/></svg>':'';
             el.innerHTML=`<div class="device-header" aria-hidden="true"></div><span class="wall-lamp-plate"><i></i><i></i></span><span class="wall-lamp-arm"></span><span class="wall-lamp-socket"></span><span class="wall-lamp-bulb"><i class="wall-lamp-filament"></i></span>${model==='cage'?'<span class="wall-lamp-glass"></span><span class="wall-lamp-cage"></span>':shade}`;
             world.appendChild(el);
             el.style.left=Math.max(sceneSideInset(),Math.min(world.offsetWidth-el.offsetWidth-sceneSideInset(),snapCoordinate(x)))+'px';
