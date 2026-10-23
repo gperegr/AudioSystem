@@ -1374,8 +1374,8 @@ const Hardware = (() => {
         }
         canvasGridControl.querySelector('select').addEventListener('change',event=>{setCanvasGrid(event.target.value);scheduleProjectSave();scheduleAppPreferencesSave();});
         setCanvasGrid(savedAppPreferences.grid||'dots');
-        const canvasBackdropModes={studio:'Estúdio',listening:'Sala de audição',loft:'Loft industrial',studioIllustrated:'Estúdio · Ilustrado',listeningIllustrated:'Sala de audição · Ilustrada',loftIllustrated:'Loft industrial · Ilustrado'};
-        const legacyBackdrops={library:'listening',night:'loft',loftPhoto:'loft'};
+        const canvasBackdropModes={studioIllustrated:'Estúdio',listeningIllustrated:'Sala de audição',loftIllustrated:'Loft industrial'};
+        const legacyBackdrops={library:'listeningIllustrated',night:'loftIllustrated',loftPhoto:'loftIllustrated',studio:'studioIllustrated',listening:'listeningIllustrated',loft:'loftIllustrated'};
         const canvasTimeModes={dawn:'Nascer do dia',dusk:'Fim de tarde',night:'Noite'};
         const canvasBackdropControl=document.createElement('label');canvasBackdropControl.className='canvas-theme-control';
         canvasBackdropControl.innerHTML='<span>Cenário</span><select id="canvas-backdrop" aria-label="Cenário de fundo">'+Object.entries(canvasBackdropModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
@@ -1441,7 +1441,7 @@ const Hardware = (() => {
         }
         function setCanvasBackdrop(mode){
             mode=legacyBackdrops[mode]||mode;
-            mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studio';state.canvasBackdrop=mode;canvas.dataset.backdrop=mode;canvasBackdropControl.querySelector('select').value=mode;
+            mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studioIllustrated';state.canvasBackdrop=mode;canvas.dataset.backdrop=mode;canvasBackdropControl.querySelector('select').value=mode;
             const scene=RoomScenes.scenes[mode];
             const imageName=scene.image+(scene.timeImages===false||state.canvasTime==='dusk'?'':'-'+state.canvasTime);
             const src=`./assets/rooms/${imageName}.webp?v=aligned-floor`;
