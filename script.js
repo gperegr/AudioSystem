@@ -5027,9 +5027,9 @@ const Hardware = (() => {
             const el=document.createElement('div');
             el.id=id;el.className='device-node device-type-pendantLamp';el.dataset.equipmentType='pendantLamp';
             el.tabIndex=0;el.setAttribute('aria-label','Luminária pendente. Arraste pela cúpula para mover.');
-            el.innerHTML='<div class="pendant-suspension" aria-hidden="true"><i class="pendant-canopy"></i><i class="pendant-cord"></i><div class="pendant-fixture"><i class="pendant-socket"></i><i class="pendant-bulb"><i class="pendant-filament"></i></i><i class="pendant-shade"></i></div></div>';
-            el.style.left=Math.max(sceneSideInset(),Math.min(world.offsetWidth-420-sceneSideInset(),x))+'px';
-            el.style.top=Math.max(170,Math.min(maxEquipmentBottom()-230,y))+'px';
+            el.innerHTML='<div class="device-header" aria-hidden="true"></div><div class="pendant-suspension" aria-hidden="true"><i class="pendant-cord"></i><div class="pendant-fixture"><i class="pendant-socket"></i><i class="pendant-bulb"><i class="pendant-filament"></i></i><i class="pendant-shade"></i></div></div>';
+            el.style.left=Math.max(sceneSideInset(),Math.min(world.offsetWidth-504-sceneSideInset(),x))+'px';
+            el.style.top=Math.max(0,Math.min(maxEquipmentBottom()-276,y))+'px';
             world.appendChild(el);
             const dev={id,type:'pendantLamp',el,nodes:{},state:{},powered:true};
             state.devices[id]=dev;bindDeviceEvents(dev);selectDevice(id);updateCables();scheduleProjectSave();
@@ -7793,7 +7793,7 @@ const Hardware = (() => {
 
         function updateCables() {
             world.querySelectorAll('.device-type-pendantLamp').forEach(lamp=>{
-                const drop=Math.round(lamp.offsetTop)+'px';
+                const drop=Math.round(lamp.offsetTop+80)+'px';
                 if(lamp.style.getPropertyValue('--pendant-drop')!==drop)lamp.style.setProperty('--pendant-drop',drop);
             });
             Hardware.updateLightingDemo();

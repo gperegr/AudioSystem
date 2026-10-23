@@ -3899,13 +3899,12 @@
 .bench-decoration-cds {left:582px;width:250px;height:224px;}
 .bench-decoration-covers {right:288px;width:548px;height:552px;}
 .bench-decoration-lamp {right:12px;width:284px;height:656px;}
-.device-type-pendantLamp {width:420px;height:230px;overflow:visible;cursor:grab;}
+.device-type-pendantLamp {width:504px;height:276px;overflow:visible;cursor:grab;}
 .device-type-pendantLamp:active {cursor:grabbing;}
-.pendant-suspension {position:absolute;left:0;right:0;top:calc(-1 * var(--pendant-drop,170px));height:calc(var(--pendant-drop,170px) + 230px);transform-origin:50% 8px;animation:pendant-sway 8s ease-in-out infinite alternate;pointer-events:none;}
-.pendant-canopy {position:absolute;top:0;left:calc(50% - 51px);width:102px;height:18px;border-radius:50% 50% 30% 30%;background:linear-gradient(#4e4c47,#171b1b 65%,#060808);border:2px solid #0e1111;box-shadow:inset 0 2px #a59b8555,0 4px 8px #0007;}
-.pendant-canopy::after {content:"";position:absolute;left:calc(50% - 12px);bottom:-9px;width:24px;height:12px;border-radius:0 0 5px 5px;background:linear-gradient(90deg,#101413,#41413a,#101413);}
-.pendant-cord {position:absolute;top:16px;bottom:184px;left:calc(50% - 2px);width:4px;background:linear-gradient(90deg,#070a0b,#47504b 50%,#101717);box-shadow:2px 0 3px #0005;}
-.pendant-fixture {position:absolute;left:0;right:0;bottom:0;height:190px;pointer-events:auto;cursor:grab;}
+.device-type-pendantLamp>.device-header {display:none!important;}
+.pendant-suspension {position:absolute;left:0;right:0;top:calc(-1 * var(--pendant-drop,250px));height:calc(var(--pendant-drop,250px) + 276px);transform-origin:50% 8px;animation:pendant-sway 8s ease-in-out infinite alternate;pointer-events:none;}
+.pendant-cord {position:absolute;top:0;bottom:221px;left:calc(50% - 2px);width:4px;background:linear-gradient(90deg,#070a0b,#47504b 50%,#101717);box-shadow:2px 0 3px #0005;}
+.pendant-fixture {position:absolute;left:calc(50% - 210px);width:420px;bottom:0;height:190px;transform:scale(1.2);transform-origin:50% 100%;pointer-events:auto;cursor:grab;}
 .pendant-fixture:active {cursor:grabbing;}
 .pendant-socket {position:absolute;left:calc(50% - 28px);top:4px;width:56px;height:74px;border-radius:12px 12px 5px 5px;background:repeating-linear-gradient(90deg,#5c2c1e 0 5px,#a25e30 6px 10px,#6d311e 11px 15px);border:3px solid #2a1b18;box-shadow:inset 5px 0 7px #ecc5875c,inset -7px 0 7px #160e0ba8,0 4px 8px #0008;z-index:3;}
 .pendant-socket::after {content:"";position:absolute;left:-13px;right:-13px;bottom:-7px;height:13px;border-radius:50%;background:linear-gradient(#78513b,#221b18);border:2px solid #191919;}
