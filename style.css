@@ -1717,8 +1717,6 @@
         #inspector {overflow:hidden;min-height:0;}
         #inspector-empty {flex:1;min-height:100px;height:auto;overflow-y:auto;}
         #inspector-content {flex:1;min-height:0;overflow-y:auto;}
-        .sidebar-edge-item {opacity:var(--sidebar-edge-opacity,1);filter:blur(var(--sidebar-edge-blur,0px));transition:opacity 90ms linear,filter 90ms linear;}
-        @media(prefers-reduced-motion:reduce){.sidebar-edge-item {opacity:1!important;filter:none!important;transition:none!important;}}
         .device-node .source-play-button {position:absolute;right:36px;bottom:6px;z-index:5;padding:4px 7px;border:1px solid #64727a;border-radius:3px;background:#1c2428;color:#b7d7e6;font:700 7px/1 "Inter",sans-serif;cursor:pointer;}
         .device-node .source-play-button[aria-pressed="true"] {border-color:#39805a;color:#b3edca;}
         /* O zoom ajusta ambos os eixos; mínimos fixos e flex-shrink não podem deformar as portas. */

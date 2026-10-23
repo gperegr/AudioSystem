@@ -1352,47 +1352,6 @@ const Hardware = (() => {
         enableWheelMomentumScroll(equipmentCatalog.querySelector('.overflow-y-auto'));
         enableWheelMomentumScroll(document.getElementById('inspector-content'));
         enableWheelMomentumScroll(document.getElementById('inspector-empty'));
-        function enableSidebarEdgeFade(region, getTargets){
-            if(!region)return;
-            const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
-            let frame=0, previousTargets=new Set();
-            const clamp=value=>Math.max(0,Math.min(1,value));
-            const collect=(element,depth=0)=>{
-                if(!element||element.hidden)return [];
-                const box=element.getBoundingClientRect();
-                if(box.height<=0)return [];
-                if(depth>=2||box.height<=region.clientHeight*.65||!element.children.length)return [element];
-                return [...element.children].flatMap(child=>collect(child,depth+1));
-            };
-            function update(){
-                frame=0;
-                const bounds=region.getBoundingClientRect(), zone=Math.max(36,Math.min(72,bounds.height*.14));
-                const targets=getTargets(region).flatMap(element=>collect(element));
-                const current=new Set(targets);
-                previousTargets.forEach(element=>{if(!current.has(element)){element.classList.remove('sidebar-edge-item');element.style.removeProperty('--sidebar-edge-opacity');element.style.removeProperty('--sidebar-edge-blur');}});
-                targets.forEach(element=>{
-                    element.classList.add('sidebar-edge-item');
-                    const box=element.getBoundingClientRect();
-                    let intensity=0;
-                    if(!reducedMotion.matches&&box.bottom>bounds.top&&box.top<bounds.bottom&&!element.matches(':hover,:focus-within')){
-                        const top=clamp((bounds.top+zone-box.top)/zone), bottom=clamp((box.bottom-(bounds.bottom-zone))/zone);
-                        intensity=Math.max(top,bottom);
-                    }
-                    element.style.setProperty('--sidebar-edge-opacity',String(1-intensity*.045));
-                    element.style.setProperty('--sidebar-edge-blur',`${intensity*.65}px`);
-                });
-                previousTargets=current;
-            }
-            const schedule=()=>{if(!frame)frame=requestAnimationFrame(update);};
-            region.addEventListener('scroll',schedule,{passive:true});
-            window.addEventListener('resize',schedule,{passive:true});
-            reducedMotion.addEventListener?.('change',schedule);
-            new MutationObserver(schedule).observe(region,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
-            schedule();
-        }
-        enableSidebarEdgeFade(equipmentCatalog.querySelector('.overflow-y-auto'),region=>[...region.querySelectorAll('.catalog-item, h3')]);
-        enableSidebarEdgeFade(inspectorContent,region=>[...region.children]);
-        enableSidebarEdgeFade(inspectorEmpty,region=>[...region.children]);
         const discardZone=document.createElement('div');
         discardZone.className='catalog-discard-zone';
         discardZone.setAttribute('aria-hidden','true');
