@@ -117,9 +117,10 @@
 
     const lightCache=new Map();
     function lights(name){if(lightCache.has(name))return lightCache.get(name);
-        const sources=(scenes[name]?.objects||[]).filter(item=>item.light||item.type==='lamp').map(item=>{
+        const sources=(scenes[name]?.objects||[]).filter(item=>item.light||item.type==='lamp').map((item,index)=>{
         const custom=item.light||{},w=custom.w||item.w||48,h=custom.h||item.h||130;
-        return {cx:item.x+(item.type==='window'?item.w/2:0),cy:item.y+(item.type==='window'?item.h/2:0),w,h,shape:custom.shape||item.shape||'rect',rgb:custom.rgb||item.rgb,strength:custom.strength||item.strength,layer:item.layer};
+        // Invisible light-point objects share the equipment-lighting pipeline with the test light.
+        return {id:`${name}-light-${index}`,type:'lightPoint',visible:false,cx:item.x+(item.type==='window'?item.w/2:0),cy:item.y+(item.type==='window'?item.h/2:0),w,h,shape:custom.shape||item.shape||'rect',rgb:custom.rgb||item.rgb,strength:custom.strength||item.strength,elevation:item.type==='window'?260:170,layer:item.layer};
     });lightCache.set(name,sources);return sources;}
 
     window.RoomScenes={scenes,materials,renderLayer,windowPanes,lights};

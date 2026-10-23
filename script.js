@@ -844,7 +844,7 @@ const Hardware = (() => {
         const light=document.querySelector('#audio-world .lighting-demo-light');
         const lx=light?light.offsetLeft+light.offsetWidth/2:0,ly=light?light.offsetTop+light.offsetHeight/2:0,lightHeight=170;
         const color=light?.querySelector('input[type="color"]')?.value||'#e4f4ff';
-        const intensity=light?Number(light.querySelector('input[type="range"]')?.value||0)/100:0;
+        const intensity=light&&light.getAttribute('aria-checked')!=='false'?Number(light.querySelector('input[type="range"]')?.value||0)/100:0;
         const rgb=[1,3,5].map(index=>parseInt(color.slice(index,index+2),16));
         if(light){light.style.setProperty('--demo-light-color',color);light.style.setProperty('--demo-light-strength',intensity);}
         const world=document.getElementById('audio-world');
@@ -954,12 +954,12 @@ const Hardware = (() => {
                         frontShadows.push({x,y,width,height:controlHeight,sx,sy,knob:knob||(plug&&control.dataset.type!=='wire'),plug,slider,handle,weight:intensity});
                     if(!device.classList.contains('device-type-streamIntegrated')||!control.matches('[data-stream-volume]')){
                         localScene.slice(0,2).forEach(scene=>{
-                            if(scene.weight<=.16)return;
+                            if(scene.weight<=.08)return;
                             const source=sampleSceneLight(scene,cx,cy);
-                            let sceneX=(cx-source.x)*height/230,sceneY=(cy-source.y)*height/230;
+                            let sceneX=(cx-source.x)*height/source.elevation,sceneY=(cy-source.y)*height/source.elevation;
                             const travel=Math.hypot(sceneX,sceneY),limit=Math.min(maxProjection,12);
                             if(travel>limit){sceneX*=limit/travel;sceneY*=limit/travel;}
-                            frontShadows.push({x,y,width,height:controlHeight,sx:sceneX,sy:sceneY,knob:knob||(plug&&control.dataset.type!=='wire'),plug,slider,handle,weight:scene.weight*.28,softness:scene.spread});
+                            frontShadows.push({x,y,width,height:controlHeight,sx:sceneX,sy:sceneY,knob:knob||(plug&&control.dataset.type!=='wire'),plug,slider,handle,weight:scene.weight*.8,softness:scene.spread});
                         });
                     }
                     const highlightX=intensity?lx:shadowScene?.x||cx,highlightY=intensity?ly:shadowScene?.y||cy;
@@ -1237,7 +1237,8 @@ const Hardware = (() => {
 
         const canvas = document.getElementById('canvas');
         const world = document.getElementById('audio-world');
-        const ROOM_SIDE_INSET=110;
+        const ROOM_SIDE_INSET=132;
+        const ROOM_FLOOR_OVERLAP=126;
         document.documentElement.classList.add('lighting-demo-enabled');
         const roomBackdrop=document.createElement('div');roomBackdrop.id='room-backdrop';roomBackdrop.setAttribute('aria-hidden','true');
         roomBackdrop.innerHTML=['far','mid','near'].map(layer=>`<img class="room-scene-image room-layer-${layer}" data-room-layer="${layer}" alt="" draggable="false">`).join('')+'<i class="room-depth-room"></i><i class="room-side-wall wall-left"></i><i class="room-side-wall wall-right"></i>';
@@ -1254,7 +1255,7 @@ const Hardware = (() => {
             if(theme==='scene')Object.values(state.devices).forEach(dev=>{
                 if(dev.type==='lightPoint')return;
                 dev.el.style.left=Math.max(ROOM_SIDE_INSET,Math.min(world.offsetWidth-dev.el.offsetWidth-ROOM_SIDE_INSET,dev.el.offsetLeft))+'px';
-                dev.el.style.top=Math.max(0,Math.min(world.offsetHeight-(canvas.dataset.floor==='none'?0:105)-dev.el.offsetHeight,dev.el.offsetTop))+'px';
+                dev.el.style.top=Math.max(0,Math.min(world.offsetHeight-(canvas.dataset.floor==='none'?0:ROOM_FLOOR_OVERLAP)-dev.el.offsetHeight,dev.el.offsetTop))+'px';
             });
             document.querySelector('.canvas-tools').dataset.theme=theme;
             document.getElementById('canvas-theme').value=theme;
@@ -1825,7 +1826,7 @@ const Hardware = (() => {
             dev.el.querySelector('.furniture-body').prepend(scene);
         }
         const STACK_FEET=Object.freeze({width:22,height:20,insetRatio:.1});
-        const maxEquipmentBottom=()=>world.offsetHeight-(canvas.dataset.theme!=='scene'||canvas.dataset.floor==='none'?0:105);
+        const maxEquipmentBottom=()=>world.offsetHeight-(canvas.dataset.theme!=='scene'||canvas.dataset.floor==='none'?0:ROOM_FLOOR_OVERLAP);
         const sceneSideInset=()=>canvas.dataset.theme==='scene'?ROOM_SIDE_INSET:0;
         function snapOnEquipment(dev,x,y){
             if(FURNITURE_TYPES[dev.type])return{x,y};
@@ -4879,7 +4880,6 @@ const Hardware = (() => {
             const colorInput=dev.el.querySelector('input[type="color"]'),range=dev.el.querySelector('input[type="range"]');
             colorInput.value=color;range.value=String(intensity);dev.el.querySelector('output').value=intensity+'%';
             dev.el.style.setProperty('--demo-light-color',color);dev.el.style.setProperty('--demo-light-strength',intensity/100);
-            document.documentElement.classList.toggle('lighting-demo-enabled',dev.state.lightEnabled!==false);
             dev.el.setAttribute('aria-checked',String(dev.state.lightEnabled!==false));
             Hardware.updateLightingDemo();
         }
