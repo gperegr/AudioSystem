@@ -1,15 +1,19 @@
 /* Spotify account and Coverflow furniture. Playback is separate from the AudioSystem signal graph. */
 const SpotifyCoverflow=(()=>{
     const CLIENT_KEY='audio-system-spotify-client-id';
+    const DEFAULT_CLIENT_ID='346af0eed59d4119b71d37808aec1f33';
     const TOKEN_KEY='audio-system-spotify-session';
     const VERIFIER_KEY='audio-system-spotify-verifier';
     const STATE_KEY='audio-system-spotify-state';
+    const COVER_SPACING=38;
+    const CLOSED_RADIUS=32;
+    const OPEN_RADIUS=18;
     const REDIRECT=location.origin+location.pathname;
     const SCOPES='user-library-read streaming user-read-email user-read-private user-modify-playback-state';
     const views=new Set();
     const reduced=matchMedia('(prefers-reduced-motion: reduce)');
-    let albums=[],status='Conecte sua conta Spotify para ver os álbuns salvos.',clientId=localStorage.getItem(CLIENT_KEY)||'';
-    let sdkPromise=null,player=null,deviceId=null,playback=null,settings=null,beforeRedirect=()=>{},loadPromise=null,albumsLoaded=false,refreshPromise=null;
+    let albums=[],status='Conecte sua conta Spotify para ver os álbuns salvos.',clientId=localStorage.getItem(CLIENT_KEY)||DEFAULT_CLIENT_ID;
+    let sdkPromise=null,player=null,deviceId=null,playback=null,settings=null,settingsSummary=null,settingsOnOpen=()=>{},beforeRedirect=()=>{},loadPromise=null,albumsLoaded=false,refreshPromise=null;
     const tokenData=()=>{try{return JSON.parse(sessionStorage.getItem(TOKEN_KEY)||'null');}catch{return null;}};
     const base64=bytes=>btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
     const random=()=>base64(crypto.getRandomValues(new Uint8Array(48)));
@@ -122,7 +126,7 @@ const SpotifyCoverflow=(()=>{
         const position=host.querySelector('.spotify-flow-position'),sort=host.querySelector('.spotify-flow-sort'),play=host.querySelector('.spotify-flow-play');
         const nodes=new Map();let ordered=[],orderedSource=null,orderedSort=null,drag=null,dragged=false,suppressClickUntil=0;
         state.coverflowSort=sorters[state.coverflowSort]?state.coverflowSort:'added';
-        state.coverflowPosition=Number.isFinite(state.coverflowPosition)?state.coverflowPosition:.5;
+        state.coverflowPosition=Number.isFinite(state.coverflowPosition)?state.coverflowPosition:0;
         state.coverflowAlbum=typeof state.coverflowAlbum==='string'?state.coverflowAlbum:null;
         sort.value=state.coverflowSort;
         const current=()=>ordered.findIndex(album=>album.uri===state.coverflowAlbum);
@@ -131,9 +135,10 @@ const SpotifyCoverflow=(()=>{
             const album=ordered[index],element=document.createElement('button');element.type='button';element.className='spotify-flow-card';element.dataset.index=index;
             element.setAttribute('aria-label',`${album.name} — ${artist(album)}`);
             const vinyl=document.createElement('span');vinyl.className='spotify-flow-vinyl';
-            const cover=document.createElement('img');cover.alt='';cover.loading='lazy';cover.referrerPolicy='no-referrer';cover.src=(album.images||[]).find(image=>image.width>=300)?.url||album.images?.[0]?.url||'';
+            const cover=document.createElement('img');cover.alt='';cover.loading='lazy';cover.referrerPolicy='no-referrer';cover.src=(album.images||[]).filter(image=>image.width>=300).sort((a,b)=>a.width-b.width)[0]?.url||album.images?.[0]?.url||'';
+            const back=cover.cloneNode();back.className='spotify-flow-back';
             const label=document.createElement('i');label.className='spotify-flow-label';if(cover.src)label.style.backgroundImage=`url("${cover.src.replaceAll('"','%22')}")`;vinyl.append(label);
-            element.append(vinyl,cover);element.addEventListener('click',event=>{event.stopPropagation();if(performance.now()<suppressClickUntil)return;if(current()===index){playAlbum(album);return;}select(index);});
+            element.append(vinyl,cover,back);element.addEventListener('click',event=>{event.stopPropagation();if(performance.now()<suppressClickUntil)return;if(current()===index){playAlbum(album);return;}select(index);});
             return element;
         }
         function refresh(){
@@ -148,19 +153,21 @@ const SpotifyCoverflow=(()=>{
             play.disabled=selected<0||!deviceId;const isPlaying=!!(playback&&selected>=0&&playback.context?.uri===ordered[selected].uri&&!playback.paused);
             play.setAttribute('aria-label',isPlaying?'Pausar álbum':'Tocar álbum');
             play.textContent=isPlaying?'❚❚':'▶';
-            const visible=new Set();for(let index=Math.max(0,Math.floor(center)-10);index<=Math.min(ordered.length-1,Math.ceil(center)+10);index++)visible.add(index);
+            const radius=selected>=0?OPEN_RADIUS:CLOSED_RADIUS;
+            const visible=new Set();for(let index=Math.max(0,Math.floor(center)-radius);index<=Math.min(ordered.length-1,Math.ceil(center)+radius);index++)visible.add(index);
             for(const [index,node] of nodes)if(!visible.has(index)||node.dataset.uri!==ordered[index]?.uri){node.remove();nodes.delete(index);}
             for(const index of visible){
                 let node=nodes.get(index);if(!node){node=card(index);node.dataset.uri=ordered[index].uri;flow.append(node);nodes.set(index,node);}
                 const distance=index-center,absolute=Math.abs(distance),side=Math.sign(distance);
-                const x=selected>=0?distance===0?-116:side*(distance>0?570:338)+(absolute-1)*side*68:distance*68;
-                node.style.transform=`translateX(${x}px) translateZ(${distance===0&&selected>=0?0:-170-Math.min(absolute,6)*8}px) rotateY(${distance===0&&selected>=0?0:-side*80}deg)`;
-                node.style.zIndex=String(100-Math.round(absolute));node.classList.toggle('is-open',index===selected);node.classList.toggle('is-playing',index===selected&&isPlaying);
-                node.style.opacity=absolute>9?0:1;
+                const x=selected>=0?distance===0?-130:side*(560+(absolute-1)*COVER_SPACING):distance*COVER_SPACING;
+                const angle=index===selected?0:-90-22*Math.tanh(distance/8);
+                node.style.transform=`translateX(${x}px) translateZ(${index===selected?100:-170-Math.min(absolute,6)*8}px) rotateY(${angle}deg)`;
+                node.style.zIndex=String(index===selected?200:100-Math.round(absolute));node.classList.toggle('is-open',index===selected);node.classList.toggle('is-playing',index===selected&&isPlaying);
+                node.style.opacity=1;
             }
         }
         function select(index){if(!ordered.length)return;const album=ordered[clamp(index)];state.coverflowAlbum=album.uri;state.coverflowPosition=clamp(index);refresh();onChange();}
-        function shift(amount){if(!ordered.length)return;const index=current();state.coverflowPosition=clamp((index>=0?index:state.coverflowPosition)+amount);if(index>=0)state.coverflowAlbum=ordered[Math.round(state.coverflowPosition)].uri;refresh();onChange();}
+        function shift(amount){if(!ordered.length)return;const index=current();state.coverflowPosition=clamp((index>=0?index:state.coverflowPosition)+amount);state.coverflowAlbum=null;refresh();onChange();}
         host.querySelector('.spotify-flow-connect').addEventListener('click',event=>{event.stopPropagation();if(clientId)login();else openSettings();});
         host.querySelector('.spotify-flow-settings').addEventListener('click',event=>{event.stopPropagation();openSettings();});
         play.addEventListener('click',event=>{event.stopPropagation();const index=current();if(index>=0)playAlbum(ordered[index]);});
@@ -170,8 +177,8 @@ const SpotifyCoverflow=(()=>{
         position.addEventListener('input',()=>{state.coverflowAlbum=null;state.coverflowPosition=Number(position.value);refresh();onChange();});
         stage.addEventListener('wheel',event=>{event.preventDefault();event.stopPropagation();shift(Math.sign(Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY));},{passive:false});
         stage.addEventListener('pointerdown',event=>{event.stopPropagation();if(event.button!==0)return;drag={x:event.clientX,index:current()>=0?current():state.coverflowPosition};dragged=false;stage.setPointerCapture(event.pointerId);});
-        stage.addEventListener('pointermove',event=>{if(!drag)return;const unit=512*stage.getBoundingClientRect().width/stage.clientWidth;const delta=(drag.x-event.clientX)/(unit*.14);if(Math.abs(delta)<.1)return;dragged=true;state.coverflowAlbum=null;state.coverflowPosition=clamp(drag.index+delta);refresh();});
-        const release=()=>{if(!drag)return;drag=null;if(dragged){suppressClickUntil=performance.now()+300;state.coverflowPosition=clamp(Math.round(state.coverflowPosition));refresh();onChange();dragged=false;}};
+        stage.addEventListener('pointermove',event=>{if(!drag)return;const scale=stage.getBoundingClientRect().width/stage.clientWidth;const delta=(drag.x-event.clientX)/(COVER_SPACING*scale);if(Math.abs(delta)<.1)return;dragged=true;host.classList.add('is-dragging');state.coverflowAlbum=null;state.coverflowPosition=clamp(drag.index+delta);refresh();});
+        const release=()=>{if(!drag)return;drag=null;host.classList.remove('is-dragging');if(dragged){suppressClickUntil=performance.now()+300;state.coverflowPosition=clamp(Math.round(state.coverflowPosition));refresh();onChange();dragged=false;}};
         stage.addEventListener('pointerup',release);stage.addEventListener('pointercancel',release);
         stage.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End','Enter',' '].includes(event.key))return;if(event.target!==stage&&['Enter',' '].includes(event.key))return;event.preventDefault();event.stopPropagation();if(event.key==='ArrowLeft')shift(-1);else if(event.key==='ArrowRight')shift(1);else if(event.key==='Home')select(0);else if(event.key==='End')select(ordered.length-1);else if(current()>=0)playAlbum(ordered[current()]);});
         const view={refresh};views.add(view);refresh();if(tokenData()){loadAlbums();ensurePlayer().catch(error=>setStatus(error.message));}
@@ -183,13 +190,28 @@ const SpotifyCoverflow=(()=>{
         if(document.activeElement!==clientInput)clientInput.value=clientId;
         settings.querySelector('[data-spotify-redirect]').textContent=REDIRECT;
         settings.querySelector('[data-spotify-status]').textContent=status||`${albums.length} álbuns salvos`;settings.querySelector('[data-spotify-logout]').hidden=!tokenData();
+        if(settingsSummary)settingsSummary.textContent=tokenData()?`${albums.length} álbuns · conectado`:'Coleção e reprodução';
+    }
+    function openSettings(){
+        if(!settings)return;
+        settingsOnOpen();
+        if(!settings.open)settings.showModal();
+        settings.querySelector('[data-spotify-client]')?.focus();
     }
     function bindSettings(element,options={}){
-        settings=element;beforeRedirect=options.beforeRedirect||beforeRedirect;
-        element.innerHTML='<strong>Spotify · coleção de discos</strong><label>Client ID <input type="text" data-spotify-client spellcheck="false" autocomplete="off" placeholder="Client ID do seu app Spotify"></label><small>Cadastre este Redirect URI no Spotify Dashboard:</small><code data-spotify-redirect></code><div class="spotify-setting-actions"><button type="button" data-spotify-connect>Conectar</button><button type="button" data-spotify-logout hidden>Desconectar</button></div><p data-spotify-status role="status"></p><small>A reprodução usa o player do Spotify, com conta Premium; não passa pelos cabos do simulador.</small>';
-        element.querySelector('[data-spotify-client]').addEventListener('change',event=>setClientId(event.target.value));
-        element.querySelector('[data-spotify-connect]').addEventListener('click',login);
-        element.querySelector('[data-spotify-logout]').addEventListener('click',logout);renderSettings();
+        beforeRedirect=options.beforeRedirect||beforeRedirect;settingsOnOpen=options.onOpen||settingsOnOpen;
+        element.className='spotify-settings-entry';
+        element.innerHTML='<strong>Spotify</strong><button type="button" data-spotify-open>Configurar Spotify</button><small data-spotify-summary></small>';
+        settingsSummary=element.querySelector('[data-spotify-summary]');
+        element.querySelector('[data-spotify-open]').addEventListener('click',openSettings);
+        settings=document.createElement('dialog');settings.className='spotify-settings-dialog';settings.setAttribute('aria-labelledby','spotify-settings-title');
+        settings.innerHTML='<div class="spotify-settings"><div class="spotify-settings-header"><div><span class="app-confirm-kicker">Coleção de discos</span><h2 id="spotify-settings-title">Spotify</h2></div><button type="button" data-spotify-close aria-label="Fechar configurações do Spotify" title="Fechar">×</button></div><label>Client ID <input type="text" data-spotify-client spellcheck="false" autocomplete="off" placeholder="Client ID do seu app Spotify"></label><div class="spotify-redirect"><small>Cadastre este Redirect URI no Spotify Dashboard:</small><code data-spotify-redirect></code></div><div class="spotify-setting-actions"><button type="button" data-spotify-connect>Conectar</button><button type="button" data-spotify-logout hidden>Desconectar</button></div><p data-spotify-status role="status" aria-live="polite"></p><small class="spotify-settings-note">A reprodução exige Spotify Premium e não passa pelos cabos do simulador.</small></div>';
+        document.body.append(settings);
+        settings.querySelector('[data-spotify-close]').addEventListener('click',()=>settings.close());
+        settings.addEventListener('click',event=>{if(event.target===settings)settings.close();});
+        settings.querySelector('[data-spotify-client]').addEventListener('change',event=>setClientId(event.target.value));
+        settings.querySelector('[data-spotify-connect]').addEventListener('click',login);
+        settings.querySelector('[data-spotify-logout]').addEventListener('click',logout);renderSettings();
     }
     async function initialize(){
         const url=new URL(location.href),code=url.searchParams.get('code'),error=url.searchParams.get('error');
@@ -205,5 +227,5 @@ const SpotifyCoverflow=(()=>{
         }
         if(tokenData())await loadAlbums();else renderSettings();
     }
-    return {mount,bindSettings,initialize,login,logout,get clientId(){return clientId;}};
+    return {mount,bindSettings,openSettings,initialize,login,logout,get clientId(){return clientId;}};
 })();

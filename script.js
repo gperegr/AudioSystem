@@ -6029,7 +6029,7 @@ const Hardware = (() => {
             installListeningControls(dev);
             bindDeviceEvents(dev);
             if(type==='furnitureCoverflow'){
-                const controller=SpotifyCoverflow.mount(el.querySelector('.spotify-coverflow-host'),dev.state,scheduleProjectSave,()=>{settingsMenu.open=true;settingsMenu.querySelector('[data-spotify-client]')?.focus();});
+                const controller=SpotifyCoverflow.mount(el.querySelector('.spotify-coverflow-host'),dev.state,scheduleProjectSave,SpotifyCoverflow.openSettings);
                 dev.refreshCoverflow=controller.refresh;dev.disposeCoverflow=controller.dispose;
             }
             if(SIGNAL_GENERATOR_TYPES.has(type)){configureSignalGenerator(dev);bindSignalGeneratorPanel(dev);}
@@ -8740,7 +8740,7 @@ const Hardware = (() => {
         clearCatalogFooter.insertBefore(roomSection,soundControls);
         const spotifySetting=document.createElement('section');spotifySetting.className='spotify-settings';
         clearCatalogFooter.insertBefore(spotifySetting,soundControls);
-        SpotifyCoverflow.bindSettings(spotifySetting,{beforeRedirect:()=>saveLocalProject(true)});
+        SpotifyCoverflow.bindSettings(spotifySetting,{beforeRedirect:()=>saveLocalProject(true),onOpen:()=>{settingsMenu.open=false;}});
         const headphoneCalibrationSetting=document.createElement('section');headphoneCalibrationSetting.className='headphone-calibration-setting';
         headphoneCalibrationSetting.innerHTML='<strong>Ajuste de escuta com fones</strong><p>Volume, detalhes, estéreo, graves, agudos e sons da interface.</p><button id="open-headphone-calibration" type="button">Calibrar volume dos fones</button>';
         clearCatalogFooter.insertBefore(headphoneCalibrationSetting,soundControls);
