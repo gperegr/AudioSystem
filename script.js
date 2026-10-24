@@ -2209,7 +2209,7 @@ const Hardware = (() => {
             furnitureHairpin:{width:1320,height:610,surfaces:[0,238,456],inset:24,rack:true,back:true,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack baixo de madeira com dois vãos centrais, nichos laterais e pés alfinete de metal.'},
             furnitureRecordOne:{width:832,height:800,surfaces:[0,300,730],inset:26,rack:true,back:true,recordColumns:1,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack de madeira com nicho para aparelhos, espaço inferior para discos e pequenos rodízios.'},
             furnitureRecordThree:{width:2440,height:800,surfaces:[0,300,730],inset:26,rack:true,back:true,recordColumns:3,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack de madeira com nicho superior para aparelhos e três compartimentos inferiores para discos.'},
-            furnitureCoverflow:{width:2440,height:640,surfaces:[0],inset:26,rack:true,back:true,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Coleção de álbuns salvos no Spotify, com capas móveis e disco revelado ao selecionar. Reprodução independente dos cabos.'},
+            furnitureCoverflow:{width:2440,height:514,surfaces:[0],inset:26,rack:true,back:true,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Coleção de álbuns salvos no Spotify, com capas móveis e disco revelado ao selecionar. Reprodução independente dos cabos.'},
             furnitureTable:{width:1680,height:760,surfaces:[0],inset:20,description:'Apoie os equipamentos sobre o tampo. Arraste a mesa pelo tampo ou pelos pés.'},
             furnitureNiche:{width:840,height:280,surfaces:[0,260],inset:20,back:true,description:'Acomode um equipamento dentro do nicho ou sobre ele.'}
         };
@@ -2229,7 +2229,7 @@ const Hardware = (() => {
             let parts='';
             if(type==='furnitureCoverflow'){
                 parts='<div class="spotify-coverflow-host"><div class="spotify-flow-stage" tabindex="0" role="region" aria-label="Capas dos álbuns. Arraste, role ou use as setas para navegar."><div class="spotify-flow-cards"></div><p class="spotify-flow-message"></p></div><div class="spotify-flow-console"><div class="spotify-flow-info"><strong class="spotify-flow-title">Sua coleção de discos</strong><span class="spotify-flow-subtitle">Álbuns salvos no Spotify</span></div><div class="spotify-flow-actions"><button type="button" class="spotify-flow-connect">Conectar Spotify</button><button type="button" class="spotify-flow-settings" aria-label="Configurar Spotify" title="Configurar Spotify">⚙</button><button type="button" class="spotify-flow-prev" aria-label="Faixa anterior">◀</button><button type="button" class="spotify-flow-play" aria-label="Tocar álbum">▶</button><button type="button" class="spotify-flow-next" aria-label="Próxima faixa">▶</button><label>Ordenar <select class="spotify-flow-sort" aria-label="Ordenar álbuns"><option value="added">Recentes</option><option value="artist">Artista</option><option value="name">Título</option><option value="year">Ano</option></select></label></div><div class="spotify-flow-position-row"><input class="spotify-flow-position" type="range" min="0" max="0" value="0" data-hardware-slider="coverflow" aria-label="Posição na coleção"><span class="spotify-flow-count"></span></div></div></div>'+
-                    part('furniture-top',0,0,config.width,28)+part('furniture-side',0,28,26,542)+part('furniture-side',config.width-26,28,26,542)+part('furniture-shelf',0,570,config.width,30)+part('furniture-caster',42,600,42,40,'<span class="caster-stem"></span><span class="caster-wheel"></span>')+part('furniture-caster',config.width-84,600,42,40,'<span class="caster-stem"></span><span class="caster-wheel"></span>');
+                    part('furniture-top',0,0,config.width,28)+part('furniture-side',0,28,26,416)+part('furniture-side',config.width-26,28,26,416)+part('furniture-shelf',0,444,config.width,30)+part('furniture-caster',42,474,42,40,'<span class="caster-stem"></span><span class="caster-wheel"></span>')+part('furniture-caster',config.width-84,474,42,40,'<span class="caster-stem"></span><span class="caster-wheel"></span>');
             }else if(type==='furnitureTable'){
                 parts=part('furniture-top',0,0,config.width,28)+part('furniture-leg',60,28,40,config.height-28)+part('furniture-leg',config.width-100,28,40,config.height-28)+part('furniture-brace',100,80,config.width-200,20);
             }else if(type==='furnitureHairpin'){
@@ -7154,7 +7154,7 @@ const Hardware = (() => {
         };
         // Keep physical units for the audio graph while exposing fixed detents in the inspector.
         function setupInspectorDetents() {
-            inspectorContent.querySelectorAll('input[type="range"]:not(#source-progress)').forEach(slider=>{
+            inspectorContent.querySelectorAll('input[type="range"]:not(#source-progress):not([data-spotify-position])').forEach(slider=>{
                 if(slider.dataset.detents)return;slider.dataset.detents='true';Hardware.slider(slider);
                 if(slider.dataset.gainSteps)slider.step=String((Number(slider.max)-Number(slider.min))/(Number(slider.dataset.gainSteps)-1));
                 if(slider.matches('.gain-spark-slider'))setupInspectorGainVisual(slider);
@@ -7299,6 +7299,7 @@ const Hardware = (() => {
                 html+=`<p class="text-sm text-gray-400">${catalogDescriptions[dev.type]} Arraste para posicionar na parede. A fonte de luz acompanha a luminária e projeta sombras nos equipamentos.</p>`;
             } else if(FURNITURE_TYPES[dev.type]) {
                 const config=FURNITURE_TYPES[dev.type];
+                if(dev.type==='furnitureCoverflow')html+=SpotifyCoverflow.inspectorHtml();
                 html += `<div class="flex flex-col gap-3"><label class="text-sm text-gray-300" for="furniture-material">Material</label><select id="furniture-material" class="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700">${Object.entries(furnitureMaterialsFor(dev.type)).map(([key,name])=>`<option value="${key}" ${dev.state.material===key?'selected':''}>${name}</option>`).join('')}</select><p class="text-xs text-gray-400">${config.description}</p><p class="text-xs text-gray-400">Aproxime a base do equipamento de uma prateleira para apoiá-lo. Arraste o móvel pelas partes sólidas.${config.rack?' Os equipamentos apoiados nas prateleiras e empilhados acompanham o rack.':''}</p></div>`;
                 if(dev.type==='furnitureTable')html+=`<fieldset class="bench-options"><legend>Ambiente da bancada</legend><label for="bench-surface">Superfície</label><select id="bench-surface">${Object.entries(BENCH_SURFACES).map(([key,label])=>`<option value="${key}" ${dev.state.benchSurface===key?'selected':''}>${label}</option>`).join('')}</select><label><input type="checkbox" id="bench-backdrop" ${dev.state.benchBackdrop===true?'checked':''}> Painel acústico</label><span>Objetos decorativos</span>${Object.entries(BENCH_DECORATIONS).map(([key,label])=>`<label><input type="checkbox" data-bench-decoration="${key}" ${dev.state.benchDecorations?.includes(key)?'checked':''}> ${label}</label>`).join('')}</fieldset>`;
             } else if (INTERFACE_DEVICES[dev.type]) {
@@ -7339,6 +7340,7 @@ const Hardware = (() => {
             inspectorContent.innerHTML = conciseEquipmentInspector(html);
             Hardware.inspector(inspectorContent);
             MenuSlider.mount(inspectorContent);
+            if(dev.type==='furnitureCoverflow')SpotifyCoverflow.bindInspector(inspectorContent,dev.el.querySelector('.spotify-coverflow-host'));
             document.getElementById('inspector-grille')?.addEventListener('click',event=>{dev.el.querySelector(dev.el.classList.contains('grille-off')?'.grille-restore':'.speaker-grille').click();event.currentTarget.setAttribute('aria-pressed',String(dev.el.classList.contains('grille-off')));event.currentTarget.classList.toggle('is-on',dev.el.classList.contains('grille-off'));});
             queueMicrotask(setupInspectorDetents);
             bindListeningInspector(dev);

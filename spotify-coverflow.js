@@ -7,19 +7,22 @@ const SpotifyCoverflow=(()=>{
     const STATE_KEY='audio-system-spotify-state';
     const COVER_SIZE=400;
     const COVER_SPACING=42;
-    const CLOSED_RADIUS=28;
+    const CLOSED_RADIUS=76;
     const OPEN_RADIUS=18;
     const REDIRECT=location.origin+location.pathname;
     const SCOPES='user-library-read streaming user-read-email user-read-private user-modify-playback-state';
     const views=new Set();
     const reduced=matchMedia('(prefers-reduced-motion: reduce)');
     let albums=[],status='Conecte sua conta Spotify para ver os álbuns salvos.',clientId=localStorage.getItem(CLIENT_KEY)||DEFAULT_CLIENT_ID;
-    let sdkPromise=null,player=null,deviceId=null,playback=null,settings=null,settingsSummary=null,settingsOnOpen=()=>{},beforeRedirect=()=>{},loadPromise=null,albumsLoaded=false,refreshPromise=null;
+    let sdkPromise=null,player=null,deviceId=null,playback=null,settings=null,settingsSummary=null,settingsOnOpen=()=>{},beforeRedirect=()=>{},loadPromise=null,albumsLoaded=false,refreshPromise=null,inspector=null;
     const tokenData=()=>{try{return JSON.parse(sessionStorage.getItem(TOKEN_KEY)||'null');}catch{return null;}};
     const base64=bytes=>btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
     const random=()=>base64(crypto.getRandomValues(new Uint8Array(48)));
     const artist=album=>(album.artists||[]).map(item=>item.name).join(', ');
     const shortTime=ms=>{const seconds=Math.max(0,Math.floor(ms/1000));return `${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;};
+    // Discos junto às bordas ficam compactos; perto do foco há espaço para ver capa e lombada.
+    const sleeveOffset=distance=>60*Math.min(distance,5)+44*Math.min(Math.max(distance-5,0),7)+32*Math.max(distance-12,0);
+    const sleeveAngle=distance=>distance===0?-90:-90+27*distance*Math.exp(-distance/4)/(4/Math.E);
     function broadcast(){views.forEach(view=>view.refresh());renderSettings();}
     function setStatus(message){status=message;broadcast();}
     function setClientId(value){
@@ -77,7 +80,7 @@ const SpotifyCoverflow=(()=>{
                 const response=await spotifyFetch(next);
                 if(!response.ok)throw new Error(`Não foi possível carregar os álbuns (${response.status}).`);
                 const page=await response.json();loaded.push(...page.items.map((item,index)=>({...item.album,_added:loaded.length+index})));
-                next=page.next;status=`Carregando álbuns… ${loaded.length} de ${page.total}`;broadcast();
+                next=page.next;albums=loaded.slice();status=`Carregando álbuns… ${loaded.length} de ${page.total}`;broadcast();
             }
             albums=loaded;albumsLoaded=true;setStatus(loaded.length?'':'Nenhum álbum salvo na sua biblioteca do Spotify.');
             if(views.size)ensurePlayer().catch(error=>setStatus(error.message));
@@ -121,6 +124,34 @@ const SpotifyCoverflow=(()=>{
         }catch(error){setStatus(error.message||'Não foi possível iniciar a reprodução.');}
     }
     const sorters={added:(a,b)=>a._added-b._added,artist:(a,b)=>artist(a).localeCompare(artist(b)),name:(a,b)=>a.name.localeCompare(b.name),year:(a,b)=>(b.release_date||'').localeCompare(a.release_date||'')};
+    function inspectorHtml(){
+        return '<section class="spotify-coverflow-inspector"><h3>Coleção de discos</h3><strong data-sp-title>Sua coleção de discos</strong><span data-sp-subtitle>Álbuns salvos no Spotify</span><p data-sp-status role="status">Conecte ao Spotify para carregar a coleção.</p><div class="spotify-inspector-actions"><button type="button" data-sp-action="connect">Conectar Spotify</button><button type="button" data-sp-action="settings">Configurar Spotify</button></div><div class="spotify-inspector-transport" role="group" aria-label="Transporte do Spotify"><button type="button" data-sp-action="prev" aria-label="Faixa anterior" title="Faixa anterior">◀</button><button type="button" data-sp-action="play" aria-label="Tocar álbum" title="Tocar álbum">▶</button><button type="button" data-sp-action="next" aria-label="Próxima faixa" title="Próxima faixa">▶</button></div><label>Ordenar álbuns<select data-sp-sort><option value="added">Recentes</option><option value="artist">Artista</option><option value="name">Título</option><option value="year">Ano</option></select></label><label>Posição na coleção <output data-sp-count>0 / 0</output><input type="range" min="0" max="0" value="0" data-spotify-position aria-label="Posição na coleção" data-hardware-slider="coverflow"></label><small>Role o mouse sobre os discos para navegar. Clique para abrir; clique novamente para tocar.</small></section>';
+    }
+    function syncInspector(host){
+        if(!inspector||inspector.host!==host||!inspector.root.isConnected)return;
+        const root=inspector.root,read=selector=>host.querySelector(selector);
+        root.querySelector('[data-sp-title]').textContent=read('.spotify-flow-title').textContent;
+        root.querySelector('[data-sp-subtitle]').textContent=read('.spotify-flow-subtitle').textContent;
+        root.querySelector('[data-sp-status]').textContent=status;
+        root.querySelector('[data-sp-action="connect"]').hidden=read('.spotify-flow-connect').hidden;
+        const play=root.querySelector('[data-sp-action="play"]'),sourcePlay=read('.spotify-flow-play');play.disabled=sourcePlay.disabled;play.textContent=sourcePlay.textContent;play.setAttribute('aria-label',sourcePlay.getAttribute('aria-label'));
+        for(const action of ['prev','next'])root.querySelector(`[data-sp-action="${action}"]`).disabled=!deviceId;
+        root.querySelector('[data-sp-sort]').value=read('.spotify-flow-sort').value;
+        const sourcePosition=read('.spotify-flow-position'),position=root.querySelector('[data-spotify-position]');position.max=sourcePosition.max;position.disabled=sourcePosition.disabled;
+        if(document.activeElement!==position)position.value=sourcePosition.value;
+        root.querySelector('[data-sp-count]').textContent=read('.spotify-flow-count').textContent;
+    }
+    function bindInspector(container,host){
+        const root=container.querySelector('.spotify-coverflow-inspector');if(!root||!host)return;
+        inspector={root,host};
+        root.querySelectorAll('[data-sp-action]').forEach(button=>button.addEventListener('click',()=>{
+            const action=button.dataset.spAction;if(action==='settings'){openSettings();return;}
+            host.querySelector(`.spotify-flow-${action}`)?.click();
+        }));
+        root.querySelector('[data-sp-sort]').addEventListener('change',event=>{const source=host.querySelector('.spotify-flow-sort');source.value=event.target.value;source.dispatchEvent(new Event('change',{bubbles:true}));});
+        root.querySelector('[data-spotify-position]').addEventListener('input',event=>{const source=host.querySelector('.spotify-flow-position');source.value=event.target.value;source.dispatchEvent(new Event('input',{bubbles:true}));});
+        syncInspector(host);
+    }
     function mount(host,state,onChange,openSettings){
         const stage=host.querySelector('.spotify-flow-stage'),flow=host.querySelector('.spotify-flow-cards'),message=host.querySelector('.spotify-flow-message');
         const hitLayer=document.createElement('div');hitLayer.className='spotify-flow-hits';stage.append(hitLayer);
@@ -154,33 +185,36 @@ const SpotifyCoverflow=(()=>{
             sort.value=state.coverflowSort;
             const selected=current();
             host.querySelector('.spotify-flow-connect').hidden=!!tokenData();
-            if(!ordered.length){nodes.forEach(node=>node.remove());nodes.clear();hits.forEach(hit=>hit.remove());hits.clear();message.textContent=status;message.hidden=false;title.textContent='Sua coleção de discos';subtitle.textContent='Álbuns salvos no Spotify';count.textContent='';position.max=0;position.value=0;position.disabled=true;play.disabled=true;return;}
+            if(!ordered.length){nodes.forEach(node=>node.remove());nodes.clear();hits.forEach(hit=>hit.remove());hits.clear();message.textContent=status;message.hidden=false;title.textContent='Sua coleção de discos';subtitle.textContent='Álbuns salvos no Spotify';count.textContent='';position.max=0;position.value=0;position.disabled=true;play.disabled=true;syncInspector(host);return;}
             message.hidden=true;const center=selected>=0?selected:clamp(state.coverflowPosition);
-            const edgeSpan=Math.min(CLOSED_RADIUS*COVER_SPACING,Math.max(0,(ordered.length-1)*COVER_SPACING/2));
-            const edgeRange=Math.min(56,Math.max(1,(ordered.length-1)/2));
+            const edgeSpan=Math.max(0,stage.clientWidth/2-24);
+            const edgeRange=Math.min(36,Math.max(1,(ordered.length-1)/2));
             const edgeOffset=selected>=0?0:-edgeSpan*Math.max(0,1-center/edgeRange)+edgeSpan*Math.max(0,1-(ordered.length-1-center)/edgeRange);
-            const layoutCenter=center-edgeOffset/COVER_SPACING;
             position.disabled=false;position.max=ordered.length-1;position.value=Math.round(center);count.textContent=`${Math.round(center)+1} / ${ordered.length}`;
             title.textContent=selected>=0?ordered[selected].name:'Sua coleção de discos';subtitle.textContent=status|| (selected>=0?`${artist(ordered[selected])} · ${(ordered[selected].release_date||'').slice(0,4)}`:'Arraste ou role as capas para escolher um álbum');
             play.disabled=selected<0||!deviceId;const isPlaying=!!(playback&&selected>=0&&playback.context?.uri===ordered[selected].uri&&!playback.paused);
             play.setAttribute('aria-label',isPlaying?'Pausar álbum':'Tocar álbum');
             play.textContent=isPlaying?'❚❚':'▶';
             const radius=selected>=0?OPEN_RADIUS:CLOSED_RADIUS;
-            const visible=new Set();for(let index=Math.max(0,Math.floor(layoutCenter)-radius);index<=Math.min(ordered.length-1,Math.ceil(layoutCenter)+radius);index++)visible.add(index);
+            const visible=new Set();for(let index=Math.max(0,Math.floor(center)-radius);index<=Math.min(ordered.length-1,Math.ceil(center)+radius);index++){
+                const distance=index-center, x=selected>=0?(distance===0?-100:Math.sign(distance)*(500+sleeveOffset(Math.abs(distance)-1))):Math.sign(distance)*sleeveOffset(Math.abs(distance))+edgeOffset;
+                if(Math.abs(x)<stage.clientWidth/2+COVER_SIZE/2)visible.add(index);
+            }
             for(const [index,node] of nodes)if(!visible.has(index)||node.dataset.uri!==ordered[index]?.uri){node.remove();nodes.delete(index);hits.get(index)?.remove();hits.delete(index);}
             for(const index of visible){
                 let node=nodes.get(index);if(!node){node=card(index);node.dataset.uri=ordered[index].uri;flow.append(node);nodes.set(index,node);}
                 let hit=hits.get(index);if(!hit){hit=document.createElement('div');hit.className='spotify-flow-hit';hit.dataset.index=index;hit.setAttribute('aria-hidden','true');hit.addEventListener('click',event=>{event.stopPropagation();activate(index);});hitLayer.append(hit);hits.set(index,hit);}
-                const distance=index-layoutCenter,absolute=Math.abs(distance),side=Math.sign(distance);
-                const x=selected>=0?distance===0?-100:side*(500+(absolute-1)*COVER_SPACING):distance*COVER_SPACING;
-                const angle=index===selected?0:-90-26*Math.tanh(distance/8);
+                const distance=index-center,absolute=Math.abs(distance),side=Math.sign(distance);
+                const x=selected>=0?distance===0?-100:side*(500+sleeveOffset(absolute-1)):side*sleeveOffset(absolute)+edgeOffset;
+                const angle=index===selected?0:sleeveAngle(absolute);
                 node.style.transform=`translateX(${x}px) translateZ(${index===selected?100:-170-Math.min(absolute,6)*8}px) rotateY(${angle}deg)`;
                 node.style.zIndex=String(index===selected?200:100-Math.round(absolute));node.classList.toggle('is-open',index===selected);node.classList.toggle('is-playing',index===selected&&isPlaying);node.setAttribute('aria-pressed',String(index===selected));
                 node.style.opacity=1;
-                const hitWidth=index===selected?COVER_SIZE*1.55:COVER_SPACING;
+                const hitWidth=index===selected?COVER_SIZE*1.55:Math.max(26,sleeveOffset(absolute+.5)-sleeveOffset(Math.max(0,absolute-.5)));
                 const hitCenter=x+(index===selected?COVER_SIZE/4:0);
                 hit.style.left=`calc(50% + ${hitCenter-hitWidth/2}px)`;hit.style.width=`${hitWidth}px`;
             }
+            syncInspector(host);
         }
         function select(index){if(!ordered.length)return;const album=ordered[clamp(index)];state.coverflowAlbum=album.uri;state.coverflowPosition=clamp(index);refresh();onChange();}
         function shift(amount){if(!ordered.length)return;const index=current();state.coverflowPosition=clamp((index>=0?index:state.coverflowPosition)+amount);state.coverflowAlbum=null;refresh();onChange();}
@@ -243,5 +277,5 @@ const SpotifyCoverflow=(()=>{
         }
         if(tokenData())await loadAlbums();else renderSettings();
     }
-    return {mount,bindSettings,openSettings,initialize,login,logout,get clientId(){return clientId;}};
+    return {mount,inspectorHtml,bindInspector,bindSettings,openSettings,initialize,login,logout,get clientId(){return clientId;}};
 })();
