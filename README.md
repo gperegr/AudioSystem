@@ -13,6 +13,8 @@ Monte um sistema de som virtual, conecte os equipamentos e ouça o resultado no 
 3. Mantenha internet disponível para os recursos externos de estilo e as fontes da interface.
 4. Clique ou toque no programa para liberar o áudio. Comece com o volume do computador baixo.
 
+Na primeira abertura, um guia opcional recomenda fones e reproduz, somente quando solicitado, um som forte, um detalhe sutil, os canais esquerdo/direito e sons reais da interface. As respostas fazem pequenos ajustes no **volume do programa** e nos **sons de interação**. Você pode pular qualquer etapa, repetir o guia em **Configurações → Calibrar volume dos fones** ou editar os dois níveis em **Configurações → Níveis de escuta**. O navegador não mede o volume real do fone; comece com o dispositivo baixo e mantenha um nível confortável.
+
 Se você recebeu o endereço da aplicação publicada, abra-o diretamente. O programa não exige instalar Node.js para ser usado.
 
 ## Sua primeira montagem

@@ -4147,6 +4147,56 @@
 .app-confirm-actions [data-dialog-accept].is-danger {border-color:#945c4c;background:#63392e;color:#fff0e9;}
 .app-confirm-actions button:focus-visible {outline:2px solid #a6d0e7;outline-offset:3px;}
 
+.headphone-calibration-dialog {width:min(520px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 32px);margin:auto;padding:0;overflow:auto;border:1px solid #766f65;border-radius:12px;background:linear-gradient(145deg,#242b30,#1a232c 65%);color:#e7edf1;box-shadow:0 22px 70px #0009,0 0 45px #c5984b16;}
+.headphone-calibration-dialog::backdrop {background:radial-gradient(circle at 50% 40%,#70533a66,#07101ae3 70%);backdrop-filter:blur(3px);}
+.headphone-calibration-dialog[open] {animation:headphone-dialog-in .38s cubic-bezier(.2,.8,.2,1) both;}
+.headphone-calibration-dialog[open]::backdrop {animation:headphone-backdrop-in .38s ease-out both;}
+.headphone-calibration-card {display:flex;flex-direction:column;gap:14px;padding:24px;}
+.headphone-calibration-card.is-entering>:is(.headphone-calibration-icon,h2,#headphone-calibration-message,.headphone-calibration-answers,.headphone-calibration-ui-volume) {animation:headphone-step-in .3s ease-out both;}
+.headphone-calibration-progress {color:#9bc5d7;font:600 12px/1.2 var(--font-ui,"Inter",sans-serif);}
+.headphone-calibration-progress:empty {display:none;}
+.headphone-calibration-icon {display:grid;place-items:center;width:52px;height:52px;border:1px solid #9b8262;border-radius:14px;background:linear-gradient(145deg,#695741,#3a4242);color:#f0d5a9;box-shadow:inset 0 1px #fff2,0 6px 18px #c3965030;}
+.headphone-calibration-icon svg {width:29px;height:29px;}
+.headphone-calibration-card h2 {margin:0;color:#f1f5f7;font:600 22px/1.25 var(--font-ui,"Inter",sans-serif);}
+.headphone-calibration-card p {margin:0;color:#c4ced5;font:400 14px/1.55 var(--font-ui,"Inter",sans-serif);}
+.headphone-calibration-card .headphone-calibration-note {padding:11px 12px;border-radius:6px;background:#263440;color:#b9cbd4;font-size:12px;}
+#headphone-calibration-status:empty {display:none;}
+#headphone-calibration-status {color:#d8c69e;}
+#headphone-calibration-status:not(:empty) {animation:headphone-step-in .22s ease-out both;}
+.headphone-calibration-actions {display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;margin-top:5px;}
+.headphone-calibration-actions button {min-height:42px;padding:9px 14px;border:1px solid #51616e;border-radius:6px;background:#27333d;color:#e0e8ed;font:600 13px/1.2 var(--font-ui,"Inter",sans-serif);cursor:pointer;}
+.headphone-calibration-actions button:hover {background:#334450;}
+.headphone-calibration-actions button:focus-visible {outline:2px solid #a6d0e7;outline-offset:3px;}
+.headphone-calibration-actions button svg {width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.headphone-calibration-actions #headphone-calibration-play svg {fill:currentColor;stroke:none;}
+#headphone-calibration-play,#headphone-calibration-next {display:flex;align-items:center;justify-content:center;gap:7px;}
+#headphone-calibration-next {border-color:#9b8060;background:#66513d;color:#fff3df;}
+.headphone-calibration-actions button[hidden] {display:none;}
+.headphone-calibration-ui-volume {display:flex;flex-direction:column;gap:3px;}
+.headphone-calibration-ui-volume[hidden] {display:none;}
+.headphone-calibration-ui-volume label {display:flex;justify-content:space-between;gap:10px;color:#dbe5ec;font:600 13px/1.3 var(--font-ui,"Inter",sans-serif);}
+.headphone-calibration-ui-volume output {color:#9bc5d7;}
+.headphone-calibration-answers {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.headphone-calibration-answers[hidden] {display:none;}
+.headphone-calibration-answers button {display:flex;align-items:center;justify-content:center;gap:5px;min-height:42px;padding:8px 5px;border:1px solid #526675;border-radius:8px;background:#273946;color:#dbe8ec;font:600 12px/1.2 var(--font-ui,"Inter",sans-serif);cursor:pointer;transition:background .18s,border-color .18s,transform .18s,box-shadow .18s;}
+.headphone-calibration-answers button svg {flex:none;width:15px;height:15px;}
+.headphone-calibration-answers button:hover,.headphone-calibration-answers button:focus-visible {border-color:#8cb5bf;transform:translateY(-1px);}
+.headphone-calibration-answers button.is-selected {border-color:#d1b68a;background:#66513d;color:#fff3df;box-shadow:0 0 0 2px #d1b68a2b,inset 0 1px #ffffff20;}
+.headphone-calibration-answers button:focus-visible {outline:2px solid #a6d0e7;outline-offset:2px;}
+.headphone-calibration-setting+.listening-level-settings {border-top:1px solid #374151;}
+.listening-level-settings {display:flex;flex-direction:column;gap:8px;padding-top:12px;}
+.listening-level-settings strong {color:#dbe5ec;font:600 13px/1.3 var(--font-ui,"Inter",sans-serif);}
+.listening-level-settings label {display:flex;justify-content:space-between;gap:10px;color:#cbd5e1;font:500 12px/1.3 var(--font-ui,"Inter",sans-serif);}
+.listening-level-settings output {color:#9bc5d7;}
+.listening-level-settings p {margin:0;color:#94a3b8;font:400 11px/1.5 var(--font-ui,"Inter",sans-serif);}
+@keyframes headphone-dialog-in {from {opacity:0;transform:translateY(9px) scale(.97);}to {opacity:1;transform:translateY(0) scale(1);}}
+@keyframes headphone-backdrop-in {from {opacity:0;}to {opacity:1;}}
+@keyframes headphone-step-in {from {opacity:0;transform:translateY(5px);}to {opacity:1;transform:translateY(0);}}
+@media (prefers-reduced-motion:reduce) {.headphone-calibration-dialog[open],.headphone-calibration-dialog[open]::backdrop,.headphone-calibration-card.is-entering>:is(.headphone-calibration-icon,h2,#headphone-calibration-message,.headphone-calibration-answers,.headphone-calibration-ui-volume) {animation:none;}.headphone-calibration-answers button {transition:none;}}
+.headphone-calibration-setting {display:flex;flex-direction:column;gap:8px;padding:14px 0;border-top:1px solid #374151;}
+.headphone-calibration-setting strong {color:#dbe5ec;font:600 13px/1.3 var(--font-ui,"Inter",sans-serif);}
+.headphone-calibration-setting p {margin:0;color:#94a3b8;font:400 11px/1.5 var(--font-ui,"Inter",sans-serif);}
+
 /* Explicit equipment movement mode appears only on touch input. */
 .touch-move-mode {display:none;}
 @media(pointer:coarse) {
@@ -4401,12 +4451,12 @@ body.inspector-collapsed #inspector>.inspector-panel-header,body.inspector-colla
 
 /* Shared menu range: the same thin track and round thumb as Ambiente sonoro · Intensidade. */
 :root {--menu-slider-track:#374151;--menu-slider-thumb:#3b82f6;--menu-slider-thumb-size:16px;--menu-slider-track-size:4px;}
-:is(#inspector-content,.app-settings-content) input.app-menu-slider[type="range"] {appearance:none;-webkit-appearance:none;box-sizing:border-box;display:block;width:100%;height:44px!important;min-height:44px!important;margin:0;padding:0;border:0;background:transparent!important;cursor:pointer;touch-action:pan-y;}
-:is(#inspector-content,.app-settings-content) input.app-menu-slider[type="range"]::-webkit-slider-runnable-track {box-sizing:border-box;width:100%;height:var(--menu-slider-track-size);border:0;border-radius:999px;background:var(--menu-slider-track);box-shadow:none;cursor:pointer;}
-:is(#inspector-content,.app-settings-content) input.app-menu-slider[type="range"]::-webkit-slider-thumb {appearance:none;-webkit-appearance:none;box-sizing:border-box;width:var(--menu-slider-thumb-size);height:var(--menu-slider-thumb-size);margin-top:calc((var(--menu-slider-track-size) - var(--menu-slider-thumb-size))/2);border:0;border-radius:50%;background:var(--menu-slider-thumb);box-shadow:0 2px 4px #0008;cursor:pointer;}
-:is(#inspector-content,.app-settings-content) input.app-menu-slider[type="range"]::-moz-range-track {box-sizing:border-box;width:100%;height:var(--menu-slider-track-size);border:0;border-radius:999px;background:var(--menu-slider-track);box-shadow:none;cursor:pointer;}
-:is(#inspector-content,.app-settings-content) input.app-menu-slider[type="range"]::-moz-range-thumb {box-sizing:border-box;width:var(--menu-slider-thumb-size);height:var(--menu-slider-thumb-size);border:0;border-radius:50%;background:var(--menu-slider-thumb);box-shadow:0 2px 4px #0008;cursor:pointer;}
-:is(#inspector-content,.app-settings-content) input.app-menu-slider[type="range"]:focus-visible {outline:2px solid #93c5fd;outline-offset:2px;border-radius:5px;}
+:is(#inspector-content,.app-settings-content,.headphone-calibration-dialog) input.app-menu-slider[type="range"] {appearance:none;-webkit-appearance:none;box-sizing:border-box;display:block;width:100%;height:44px!important;min-height:44px!important;margin:0;padding:0;border:0;background:transparent!important;cursor:pointer;touch-action:pan-y;}
+:is(#inspector-content,.app-settings-content,.headphone-calibration-dialog) input.app-menu-slider[type="range"]::-webkit-slider-runnable-track {box-sizing:border-box;width:100%;height:var(--menu-slider-track-size);border:0;border-radius:999px;background:var(--menu-slider-track);box-shadow:none;cursor:pointer;}
+:is(#inspector-content,.app-settings-content,.headphone-calibration-dialog) input.app-menu-slider[type="range"]::-webkit-slider-thumb {appearance:none;-webkit-appearance:none;box-sizing:border-box;width:var(--menu-slider-thumb-size);height:var(--menu-slider-thumb-size);margin-top:calc((var(--menu-slider-track-size) - var(--menu-slider-thumb-size))/2);border:0;border-radius:50%;background:var(--menu-slider-thumb);box-shadow:0 2px 4px #0008;cursor:pointer;}
+:is(#inspector-content,.app-settings-content,.headphone-calibration-dialog) input.app-menu-slider[type="range"]::-moz-range-track {box-sizing:border-box;width:100%;height:var(--menu-slider-track-size);border:0;border-radius:999px;background:var(--menu-slider-track);box-shadow:none;cursor:pointer;}
+:is(#inspector-content,.app-settings-content,.headphone-calibration-dialog) input.app-menu-slider[type="range"]::-moz-range-thumb {box-sizing:border-box;width:var(--menu-slider-thumb-size);height:var(--menu-slider-thumb-size);border:0;border-radius:50%;background:var(--menu-slider-thumb);box-shadow:none;cursor:pointer;}
+:is(#inspector-content,.app-settings-content,.headphone-calibration-dialog) input.app-menu-slider[type="range"]:focus-visible {outline:2px solid #93c5fd;outline-offset:2px;border-radius:5px;}
 
 .app-select-caption:has(.app-select-room-icon),.app-select-option:has(.app-select-room-icon) {display:flex;align-items:center;gap:9px;}
 .app-select-room-icon {flex:none;display:grid;place-items:center;width:22px;height:22px;color:#a9c6d7;}
