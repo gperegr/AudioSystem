@@ -2142,7 +2142,7 @@ const Hardware = (() => {
         });
 
         const DEVICE_NAMES = {
-            furnitureRack:'Rack de Áudio', furnitureHairpin:'Rack Vintage · Alfinete', furnitureRecordOne:'Rack para Discos · 1 Coluna', furnitureRecordThree:'Rack para Discos · 3 Colunas', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureRackSixTall:'Rack com Vãos Altos · 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio', pendantLamp:'Luminária pendente', wallLampCage:'Arandela industrial', wallLampDome:'Arandela de prato', wallLampBare:'Arandela de filamento',
+            furnitureRack:'Rack de Áudio', furnitureHairpin:'Rack Vintage · Alfinete', furnitureRecordOne:'Rack para Discos · 1 Coluna', furnitureRecordThree:'Rack para Discos · 3 Colunas', furnitureCoverflow:'Coleção de Discos · Spotify', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureRackSixTall:'Rack com Vãos Altos · 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio', pendantLamp:'Luminária pendente', wallLampCage:'Arandela industrial', wallLampDome:'Arandela de prato', wallLampBare:'Arandela de filamento',
             adapterRcaP2:'Adaptador RCA → P2', adapterP2Rca:'Adaptador P2 → RCA', adapterP10P2:'Adaptador P10 → P2', adapterP2P10:'Adaptador P2 → P10', adapterRcaP10:'Adaptador RCA → P10', adapterP10Rca:'Adaptador P10 → RCA', phonoConverter:'Conversor Phono → Linha', speakerConverter:'Conversor Amplificado → Linha',
             turntable: 'Toca-discos', turntableVintage: 'Toca-discos Vintage', turntableLinear:'Toca-discos Tangencial',
             hardwareDemo:'Modelo · Controles',signalGeneratorVintage:'Gerador de Sinais Vintage', signalGenerator:'Gerador de Sinais', cdPlayer: 'CD Player', tapeDeck:'Tape Deck de Rolo', preamp:'Pré · Slim',preReference:'Pré · Visor Verde',preControl:'Pré · Controle 2.1',preDisplay:'Pré · Tela Central', benchMeter:'Medidor de Bancada', benchMeterVintage:'Medidor de Bancada Vintage',
@@ -2209,6 +2209,7 @@ const Hardware = (() => {
             furnitureHairpin:{width:1320,height:610,surfaces:[0,238,456],inset:24,rack:true,back:true,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack baixo de madeira com dois vãos centrais, nichos laterais e pés alfinete de metal.'},
             furnitureRecordOne:{width:832,height:800,surfaces:[0,300,730],inset:26,rack:true,back:true,recordColumns:1,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack de madeira com nicho para aparelhos, espaço inferior para discos e pequenos rodízios.'},
             furnitureRecordThree:{width:2440,height:800,surfaces:[0,300,730],inset:26,rack:true,back:true,recordColumns:3,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack de madeira com nicho superior para aparelhos e três compartimentos inferiores para discos.'},
+            furnitureCoverflow:{width:2440,height:800,surfaces:[0],inset:26,rack:true,back:true,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Coleção de álbuns salvos no Spotify, com capas móveis e disco revelado ao selecionar. Reprodução independente dos cabos.'},
             furnitureTable:{width:1680,height:760,surfaces:[0],inset:20,description:'Apoie os equipamentos sobre o tampo. Arraste a mesa pelo tampo ou pelos pés.'},
             furnitureNiche:{width:840,height:280,surfaces:[0,260],inset:20,back:true,description:'Acomode um equipamento dentro do nicho ou sobre ele.'}
         };
@@ -2226,7 +2227,10 @@ const Hardware = (() => {
             const config=FURNITURE_TYPES[type];
             const part=(name,x,y,width,height,content='')=>`<div class="furniture-part ${name}" style="left:${x}px;top:${y}px;width:${width}px;height:${height}px">${content}</div>`;
             let parts='';
-            if(type==='furnitureTable'){
+            if(type==='furnitureCoverflow'){
+                parts='<div class="spotify-coverflow-host"><div class="spotify-flow-stage" tabindex="0" role="region" aria-label="Capas dos álbuns. Arraste, role ou use as setas para navegar."><div class="spotify-flow-cards"></div><p class="spotify-flow-message"></p></div><div class="spotify-flow-console"><div class="spotify-flow-info"><strong class="spotify-flow-title">Sua coleção de discos</strong><span class="spotify-flow-subtitle">Álbuns salvos no Spotify</span></div><div class="spotify-flow-actions"><button type="button" class="spotify-flow-connect">Conectar Spotify</button><button type="button" class="spotify-flow-settings" aria-label="Configurar Spotify" title="Configurar Spotify">⚙</button><button type="button" class="spotify-flow-prev" aria-label="Faixa anterior">◀</button><button type="button" class="spotify-flow-play" aria-label="Tocar álbum">▶</button><button type="button" class="spotify-flow-next" aria-label="Próxima faixa">▶</button><label>Ordenar <select class="spotify-flow-sort" aria-label="Ordenar álbuns"><option value="added">Recentes</option><option value="artist">Artista</option><option value="name">Título</option><option value="year">Ano</option></select></label></div><div class="spotify-flow-position-row"><input class="spotify-flow-position" type="range" min="0" max="0" value="0" aria-label="Posição na coleção"><span class="spotify-flow-count"></span></div></div></div>'+
+                    part('furniture-top',0,0,config.width,28)+part('furniture-side',0,28,26,702)+part('furniture-side',config.width-26,28,26,702)+part('furniture-shelf',0,730,config.width,30)+part('furniture-caster',42,760,42,40,'<span class="caster-stem"></span><span class="caster-wheel"></span>')+part('furniture-caster',config.width-84,760,42,40,'<span class="caster-stem"></span><span class="caster-wheel"></span>');
+            }else if(type==='furnitureTable'){
                 parts=part('furniture-top',0,0,config.width,28)+part('furniture-leg',60,28,40,config.height-28)+part('furniture-leg',config.width-100,28,40,config.height-28)+part('furniture-brace',100,80,config.width-200,20);
             }else if(type==='furnitureHairpin'){
                 const pin='<svg viewBox="0 0 80 130" aria-hidden="true"><path d="M9 3 28 115Q34 129 40 115L61 3M20 3 32 108Q34 116 36 108L50 3"/><path class="hairpin-glint" d="M12 5 30 114M58 5 39 114"/></svg>';
@@ -4186,7 +4190,7 @@ const Hardware = (() => {
                 headphoneAmp:'#c6ab87',headphoneAmpModern:'#91b7c7',headphoneAmp4:'#a1b7c0',eqStudio:'#9eb7c5',eqVintage:'#c5ad86',mixer:'#a4b6c6',mixerVintage:'#bfa385',
                 crossover:'#93b8bf',crossoverVintage:'#c3ae8b',btReceiverA:'#8abac8',btTransmitterPro:'#99b7cc',
                 rcaSwitch:'#a4b5c1',rcaSwitchVintage:'#bda98a',speakerSwitch:'#9eb8bc',speakerSwitchVintage:'#c1a785',rcaMatrix:'#9bacc3',rcaMatrixVintage:'#b9a88b',
-                furnitureRack:'#a5b3ad',furnitureHairpin:'#b99470',furnitureRecordOne:'#c19a71',furnitureRecordThree:'#c19a71',furnitureRackTall:'#a0b1ab',furnitureRackSix:'#9baaa6',furnitureRackSixTall:'#92a5a0',furnitureTable:'#baa48a',furnitureNiche:'#b7a58d',pendantLamp:'#e6b674',wallLampCage:'#d8b879',wallLampDome:'#d9ae75',wallLampBare:'#e1b874'
+                furnitureRack:'#a5b3ad',furnitureHairpin:'#b99470',furnitureRecordOne:'#c19a71',furnitureRecordThree:'#c19a71',furnitureCoverflow:'#c19a71',furnitureRackTall:'#a0b1ab',furnitureRackSix:'#9baaa6',furnitureRackSixTall:'#92a5a0',furnitureTable:'#baa48a',furnitureNiche:'#b7a58d',pendantLamp:'#e6b674',wallLampCage:'#d8b879',wallLampDome:'#d9ae75',wallLampBare:'#e1b874'
             };
             const color=colors[type]||(INTERFACE_DEVICES[type]?.passive?'#b6b5aa':DEVICE_FAMILIES[type]==='vintage'?'#c0ab8a':'#a0b8c4');
             drawing=drawing.replace(/ opacity="[^"]*"/g,'');
@@ -6024,6 +6028,10 @@ const Hardware = (() => {
             installOutputCircuits(dev);
             installListeningControls(dev);
             bindDeviceEvents(dev);
+            if(type==='furnitureCoverflow'){
+                const controller=SpotifyCoverflow.mount(el.querySelector('.spotify-coverflow-host'),dev.state,scheduleProjectSave,()=>{settingsMenu.open=true;settingsMenu.querySelector('[data-spotify-client]')?.focus();});
+                dev.refreshCoverflow=controller.refresh;dev.disposeCoverflow=controller.dispose;
+            }
             if(SIGNAL_GENERATOR_TYPES.has(type)){configureSignalGenerator(dev);bindSignalGeneratorPanel(dev);}
             if(EXTRA_AUDIO_TYPES.has(type))bindExtraDevice(dev);
             if(type==='hardwareDemo')Hardware.bindDemo(dev);
@@ -6817,6 +6825,7 @@ const Hardware = (() => {
         }
         function deleteDevice(dev) {
             if (!dev || !state.devices[dev.id]) return;
+            dev.disposeCoverflow?.();
             dev.disposeLinear?.();
             dev.disposeStream?.();
             Hardware.dispose(dev);
@@ -8611,6 +8620,7 @@ const Hardware = (() => {
             if(SELECTOR_TYPES.has(dev.type)){const source=saved.selectedSource==='B'?'B':'A';dev.el.querySelector(`[data-switch-source="${source}"]`)?.click();}
             updateBenchAppearance(dev);
             if(FURNITURE_TYPES[dev.type]){s.material=furnitureMaterialFor(dev.type,s.material);dev.el.dataset.material=s.material;if(FURNITURE_TYPES[dev.type].back){s.hasBack=true;dev.el.dataset.back='true';}}
+            dev.refreshCoverflow?.();
             if(controlAmpConfig(dev.type)){s.integratedSource=clamp(s.integratedSource,0,3,0);s.integratedSource=Math.round(s.integratedSource);s.direct=!!s.direct;s.subLevel=clamp(s.subLevel,0,1,.8);s.subFrequency=clamp(s.subFrequency,40,200,80);s.preMuted=!!s.preMuted;s.preMono=!!s.preMono;s.preInvert=!!s.preInvert;dev.applyIntegrated();}
             dev.setLidOpen?.(!!dev.state.lidOpen);
             dev.setTrayOpen?.(!!dev.state.trayOpen);
@@ -8728,6 +8738,9 @@ const Hardware = (() => {
         const roomSection=document.createElement('section');roomSection.className='room-settings';
         roomSection.innerHTML='<label>Ambiente sonoro<select id="room-preset">'+Object.entries(ROOM_PRESETS).map(([key,value])=>`<option value="${key}">${value.name}</option>`).join('')+'</select></label><label for="room-intensity">Intensidade <output id="room-intensity-value">0/10</output></label><input id="room-intensity" type="range" min="0" max="10" step="1" value="0"><p>Reverberação estéreo na escuta final. Em zero, o áudio permanece seco.</p>';
         clearCatalogFooter.insertBefore(roomSection,soundControls);
+        const spotifySetting=document.createElement('section');spotifySetting.className='spotify-settings';
+        clearCatalogFooter.insertBefore(spotifySetting,soundControls);
+        SpotifyCoverflow.bindSettings(spotifySetting,{beforeRedirect:()=>saveLocalProject(true)});
         const headphoneCalibrationSetting=document.createElement('section');headphoneCalibrationSetting.className='headphone-calibration-setting';
         headphoneCalibrationSetting.innerHTML='<strong>Ajuste de escuta com fones</strong><p>Volume, detalhes, estéreo, graves, agudos e sons da interface.</p><button id="open-headphone-calibration" type="button">Calibrar volume dos fones</button>';
         clearCatalogFooter.insertBefore(headphoneCalibrationSetting,soundControls);
@@ -8848,6 +8861,7 @@ const Hardware = (() => {
         }
         setupAppDropdowns();
 
+        SpotifyCoverflow.initialize().catch(()=>{});
         initializeProjectPersistence().finally(()=>{if(!headphonePromptSeen)requestAnimationFrame(openHeadphoneCalibration);});
 
         renderVisuals();

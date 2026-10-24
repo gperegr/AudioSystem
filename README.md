@@ -77,6 +77,14 @@ Ao deslocar ou ampliar o canvas, a imagem do cenário se move em velocidade dife
 
 A categoria **Móveis** inclui a **Luminária pendente**, que acompanha a altura do teto com o cabo e balança discretamente, e três arandelas de parede: **Industrial**, **de prato** e **de filamento**. Todas iluminam os equipamentos; as cúpulas bloqueiam a luz fora da sua abertura. As arandelas podem ser arrastadas livremente pelas paredes e são salvas com o projeto. A categoria **DEBUG** fica oculta por padrão; ative **Configurações → Modo desenvolvedor** para mostrar **Modelo · Controles** no catálogo. Projetos que já contêm esse modelo continuam funcionando. Em caixas com grade removível, um pequeno botão quadrado com ícone permite recolocá-la.
 
+### Coleção de discos do Spotify
+
+Em **Móveis**, adicione **Coleção de Discos · Spotify**. O móvel tem a largura do **Rack para Discos · 3 Colunas** e acabamentos de madeira clara ou escura. Arraste, role ou use as setas sobre as capas para percorrer seus álbuns salvos. Selecione uma capa para abrir o disco; clique novamente ou use o botão de reprodução para tocar. A barra inferior permite ir diretamente a uma posição e ordenar a coleção. Apenas as capas próximas da posição atual são renderizadas.
+
+Para conectar, crie um aplicativo no [Spotify for Developers](https://developer.spotify.com/dashboard), cadastre o **Redirect URI** mostrado em **Configurações → Spotify** no painel do Spotify e cole ali o **Client ID**. Abra o AudioSystem em HTTPS ou em `http://127.0.0.1` com um servidor local: a autorização PKCE e o Web Playback SDK não funcionam ao abrir `index.html` diretamente como arquivo. Uma conta **Spotify Premium** é necessária para a reprodução pelo navegador. O player Spotify é compartilhado entre os móveis e seu áudio não passa pelos cabos ou pelo sistema de sinais simulados.
+
+O projeto salva a posição, a ordenação e o álbum selecionado em cada móvel. O Client ID fica no navegador; tokens de acesso ficam somente na sessão. A biblioteca e os tokens não são exportados com o projeto. Ao abrir o projeto em outro navegador, conecte sua conta novamente.
+
 ### Celulares e tablets
 
 Os ícones **Equipamentos** e **Propriedades** abrem gavetas sobre a montagem. Feche pelo botão fixo ou tocando fora. Em telas estreitas, deslize a barra superior horizontalmente. Use dois dedos para mover/ampliar o canvas; pressione e segure antes de mover um aparelho, ou ative **Modo Touch** para arraste imediato.

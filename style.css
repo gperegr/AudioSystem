@@ -1802,6 +1802,40 @@
         .furniture-rack {isolation:isolate;}
         .furniture-rack .furniture-shelf {z-index:1;}
         .furniture-rack .furniture-side {z-index:2;}
+.device-type-furnitureCoverflow .spotify-coverflow-host {position:absolute;inset:28px 26px 70px;z-index:1;overflow:hidden;pointer-events:auto;background:linear-gradient(110deg,#12100edb,#302820cc 50%,#11100fdf);box-shadow:inset 0 12px 30px #0008,inset 12px 0 25px #0006,inset -12px 0 25px #0006;}
+.device-type-furnitureCoverflow .spotify-flow-stage {position:absolute;inset:0 0 126px;overflow:hidden;perspective:1500px;perspective-origin:50% 47%;touch-action:none;cursor:grab;outline:none;}
+.device-type-furnitureCoverflow .spotify-flow-stage:active {cursor:grabbing;}
+.device-type-furnitureCoverflow .spotify-flow-stage:focus-visible {outline:5px solid #91bfcd;outline-offset:-7px;}
+.device-type-furnitureCoverflow .spotify-flow-cards {position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;}
+.device-type-furnitureCoverflow .spotify-flow-card {position:absolute;left:-256px;top:-256px;width:512px;height:512px;padding:0;border:0;background:transparent;cursor:pointer;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.2,.75,.2,1),opacity .3s;}
+.device-type-furnitureCoverflow .spotify-flow-card::before {content:'';position:absolute;left:-20px;top:0;width:22px;height:100%;background:linear-gradient(90deg,#13100f,#716758 52%,#211d1a);transform:rotateY(-90deg);transform-origin:right center;box-shadow:0 5px 10px #0008;}
+.device-type-furnitureCoverflow .spotify-flow-card>img {position:absolute;inset:0;z-index:2;width:100%;height:100%;object-fit:cover;background:linear-gradient(145deg,#625343,#201d1a);box-shadow:0 13px 25px #0008,inset 0 0 0 2px #b5a07d55;backface-visibility:hidden;}
+.device-type-furnitureCoverflow .spotify-flow-vinyl {position:absolute;inset:8px;z-index:1;border-radius:50%;background:conic-gradient(from 25deg,#fff2,transparent 16% 50%,#fff2 60%,transparent 70%),repeating-radial-gradient(circle,#090b0c 0 3px,#1d2022 3px 5px);box-shadow:0 10px 22px #0009;visibility:hidden;transform:translateX(0);transition:transform .7s cubic-bezier(.2,.75,.2,1),visibility 0s .7s;}
+.device-type-furnitureCoverflow .spotify-flow-card.is-open .spotify-flow-vinyl {visibility:visible;transform:translateX(260px);transition:transform .75s cubic-bezier(.2,.75,.2,1),visibility 0s;}
+.device-type-furnitureCoverflow .spotify-flow-label {position:absolute;left:33%;top:33%;width:34%;height:34%;border-radius:50%;background-color:#9c7249;background-position:center;background-size:cover;box-shadow:0 0 0 4px #0b0d0e;animation:spotify-label-spin 8s linear infinite;animation-play-state:paused;}
+.device-type-furnitureCoverflow .spotify-flow-label::after {content:'';position:absolute;left:46%;top:46%;width:8%;height:8%;border-radius:50%;background:#151819;}
+.device-type-furnitureCoverflow .spotify-flow-card.is-playing .spotify-flow-label {animation-play-state:running;}
+@keyframes spotify-label-spin {to {transform:rotate(360deg);}}
+.device-type-furnitureCoverflow .spotify-flow-message {position:absolute;inset:0;display:grid;place-items:center;margin:0;padding:70px;color:#e0d4bc;font:500 28px/1.4 var(--font-ui);text-align:center;pointer-events:none;}
+.device-type-furnitureCoverflow .spotify-flow-console {position:absolute;left:0;right:0;bottom:0;height:126px;display:flex;align-items:center;gap:24px;box-sizing:border-box;padding:12px 28px;background:linear-gradient(#403b35,#171b1c);border-top:5px solid #a18d70;color:#e8e2d6;}
+.device-type-furnitureCoverflow .spotify-flow-info {display:flex;flex-direction:column;gap:5px;width:510px;min-width:0;overflow:hidden;}
+.device-type-furnitureCoverflow .spotify-flow-title {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 27px/1.2 var(--font-ui);}
+.device-type-furnitureCoverflow .spotify-flow-subtitle {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#bdb7ae;font:400 17px/1.2 var(--font-ui);}
+.device-type-furnitureCoverflow .spotify-flow-actions {display:flex;align-items:center;gap:11px;flex:none;}
+.device-type-furnitureCoverflow .spotify-flow-actions button,.device-type-furnitureCoverflow .spotify-flow-actions select {min-width:60px;height:52px;padding:6px 12px;border:2px solid #736e61;border-radius:6px;background:#252a2b;color:#e9e3d8;font:600 18px var(--font-ui);cursor:pointer;}
+.device-type-furnitureCoverflow .spotify-flow-actions button[hidden] {display:none;}
+.device-type-furnitureCoverflow .spotify-flow-actions button:disabled {opacity:.45;cursor:default;}
+.device-type-furnitureCoverflow .spotify-flow-actions label {display:flex;align-items:center;gap:8px;font:500 16px var(--font-ui);}
+.device-type-furnitureCoverflow .spotify-flow-position-row {display:flex;align-items:center;gap:12px;flex:1;min-width:0;}
+.device-type-furnitureCoverflow .spotify-flow-position {width:100%;accent-color:#c4a875;}
+.device-type-furnitureCoverflow .spotify-flow-count {min-width:84px;font:500 16px var(--font-ui);text-align:right;}
+@media (prefers-reduced-motion:reduce) {.device-type-furnitureCoverflow .spotify-flow-card,.device-type-furnitureCoverflow .spotify-flow-vinyl {transition:none;}.device-type-furnitureCoverflow .spotify-flow-label {animation:none;}}
+.spotify-settings {display:flex;flex-direction:column;gap:8px;padding:14px 0;border-top:1px solid #374151;color:#dbe5ec;font:500 12px/1.4 var(--font-ui);}
+.spotify-settings strong {font-size:13px;}.spotify-settings label {display:flex;flex-direction:column;gap:6px;}
+.spotify-settings input {width:100%;box-sizing:border-box;padding:8px;border:1px solid #536170;border-radius:5px;background:#1b2530;color:#e6edf2;}
+.spotify-settings code {display:block;overflow-wrap:anywhere;color:#9bc5d7;user-select:all;}
+.spotify-setting-actions {display:flex;gap:8px;}.spotify-setting-actions button {padding:8px 12px;border:1px solid #536170;border-radius:5px;background:#293844;color:#e6edf2;cursor:pointer;}.spotify-setting-actions button[hidden] {display:none;}
+.spotify-settings p {margin:0;color:#b9cbd4;}
         .furniture-node[data-back="true"] .rack-body::before {content:'';position:absolute;inset:var(--back-top,16px) 20px var(--back-bottom,60px);pointer-events:none;background:linear-gradient(100deg,#20262b,#101519 65%,#191e23);box-shadow:inset 0 10px 24px #0009,inset 12px 0 20px #0005,inset -12px 0 20px #0005;}
         .furniture-node[data-back="true"][data-material="metal"] .rack-body::before {background:repeating-linear-gradient(0deg,#ffffff06 0 1px,transparent 1px 3px),linear-gradient(100deg,#68747b,#414b52 60%,#59666e);}
         .furniture-node[data-back="true"][data-material="lightWood"] .rack-body::before {background:repeating-linear-gradient(2deg,#d3aa7710 0 1px,transparent 1px 7px,#2e1d1315 7px 9px),linear-gradient(100deg,#997749,#705436 60%,#8c6a43);}
