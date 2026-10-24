@@ -5,8 +5,9 @@ const SpotifyCoverflow=(()=>{
     const TOKEN_KEY='audio-system-spotify-session';
     const VERIFIER_KEY='audio-system-spotify-verifier';
     const STATE_KEY='audio-system-spotify-state';
-    const COVER_SPACING=38;
-    const CLOSED_RADIUS=32;
+    const COVER_SIZE=400;
+    const COVER_SPACING=42;
+    const CLOSED_RADIUS=28;
     const OPEN_RADIUS=18;
     const REDIRECT=location.origin+location.pathname;
     const SCOPES='user-library-read streaming user-read-email user-read-private user-modify-playback-state';
@@ -122,23 +123,30 @@ const SpotifyCoverflow=(()=>{
     const sorters={added:(a,b)=>a._added-b._added,artist:(a,b)=>artist(a).localeCompare(artist(b)),name:(a,b)=>a.name.localeCompare(b.name),year:(a,b)=>(b.release_date||'').localeCompare(a.release_date||'')};
     function mount(host,state,onChange,openSettings){
         const stage=host.querySelector('.spotify-flow-stage'),flow=host.querySelector('.spotify-flow-cards'),message=host.querySelector('.spotify-flow-message');
+        const hitLayer=document.createElement('div');hitLayer.className='spotify-flow-hits';stage.append(hitLayer);
         const title=host.querySelector('.spotify-flow-title'),subtitle=host.querySelector('.spotify-flow-subtitle'),count=host.querySelector('.spotify-flow-count');
         const position=host.querySelector('.spotify-flow-position'),sort=host.querySelector('.spotify-flow-sort'),play=host.querySelector('.spotify-flow-play');
-        const nodes=new Map();let ordered=[],orderedSource=null,orderedSort=null,drag=null,dragged=false,suppressClickUntil=0;
+        const nodes=new Map(),hits=new Map();let ordered=[],orderedSource=null,orderedSort=null,drag=null,dragged=false,suppressClickUntil=0;
         state.coverflowSort=sorters[state.coverflowSort]?state.coverflowSort:'added';
         state.coverflowPosition=Number.isFinite(state.coverflowPosition)?state.coverflowPosition:0;
         state.coverflowAlbum=typeof state.coverflowAlbum==='string'?state.coverflowAlbum:null;
         sort.value=state.coverflowSort;
         const current=()=>ordered.findIndex(album=>album.uri===state.coverflowAlbum);
         const clamp=value=>Math.max(0,Math.min(Math.max(0,ordered.length-1),value));
+        function activate(index){if(performance.now()<suppressClickUntil)return;const album=ordered[index];if(!album)return;if(current()===index){playAlbum(album);return;}select(index);}
         function card(index){
-            const album=ordered[index],element=document.createElement('button');element.type='button';element.className='spotify-flow-card';element.dataset.index=index;
+            const album=ordered[index],element=document.createElement('div');element.className='spotify-flow-card';element.dataset.index=index;element.setAttribute('role','button');element.tabIndex=0;
             element.setAttribute('aria-label',`${album.name} — ${artist(album)}`);
             const vinyl=document.createElement('span');vinyl.className='spotify-flow-vinyl';
-            const cover=document.createElement('img');cover.alt='';cover.loading='lazy';cover.referrerPolicy='no-referrer';cover.src=(album.images||[]).filter(image=>image.width>=300).sort((a,b)=>a.width-b.width)[0]?.url||album.images?.[0]?.url||'';
+            const cover=document.createElement('img');cover.alt='';cover.loading='lazy';cover.referrerPolicy='no-referrer';
+            const artUrl=(album.images||[]).filter(image=>image.width>=300).sort((a,b)=>a.width-b.width)[0]?.url||album.images?.[0]?.url;
+            if(artUrl)cover.src=artUrl;
             const back=cover.cloneNode();back.className='spotify-flow-back';
-            const label=document.createElement('i');label.className='spotify-flow-label';if(cover.src)label.style.backgroundImage=`url("${cover.src.replaceAll('"','%22')}")`;vinyl.append(label);
-            element.append(vinyl,cover,back);element.addEventListener('click',event=>{event.stopPropagation();if(performance.now()<suppressClickUntil)return;if(current()===index){playAlbum(album);return;}select(index);});
+            const spines=['left','right'].map(side=>{const spine=document.createElement('span');spine.className=`spotify-flow-spine spotify-flow-spine-${side}`;const text=document.createElement('span');text.textContent=album.name;spine.append(text);return spine;});
+            if(artUrl)element.style.setProperty('--album-art',`url("${artUrl.replaceAll('"','%22')}")`);
+            const label=document.createElement('i');label.className='spotify-flow-label';if(artUrl)label.style.backgroundImage=`url("${artUrl.replaceAll('"','%22')}")`;vinyl.append(label);
+            element.append(vinyl,cover,back,...spines);element.addEventListener('click',event=>{event.stopPropagation();activate(index);});
+            element.addEventListener('keydown',event=>{if(!['Enter',' '].includes(event.key))return;event.preventDefault();event.stopPropagation();element.click();});
             return element;
         }
         function refresh(){
@@ -146,24 +154,32 @@ const SpotifyCoverflow=(()=>{
             sort.value=state.coverflowSort;
             const selected=current();
             host.querySelector('.spotify-flow-connect').hidden=!!tokenData();
-            if(!ordered.length){nodes.forEach(node=>node.remove());nodes.clear();message.textContent=status;message.hidden=false;title.textContent='Sua coleção de discos';subtitle.textContent='Álbuns salvos no Spotify';count.textContent='';position.max=0;position.value=0;position.disabled=true;play.disabled=true;return;}
+            if(!ordered.length){nodes.forEach(node=>node.remove());nodes.clear();hits.forEach(hit=>hit.remove());hits.clear();message.textContent=status;message.hidden=false;title.textContent='Sua coleção de discos';subtitle.textContent='Álbuns salvos no Spotify';count.textContent='';position.max=0;position.value=0;position.disabled=true;play.disabled=true;return;}
             message.hidden=true;const center=selected>=0?selected:clamp(state.coverflowPosition);
+            const edgeSpan=Math.min(CLOSED_RADIUS*COVER_SPACING,Math.max(0,(ordered.length-1)*COVER_SPACING/2));
+            const edgeRange=Math.min(56,Math.max(1,(ordered.length-1)/2));
+            const edgeOffset=selected>=0?0:-edgeSpan*Math.max(0,1-center/edgeRange)+edgeSpan*Math.max(0,1-(ordered.length-1-center)/edgeRange);
+            const layoutCenter=center-edgeOffset/COVER_SPACING;
             position.disabled=false;position.max=ordered.length-1;position.value=Math.round(center);count.textContent=`${Math.round(center)+1} / ${ordered.length}`;
             title.textContent=selected>=0?ordered[selected].name:'Sua coleção de discos';subtitle.textContent=status|| (selected>=0?`${artist(ordered[selected])} · ${(ordered[selected].release_date||'').slice(0,4)}`:'Arraste ou role as capas para escolher um álbum');
             play.disabled=selected<0||!deviceId;const isPlaying=!!(playback&&selected>=0&&playback.context?.uri===ordered[selected].uri&&!playback.paused);
             play.setAttribute('aria-label',isPlaying?'Pausar álbum':'Tocar álbum');
             play.textContent=isPlaying?'❚❚':'▶';
             const radius=selected>=0?OPEN_RADIUS:CLOSED_RADIUS;
-            const visible=new Set();for(let index=Math.max(0,Math.floor(center)-radius);index<=Math.min(ordered.length-1,Math.ceil(center)+radius);index++)visible.add(index);
-            for(const [index,node] of nodes)if(!visible.has(index)||node.dataset.uri!==ordered[index]?.uri){node.remove();nodes.delete(index);}
+            const visible=new Set();for(let index=Math.max(0,Math.floor(layoutCenter)-radius);index<=Math.min(ordered.length-1,Math.ceil(layoutCenter)+radius);index++)visible.add(index);
+            for(const [index,node] of nodes)if(!visible.has(index)||node.dataset.uri!==ordered[index]?.uri){node.remove();nodes.delete(index);hits.get(index)?.remove();hits.delete(index);}
             for(const index of visible){
                 let node=nodes.get(index);if(!node){node=card(index);node.dataset.uri=ordered[index].uri;flow.append(node);nodes.set(index,node);}
-                const distance=index-center,absolute=Math.abs(distance),side=Math.sign(distance);
-                const x=selected>=0?distance===0?-130:side*(560+(absolute-1)*COVER_SPACING):distance*COVER_SPACING;
-                const angle=index===selected?0:-90-22*Math.tanh(distance/8);
+                let hit=hits.get(index);if(!hit){hit=document.createElement('div');hit.className='spotify-flow-hit';hit.dataset.index=index;hit.setAttribute('aria-hidden','true');hit.addEventListener('click',event=>{event.stopPropagation();activate(index);});hitLayer.append(hit);hits.set(index,hit);}
+                const distance=index-layoutCenter,absolute=Math.abs(distance),side=Math.sign(distance);
+                const x=selected>=0?distance===0?-100:side*(500+(absolute-1)*COVER_SPACING):distance*COVER_SPACING;
+                const angle=index===selected?0:-90-26*Math.tanh(distance/8);
                 node.style.transform=`translateX(${x}px) translateZ(${index===selected?100:-170-Math.min(absolute,6)*8}px) rotateY(${angle}deg)`;
-                node.style.zIndex=String(index===selected?200:100-Math.round(absolute));node.classList.toggle('is-open',index===selected);node.classList.toggle('is-playing',index===selected&&isPlaying);
+                node.style.zIndex=String(index===selected?200:100-Math.round(absolute));node.classList.toggle('is-open',index===selected);node.classList.toggle('is-playing',index===selected&&isPlaying);node.setAttribute('aria-pressed',String(index===selected));
                 node.style.opacity=1;
+                const hitWidth=index===selected?COVER_SIZE*1.55:COVER_SPACING;
+                const hitCenter=x+(index===selected?COVER_SIZE/4:0);
+                hit.style.left=`calc(50% + ${hitCenter-hitWidth/2}px)`;hit.style.width=`${hitWidth}px`;
             }
         }
         function select(index){if(!ordered.length)return;const album=ordered[clamp(index)];state.coverflowAlbum=album.uri;state.coverflowPosition=clamp(index);refresh();onChange();}
@@ -176,13 +192,13 @@ const SpotifyCoverflow=(()=>{
         sort.addEventListener('change',()=>{state.coverflowSort=sort.value;nodes.forEach(node=>node.remove());nodes.clear();refresh();onChange();});
         position.addEventListener('input',()=>{state.coverflowAlbum=null;state.coverflowPosition=Number(position.value);refresh();onChange();});
         stage.addEventListener('wheel',event=>{event.preventDefault();event.stopPropagation();shift(Math.sign(Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY));},{passive:false});
-        stage.addEventListener('pointerdown',event=>{event.stopPropagation();if(event.button!==0)return;drag={x:event.clientX,index:current()>=0?current():state.coverflowPosition};dragged=false;stage.setPointerCapture(event.pointerId);});
-        stage.addEventListener('pointermove',event=>{if(!drag)return;const scale=stage.getBoundingClientRect().width/stage.clientWidth;const delta=(drag.x-event.clientX)/(COVER_SPACING*scale);if(Math.abs(delta)<.1)return;dragged=true;host.classList.add('is-dragging');state.coverflowAlbum=null;state.coverflowPosition=clamp(drag.index+delta);refresh();});
+        stage.addEventListener('pointerdown',event=>{event.stopPropagation();if(event.button!==0)return;drag={x:event.clientX,index:current()>=0?current():state.coverflowPosition};dragged=false;if(event.target===stage)stage.setPointerCapture(event.pointerId);});
+        stage.addEventListener('pointermove',event=>{if(!drag)return;const scale=stage.getBoundingClientRect().width/stage.clientWidth;const delta=(drag.x-event.clientX)/(COVER_SPACING*scale);if(Math.abs(delta)<.1)return;if(!stage.hasPointerCapture(event.pointerId))stage.setPointerCapture(event.pointerId);dragged=true;host.classList.add('is-dragging');state.coverflowAlbum=null;state.coverflowPosition=clamp(drag.index+delta);refresh();});
         const release=()=>{if(!drag)return;drag=null;host.classList.remove('is-dragging');if(dragged){suppressClickUntil=performance.now()+300;state.coverflowPosition=clamp(Math.round(state.coverflowPosition));refresh();onChange();dragged=false;}};
         stage.addEventListener('pointerup',release);stage.addEventListener('pointercancel',release);
         stage.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End','Enter',' '].includes(event.key))return;if(event.target!==stage&&['Enter',' '].includes(event.key))return;event.preventDefault();event.stopPropagation();if(event.key==='ArrowLeft')shift(-1);else if(event.key==='ArrowRight')shift(1);else if(event.key==='Home')select(0);else if(event.key==='End')select(ordered.length-1);else if(current()>=0)playAlbum(ordered[current()]);});
         const view={refresh};views.add(view);refresh();if(tokenData()){loadAlbums();ensurePlayer().catch(error=>setStatus(error.message));}
-        return {refresh,dispose(){views.delete(view);nodes.clear();if(!views.size)disconnect();}};
+        return {refresh,dispose(){views.delete(view);nodes.clear();hitLayer.remove();hits.clear();if(!views.size)disconnect();}};
     }
     function renderSettings(){
         if(!settings)return;
