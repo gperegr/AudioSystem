@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=headphone-guide-loop">
+    <link rel="stylesheet" href="./style.css?v=headphone-guide-slide">
 </head>
 <body class="flex flex-col h-screen bg-black text-white">
 
@@ -277,6 +277,7 @@
     <dialog id="headphone-calibration-dialog" class="headphone-calibration-dialog" aria-labelledby="headphone-calibration-title" aria-describedby="headphone-calibration-message">
         <div class="headphone-calibration-card">
             <span class="app-confirm-kicker">Escuta com fones</span>
+            <div class="headphone-calibration-stage-window"><div id="headphone-calibration-stage" class="headphone-calibration-stage">
             <span id="headphone-calibration-progress" class="headphone-calibration-progress"></span>
             <span id="headphone-calibration-icon" class="headphone-calibration-icon" aria-hidden="true"></span>
             <h2 id="headphone-calibration-title"></h2>
@@ -290,8 +291,9 @@
                 <label for="headphone-calibration-ui-slider">Volume dos sons de interação <output id="headphone-calibration-ui-value">90%</output></label>
                 <input id="headphone-calibration-ui-slider" class="app-menu-slider" type="range" min="0" max="100" step="5" value="90" aria-label="Volume dos sons de interação">
             </div>
+            <p id="headphone-calibration-status" class="headphone-calibration-status" role="status" aria-live="polite"></p>
+            </div></div>
             <p class="headphone-calibration-note">O navegador não mede o volume real do fone. Priorize o conforto.</p>
-            <p id="headphone-calibration-status" role="status" aria-live="polite"></p>
             <div class="headphone-calibration-actions">
                 <button id="headphone-calibration-back" type="button" data-hardware-feedback aria-label="Voltar à etapa anterior" title="Voltar" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg></button>
                 <button id="headphone-calibration-skip" type="button" data-hardware-feedback>Pular</button>
@@ -1347,6 +1349,6 @@
     </template>
 
     <script src="./assets/rooms/scenes.js?v=illustrated-rooms"></script>
-    <script src="./script.js?v=headphone-guide-loop"></script>
+    <script src="./script.js?v=headphone-guide-slide"></script>
 </body>
 </html>
