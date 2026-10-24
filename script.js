@@ -828,18 +828,27 @@ const Hardware = (() => {
         const worldRect=world.getBoundingClientRect(),scale=worldRect.width/world.offsetWidth;
         if(!scale)return [];
         const bench=[...world.querySelectorAll('.device-type-furnitureTable .bench-decoration-lamp')].map(lamp=>{
-            const rect=lamp.getBoundingClientRect();
-            return {x:(rect.left+rect.width*135/284-worldRect.left)/scale,y:(rect.top+rect.height*187/656-worldRect.top)/scale,width:110,height:24,shape:'bar',fixture:'table',rgb:[255,205,105],strength:1.45,elevation:135,reach:1100,shade:{opening:1.22,penumbra:.24}};
+            const owner=lamp.closest('.device-node'),rect=staticLightRect(lamp,owner,worldRect,scale);
+            return {id:owner.id,x:rect.x+rect.width*135/284,y:rect.y+rect.height*187/656,width:110,height:24,shape:'bar',fixture:'table',rgb:[255,205,105],strength:1.45,elevation:135,reach:1100,shade:{opening:1.22,penumbra:.24}};
         });
         const pendants=[...world.querySelectorAll('.device-type-pendantLamp .pendant-filament')].map(filament=>{
-            const rect=filament.getBoundingClientRect();
-            return {x:(rect.left+rect.width/2-worldRect.left)/scale,y:(rect.top+rect.height/2-worldRect.top)/scale,width:28,height:36,shape:'point',fixture:'pendant',rgb:[255,192,82],strength:1.9,elevation:220,reach:1550,shade:{opening:1.2,penumbra:.2},animated:true};
+            const rect=filament.getBoundingClientRect(),owner=filament.closest('.device-node');
+            return {id:owner.id,x:(rect.left+rect.width/2-worldRect.left)/scale,y:(rect.top+rect.height/2-worldRect.top)/scale,width:28,height:36,shape:'point',fixture:'pendant',rgb:[255,192,82],strength:1.9,elevation:220,reach:1550,shade:{opening:1.2,penumbra:.2},animated:true};
         });
         const wallLamps=[...world.querySelectorAll('.wall-lamp-node .wall-lamp-filament')].map(filament=>{
-            const rect=filament.getBoundingClientRect(),model=filament.closest('.wall-lamp-node').dataset.lampModel;
-            return {x:(rect.left+rect.width/2-worldRect.left)/scale,y:(rect.top+rect.height/2-worldRect.top)/scale,width:26,height:32,shape:'point',fixture:model,rgb:model==='cage'?[255,194,110]:[255,200,123],strength:model==='bare'?1.55:model==='dome'?1.75:1.35,elevation:165,reach:1300,...(model==='dome'?{shade:{opening:1.18,penumbra:.25}}:{})};
+            const owner=filament.closest('.wall-lamp-node'),rect=staticLightRect(filament,owner,worldRect,scale),model=owner.dataset.lampModel;
+            return {id:owner.id,x:rect.x+rect.width/2,y:rect.y+rect.height/2,width:26,height:32,shape:'point',fixture:model,rgb:model==='cage'?[255,194,110]:[255,200,123],strength:model==='bare'?1.55:model==='dome'?1.75:1.35,elevation:165,reach:1300,...(model==='dome'?{shade:{opening:1.18,penumbra:.25}}:{})};
         });
         return [...bench,...pendants,...wallLamps];
+    }
+    const staticLightGeometry=new WeakMap();
+    function staticLightRect(element,owner,worldRect,scale){
+        const key=owner.style.left+'|'+owner.style.top+'|'+owner.offsetWidth+'|'+owner.offsetHeight;
+        const cached=staticLightGeometry.get(element);
+        if(cached?.key===key)return cached.rect;
+        const box=element.getBoundingClientRect();
+        const rect={x:(box.left-worldRect.left)/scale,y:(box.top-worldRect.top)/scale,width:box.width/scale,height:box.height/scale};
+        staticLightGeometry.set(element,{key,rect});return rect;
     }
     let roomFixtureLightKey='';
     function paintRoomFixtureLight(world,sources,scene,time){
@@ -979,15 +988,20 @@ const Hardware = (() => {
         const fixtureEmitters=positionedObjectLights(world);
         const sceneEmitters=[...positionedSceneLights(sceneName,sceneTime,world),...fixtureEmitters];
         paintRoomFixtureLight(world,fixtureEmitters,sceneName,sceneTime);
-        const sceneEmitterKey=sceneTime+':'+sceneEmitters.map(source=>{const step=source.animated?4:8;return Math.round(source.x/step)+','+Math.round(source.y/step);}).join(';');
+        const lightKeyAt=(x,y,width,height)=>sceneTime+':'+sceneEmitters.filter(source=>{
+            const dx=Math.max(0,Math.abs(source.x-x)-(source.width+width)/2);
+            const dy=Math.max(0,Math.abs(source.y-y)-(source.height+height)/2);
+            return Math.hypot(dx,dy)<(source.reach||2100);
+        }).map(source=>{const step=source.animated?4:8;return source.id+','+Math.round(source.x/step)+','+Math.round(source.y/step);}).join(';');
         const furnitureKey=furnitureBodies.map(body=>{const node=body.closest('.furniture-node');return node.id+':'+node.style.left+':'+node.style.top;}).join('|');
         if(furnitureLightingGeometry.key!==furnitureKey){
             const worldRect=world.getBoundingClientRect(),worldScale=worldRect.width/world.offsetWidth;
             const rectInWorld=element=>{const rect=element.getBoundingClientRect();return{x:(rect.left-worldRect.left)/worldScale,y:(rect.top-worldRect.top)/worldScale,width:rect.width/worldScale,height:rect.height/worldScale};};
-            furnitureLightingGeometry={key:furnitureKey,items:furnitureBodies.map(body=>({
-                id:body.closest('.furniture-node').id,...rectInWorld(body),
-                parts:[...body.querySelectorAll('.furniture-side,.furniture-shelf,.furniture-top')].map(part=>({...rectInWorld(part),kind:part.classList.contains('furniture-side')?'side':part.classList.contains('furniture-top')?'top':'shelf'}))
-            }))};
+            furnitureLightingGeometry={key:furnitureKey,items:furnitureBodies.map(body=>{
+                const visualParts=[...body.querySelectorAll('.furniture-part')].map(part=>({el:part,...rectInWorld(part)}));
+                return {id:body.closest('.furniture-node').id,...rectInWorld(body),visualParts,
+                    parts:visualParts.filter(part=>part.el.matches('.furniture-side,.furniture-shelf,.furniture-top')).map(part=>({...part,kind:part.el.classList.contains('furniture-side')?'side':part.el.classList.contains('furniture-top')?'top':'shelf'}))};
+            })};
         }
         const furniture=furnitureLightingGeometry.items;
         const stackBoxes=[...world.querySelectorAll('.device-node:not(.furniture-node):not(.device-type-pendantLamp):not(.wall-lamp-node)')].filter(el=>el.style.visibility!=='hidden').map(el=>({el,x:el.offsetLeft,y:el.offsetTop,width:el.offsetWidth,height:el.offsetHeight}));
@@ -996,17 +1010,15 @@ const Hardware = (() => {
         world.querySelectorAll('.furniture-node.lighting-demo-target').forEach(node=>{
             const rect=node.getBoundingClientRect();
             if(rect.right<viewport.left||rect.left>viewport.right||rect.bottom<viewport.top||rect.top>viewport.bottom)return;
-            const key=sceneName+'|'+sceneEmitterKey+'|'+node.offsetLeft+'|'+node.offsetTop+'|'+node.dataset.back;
+            const rack=furniture.find(item=>item.id===node.id);
+            const key=sceneName+'|'+lightKeyAt(node.offsetLeft+node.offsetWidth/2,node.offsetTop+node.offsetHeight/2,node.offsetWidth,node.offsetHeight)+'|'+node.offsetLeft+'|'+node.offsetTop+'|'+node.dataset.back;
             if(node.dataset.lightPaintKey===key)return;
             node.dataset.lightPaintKey=key;
-            node.querySelectorAll('.furniture-part').forEach(part=>{
-                const box=part.getBoundingClientRect(),scale=rect.width/node.offsetWidth;
-                const x=(box.left-rect.left)/scale+node.offsetLeft,y=(box.top-rect.top)/scale+node.offsetTop;
-                const source=sceneEmitters.map(item=>sampleSceneLight(item,x+box.width/scale/2,y+box.height/scale/2)).sort((a,b)=>b.weight-a.weight)[0];
+            rack?.visualParts.forEach(({el:part,x,y,width,height})=>{
+                const source=sceneEmitters.map(item=>sampleSceneLight(item,x+width/2,y+height/2)).sort((a,b)=>b.weight-a.weight)[0];
                 part.style.setProperty('--demo-scene-light-strength',(source?.weight||0).toFixed(3));
-                if(source){part.style.setProperty('--demo-scene-light-rgb',source.rgb.join(' '));part.style.setProperty('--demo-scene-light-x',incidentPosition(source.x,x,box.width/scale));part.style.setProperty('--demo-scene-light-y',incidentPosition(source.y,y,box.height/scale));}
+                if(source){part.style.setProperty('--demo-scene-light-rgb',source.rgb.join(' '));part.style.setProperty('--demo-scene-light-x',incidentPosition(source.x,x,width));part.style.setProperty('--demo-scene-light-y',incidentPosition(source.y,y,height));}
             });
-            const rack=furniture.find(item=>item.id===node.id);
             if(rack){
                 const source=sceneEmitters.map(item=>sampleSceneLight(item,rack.x+rack.width/2,rack.y+rack.height/2)).reduce((best,item)=>item.weight>(best?.weight||0)?item:best,null);
                 drawFurnitureInteriorShadows(node,rack,source?.x||0,source?.y||0,source?.weight||0);
@@ -1033,7 +1045,7 @@ const Hardware = (() => {
             const rack=furniture.find(item=>centerX>item.x+16&&centerX<item.x+item.width-16&&centerY>item.y+16&&centerY<item.y+item.height-16);
             const stackedAbove=stackTops.filter(upper=>upper.el!==device&&deviceY-upper.y-upper.height>=-.5&&deviceY-upper.y-upper.height<=20.5&&Math.min(deviceX+geometry.width,upper.x+upper.width)-Math.max(deviceX,upper.x)>=Math.min(geometry.width,upper.width)*.7);
             const stackKey=stackedAbove.map(upper=>upper.el.id+':'+upper.x+':'+upper.y).join('|');
-            const positionKey=sceneName+'|'+sceneEmitterKey+'|'+deviceX+'|'+deviceY+'|'+(rack?.id||'')+'|'+(rack?.x||0)+'|'+(rack?.y||0)+'|'+stackKey;
+            const positionKey=sceneName+'|'+lightKeyAt(centerX,centerY,geometry.width,geometry.height)+'|'+deviceX+'|'+deviceY+'|'+(rack?.id||'')+'|'+(rack?.x||0)+'|'+(rack?.y||0)+'|'+stackKey;
             if(geometry.lastPosition===positionKey)return;
             geometry.lastPosition=positionKey;
             const localScene=sceneEmitters.map(source=>sampleSceneLight(source,centerX,centerY)).sort((a,b)=>b.weight-a.weight);
@@ -1342,6 +1354,8 @@ const Hardware = (() => {
         const roomBackdrop=document.createElement('div');roomBackdrop.id='room-backdrop';roomBackdrop.setAttribute('aria-hidden','true');
         roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far is-visible" alt="" draggable="false"><canvas class="room-fixture-glow"></canvas><i class="room-grid-overlay"></i>';
         const roomMotes=document.createElement('div');roomMotes.className='room-motes';roomMotes.setAttribute('aria-hidden','true');
+        const roomMoteCanvas=document.createElement('canvas');roomMoteCanvas.className='room-mote-canvas';roomMoteCanvas.setAttribute('aria-hidden','true');
+        let roomMoteBeams=[],roomMoteFrame=0,roomMoteTimer=0;
         roomBackdrop.appendChild(roomMotes);
         world.style.setProperty('--room-image-drop','260px');
         world.prepend(roomBackdrop);
@@ -1354,6 +1368,7 @@ const Hardware = (() => {
         document.querySelector('.canvas-tools').appendChild(canvasThemeControl);
         function setCanvasTheme(theme){
             theme=Object.hasOwn(canvasThemes,theme)?theme:'scene';state.canvasTheme=theme;canvas.dataset.theme=theme;
+            if(theme==='scene')startRoomMotes();else stopRoomMotes();
             if(theme==='scene')Object.values(state.devices).forEach(dev=>{
                 dev.el.style.left=Math.max(ROOM_SIDE_INSET,Math.min(world.offsetWidth-dev.el.offsetWidth-ROOM_SIDE_INSET,dev.el.offsetLeft))+'px';
                 dev.el.style.top=Math.max(0,Math.min((dev.el.classList.contains('wall-lamp-node')?wallPlacementBottom():floorPlacementBottom())-dev.el.offsetHeight,dev.el.offsetTop))+'px';
@@ -1424,7 +1439,7 @@ const Hardware = (() => {
         function updateRoomMotes(mode,time){
             const daylight=time==='dawn';
             const dusk=time==='dusk';
-            roomMotes.innerHTML=RoomScenes.lights(mode,time).map((light,index)=>{
+            roomMoteBeams=RoomScenes.lights(mode,time).map((light,index)=>{
                 const count=dusk?64:daylight?56:32;
                 const x=(240+light.cx*.8)/24,y=(268+light.cy*.8)/16;
                 const color=light.rgb.join(' ');
@@ -1434,11 +1449,47 @@ const Hardware = (() => {
                     const px=12+(seed*43)%76,py=9+(seed*29)%82;
                     const size=dusk?(particle%7===0?13:particle%3===0?9.5:7):daylight?(particle%7===0?7.5:particle%3===0?5.5:4):(particle%7===0?5:particle%3===0?3.6:2.5);
                     const duration=(11+seed%9)*(dusk?.75:1);
-                    return `<i class="room-mote" style="--mote-x:${px}%;--mote-y:${py}%;--mote-size:${size}px;--mote-delay:-${((seed%41)*.43).toFixed(2)}s;--mote-duration:${duration.toFixed(1)}s;--mote-drift:${(seed%2?-1:1)*(13+seed%19)}px"></i>`;
-                }).join('');
-                return `<div class="room-mote-beam room-mote-window" style="--beam-x:${x}%;--beam-y:${y}%;--beam-color:${color};--beam-strength:${strength.toFixed(2)}">${particles}</div>`;
-            }).join('');
+                    return {x:px/100,y:py/100,size,duration:duration*1000,delay:(seed%41)*430,drift:(seed%2?-1:1)*(13+seed%19)};
+                });
+                return {x:x/100,y:y/100,rgb:color,strength,particles};
+            });
+            roomMotes.innerHTML=roomMoteBeams.map(beam=>`<div class="room-mote-beam room-mote-window" style="--beam-x:${beam.x*100}%;--beam-y:${beam.y*100}%;--beam-color:${beam.rgb};--beam-strength:${beam.strength.toFixed(2)}"></div>`).join('');
+            roomMotes.appendChild(roomMoteCanvas);
+            startRoomMotes();
         }
+        function stopRoomMotes(){cancelAnimationFrame(roomMoteFrame);clearTimeout(roomMoteTimer);roomMoteFrame=0;roomMoteTimer=0;}
+        function startRoomMotes(){if(!roomMoteFrame&&!roomMoteTimer&&document.visibilityState==='visible'&&canvas.dataset.theme==='scene')roomMoteFrame=requestAnimationFrame(drawRoomMotes);}
+        function drawRoomMotes(now){
+            roomMoteFrame=0;
+            if(document.visibilityState!=='visible'||canvas.dataset.theme!=='scene')return;
+            const width=roomMotes.clientWidth,height=roomMotes.clientHeight,resolution=.28;
+            if(width&&height){
+                const pixelWidth=Math.round(width*resolution),pixelHeight=Math.round(height*resolution);
+                if(roomMoteCanvas.width!==pixelWidth||roomMoteCanvas.height!==pixelHeight){roomMoteCanvas.width=pixelWidth;roomMoteCanvas.height=pixelHeight;}
+                const ctx=roomMoteCanvas.getContext('2d');ctx.setTransform(resolution,0,0,resolution,0,0);ctx.clearRect(0,0,width,height);
+                const read=name=>parseFloat(world.style.getPropertyValue(name))||0;
+                const farX=read('--room-far-x'),farY=read('--room-far-y'),drop=read('--room-image-drop'),horizon=read('--room-horizon-shift'),scale=read('--room-far-scale')||1;
+                const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+                roomMoteBeams.forEach(beam=>{
+                    const beamWidth=width*.23*scale,beamHeight=height*.36*scale;
+                    const left=width*beam.x+farX-beamWidth/2,top=height*beam.y+farY+drop+horizon;
+                    ctx.fillStyle=`rgb(${beam.rgb.replaceAll(' ', ',')})`;
+                    beam.particles.forEach(particle=>{
+                        const phase=reduced?.5:(now+particle.delay)%(particle.duration*2)/particle.duration;
+                        const progress=reduced?.5:phase<=1?phase:2-phase;
+                        const eased=(1-Math.cos(Math.PI*progress))/2;
+                        const alpha=reduced?.38:progress<.24?progress/.24*.72:progress<.78?.72-(progress-.24)/.54*.26:(1-progress)/.22*.46;
+                        const localX=particle.x+particle.drift*eased/beamWidth,localY=particle.y+(15-60*eased)/beamHeight;
+                        if(localX<.2*(1-localY)||localX>1-.2*(1-localY)||localY<0||localY>1)return;
+                        ctx.globalAlpha=beam.strength*.88*alpha;
+                        ctx.beginPath();ctx.arc(left+beamWidth*localX,top+beamHeight*localY,particle.size*scale/2,0,Math.PI*2);ctx.fill();
+                    });
+                });
+                ctx.globalAlpha=1;
+            }
+            roomMoteTimer=setTimeout(()=>{roomMoteTimer=0;startRoomMotes();},33);
+        }
+        document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')startRoomMotes();else stopRoomMotes();});
         function setCanvasBackdrop(mode){
             mode=legacyBackdrops[mode]||mode;
             mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studioIllustrated';state.canvasBackdrop=mode;canvas.dataset.backdrop=mode;canvasBackdropControl.querySelector('select').value=mode;
@@ -8119,9 +8170,15 @@ const Hardware = (() => {
             state.connections.push({outId:output.id,inId:input.id,el,type,wps:[],miswired});if(miswired)el.dataset.miswired='true';else from.nodes[nodeOut].connect(to.nodes[nodeIn]);output.classList.add('connected');input.classList.add('connected');
         }
 
-        let pendantLightTick=0,pendantLightSignature='';
+        let pendantLightTick=0,pendantLightSignature='',visualFrame=0,visualTimer=0;
+        function scheduleVisuals(delay=0){
+            if(document.visibilityState!=='visible'||visualFrame||visualTimer)return;
+            if(delay)visualTimer=setTimeout(()=>{visualTimer=0;visualFrame=requestAnimationFrame(renderVisuals);},delay);
+            else visualFrame=requestAnimationFrame(renderVisuals);
+        }
         function renderVisuals() {
-            requestAnimationFrame(renderVisuals);
+            visualFrame=0;
+            if(document.visibilityState!=='visible')return;
             const now=performance.now();
             if(now-pendantLightTick>=90){
                 pendantLightTick=now;
@@ -8174,18 +8231,27 @@ const Hardware = (() => {
 
             // Animação de cones dos alto-falantes se a simulação de som estiver ativa
             {
-                const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+                const reduced=powerMotionPreference.matches;
                 Object.values(state.devices).forEach(dev => {
-                    if (dev.analyzer && dev.dataArray && dev.el.querySelector('.spk-woofer,.classic-box-woofer')) {
+                    const woofers=dev.visualWoofers??=dev.el.querySelectorAll('.spk-woofer,.classic-box-woofer');
+                    if (dev.analyzer && dev.dataArray && woofers.length) {
                         dev.analyzer.getByteFrequencyData(dev.dataArray);
                         let avg = dev.dataArray.slice(0, 10).reduce((a,b)=>a+b,0)/10;
                         const punch = (SUB_TYPES.has(dev.type) || PASSIVE_SUB_TYPES.has(dev.type)) ? .025 : .014;
                         const scale=1+(!reduced&&dev.powered!==false?(avg/255)*punch:0);
-                        dev.el.querySelectorAll('.spk-woofer,.classic-box-woofer').forEach(w=>{w.style.transform=`${w.classList.contains('classic-box-woofer')?'translateX(-50%) ':''}scale(${scale})`;});
+                        woofers.forEach(w=>{w.style.transform=`${w.classList.contains('classic-box-woofer')?'translateX(-50%) ':''}scale(${scale})`;});
                     }
                 });
             }
+            const devices=Object.values(state.devices);
+            const activeAudio=devices.some(dev=>dev.state?.playing||dev.state?.radioOn||(dev.meters&&dev.powered===true));
+            const activeCable=isPatching||state.connections.some(connection=>connection.seatStarted!=null);
+            scheduleVisuals(activeCable?0:activeAudio?33:pendantLightSignature?90:200);
         }
+        document.addEventListener('visibilitychange',()=>{
+            if(document.visibilityState==='visible')scheduleVisuals();
+            else {cancelAnimationFrame(visualFrame);clearTimeout(visualTimer);visualFrame=0;visualTimer=0;}
+        });
         const PROJECT_FORMAT='audio-system-project',PROJECT_VERSION=1;
         let projectDatabase=null,projectPersistenceBlocked=false,projectRestoring=false,projectSaving=false,projectSaveAgain=false,lastProjectSignature='',knownAudioKeys=new Set();
         const projectTools=document.createElement('section');projectTools.className='project-tools';
