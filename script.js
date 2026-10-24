@@ -1438,7 +1438,7 @@ const Hardware = (() => {
             headphoneCalibrationTransitionCleanup=cleanup;
             Promise.allSettled(animations.map(animation=>animation.finished)).then(cleanup);
         }
-        async function playHeadphoneCalibrationSound(loopReplay=false){
+        async function playHeadphoneCalibrationSound(loopReplay=false,playOnce=false){
             const step=headphoneCalibrationStep,status=document.getElementById('headphone-calibration-status');
             if(step<0||step>=headphoneCalibrationSteps.length)return;
             if([0,1,3,4].includes(step)&&headphoneCalibrationLooping&&!loopReplay){stopHeadphoneCalibrationSound();status.textContent='Reprodução parada.';return;}
@@ -1463,15 +1463,15 @@ const Hardware = (() => {
                     headphoneCalibrationVoices.push(oscillator);oscillator.start(at);oscillator.stop(at+duration+.01);
                 };
                 if(step===0){tone(440,0,.24);tone(660,.72,.2);}
-                if(step===1){const preview={low:1.3,okay:1,high:.75}[headphoneCalibrationAnswers[1]]||1;tone(900,0,.024*preview);tone(1200,.72,.021*preview);}
+                if(step===1){const preview={low:1.8,okay:1,high:.45}[headphoneCalibrationAnswers[1]]||1;tone(900,0,.024*preview);tone(1200,.72,.021*preview);}
                 if(step===2){tone(520,0,.06,-1);tone(620,.72,.06,1);}
                 if(step===3){tone(90,0,.12);tone(140,.72,.1);}
                 if(step===4){tone(3200,0,.025);tone(4800,.72,.02);}
-                if([0,1,3,4].includes(step)){
+                if([0,1,3,4].includes(step)&&!playOnce){
                     headphoneCalibrationLooping=true;setHeadphoneCalibrationPlayLabel(true);
                     headphoneCalibrationTimers.push(setTimeout(()=>{if(headphoneCalibrationDialog.open&&headphoneCalibrationStep===step&&headphoneCalibrationLooping)playHeadphoneCalibrationSound(true);},1650));
                 }
-                status.textContent=[0,1,3,4].includes(step)?'Repetindo com pausa curta.':'Tocando primeiro à esquerda, depois à direita.';
+                status.textContent=playOnce?'Prévia reproduzida.':[0,1,3,4].includes(step)?'Repetindo com pausa curta.':'Tocando primeiro à esquerda, depois à direita.';
             }catch{stopHeadphoneCalibrationSound();status.textContent='O navegador bloqueou o áudio. Toque em “Tocar” novamente.';}
         }
         function openHeadphoneCalibration(){
@@ -1507,7 +1507,7 @@ const Hardware = (() => {
                 else stopHeadphoneCalibrationSound();
                 status.textContent=answer==='okay'?'Nível escolhido mantido.':state.listeningOutputLevel===base.program?'Limite de ajuste atingido; priorize o volume físico confortável.':answer==='low'?'Saída do programa levemente ampliada.':'Saída do programa suavizada.';
             }
-            if(step===1){setListeningOutputLevel(base.program+(answer==='low'?.1:answer==='high'?-.1:0));status.textContent=answer==='okay'?'Nível de escuta mantido.':state.listeningOutputLevel===base.program?'Limite de ajuste atingido; priorize o conforto.':answer==='low'?'Detalhes ampliados; confira se o som forte continua confortável.':'Nível de escuta suavizado.';if(headphoneCalibrationLooping)playHeadphoneCalibrationSound(true);}
+            if(step===1){setListeningOutputLevel(base.program+(answer==='low'?.1:answer==='high'?-.1:0));status.textContent=answer==='okay'?'Nível de escuta mantido.':state.listeningOutputLevel===base.program?'Limite de ajuste atingido; priorize o conforto.':answer==='low'?'Detalhes ampliados; confira se o som forte continua confortável.':'Nível de escuta suavizado.';playHeadphoneCalibrationSound(headphoneCalibrationLooping,!headphoneCalibrationLooping);}
         }));
         document.getElementById('headphone-calibration-next').addEventListener('click',()=>{
             if(headphoneCalibrationTransitioning)return;
@@ -3149,7 +3149,7 @@ const Hardware = (() => {
             updateCableFlows();
         }
 
-        let audioUnlocked=false,audioPrimed=false,legacyPlaybackAudio=null;
+        let audioPrimed=false,audioNeedsGestureRecovery=false,legacyPlaybackAudio=null;
         const isAppleTouchDevice=()=>/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
         function configurePlaybackSession(){
             try{
@@ -3190,7 +3190,7 @@ const Hardware = (() => {
             state.listeningToneInput=bass;state.listeningToneFilters={bass,treble};
             setupRoomAudio();
             state.audioCtx.addEventListener('statechange', () => {
-                if(state.audioCtx.state==='running')audioUnlocked=true;
+                if(state.audioCtx.state==='interrupted')audioNeedsGestureRecovery=true;
                 updateCableFlows();
             });
         }
@@ -3221,28 +3221,28 @@ const Hardware = (() => {
                 prepareLegacyPlayback();
                 // Start inside the trusted gesture, before any await. Touch Safari may
                 // ignore pointerdown but accepts touchend/click and a started buffer.
-                if(!audioPrimed){
+                if(!audioPrimed||audioNeedsGestureRecovery){
                     const source=context.createBufferSource();source.buffer=context.createBuffer(1,1,context.sampleRate);source.connect(context.destination);
-                    source.onended=()=>{audioPrimed=true;source.disconnect();};source.start(0);
+                    source.onended=()=>source.disconnect();source.start(0);audioPrimed=true;audioNeedsGestureRecovery=false;
                 }
-                if(context.state==='running')audioUnlocked=true;
-                else context.resume().then(()=>{audioUnlocked=context.state==='running'||audioUnlocked;updateCableFlows();}).catch(()=>{});
+                if(context.state!=='running')context.resume().then(()=>{audioNeedsGestureRecovery=context.state!=='running';updateCableFlows();}).catch(()=>{audioNeedsGestureRecovery=true;});
             }catch{ /* Playback controls can retry when the browser allows audio. */ }
         }
         for(const name of ['pointerdown','pointerup','touchend','click','keydown'])document.addEventListener(name,activateAudioFromGesture,{capture:true,passive:true});
         function resumeAudioAfterReturn(){
             const context=state.audioCtx;
-            if(!audioUnlocked||!context||document.visibilityState==='hidden'||context.state==='closed')return;
+            if(!context||document.visibilityState==='hidden'||context.state==='closed')return;
             prepareLegacyPlayback();
-            if(context.state!=='running')context.resume().then(()=>updateCableFlows()).catch(()=>{});
+            if(context.state!=='running')context.resume().then(()=>{if(context.state!=='running')audioNeedsGestureRecovery=true;updateCableFlows();}).catch(()=>{audioNeedsGestureRecovery=true;});
         }
         document.addEventListener('visibilitychange',()=>{
-            if(document.visibilityState==='hidden')legacyPlaybackAudio?.pause();
+            if(document.visibilityState==='hidden'){audioNeedsGestureRecovery=true;legacyPlaybackAudio?.pause();}
             else resumeAudioAfterReturn();
         });
         window.addEventListener('pageshow',resumeAudioAfterReturn);
-        window.addEventListener('focus',resumeAudioAfterReturn);
-        window.addEventListener('pagehide',()=>legacyPlaybackAudio?.pause());
+        window.addEventListener('focus',()=>{audioNeedsGestureRecovery=true;resumeAudioAfterReturn();});
+        window.addEventListener('blur',()=>{audioNeedsGestureRecovery=true;});
+        window.addEventListener('pagehide',()=>{audioNeedsGestureRecovery=true;legacyPlaybackAudio?.pause();});
 
         const uiSoundTimes = {};
         let uiNoiseBuffer=null,uiEffectsGain=null,uiEffectsLimiter=null;
