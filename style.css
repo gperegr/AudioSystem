@@ -3901,8 +3901,8 @@
 .bench-decoration-cds {left:582px;width:250px;height:224px;}
 .bench-decoration-covers {right:288px;width:548px;height:552px;}
 .bench-decoration-lamp {right:12px;width:284px;height:656px;}
-.wall-lamp-node {width:230px;height:270px;z-index:3;overflow:visible;cursor:grab;pointer-events:none;filter:drop-shadow(4px 12px 9px #080b0c8c);}
-.wall-lamp-node.selected {z-index:4;}
+.wall-lamp-node {width:230px;height:270px;z-index:0!important;overflow:visible;cursor:grab;pointer-events:none;filter:drop-shadow(4px 12px 9px #080b0c8c);}
+.wall-lamp-node.selected {z-index:0!important;}
 .wall-lamp-node:active {cursor:grabbing;}
 .wall-lamp-node>*:not(.device-header) {pointer-events:auto;}
 .wall-lamp-node>.device-header {display:none!important;}
