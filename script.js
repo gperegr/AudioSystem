@@ -843,7 +843,9 @@ const Hardware = (() => {
     }
     const staticLightGeometry=new WeakMap();
     function staticLightRect(element,owner,worldRect,scale){
-        const key=owner.style.left+'|'+owner.style.top+'|'+owner.offsetWidth+'|'+owner.offsetHeight;
+        const world=owner.closest('#audio-world');
+        const wallParallax=owner.classList.contains('wall-lamp-node')&&world?['--room-far-x','--room-far-y','--room-far-scale','--room-horizon-shift'].map(name=>world.style.getPropertyValue(name)).join('|'):'';
+        const key=owner.style.left+'|'+owner.style.top+'|'+owner.offsetWidth+'|'+owner.offsetHeight+'|'+wallParallax;
         const cached=staticLightGeometry.get(element);
         if(cached?.key===key)return cached.rect;
         const box=element.getBoundingClientRect();
@@ -1359,6 +1361,8 @@ const Hardware = (() => {
         roomBackdrop.appendChild(roomMotes);
         world.style.setProperty('--room-image-drop','260px');
         world.prepend(roomBackdrop);
+        const wallLampLayer=document.createElement('div');wallLampLayer.className='room-wall-lamps';
+        world.appendChild(wallLampLayer);
         const floorShadows=document.createElement('canvas');floorShadows.className='room-floor-shadows';floorShadows.setAttribute('aria-hidden','true');
         world.insertBefore(floorShadows,document.getElementById('cables-layer'));
         canvas.appendChild(document.getElementById('connection-guidance'));
@@ -5171,9 +5175,15 @@ const Hardware = (() => {
             el.tabIndex=0;el.setAttribute('aria-label',`${DEVICE_NAMES[type]}. Arraste pela luminária para posicionar.`);
             const shade=model==='dome'?'<svg class="wall-lamp-dome-shade" viewBox="0 0 420 110" aria-hidden="true"><defs><linearGradient id="wall-shade-'+id+'" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#171b1a"/><stop offset=".19" stop-color="#303532"/><stop offset=".5" stop-color="#515550"/><stop offset=".81" stop-color="#303532"/><stop offset="1" stop-color="#171b1a"/></linearGradient><pattern id="wall-brush-'+id+'" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 1h5M0 4h5" stroke="#c9c2ac" stroke-opacity=".1" stroke-width=".5"/></pattern></defs><path d="M193 5 Q183 7 175 16 C140 51 89 73 16 87 Q10 89 12 93 Q100 99 210 98 Q320 99 408 93 Q410 89 404 87 C331 73 280 51 245 16 Q237 7 227 5Z" fill="url(#wall-shade-'+id+')"/><path d="M193 5 Q183 7 175 16 C140 51 89 73 16 87 Q10 89 12 93 Q100 99 210 98 Q320 99 408 93 Q410 89 404 87 C331 73 280 51 245 16 Q237 7 227 5Z" fill="url(#wall-brush-'+id+')"/><path d="M173 19Q210 25 247 19M45 84Q210 95 375 84" fill="none" stroke="#b5b3a3" stroke-opacity=".24" stroke-width="1"/><path d="M13 92Q210 103 407 92" fill="none" stroke="#9a937f" stroke-opacity=".55" stroke-width="5"/><path d="M40 97Q210 111 380 97" fill="none" stroke="#bb925e" stroke-opacity=".4" stroke-width="5"/></svg>':'';
             el.innerHTML=`<div class="device-header" aria-hidden="true"></div><span class="wall-lamp-plate"><i></i><i></i></span><span class="wall-lamp-arm"></span><span class="wall-lamp-socket"></span><span class="wall-lamp-bulb"><i class="wall-lamp-filament"></i></span>${model==='cage'?'<span class="wall-lamp-glass"></span><span class="wall-lamp-cage"></span>':shade}`;
-            world.appendChild(el);
-            el.style.left=Math.max(sceneSideInset(),Math.min(world.offsetWidth-el.offsetWidth-sceneSideInset(),snapCoordinate(x)))+'px';
-            el.style.top=Math.max(0,Math.min(wallPlacementBottom()-el.offsetHeight,snapCoordinate(y)))+'px';
+            wallLampLayer.appendChild(el);
+            const parallaxScale=canvas.dataset.theme==='scene'?parseFloat(world.style.getPropertyValue('--room-far-scale'))||1:1;
+            const farX=canvas.dataset.theme==='scene'?parseFloat(world.style.getPropertyValue('--room-far-x'))||0:0;
+            const farY=canvas.dataset.theme==='scene'?parseFloat(world.style.getPropertyValue('--room-far-y'))||0:0;
+            const horizon=canvas.dataset.theme==='scene'?parseFloat(world.style.getPropertyValue('--room-horizon-shift'))||0:0;
+            const localX=world.offsetWidth/2+(x-world.offsetWidth/2-farX)/parallaxScale;
+            const localY=world.offsetHeight+(y-world.offsetHeight-farY-horizon)/parallaxScale;
+            el.style.left=Math.max(sceneSideInset(),Math.min(world.offsetWidth-el.offsetWidth-sceneSideInset(),snapCoordinate(localX)))+'px';
+            el.style.top=Math.max(0,Math.min(wallPlacementBottom()-el.offsetHeight,snapCoordinate(localY)))+'px';
             const dev={id,type,el,nodes:{},state:{},powered:true};
             state.devices[id]=dev;bindDeviceEvents(dev);selectDevice(id);updateCables();scheduleProjectSave();
         }
@@ -6410,7 +6420,8 @@ const Hardware = (() => {
                         }
                     };
                     const aim = (ev,settle=false) => {
-                        const rawX=(ev.clientX-startX)/view.zoom,rawY=(ev.clientY-startY)/view.zoom;
+                        const wallDragScale=movingDevices.length===1&&WALL_LAMP_TYPES[movingDevices[0].type]&&canvas.dataset.theme==='scene'?parseFloat(world.style.getPropertyValue('--room-far-scale'))||1:1;
+                        const rawX=(ev.clientX-startX)/view.zoom/wallDragScale,rawY=(ev.clientY-startY)/view.zoom/wallDragScale;
                         const sideInset=sceneSideInset();
                         const dx=Math.max(sideInset-dragBounds.left,Math.min(settle?snapCoordinate(origin.x+rawX)-origin.x:rawX,world.offsetWidth-sideInset-dragBounds.right));
                         const bottomLimit=movingDevices.some(item=>WALL_LAMP_TYPES[item.type])?wallPlacementBottom():maxEquipmentBottom();
