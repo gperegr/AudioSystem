@@ -1150,7 +1150,7 @@
             flex:1 1 0;
             min-height:0;
         }
-        .device-type-eqVintage > div:not(.device-header):not(.auto-stack-foot) {
+        .device-type-eqVintage > .p-4 {
             gap:10px !important;
             padding:12px !important;
             border:1px solid #aa9b7b;
