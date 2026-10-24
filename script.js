@@ -7038,7 +7038,6 @@ const Hardware = (() => {
                 const config=FURNITURE_TYPES[dev.type];
                 html += `<div class="flex flex-col gap-3"><label class="text-sm text-gray-300" for="furniture-material">Material</label><select id="furniture-material" class="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700">${Object.entries(furnitureMaterialsFor(dev.type)).map(([key,name])=>`<option value="${key}" ${dev.state.material===key?'selected':''}>${name}</option>`).join('')}</select><p class="text-xs text-gray-400">${config.description}</p><p class="text-xs text-gray-400">Aproxime a base do equipamento de uma prateleira para apoiá-lo. Arraste o móvel pelas partes sólidas.${config.rack?' Os equipamentos apoiados nas prateleiras e empilhados acompanham o rack.':''}</p></div>`;
                 if(dev.type==='furnitureTable')html+=`<fieldset class="bench-options"><legend>Ambiente da bancada</legend><label for="bench-surface">Superfície</label><select id="bench-surface">${Object.entries(BENCH_SURFACES).map(([key,label])=>`<option value="${key}" ${dev.state.benchSurface===key?'selected':''}>${label}</option>`).join('')}</select><label><input type="checkbox" id="bench-backdrop" ${dev.state.benchBackdrop===true?'checked':''}> Painel acústico</label><span>Objetos decorativos</span>${Object.entries(BENCH_DECORATIONS).map(([key,label])=>`<label><input type="checkbox" data-bench-decoration="${key}" ${dev.state.benchDecorations?.includes(key)?'checked':''}> ${label}</label>`).join('')}</fieldset>`;
-                if(config.back)html+=`<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Fundo do móvel</span><button id="furniture-back" class="tt-insp-btn ${dev.state.hasBack?'is-on':''}" aria-pressed="${!!dev.state.hasBack}">FUNDO DO MÓVEL</button><p class="text-xs text-gray-400">O fundo acompanha o material do móvel, com acabamento escurecido pela sombra.</p></div>`;
             } else if (INTERFACE_DEVICES[dev.type]) {
                 html += `<p class="text-sm text-gray-400">${INTERFACE_DEVICES[dev.type].description}</p>`;
             } else if (dev.type === 'cdPlayer') {
@@ -7099,11 +7098,6 @@ const Hardware = (() => {
                 dev.state.benchDecorations=[...document.querySelectorAll('[data-bench-decoration]:checked')].map(item=>item.dataset.benchDecoration);updateBenchAppearance(dev);
             }));
             if(FURNITURE_TYPES[dev.type])document.getElementById('furniture-material')?.addEventListener('change',event=>{dev.state.material=furnitureMaterialFor(dev.type,event.target.value);dev.el.dataset.material=dev.state.material;});
-            document.getElementById('furniture-back')?.addEventListener('click',event=>{
-                dev.state.hasBack=!dev.state.hasBack;dev.el.dataset.back=String(dev.state.hasBack);
-                event.currentTarget.classList.toggle('is-on',dev.state.hasBack);
-                event.currentTarget.setAttribute('aria-pressed',String(dev.state.hasBack));
-            });
             if (EQ_TYPES.has(dev.type) || CROSSOVER_TYPES.has(dev.type) || BENCH_METER_TYPES.has(dev.type)) {
                 setupSpectrum(dev);
                 document.getElementById('spectrum-channel').addEventListener('change',()=>setupSpectrum(dev));
@@ -8362,7 +8356,7 @@ const Hardware = (() => {
             if(dev.updateMatrix)dev.updateMatrix();
             if(SELECTOR_TYPES.has(dev.type)){const source=saved.selectedSource==='B'?'B':'A';dev.el.querySelector(`[data-switch-source="${source}"]`)?.click();}
             updateBenchAppearance(dev);
-            if(FURNITURE_TYPES[dev.type]){s.material=furnitureMaterialFor(dev.type,s.material);dev.el.dataset.material=s.material;dev.el.dataset.back=String(s.hasBack!==false);}
+            if(FURNITURE_TYPES[dev.type]){s.material=furnitureMaterialFor(dev.type,s.material);dev.el.dataset.material=s.material;if(FURNITURE_TYPES[dev.type].back){s.hasBack=true;dev.el.dataset.back='true';}}
             if(controlAmpConfig(dev.type)){s.integratedSource=clamp(s.integratedSource,0,3,0);s.integratedSource=Math.round(s.integratedSource);s.direct=!!s.direct;s.subLevel=clamp(s.subLevel,0,1,.8);s.subFrequency=clamp(s.subFrequency,40,200,80);s.preMuted=!!s.preMuted;s.preMono=!!s.preMono;s.preInvert=!!s.preInvert;dev.applyIntegrated();}
             dev.setLidOpen?.(!!dev.state.lidOpen);
             dev.setTrayOpen?.(!!dev.state.trayOpen);
