@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=headphone-dynamic-guide">
+    <link rel="stylesheet" href="./style.css?v=headphone-guide-loop">
 </head>
 <body class="flex flex-col h-screen bg-black text-white">
 
@@ -293,9 +293,10 @@
             <p class="headphone-calibration-note">O navegador não mede o volume real do fone. Priorize o conforto.</p>
             <p id="headphone-calibration-status" role="status" aria-live="polite"></p>
             <div class="headphone-calibration-actions">
+                <button id="headphone-calibration-back" type="button" data-hardware-feedback aria-label="Voltar à etapa anterior" title="Voltar" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg></button>
                 <button id="headphone-calibration-skip" type="button" data-hardware-feedback>Pular</button>
                 <button id="headphone-calibration-play" type="button" data-hardware-feedback><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7Z"/></svg><span>Tocar</span></button>
-                <button id="headphone-calibration-next" type="button" data-hardware-feedback><span>Iniciar</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+                <button id="headphone-calibration-next" type="button" data-hardware-feedback aria-label="Iniciar ajuste" title="Iniciar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
             </div>
         </div>
     </dialog>
@@ -1346,6 +1347,6 @@
     </template>
 
     <script src="./assets/rooms/scenes.js?v=illustrated-rooms"></script>
-    <script src="./script.js?v=headphone-dynamic-guide"></script>
+    <script src="./script.js?v=headphone-guide-loop"></script>
 </body>
 </html>
