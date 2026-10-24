@@ -6769,7 +6769,7 @@ const Hardware = (() => {
             // Listening controls and live meters alone are not equipment settings.
             return SOURCE_TYPES.has(dev.type)||EQ_TYPES.has(dev.type)||MIXER_TYPES.has(dev.type)
                 ||SELECTOR_TYPES.has(dev.type)||MATRIX_TYPES.has(dev.type)
-                ||ACTIVE_SPK.has(dev.type)||SUB_TYPES.has(dev.type)||!!FURNITURE_TYPES[dev.type]||dev.type==='hpKubaDisco2'
+                ||ACTIVE_SPK.has(dev.type)||SUB_TYPES.has(dev.type)||dev.type==='hpKubaDisco2'
                 ||['preamp','receiver','powerAmp','powerStereo','powerVintage','headphoneAmp','headphoneAmpModern','headphoneAmp4'].includes(dev.type);
         }
         async function restoreDeviceSettings(dev) {
