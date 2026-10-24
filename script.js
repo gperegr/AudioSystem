@@ -2158,7 +2158,7 @@ const Hardware = (() => {
                 dev, x:parseFloat(dev.el.style.left)||0, y:parseFloat(dev.el.style.top)||0,
                 width:dev.el.offsetWidth, height:dev.el.offsetHeight
             }));
-            const equipment = boxes.filter(b => !FURNITURE_TYPES[b.dev.type] && b.width >= 300 && (b.height < b.width * .8 || b.dev.type==='tapeDeck'));
+            const equipment = boxes.filter(b => !FURNITURE_TYPES[b.dev.type] && b.dev.type!=='pendantLamp' && !WALL_LAMP_TYPES[b.dev.type] && b.width >= 300 && (b.height < b.width * .8 || b.dev.type==='tapeDeck'));
             const retainedFeet=new Set();
             const reducedFeetMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
             const nextSupports=new Map();
