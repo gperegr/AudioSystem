@@ -7108,8 +7108,9 @@ const Hardware = (() => {
             const control=document.createElement('span');control.className='gain-slider-control';
             const visual=document.createElement('span');visual.className='gain-slider-visual';visual.setAttribute('aria-hidden','true');
             const particles=Array.from({length:24},(_,i)=>`<i style="--particle-x:${5+(i*37)%90}%;--particle-y:${16+(i*29)%68}%;--particle-size:${i%3===0?3:2}px;--particle-direction:${i%2?-1:1};--particle-threshold:${i<8?0:((i-8)/16*.7).toFixed(3)};--particle-delay:${-(i*.47).toFixed(2)}s;--particle-duration:${(2.8+(i%4)*.5).toFixed(1)}s"></i>`).join('');
-            visual.innerHTML=`<span class="gain-slider-fill"><span class="gain-slider-particles">${particles}</span></span>`;
-            slider.before(control);control.append(visual,slider);
+            visual.innerHTML=`<span class="gain-slider-fill"></span>`;
+            const particlesEl=document.createElement('span');particlesEl.className='gain-slider-particles';particlesEl.setAttribute('aria-hidden','true');particlesEl.innerHTML=particles;
+            slider.before(control);control.append(visual,slider,particlesEl);
             slider.addEventListener('input',()=>syncInspectorGainVisual(slider));
             slider.addEventListener('change',()=>syncInspectorGainVisual(slider));
             syncInspectorGainVisual(slider);
