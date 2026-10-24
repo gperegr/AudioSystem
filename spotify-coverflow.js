@@ -5,7 +5,7 @@ const SpotifyCoverflow=(()=>{
     const VERIFIER_KEY='audio-system-spotify-verifier';
     const STATE_KEY='audio-system-spotify-state';
     const COVER_SIZE=400;
-    const COVER_SPACING=42;
+    const COVER_SPACING=38;
     const CLOSED_RADIUS=76;
     const OPEN_RADIUS=18;
     const REDIRECT=location.origin+location.pathname;
@@ -20,9 +20,7 @@ const SpotifyCoverflow=(()=>{
     const random=()=>base64(crypto.getRandomValues(new Uint8Array(48)));
     const artist=album=>(album.artists||[]).map(item=>item.name).join(', ');
     const shortTime=ms=>{const seconds=Math.max(0,Math.floor(ms/1000));return `${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;};
-    // Discos junto às bordas ficam compactos; perto do foco há espaço para ver capa e lombada.
-    const sleeveOffset=distance=>60*Math.min(distance,5)+44*Math.min(Math.max(distance-5,0),7)+32*Math.max(distance-12,0);
-    const sleeveAngle=distance=>distance===0?-90:-90+27*distance*Math.exp(-distance/4)/(4/Math.E);
+    const sleeveOffset=distance=>COVER_SPACING*distance;
     function broadcast(){views.forEach(view=>view.refresh());}
     function setStatus(message){status=message;broadcast();}
     async function tokenRequest(params){
@@ -114,7 +112,7 @@ const SpotifyCoverflow=(()=>{
     }
     const sorters={added:(a,b)=>a._added-b._added,artist:(a,b)=>artist(a).localeCompare(artist(b)),name:(a,b)=>a.name.localeCompare(b.name),year:(a,b)=>(b.release_date||'').localeCompare(a.release_date||'')};
     function inspectorHtml(){
-        return '<section class="spotify-coverflow-inspector"><h3>Coleção de discos</h3><strong data-sp-title>Sua coleção de discos</strong><span data-sp-subtitle>Álbuns salvos no Spotify</span><p data-sp-status role="status">Conecte ao Spotify para carregar a coleção.</p><div class="spotify-inspector-actions"><button type="button" data-sp-action="connect">Conectar Spotify</button><button type="button" data-sp-action="logout" hidden>Desconectar Spotify</button></div><div class="spotify-inspector-transport" role="group" aria-label="Transporte do Spotify"><button type="button" data-sp-action="prev" aria-label="Faixa anterior" title="Faixa anterior">◀</button><button type="button" data-sp-action="play" aria-label="Tocar álbum" title="Tocar álbum">▶</button><button type="button" data-sp-action="next" aria-label="Próxima faixa" title="Próxima faixa">▶</button></div><label>Ordenar álbuns<select data-sp-sort><option value="added">Recentes</option><option value="artist">Artista</option><option value="name">Título</option><option value="year">Ano</option></select></label><label>Posição na coleção <output data-sp-count>0 / 0</output><input type="range" min="0" max="0" value="0" data-spotify-position aria-label="Posição na coleção" data-hardware-slider="coverflow"></label><small>Role o mouse sobre os discos para navegar. Clique para abrir; clique novamente para tocar.</small></section>';
+        return '<section class="spotify-coverflow-inspector"><h3>Coleção de discos</h3><strong data-sp-title>Sua coleção de discos</strong><span data-sp-subtitle>Álbuns salvos no Spotify</span><p data-sp-status role="status">Conecte ao Spotify para carregar a coleção.</p><div class="spotify-inspector-actions"><button type="button" data-sp-action="connect">Conectar Spotify</button><button type="button" data-sp-action="logout" hidden>Desconectar Spotify</button></div><div class="spotify-inspector-transport" role="group" aria-label="Transporte do Spotify"><button type="button" data-sp-action="prev" aria-label="Faixa anterior" title="Faixa anterior">◀</button><button type="button" data-sp-action="play" aria-label="Tocar álbum" title="Tocar álbum">▶</button><button type="button" data-sp-action="next" aria-label="Próxima faixa" title="Próxima faixa">▶</button></div><label>Ordenar álbuns<select data-sp-sort><option value="added">Recentes</option><option value="artist">Artista</option><option value="name">Título</option><option value="year">Ano</option></select></label><label>Posição na coleção <output data-sp-count>0 / 0</output><input type="range" min="0" max="0" value="0" data-spotify-position aria-label="Posição na coleção" data-hardware-slider="coverflow"></label><small>Role o mouse para navegar. Clique em um álbum para abrir ou guardar; reproduza pelo botão acima.</small></section>';
     }
     function syncInspector(host){
         if(!inspector||inspector.host!==host||!inspector.root.isConnected)return;
@@ -154,7 +152,7 @@ const SpotifyCoverflow=(()=>{
         sort.value=state.coverflowSort;
         const current=()=>ordered.findIndex(album=>album.uri===state.coverflowAlbum);
         const clamp=value=>Math.max(0,Math.min(Math.max(0,ordered.length-1),value));
-        function activate(index){if(performance.now()<suppressClickUntil)return;const album=ordered[index];if(!album)return;if(current()===index){playAlbum(album);return;}select(index);}
+        function activate(index){if(performance.now()<suppressClickUntil||!ordered[index])return;if(current()===index){state.coverflowAlbum=null;state.coverflowPosition=index;refresh();onChange();return;}select(index);}
         function card(index){
             const album=ordered[index],element=document.createElement('div');element.className='spotify-flow-card';element.dataset.index=index;element.setAttribute('role','button');element.tabIndex=0;
             element.setAttribute('aria-label',`${album.name} — ${artist(album)}`);
@@ -162,11 +160,10 @@ const SpotifyCoverflow=(()=>{
             const cover=document.createElement('img');cover.alt='';cover.loading='lazy';cover.referrerPolicy='no-referrer';
             const artUrl=(album.images||[]).filter(image=>image.width>=300).sort((a,b)=>a.width-b.width)[0]?.url||album.images?.[0]?.url;
             if(artUrl)cover.src=artUrl;
-            const back=cover.cloneNode();back.className='spotify-flow-back';
-            const spines=['left','right'].map(side=>{const spine=document.createElement('span');spine.className=`spotify-flow-spine spotify-flow-spine-${side}`;const text=document.createElement('span');text.textContent=album.name;spine.append(text);return spine;});
+            const spine=document.createElement('span');spine.className='spotify-flow-spine spotify-flow-spine-right';const spineText=document.createElement('span');spineText.textContent=album.name;spine.append(spineText);
             if(artUrl)element.style.setProperty('--album-art',`url("${artUrl.replaceAll('"','%22')}")`);
             const label=document.createElement('i');label.className='spotify-flow-label';if(artUrl)label.style.backgroundImage=`url("${artUrl.replaceAll('"','%22')}")`;vinyl.append(label);
-            element.append(vinyl,cover,back,...spines);element.addEventListener('click',event=>{event.stopPropagation();activate(index);});
+            element.append(vinyl,cover,spine);element.addEventListener('click',event=>{event.stopPropagation();activate(index);});
             element.addEventListener('keydown',event=>{if(!['Enter',' '].includes(event.key))return;event.preventDefault();event.stopPropagation();element.click();});
             return element;
         }
@@ -196,7 +193,7 @@ const SpotifyCoverflow=(()=>{
                 let hit=hits.get(index);if(!hit){hit=document.createElement('div');hit.className='spotify-flow-hit';hit.dataset.index=index;hit.setAttribute('aria-hidden','true');hit.addEventListener('click',event=>{event.stopPropagation();activate(index);});hitLayer.append(hit);hits.set(index,hit);}
                 const distance=index-center,absolute=Math.abs(distance),side=Math.sign(distance);
                 const x=selected>=0?distance===0?-100:side*(500+sleeveOffset(absolute-1)):side*sleeveOffset(absolute)+edgeOffset;
-                const angle=index===selected?0:sleeveAngle(absolute);
+                const angle=index===selected?0:-90;
                 node.style.transform=`translateX(${x}px) translateZ(${index===selected?100:-170-Math.min(absolute,6)*8}px) rotateY(${angle}deg)`;
                 node.style.zIndex=String(index===selected?200:100-Math.round(absolute));node.classList.toggle('is-open',index===selected);node.classList.toggle('is-playing',index===selected&&isPlaying);node.setAttribute('aria-pressed',String(index===selected));
                 node.style.opacity=1;
@@ -219,7 +216,7 @@ const SpotifyCoverflow=(()=>{
         stage.addEventListener('pointermove',event=>{if(!drag)return;const scale=stage.getBoundingClientRect().width/stage.clientWidth;const delta=(drag.x-event.clientX)/(COVER_SPACING*scale);if(Math.abs(delta)<.1)return;if(!stage.hasPointerCapture(event.pointerId))stage.setPointerCapture(event.pointerId);dragged=true;host.classList.add('is-dragging');state.coverflowAlbum=null;state.coverflowPosition=clamp(drag.index+delta);refresh();});
         const release=()=>{if(!drag)return;drag=null;host.classList.remove('is-dragging');if(dragged){suppressClickUntil=performance.now()+300;state.coverflowPosition=clamp(Math.round(state.coverflowPosition));refresh();onChange();dragged=false;}};
         stage.addEventListener('pointerup',release);stage.addEventListener('pointercancel',release);
-        stage.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End','Enter',' '].includes(event.key))return;if(event.target!==stage&&['Enter',' '].includes(event.key))return;event.preventDefault();event.stopPropagation();if(event.key==='ArrowLeft')shift(-1);else if(event.key==='ArrowRight')shift(1);else if(event.key==='Home')select(0);else if(event.key==='End')select(ordered.length-1);else if(current()>=0)playAlbum(ordered[current()]);});
+        stage.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End','Enter',' '].includes(event.key))return;if(event.target!==stage&&['Enter',' '].includes(event.key))return;event.preventDefault();event.stopPropagation();if(event.key==='ArrowLeft')shift(-1);else if(event.key==='ArrowRight')shift(1);else if(event.key==='Home')select(0);else if(event.key==='End')select(ordered.length-1);else activate(current()>=0?current():Math.round(state.coverflowPosition));});
         const view={refresh};views.add(view);refresh();if(tokenData()){loadAlbums();ensurePlayer().catch(error=>setStatus(error.message));}
         return {refresh,dispose(){views.delete(view);nodes.clear();hitLayer.remove();hits.clear();if(!views.size)disconnect();}};
     }
