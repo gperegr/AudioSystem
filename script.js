@@ -1802,15 +1802,19 @@ const Hardware = (() => {
         });
         const selectionMarquee = document.getElementById('selection-marquee');
         const selectionCount = document.getElementById('selection-count');
-        const view = { x: 0, y: 0, zoom: Number.isFinite(savedAppPreferences.zoom)?savedAppPreferences.zoom:1 };
+        const view = { x: 0, y: 0, zoom: 1 };
         const MIN_CANVAS_ZOOM = 0.175;
         const MAX_CANVAS_ZOOM = 2.5;
         const clampZoom = zoom => {
             const minimum = Math.max(MIN_CANVAS_ZOOM, canvas.clientWidth / Math.max(1, world.offsetWidth), canvas.clientHeight / Math.max(1, world.offsetHeight));
             return Math.max(minimum, Math.min(MAX_CANVAS_ZOOM, zoom));
         };
-        view.zoom=clampZoom(view.zoom);
-        view.y=Math.min(0,canvas.clientHeight-world.offsetHeight*view.zoom);
+        function setOpeningView(){
+            view.zoom=clampZoom(MIN_CANVAS_ZOOM);
+            view.x=Math.min(0,(canvas.clientWidth-world.offsetWidth*view.zoom)/2);
+            view.y=Math.min(0,canvas.clientHeight-world.offsetHeight*view.zoom);
+        }
+        setOpeningView();
         const snapCoordinate = value => Math.round(value / Hardware.sizes.grid) * Hardware.sizes.grid;
         let viewAnimation=0;
         let viewLightingTimer=0;
@@ -2228,7 +2232,7 @@ const Hardware = (() => {
             const part=(name,x,y,width,height,content='')=>`<div class="furniture-part ${name}" style="left:${x}px;top:${y}px;width:${width}px;height:${height}px">${content}</div>`;
             let parts='';
             if(type==='furnitureCoverflow'){
-                parts='<div class="spotify-coverflow-host"><div class="spotify-flow-stage" tabindex="0" role="region" aria-label="Capas dos álbuns. Arraste, role ou use as setas para navegar."><div class="spotify-flow-cards"></div><p class="spotify-flow-message"></p></div><div class="spotify-flow-console"><div class="spotify-flow-info"><strong class="spotify-flow-title">Sua coleção de discos</strong><span class="spotify-flow-subtitle">Álbuns salvos no Spotify</span></div><div class="spotify-flow-actions"><button type="button" class="spotify-flow-connect">Conectar Spotify</button><button type="button" class="spotify-flow-settings" aria-label="Configurar Spotify" title="Configurar Spotify">⚙</button><button type="button" class="spotify-flow-prev" aria-label="Faixa anterior">◀</button><button type="button" class="spotify-flow-play" aria-label="Tocar álbum">▶</button><button type="button" class="spotify-flow-next" aria-label="Próxima faixa">▶</button><label>Ordenar <select class="spotify-flow-sort" aria-label="Ordenar álbuns"><option value="added">Recentes</option><option value="artist">Artista</option><option value="name">Título</option><option value="year">Ano</option></select></label></div><div class="spotify-flow-position-row"><input class="spotify-flow-position" type="range" min="0" max="0" value="0" data-hardware-slider="coverflow" aria-label="Posição na coleção"><span class="spotify-flow-count"></span></div></div></div>'+
+                parts='<div class="spotify-coverflow-host"><div class="spotify-flow-stage" tabindex="0" role="region" aria-label="Capas dos álbuns. Arraste, role ou use as setas para navegar."><div class="spotify-flow-cards"></div><p class="spotify-flow-message"></p></div><div class="spotify-flow-console"><div class="spotify-flow-info"><strong class="spotify-flow-title">Sua coleção de discos</strong><span class="spotify-flow-subtitle">Álbuns salvos no Spotify</span></div><div class="spotify-flow-actions"><button type="button" class="spotify-flow-connect">Conectar Spotify</button><button type="button" class="spotify-flow-prev" aria-label="Faixa anterior">◀</button><button type="button" class="spotify-flow-play" aria-label="Tocar álbum">▶</button><button type="button" class="spotify-flow-next" aria-label="Próxima faixa">▶</button><label>Ordenar <select class="spotify-flow-sort" aria-label="Ordenar álbuns"><option value="added">Recentes</option><option value="artist">Artista</option><option value="name">Título</option><option value="year">Ano</option></select></label></div><div class="spotify-flow-position-row"><input class="spotify-flow-position" type="range" min="0" max="0" value="0" data-hardware-slider="coverflow" aria-label="Posição na coleção"><span class="spotify-flow-count"></span></div></div></div>'+
                     part('furniture-top',0,0,config.width,28)+part('furniture-side',0,28,26,416)+part('furniture-side',config.width-26,28,26,416)+part('furniture-shelf',0,444,config.width,30)+part('furniture-caster',42,474,42,40,'<span class="caster-stem"></span><span class="caster-wheel"></span>')+part('furniture-caster',config.width-84,474,42,40,'<span class="caster-stem"></span><span class="caster-wheel"></span>');
             }else if(type==='furnitureTable'){
                 parts=part('furniture-top',0,0,config.width,28)+part('furniture-leg',60,28,40,config.height-28)+part('furniture-leg',config.width-100,28,40,config.height-28)+part('furniture-brace',100,80,config.width-200,20);
@@ -6029,7 +6033,7 @@ const Hardware = (() => {
             installListeningControls(dev);
             bindDeviceEvents(dev);
             if(type==='furnitureCoverflow'){
-                const controller=SpotifyCoverflow.mount(el.querySelector('.spotify-coverflow-host'),dev.state,scheduleProjectSave,SpotifyCoverflow.openSettings);
+                const controller=SpotifyCoverflow.mount(el.querySelector('.spotify-coverflow-host'),dev.state,scheduleProjectSave);
                 dev.refreshCoverflow=controller.refresh;dev.disposeCoverflow=controller.dispose;
             }
             if(SIGNAL_GENERATOR_TYPES.has(type)){configureSignalGenerator(dev);bindSignalGeneratorPanel(dev);}
@@ -8718,7 +8722,7 @@ const Hardware = (() => {
                 try{projectDatabase=await openProjectDatabase();knownAudioKeys=new Set(await dbKeys());}catch{}
                 let snapshot=null;try{if(projectDatabase)snapshot=await dbRead('projects','current');}catch{}
                 try{const raw=localStorage.getItem('audio-system-project-fallback'),backup=raw?JSON.parse(raw):null;if(backup&&(!snapshot||(backup.savedAt||0)>(snapshot.savedAt||0)))snapshot=backup;}catch{}
-                if(snapshot){const warnings=await restoreLocalProject(snapshot,key=>projectDatabase?dbRead('audio',key):Promise.resolve(null));projectStatus(warnings.length?'Montagem restaurada; alguns áudios ou cabos precisam de revisão.':'Montagem restaurada · fontes pausadas',!!warnings.length);}
+                if(snapshot){const warnings=await restoreLocalProject(snapshot,key=>projectDatabase?dbRead('audio',key):Promise.resolve(null));setOpeningView();applyView();projectStatus(warnings.length?'Montagem restaurada; alguns áudios ou cabos precisam de revisão.':'Montagem restaurada · fontes pausadas',!!warnings.length);}
                 else projectStatus(projectDatabase?'Salvamento automático local ativado.':'Armazenamento limitado; exporte uma cópia do projeto.',!projectDatabase);
                 lastProjectSignature=JSON.stringify(projectCapture());
             }catch(error){projectPersistenceBlocked=true;projectStatus('Falha ao restaurar o projeto local. Você pode abrir uma cópia exportada.',true);}
@@ -8740,9 +8744,7 @@ const Hardware = (() => {
         const roomSection=document.createElement('section');roomSection.className='room-settings';
         roomSection.innerHTML='<label>Ambiente sonoro<select id="room-preset">'+Object.entries(ROOM_PRESETS).map(([key,value])=>`<option value="${key}">${value.name}</option>`).join('')+'</select></label><label for="room-intensity">Intensidade <output id="room-intensity-value">0/10</output></label><input id="room-intensity" type="range" min="0" max="10" step="1" value="0"><p>Reverberação estéreo na escuta final. Em zero, o áudio permanece seco.</p>';
         clearCatalogFooter.insertBefore(roomSection,soundControls);
-        const spotifySetting=document.createElement('section');spotifySetting.className='spotify-settings';
-        clearCatalogFooter.insertBefore(spotifySetting,soundControls);
-        SpotifyCoverflow.bindSettings(spotifySetting,{beforeRedirect:()=>saveLocalProject(true),onOpen:()=>{settingsMenu.open=false;}});
+        SpotifyCoverflow.setBeforeRedirect(()=>saveLocalProject(true));
         const headphoneCalibrationSetting=document.createElement('section');headphoneCalibrationSetting.className='headphone-calibration-setting';
         headphoneCalibrationSetting.innerHTML='<strong>Ajuste de escuta com fones</strong><p>Volume, detalhes, estéreo, graves, agudos e sons da interface.</p><button id="open-headphone-calibration" type="button">Calibrar volume dos fones</button>';
         clearCatalogFooter.insertBefore(headphoneCalibrationSetting,soundControls);

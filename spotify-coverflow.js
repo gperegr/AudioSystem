@@ -1,6 +1,5 @@
 /* Spotify account and Coverflow furniture. Playback is separate from the AudioSystem signal graph. */
 const SpotifyCoverflow=(()=>{
-    const CLIENT_KEY='audio-system-spotify-client-id';
     const DEFAULT_CLIENT_ID='346af0eed59d4119b71d37808aec1f33';
     const TOKEN_KEY='audio-system-spotify-session';
     const VERIFIER_KEY='audio-system-spotify-verifier';
@@ -13,8 +12,9 @@ const SpotifyCoverflow=(()=>{
     const SCOPES='user-library-read streaming user-read-email user-read-private user-modify-playback-state';
     const views=new Set();
     const reduced=matchMedia('(prefers-reduced-motion: reduce)');
-    let albums=[],status='Conecte sua conta Spotify para ver os álbuns salvos.',clientId=localStorage.getItem(CLIENT_KEY)||DEFAULT_CLIENT_ID;
-    let sdkPromise=null,player=null,deviceId=null,playback=null,settings=null,settingsSummary=null,settingsOnOpen=()=>{},beforeRedirect=()=>{},loadPromise=null,albumsLoaded=false,refreshPromise=null,inspector=null;
+    let albums=[],status='Conecte sua conta Spotify para ver os álbuns salvos.';
+    const clientId=DEFAULT_CLIENT_ID;
+    let sdkPromise=null,player=null,deviceId=null,playback=null,beforeRedirect=()=>{},loadPromise=null,albumsLoaded=false,refreshPromise=null,inspector=null;
     const tokenData=()=>{try{return JSON.parse(sessionStorage.getItem(TOKEN_KEY)||'null');}catch{return null;}};
     const base64=bytes=>btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
     const random=()=>base64(crypto.getRandomValues(new Uint8Array(48)));
@@ -23,16 +23,8 @@ const SpotifyCoverflow=(()=>{
     // Discos junto às bordas ficam compactos; perto do foco há espaço para ver capa e lombada.
     const sleeveOffset=distance=>60*Math.min(distance,5)+44*Math.min(Math.max(distance-5,0),7)+32*Math.max(distance-12,0);
     const sleeveAngle=distance=>distance===0?-90:-90+27*distance*Math.exp(-distance/4)/(4/Math.E);
-    function broadcast(){views.forEach(view=>view.refresh());renderSettings();}
+    function broadcast(){views.forEach(view=>view.refresh());}
     function setStatus(message){status=message;broadcast();}
-    function setClientId(value){
-        const next=value.trim();
-        if(next===clientId)return;
-        clientId=next;
-        if(next)localStorage.setItem(CLIENT_KEY,next);else localStorage.removeItem(CLIENT_KEY);
-        disconnect();sessionStorage.removeItem(TOKEN_KEY);albums=[];albumsLoaded=false;loadPromise=null;
-        setStatus(next?'Pronto para conectar ao Spotify.':'Informe o Client ID para conectar ao Spotify.');
-    }
     async function tokenRequest(params){
         const response=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:clientId,...params})});
         if(!response.ok)throw new Error(`Falha de autenticação (${response.status}).`);
@@ -49,9 +41,6 @@ const SpotifyCoverflow=(()=>{
         finally{refreshPromise=null;}
     }
     async function login(){
-        const input=settings?.querySelector('[data-spotify-client]');
-        if(input)setClientId(input.value);
-        if(!clientId){setStatus('Informe o Client ID nas configurações.');input?.focus();return;}
         if(!crypto.subtle){setStatus('Abra o programa em HTTPS ou em 127.0.0.1 para conectar ao Spotify.');return;}
         const verifier=random(),state=random();
         sessionStorage.setItem(VERIFIER_KEY,verifier);sessionStorage.setItem(STATE_KEY,state);
@@ -125,7 +114,7 @@ const SpotifyCoverflow=(()=>{
     }
     const sorters={added:(a,b)=>a._added-b._added,artist:(a,b)=>artist(a).localeCompare(artist(b)),name:(a,b)=>a.name.localeCompare(b.name),year:(a,b)=>(b.release_date||'').localeCompare(a.release_date||'')};
     function inspectorHtml(){
-        return '<section class="spotify-coverflow-inspector"><h3>Coleção de discos</h3><strong data-sp-title>Sua coleção de discos</strong><span data-sp-subtitle>Álbuns salvos no Spotify</span><p data-sp-status role="status">Conecte ao Spotify para carregar a coleção.</p><div class="spotify-inspector-actions"><button type="button" data-sp-action="connect">Conectar Spotify</button><button type="button" data-sp-action="settings">Configurar Spotify</button></div><div class="spotify-inspector-transport" role="group" aria-label="Transporte do Spotify"><button type="button" data-sp-action="prev" aria-label="Faixa anterior" title="Faixa anterior">◀</button><button type="button" data-sp-action="play" aria-label="Tocar álbum" title="Tocar álbum">▶</button><button type="button" data-sp-action="next" aria-label="Próxima faixa" title="Próxima faixa">▶</button></div><label>Ordenar álbuns<select data-sp-sort><option value="added">Recentes</option><option value="artist">Artista</option><option value="name">Título</option><option value="year">Ano</option></select></label><label>Posição na coleção <output data-sp-count>0 / 0</output><input type="range" min="0" max="0" value="0" data-spotify-position aria-label="Posição na coleção" data-hardware-slider="coverflow"></label><small>Role o mouse sobre os discos para navegar. Clique para abrir; clique novamente para tocar.</small></section>';
+        return '<section class="spotify-coverflow-inspector"><h3>Coleção de discos</h3><strong data-sp-title>Sua coleção de discos</strong><span data-sp-subtitle>Álbuns salvos no Spotify</span><p data-sp-status role="status">Conecte ao Spotify para carregar a coleção.</p><div class="spotify-inspector-actions"><button type="button" data-sp-action="connect">Conectar Spotify</button><button type="button" data-sp-action="logout" hidden>Desconectar Spotify</button></div><div class="spotify-inspector-transport" role="group" aria-label="Transporte do Spotify"><button type="button" data-sp-action="prev" aria-label="Faixa anterior" title="Faixa anterior">◀</button><button type="button" data-sp-action="play" aria-label="Tocar álbum" title="Tocar álbum">▶</button><button type="button" data-sp-action="next" aria-label="Próxima faixa" title="Próxima faixa">▶</button></div><label>Ordenar álbuns<select data-sp-sort><option value="added">Recentes</option><option value="artist">Artista</option><option value="name">Título</option><option value="year">Ano</option></select></label><label>Posição na coleção <output data-sp-count>0 / 0</output><input type="range" min="0" max="0" value="0" data-spotify-position aria-label="Posição na coleção" data-hardware-slider="coverflow"></label><small>Role o mouse sobre os discos para navegar. Clique para abrir; clique novamente para tocar.</small></section>';
     }
     function syncInspector(host){
         if(!inspector||inspector.host!==host||!inspector.root.isConnected)return;
@@ -134,6 +123,7 @@ const SpotifyCoverflow=(()=>{
         root.querySelector('[data-sp-subtitle]').textContent=read('.spotify-flow-subtitle').textContent;
         root.querySelector('[data-sp-status]').textContent=status;
         root.querySelector('[data-sp-action="connect"]').hidden=read('.spotify-flow-connect').hidden;
+        root.querySelector('[data-sp-action="logout"]').hidden=!tokenData();
         const play=root.querySelector('[data-sp-action="play"]'),sourcePlay=read('.spotify-flow-play');play.disabled=sourcePlay.disabled;play.textContent=sourcePlay.textContent;play.setAttribute('aria-label',sourcePlay.getAttribute('aria-label'));
         for(const action of ['prev','next'])root.querySelector(`[data-sp-action="${action}"]`).disabled=!deviceId;
         root.querySelector('[data-sp-sort]').value=read('.spotify-flow-sort').value;
@@ -145,14 +135,14 @@ const SpotifyCoverflow=(()=>{
         const root=container.querySelector('.spotify-coverflow-inspector');if(!root||!host)return;
         inspector={root,host};
         root.querySelectorAll('[data-sp-action]').forEach(button=>button.addEventListener('click',()=>{
-            const action=button.dataset.spAction;if(action==='settings'){openSettings();return;}
+            const action=button.dataset.spAction;if(action==='logout'){logout();return;}
             host.querySelector(`.spotify-flow-${action}`)?.click();
         }));
         root.querySelector('[data-sp-sort]').addEventListener('change',event=>{const source=host.querySelector('.spotify-flow-sort');source.value=event.target.value;source.dispatchEvent(new Event('change',{bubbles:true}));});
         root.querySelector('[data-spotify-position]').addEventListener('input',event=>{const source=host.querySelector('.spotify-flow-position');source.value=event.target.value;source.dispatchEvent(new Event('input',{bubbles:true}));});
         syncInspector(host);
     }
-    function mount(host,state,onChange,openSettings){
+    function mount(host,state,onChange){
         const stage=host.querySelector('.spotify-flow-stage'),flow=host.querySelector('.spotify-flow-cards'),message=host.querySelector('.spotify-flow-message');
         const hitLayer=document.createElement('div');hitLayer.className='spotify-flow-hits';stage.append(hitLayer);
         const title=host.querySelector('.spotify-flow-title'),subtitle=host.querySelector('.spotify-flow-subtitle'),count=host.querySelector('.spotify-flow-count');
@@ -218,8 +208,7 @@ const SpotifyCoverflow=(()=>{
         }
         function select(index){if(!ordered.length)return;const album=ordered[clamp(index)];state.coverflowAlbum=album.uri;state.coverflowPosition=clamp(index);refresh();onChange();}
         function shift(amount){if(!ordered.length)return;const index=current();state.coverflowPosition=clamp((index>=0?index:state.coverflowPosition)+amount);state.coverflowAlbum=null;refresh();onChange();}
-        host.querySelector('.spotify-flow-connect').addEventListener('click',event=>{event.stopPropagation();if(clientId)login();else openSettings();});
-        host.querySelector('.spotify-flow-settings').addEventListener('click',event=>{event.stopPropagation();openSettings();});
+        host.querySelector('.spotify-flow-connect').addEventListener('click',event=>{event.stopPropagation();login();});
         play.addEventListener('click',event=>{event.stopPropagation();const index=current();if(index>=0)playAlbum(ordered[index]);});
         host.querySelector('.spotify-flow-prev').addEventListener('click',event=>{event.stopPropagation();player?.previousTrack();});
         host.querySelector('.spotify-flow-next').addEventListener('click',event=>{event.stopPropagation();player?.nextTrack();});
@@ -234,35 +223,6 @@ const SpotifyCoverflow=(()=>{
         const view={refresh};views.add(view);refresh();if(tokenData()){loadAlbums();ensurePlayer().catch(error=>setStatus(error.message));}
         return {refresh,dispose(){views.delete(view);nodes.clear();hitLayer.remove();hits.clear();if(!views.size)disconnect();}};
     }
-    function renderSettings(){
-        if(!settings)return;
-        const clientInput=settings.querySelector('[data-spotify-client]');
-        if(document.activeElement!==clientInput)clientInput.value=clientId;
-        settings.querySelector('[data-spotify-redirect]').textContent=REDIRECT;
-        settings.querySelector('[data-spotify-status]').textContent=status||`${albums.length} álbuns salvos`;settings.querySelector('[data-spotify-logout]').hidden=!tokenData();
-        if(settingsSummary)settingsSummary.textContent=tokenData()?`${albums.length} álbuns · conectado`:'Coleção e reprodução';
-    }
-    function openSettings(){
-        if(!settings)return;
-        settingsOnOpen();
-        if(!settings.open)settings.showModal();
-        settings.querySelector('[data-spotify-client]')?.focus();
-    }
-    function bindSettings(element,options={}){
-        beforeRedirect=options.beforeRedirect||beforeRedirect;settingsOnOpen=options.onOpen||settingsOnOpen;
-        element.className='spotify-settings-entry';
-        element.innerHTML='<strong>Spotify</strong><button type="button" data-spotify-open>Configurar Spotify</button><small data-spotify-summary></small>';
-        settingsSummary=element.querySelector('[data-spotify-summary]');
-        element.querySelector('[data-spotify-open]').addEventListener('click',openSettings);
-        settings=document.createElement('dialog');settings.className='spotify-settings-dialog';settings.setAttribute('aria-labelledby','spotify-settings-title');
-        settings.innerHTML='<div class="spotify-settings"><div class="spotify-settings-header"><div><span class="app-confirm-kicker">Coleção de discos</span><h2 id="spotify-settings-title">Spotify</h2></div><button type="button" data-spotify-close aria-label="Fechar configurações do Spotify" title="Fechar">×</button></div><label>Client ID <input type="text" data-spotify-client spellcheck="false" autocomplete="off" placeholder="Client ID do seu app Spotify"></label><div class="spotify-redirect"><small>Cadastre este Redirect URI no Spotify Dashboard:</small><code data-spotify-redirect></code></div><div class="spotify-setting-actions"><button type="button" data-spotify-connect>Conectar</button><button type="button" data-spotify-logout hidden>Desconectar</button></div><p data-spotify-status role="status" aria-live="polite"></p><small class="spotify-settings-note">A reprodução exige Spotify Premium e não passa pelos cabos do simulador.</small></div>';
-        document.body.append(settings);
-        settings.querySelector('[data-spotify-close]').addEventListener('click',()=>settings.close());
-        settings.addEventListener('click',event=>{if(event.target===settings)settings.close();});
-        settings.querySelector('[data-spotify-client]').addEventListener('change',event=>setClientId(event.target.value));
-        settings.querySelector('[data-spotify-connect]').addEventListener('click',login);
-        settings.querySelector('[data-spotify-logout]').addEventListener('click',logout);renderSettings();
-    }
     async function initialize(){
         const url=new URL(location.href),code=url.searchParams.get('code'),error=url.searchParams.get('error');
         const returnedState=url.searchParams.get('state');
@@ -275,7 +235,7 @@ const SpotifyCoverflow=(()=>{
             try{await tokenRequest({grant_type:'authorization_code',code,redirect_uri:REDIRECT,code_verifier:verifier});}
             catch(error){setStatus(error.message||'Não foi possível concluir a conexão.');return;}
         }
-        if(tokenData())await loadAlbums();else renderSettings();
+        if(tokenData())await loadAlbums();
     }
-    return {mount,inspectorHtml,bindInspector,bindSettings,openSettings,initialize,login,logout,get clientId(){return clientId;}};
+    return {mount,inspectorHtml,bindInspector,initialize,login,logout,setBeforeRedirect(callback){beforeRedirect=callback;}};
 })();
