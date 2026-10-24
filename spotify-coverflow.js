@@ -110,7 +110,8 @@ const SpotifyCoverflow=(()=>{
             if(!response.ok&&response.status!==204)throw new Error(`Não foi possível tocar o álbum (${response.status}).`);
         }catch(error){setStatus(error.message||'Não foi possível iniciar a reprodução.');}
     }
-    const sorters={added:(a,b)=>a._added-b._added,artist:(a,b)=>artist(a).localeCompare(artist(b)),name:(a,b)=>a.name.localeCompare(b.name),year:(a,b)=>(b.release_date||'').localeCompare(a.release_date||'')};
+    const artistCollator=new Intl.Collator('pt',{sensitivity:'base'});
+    const sorters={added:(a,b)=>a._added-b._added,artist:(a,b)=>artistCollator.compare(artist(a),artist(b))||artistCollator.compare(a.name,b.name),name:(a,b)=>a.name.localeCompare(b.name),year:(a,b)=>(b.release_date||'').localeCompare(a.release_date||'')};
     function inspectorHtml(){
         return '<section class="spotify-coverflow-inspector"><h3>Coleção de discos</h3><strong data-sp-title>Sua coleção de discos</strong><span data-sp-subtitle>Álbuns salvos no Spotify</span><p data-sp-status role="status">Conecte ao Spotify para carregar a coleção.</p><div class="spotify-inspector-actions"><button type="button" data-sp-action="connect">Conectar Spotify</button><button type="button" data-sp-action="logout" hidden>Desconectar Spotify</button></div><div class="spotify-inspector-transport" role="group" aria-label="Transporte do Spotify"><button type="button" data-sp-action="prev" aria-label="Faixa anterior" title="Faixa anterior">◀</button><button type="button" data-sp-action="play" aria-label="Tocar álbum" title="Tocar álbum">▶</button><button type="button" data-sp-action="next" aria-label="Próxima faixa" title="Próxima faixa">▶</button></div><label>Ordenar álbuns<select data-sp-sort><option value="added">Recentes</option><option value="artist">Artista</option><option value="name">Título</option><option value="year">Ano</option></select></label><label>Posição na coleção <output data-sp-count>0 / 0</output><input type="range" min="0" max="0" value="0" data-spotify-position aria-label="Posição na coleção" data-hardware-slider="coverflow"></label><small>Role o mouse para navegar. Clique em um álbum para abrir ou guardar; reproduza pelo botão acima.</small></section>';
     }
@@ -146,7 +147,7 @@ const SpotifyCoverflow=(()=>{
         const title=host.querySelector('.spotify-flow-title'),subtitle=host.querySelector('.spotify-flow-subtitle'),count=host.querySelector('.spotify-flow-count');
         const position=host.querySelector('.spotify-flow-position'),sort=host.querySelector('.spotify-flow-sort'),play=host.querySelector('.spotify-flow-play');
         const nodes=new Map(),hits=new Map();let ordered=[],orderedSource=null,orderedSort=null,drag=null,dragged=false,suppressClickUntil=0;
-        state.coverflowSort=sorters[state.coverflowSort]?state.coverflowSort:'added';
+        state.coverflowSort=sorters[state.coverflowSort]&&state.coverflowSort!=='added'?state.coverflowSort:'artist';
         state.coverflowPosition=Number.isFinite(state.coverflowPosition)?state.coverflowPosition:0;
         state.coverflowAlbum=typeof state.coverflowAlbum==='string'?state.coverflowAlbum:null;
         sort.value=state.coverflowSort;
