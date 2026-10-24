@@ -1304,6 +1304,9 @@ const Hardware = (() => {
     return Object.freeze({knobs,buttons,controlSizes,setControlSize,buttonSounds,movementSounds,movementSound,sliders,leds,plugs,accents,sizes,physics,updateAccents,updateLightingDemo,sceneLightAt,demoMarkup,bindDemo,sourceTransport,setButtonLabel,button:skinButton,bindKnob,bindLinear,slider,setLed,layout,mount,sync,dispose,inspector,plugMarkup});
 })();
 
+        const DEFAULT_BACKDROP='loftIllustrated';
+        const DEFAULT_ROOM_SETTINGS={preset:'small',intensity:5};
+        const DEFAULT_UI_SOUND_VOLUME=.5;
         const state = {
             isPlaying: false,
             devices: {},
@@ -1313,6 +1316,8 @@ const Hardware = (() => {
             selectedConnection: null,
             audioCtx: null,
             masterGain: null,
+            environment:{...DEFAULT_ROOM_SETTINGS},
+            uiSoundVolume:DEFAULT_UI_SOUND_VOLUME,
             seqInterval: null,
             pairingId: null
         };
@@ -1399,7 +1404,7 @@ const Hardware = (() => {
             const toneControl=document.getElementById('headphone-calibration-tone'),toneKind=headphoneCalibrationStep===3?'bass':headphoneCalibrationStep===4?'treble':null;
             toneControl.hidden=!toneKind;
             if(toneKind){const value=state[toneKind==='bass'?'listeningBass':'listeningTreble'];document.getElementById('headphone-calibration-tone-label').textContent=toneKind==='bass'?'Graves':'Agudos';document.getElementById('headphone-calibration-tone-value').textContent=`${value>0?'+':''}${value} dB`;document.getElementById('headphone-calibration-tone-slider').value=value;document.getElementById('headphone-calibration-tone-slider').setAttribute('aria-label',toneKind==='bass'?'Graves da escuta':'Agudos da escuta');}
-            document.getElementById('headphone-calibration-ui-slider').value=Math.round((state.uiSoundVolume??.9)*100);
+            document.getElementById('headphone-calibration-ui-slider').value=Math.round(state.uiSoundVolume*100);
             document.getElementById('headphone-calibration-ui-value').textContent=state.uiSoundVolume?`${Math.round(state.uiSoundVolume*100)}%`:'desligados';
             document.getElementById('headphone-calibration-back').hidden=headphoneCalibrationStep<0;
             document.getElementById('headphone-calibration-skip').hidden=done;
@@ -1698,7 +1703,7 @@ const Hardware = (() => {
         canvasBackdropControl.querySelector('select').addEventListener('change',event=>{setCanvasBackdrop(event.target.value);updateCables();scheduleProjectSave();scheduleAppPreferencesSave();});
         canvasTimeControl.querySelector('select').addEventListener('change',event=>{setCanvasTime(event.target.value);updateCables();scheduleProjectSave();scheduleAppPreferencesSave();});
         state.canvasTime=Object.hasOwn(canvasTimeModes,savedAppPreferences.time)?savedAppPreferences.time:savedAppPreferences.backdrop==='night'?'night':'dusk';canvas.dataset.time=state.canvasTime;canvasTimeControl.querySelector('select').value=state.canvasTime;
-        setCanvasBackdrop(savedAppPreferences.backdrop||'studio');
+        setCanvasBackdrop(savedAppPreferences.backdrop||DEFAULT_BACKDROP);
         setCanvasTheme(state.canvasTheme);
 
 
@@ -3244,7 +3249,7 @@ const Hardware = (() => {
         const interactionGain=value=>Math.min(1.4,Math.max(0,value)*1.3);
         function ensureUiEffectsBus(context){
             if(uiEffectsGain)return;
-            uiEffectsGain=context.createGain();uiEffectsGain.gain.value=interactionGain(state.uiSoundVolume??.9);
+            uiEffectsGain=context.createGain();uiEffectsGain.gain.value=interactionGain(state.uiSoundVolume);
             uiEffectsLimiter=context.createDynamicsCompressor();uiEffectsLimiter.threshold.value=-14;uiEffectsLimiter.knee.value=12;uiEffectsLimiter.ratio.value=6;uiEffectsLimiter.attack.value=.003;uiEffectsLimiter.release.value=.12;
             uiEffectsGain.connect(uiEffectsLimiter);uiEffectsLimiter.connect(state.listeningToneInput);
         }
@@ -3369,7 +3374,7 @@ const Hardware = (() => {
                 if(context.state!=='running')await context.resume();
                 if(request!==cableHumRequest||!isPatching||context.state!=='running')return;
                 prepareUiAudio();
-                uiEffectsGain.gain.setTargetAtTime(interactionGain(state.uiSoundVolume??.9),context.currentTime,.02);
+                uiEffectsGain.gain.setTargetAtTime(interactionGain(state.uiSoundVolume),context.currentTime,.02);
                 const oscillator=context.createOscillator(),filter=context.createBiquadFilter(),gain=context.createGain();
                 const real=new Float32Array(7),imag=new Float32Array([0,1,.28,.16,.07,.03,.02]);
                 oscillator.setPeriodicWave(context.createPeriodicWave(real,imag));oscillator.frequency.value=60;
@@ -3392,7 +3397,7 @@ const Hardware = (() => {
         window.addEventListener('keydown',event=>{if(event.key==='Escape')cancelCableDrag();},{capture:true});
         const soundControls=document.createElement('div');
         soundControls.className='flex flex-col gap-2 mb-4';
-        soundControls.innerHTML='<label for="ui-sound-volume" class="text-xs text-gray-400">Sons de interação <span id="ui-sound-value">90%</span></label><input id="ui-sound-volume" aria-label="Volume dos sons de interação; zero silencia" type="range" min="0" max="100" step="5" value="90">';
+        soundControls.innerHTML='<label for="ui-sound-volume" class="text-xs text-gray-400">Sons de interação <span id="ui-sound-value">50%</span></label><input id="ui-sound-volume" aria-label="Volume dos sons de interação; zero silencia" type="range" min="0" max="100" step="5" value="50">';
         clearCatalogFooter.prepend(soundControls);
         function setInteractionVolume(percent){
             const value=Math.max(0,Math.min(100,Number(percent)||0));
@@ -4843,7 +4848,7 @@ const Hardware = (() => {
             state.roomAudio={dry,wet,convolver,delay,filter,preset:null,impulses:new Map()};applyRoomAudio();
         }
         function applyRoomAudio(){
-            const s=state.environment||(state.environment={preset:'near',intensity:0}),preset=ROOM_PRESETS[s.preset]||ROOM_PRESETS.near,graph=state.roomAudio;if(!graph)return;
+            const s=state.environment||(state.environment={...DEFAULT_ROOM_SETTINGS}),preset=ROOM_PRESETS[s.preset]||ROOM_PRESETS.small,graph=state.roomAudio;if(!graph)return;
             const context=state.audioCtx,t=context.currentTime;
             if(graph.preset!==s.preset){
                 if(!graph.impulses.has(s.preset)){
@@ -8489,9 +8494,9 @@ const Hardware = (() => {
             const connections=state.connections.map(c=>{const out=document.getElementById(c.outId),input=document.getElementById(c.inId);return {from:out?.closest('.device-node')?.id,out:out?.dataset.node,to:input?.closest('.device-node')?.id,input:input?.dataset.node,label:c.label||'',color:c.color||null,hidden:!!c.hidden,slack:c.slack??5};});
             const catalogScroll=equipmentCatalog.querySelector('.overflow-y-auto');
             return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{
-                environment:{...(state.environment||{preset:'near',intensity:0})},
-                canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'scene',canvasBackdrop:state.canvasBackdrop||'studio',canvasTime:state.canvasTime||'dusk',
-                soundVolume:state.uiSoundVolume??.9,hideCables:!!state.hideCables,
+                environment:{...(state.environment||DEFAULT_ROOM_SETTINGS)},
+                canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'scene',canvasBackdrop:state.canvasBackdrop||DEFAULT_BACKDROP,canvasTime:state.canvasTime||'dusk',
+                soundVolume:state.uiSoundVolume??DEFAULT_UI_SOUND_VOLUME,hideCables:!!state.hideCables,
                 selected:[...state.selectedDeviceIds],selectedCable:state.connections.indexOf(state.selectedConnection),
                 search:document.getElementById('equipment-search').value,catalogScroll:catalogScroll?.scrollTop||0,inspectorScroll:inspectorContent.scrollTop
             }};
@@ -8632,7 +8637,7 @@ const Hardware = (() => {
                 restored.forEach(([saved,dev])=>{const other=state.devices[ids.get(saved.pairedId)];if(other&&BT_TX_TYPES.has(dev.type)&&canPair(dev,other))pairDevices(dev,other);});
                 setRoomSettings(ui.environment);
                 cableVisibilityButton.setAttribute('aria-pressed',String(!!ui.hideCables));
-                state.uiSoundVolume=typeof ui.soundVolume==='number'?Math.max(0,Math.min(1,ui.soundVolume)):.9;state.hideCables=!!ui.hideCables;
+                state.uiSoundVolume=typeof ui.soundVolume==='number'?Math.max(0,Math.min(1,ui.soundVolume)):DEFAULT_UI_SOUND_VOLUME;state.hideCables=!!ui.hideCables;
                 const sound=document.getElementById('ui-sound-volume');sound.value=Math.round(state.uiSoundVolume*100);document.getElementById('ui-sound-value').textContent=state.uiSoundVolume?`${sound.value}%`:'desligados';uiEffectsGain?.gain.setValueAtTime(interactionGain(state.uiSoundVolume),state.audioCtx.currentTime);
                 const search=document.getElementById('equipment-search');search.value=typeof ui.search==='string'?ui.search:'';search.dispatchEvent(new Event('input'));
                 if(snapshot.view&&snapshot.devices.length){view.zoom=clampZoom(Number(snapshot.view.zoom)||1);view.x=Number(snapshot.view.x)||0;view.y=Number(snapshot.view.y)||0;}
@@ -8689,7 +8694,7 @@ const Hardware = (() => {
         const settingsMenu=document.createElement('details');settingsMenu.className='app-settings';
         settingsMenu.innerHTML='<summary aria-label="Abrir configurações"><svg class="settings-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7.1"/><circle cx="12" cy="12" r="2.7"/><path d="M12 1.8v3.1m0 14.2v3.1M1.8 12h3.1m14.2 0h3.1M4.3 4.3l2.2 2.2m11 11 2.2 2.2m0-15.4-2.2 2.2m-11 11-2.2 2.2"/></svg><span>Configurações</span></summary>';
         clearCatalogFooter.className='app-settings-content';
-        const themeSection=document.createElement('section');themeSection.className='settings-theme-section';themeSection.appendChild(canvasThemeControl);themeSection.appendChild(canvasGridControl);themeSection.appendChild(canvasBackdropControl);themeSection.appendChild(canvasTimeControl);setCanvasGrid('dots');
+        const themeSection=document.createElement('section');themeSection.className='settings-theme-section';themeSection.appendChild(canvasThemeControl);themeSection.appendChild(canvasGridControl);themeSection.appendChild(canvasBackdropControl);themeSection.appendChild(canvasTimeControl);
         const connectionHelpSetting=document.createElement('label');connectionHelpSetting.className='connection-help-setting';connectionHelpSetting.innerHTML='<input id="connection-help-enabled" type="checkbox"><span><strong>Orientação de conexões</strong><small>Mostra dicas e impede ligações incompatíveis. Desative para permitir erros quando os plugues encaixarem.</small></span>';
         const connectionHelpCheckbox=connectionHelpSetting.querySelector('input');connectionHelpCheckbox.checked=connectionGuidanceEnabled;themeSection.appendChild(connectionHelpSetting);
         connectionHelpCheckbox.addEventListener('change',()=>{connectionGuidanceEnabled=connectionHelpCheckbox.checked;hideContextHelp();updatePortGuidance(true);scheduleAppPreferencesSave();});
@@ -8712,7 +8717,7 @@ const Hardware = (() => {
         listeningLevels.querySelector('#listening-output-level').addEventListener('input',event=>setListeningOutputLevel(Number(event.target.value)/100));
         for(const kind of ['bass','treble'])listeningLevels.querySelector(`#listening-${kind}-level`).addEventListener('input',event=>setListeningTone(kind,event.target.value));
         function setRoomSettings(settings){
-            state.environment={preset:Object.hasOwn(ROOM_PRESETS,settings?.preset)?settings.preset:'near',intensity:Number.isFinite(settings?.intensity)?Math.max(0,Math.min(10,Math.round(settings.intensity))):0};
+            state.environment={preset:Object.hasOwn(ROOM_PRESETS,settings?.preset)?settings.preset:DEFAULT_ROOM_SETTINGS.preset,intensity:Number.isFinite(settings?.intensity)?Math.max(0,Math.min(10,Math.round(settings.intensity))):DEFAULT_ROOM_SETTINGS.intensity};
             roomSection.querySelector('#room-preset').value=state.environment.preset;roomSection.querySelector('#room-intensity').value=state.environment.intensity;roomSection.querySelector('#room-intensity-value').textContent=state.environment.intensity+'/10';applyRoomAudio();
         }
         roomSection.addEventListener('input',()=>{setRoomSettings({preset:document.getElementById('room-preset').value,intensity:Number(document.getElementById('room-intensity').value)});scheduleProjectSave();});
