@@ -1547,10 +1547,12 @@ const Hardware = (() => {
         roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far is-visible" alt="" draggable="false"><canvas class="room-fixture-glow"></canvas><i class="room-grid-overlay"></i>';
         const roomMotes=document.createElement('div');roomMotes.className='room-motes';roomMotes.setAttribute('aria-hidden','true');
         const roomMoteCanvas=document.createElement('canvas');roomMoteCanvas.className='room-mote-canvas';roomMoteCanvas.setAttribute('aria-hidden','true');
+        const roomMoteContext=roomMoteCanvas.getContext('2d',{alpha:true});
         let roomMoteBeams=[],roomMoteFrame=0,roomMoteTimer=0;
         roomBackdrop.appendChild(roomMotes);
         world.style.setProperty('--room-image-drop','260px');
         world.prepend(roomBackdrop);
+        canvas.appendChild(roomMoteCanvas);
         const wallLampLayer=document.createElement('div');wallLampLayer.className='room-wall-lamps';
         world.appendChild(wallLampLayer);
         const floorShadows=document.createElement('canvas');floorShadows.className='room-floor-shadows';floorShadows.setAttribute('aria-hidden','true');
@@ -1648,7 +1650,6 @@ const Hardware = (() => {
                 return {x:x/100,y:y/100,rgb:color,strength,particles};
             });
             roomMotes.innerHTML=roomMoteBeams.map(beam=>`<div class="room-mote-beam room-mote-window" style="--beam-x:${beam.x*100}%;--beam-y:${beam.y*100}%;--beam-color:${beam.rgb};--beam-strength:${beam.strength.toFixed(2)}"></div>`).join('');
-            roomMotes.appendChild(roomMoteCanvas);
             startRoomMotes();
         }
         function stopRoomMotes(){cancelAnimationFrame(roomMoteFrame);clearTimeout(roomMoteTimer);roomMoteFrame=0;roomMoteTimer=0;}
@@ -1656,17 +1657,20 @@ const Hardware = (() => {
         function drawRoomMotes(now){
             roomMoteFrame=0;
             if(document.visibilityState!=='visible'||canvas.dataset.theme!=='scene')return;
-            const width=roomMotes.clientWidth,height=roomMotes.clientHeight,resolution=.28;
+            const width=canvas.clientWidth,height=canvas.clientHeight,resolution=.8;
             if(width&&height){
                 const pixelWidth=Math.round(width*resolution),pixelHeight=Math.round(height*resolution);
                 if(roomMoteCanvas.width!==pixelWidth||roomMoteCanvas.height!==pixelHeight){roomMoteCanvas.width=pixelWidth;roomMoteCanvas.height=pixelHeight;}
-                const ctx=roomMoteCanvas.getContext('2d');ctx.setTransform(resolution,0,0,resolution,0,0);ctx.clearRect(0,0,width,height);
+                const ctx=roomMoteContext;ctx.setTransform(resolution,0,0,resolution,0,0);ctx.clearRect(0,0,width,height);
+                const moteBounds=roomMotes.getBoundingClientRect(),canvasBounds=canvas.getBoundingClientRect();
+                const sceneWidth=roomMotes.clientWidth,sceneHeight=roomMotes.clientHeight,sceneZoom=moteBounds.width/sceneWidth;
+                const offsetX=moteBounds.left-canvasBounds.left,offsetY=moteBounds.top-canvasBounds.top;
                 const read=name=>parseFloat(world.style.getPropertyValue(name))||0;
                 const farX=read('--room-far-x'),farY=read('--room-far-y'),drop=read('--room-image-drop'),horizon=read('--room-horizon-shift'),scale=read('--room-far-scale')||1;
                 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
                 roomMoteBeams.forEach(beam=>{
-                    const beamWidth=width*.23*scale,beamHeight=height*.36*scale;
-                    const left=width*beam.x+farX-beamWidth/2,top=height*beam.y+farY+drop+horizon;
+                    const beamWidth=sceneWidth*.23*scale,beamHeight=sceneHeight*.36*scale;
+                    const left=offsetX+(sceneWidth*beam.x+farX-beamWidth/2)*sceneZoom,top=offsetY+(sceneHeight*beam.y+farY+drop+horizon)*sceneZoom;
                     ctx.fillStyle=`rgb(${beam.rgb.replaceAll(' ', ',')})`;
                     beam.particles.forEach(particle=>{
                         const phase=reduced?.5:(now+particle.delay)%(particle.duration*2)/particle.duration;
@@ -1676,12 +1680,28 @@ const Hardware = (() => {
                         const localX=particle.x+particle.drift*eased/beamWidth,localY=particle.y+(15-60*eased)/beamHeight;
                         if(localX<.2*(1-localY)||localX>1-.2*(1-localY)||localY<0||localY>1)return;
                         ctx.globalAlpha=beam.strength*.88*alpha;
-                        ctx.beginPath();ctx.arc(left+beamWidth*localX,top+beamHeight*localY,particle.size*scale/2,0,Math.PI*2);ctx.fill();
+                        const x=left+beamWidth*localX*sceneZoom,y=top+beamHeight*localY*sceneZoom,radius=particle.size*scale*sceneZoom/2;
+                        if(x+radius<0||x-radius>width||y+radius<0||y-radius>height)return;
+                        ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();
                     });
                 });
+                const count=state.canvasTime==='night'?14:24;
+                const color=state.canvasTime==='night'?'198,217,229':'255,224,177';
+                for(let i=0;i<count;i++){
+                    const phase=reduced?.5:(now/(9500+i%6*1100)+i*.317)%1;
+                    const fade=Math.sin(Math.PI*phase),size=18+i%6*5;
+                    const x=((i*73+19)%101)/101*width+Math.sin(now/6200+i*2.7)*12;
+                    const y=((i*47+13)%89)/89*height-phase*42;
+                    if(x+size<0||x-size>width||y+size<0||y-size>height)continue;
+                    const strength=(state.canvasTime==='night'?.13:.28)*fade;
+                    const glow=ctx.createRadialGradient(x,y,0,x,y,size);
+                    glow.addColorStop(0,`rgba(${color},${strength})`);glow.addColorStop(.32,`rgba(${color},${strength*.5})`);glow.addColorStop(1,`rgba(${color},0)`);
+                    ctx.globalAlpha=1;ctx.fillStyle=glow;ctx.beginPath();ctx.arc(x,y,size,0,Math.PI*2);ctx.fill();
+                    ctx.fillStyle=`rgba(${color},${strength*.65})`;ctx.beginPath();ctx.arc(x,y,Math.max(1.5,size*.1),0,Math.PI*2);ctx.fill();
+                }
                 ctx.globalAlpha=1;
             }
-            roomMoteTimer=setTimeout(()=>{roomMoteTimer=0;startRoomMotes();},33);
+            roomMoteTimer=setTimeout(()=>{roomMoteTimer=0;startRoomMotes();},42);
         }
         document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')startRoomMotes();else stopRoomMotes();});
         function setCanvasBackdrop(mode){
