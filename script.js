@@ -1348,7 +1348,7 @@ const Hardware = (() => {
         }
         const headphoneCalibrationDialog=document.getElementById('headphone-calibration-dialog');
         const headphoneCalibrationSteps=[
-            {title:'Som forte',message:'Toque e ajuste até soar forte e confortável. Marque Bom para seguir.'},
+            {title:'Som forte',message:'Toque e ajuste até soar forte e confortável.'},
             {title:'Detalhe sutil',message:'Sem mexer no volume, o detalhe deve ser audível.'},
             {title:'Esquerda e direita',message:'Os dois lados devem soar equilibrados.'},
             {title:'Sons de interação',message:'Ajuste o slider e toque para ouvir. Pare quando ficar confortável.'}
@@ -1396,7 +1396,6 @@ const Hardware = (() => {
             document.getElementById('headphone-calibration-skip').hidden=done;
             const next=document.getElementById('headphone-calibration-next'),nextLabel=done?'Concluir':step?'Próxima etapa':'Iniciar ajuste';
             next.setAttribute('aria-label',nextLabel);next.title=nextLabel;
-            next.disabled=headphoneCalibrationStep===0&&headphoneCalibrationAnswers[0]!=='okay';
             next.querySelector('path').setAttribute('d',done?'m4 12 5 5L20 6':'M5 12h14m-6-6 6 6-6 6');
             setHeadphoneCalibrationPlayLabel(headphoneCalibrationLooping);
             document.getElementById('headphone-calibration-status').textContent='';
@@ -1487,7 +1486,6 @@ const Hardware = (() => {
             if(step===0){
                 if(answer!=='okay')setListeningOutputLevel(base.program+(answer==='low'?.1:-.15));
                 else stopHeadphoneCalibrationSound();
-                document.getElementById('headphone-calibration-next').disabled=answer!=='okay';
                 status.textContent=answer==='low'?'Saída do programa levemente ampliada.':answer==='high'?'Saída do programa suavizada.':'Nível escolhido mantido.';
             }
             if(step===1){const boost=answer==='low'&&headphoneCalibrationAnswers[0]!=='high'?.05:0;setListeningOutputLevel(base.program+boost);status.textContent=answer==='low'&&!boost?'Preserve o conforto; o som forte já foi reduzido.':answer==='low'?'Detalhes levemente ampliados.':'Nível do programa mantido.';}
