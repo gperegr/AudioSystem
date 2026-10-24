@@ -1993,8 +1993,8 @@ const Hardware = (() => {
             furnitureRackSix:{width:840,height:1120,surfaces:[0,210,420,630,840,1050],inset:20,rack:true,back:true,description:'Seis vãos de 194 px para equipamentos baixos e médios.'},
             furnitureRackSixTall:{width:840,height:1370,surfaces:[0,260,520,780,1040,1300],inset:20,rack:true,back:true,description:'Seis vãos de 244 px para acomodar equipamentos médios e altos.'},
             furnitureHairpin:{width:1320,height:610,surfaces:[0,238,456],inset:24,rack:true,back:true,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack baixo de madeira com dois vãos centrais, nichos laterais e pés alfinete de metal.'},
-            furnitureRecordOne:{width:840,height:800,surfaces:[0,300,730],inset:26,rack:true,back:true,recordColumns:1,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack de madeira com nicho para aparelhos, espaço inferior para discos e pequenos rodízios.'},
-            furnitureRecordThree:{width:2040,height:800,surfaces:[0,300,730],inset:26,rack:true,back:true,recordColumns:3,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack de madeira com nicho superior para aparelhos e três compartimentos inferiores para discos.'},
+            furnitureRecordOne:{width:832,height:800,surfaces:[0,300,730],inset:26,rack:true,back:true,recordColumns:1,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack de madeira com nicho para aparelhos, espaço inferior para discos e pequenos rodízios.'},
+            furnitureRecordThree:{width:2440,height:800,surfaces:[0,300,730],inset:26,rack:true,back:true,recordColumns:3,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack de madeira com nicho superior para aparelhos e três compartimentos inferiores para discos.'},
             furnitureTable:{width:1680,height:760,surfaces:[0],inset:20,description:'Apoie os equipamentos sobre o tampo. Arraste a mesa pelo tampo ou pelos pés.'},
             furnitureNiche:{width:840,height:280,surfaces:[0,260],inset:20,back:true,description:'Acomode um equipamento dentro do nicho ou sobre ele.'}
         };
@@ -2023,9 +2023,10 @@ const Hardware = (() => {
                 const recordBay=(side,x)=>`<div class="hairpin-record-bay" style="left:${x}px" aria-hidden="true">${sleeves[side].map(([left,width,height,angle,color])=>`<span class="hairpin-record-sleeve" style="--sleeve-x:${left}px;--sleeve-width:${width}px;--sleeve-height:${height}px;--sleeve-angle:${angle}deg;--sleeve-color:${color}"></span>`).join('')}</div>`;
                 parts=recordBay(0,24)+recordBay(1,1076)+part('furniture-top',0,0,1320,28)+part('furniture-shelf',264,238,792,24)+part('furniture-shelf',0,456,1320,24)+part('furniture-side',0,28,24,428)+part('furniture-side',1296,28,24,428)+part('furniture-side furniture-divider',244,28,20,428)+part('furniture-side furniture-divider',1056,28,20,428)+part('furniture-hairpin-leg',38,480,80,130,pin)+part('furniture-hairpin-leg',1202,480,80,130,pin);
             }else if(config.recordColumns){
-                const width=config.width,interior=width-52;
+                const width=config.width,interior=width-52,dividerWidth=24;
+                const bayWidth=(interior-(config.recordColumns-1)*dividerWidth)/config.recordColumns;
                 parts=part('furniture-top',0,0,width,28)+part('furniture-shelf',26,300,interior,24)+part('furniture-shelf',0,730,width,30)+part('furniture-side',0,28,26,702)+part('furniture-side',width-26,28,26,702);
-                for(let column=1;column<config.recordColumns;column++)parts+=part('furniture-side furniture-divider',26+column*interior/config.recordColumns-12,324,24,406);
+                for(let column=1;column<config.recordColumns;column++)parts+=part('furniture-side furniture-divider',26+column*bayWidth+(column-1)*dividerWidth,324,dividerWidth,406);
                 const caster='<span class="caster-stem"></span><span class="caster-wheel"></span>';
                 parts+=part('furniture-caster',42,760,42,40,caster)+part('furniture-caster',width-84,760,42,40,caster);
             }else if(config.rack){
