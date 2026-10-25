@@ -4580,6 +4580,9 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
 
 #inspector-content .audio-transport .transport-buttons button {display:grid;place-items:center;min-height:36px;}
 #inspector-content .audio-transport .transport-buttons svg {width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none;}
+#inspector-content .audio-transport .source-play-toggle .source-pause-icon {display:none;}
+#inspector-content .audio-transport .source-play-toggle.is-playing .source-play-icon {display:none;}
+#inspector-content .audio-transport .source-play-toggle.is-playing .source-pause-icon {display:block;}
 #inspector-content .audio-transport .transport-buttons svg text {fill:currentColor;stroke:none;font:700 7px "Inter",sans-serif;}
 
 #inspector-content .linear-disc-choices {display:flex;gap:10px;}

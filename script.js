@@ -3582,7 +3582,9 @@ const Hardware = (() => {
             const active=spotify&&(playback.context===dev.spotifyVinyl.uri||spotifyPlayingTurntable===dev.id);
             const position=spotify?(active?playback.position:0):sourcePosition(dev),duration=spotify?(active?playback.duration:0):dev.audioBuffer.duration;
             const repeat=spotify?playback.repeat:!!dev.state.repeat,disabled=spotify&&(!playback.connected||!active||!duration)?'disabled':'';
-            return `<div class="audio-transport"><label for="source-progress">Transporte da música</label>${spotify?'<span id="source-track-title" class="spotify-track-title">Aguardando faixa do Spotify</span>':''}<div class="transport-time"><span id="source-position">${formatAudioTime(position)}</span><span id="source-duration">${formatAudioTime(duration)}</span></div><input id="source-progress" type="range" min="0" max="${Math.max(.1,duration)}" step="0.1" value="${position}" aria-label="Posição da faixa" ${disabled}><div class="transport-buttons"><button class="tt-insp-btn" id="source-rewind" type="button" title="Retroceder 10 segundos" aria-label="Retroceder 10 segundos" ${disabled}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8V4m0 4h4M5.4 8a8 8 0 1 1-1 8"/><text x="12" y="16" text-anchor="middle">10</text></svg></button><button class="tt-insp-btn" id="source-forward" type="button" title="Avançar 10 segundos" aria-label="Avançar 10 segundos" ${disabled}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 8V4m0 4h-4M18.6 8a8 8 0 1 0 1 8"/><text x="12" y="16" text-anchor="middle">10</text></svg></button><button class="tt-insp-btn ${repeat?'is-on':''}" id="source-repeat" type="button" title="Repetir faixa" aria-label="Repetir faixa" aria-pressed="${repeat}" ${disabled}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V7a3 3 0 0 1 3-3h11l-2.5-2.5M18 4l-2.5 2.5M20 15v2a3 3 0 0 1-3 3H6l2.5 2.5M6 20l2.5-2.5"/></svg></button></div></div>`;
+            const playButton=spotify?`<button class="tt-insp-btn source-play-toggle ${dev.state.playing?'is-playing':''}" id="source-play-pause" type="button" title="${dev.state.playing?'Pausar':'Reproduzir'}" aria-label="${dev.state.playing?'Pausar':'Reproduzir'}"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="source-play-icon" d="M7 4v16l13-8Z"/><path class="source-pause-icon" d="M6 4h4v16H6zm8 0h4v16h-4z"/></svg></button>`:'';
+            const shuffleButton=spotify?`<button class="tt-insp-btn ${playback.shuffle?'is-on':''}" id="source-shuffle" type="button" title="Ordem aleatória" aria-label="Ordem aleatória" aria-pressed="${playback.shuffle}" ${!playback.connected?'disabled':''}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h3c5 0 7 12 12 12h3m-4-4 4 4-4 4M3 18h3c2.5 0 4-2.5 5.4-5m3-2C16 8.5 17.5 6 20 6h1m-4-4 4 4-4 4"/></svg></button>`:'';
+            return `<div class="audio-transport"><label for="source-progress">Transporte da música</label>${spotify?'<span id="source-track-title" class="spotify-track-title">Aguardando faixa do Spotify</span>':''}<div class="transport-time"><span id="source-position">${formatAudioTime(position)}</span><span id="source-duration">${formatAudioTime(duration)}</span></div><input id="source-progress" type="range" min="0" max="${Math.max(.1,duration)}" step="0.1" value="${position}" aria-label="Posição da faixa" ${disabled}><div class="transport-buttons">${playButton}<button class="tt-insp-btn" id="source-rewind" type="button" title="Retroceder 10 segundos" aria-label="Retroceder 10 segundos" ${disabled}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8V4m0 4h4M5.4 8a8 8 0 1 1-1 8"/><text x="12" y="16" text-anchor="middle">10</text></svg></button><button class="tt-insp-btn" id="source-forward" type="button" title="Avançar 10 segundos" aria-label="Avançar 10 segundos" ${disabled}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 8V4m0 4h-4M18.6 8a8 8 0 1 0 1 8"/><text x="12" y="16" text-anchor="middle">10</text></svg></button><button class="tt-insp-btn ${repeat?'is-on':''}" id="source-repeat" type="button" title="Repetir faixa" aria-label="Repetir faixa" aria-pressed="${repeat}" ${disabled}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V7a3 3 0 0 1 3-3h11l-2.5-2.5M18 4l-2.5 2.5M20 15v2a3 3 0 0 1-3 3H6l2.5 2.5M6 20l-2.5-2.5"/></svg></button>${shuffleButton}</div></div>`;
         }
         function spotifyTrackInspectorHtml(){
             return '<section class="spotify-track-panel" aria-label="Faixas do disco"><h3>Faixas do disco</h3><span class="spotify-track-album"></span><div class="spotify-track-list" role="list"><p role="status">Carregando faixas…</p></div></section>';
@@ -3626,6 +3628,15 @@ const Hardware = (() => {
         function bindTransportInspector(dev) {
             if(dev.spotifyVinyl){
                 const seek=seconds=>SpotifyCoverflow.seekTo(seconds).catch(error=>spotifyVinylNotice(error.message||'Não foi possível avançar a faixa.'));
+                document.getElementById('source-play-pause').addEventListener('click',()=>{
+                    if(!dev.powered){spotifyVinylNotice('Ligue o toca-discos para reproduzir.');return;}
+                    setSourcePlaying(dev,!dev.state.playing);
+                });
+                document.getElementById('source-shuffle').addEventListener('click',async event=>{
+                    const enabled=event.currentTarget.getAttribute('aria-pressed')!=='true';
+                    try{await SpotifyCoverflow.setShuffle(enabled);event.currentTarget.classList.toggle('is-on',enabled);event.currentTarget.setAttribute('aria-pressed',String(enabled));}
+                    catch(error){spotifyVinylNotice(error.message||'Não foi possível mudar a ordem aleatória.');}
+                });
                 document.getElementById('source-progress').addEventListener('input',event=>{document.getElementById('source-position').textContent=formatAudioTime(Number(event.target.value));});
                 document.getElementById('source-progress').addEventListener('change',event=>seek(Number(event.target.value)));
                 document.getElementById('source-rewind').addEventListener('click',()=>seek(SpotifyCoverflow.getPlaybackState().position-10));
@@ -3890,6 +3901,15 @@ const Hardware = (() => {
                 for(const id of ['source-rewind','source-forward','source-repeat'])document.getElementById(id).disabled=!ready;
                 document.getElementById('source-repeat').classList.toggle('is-on',playback.repeat);
                 document.getElementById('source-repeat').setAttribute('aria-pressed',String(playback.repeat));
+                const playButton=document.getElementById('source-play-pause');
+                playButton.classList.toggle('is-playing',!!selected.state.playing);
+                playButton.disabled=!selected.powered||!!(spotifyPlayingTurntable&&spotifyPlayingTurntable!==selected.id);
+                playButton.title=selected.state.playing?'Pausar':'Reproduzir';
+                playButton.setAttribute('aria-label',playButton.title);
+                const shuffleButton=document.getElementById('source-shuffle');
+                shuffleButton.disabled=!playback.connected;
+                shuffleButton.classList.toggle('is-on',playback.shuffle);
+                shuffleButton.setAttribute('aria-pressed',String(playback.shuffle));
                 updateSpotifyTrackSelection(selected);
             }else if(selected?.audioBuffer){const progress=document.getElementById('source-progress'),label=document.getElementById('source-position');const position=sourcePosition(selected);if(progress&&document.activeElement!==progress)progress.value=position;if(label)label.textContent=formatAudioTime(position);}
         }
