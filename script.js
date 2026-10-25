@@ -3317,8 +3317,10 @@ const Hardware = (() => {
         function configurePlaybackSession(){
             try{
                 if(navigator.audioSession){
-                    if(navigator.audioSession.type!=='playback')navigator.audioSession.type='playback';
-                    return navigator.audioSession.type==='playback';
+                    const capturing=Object.values(state.devices).some(dev=>dev.capturePending||dev.authorizingCapture||dev.micStream);
+                    const sessionType=capturing?'play-and-record':'playback';
+                    if(navigator.audioSession.type!==sessionType)navigator.audioSession.type=sessionType;
+                    return navigator.audioSession.type===sessionType;
                 }
             }catch{ /* Older Safari versions have no writable Audio Session API. */ }
             return false;
@@ -6336,7 +6338,7 @@ const Hardware = (() => {
                     dev.micSource?.disconnect();dev.micSplitter?.disconnect();dev.micAnalyser?.disconnect();dev.micSource=dev.micSplitter=dev.micAnalyser=null;
                     dev.state.playing=false;for(const ch of ['L','R'])dev.nodes['gen'+ch].gain.setTargetAtTime(0,state.audioCtx.currentTime,.015);
                     dev.el.classList.remove('ai-live','ai-signal','ai-clip');const button=dev.el.querySelector('[data-source-play]');button?.setAttribute('aria-pressed','false');button?.setAttribute('aria-label','Iniciar captura do computador');
-                    dev.micMessage='Captura parada.';if(refresh&&state.selectedDeviceId===dev.id)selectDevice(dev.id,true);updateCableFlows();
+                    configurePlaybackSession();dev.micMessage='Captura parada.';if(refresh&&state.selectedDeviceId===dev.id)selectDevice(dev.id,true);updateCableFlows();
                 };
                 dev.startMicCapture=async()=>{
                     if(dev.capturePending||dev.state.playing)return;
@@ -6348,7 +6350,7 @@ const Hardware = (() => {
                         const audio=dev.captureInputLabelsAvailable?{...(selectedDevice?{deviceId:{exact:selectedDevice}}:{}),channelCount:{ideal:2},echoCancellation:false,noiseSuppression:false,autoGainControl:false}:true;
                         // Start the permission request in the original click gesture. Safari can
                         // lose that gesture if AudioContext.resume() is awaited first.
-                        const firstRequest=navigator.mediaDevices.getUserMedia({audio});
+                        const firstRequest=requestCaptureAudio(audio);
                         state.audioCtx.resume().catch(()=>{});
                         try{captureStream=await firstRequest;}catch(error){
                             // Safari versions vary in which processing constraints they expose.
@@ -6356,7 +6358,7 @@ const Hardware = (() => {
                             // silently switch an explicitly selected input to the built-in mic.
                             if(['OverconstrainedError','TypeError'].includes(error.name)){
                                 const retryAudio=selectedDevice?{deviceId:{exact:selectedDevice}}:true;
-                                captureStream=await navigator.mediaDevices.getUserMedia({audio:retryAudio});
+                                captureStream=await requestCaptureAudio(retryAudio);
                                 if(state.audioCtx.state!=='running')await state.audioCtx.resume();
                             }else throw error;
                         }
@@ -6374,6 +6376,7 @@ const Hardware = (() => {
                         captureStream?.getTracks().forEach(track=>track.stop());
                         dev.micSource?.disconnect();dev.micSplitter?.disconnect();dev.micAnalyser?.disconnect();dev.micSource=dev.micSplitter=dev.micAnalyser=null;dev.micStream=null;
                         const messages={
+                            InvalidStateError:captureStateMessage(),
                             NotAllowedError:'Permita o microfone para este site nas configurações do Safari e do macOS e tente novamente.',
                             NotFoundError:'O Safari não encontrou essa entrada. Confira se a interface aparece em Ajustes do Sistema → Som → Entrada.',
                             NotReadableError:'A entrada está ocupada ou bloqueada pelo macOS. Feche outros apps de áudio e confira a permissão de microfone do Safari.',
@@ -6384,7 +6387,7 @@ const Hardware = (() => {
                         if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);
                         refreshCaptureInputs(dev);
                     }
-                    finally{dev.capturePending=false;}
+                    finally{dev.capturePending=false;configurePlaybackSession();}
                 };
                 dev.syncCaptureControls=()=>{if(state.selectedDeviceId===dev.id){for(const channel of ['L','R']){const input=document.getElementById(`ai-gain-${channel}`);if(input)input.value=dev.state['micGain'+channel];}const line=document.getElementById('ai-line');if(line)line.value=dev.state.aiLineLevel;dev.state.aiPhoneLevels.forEach((value,index)=>{const input=document.getElementById(`ai-phones-${index}`);if(input)input.value=value;});}Hardware.sync(dev);};
                 for(const name of ['setMicGain','setAiLine','setAiPhones']){const setter=dev[name];dev[name]=(...args)=>{const result=setter(...args);dev.syncCaptureControls();scheduleProjectSave();return result;};}
@@ -6818,25 +6821,43 @@ const Hardware = (() => {
             }catch{}
         }
 
+        function captureStateMessage(){
+            return 'O Safari recusou a captura porque a página não está pronta (InvalidStateError). Abra o endereço do programa diretamente em uma aba ativa do Safari, recarregue e tente novamente. Se persistir, feche outras abas deste programa.';
+        }
+        async function requestCaptureAudio(audio){
+            if(document.visibilityState!=='visible')throw new DOMException('Mantenha a aba visível para capturar áudio.','InvalidStateError');
+            configurePlaybackSession();
+            try{return await navigator.mediaDevices.getUserMedia({audio});}
+            catch(error){
+                if(error.name!=='InvalidStateError')throw error;
+                // WebKit may still be restoring a page's capture state after focus.
+                // Retry once after its next visible frame, keeping the original error
+                // if the document is still inactive.
+                await new Promise(resolve=>requestAnimationFrame(resolve));
+                if(document.visibilityState!=='visible'||!document.hasFocus())throw error;
+                return navigator.mediaDevices.getUserMedia({audio});
+            }
+        }
+
         async function authorizeCaptureInputs(dev,button){
             const status=document.getElementById('ai-capture-status');
             const report=message=>{dev.micMessage=message;if(status?.isConnected)status.textContent=message;};
             if(!navigator.mediaDevices?.getUserMedia){report('Abra em HTTPS ou localhost para permitir o microfone.');return;}
             let permissionStream;
-            button.disabled=true;
+            button.disabled=true;dev.authorizingCapture=true;
             report('Aguardando permissão do microfone…');
             try{
                 // Bare request directly from the user's click: no AudioContext, device ID,
                 // or optional capture constraints can block Safari's permission discovery.
-                permissionStream=await navigator.mediaDevices.getUserMedia({audio:true});
+                permissionStream=await requestCaptureAudio(true);
                 await refreshCaptureInputs(dev);
                 report('Acesso autorizado. Escolha sua interface e toque em Iniciar captura.');
             }catch(error){
-                report(error.name==='NotAllowedError'
+                report(error.name==='InvalidStateError'?captureStateMessage():error.name==='NotAllowedError'
                     ?'Microfone bloqueado. No Safari: Ajustes → Sites → Microfone → Permitir para este site. No macOS: Ajustes do Sistema → Privacidade e Segurança → Microfone → Safari. Depois recarregue.'
                     :error.name==='NotFoundError'?'Nenhuma entrada disponível. Confira Ajustes do Sistema → Som → Entrada.'
                     :'Não foi possível acessar o microfone ('+(error.name||'erro')+'). Confira as permissões do site e do macOS.');
-            }finally{permissionStream?.getTracks().forEach(track=>track.stop());if(button.isConnected)button.disabled=false;}
+            }finally{permissionStream?.getTracks().forEach(track=>track.stop());dev.authorizingCapture=false;configurePlaybackSession();if(button.isConnected)button.disabled=false;}
         }
 
         function bindDeviceEvents(dev) {
