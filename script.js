@@ -2213,7 +2213,7 @@ const Hardware = (() => {
             furnitureHairpin:{width:1320,height:610,surfaces:[0,238,456],inset:24,rack:true,back:true,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack baixo de madeira com dois vãos centrais, nichos laterais e pés alfinete de metal.'},
             furnitureRecordOne:{width:832,height:800,surfaces:[0,300,730],inset:26,rack:true,back:true,recordColumns:1,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack de madeira com nicho para aparelhos, espaço inferior para discos e pequenos rodízios.'},
             furnitureRecordThree:{width:2440,height:800,surfaces:[0,300,730],inset:26,rack:true,back:true,recordColumns:3,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack de madeira com nicho superior para aparelhos e três compartimentos inferiores para discos.'},
-            furnitureCoverflow:{width:2440,height:514,surfaces:[0],inset:26,rack:true,back:true,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Coleção de álbuns salvos no Spotify, com capas móveis e disco revelado ao selecionar. Reprodução independente dos cabos.'},
+            furnitureCoverflow:{width:2440,height:514,surfaces:[0],inset:26,rack:true,back:true,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Coleção de álbuns e playlists do Spotify. Retire um vinil da capa aberta e coloque-o em um toca-discos; cabos e volumes controlam a escuta.'},
             furnitureTable:{width:1680,height:760,surfaces:[0],inset:20,description:'Apoie os equipamentos sobre o tampo. Arraste a mesa pelo tampo ou pelos pés.'},
             furnitureNiche:{width:840,height:280,surfaces:[0,260],inset:20,back:true,description:'Acomode um equipamento dentro do nicho ou sobre ele.'}
         };
@@ -2458,6 +2458,8 @@ const Hardware = (() => {
         const BENCH_METER_TYPES=new Set(['benchMeter','benchMeterVintage']);
         const SIGNAL_GENERATOR_TYPES=new Set(['signalGenerator','signalGeneratorVintage']);
         const SOURCE_TYPES = new Set([...TURNTABLE_TYPES, 'cdPlayer', 'streamer','streamIntegrated', 'btReceiverA','tapeDeck','signalGenerator','signalGeneratorVintage']);
+        const spotifyVinyls=new Map();
+        let spotifyPlayingTurntable=null,spotifyVolume=0,spotifyVolumeTimer=0,spotifyNoticeTimer=0;
         const EQ_TYPES = new Set(['eqStudio', 'eqVintage']);
         const BT_RX_TYPES = new Set(['btReceiverA']);
         const BT_TX_TYPES = new Set(['btTransmitterPro']);
@@ -3943,13 +3945,22 @@ const Hardware = (() => {
                 }
             }
             if(playing&&(dev.state.damage||!state.devices[dev.id]))return;
+            if(dev.spotifyVinyl){
+                if(playing){
+                    if(spotifyPlayingTurntable&&spotifyPlayingTurntable!==dev.id){spotifyVinylNotice('Pare o outro toca-discos do Spotify antes de reproduzir este.');return;}
+                    spotifyVolume=0;try{await SpotifyCoverflow.setPlaybackVolume(0);await SpotifyCoverflow.playAlbum(dev.spotifyVinyl);}catch{return;}
+                    spotifyPlayingTurntable=dev.id;
+                }else if(spotifyPlayingTurntable===dev.id){
+                    spotifyPlayingTurntable=null;spotifyVolume=0;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});
+                }
+            }
             stopFilePlayback(dev);
             if(!dev.audioBuffer){
                 if(dev.state.playing && dev.demoStartedAt != null) dev.demoOffset=(dev.demoOffset||0)+state.audioCtx.currentTime-dev.demoStartedAt;
                 dev.demoStartedAt=playing?state.audioCtx.currentTime:null;
             }
             dev.state.playing = !!playing;
-            syncVinylNoise(dev);
+            if(dev.spotifyVinyl)stopVinylNoise(dev);else syncVinylNoise(dev);
             syncTapeHiss(dev);
             syncSignalGenerator(dev);
             if (dev.state.playing && dev.audioBuffer) startFilePlayback(dev);
@@ -3977,7 +3988,7 @@ const Hardware = (() => {
                     if (state.audioCtx.state !== 'running') return;
                     Object.values(state.devices).forEach(dev => {
                         // Só toca se o dispositivo estiver ligado (e, no toca-discos, com o prato girando)
-                        if (!isSourceRunning(dev) || dev.audioBuffer || RADIO_RECEIVERS.has(dev.type) || SIGNAL_GENERATOR_TYPES.has(dev.type)) return;
+                        if (!isSourceRunning(dev) || dev.audioBuffer || dev.spotifyVinyl || RADIO_RECEIVERS.has(dev.type) || SIGNAL_GENERATOR_TYPES.has(dev.type)) return;
 
                         const outR = dev.nodes.genR || dev.nodes.outR;
                         const outL = dev.nodes.genL || dev.nodes.outL;
@@ -6276,7 +6287,7 @@ const Hardware = (() => {
                 }
                 if(mechanism.phase==='playing'){
                     const seconds=position();
-                    if(seconds>=duration()&&!dev.state.repeat){dev.linearStop();}
+                    if(!dev.spotifyVinyl&&seconds>=duration()&&!dev.state.repeat){dev.linearStop();}
                     else mechanism.target=leadIn()+(leadOut()-leadIn())*Math.min(1,(seconds%duration())/duration());
                 }
                 if(mechanism.cue){
@@ -6829,6 +6840,7 @@ const Hardware = (() => {
         }
         function deleteDevice(dev) {
             if (!dev || !state.devices[dev.id]) return;
+            if(dev.spotifyVinyl){if(spotifyPlayingTurntable===dev.id){spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});}dev.spotifyVinyl.turntableId=null;dev.spotifyVinyl.el.classList.remove('is-on-platter');}
             dev.disposeCoverflow?.();
             dev.disposeLinear?.();
             dev.disposeStream?.();
@@ -8198,6 +8210,7 @@ const Hardware = (() => {
         }
 
         function updateCables() {
+            syncPlatterVinyls();
             world.querySelectorAll('.device-type-pendantLamp').forEach(lamp=>{
                 const drop=Math.round(lamp.offsetTop+80)+'px';
                 if(lamp.style.getPropertyValue('--pendant-drop')!==drop)lamp.style.setProperty('--pendant-drop',drop);
@@ -8244,6 +8257,7 @@ const Hardware = (() => {
 
         function updateCableFlows() {
             updateListeningControls();
+            if(spotifyPlayingTurntable||spotifyVolume>0)scheduleSpotifyVolume();
             updateStackFeet();
             syncSourceSequencer();
             // Atualiza compatibilidade após trocas de sinal, entrada ou estado dos aparelhos.
@@ -8515,6 +8529,72 @@ const Hardware = (() => {
             if(document.visibilityState==='visible')scheduleVisuals();
             else {cancelAnimationFrame(visualFrame);clearTimeout(visualTimer);visualFrame=0;visualTimer=0;}
         });
+        const spotifyNotice=document.createElement('div');spotifyNotice.className='spotify-vinyl-notice';spotifyNotice.setAttribute('role','status');document.body.append(spotifyNotice);
+        function spotifyVinylNotice(message){spotifyNotice.textContent=message;spotifyNotice.classList.add('is-visible');clearTimeout(spotifyNoticeTimer);spotifyNoticeTimer=setTimeout(()=>spotifyNotice.classList.remove('is-visible'),5200);}
+        function refreshSpotifyVinyls(){SpotifyCoverflow.markExtracted(new Set([...spotifyVinyls.values()].map(item=>item.uri)));}
+        function vinylPlatterCenter(dev){
+            const marker=dev.el.querySelector(dev.type==='turntableLinear'?'.linear-disc-size':'[data-tt="record"]')||dev.el;
+            const rect=marker.getBoundingClientRect();return screenToWorld(rect.left+rect.width/2,rect.top+rect.height/2);
+        }
+        function syncPlatterVinyls(){for(const item of spotifyVinyls.values()){const dev=state.devices[item.turntableId];if(!dev)continue;const at=vinylPlatterCenter(dev);moveSpotifyVinyl(item,at.x-72,at.y-72);}}
+        function moveSpotifyVinyl(item,x,y){item.x=Math.max(0,Math.min(world.offsetWidth-150,x));item.y=Math.max(0,Math.min(maxEquipmentBottom()-150,y));item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';}
+        function placeSpotifyVinyl(item,dev,animate=true){
+            if(dev.spotifyVinyl&&dev.spotifyVinyl!==item){spotifyVinylNotice('Este prato já tem um disco.');return false;}
+            if(dev.state.playing)setSourcePlaying(dev,false);
+            if(item.turntableId&&state.devices[item.turntableId]){const previous=state.devices[item.turntableId];if(previous.state.playing)setSourcePlaying(previous,false);previous.spotifyVinyl=null;}
+            item.turntableId=dev.id;dev.spotifyVinyl=item;const center=vinylPlatterCenter(dev);moveSpotifyVinyl(item,center.x-72,center.y-72);
+            item.el.classList.toggle('is-linear',dev.type==='turntableLinear');item.el.classList.add('is-on-platter');
+            if(animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches)item.el.animate([{transform:'translateY(-80px) scale(1.12)',opacity:.7},{transform:'translateY(0) scale(1)',opacity:1}],{duration:480,easing:'cubic-bezier(.2,.8,.2,1)'});
+            if(!projectRestoring)spotifyVinylNotice('O Play do toca-discos controla este álbum. Cabos e volumes determinam se você o ouve; efeitos sonoros dos aparelhos não são aplicados.');scheduleProjectSave();return true;
+        }
+        function createSpotifyVinyl(record){
+            if(!record||typeof record.uri!=='string'||!/^spotify:(album|playlist):[A-Za-z0-9]+$/.test(record.uri)||spotifyVinyls.has(record.uri))return null;
+            const item={id:record.id||'vinyl_'+Math.random().toString(36).slice(2),uri:record.uri,name:String(record.name||'Disco do Spotify').slice(0,160),image:/^https:\/\//.test(record.image||'')?record.image:'',origin:record.origin||null,turntableId:null,x:0,y:0};
+            const el=document.createElement('div');el.className='spotify-canvas-vinyl';el.tabIndex=0;el.title=item.name+' · arraste ao toca-discos ou de volta ao móvel';el.setAttribute('aria-label',el.title);
+            const label=document.createElement('span');if(item.image)label.style.backgroundImage=`url("${item.image.replaceAll('"','%22')}")`;el.append(label);item.el=el;world.append(el);spotifyVinyls.set(item.uri,item);moveSpotifyVinyl(item,Number(record.x)||0,Number(record.y)||0);refreshSpotifyVinyls();
+            el.addEventListener('pointerdown',event=>{if(event.button!==0)return;event.preventDefault();event.stopPropagation();beginSpotifyVinylDrag(item,event);});
+            return item;
+        }
+        function removeSpotifyVinyl(item){if(item.turntableId){const dev=state.devices[item.turntableId];if(dev?.state.playing)setSourcePlaying(dev,false);if(dev)dev.spotifyVinyl=null;}spotifyVinyls.delete(item.uri);item.el.remove();refreshSpotifyVinyls();scheduleProjectSave();}
+        function beginSpotifyVinylDrag(item,event){
+            const prior=state.devices[item.turntableId];if(prior){if(prior.state.playing)setSourcePlaying(prior,false);prior.spotifyVinyl=null;item.turntableId=null;item.el.classList.remove('is-on-platter','is-linear');}
+            const point=screenToWorld(event.clientX,event.clientY),offsetX=point.x-item.x,offsetY=point.y-item.y;item.el.classList.add('is-dragging');
+            const move=ev=>{if(ev.pointerId!==event.pointerId)return;const at=screenToWorld(ev.clientX,ev.clientY);moveSpotifyVinyl(item,at.x-offsetX,at.y-offsetY);};
+            const end=ev=>{if(ev.pointerId!==event.pointerId)return;window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',end,true);window.removeEventListener('pointercancel',end,true);item.el.classList.remove('is-dragging');
+                item.el.style.pointerEvents='none';const target=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('.device-node');item.el.style.pointerEvents='';const dev=state.devices[target?.id];
+                if(dev&&TURNTABLE_TYPES.has(dev.type))placeSpotifyVinyl(item,dev);
+                else if(dev?.type==='furnitureCoverflow'){removeSpotifyVinyl(item);spotifyVinylNotice('Disco guardado na coleção.');}
+                else scheduleProjectSave();
+            };
+            window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',end,true);window.addEventListener('pointercancel',end,true);
+        }
+        document.addEventListener('spotify-vinyl-pickup',event=>{
+            const furniture=event.target.closest('.device-node'),data=event.detail;if(!furniture||!data||spotifyVinyls.has(data.uri))return;
+            const at=screenToWorld(data.clientX,data.clientY),item=createSpotifyVinyl({...data,origin:furniture.id,x:at.x-72,y:at.y-72});if(item)beginSpotifyVinylDrag(item,{...data,button:0});
+        });
+        function spotifyPathVolume(source){
+            const solo=Object.values(state.devices).some(dev=>isListeningDevice(dev)&&dev.state.solo),seen=new Set();let best=0;
+            function walk(dev,input,gain){
+                if(!dev||dev.state.damage||!dev.powered)return;
+                if(dev!==source){if(dev.state.muted||dev.state.streamMute||dev.state.preMuted)return;if(typeof dev.state.volume==='number')gain*=Math.max(0,Math.min(1,dev.state.volume));if(Array.isArray(dev.state.channelVolumes))gain*=Math.max(0,...dev.state.channelVolumes.map(value=>Math.max(0,Math.min(1,value))));}
+                if(isListeningDevice(dev)){if(!dev.state.muted&&(!solo||dev.state.solo))best=Math.max(best,gain);return;}
+                for(const output of dev.el.querySelectorAll('.port[data-io="out"]')){
+                    if(input&&!routedInputPorts(dev,output).includes(input))continue;
+                    if(!portCarriesSignal(dev,output))continue;
+                    for(const cable of state.connections){if(cable.miswired||cable.outId!==output.id)continue;const nextInput=document.getElementById(cable.inId),next=state.devices[nextInput?.closest('.device-node')?.id];if(!next||seen.has(next.id+':'+nextInput.id))continue;
+                        if(RADIO_RECEIVERS.has(next.type)){const selected=next.state.receiverInput||'line1',prefix=selected==='line1'?'in':selected;if(selected==='fm'||!new RegExp('^'+prefix+'[LR]$').test(nextInput.dataset.node))continue;}
+                        if(next.type==='streamIntegrated'&&next.state.streamInput!=='line')continue;
+                        if(controlAmpConfig(next.type)&&!nextInput.dataset.node.startsWith(next.state.integratedSource===3&&controlAmpConfig(next.type).phono!==false?'phono':'line'+next.state.integratedSource))continue;
+                        if(next.type==='preamp'&&!nextInput.dataset.node.startsWith('in'+next.state.preSource))continue;
+                        if(MATRIX_TYPES.has(next.type)&&!nextInput.dataset.node.startsWith('in'+next.state.matrixInput))continue;
+                        seen.add(next.id+':'+nextInput.id);walk(next,nextInput,gain);seen.delete(next.id+':'+nextInput.id);
+                    }
+                }
+            }
+            walk(source,null,1);return Math.min(.65,best*.55*Math.min(1,state.listeningOutputLevel));
+        }
+        function scheduleSpotifyVolume(){if(spotifyVolumeTimer)return;spotifyVolumeTimer=setTimeout(()=>{spotifyVolumeTimer=0;const dev=state.devices[spotifyPlayingTurntable],target=dev&&dev.state.playing?spotifyPathVolume(dev):0;spotifyVolume+=Math.max(-.08,Math.min(.08,target-spotifyVolume));if(Math.abs(spotifyVolume-target)<.004)spotifyVolume=target;SpotifyCoverflow.setPlaybackVolume(spotifyVolume).catch(()=>{});if(spotifyPlayingTurntable&&Math.abs(spotifyVolume-target)>.004)scheduleSpotifyVolume();},100);}
+        setInterval(()=>{if(spotifyPlayingTurntable)scheduleSpotifyVolume();},240);
         const PROJECT_FORMAT='audio-system-project',PROJECT_VERSION=1;
         let projectDatabase=null,projectPersistenceBlocked=false,projectRestoring=false,projectSaving=false,projectSaveAgain=false,lastProjectSignature='',knownAudioKeys=new Set();
         const projectTools=document.createElement('section');projectTools.className='project-tools';
@@ -8529,7 +8609,8 @@ const Hardware = (() => {
             });
             const connections=state.connections.map(c=>{const out=document.getElementById(c.outId),input=document.getElementById(c.inId);return {from:out?.closest('.device-node')?.id,out:out?.dataset.node,to:input?.closest('.device-node')?.id,input:input?.dataset.node,label:c.label||'',color:c.color||null,hidden:!!c.hidden,slack:c.slack??5};});
             const catalogScroll=equipmentCatalog.querySelector('.overflow-y-auto');
-            return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{
+            const vinyls=[...spotifyVinyls.values()].map(item=>({id:item.id,uri:item.uri,name:item.name,image:item.image,origin:item.origin,x:item.x,y:item.y,turntableId:item.turntableId}));
+            return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,vinyls,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{
                 environment:{...(state.environment||DEFAULT_ROOM_SETTINGS)},
                 canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'scene',canvasBackdrop:state.canvasBackdrop||DEFAULT_BACKDROP,canvasTime:state.canvasTime||'dusk',
                 soundVolume:state.uiSoundVolume??DEFAULT_UI_SOUND_VOLUME,hideCables:!!state.hideCables,
@@ -8640,7 +8721,7 @@ const Hardware = (() => {
             const shield=document.createElement('div');shield.className='project-restore-shield';shield.textContent='Restaurando montagem local…';document.body.appendChild(shield);
             const ids=new Map(),restored=[],warnings=[];
             try{
-                stopViewMotion();cancelCableDrag();Object.values(state.devices).forEach(deleteDevice);
+                stopViewMotion();cancelCableDrag();spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});spotifyVinyls.forEach(item=>item.el.remove());spotifyVinyls.clear();refreshSpotifyVinyls();Object.values(state.devices).forEach(deleteDevice);
                 world.style.removeProperty('min-width');world.style.removeProperty('min-height');
                 const ui=snapshot.ui||{};setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setCanvasTime(ui.canvasTime||(ui.canvasBackdrop==='night'?'night':'dusk'));setCanvasBackdrop(ui.canvasBackdrop);
                 for(const saved of snapshot.devices){
@@ -8672,6 +8753,7 @@ const Hardware = (() => {
                     connection.label=typeof saved.label==='string'?saved.label.slice(0,60):'';connection.color=/^#[0-9a-f]{6}$/i.test(saved.color||'')?saved.color:undefined;connection.hidden=!!saved.hidden;connection.slack=Number.isFinite(saved.slack)?Math.max(0,Math.min(10,Math.round(saved.slack))):5;links.push(connection);
                 });
                 restored.forEach(([saved,dev])=>{const other=state.devices[ids.get(saved.pairedId)];if(other&&BT_TX_TYPES.has(dev.type)&&canPair(dev,other))pairDevices(dev,other);});
+                for(const record of Array.isArray(snapshot.vinyls)?snapshot.vinyls.slice(0,200):[]){const item=createSpotifyVinyl({...record,origin:ids.get(record.origin)||null});const platter=state.devices[ids.get(record.turntableId)];if(item&&platter&&TURNTABLE_TYPES.has(platter.type))placeSpotifyVinyl(item,platter,false);}
                 setRoomSettings(ui.environment);
                 cableVisibilityButton.setAttribute('aria-pressed',String(!!ui.hideCables));
                 state.uiSoundVolume=typeof ui.soundVolume==='number'?Math.max(0,Math.min(1,ui.soundVolume)):DEFAULT_UI_SOUND_VOLUME;state.hideCables=!!ui.hideCables;
