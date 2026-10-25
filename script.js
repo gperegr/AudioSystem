@@ -1326,6 +1326,7 @@ const Hardware = (() => {
         function readAppPreferences(){try{const value=JSON.parse(localStorage.getItem(APP_PREFERENCES_KEY)||'{}');return value&&typeof value==='object'?value:{};}catch{return {};}}
         const savedAppPreferences=readAppPreferences();
         let connectionGuidanceEnabled=savedAppPreferences.connectionGuidanceEnabled!==false;
+        let gravityEnabled=savedAppPreferences.gravityEnabled!==false;
         let developerModeEnabled=savedAppPreferences.developerMode===true;
         let headphonePromptSeen=savedAppPreferences.headphonePromptSeen===true;
         state.listeningOutputLevel=Number.isFinite(savedAppPreferences.listeningOutputLevel)?Math.max(.5,Math.min(1.2,savedAppPreferences.listeningOutputLevel)):1;
@@ -1337,7 +1338,7 @@ const Hardware = (() => {
             appPreferencesSaveTimer=setTimeout(()=>{
                 if(!canvas.clientWidth||!canvas.clientHeight)return;
                 const focusX=(canvas.clientWidth/2-view.x)/view.zoom,focusY=(canvas.clientHeight/2-view.y)/view.zoom;
-                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,backdrop:state.canvasBackdrop,time:state.canvasTime,connectionGuidanceEnabled,developerMode:developerModeEnabled,headphonePromptSeen,catalogPinned:sidebarPinned.catalog,inspectorPinned:sidebarPinned.properties,listeningOutputLevel:state.listeningOutputLevel,listeningBass:state.listeningBass,listeningTreble:state.listeningTreble,zoom:view.zoom,focusX,focusY}));}catch{}
+                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,backdrop:state.canvasBackdrop,time:state.canvasTime,connectionGuidanceEnabled,gravityEnabled,developerMode:developerModeEnabled,headphonePromptSeen,catalogPinned:sidebarPinned.catalog,inspectorPinned:sidebarPinned.properties,listeningOutputLevel:state.listeningOutputLevel,listeningBass:state.listeningBass,listeningTreble:state.listeningTreble,zoom:view.zoom,focusX,focusY}));}catch{}
             },450);
         }
         const appDialog=document.getElementById('app-confirm-dialog');
@@ -1981,7 +1982,7 @@ const Hardware = (() => {
             if(!compactLayout.matches)config.panel.inert=closed;
         }
         function cancelSidebarTimer(key){clearTimeout(sidebarTimers[key]);sidebarTimers[key]=0;clearTimeout(sidebarHoverTimers[key]);sidebarHoverTimers[key]=0;}
-        function closeSidebar(key){if(compactLayout.matches||sidebarPinned[key]||document.body.classList.contains(sidebarConfig[key].collapsed))return;cancelSidebarTimer(key);document.body.classList.add(sidebarConfig[key].collapsed);syncSidebar(key);window.dispatchEvent(new Event('resize'));}
+        function closeSidebar(key){if(compactLayout.matches||sidebarPinned[key]||document.body.classList.contains(sidebarConfig[key].collapsed))return;cancelSidebarTimer(key);document.body.classList.add(sidebarConfig[key].collapsed);syncSidebar(key);}
         function scheduleSidebarClose(key,delay=800){
             if(compactLayout.matches||sidebarPinned[key])return;clearTimeout(sidebarTimers[key]);sidebarTimers[key]=setTimeout(()=>{
                 const panel=sidebarConfig[key].panel;if(panel.matches(':hover')||panel.contains(document.activeElement))return;
@@ -1989,7 +1990,7 @@ const Hardware = (() => {
             },delay);
         }
         function openSidebar(key,delay=3200){
-            if(compactLayout.matches)return;cancelSidebarTimer(key);const wasClosed=document.body.classList.contains(sidebarConfig[key].collapsed);document.body.classList.remove(sidebarConfig[key].collapsed);syncSidebar(key);if(wasClosed)window.dispatchEvent(new Event('resize'));
+            if(compactLayout.matches)return;cancelSidebarTimer(key);document.body.classList.remove(sidebarConfig[key].collapsed);syncSidebar(key);
             if(!sidebarPinned[key])scheduleSidebarClose(key,delay);
         }
         for(const [key,config] of Object.entries(sidebarConfig)){
@@ -2388,6 +2389,41 @@ const Hardware = (() => {
                 }
             }
             return best?targets.map(p=>({...p,x:p.x+best.dx,y:p.y+best.dy})):fallback;
+        }
+        function gravityDropTargets(targets,ignored){
+            if(!gravityEnabled||targets.some(p=>p.dev.type==='pendantLamp'||WALL_LAMP_TYPES[p.dev.type]))return targets;
+            const obstacles=Object.values(state.devices).filter(dev=>!ignored.has(dev.id)&&dev.type!=='pendantLamp'&&!WALL_LAMP_TYPES[dev.type]).flatMap(dev=>placementShapes(dev,parseFloat(dev.el.style.left)||0,parseFloat(dev.el.style.top)||0).map(shape=>({...shape,dev})));
+            let distance=Math.min(...targets.map(p=>maxEquipmentBottom()-p.y-p.dev.el.offsetHeight));
+            for(const p of targets){
+                for(const shape of placementShapes(p.dev,p.x,p.y)){
+                    for(const obstacle of obstacles){
+                        const overlap=Math.min(shape.x+shape.width,obstacle.x+obstacle.width)-Math.max(shape.x,obstacle.x);
+                        if(overlap<Math.min(12,shape.width*.2))continue;
+                        const feet=p.dev.el.dataset.chassis&&obstacle.dev.el.dataset.chassis?STACK_FEET.height:0;
+                        const gap=obstacle.y-shape.y-shape.height-feet;
+                        if(gap>=-.5)distance=Math.min(distance,Math.max(0,gap));
+                    }
+                }
+            }
+            return distance>.5?targets.map(p=>({...p,y:p.y+distance})):targets;
+        }
+        function settleNewDeviceWithGravity(dev){
+            if(state.restoringProject||!gravityEnabled||dev.type==='pendantLamp'||WALL_LAMP_TYPES[dev.type])return;
+            const startY=parseFloat(dev.el.style.top)||0;
+            const target=gravityDropTargets([{dev,x:parseFloat(dev.el.style.left)||0,y:startY}],new Set([dev.id]))[0];
+            if(target.y-startY<1)return;
+            if(matchMedia('(prefers-reduced-motion: reduce)').matches){dev.el.style.top=target.y+'px';updateCables();scheduleProjectSave();return;}
+            const started=performance.now(),duration=Math.min(620,280+(target.y-startY)*.18);
+            let frame=0;
+            const step=now=>{
+                if(!state.devices[dev.id])return;
+                const progress=Math.min(1,(now-started)/duration),ease=1-(1-progress)**3;
+                dev.el.style.top=(startY+(target.y-startY)*ease)+'px';updateCables();
+                if(progress<1)frame=requestAnimationFrame(step);
+                else {frame=0;dev.cancelPlacementMotion=null;scheduleProjectSave();}
+            };
+            dev.cancelPlacementMotion=()=>{cancelAnimationFrame(frame);frame=0;dev.cancelPlacementMotion=null;};
+            frame=requestAnimationFrame(step);
         }
 
         // Supports live outside device boxes so they do not alter grid alignment.
@@ -6085,6 +6121,7 @@ const Hardware = (() => {
             if(!FURNITURE_TYPES[type]) setupAudioMeters(dev);
             animateDevicePower(dev);
             selectDevice(id);
+            settleNewDeviceWithGravity(dev);
             updateCableFlows();
         }
 
@@ -6726,7 +6763,7 @@ const Hardware = (() => {
                             const target=settle&&initialPositions.length===1?snapOnEquipment(p.dev,x,y):{x,y};
                             return {dev:p.dev,x:target.x,y:target.y};
                         });
-                        if(settle)targets=settleEquipmentDrop(targets,ignored,initialPositions);
+                        if(settle){targets=settleEquipmentDrop(targets,ignored,initialPositions);if(targets!==initialPositions)targets=gravityDropTargets(targets,ignored);}
                         if(!frame){lastTime=0;frame=requestAnimationFrame(animate);}
                     };
                     const move = ev => {
@@ -8869,6 +8906,9 @@ const Hardware = (() => {
         const connectionHelpSetting=document.createElement('label');connectionHelpSetting.className='connection-help-setting';connectionHelpSetting.innerHTML='<input id="connection-help-enabled" type="checkbox"><span><strong>Orientação de conexões</strong><small>Mostra dicas e impede ligações incompatíveis. Desative para permitir erros quando os plugues encaixarem.</small></span>';
         const connectionHelpCheckbox=connectionHelpSetting.querySelector('input');connectionHelpCheckbox.checked=connectionGuidanceEnabled;themeSection.appendChild(connectionHelpSetting);
         connectionHelpCheckbox.addEventListener('change',()=>{connectionGuidanceEnabled=connectionHelpCheckbox.checked;hideContextHelp();updatePortGuidance(true);scheduleAppPreferencesSave();});
+        const gravitySetting=document.createElement('label');gravitySetting.className='connection-help-setting';gravitySetting.innerHTML='<input id="gravity-enabled" type="checkbox"><span><strong>Gravidade</strong><small>Ao soltar, equipamentos e móveis descem até o piso ou o primeiro apoio. Não afeta luminárias nem vinis.</small></span>';
+        const gravityCheckbox=gravitySetting.querySelector('input');gravityCheckbox.checked=gravityEnabled;themeSection.appendChild(gravitySetting);
+        gravityCheckbox.addEventListener('change',()=>{gravityEnabled=gravityCheckbox.checked;scheduleAppPreferencesSave();});
         const developerModeSetting=document.createElement('label');developerModeSetting.className='connection-help-setting';developerModeSetting.innerHTML='<input id="developer-mode-enabled" type="checkbox"><span><strong>Modo desenvolvedor</strong><small>Mostra a categoria DEBUG e os modelos de teste no catálogo.</small></span>';
         const developerModeCheckbox=developerModeSetting.querySelector('input');developerModeCheckbox.checked=developerModeEnabled;themeSection.appendChild(developerModeSetting);
         developerModeCheckbox.addEventListener('change',()=>{developerModeEnabled=developerModeCheckbox.checked;equipmentSearch.dispatchEvent(new Event('input'));scheduleAppPreferencesSave();});

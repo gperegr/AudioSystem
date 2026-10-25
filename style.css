@@ -4372,9 +4372,12 @@ body.inspector-collapsed #inspector {width:18rem;min-width:18rem;flex:0 0 18rem;
 body.inspector-collapsed #inspector>.inspector-panel-header,body.inspector-collapsed #inspector>#inspector-empty,body.inspector-collapsed #inspector>#inspector-content {display:none!important;}
 #app-topbar .topbar-controls>.sidebar-toggle {width:40px;height:40px;}
 #workspace-shell {position:relative;min-width:0;}
-#equipment-catalog {box-sizing:border-box;width:18rem;min-width:18rem;flex:0 0 18rem;}
-body.catalog-collapsed #equipment-catalog {width:18rem;min-width:18rem;flex:0 0 18rem;margin-left:-18rem;}
-body.inspector-collapsed #inspector {width:18rem;min-width:18rem;flex:0 0 18rem;margin-right:-18rem;}
+#canvas {flex:1 1 100%;width:100%;min-width:0;}
+#equipment-catalog,#inspector {position:absolute;top:0;bottom:0;z-index:30;box-sizing:border-box;width:18rem;min-width:18rem;flex:none;margin:0;transition:transform 240ms cubic-bezier(.22,.7,.2,1);}
+#equipment-catalog {left:0;}
+#inspector {right:0;}
+body.catalog-collapsed #equipment-catalog {margin:0;transform:translateX(-100%);pointer-events:none;}
+body.inspector-collapsed #inspector {margin:0;transform:translateX(100%);pointer-events:none;}
 .sidebar-edge-tab {position:absolute;top:34%;z-index:38;width:30px;height:74px;border-color:#54616a;background:linear-gradient(90deg,#283139,#1b242c);box-shadow:2px 3px 10px #0007;font-size:25px;transition:left 240ms cubic-bezier(.22,.7,.2,1),right 240ms cubic-bezier(.22,.7,.2,1),background 150ms;}
 .sidebar-edge-tab-left {left:18rem;border-radius:0 9px 9px 0;border-left:0;}
 .sidebar-edge-tab-right {right:18rem;border-radius:9px 0 0 9px;border-right:0;}
@@ -4407,6 +4410,7 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
     #app-topbar .canvas-tools .movement-history-tools button {width:44px;height:44px;min-width:44px;min-height:44px;padding:9px;}
     #equipment-catalog,#inspector {transition:transform 240ms cubic-bezier(.22,.7,.2,1),visibility 240ms,width 240ms;}
     .sidebar-edge-tab,.sidebar-pin {display:none;}
+    body.catalog-collapsed #equipment-catalog,body.inspector-collapsed #inspector {pointer-events:auto;}
     body.catalog-collapsed #equipment-catalog,body.inspector-collapsed #inspector {width:min(360px,calc(100vw - 24px));min-width:0;flex:initial;margin-left:0;margin-right:0;}
     body.inspector-collapsed #inspector {margin-right:0;}
     body.catalog-collapsed #equipment-catalog .catalog-search {display:flex!important;}
