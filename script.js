@@ -6337,10 +6337,17 @@ const Hardware = (() => {
                     if(dev.capturePending||dev.state.playing)return;
                     if(!dev.powered||!navigator.mediaDevices?.getUserMedia){dev.micMessage='Captura indisponível. Use HTTPS ou localhost e permita o acesso ao dispositivo de áudio.';if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);return;}
                     const token=++dev.captureToken;dev.capturePending=true;
+                    let captureStream=null;
                     try{
                         await state.audioCtx.resume();
-                        const stream=await navigator.mediaDevices.getUserMedia({audio:{...(dev.micDeviceId?{deviceId:{exact:dev.micDeviceId}}:{}),channelCount:{ideal:2},echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
-                        if(token!==dev.captureToken||!state.devices[dev.id]||!dev.powered){stream.getTracks().forEach(track=>track.stop());return;}
+                        const audio={...(dev.micDeviceId?{deviceId:{exact:dev.micDeviceId}}:{}),channelCount:{ideal:2},echoCancellation:false,noiseSuppression:false,autoGainControl:false};
+                        try{captureStream=await navigator.mediaDevices.getUserMedia({audio});}
+                        catch(error){
+                            if(['OverconstrainedError','NotFoundError'].includes(error.name)&&dev.micDeviceId){dev.micDeviceId='';captureStream=await navigator.mediaDevices.getUserMedia({audio:{channelCount:{ideal:2},echoCancellation:false,noiseSuppression:false,autoGainControl:false}});}
+                            else throw error;
+                        }
+                        if(token!==dev.captureToken||!state.devices[dev.id]||!dev.powered){captureStream.getTracks().forEach(track=>track.stop());return;}
+                        const stream=captureStream;
                         const channels=stream.getAudioTracks()[0]?.getSettings().channelCount||2;dev.micStream=stream;dev.micSource=state.audioCtx.createMediaStreamSource(stream);dev.micSplitter=state.audioCtx.createChannelSplitter(2);dev.micSource.connect(dev.micSplitter);
                         dev.micSplitter.connect(dev.nodes.genL,0);dev.micSplitter.connect(dev.nodes.genR,channels===1?0:1);
                         dev.micAnalyser=state.audioCtx.createAnalyser();dev.micAnalyser.fftSize=256;dev.micSource.connect(dev.micAnalyser);const samples=new Uint8Array(dev.micAnalyser.fftSize);
@@ -6348,7 +6355,21 @@ const Hardware = (() => {
                         dev.state.playing=true;for(const ch of ['L','R'])dev.setMicGain(ch,dev.state['micGain'+ch]);
                         stream.getAudioTracks()[0]?.addEventListener('ended',()=>{if(dev.micStream===stream)dev.stopMicCapture();},{once:true});dev.el.classList.add('ai-live');const button=dev.el.querySelector('[data-source-play]');button?.setAttribute('aria-pressed','true');button?.setAttribute('aria-label','Parar captura do computador');
                         dev.micMessage=`Captura ativa · ${channels===1?'mono':'estéreo'}. O áudio segue às saídas conectadas.`;if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);updateCableFlows();
-                    }catch(error){dev.micMessage=error.name==='NotAllowedError'?'Permissão de captura negada. Autorize o dispositivo no navegador.':'Não foi possível abrir a entrada de áudio selecionada.';if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);}
+                        refreshCaptureInputs(dev);
+                    }catch(error){
+                        captureStream?.getTracks().forEach(track=>track.stop());
+                        dev.micSource?.disconnect();dev.micSplitter?.disconnect();dev.micAnalyser?.disconnect();dev.micSource=dev.micSplitter=dev.micAnalyser=null;dev.micStream=null;
+                        const messages={
+                            NotAllowedError:'Acesso ao microfone negado. Permita o uso do microfone para este site nas configurações do navegador.',
+                            NotFoundError:'O navegador não encontrou uma entrada de áudio. Confira se a interface aparece em Som → Entrada no sistema.',
+                            NotReadableError:'A entrada foi encontrada, mas não pôde ser aberta. Feche outros apps que estejam usando a interface e tente novamente.',
+                            OverconstrainedError:'A entrada selecionada não está mais disponível. Escolha novamente a entrada de áudio.',
+                            SecurityError:'A captura foi bloqueada pelo navegador. Abra o programa em HTTPS ou localhost e confira as permissões do site.'
+                        };
+                        dev.micMessage=messages[error.name]||`Não foi possível iniciar a captura (${error.name||'erro de áudio'}). Confira a entrada selecionada e as permissões do navegador.`;
+                        if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);
+                        refreshCaptureInputs(dev);
+                    }
                     finally{dev.capturePending=false;}
                 };
                 dev.syncCaptureControls=()=>{if(state.selectedDeviceId===dev.id){for(const channel of ['L','R']){const input=document.getElementById(`ai-gain-${channel}`);if(input)input.value=dev.state['micGain'+channel];}const line=document.getElementById('ai-line');if(line)line.value=dev.state.aiLineLevel;dev.state.aiPhoneLevels.forEach((value,index)=>{const input=document.getElementById(`ai-phones-${index}`);if(input)input.value=value;});}Hardware.sync(dev);};
@@ -6766,6 +6787,20 @@ const Hardware = (() => {
             q('tt-insp-out-line').addEventListener('click', () => dev.ttSetOutput('line'));
             q('tt-insp-out-phono').addEventListener('click', () => dev.ttSetOutput('phono'));
             q('tt-insp-pitch').addEventListener('input', e => dev.ttSetPitch(Number(e.target.value) / 8));
+        }
+
+        async function refreshCaptureInputs(dev,select=document.getElementById('ai-input-device')){
+            if(!select||!navigator.mediaDevices?.enumerateDevices)return;
+            const selected=dev.micDeviceId||select.value||'';
+            try{
+                const devices=await navigator.mediaDevices.enumerateDevices();
+                if(!select.isConnected)return;
+                const inputs=devices.filter(device=>device.kind==='audioinput');
+                select.replaceChildren(new Option('Entrada padrão do sistema',''));
+                inputs.forEach((device,index)=>select.add(new Option(device.label||`Entrada de áudio ${index+1}`,device.deviceId)));
+                select.value=inputs.some(device=>device.deviceId===selected)?selected:'';
+                dev.micDeviceId=select.value;
+            }catch{}
         }
 
         function bindDeviceEvents(dev) {
@@ -7762,7 +7797,7 @@ const Hardware = (() => {
             document.getElementById('source-inspector-play')?.addEventListener('click', () => { if (dev.powered) setSourcePlaying(dev, !dev.state.playing); });
             if(CAPTURE_INTERFACE_TYPES.has(dev.type)){
                 const select=document.getElementById('ai-input-device');
-                navigator.mediaDevices?.enumerateDevices?.().then(devices=>{if(!select.isConnected)return;devices.filter(device=>device.kind==='audioinput').forEach((device,index)=>{const option=document.createElement('option');option.value=device.deviceId;option.textContent=device.label||`Entrada de áudio ${index+1}`;select.append(option);});select.value=dev.micDeviceId||'';}).catch(()=>{});
+                refreshCaptureInputs(dev,select);
                 select.addEventListener('change',()=>{const active=dev.state.playing;if(active)dev.stopMicCapture(false);dev.micDeviceId=select.value;if(active)dev.startMicCapture();});
                 document.getElementById('ai-capture-toggle').addEventListener('click',()=>setSourcePlaying(dev,!dev.state.playing));
                 for(const channel of ['L','R'])document.getElementById(`ai-gain-${channel}`).addEventListener('input',event=>dev.setMicGain(channel,event.target.value));
