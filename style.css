@@ -746,12 +746,13 @@
         .power-btn--round.off { background: radial-gradient(circle at 35% 28%,#4b5156,#252a2e 58%,#121416 80%); }
         .power-btn.off + .power-indicator { background:#3f4548; box-shadow: inset 0 1px 2px #111; }
 
-        .port {
+        .port,.socket-face {
             width: calc(16px * var(--canvas-inverse-zoom, 1)); height: calc(16px * var(--canvas-inverse-zoom, 1)); border-radius: 50%;
             border: calc(2px * var(--canvas-inverse-zoom, 1)) solid #374151; background: #111;
             cursor: pointer; position: relative; z-index: 20;
             transition: transform 0.1s;
         }
+        .socket-face {display:block;box-sizing:border-box;width:19px;height:19px;border-width:3px;position:relative;}
         /* Área de clique/drop generosa para facilitar encaixe do cabo */
         .port::before {
             content: '';
@@ -774,7 +775,7 @@
         .port[data-type="rca-r"] { border-color: var(--port-rca-r); }
         .port[data-type="rca-l"] { border-color: var(--port-rca-l); }
         .port[data-type="rca"] { border-color: var(--port-rca-r); }
-        .port[data-type="p10"] { border-color: var(--port-p10); }
+        .port[data-type="p10"],.socket-face[data-type="p10"] { border-color: var(--port-p10); }
         .port[data-type="p2"] { border-color: var(--port-p2); }
         .port[data-type="wire"] { border-color: var(--port-wire); }
         
@@ -1791,95 +1792,6 @@
         .interface-box .interface-face {height:100%;box-sizing:border-box;display:grid;grid-template-rows:14px minmax(0,1fr) 8px;gap:6px;padding:10px 16px;}
         .interface-box .interface-ports {margin:0;min-height:0;}
         .interface-box .interface-ports>div {gap:6px;}
-.device-node.audio-interface {background:linear-gradient(145deg,#ea674b,#b72024 52%,#83171e)!important;border:2px solid #7c2929!important;border-radius:9px!important;box-shadow:inset 0 2px 2px #ffb18c88,inset 0 -5px 10px #4d071055,0 8px 18px #0008!important;color:#f8eeea;}
-.audio-interface-face {height:100%;box-sizing:border-box;display:grid;grid-template-columns:41px 33px 41px 33px 41px 56px 38px;align-items:center;gap:3px;padding:11px 8px;background:linear-gradient(90deg,#58131633,transparent 20% 80%,#4d081333);}
-.audio-interface-face>div {min-width:0;text-align:center;}
-.audio-interface-face small {display:block;font:700 6px/1.2 "Inter",sans-serif;letter-spacing:.04em;color:#ffe3d8;}
-.ai-brand strong {display:block;font:900 12px/1 "Inter",sans-serif;letter-spacing:-.08em;color:#fff;}
-.ai-brand small {font-size:5px;}
-.ai-jack {display:grid;place-items:center;width:23px;height:23px;margin:0 auto 5px;border:3px solid #c4c8c5;border-radius:5px;background:#161719;color:#909a9a;font-size:17px;box-shadow:inset 0 0 0 3px #343536,0 2px 3px #47060b;}
-.ai-instrument {border-radius:50%;}
-.ai-gain-knob {display:block;width:31px;height:31px;margin:0 auto 4px;border:2px solid #b8bebd;border-radius:50%;background:radial-gradient(circle at 32% 23%,#727d7c,#293031 65%,#13181a);box-shadow:inset 1px 1px 2px #e6eeec99,0 3px 4px #4d0713,0 0 0 3px #202627;cursor:ns-resize;}
-.ai-gain-knob::after {content:"";display:block;width:2px;height:10px;margin:2px auto;background:#f2f0e8;border-radius:2px;transform:rotate(var(--ai-angle,0deg));transform-origin:1px 13px;}
-.audio-interface.ai-signal .ai-gain-knob {box-shadow:inset 1px 1px 2px #e6eeec99,0 3px 4px #4d0713,0 0 0 3px #43d286;}
-.audio-interface.ai-clip .ai-gain-knob {box-shadow:inset 1px 1px 2px #e6eeec99,0 3px 4px #4d0713,0 0 0 3px #ef9b34;}
-.ai-actions .ai-capture {display:block;width:52px;padding:4px 2px;margin:0 auto 5px;border:1px solid #e9aaaa;border-radius:4px;background:#70232a;color:#f9d3d0;font-size:9px;}
-.ai-actions .ai-capture span {font-size:5px;}
-.audio-interface.ai-live .ai-capture {background:#288c53;border-color:#9be0a9;color:#fff;box-shadow:0 0 10px #70e98699;}
-.ai-phantom {display:block;color:#d6c2b8;font:700 7px "Inter",sans-serif;}
-.ai-outputs {display:flex;flex-wrap:wrap;justify-content:center;gap:5px;}
-.ai-outputs span {width:100%;font:700 6px "Inter",sans-serif;}
-.ai-inspector {display:flex;flex-direction:column;gap:10px;border-top:1px solid #374151;padding-top:14px;color:#d1d5db;font-size:12px;}
-.ai-inspector h3 {font-size:14px;font-weight:700;}.ai-inspector label {display:flex;flex-direction:column;gap:5px;}.ai-inspector select {max-width:100%;background:#202b35;border:1px solid #51606c;border-radius:5px;padding:7px;color:#e3edf3;}.ai-inspector p,.ai-inspector small {color:#aab9c5;line-height:1.4;}
-.device-node.audio-interface.evo-interface {border-color:#202326!important;background:linear-gradient(145deg,#474b4e,#171b1d 48%,#0e1112)!important;color:#f1f3f2;box-shadow:inset 0 2px #9a9e9e55,inset 0 -5px 12px #0008,0 8px 18px #0009!important;}
-.evo-face {grid-template-columns:47px 64px 68px 74px 51px 40px;gap:3px;background:linear-gradient(90deg,#07080855,#22262822 50%,#05060766);}
-.evo-brand strong {display:block;color:#f9f9f8;font:900 21px/1 "Inter",sans-serif;letter-spacing:-.1em;}.evo-brand small {color:#b6c3c3;}
-.evo-inputs {display:flex;flex-direction:column;gap:8px;align-items:start;}.evo-inputs span {padding-left:5px;color:#d8dfdd;font:700 7px/1.2 "Inter",sans-serif;}
-.evo-select {display:flex;gap:3px;justify-content:center;}.evo-select button {width:20px;height:21px;border:1px solid #6d7474;border-radius:4px;background:#252a2b;color:#d6dddc;font:700 9px "Inter",sans-serif;}.evo-select button[aria-pressed="true"] {border-color:#ee8a53;background:#6d3523;color:#ffe2c2;box-shadow:0 0 6px #e36c3988;}
-.evo-main-knob {width:46px;height:46px;border-color:#9ba5a4;background:radial-gradient(circle at 32% 22%,#777e7d,#202425 62%,#111516);box-shadow:inset 1px 1px 3px #f0f4ed55,0 3px 6px #0009,0 0 0 4px #df7444,0 0 9px #e4743a66;}
-.evo-main-knob::after {height:14px;transform-origin:1px 17px;}.evo-dial small {color:#f4b08c;}
-.evo-side {display:flex;flex-direction:column;gap:4px;align-items:center;}.evo-side [data-evo-smart] {padding:3px 2px;border:1px solid #dd865e;border-radius:3px;background:#6c3525;color:#ffd4bc;font:700 6px "Inter",sans-serif;}.evo-side>span {color:#bdc5c2;font:700 7px "Inter",sans-serif;}.evo-side .ai-capture {width:40px;margin:0;padding:2px;color:#f6d8c8;border-color:#70413c;background:#382a28;font-size:7px;}
-.evo-interface.ai-live .ai-capture {background:#246c50;border-color:#80d6af;}
-.evo-face .ai-outputs span {font-size:5px;}.evo-face .ai-outputs .port {transform:scale(.8);}
-.device-node.audio-interface.quantum-interface {border-color:#20262c!important;border-radius:7px!important;background:linear-gradient(155deg,#444b52 0%,#1a2027 30%,#10161c 78%,#313941)!important;color:#e8edf1;box-shadow:inset 0 2px 2px #b5c6d344,inset 0 -4px 8px #000b,0 8px 18px #0009!important;}
-.quantum-face {grid-template-columns:38px 32px 33px 52px 42px 43px 40px;gap:3px;padding:11px 7px;background:linear-gradient(90deg,#070b0f66,transparent 24% 78%,#080d1266);}
-.quantum-face small {color:#a9b8c4;}
-.quantum-brand strong {display:block;font:800 9px/1.1 "Inter",sans-serif;letter-spacing:.07em;color:#f4f4ed;}.quantum-brand small {margin-top:4px;font-size:5px;letter-spacing:.1em;}
-.quantum-jack {width:22px;height:22px;margin:0 auto 4px;border:3px solid #49525a;border-radius:50%;background:radial-gradient(circle,#06090b 0 31%,#717d84 32% 37%,#10151a 38%);box-shadow:inset 1px 2px 3px #000,0 2px 3px #0008;}
-.quantum-face .ai-gain-knob {width:27px;height:27px;border-color:#68717a;background:radial-gradient(circle at 34% 25%,#66717c,#202a33 60%,#111820);box-shadow:inset 1px 1px 2px #d2deea55,0 2px 4px #000a,0 0 0 2px #17232d;}
-.quantum-face .quantum-main {width:43px;height:43px;border-color:#667988;box-shadow:inset 1px 1px 2px #d2deea77,0 3px 5px #000c,0 0 0 3px #3887b7,0 0 10px #419bd288;}
-.quantum-face .quantum-main::after {height:12px;transform-origin:1px 15px;}.quantum-face .ai-gain-knob::after {background:#d8ecf7;}
-.quantum-actions {display:flex;flex-direction:column;align-items:center;gap:3px;}.quantum-actions>* {box-sizing:border-box;width:42px;min-height:14px;border:1px solid #475b6a;border-radius:3px;background:#263542;color:#bbd6e8;font:700 6px/12px "Inter",sans-serif;letter-spacing:.02em;}
-.quantum-actions .quantum-phantom {cursor:help;}.quantum-actions [data-quantum-direct] {cursor:pointer;}.quantum-actions [data-quantum-direct][aria-pressed="true"] {background:#6b818b;border-color:#e0e9eb;color:#fff;box-shadow:0 0 6px #d4edff88;}
-.quantum-actions .ai-capture {margin:0;font-size:6px;cursor:pointer;}.quantum-interface.ai-live .ai-capture {background:#286b7c;border-color:#8ee0f0;}
-.quantum-phones .port {margin:0 auto 2px;transform:scale(.75);}.quantum-phones .ai-gain-knob {margin-bottom:1px;}.quantum-face .ai-outputs span {font-size:5px;}.quantum-face .ai-outputs .port {transform:scale(.8);}
-.quantum-interface.ai-signal .quantum-gain {box-shadow:inset 1px 1px 2px #d2deea55,0 2px 4px #000a,0 0 0 2px #41c987;}.quantum-interface.ai-clip .quantum-gain {box-shadow:inset 1px 1px 2px #d2deea55,0 2px 4px #000a,0 0 0 2px #f16566;}
-.device-node.audio-interface.volt-interface {border:3px solid #60472e!important;border-radius:8px!important;background:linear-gradient(90deg,#4b3020,#8b6540 2%,#252122 3.5%,#292424 96.5%,#8b6540 98%,#4b3020)!important;color:#252321;box-shadow:inset 0 2px #e9c59b88,inset 0 -4px #24170f99,0 9px 20px #0009!important;}
-.audio-interface-face .ai-gain-knob {position:relative;isolation:isolate;appearance:none;padding:0;touch-action:none;}
-.audio-interface-face .ai-gain-knob::before {content:"";position:absolute;inset:3px;border-radius:50%;background:repeating-conic-gradient(from -135deg,transparent 0deg 10deg,#ffffff70 10.5deg 12deg,transparent 12.5deg 22.5deg);-webkit-mask:radial-gradient(circle,transparent 0 68%,#000 70%);mask:radial-gradient(circle,transparent 0 68%,#000 70%);pointer-events:none;}
-.audio-interface-face .ai-gain-knob::after {position:absolute;left:50%;top:5px;width:2px;height:8px;margin:0;transform:translateX(-50%) rotate(var(--ai-angle,0deg));transform-origin:50% 10px;border-radius:2px;background:linear-gradient(#fff,#d1d8d7);box-shadow:0 0 3px #fff8;pointer-events:none;}
-.audio-interface-face .ai-capture {min-height:24px;box-shadow:inset 0 1px #ffffff50,0 2px 3px #0008;cursor:pointer;touch-action:manipulation;}
-.audio-interface-face button[data-evo-mode],.audio-interface-face button[data-evo-smart],.audio-interface-face button[data-quantum-direct],.audio-interface-face button[data-volt-vintage],.audio-interface-face button[data-volt-compressor],.audio-interface-face button[data-volt-source],.audio-interface-face button[data-volt-mono] {box-shadow:inset 0 1px #ffffff35,0 2px 3px #0008;cursor:pointer;touch-action:manipulation;}
-.evo-face .evo-main-knob {width:52px;height:52px;border:3px solid #b9c2c0;background:radial-gradient(circle at 35% 28%,#afb5b2 0 5%,#535a59 18%,#222827 58%,#101414 72%);box-shadow:inset 0 0 0 2px #101414,inset 0 1px 4px #fff8,0 0 0 5px #d65e37,0 0 10px #d65e3770,0 4px 7px #000b;}
-.evo-face .evo-main-knob::before {inset:-7px;border:1px solid #e7794d;border-radius:50%;background:repeating-conic-gradient(#f4a17b 0 1deg,transparent 1deg 10deg);-webkit-mask:none;mask:none;}
-.quantum-face .ai-gain-knob {background:radial-gradient(circle at 33% 25%,#839099 0 4%,#39434a 20%,#20292f 62%,#0b1115 75%);box-shadow:inset 0 0 0 2px #111a1f,inset 0 1px 3px #e7f4ff77,0 0 0 3px #161d22,0 3px 5px #000b;}
-.quantum-face .quantum-main {width:46px;height:46px;border-color:#85949d;box-shadow:inset 0 0 0 2px #111a1f,inset 0 1px 3px #e7f4ff88,0 0 0 4px #2582a9,0 0 9px #29a9d777,0 3px 5px #000b;}
-.volt-face .ai-gain-knob {width:34px;height:34px;border:2px solid #977c58;background:radial-gradient(circle at 34% 24%,#a69a7d 0 4%,#564d3c 20%,#282522 64%,#141311 76%);box-shadow:inset 0 0 0 2px #191715,inset 0 1px 3px #fff6,0 0 0 2px #171615,0 3px 5px #000b;}
-.volt-face .volt-main-knob {width:47px;height:47px;border-color:#c39a5d;background:radial-gradient(circle at 34% 24%,#d5c09b 0 4%,#786241 21%,#34291d 62%,#17130f 76%);box-shadow:inset 0 0 0 2px #21190f,inset 0 1px 3px #fff8,0 0 0 4px #8f5f2f,0 3px 6px #000c;}
-.volt-face .volt-channel-buttons button[aria-pressed="true"] {background:linear-gradient(#df9b49,#9e541f);border-color:#f3bd73;color:#fff5df;box-shadow:0 0 7px #ff9b3c88,inset 0 1px #fff8;}
-.audio-interface-face button:focus-visible {outline:2px solid #f3ca83;outline-offset:3px;}
-.volt-face {grid-template-columns:65px minmax(0,1fr) 75px 80px 56px;gap:8px;padding:13px 19px;background:linear-gradient(180deg,#d2cec1,#a9a89e 7%,#c5c2b7 55%,#aba99d 91%,#696a65);box-shadow:inset 0 3px 3px #f6eee8a6,inset 0 -5px 9px #48453d80;}
-.volt-face small {color:#383f3d;}.volt-brand strong {display:block;font:800 9px/1.15 "Inter",sans-serif;letter-spacing:.03em;}.volt-brand b {display:block;margin-top:13px;font:900 16px/1 "Inter",sans-serif;letter-spacing:-.06em;}.volt-brand em {font-style:normal;color:#a45129;}.volt-brand small {margin-top:4px;font-size:5px;}
-.volt-channels {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));min-width:0;gap:3px;}.volt-channel {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;border-left:1px solid #686b6866;}.volt-channel>span {font:800 7px "Inter",sans-serif;letter-spacing:.06em;white-space:nowrap;}.volt-signal-led {display:inline-block;width:5px;height:5px;margin-left:3px;border-radius:50%;background:#47544c;box-shadow:inset 0 1px 1px #151b17;}.volt-interface.ai-signal .volt-signal-led {background:#69d786;box-shadow:0 0 5px #58e16b;}.volt-interface.ai-clip .volt-signal-led {background:#ee6249;box-shadow:0 0 6px #fa4828;}
-.volt-face .ai-gain-knob {border-color:#4c504e;background:radial-gradient(circle at 31% 23%,#727773,#282e2c 60%,#171c1b);box-shadow:inset 1px 1px 2px #f2f3e577,0 3px 4px #3f3e3688,0 0 0 2px #7c7f77;}.volt-face .ai-gain-knob::after {background:#e6ded0;}.volt-face .volt-gain {width:29px;height:29px;margin:0;}
-.volt-channel-buttons {display:flex;gap:3px;}.volt-channel-buttons button {padding:2px 4px;border:1px solid #7e8179;border-radius:3px;background:#666b67;color:#faf2df;font:700 6px "Inter",sans-serif;cursor:pointer;}.volt-channel-buttons [data-volt-vintage][aria-pressed="true"] {border-color:#d78341;background:#a45d31;box-shadow:0 0 5px #db7b3b99;}.volt-channel-buttons [data-volt-compressor][data-mode]:not([data-mode="0"]) {border-color:#bd9a54;background:#847037;box-shadow:0 0 5px #d2b76188;}
-.volt-channel-buttons span {border:1px solid #69866c;border-radius:3px;padding:2px;color:#3e6445;font:700 6px "Inter",sans-serif;cursor:help;}
-.volt-combo {width:26px;height:26px;border:3px solid #747a76;border-radius:5px;background:radial-gradient(circle,#111715 0 30%,#afb8af 32% 37%,#1b211e 39%);box-shadow:inset 0 0 0 2px #323a35,0 2px 3px #393b3488;}
-.volt-master {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-left:1px solid #686b6866;}.volt-phantom {border:1px solid #9c6659;border-radius:3px;padding:2px 4px;color:#9b322c;font:800 7px "Inter",sans-serif;cursor:help;}.volt-face .volt-main-knob {width:42px;height:42px;margin:2px 0;}.volt-face .volt-main-knob::after {height:13px;transform-origin:1px 16px;}.volt-master>[data-volt-source],.volt-master>[data-volt-mono],.volt-master>.ai-capture {width:61px;margin:0;padding:3px 2px;border:1px solid #606965;border-radius:3px;background:#363b39;color:#e5e9e1;font:700 7px "Inter",sans-serif;cursor:pointer;}.volt-master>[data-volt-mono][aria-pressed="true"] {border-color:#aecbc8;background:#647e78;color:#fff;}.volt-master>.ai-capture {background:#354640;}.volt-interface.ai-live .volt-master>.ai-capture {background:#2b785d;border-color:#97d1ac;}
-.volt-phones {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;gap:2px;border-left:1px solid #686b6866;}.volt-phones>div {min-width:0;text-align:center;}.volt-face .volt-phone-knob {width:27px;height:27px;margin:0 auto 6px;}.volt-phones .port {margin:0 auto 5px;transform:scale(.8);}.volt-phones small {font-size:5px;white-space:nowrap;}.volt-face .ai-outputs {align-content:center;border-left:1px solid #686b6866;}.volt-face .ai-outputs span {font-size:6px;white-space:nowrap;}.volt-face .ai-outputs .port {transform:scale(.85);}
-.volt-inspector-channels {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}.volt-inspector-channels>div {display:flex;flex-wrap:wrap;gap:5px;padding:9px;border:1px solid #48515a;border-radius:6px;background:#202932;}.volt-inspector-channels strong,.volt-inspector-channels label {width:100%;}.volt-inspector-channels strong {font-size:10px;color:#d9e2e7;}.volt-inspector-channels button {flex:1;border:1px solid #69727a;border-radius:4px;padding:4px 2px;color:#dce1dd;font-size:9px;}.volt-inspector-channels button[aria-pressed="true"] {border-color:#d58351;background:#67432d;color:#ffddb9;}
-        .audio-transport {display:flex;flex-direction:column;gap:10px;border-top:1px solid #374151;padding-top:16px;color:#d1d5db;font:500 12px/1.4 "Inter",sans-serif;}
-        .spotify-track-panel {display:flex;flex-direction:column;gap:7px;padding-top:16px;border-top:1px solid #374151;color:#d1d5db;font:500 12px/1.4 "Inter",sans-serif;min-width:0;}
-        .spotify-track-panel h3 {font-size:14px;font-weight:600;}
-        .spotify-track-album {color:#9ca3af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-        .spotify-track-list {max-height:270px;overflow-y:auto;overscroll-behavior:contain;border:1px solid #374151;border-radius:8px;background:#151b22;}
-        .spotify-track-list>p {padding:12px;color:#9ca3af;}
-        .spotify-track-item {display:grid;grid-template-columns:25px minmax(0,1fr) auto;align-items:center;gap:6px;width:100%;padding:8px;text-align:left;border-bottom:1px solid #2b3642;color:#cbd5e1;font:500 11px/1.35 "Inter",sans-serif;}
-        .spotify-track-item:last-child {border-bottom:0;}
-        .spotify-track-item:hover,.spotify-track-item:focus-visible {background:#293b4a;color:#fff;outline:none;}
-        .spotify-track-item.is-current {background:#254258;color:#b9e4f6;}
-        .spotify-track-number,.spotify-track-item time {color:#91a4b3;font-variant-numeric:tabular-nums;}
-        .spotify-track-name {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-        .transport-time {display:flex;justify-content:space-between;color:#9ca3af;font:500 11px "Inter",sans-serif;}.transport-buttons {display:flex;gap:5px;}.transport-buttons button {flex:1;padding:8px 5px;font-size:9px;}
-        .spectrum-panel {display:flex;flex-direction:column;gap:10px;padding-top:16px;border-top:1px solid #374151;color:#d1d5db;font:500 12px/1.5 "Inter",sans-serif;}
-        .spectrum-panel h3 {font-size:14px;font-weight:600;}.spectrum-selectors {display:flex;gap:8px;}.spectrum-selectors label {flex:1;min-width:0;font-size:11px;color:#9ca3af;}.spectrum-selectors select {display:block;width:100%;margin-top:5px;padding:7px 5px;border:1px solid #4b5563;border-radius:4px;background:#22282e;color:#e5e7eb;font-size:11px;}
-        .spectrum-legend {display:flex;gap:14px;font-size:11px;color:#a3adb8;}.spectrum-legend span:last-child {color:#55c7ff;}.spectrum-panel canvas {width:100%;height:170px;border:1px solid #374151;border-radius:4px;}.spectrum-panel p {font-size:11px;color:#9ca3af;}
-        :is(#audio-world,.equipment-preview-world) .device-node.furniture-node {z-index:1!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;filter:none!important;pointer-events:none;}
-        :is(#audio-world,.equipment-preview-world) .device-node.furniture-node.selected {z-index:2!important;filter:drop-shadow(0 0 3px #60a5fa99)!important;}
-        .furniture-body {position:relative;pointer-events:none;}
-        .furniture-rack {isolation:isolate;}
-        .furniture-rack .furniture-shelf {z-index:1;}
-        .furniture-rack .furniture-side {z-index:2;}
 .device-type-furnitureCoverflow .spotify-coverflow-host {--spotify-cover-size:calc(var(--spotify-vinyl-size) + 16px);position:absolute;inset:28px 26px 70px;z-index:1;overflow:hidden;pointer-events:auto;background:linear-gradient(110deg,#12100edb,#302820cc 50%,#11100fdf);box-shadow:inset 0 12px 30px #0008,inset 12px 0 25px #0006,inset -12px 0 25px #0006;}
 .device-type-furnitureCoverflow .spotify-flow-stage {position:absolute;inset:0;overflow:hidden;perspective:8000px;perspective-origin:50% 50%;touch-action:none;cursor:grab;outline:none;}
 .device-type-furnitureCoverflow .spotify-flow-stage:active {cursor:grabbing;}
@@ -4726,23 +4638,6 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
     .app-settings-content .settings-icon-control {display:flex;flex-direction:column;align-items:stretch;}
 }
 
-/* Capture interfaces use the shared hardware knob markup; skin its real face and indicator. */
-:is(#audio-world,.equipment-preview-world) .device-node.audio-interface .audio-interface-face .hw-knob {--hw-knob-rim:#aab5b2;--hw-knob-face:radial-gradient(circle at 34% 25%,#89918e 0 4%,#505855 22%,#252c2c 66%,#101516 78%);--hw-knob-ink:#f1eee3;width:34px!important;height:34px!important;border:2px solid #b8c1bd!important;background:repeating-conic-gradient(#d9dfd7 0 1deg,#5d6965 1deg 5deg)!important;box-shadow:0 3px 5px #000b,inset 0 1px #fff9!important;}
-:is(#audio-world,.equipment-preview-world) .solo-interface .audio-interface-face .hw-knob .hw-knob-face {inset:3px!important;background:radial-gradient(circle at 33% 24%,#77807e,#303838 56%,#161c1d 78%)!important;box-shadow:inset 0 1px 2px #fff7,inset 0 -2px 4px #000b!important;}
-:is(#audio-world,.equipment-preview-world) .evo-interface .audio-interface-face .hw-knob {--hw-knob-rim:#d5dedb;--hw-knob-face:radial-gradient(circle at 34% 25%,#aeb7b3 0 4%,#555e5b 20%,#252b29 63%,#101413 78%);width:52px!important;height:52px!important;border:3px solid #c0c9c5!important;box-shadow:0 0 0 5px #d75c35,0 0 12px #e36b4177,0 4px 7px #000c!important;}
-:is(#audio-world,.equipment-preview-world) .evo-interface .audio-interface-face .hw-knob .hw-knob-face {inset:3px!important;border:2px solid #111!important;background:radial-gradient(circle at 35% 25%,#89918e,#303735 55%,#141918 78%)!important;box-shadow:inset 0 1px 4px #fff9,inset 0 -3px 4px #000d!important;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .audio-interface-face .hw-knob {--hw-knob-rim:#7f929d;--hw-knob-face:radial-gradient(circle at 34% 24%,#8999a1 0 4%,#46535b 20%,#222d33 63%,#0b1216 78%);border:2px solid #82939c!important;box-shadow:0 0 0 3px #18242c,0 3px 5px #000c,inset 0 1px #eaf5ff!important;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .audio-interface-face .quantum-main.hw-knob {--hw-knob-rim:#a7c4d2;width:46px!important;height:46px!important;box-shadow:0 0 0 4px #2685ad,0 0 10px #29a9d788,0 3px 6px #000d!important;}
-:is(#audio-world,.equipment-preview-world) .volt-interface .audio-interface-face .hw-knob {--hw-knob-rim:#b2905c;--hw-knob-face:radial-gradient(circle at 34% 24%,#c4b38c 0 4%,#766448 20%,#32291e 63%,#15120e 78%);width:35px!important;height:35px!important;border:2px solid #b3915b!important;background:repeating-conic-gradient(#ddc48c 0 1deg,#52422b 1deg 5deg)!important;box-shadow:0 3px 5px #000c,inset 0 1px #fff9!important;}
-:is(#audio-world,.equipment-preview-world) .volt-interface .audio-interface-face .volt-main-knob.hw-knob,:is(#audio-world,.equipment-preview-world) .volt-interface .audio-interface-face .volt-phone-knob.hw-knob {width:46px!important;height:46px!important;}
-:is(#audio-world,.equipment-preview-world) .audio-interface-face .hw-knob .hw-knob-indicator {top:5%!important;width:3px!important;height:29%!important;background:var(--hw-knob-ink)!important;box-shadow:0 0 3px #fff9!important;}
-:is(#audio-world,.equipment-preview-world) .audio-interface-face .ai-capture {min-height:28px!important;border:1px solid #f2c2b4!important;border-radius:6px!important;background:linear-gradient(#a84238,#5f1c20)!important;color:#fff5eb!important;box-shadow:inset 0 1px #fff8,0 3px 5px #000b!important;font-weight:800!important;}
-:is(#audio-world,.equipment-preview-world) .evo-interface .evo-select button {width:21px;height:21px;border:1px solid #899391;border-radius:50%;background:radial-gradient(circle at 35% 25%,#555d5a,#202523);color:#e8eeeb;box-shadow:0 2px 3px #000b,inset 0 1px #fff5;}
-:is(#audio-world,.equipment-preview-world) .evo-interface .evo-select button[aria-pressed="true"] {border-color:#ff9a62;background:radial-gradient(circle,#ffad70 0 18%,#733c28 48%,#241b18);box-shadow:0 0 7px #f4824f99,inset 0 1px #fff8;}
-:is(#audio-world,.equipment-preview-world) .evo-interface [data-evo-smart],:is(#audio-world,.equipment-preview-world) .quantum-interface [data-quantum-direct],:is(#audio-world,.equipment-preview-world) .volt-interface .volt-channel-buttons button,:is(#audio-world,.equipment-preview-world) .volt-interface .volt-master>button {border:1px solid #a4aaa4;border-radius:5px;background:linear-gradient(#535b57,#242927);color:#f3f2e9;box-shadow:inset 0 1px #fff7,0 2px 4px #000b;}
-:is(#audio-world,.equipment-preview-world) .volt-interface .volt-channel-buttons [aria-pressed="true"] {background:linear-gradient(#e2a250,#8a4d23);border-color:#ffd18a;box-shadow:0 0 7px #fca54f99,inset 0 1px #fff9;}
-:is(#audio-world,.equipment-preview-world) .audio-interface-face button:focus-visible {outline:2px solid #ffe0a0!important;outline-offset:3px!important;}
-
 /* Phone layout: thumb navigation and a three-position properties sheet. */
 @media(max-width:700px) {
     :root {--phone-nav-height:calc(64px + env(safe-area-inset-bottom,0px));}
@@ -4782,53 +4677,6 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
     .mobile-panel-controls {display:none!important;}
 }
 
-/* Scarlett Solo: red aluminum chassis and a compact, reference-matched front panel. */
-:is(#audio-world,.equipment-preview-world) .device-node.audio-interface.solo-interface {box-sizing:border-box!important;width:380px!important;min-width:380px!important;max-width:380px!important;height:120px!important;min-height:120px!important;max-height:120px!important;padding:5px!important;border:3px solid #9d1d30!important;border-radius:17px!important;background:linear-gradient(180deg,#ef536b 0%,#c62942 9%,#a51e33 88%,#d54052 100%)!important;box-shadow:inset 0 2px 2px #ffb3ba,inset 0 -4px 6px #5c0d1c,0 7px 12px #0009!important;color:#f2f4f5!important;}
-:is(#audio-world,.equipment-preview-world) .solo-interface>.device-header {display:none!important;}
-:is(#audio-world,.equipment-preview-world) .solo-face {position:relative;overflow:hidden;box-sizing:border-box;height:100%;display:grid;grid-template-columns:43px 43px 1px 63px 39px 30px 48px 61px;align-items:center;justify-content:space-between;gap:2px;padding:5px 8px;border:1px solid #555b66;border-radius:12px;background:radial-gradient(ellipse at 45% 5%,#303642,#15191f 65%,#101318);box-shadow:inset 0 2px 5px #a5b4c322,inset 0 -3px 7px #000a;}
-:is(#audio-world,.equipment-preview-world) .solo-face::before {content:"";position:absolute;inset:0;pointer-events:none;opacity:.18;background:repeating-linear-gradient(0deg,transparent 0 2px,#dbe1e90c 2.5px 3px);}
-:is(#audio-world,.equipment-preview-world) .solo-face>.solo-input-gain,:is(#audio-world,.equipment-preview-world) .solo-face>.solo-divider,:is(#audio-world,.equipment-preview-world) .solo-face>.solo-output-control,:is(#audio-world,.equipment-preview-world) .solo-face>.solo-direct,:is(#audio-world,.equipment-preview-world) .solo-face>.solo-small-controls,:is(#audio-world,.equipment-preview-world) .solo-face>.solo-headphone,:is(#audio-world,.equipment-preview-world) .solo-face>.solo-line-outputs {position:relative;z-index:1;min-width:0;text-align:center;}
-:is(#audio-world,.equipment-preview-world) .solo-input-gain {height:100%;display:grid;grid-template-rows:10px 42px 31px;justify-items:center;align-content:center;gap:2px;}
-:is(#audio-world,.equipment-preview-world) .solo-input-gain>label,:is(#audio-world,.equipment-preview-world) .solo-output-control>label {color:#e7e9ed;font:700 8px/1 "Inter",sans-serif;}
-:is(#audio-world,.equipment-preview-world) .solo-input-gain .ai-gain-knob {grid-row:2;width:37px!important;height:37px!important;margin:0!important;border:2px solid #50545c!important;border-radius:50%!important;background:radial-gradient(circle at 34% 25%,#666b73 0,#343941 46%,#20242b 75%,#111419 100%)!important;box-shadow:inset 0 1px 2px #ffffff60,inset 0 -3px 4px #000b,0 2px 4px #000b!important;}
-:is(#audio-world,.equipment-preview-world) .solo-input-gain .ai-gain-knob::before {content:none!important;}
-:is(#audio-world,.equipment-preview-world) .solo-input-gain .ai-gain-knob::after {top:2px!important;height:11px!important;width:2px!important;background:#e8e9ed!important;}
-:is(#audio-world,.equipment-preview-world) .solo-input-gain .ai-gain-ring {position:absolute;top:11px;left:50%;width:45px;height:45px;transform:translateX(-50%);border-radius:50%;background:conic-gradient(from 220deg,#52e5a7 0 28%,#d4ec61 37%,#f0b655 48%,transparent 50% 100%);-webkit-mask:radial-gradient(circle,transparent 0 72%,#000 75% 81%,transparent 84%);mask:radial-gradient(circle,transparent 0 72%,#000 75% 81%,transparent 84%);pointer-events:none;}
-:is(#audio-world,.equipment-preview-world) .solo-combo {grid-row:3;position:relative;width:30px;height:30px;border:2px solid #899098;border-radius:50%;background:radial-gradient(circle,#020305 0 42%,#717982 45% 49%,#0b0e12 52% 70%,#30353c 73%);box-shadow:0 2px 4px #000b,inset 0 1px 3px #fff7;}
-:is(#audio-world,.equipment-preview-world) .solo-combo::after {content:"";position:absolute;inset:7px;border:1px solid #30363e;border-radius:50%;background:#050608;}
-:is(#audio-world,.equipment-preview-world) .solo-combo>i {position:absolute;z-index:2;inset:10px;border:1px solid #171a1e;border-radius:50%;}
-:is(#audio-world,.equipment-preview-world) .solo-instrument {width:25px;height:25px;border-color:#aab2b7;background:radial-gradient(circle,#020304 0 43%,#969c9d 46% 51%,#0b0e12 54% 76%,#30353c 79%);}
-:is(#audio-world,.equipment-preview-world) .solo-instrument::after {inset:6px;border-color:#171a1e;}
-:is(#audio-world,.equipment-preview-world) .solo-instrument>i {inset:9px;}
-:is(#audio-world,.equipment-preview-world) .solo-input-gain [data-ai-inst] {position:absolute;right:-3px;bottom:0;width:23px;height:20px;min-height:20px!important;padding:0;border:1px solid #606671;border-radius:50%;background:linear-gradient(#383d45,#171a20);color:#d5d8dc;font:700 5px "Inter",sans-serif;}
-:is(#audio-world,.equipment-preview-world) .solo-input-gain [data-ai-inst][aria-pressed="true"],:is(#audio-world,.equipment-preview-world) .solo-mini-toggle[aria-pressed="true"] {border-color:#7de5b2;background:radial-gradient(circle at 35% 25%,#8bf0bd,#235c49);color:#082319;box-shadow:0 0 7px #57e8a27d;}
-:is(#audio-world,.equipment-preview-world) .solo-divider {height:77%;background:linear-gradient(90deg,#151a20,#75808a,#20252c);}
-:is(#audio-world,.equipment-preview-world) .solo-output-control {display:grid;justify-items:center;align-content:center;gap:5px;}
-:is(#audio-world,.equipment-preview-world) .solo-output-knob {width:61px!important;height:61px!important;margin:0!important;border:2px solid #737b87!important;background:radial-gradient(circle at 35% 25%,#6f7580,#3b404a 48%,#252a32 78%,#15191f)!important;box-shadow:inset 0 1px 3px #ffffff5c,inset 0 -4px 5px #000a,0 2px 4px #000b!important;}
-:is(#audio-world,.equipment-preview-world) .solo-output-knob::before {inset:-4px!important;opacity:.65;}
-:is(#audio-world,.equipment-preview-world) .solo-output-knob::after {top:4px!important;height:16px!important;width:3px!important;background:#e7e9ec!important;}
-:is(#audio-world,.equipment-preview-world) .solo-direct {width:23px;height:23px;min-height:23px!important;align-self:start;margin-top:9px;padding:0;border:1px solid #606771;border-radius:50%;background:radial-gradient(circle at 35% 25%,#444a53,#1d2128 70%);color:transparent;font-size:0;box-shadow:inset 0 1px #ffffff45,0 2px 3px #000b;}
-:is(#audio-world,.equipment-preview-world) .solo-direct::after {content:"";display:block;width:7px;height:7px;margin:auto;border-radius:50%;background:#11151a;box-shadow:inset 0 1px 2px #000;}
-:is(#audio-world,.equipment-preview-world) .solo-direct[aria-pressed="true"]::after {background:#81d5a5;box-shadow:0 0 6px #66e89b;}
-:is(#audio-world,.equipment-preview-world) .solo-small-controls {align-self:start;padding-top:9px;}
-:is(#audio-world,.equipment-preview-world) .solo-mini-toggle {width:26px;height:25px;min-height:25px!important;padding:0;border:1px solid #5a606a;border-radius:50%;background:radial-gradient(circle at 35% 25%,#444a53,#1d2128 70%);color:#e0e2e7;font:700 6px "Inter",sans-serif;box-shadow:inset 0 1px #ffffff45,0 2px 3px #000b;}
-:is(#audio-world,.equipment-preview-world) .solo-face .solo-headphone,:is(#audio-world,.equipment-preview-world) .solo-face .solo-line-outputs {align-self:start;padding-top:4px;}
-:is(#audio-world,.equipment-preview-world) .solo-face small {display:block;color:#d0d3da;font:700 5px/1.1 "Inter",sans-serif;letter-spacing:.02em;white-space:nowrap;}
-:is(#audio-world,.equipment-preview-world) .solo-headphone-jack {position:relative;display:grid;place-items:center;width:31px;height:31px;margin:12px auto 0;border:2px solid #7b828c;border-radius:50%;background:radial-gradient(circle,#020304 0 50%,#5f6873 53% 61%,#090b0f 64%);box-shadow:0 2px 4px #000b;}
-:is(#audio-world,.equipment-preview-world) .solo-headphone-jack>i {position:absolute;top:-14px;width:7px;height:7px;border:1px solid #aeb7c0;border-radius:2px;}
-:is(#audio-world,.equipment-preview-world) .solo-headphone-jack .port {position:absolute;inset:0;z-index:4;opacity:.02;transform:scale(1.15);}
-:is(#audio-world,.equipment-preview-world) .solo-rca-pair {display:flex;justify-content:center;gap:6px;margin-top:13px;}
-:is(#audio-world,.equipment-preview-world) .solo-rca-pair .port {margin:0;}
-:is(#audio-world,.equipment-preview-world) .solo-line-outputs .port {width:16px;height:16px;min-width:16px;min-height:16px;border-radius:50%;background:radial-gradient(circle,#050607 0 34%,#b3b9bc 38% 48%,#252b31 52% 72%,#07090c 76%);box-shadow:0 1px 3px #000b,inset 0 1px 1px #fff6;}
-:is(#audio-world,.equipment-preview-world) .solo-interface.ai-signal .solo-input-gain .ai-gain-ring {filter:brightness(1.35) drop-shadow(0 0 2px #61eab2aa);}
-:is(#audio-world,.equipment-preview-world) .solo-brand {position:absolute;right:80px;bottom:5px;z-index:2;display:flex;align-items:baseline;gap:3px;color:#c3c8d0;font:400 8px/1 "Inter",sans-serif;letter-spacing:-.02em;pointer-events:none;}
-:is(#audio-world,.equipment-preview-world) .solo-brand strong {font-weight:800;}
-:is(#audio-world,.equipment-preview-world) .solo-usb-status {position:absolute;right:48%;top:7px;z-index:2;display:flex;align-items:center;gap:3px;}
-:is(#audio-world,.equipment-preview-world) .solo-usb-icon {color:#aeb6c2;font-size:12px;line-height:1;}
-:is(#audio-world,.equipment-preview-world) .solo-usb-status .ai-capture {display:grid;place-items:center;width:15px;height:15px;min-height:15px!important;margin:0;padding:0;border:1px solid #666d78;border-radius:50%;background:linear-gradient(#343942,#171b21);}
-:is(#audio-world,.equipment-preview-world) .solo-usb-status .ai-capture i {width:5px;height:5px;border-radius:50%;background:#b9c1c8;}
-:is(#audio-world,.equipment-preview-world) .solo-interface.ai-live .solo-usb-status .ai-capture i {background:#52e69a;box-shadow:0 0 6px #43ea91;}
-
 /* Mobile contextual actions and easier catalogue scanning. */
 .mobile-context-actions {display:none;}
 .mobile-category-nav {display:none;}
@@ -4860,92 +4708,3 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
     .mobile-context-actions button svg {width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
     .mobile-context-actions button[data-context-action="remove"] {color:#ffd1cf;border-color:#765052;}
 }
-
-/* Fender Quantum LT 2: raised graphite shell and the real front-panel control order. */
-:is(#audio-world,.equipment-preview-world) .device-node.audio-interface.quantum-interface {box-sizing:border-box!important;width:400px!important;min-width:400px!important;max-width:400px!important;height:160px!important;min-height:160px!important;max-height:160px!important;padding:0!important;overflow:visible!important;border:1px solid #17191b!important;border-radius:25px 25px 12px 12px!important;background:linear-gradient(180deg,#55575a 0%,#404245 18%,#2a2c2f 26%,#141619 100%)!important;color:#e6e7e9!important;box-shadow:inset 0 2px 2px #ffffff40,inset 0 -4px 7px #000a,0 8px 14px #000a!important;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface>.device-header {display:none!important;}
-:is(#audio-world,.equipment-preview-world) .quantum-face {position:absolute;left:4px;right:4px;top:37px;bottom:4px;display:block;box-sizing:border-box;overflow:hidden;border:1px solid #4c4e51;border-radius:8px 8px 10px 10px;padding:0;background:linear-gradient(110deg,#25272a,#1c1e21 45%,#181a1d);box-shadow:inset 0 2px 2px #ffffff16,inset 0 -3px 7px #0009;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface::before {content:"Fender";position:absolute;left:40%;right:10%;top:5px;height:30px;color:#17191b55;font:italic 700 22px/1.2 Georgia,serif;letter-spacing:.04em;text-align:center;transform:rotate(-3deg);pointer-events:none;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-brand {position:absolute;left:4%;top:40%;width:20%;color:#f0f0f1;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-brand strong {display:block;font:italic 700 23px/.95 Georgia,"Times New Roman",serif;letter-spacing:-.06em;text-shadow:0 1px 1px #0008;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-input {position:absolute;left:8%;top:48%;width:15%;height:48%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;}
-:is(#audio-world,.equipment-preview-world) .quantum-input-number {position:absolute;top:-13px;left:52%;color:#e6e6e7;font:400 13px/1 "Inter",sans-serif;}
-:is(#audio-world,.equipment-preview-world) .quantum-guitar-mark {position:absolute;left:6px;top:-15px;width:16px;height:16px;fill:none;stroke:#c8c9ca;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
-:is(#audio-world,.equipment-preview-world) .quantum-jack {position:relative;width:39px;height:39px;margin:0;border:3px solid #4b4e51;border-radius:50%;background:radial-gradient(circle,#030405 0 42%,#141619 45% 57%,#080a0c 60% 77%,#5a5c5f 80% 86%,#151719 89%);box-shadow:0 2px 4px #000b,inset 0 1px 2px #ffffff35;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-gain2 {position:absolute;left:31%;top:3%;width:15%;height:72%;display:flex;flex-direction:column;align-items:center;}
-:is(#audio-world,.equipment-preview-world) .quantum-gain2>span {color:#e8e9eb;font:400 13px/1 "Inter",sans-serif;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-gain {width:49px!important;height:49px!important;margin:5px 0 0!important;border:4px solid #111315!important;border-radius:50%!important;background:repeating-conic-gradient(#131518 0 2deg,#303236 2.5deg 5deg)!important;box-shadow:0 2px 4px #000b,inset 0 1px #ffffff2e!important;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-gain .hw-knob-face {inset:5px!important;border:2px solid #17191c!important;border-radius:50%;background:radial-gradient(circle at 33% 24%,#777a7d,#383a3e 57%,#242629 78%)!important;box-shadow:inset 0 1px 2px #ffffff38,inset 0 -2px 3px #000b!important;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-gain .hw-knob-indicator {width:3px!important;height:25%!important;top:14%!important;background:#e7e7e8!important;}
-:is(#audio-world,.equipment-preview-world) .quantum-clip {display:flex;align-items:center;gap:4px;margin-top:2px;color:#c7c9cb;}
-:is(#audio-world,.equipment-preview-world) .quantum-clip i {display:block;width:20px;height:8px;border:1px solid #151719;border-radius:8px;background:#111315;box-shadow:inset 0 1px 2px #000;}
-:is(#audio-world,.equipment-preview-world) .quantum-clip small {color:#c7c9cb;font:500 7px/1 "Inter",sans-serif;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface.ai-clip .quantum-clip i {border-color:#fb7a73;background:#ef4f4c;box-shadow:0 0 7px #ff4848b8;}
-:is(#audio-world,.equipment-preview-world) .quantum-phantom {position:absolute;left:30%;bottom:13%;display:grid;place-items:center;width:45px;height:39px;border:2px solid #1c1e21;border-radius:50%;background:radial-gradient(circle at 36% 26%,#424448,#242629 68%,#151719);box-shadow:0 2px 4px #000b,inset 0 1px #ffffff32;color:#3c8cff;font:500 11px/1 "Inter",sans-serif;}
-:is(#audio-world,.equipment-preview-world) .quantum-main-control {position:absolute;left:47%;top:3%;width:27%;height:95%;display:flex;flex-direction:column;align-items:center;}
-:is(#audio-world,.equipment-preview-world) .quantum-main-control>label {color:#f0f0f1;font:400 13px/1 "Inter",sans-serif;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-main {position:relative;width:88px!important;height:88px!important;margin:8px 0 0!important;border:5px solid #17191c!important;border-radius:50%!important;background:repeating-conic-gradient(#111316 0 1.5deg,#282a2d 2deg 5deg)!important;box-shadow:0 3px 6px #000d,inset 0 1px #ffffff30,0 0 0 2px #34373a!important;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-main::before {content:"";position:absolute;inset:3px;border-radius:50%;background:conic-gradient(from 0deg,#2584ff,#58a1ff,#1768e5,#398dff);-webkit-mask:radial-gradient(circle,transparent 0 78%,#000 80% 86%,transparent 88%);mask:radial-gradient(circle,transparent 0 78%,#000 80% 86%,transparent 88%);}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-main .hw-knob-face {inset:7px!important;border:2px solid #121417!important;border-radius:50%;background:radial-gradient(circle at 31% 27%,#5b5d61,#34363a 50%,#232528 80%)!important;box-shadow:inset 0 1px 4px #ffffff31,inset 0 -3px 5px #000c!important;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-main .hw-knob-indicator {top:12%!important;height:24%!important;width:5px!important;border-radius:3px;background:#1780ff!important;box-shadow:0 0 6px #1680ffaa!important;}
-:is(#audio-world,.equipment-preview-world) .quantum-usb-status {position:absolute;left:72%;top:22%;display:flex;flex-direction:column;align-items:center;gap:2px;color:#dadcdf;}
-:is(#audio-world,.equipment-preview-world) .quantum-usb-status svg {width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
-:is(#audio-world,.equipment-preview-world) .quantum-usb-status i {width:19px;height:8px;border-radius:7px;background:#101214;box-shadow:inset 0 1px 2px #000;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface.ai-live .quantum-usb-status i {background:#1681ff;box-shadow:0 0 8px #258bffb8;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-direct {position:absolute;left:70%;bottom:15%;display:grid;place-items:center;width:55px;height:45px;min-height:45px!important;padding:0;border:3px solid #191b1e;border-radius:50%;background:radial-gradient(circle at 36% 27%,#46484c,#282a2e 69%,#17191c);box-shadow:0 2px 5px #000b,inset 0 1px #ffffff33;color:#2788ff;}
-:is(#audio-world,.equipment-preview-world) .quantum-direct svg {width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-direct[aria-pressed="true"] {color:#53a0ff;box-shadow:0 0 8px #268bff7a,inset 0 1px #ffffff42;}
-:is(#audio-world,.equipment-preview-world) .quantum-phone-control {position:absolute;right:5%;top:4%;width:17%;height:92%;display:flex;flex-direction:column;align-items:center;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-phone-knob {width:47px!important;height:47px!important;margin:4px 0 0!important;border:4px solid #111315!important;border-radius:50%!important;background:repeating-conic-gradient(#131518 0 2deg,#303236 2.5deg 5deg)!important;box-shadow:0 2px 4px #000b,inset 0 1px #ffffff2e!important;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-phone-knob .hw-knob-face {inset:5px!important;border:2px solid #17191c!important;border-radius:50%;background:radial-gradient(circle at 33% 24%,#777a7d,#383a3e 57%,#242629 78%)!important;}
-:is(#audio-world,.equipment-preview-world) .quantum-phone-control>svg {position:absolute;top:54%;width:18px;height:18px;fill:none;stroke:#d8dadd;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-:is(#audio-world,.equipment-preview-world) .quantum-phone-control>.port {position:absolute;bottom:8%;width:34px;height:34px;min-width:34px;min-height:34px;border-radius:50%;background:radial-gradient(circle,#030405 0 44%,#111315 47% 57%,#777a7c 60% 67%,#17191b 70%);box-shadow:0 2px 4px #000b,inset 0 1px 2px #ffffff28;}
-:is(#audio-world,.equipment-preview-world) .quantum-rear-outputs {position:absolute;left:4%;bottom:4%;display:flex;align-items:center;gap:5px;padding:2px 5px;border-radius:3px;background:#151719b8;color:#aaadb1;}
-:is(#audio-world,.equipment-preview-world) .quantum-rear-outputs small {margin-right:2px;font:600 5px/1 "Inter",sans-serif;}
-:is(#audio-world,.equipment-preview-world) .quantum-rear-outputs .port {width:12px;height:12px;min-width:12px;min-height:12px;border-radius:50%;background:radial-gradient(circle,#030405 0 40%,#8d9194 45% 58%,#17191b 61%);}
-:is(#audio-world,.equipment-preview-world) .quantum-model {position:absolute;right:4%;bottom:3%;color:#d4d6d8;font:400 13px/1 "Inter",sans-serif;letter-spacing:.14em;}
-:is(#audio-world,.equipment-preview-world) .quantum-model strong {font-weight:800;letter-spacing:.04em;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-main.hw-knob,:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-phone-knob.hw-knob,:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-gain.hw-knob {isolation:isolate;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-main.hw-knob::after,:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-phone-knob.hw-knob::after,:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-gain.hw-knob::after {content:none!important;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-main.hw-knob::after,:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-phone-knob.hw-knob::after,:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-gain.hw-knob::after {z-index:4;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-main.hw-knob::before {z-index:1;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-main .hw-knob-face,:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-phone-knob .hw-knob-face,:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-gain .hw-knob-face {z-index:2;}
-:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-main .hw-knob-indicator,:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-phone-knob .hw-knob-indicator,:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-gain .hw-knob-indicator {z-index:3;}
-
-/* Audient EVO 4: compact desktop face with the single encoder and I/O visible together. */
-.device-node.audio-interface.evo-interface {position:relative!important;overflow:hidden;border:1px solid #101213!important;border-radius:24px!important;background:linear-gradient(160deg,#454648 0%,#363739 52%,#292a2c 100%)!important;box-shadow:inset 0 1px #ffffff42,inset 0 -2px 4px #0009,0 8px 18px #0009!important;color:#f0f0f0;}
-.evo-interface>.device-header {display:none!important;}
-.evo-interface .evo-face {position:absolute;inset:0;display:block!important;padding:0!important;background:none!important;}
-.evo-interface .evo-brand {position:absolute;right:5%;top:8%;text-align:right!important;z-index:4;}
-.evo-interface .evo-brand strong {font:700 20px/1 "Inter",sans-serif;letter-spacing:-.07em;color:#f2f2f2;}
-.evo-interface .evo-brand small {margin-top:3px;color:#b9babc;font:500 6px/1 "Inter",sans-serif;letter-spacing:.08em;}
-.evo-interface .evo-input-bank {position:absolute;left:12%;top:23%;width:14%;height:65%;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:12px 1fr 1fr 10px;align-items:center;justify-items:center;gap:3px;}
-.evo-interface .evo-input-title,.evo-interface .evo-io-caption,.evo-interface .evo-output-title {grid-column:1/-1;color:#c4c5c6;font:600 6px/1 "Inter",sans-serif;letter-spacing:.08em;}
-.evo-interface .evo-combo {position:relative;display:grid;place-items:center;width:26px;height:26px;border:3px solid #121416;border-radius:50%;background:radial-gradient(circle,#050607 0 38%,#17191a 43% 52%,#77797b 56% 64%,#242628 68%);box-shadow:0 2px 3px #000b,inset 0 1px 2px #ffffff38;}
-.evo-interface .evo-combo i {position:absolute;inset:5px;border:1px solid #404244;border-radius:50%;}
-.evo-interface .evo-combo b {position:absolute;top:-9px;right:-7px;display:grid;place-items:center;width:13px;height:13px;border:1px solid #4a4b4d;border-radius:50%;background:#303133;color:#f1f1f1;font:600 7px/1 "Inter",sans-serif;}
-.evo-interface .evo-io-caption {font-size:5px;color:#aeb0b1;}
-.evo-interface .evo-left-controls {position:absolute;left:2%;top:17%;width:9%;height:77%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;z-index:3;}
-.evo-interface .evo-48v {display:grid;place-items:center;width:21px;height:21px;border:1px solid #121416;border-radius:50%;background:radial-gradient(circle at 35% 25%,#505153,#252628 72%);color:#ddd;font:500 5px/1 "Inter",sans-serif;box-shadow:0 2px 3px #0008;}
-.evo-interface .evo-round {display:grid;place-items:center;flex:0 0 21px;width:21px;height:21px;padding:0;border:1px solid #171819;border-radius:50%;background:radial-gradient(circle at 34% 25%,#4c4d4f,#222325 70%);color:#e7e8e9;font:600 8px/1 "Inter",sans-serif;box-shadow:0 2px 3px #0008,inset 0 1px #ffffff22;cursor:pointer;}
-.evo-interface .evo-round[aria-pressed="true"] {box-shadow:0 0 0 1px #f5f5f566,0 0 6px #ffffff3a,inset 0 1px #ffffff33;}
-.evo-interface .evo-capture {display:grid;place-items:center;width:49px;height:24px;min-height:24px!important;margin:0;padding:0;border:1px solid #3c9d39;border-radius:16px;background:linear-gradient(#6ed64d,#48b934);color:white;box-shadow:0 2px 4px #0008,inset 0 1px #ffffff66;}
-.evo-interface .evo-capture svg {width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
-.evo-interface.ai-live .evo-capture {background:linear-gradient(#91eb69,#58c943);box-shadow:0 0 10px #77ed56aa,inset 0 1px #ffffff88;}
-.evo-interface .evo-main-control {position:absolute;left:36%;top:12%;width:30%;height:80%;display:grid;place-items:center;}
-.evo-interface .evo-led-ring {position:absolute;width:100px;height:100px;border-radius:50%;background:repeating-conic-gradient(from -135deg,#f4f4f3 0deg 2.5deg,transparent 3deg 15deg);-webkit-mask:radial-gradient(circle,transparent 0 71%,#000 73% 81%,transparent 83%);mask:radial-gradient(circle,transparent 0 71%,#000 73% 81%,transparent 83%);filter:drop-shadow(0 0 2px #ffffff65);}
-.evo-interface.ai-signal .evo-led-ring {background:repeating-conic-gradient(from -135deg,#70d64c 0deg 2.5deg,transparent 3deg 15deg);}
-.evo-interface .evo-main-knob {position:relative;z-index:1;width:72px!important;height:72px!important;margin:0!important;border:3px solid #111315!important;border-radius:50%!important;background:radial-gradient(circle at 35% 25%,#535456,#303133 61%,#1b1c1e 78%)!important;box-shadow:inset 0 1px 3px #ffffff30,inset 0 -3px 4px #000b,0 3px 6px #000b!important;}
-.evo-interface .evo-main-knob::before {content:none!important;}
-.evo-interface .evo-main-knob::after {top:9px!important;width:2px!important;height:12px!important;background:#eee!important;transform-origin:50% 21px!important;}
-.evo-interface .evo-main-control small {position:absolute;bottom:0;color:#d2d3d4;font:500 6px/1 "Inter",sans-serif;letter-spacing:.1em;}
-.evo-interface .evo-right-controls {position:absolute;right:2%;top:41%;width:9%;height:53%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;z-index:3;}
-.evo-interface .evo-right-controls .evo-round {width:22px;height:22px;flex-basis:22px;}
-.evo-interface .evo-right-controls svg {width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
-.evo-interface .evo-right-controls .evo-smart {color:#ededed;}
-.evo-interface .evo-output-jack {position:absolute;left:-106%;bottom:-3%;display:flex;flex-direction:column;align-items:center;gap:3px;color:#bcbec0;font:600 5px/1 "Inter",sans-serif;}
-.evo-interface .evo-output-jack .port {width:20px;height:20px;min-width:20px;min-height:20px;border:3px solid #161819;border-radius:50%;background:radial-gradient(circle,#030405 0 42%,#17191a 46% 57%,#8a8d8e 60% 67%,#202224 70%);box-shadow:0 2px 3px #000a,inset 0 1px 2px #ffffff30;}
-.evo-interface .evo-output-bank {position:absolute;right:13%;top:48%;width:22%;height:36%;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:10px 1fr 8px;justify-items:center;align-items:center;gap:2px;}
-.evo-interface .evo-output-bank .port {width:18px;height:18px;min-width:18px;min-height:18px;border:3px solid #17191a;border-radius:50%;background:radial-gradient(circle,#030405 0 43%,#1a1c1d 47% 56%,#858889 60% 66%,#202224 70%);box-shadow:0 2px 3px #000a,inset 0 1px 2px #ffffff25;}
-.evo-interface .evo-usb-led {position:absolute;right:-12%;top:-71%;width:6px;height:6px;border-radius:50%;background:#686b6d;box-shadow:0 0 2px #aaa;}
-.evo-interface.ai-live .evo-usb-led {background:#64a6ff;box-shadow:0 0 7px #3e91ff;}
