@@ -417,7 +417,7 @@ const Hardware = (() => {
     const bindings = new WeakMap(),releases=new WeakMap();
     const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number.isFinite(Number(v))?Number(v):min));
     const snap=(value,min,max,step)=>Number((min+Math.round((clamp(value,min,max)-min)/step)*step).toFixed(6));
-    let knobReadout=null,readoutOwner=null,readoutTimer=null;
+    let knobReadout=null,readoutOwner=null,readoutTimer=null,fineControlPanel=null,fineControlOwner=null,knobHoldTimer=null;
     const knobValueText=({get,min,max,format})=>{
         const value=clamp(get(),min,max);
         return format?format(value):min===0&&max===1?`${Number((value*100).toFixed(1))}%`:String(Number(value.toFixed(2)));
@@ -434,6 +434,23 @@ const Hardware = (() => {
     function hideKnobReadout(delay=450){
         clearTimeout(readoutTimer);readoutTimer=setTimeout(()=>{if(knobReadout)knobReadout.hidden=true;readoutOwner=null;},delay);
     }
+    function showFineControl(el){
+        const control=bindings.get(el);if(!control||!el.isConnected)return;
+        if(!fineControlPanel){
+            fineControlPanel=document.createElement('div');fineControlPanel.className='knob-fine-control';fineControlPanel.setAttribute('role','group');fineControlPanel.innerHTML='<output></output><input type="range" aria-label="Ajuste fino do knob">';document.body.appendChild(fineControlPanel);
+            fineControlPanel.querySelector('input').addEventListener('input',()=>{
+                const owner=fineControlOwner,active=bindings.get(owner);if(!owner||!active)return;
+                const value=clamp(snap(Number(fineControlPanel.querySelector('input').value),active.min,active.max,active.fineStep),active.min,active.max);
+                active.set(value);paintKnob(owner);fineControlPanel.querySelector('output').textContent=knobValueText(active);
+            });
+            fineControlPanel.querySelector('input').addEventListener('change',()=>{updateCableFlows();scheduleProjectSave();});
+            document.addEventListener('pointerdown',event=>{if(fineControlPanel&&!fineControlPanel.hidden&&!fineControlPanel.contains(event.target)&&!fineControlOwner?.contains(event.target)){fineControlPanel.hidden=true;fineControlOwner=null;}},true);
+            document.addEventListener('keydown',event=>{if(event.key==='Escape'&&fineControlPanel&&!fineControlPanel.hidden){fineControlPanel.hidden=true;fineControlOwner=null;}});
+        }
+        fineControlOwner=el;const range=fineControlPanel.querySelector('input');range.min=control.min;range.max=control.max;range.step=control.fineStep;range.value=control.get();fineControlPanel.querySelector('output').textContent=knobValueText(control);fineControlPanel.hidden=false;
+        const rect=el.getBoundingClientRect(),panelWidth=Math.min(220,innerWidth-16);fineControlPanel.style.width=panelWidth+'px';fineControlPanel.style.left=Math.max(8,Math.min(innerWidth-panelWidth-8,rect.left+(rect.width-panelWidth)/2))+'px';fineControlPanel.style.top=Math.max(8,Math.min(innerHeight-96,rect.top-94))+'px';
+        range.focus({preventScroll:true});
+    }
     function paintKnob(el){
         const control=bindings.get(el);if(!control)return;
         const {get,min,max}=control,value=clamp(get(),min,max);
@@ -449,7 +466,7 @@ const Hardware = (() => {
         const continuous=step==null&&kind==='linear',precision=step??(max-min)/(kind==='knob'?physics.detents:1000);
         const keyboardStep=step??(kind==='knob'?precision:min<0&&max>0 ? .1 : (max-min)/100);
         const detents=continuous?(min<0&&max>0?[0]:min===0&&max===1?[0,.5,1]:[min,max]):[];
-        const control={get,set,min,max,step:precision,activate,format,model,kind};bindings.set(el,control);el.tabIndex=0;if(kind==='knob')el.dataset.hardwareKnob='';
+        const control={get,set,min,max,step:precision,fineStep:step??(max-min)/1000,activate,format,model,kind};bindings.set(el,control);el.tabIndex=0;if(kind==='knob')el.dataset.hardwareKnob='';
         const change=(value,magnetic=false)=>{
             let next=clamp(snap(value,min,max,precision),min,max);
             const detent=magnetic?detents.find(point=>Math.abs(next-point)<(max-min)*.012):undefined;
@@ -460,10 +477,11 @@ const Hardware = (() => {
         const commit=()=>{if(el.isConnected){updateCableFlows();scheduleProjectSave();}};
         el.addEventListener('pointerdown',event=>{
             if(event.button!==0||el.disabled)return;event.preventDefault();event.stopPropagation();activate?.();el.classList.add('hw-pointer-focus');el.focus({preventScroll:true});
-            const pointer=event.pointerId,start=get(),x=event.clientX,y=event.clientY,zoom=Math.max(.1,view.zoom);el.setPointerCapture(pointer);el.classList.add('hw-turning');showKnobReadout(el);
+            const pointer=event.pointerId,start=get(),x=event.clientX,y=event.clientY,zoom=Math.max(.1,view.zoom);let holdOpened=false;el.setPointerCapture(pointer);el.classList.add('hw-turning');showKnobReadout(el);
+            clearTimeout(knobHoldTimer);knobHoldTimer=setTimeout(()=>{if(el.hasPointerCapture(pointer)){holdOpened=true;showFineControl(el);}},480);
             if(pointerToValue)change(pointerToValue(event),true);
-            const move=e=>{if(e.pointerId===pointer){e.preventDefault();change(pointerToValue?pointerToValue(e):start+((y-e.clientY)+(e.clientX-x)*.35)*(max-min)/(physics.travel*zoom),true);}};
-            const finish=e=>{if(e?.pointerId!=null&&e.pointerId!==pointer)return;el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',finish);el.removeEventListener('pointercancel',finish);el.removeEventListener('lostpointercapture',finish);window.removeEventListener('blur',finish);releases.delete(el);el.classList.remove('hw-turning');if(el.hasPointerCapture(pointer))el.releasePointerCapture(pointer);hideKnobReadout();commit();};
+            const move=e=>{if(e.pointerId===pointer){if(Math.hypot(e.clientX-x,e.clientY-y)>8&&!holdOpened)clearTimeout(knobHoldTimer);e.preventDefault();change(pointerToValue?pointerToValue(e):start+((y-e.clientY)+(e.clientX-x)*.35)*(max-min)/(physics.travel*zoom),true);}};
+            const finish=e=>{if(e?.pointerId!=null&&e.pointerId!==pointer)return;clearTimeout(knobHoldTimer);el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',finish);el.removeEventListener('pointercancel',finish);el.removeEventListener('lostpointercapture',finish);window.removeEventListener('blur',finish);releases.delete(el);el.classList.remove('hw-turning');if(el.hasPointerCapture(pointer))el.releasePointerCapture(pointer);hideKnobReadout();if(holdOpened&&fineControlPanel){fineControlPanel.querySelector('input').focus({preventScroll:true});}commit();};
             releases.set(el,finish);el.addEventListener('pointermove',move);el.addEventListener('pointerup',finish);el.addEventListener('pointercancel',finish);el.addEventListener('lostpointercapture',finish);window.addEventListener('blur',finish);
         });
         el.addEventListener('blur',()=>{el.classList.remove('hw-pointer-focus');if(readoutOwner===el)hideKnobReadout(0);});
@@ -699,6 +717,11 @@ const Hardware = (() => {
     }
     function dispose(dev){if(readoutOwner&&dev.el.contains(readoutOwner))hideKnobReadout(0);dev.el.querySelectorAll('[data-hardware-knob],[data-hardware-linear],[data-hardware-feedback]').forEach(el=>releases.get(el)?.());}
     function layout({type,el}){
+        if(type==='audioInterfaceQuantum'){
+            el.dataset.chassis='medium';el.dataset.chassisWidth='compact';el.style.setProperty('--chassis-height','160px');el.style.setProperty('--chassis-width','400px');
+            for(const [key,value]of Object.entries({width:'400px','min-width':'400px','max-width':'400px',height:'160px','min-height':'160px','max-height':'160px'}))el.style.setProperty(key,value,'important');
+            return;
+        }
         if(type==='streamIntegrated'){
             el.dataset.chassis='high';el.style.setProperty('--chassis-height',sizes.heights.high+'px');
             for(const key of ['height','min-height','max-height'])el.style.setProperty(key,sizes.heights.high+'px','important');
@@ -1908,9 +1931,29 @@ const Hardware = (() => {
         document.documentElement.classList.toggle('has-touch-input',navigator.maxTouchPoints>0);
         touchMoveModeButton.addEventListener('click',()=>{touchMovementMode=!touchMovementMode;touchMoveModeButton.setAttribute('aria-pressed',String(touchMovementMode));touchMoveModeButton.dataset.tooltip=touchMovementMode?'Modo Touch ativo · toque e arraste para mover imediatamente':'Modo Touch desligado · segure brevemente um equipamento antes de arrastá-lo';});
         const mobileControls=document.createElement('div');mobileControls.className='mobile-panel-controls';
-        mobileControls.innerHTML='<button type="button" data-mobile-panel="catalog" aria-label="Abrir painel de equipamentos" data-tooltip="Equipamentos" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg></button><button type="button" data-mobile-panel="properties" aria-label="Abrir painel de propriedades" data-tooltip="Propriedades" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="18" r="2"/></svg></button>';
+        mobileControls.innerHTML='<button type="button" data-mobile-panel="catalog" aria-label="Equipamentos" data-tooltip="Equipamentos" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg><small>Equip.</small></button><button type="button" data-mobile-panel="properties" aria-label="Propriedades" data-tooltip="Propriedades" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="18" r="2"/></svg><small>Ajustes</small></button><button type="button" data-mobile-action="center" aria-label="Centralizar" data-tooltip="Centralizar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v5m0 8v5M3 12h5m8 0h5"/><circle cx="12" cy="12" r="4"/></svg><small>Centro</small></button><button type="button" data-mobile-action="undo" aria-label="Desfazer" data-tooltip="Desfazer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h9a7 7 0 0 1 0 14h-2"/></svg><small>Desfazer</small></button><button type="button" data-mobile-action="settings" aria-label="Configurações" data-tooltip="Configurações"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3m14 0h3"/></svg><small>Ajustes</small></button>';
         document.getElementById('app-topbar').lastElementChild.prepend(mobileControls);
+        const mobileContextActions=document.createElement('div');mobileContextActions.className='mobile-context-actions';mobileContextActions.hidden=true;mobileContextActions.setAttribute('aria-label','Ações do equipamento selecionado');
+        mobileContextActions.innerHTML='<button type="button" data-context-action="power"><svg viewBox="0 0 24 24"><path d="M12 3v9"/><path d="M6.1 6.1a8 8 0 1 0 11.8 0"/></svg><span>Ligar</span></button><button type="button" data-context-action="play"><svg viewBox="0 0 24 24"><path d="m8 5 12 7-12 7z"/></svg><span>Reproduzir</span></button><button type="button" data-context-action="center"><svg viewBox="0 0 24 24"><path d="M12 2v6m0 8v6M2 12h6m8 0h6"/><circle cx="12" cy="12" r="4"/></svg><span>Centralizar</span></button><button type="button" data-context-action="remove"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5m4-5v5"/></svg><span>Remover</span></button>';
+        document.body.appendChild(mobileContextActions);
+        function syncMobileContextActions(){
+            const id=state.selectedDeviceId,dev=id&&state.devices[id];mobileContextActions.hidden=!compactTouchLayout.matches||!dev||document.body.classList.contains('mobile-catalog-open')||document.body.classList.contains('mobile-properties-open');
+            if(!dev)return;
+            const power=mobileContextActions.querySelector('[data-context-action="power"]'),play=mobileContextActions.querySelector('[data-context-action="play"]');
+            power.hidden=!dev.el.querySelector('.power-btn');power.querySelector('span').textContent=dev.powered===false?'Ligar':'Desligar';power.setAttribute('aria-label',dev.powered===false?'Ligar equipamento':'Desligar equipamento');
+            const playControl=dev.el.querySelector('[data-source-play],.at-startstop');play.hidden=!playControl||!SOURCE_TYPES.has(dev.type);play.querySelector('span').textContent=dev.state.playing?'Pausar':'Reproduzir';play.setAttribute('aria-label',dev.state.playing?'Pausar':'Reproduzir');play.dataset.target=dev.id;
+        }
+        mobileContextActions.addEventListener('click',event=>{
+            const button=event.target.closest('[data-context-action]');if(!button)return;const dev=state.devices[state.selectedDeviceId];if(!dev)return;
+            if(button.dataset.contextAction==='power'){dev.el.querySelector('.power-btn')?.click();setTimeout(syncMobileContextActions,0);}
+            if(button.dataset.contextAction==='play')dev.el.querySelector('[data-source-play],.at-startstop')?.click();
+            if(button.dataset.contextAction==='center')centerDeviceSet([dev]);
+            if(button.dataset.contextAction==='remove'){deleteDevice(dev);scheduleProjectSave();}
+        });
         const compactLayout=matchMedia('(max-width:1000px), (hover:none) and (pointer:coarse) and (max-width:1400px)');
+        compactLayout.addEventListener('change',syncMobileContextActions);
+        const compactTouchLayout=matchMedia('(max-width:700px), (hover:none) and (pointer:coarse)');
+        compactTouchLayout.addEventListener('change',syncMobileContextActions);
         function syncCompactViewport(){
             if(compactLayout.matches)document.body.style.setProperty('--compact-viewport-height',(window.visualViewport?.height||innerHeight)+'px');
             else document.body.style.removeProperty('--compact-viewport-height');
@@ -1920,22 +1963,37 @@ const Hardware = (() => {
         const mobileCatalogClose=document.createElement('button');mobileCatalogClose.type='button';mobileCatalogClose.className='mobile-catalog-close';mobileCatalogClose.textContent='Fechar equipamentos ×';equipmentCatalog.prepend(mobileCatalogClose);
         function syncMobilePanels(){
             const catalogOpen=compactLayout.matches&&document.body.classList.contains('mobile-catalog-open'),propertiesOpen=compactLayout.matches&&document.body.classList.contains('mobile-properties-open');
+            const inspector=document.getElementById('inspector');if(propertiesOpen&&!inspector.dataset.sheetLevel)inspector.dataset.sheetLevel='mid';
             equipmentCatalog.inert=compactLayout.matches?!catalogOpen:document.body.classList.contains('catalog-collapsed');document.getElementById('inspector').inert=compactLayout.matches?!propertiesOpen:document.body.classList.contains('inspector-collapsed');
             mobileBackdrop.hidden=!(catalogOpen||propertiesOpen);
             mobileControls.querySelector('[data-mobile-panel="catalog"]').setAttribute('aria-expanded',String(catalogOpen));mobileControls.querySelector('[data-mobile-panel="properties"]').setAttribute('aria-expanded',String(propertiesOpen));
+            syncMobileContextActions();
         }
         function closeMobilePanels(){document.body.classList.remove('mobile-catalog-open','mobile-properties-open');syncMobilePanels();}
         mobileBackdrop.addEventListener('click',()=>{const key=document.body.classList.contains('mobile-catalog-open')?'catalog':'properties';closeMobilePanels();mobileControls.querySelector(`[data-mobile-panel="${key}"]`).focus();});
         mobileCatalogClose.addEventListener('click',()=>{closeMobilePanels();mobileControls.querySelector('[data-mobile-panel="catalog"]').focus();});
         compactLayout.addEventListener('change',()=>{syncCompactViewport();if(!compactLayout.matches)closeMobilePanels();else syncMobilePanels();});
         mobileControls.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{
+            if(button.dataset.mobileAction==='center'){document.getElementById('center-devices')?.click();return;}
+            if(button.dataset.mobileAction==='undo'){document.getElementById('undo-movement')?.click();return;}
+            if(button.dataset.mobileAction==='settings'){document.querySelector('.app-settings>summary')?.click();return;}
             const className=button.dataset.mobilePanel==='catalog'?'mobile-catalog-open':'mobile-properties-open',open=document.body.classList.contains(className);
             closeMobilePanels();if(!open){document.querySelector('.app-settings')?.removeAttribute('open');document.body.classList.add(className);syncMobilePanels();(button.dataset.mobilePanel==='catalog'?mobileCatalogClose:mobileInspectorClose).focus({preventScroll:true});}
         }));
         canvas.addEventListener('pointerdown',()=>{stopViewMotion();closeMobilePanels();},{capture:true});
         const mobileInspectorClose=document.createElement('button');mobileInspectorClose.type='button';mobileInspectorClose.className='mobile-inspector-close';mobileInspectorClose.textContent='Ocultar propriedades →';mobileInspectorClose.setAttribute('aria-label','Ocultar menu da direita');
-        mobileInspectorClose.addEventListener('click',()=>{closeMobilePanels();mobileControls.querySelector('[data-mobile-panel="properties"]').focus();});
         document.getElementById('inspector').prepend(mobileInspectorClose);
+        mobileInspectorClose.addEventListener('click',()=>{
+            if(mobileInspectorClose.dataset.dragged==='true'){delete mobileInspectorClose.dataset.dragged;return;}
+            const panel=document.getElementById('inspector');
+            const level=panel.dataset.sheetLevel||'mid';
+            panel.dataset.sheetLevel=level==='mid'?'full':level==='full'?'peek':'mid';
+            mobileInspectorClose.setAttribute('aria-label',`Painel de propriedades: ${panel.dataset.sheetLevel}`);
+        });
+        mobileInspectorClose.textContent='⌃';mobileInspectorClose.setAttribute('aria-label','Expandir propriedades');
+        let sheetStartY=0;
+        mobileInspectorClose.addEventListener('pointerdown',event=>{sheetStartY=event.clientY;mobileInspectorClose.setPointerCapture?.(event.pointerId);});
+        mobileInspectorClose.addEventListener('pointerup',event=>{const delta=sheetStartY-event.clientY;if(Math.abs(delta)<18)return;mobileInspectorClose.dataset.dragged='true';const panel=document.getElementById('inspector');panel.dataset.sheetLevel=delta>0?'full':'peek';});
         mobileControls.querySelector('[data-mobile-panel="catalog"]').setAttribute('aria-controls','equipment-catalog');
         mobileControls.querySelector('[data-mobile-panel="properties"]').setAttribute('aria-controls','inspector');
         const sidebarConfig={catalog:{panel:equipmentCatalog,button:document.getElementById('catalog-sidebar-toggle'),pin:document.getElementById('catalog-sidebar-pin'),collapsed:'catalog-collapsed',name:'equipamentos'},properties:{panel:document.getElementById('inspector'),button:document.getElementById('inspector-sidebar-toggle'),pin:document.getElementById('inspector-sidebar-pin'),collapsed:'inspector-collapsed',name:'propriedades'}};
@@ -1990,6 +2048,10 @@ const Hardware = (() => {
 
         const touchHint=document.createElement('p');touchHint.className='touch-catalog-hint';touchHint.textContent='Toque no nome para adicionar. No canvas, toque em Mover para arrastar equipamentos sem interferir nos cabos; dois dedos movem a bancada e ajustam o zoom.';
         equipmentCatalog.querySelector(':scope > .p-4').appendChild(touchHint);
+        const mobileCategoryNav=document.createElement('nav');mobileCategoryNav.className='mobile-category-nav';mobileCategoryNav.setAttribute('aria-label','Categorias de equipamentos');
+        mobileCategoryNav.innerHTML='<button type="button" data-category-target="Fontes de áudio">Fontes</button><button type="button" data-category-target="Amplificadores">Amplificadores</button><button type="button" data-category-target="Caixas">Caixas</button><button type="button" data-category-target="Móveis">Móveis</button>';
+        equipmentCatalog.querySelector('.catalog-panel-header')?.appendChild(mobileCategoryNav);
+        mobileCategoryNav.addEventListener('click',event=>{const button=event.target.closest('[data-category-target]');if(!button)return;const title=button.dataset.categoryTarget,sections=[...equipmentCatalog.querySelectorAll('.flex-1.overflow-y-auto>.mb-6')],section=sections.find(candidate=>candidate.querySelector('h3')?.textContent.trim().startsWith(title));section?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});});
 
         function syncDeviceSelection() {
             Object.values(state.devices).forEach(dev => {
@@ -4112,6 +4174,7 @@ const Hardware = (() => {
                 dev.demoStartedAt=playing?state.audioCtx.currentTime:null;
             }
             dev.state.playing = !!playing;
+            syncMobileContextActions();
             dev.spotifyVinyl?.el.classList.toggle('is-playing',dev.state.playing);
             syncVinylNoise(dev);
             syncTapeHiss(dev);
@@ -4189,7 +4252,7 @@ const Hardware = (() => {
             benchMeter:'Medidor de bancada com LCD, barras VU L/R, espectro e correlação estéreo em tempo real.',
             benchMeterVintage:'Medidor vintage em madeira e metal, com ponteiros VU L/R calibrados, espectro e correlação estéreo.',
             cdPlayer: 'Lê CDs e envia áudio estéreo em nível de linha por RCA.',
-            audioInterface:'Captura a entrada de áudio escolhida no navegador e envia sinal de linha estéreo por RCA. Os ganhos e o indicador respondem ao sinal; 48 V é controlado na interface física.',
+            audioInterface:'Interface Scarlett Solo: captura a entrada escolhida no navegador, com dois ganhos, seleção INST, realce Air, saída e monitoramento direto simulados. 48 V continua controlado na interface física.',
             audioInterfaceEvo:'Interface compacta preta inspirada na EVO 4: captura entrada do computador, usa ganho por canal, Smartgain assistido e controle de saída.',
             audioInterfaceQuantum:'Interface preta inspirada na Fender Quantum LT 2: captura entrada do computador, oferece ganho, saída principal e monitoramento virtual para fones.',
             audioInterfaceVolt:'Interface inspirada na Universal Audio Volt 476P: captura até quatro canais do dispositivo escolhido, com Vintage e compressor 76 simulados por entrada.',
@@ -5676,7 +5739,7 @@ const Hardware = (() => {
                 el.innerHTML = `<div class="device-header"><span>${deviceName}</span></div><section class="stereo-power-face"><div class="stereo-power-inputs"><div class="stereo-power-pair">${port('rca-r','in','inR','RCA IN R')}${port('rca-l','in','inL','RCA IN L')}</div><span>RCA R/L IN</span>${port('p10','in','inStereo','P10 TRS IN · estéreo')}<span>P10 IN</span></div><div class="stereo-power-vent"></div><label class="stereo-power-gain"><button class="receiver-dial" data-power-channel="L" aria-label="Ganho A esquerdo"></button><span>GAIN A · L</span></label><div class="stereo-power-meters">${['L','R'].map(ch=>`<div data-meter="${ch}">${Array.from({length:8},(_,i)=>`<i style="--led-color:${i<2?'#dc4030':i===2?'#efb02e':'#35ce48'}"></i>`).join('')}</div>`).join('')}</div><label class="stereo-power-gain"><button class="receiver-dial" data-power-channel="R" aria-label="Ganho B direito"></button><span>GAIN B · R</span></label><div class="stereo-power-vent"></div><div class="stereo-power-outputs"><div class="stereo-power-pair">${port('wire','out','outL','SPEAKER OUT L','amp-speaker-out')}${port('wire','out','outR','SPEAKER OUT R','amp-speaker-out')}</div><span>CAIXAS L/R</span><div class="stereo-power-pair">${port('rca-l','out','lineL','LINE OUT RCA L')}${port('rca-r','out','lineR','LINE OUT RCA R')}</div><span>LINE OUT · RCA</span></div><div class="stereo-power-energy"><div data-power-slot><button class="power-btn"></button></div></div></section>`;
             }
             if(EXTRA_AUDIO_TYPES.has(type))el.innerHTML=extraDeviceMarkup(type);
-            const rackUnits = {signalGeneratorVintage:3,signalGenerator:3,headphoneAmp4:3,preamp:3,benchMeter:4,benchMeterVintage:4,rcaSwitchVintage:3,powerStereo:3,powerVintage:3,receiver:4,powerAmp:4,eqStudio:3,eqVintage:3,mixer:4.5,mixerVintage:4.5,crossover:3,crossoverVintage:3,cdPlayer:3,streamer:3,audioInterface:3,audioInterfaceEvo:3,audioInterfaceQuantum:3,audioInterfaceVolt:4.5,btReceiverA:3,btTransmitterPro:3,rcaSwitch:3,speakerSwitch:3,speakerSwitchVintage:3};
+            const rackUnits = {signalGeneratorVintage:3,signalGenerator:3,headphoneAmp4:3,preamp:3,benchMeter:4,benchMeterVintage:4,rcaSwitchVintage:3,powerStereo:3,powerVintage:3,receiver:4,powerAmp:4,eqStudio:3,eqVintage:3,mixer:4.5,mixerVintage:4.5,crossover:3,crossoverVintage:3,cdPlayer:3,streamer:3,audioInterface:3,audioInterfaceEvo:3,audioInterfaceQuantum:4,audioInterfaceVolt:4.5,btReceiverA:3,btTransmitterPro:3,rcaSwitch:3,speakerSwitch:3,speakerSwitchVintage:3};
             if (MATRIX_TYPES.has(type)) rackUnits[type] = 3;
             if (rackUnits[type]) {
                 el.classList.add('rack-device');
@@ -5710,11 +5773,12 @@ const Hardware = (() => {
             }
             if(CAPTURE_INTERFACE_TYPES.has(type)){
                 el.classList.add('audio-interface',type==='audioInterface'?'solo-interface':type==='audioInterfaceEvo'?'evo-interface':type==='audioInterfaceQuantum'?'quantum-interface':'volt-interface');
-                el.innerHTML=`<div class="device-header"><span>${deviceName}</span></div><section class="audio-interface-face"><div class="ai-brand"><strong>SOLO</strong><small>USB AUDIO INTERFACE</small></div><div class="ai-input"><div class="ai-jack" aria-hidden="true">◉</div><small>MIC · 1</small></div><div class="ai-gain"><button class="ai-gain-knob" data-ai-gain="L" type="button" aria-label="Ganho da entrada 1"></button><small>GAIN 1</small></div><div class="ai-input"><div class="ai-jack ai-instrument" aria-hidden="true">◉</div><small>INST · 2</small></div><div class="ai-gain"><button class="ai-gain-knob" data-ai-gain="R" type="button" aria-label="Ganho da entrada 2"></button><small>GAIN 2</small></div><div class="ai-actions"><button type="button" class="ai-capture" data-source-play aria-label="Iniciar captura do microfone" aria-pressed="false">● <span>CAPTURAR</span></button><span class="ai-phantom" title="Alimentação 48 V é controlada na interface física">48V</span><small>USB · COMPUTER</small></div><div class="ai-outputs"><span>LINE OUT · L/R</span><div class="port" data-type="rca-l" data-io="out" data-node="outL" data-signal="line" title="Saída de linha esquerda"></div><div class="port" data-type="rca-r" data-io="out" data-node="outR" data-signal="line" title="Saída de linha direita"></div></div></section>`;
+                if(type==='audioInterface')el.innerHTML=`<div class="device-header"><span>${deviceName}</span></div><section class="audio-interface-face solo-face"><div class="solo-input-gain"><label>1</label><button class="ai-gain-knob" data-ai-gain="L" type="button" aria-label="Ganho da entrada 1"></button><div class="ai-gain-ring"></div><div class="solo-combo" aria-hidden="true"><i></i></div></div><div class="solo-input-gain"><label>2</label><button class="ai-gain-knob" data-ai-gain="R" type="button" aria-label="Ganho da entrada 2"></button><div class="ai-gain-ring"></div><div class="solo-combo solo-instrument" aria-hidden="true"><i></i></div><button type="button" class="solo-mini-toggle" data-ai-inst aria-pressed="false" aria-label="Instrumento desligado">INST</button></div><div class="solo-divider"></div><div class="solo-output-control"><label>OUTPUT</label><button class="ai-gain-knob solo-output-knob" data-ai-output type="button" aria-label="Volume de saída"></button></div><button type="button" class="solo-direct" data-ai-direct aria-pressed="true" aria-label="Direct monitor ligado" title="Monitoramento direto">DIRECT</button><div class="solo-small-controls"><button type="button" class="solo-mini-toggle" data-ai-air aria-pressed="false" aria-label="Air desligado" title="Realce de presença Air">AIR</button></div><div class="solo-headphone"><small>PHONES</small><div class="solo-headphone-jack"><i></i><div class="port" data-type="p10" data-io="out" data-node="outPhone" data-signal="headphone" title="Saída de fones monitorada · P10"></div></div></div><div class="solo-line-outputs"><small>LINE OUT · L/R</small><div class="solo-rca-pair"><div class="port" data-type="p10" data-io="out" data-node="outL" data-signal="line" title="Saída balanceada esquerda · P10"></div><div class="port" data-type="p10" data-io="out" data-node="outR" data-signal="line" title="Saída balanceada direita · P10"></div></div></div><div class="solo-brand"><strong>Focusrite</strong><span>Scarlett Solo</span></div><div class="solo-usb-status"><span class="solo-usb-icon">⌁</span><button type="button" class="ai-capture" data-source-play aria-label="Iniciar captura do microfone" aria-pressed="false" title="Conectar entrada do computador"><i></i></button></div></section>`;
+                else el.innerHTML=`<div class="device-header"><span>${deviceName}</span></div><section class="audio-interface-face"><div class="ai-brand"><strong>SOLO</strong><small>USB AUDIO INTERFACE</small></div><div class="ai-input"><div class="ai-jack" aria-hidden="true">◉</div><small>MIC · 1</small></div><div class="ai-gain"><button class="ai-gain-knob" data-ai-gain="L" type="button" aria-label="Ganho da entrada 1"></button><small>GAIN 1</small></div><div class="ai-input"><div class="ai-jack ai-instrument" aria-hidden="true">◉</div><small>INST · 2</small></div><div class="ai-gain"><button class="ai-gain-knob" data-ai-gain="R" type="button" aria-label="Ganho da entrada 2"></button><small>GAIN 2</small></div><div class="ai-actions"><button type="button" class="ai-capture" data-source-play aria-label="Iniciar captura do microfone" aria-pressed="false">● <span>CAPTURAR</span></button><span class="ai-phantom" title="Alimentação 48 V é controlada na interface física">48V</span><small>USB · COMPUTER</small></div><div class="ai-outputs"><span>LINE OUT · L/R</span><div class="port" data-type="rca-l" data-io="out" data-node="outL" data-signal="line" title="Saída de linha esquerda"></div><div class="port" data-type="rca-r" data-io="out" data-node="outR" data-signal="line" title="Saída de linha direita"></div></div></section>`;
                 if(type==='audioInterfaceEvo'){el.classList.add('evo-interface');el.innerHTML=`<div class="device-header"><span>${deviceName}</span></div><section class="audio-interface-face evo-face"><div class="evo-brand"><strong>evo</strong><small>4 · USB AUDIO</small></div><div class="evo-inputs"><span>INPUT 1 · MIC</span><span>INPUT 2 · INST</span></div><div class="evo-select"><button type="button" data-evo-mode="L" aria-pressed="true">1</button><button type="button" data-evo-mode="R" aria-pressed="false">2</button><button type="button" data-evo-mode="monitor" aria-pressed="false">◖◗</button></div><div class="evo-dial"><button type="button" class="ai-gain-knob evo-main-knob" data-evo-dial aria-label="Ganho da entrada 1"></button><small data-evo-label>GAIN 1</small></div><div class="evo-side"><button type="button" data-evo-smart title="Ajustar ganho pela intensidade atual do sinal">SMARTGAIN</button><span title="48 V é controlado na interface física">48V</span><button type="button" class="ai-capture" data-source-play aria-label="Iniciar captura do microfone" aria-pressed="false">● REC</button></div><div class="ai-outputs"><span>OUT · L/R</span><div class="port" data-type="rca-l" data-io="out" data-node="outL" data-signal="line" title="Saída de linha esquerda"></div><div class="port" data-type="rca-r" data-io="out" data-node="outR" data-signal="line" title="Saída de linha direita"></div></div></section>`;}
                 if(type==='audioInterfaceQuantum'){
                     el.classList.add('quantum-interface');
-                    el.innerHTML=`<div class="device-header"><span>${deviceName}</span></div><section class="audio-interface-face quantum-face"><div class="quantum-brand"><strong>FENDER</strong><small>QUANTUM LT 2</small></div><div class="quantum-input"><div class="quantum-jack" aria-hidden="true"></div><small>INST · 1</small></div><div class="quantum-control"><button type="button" class="ai-gain-knob quantum-gain" data-ai-gain="R" aria-label="Ganho da entrada 2"></button><small>GAIN · 2</small></div><div class="quantum-control"><button type="button" class="ai-gain-knob quantum-main" data-quantum-main aria-label="Volume principal"></button><small>MAIN</small></div><div class="quantum-actions"><span class="quantum-phantom" title="48 V: acionamento somente na interface física">48V</span><button type="button" data-quantum-direct aria-pressed="false" title="Monitoramento virtual da entrada para a saída de fones">DIRECT</button><button type="button" class="ai-capture" data-source-play aria-label="Iniciar captura do microfone" aria-pressed="false">● USB</button></div><div class="quantum-control quantum-phones"><button type="button" class="ai-gain-knob quantum-phone-knob" data-quantum-phones aria-label="Volume de fones"></button><div class="port" data-type="p10" data-io="out" data-node="outPhone" data-signal="headphone" title="Saída de fones P10 · monitoramento virtual"></div><small>PHONES</small></div><div class="ai-outputs"><span>MAIN L/R</span><div class="port" data-type="rca-l" data-io="out" data-node="outL" data-signal="line" title="Saída principal esquerda"></div><div class="port" data-type="rca-r" data-io="out" data-node="outR" data-signal="line" title="Saída principal direita"></div></div></section>`;
+                    el.innerHTML=`<div class="device-header"><span>${deviceName}</span></div><section class="audio-interface-face quantum-face"><div class="quantum-brand"><strong>Fender</strong></div><div class="quantum-input"><span class="quantum-input-number">1</span><svg class="quantum-guitar-mark" viewBox="0 0 28 28" aria-hidden="true"><path d="m17 3 8-2-2 8-3-3-7 7a6 6 0 1 1-4-4l7-7-3-3Z"/><path d="m5 18 5 5M4 21l3 3"/></svg><div class="quantum-jack" aria-hidden="true"></div></div><div class="quantum-gain2"><span>2</span><button type="button" class="ai-gain-knob quantum-gain" data-ai-gain="R" aria-label="Ganho da entrada 2"></button><div class="quantum-clip"><i></i><small>CLIP</small></div></div><span class="quantum-phantom" title="48 V é acionado na interface física">48V</span><div class="quantum-main-control"><label>Main</label><button type="button" class="ai-gain-knob quantum-main" data-quantum-main aria-label="Volume principal"></button></div><div class="quantum-usb-status" title="Estado da captura USB"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v17m0-17 4 4m-4-4L8 6m4 13 5-5m-5 5-5-5m5 5 4 4v-4h-4m-4-9-4 4h4v-4"/></svg><i></i></div><button type="button" class="quantum-direct" data-quantum-direct aria-pressed="false" aria-label="Monitoramento direto desligado" title="Monitoramento virtual nos fones"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16 9a5 5 0 0 1 0 6m2-9a9 9 0 0 1 0 12"/></svg></button><div class="quantum-phone-control"><button type="button" class="ai-gain-knob quantum-phone-knob" data-quantum-phones aria-label="Volume de fones"></button><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13v-2a9 9 0 0 1 18 0v2M3 12h4v8H5a2 2 0 0 1-2-2Zm18 0h-4v8h2a2 2 0 0 0 2-2Z"/></svg><div class="port" data-type="p10" data-io="out" data-node="outPhone" data-signal="headphone" title="Saída de fones P10 · monitoramento virtual"></div></div><div class="quantum-rear-outputs"><small>MAIN OUT · L/R</small><div class="port" data-type="p10" data-io="out" data-node="outL" data-signal="line" title="Saída principal balanceada esquerda · P10"></div><div class="port" data-type="p10" data-io="out" data-node="outR" data-signal="line" title="Saída principal balanceada direita · P10"></div></div><div class="quantum-model">QUANTUM <strong>LT 2</strong></div></section>`;
                 }
                 if(type==='audioInterfaceVolt'){
                     el.classList.add('volt-interface');
@@ -5863,6 +5927,7 @@ const Hardware = (() => {
                 dev.powerNodes = [powerR, powerL];
                 dev.nodes.genR.connect(powerR);
                 dev.nodes.genL.connect(powerL);
+                if(type==='audioInterface'){dev.nodes.outPhone=state.audioCtx.createChannelMerger(2);powerL.connect(dev.nodes.outPhone,0,0);powerR.connect(dev.nodes.outPhone,0,1);}
                 if (TURNTABLE_TYPES.has(type)) {
                     // PHONO: nível baixo e curva RIAA invertida (sem equalização no resto do sistema). LINE: pré interno, sinal plano.
                     const stages = [[powerR, dev.nodes.outR], [powerL, dev.nodes.outL]].map(([src, dst]) => {
@@ -6203,14 +6268,28 @@ const Hardware = (() => {
             }
             if(CAPTURE_INTERFACE_TYPES.has(type)){
                 dev.state.micGainL=dev.state.micGainR=type==='audioInterfaceVolt'?1:.65;
+                if(type==='audioInterface'){dev.state.aiOutput=.8;dev.state.aiDirect=true;dev.state.aiInstrument=false;dev.state.aiAir=false;dev.aiAirFilters=['L','R'].map(()=>{const filter=state.audioCtx.createBiquadFilter();filter.type='highshelf';filter.frequency.value=6500;filter.gain.value=0;return filter;});dev.aiDirectDelays=['L','R'].map(()=>{const delay=state.audioCtx.createDelay(.1);delay.delayTime.value=.008;return delay;});}
                 dev.setMicGain=(channel,value)=>{
                     const gain=Math.max(0,Math.min(1,Number(value)||0));
                     dev.state['micGain'+channel]=gain;
-                    dev.nodes['gen'+channel].gain.setTargetAtTime(dev.state.playing?gain:0,state.audioCtx.currentTime,.02);
+                    const soloFactor=type==='audioInterface'?dev.state.aiOutput*(channel==='R'&&dev.state.aiInstrument?1.2:1):1;
+                    dev.nodes['gen'+channel].gain.setTargetAtTime(dev.state.playing?gain*soloFactor:0,state.audioCtx.currentTime,.02);
                     dev.el.querySelector(`[data-ai-gain="${channel}"]`)?.style.setProperty('--ai-angle',`${-135+gain*270}deg`);
+                    if(type==='audioInterfaceQuantum')dev.el.querySelector(`[data-ai-gain="${channel}"]`)?.style.setProperty('--knob-angle',`${-135+gain*270}deg`);
                     const slider=document.getElementById(`ai-gain-${channel}`);if(slider&&state.selectedDeviceId===dev.id)slider.value=gain;
                     if(type==='audioInterfaceEvo'&&dev.aiControlMode===channel)dev.el.querySelector('[data-evo-dial]')?.style.setProperty('--ai-angle',`${-135+gain*270}deg`);
                 };
+                if(type==='audioInterface'){
+                    dev.setAiOutput=value=>{dev.state.aiOutput=Math.max(0,Math.min(1,Number(value)||0));for(const channel of ['L','R'])dev.setMicGain(channel,dev.state['micGain'+channel]);};
+                    dev.setAiDirect=value=>{dev.state.aiDirect=!!value;const control=el.querySelector('[data-ai-direct]');control.setAttribute('aria-pressed',String(dev.state.aiDirect));control.setAttribute('aria-label',`Direct monitor ${dev.state.aiDirect?'ligado':'desligado'}`);dev.aiDirectDelays.forEach(delay=>delay.delayTime.setTargetAtTime(dev.state.aiDirect ? .008 : .045,state.audioCtx.currentTime,.02));};
+                    dev.setAiInstrument=value=>{dev.state.aiInstrument=!!value;const control=el.querySelector('[data-ai-inst]');control.setAttribute('aria-pressed',String(dev.state.aiInstrument));control.setAttribute('aria-label',`Instrumento ${dev.state.aiInstrument?'ligado':'desligado'}`);for(const channel of ['L','R'])dev.setMicGain(channel,dev.state['micGain'+channel]);};
+                    dev.setAiAir=value=>{dev.state.aiAir=!!value;const control=el.querySelector('[data-ai-air]');control.setAttribute('aria-pressed',String(dev.state.aiAir));control.setAttribute('aria-label',`Air ${dev.state.aiAir?'ligado':'desligado'}`);dev.aiAirFilters.forEach(filter=>filter.gain.setTargetAtTime(dev.state.aiAir?4:0,state.audioCtx.currentTime,.04));};
+                    const outputKnob=el.querySelector('[data-ai-output]');Hardware.bindKnob(outputKnob,{get:()=>dev.state.aiOutput,set:dev.setAiOutput,model:'faceted'});
+                    el.querySelector('[data-ai-direct]').addEventListener('click',()=>{dev.setAiDirect(!dev.state.aiDirect);scheduleProjectSave();});
+                    el.querySelector('[data-ai-inst]').addEventListener('click',()=>{dev.setAiInstrument(!dev.state.aiInstrument);scheduleProjectSave();});
+                    el.querySelector('[data-ai-air]').addEventListener('click',()=>{dev.setAiAir(!dev.state.aiAir);scheduleProjectSave();});
+                    dev.setAiDirect(dev.state.aiDirect);dev.setAiInstrument(dev.state.aiInstrument);dev.setAiAir(dev.state.aiAir);dev.setAiOutput(dev.state.aiOutput);
+                }
                 if(type==='audioInterfaceEvo'){
                     dev.state.monitorLevel=.8;dev.aiControlMode='L';
                     dev.setMonitorLevel=value=>{const level=Math.max(0,Math.min(1,Number(value)||0));dev.state.monitorLevel=level;for(const channel of ['L','R'])dev.nodes['out'+channel].gain.setTargetAtTime(level,state.audioCtx.currentTime,.02);if(dev.aiControlMode==='monitor')dev.el.querySelector('[data-evo-dial]').style.setProperty('--ai-angle',`${-135+level*270}deg`);const slider=document.getElementById('ai-monitor');if(slider&&state.selectedDeviceId===dev.id)slider.value=level;};
@@ -6232,17 +6311,17 @@ const Hardware = (() => {
                     dev.setQuantumMain=value=>{
                         const level=Math.max(0,Math.min(1,Number(value)||0));dev.state.quantumMain=level;
                         for(const channel of ['L','R'])dev.nodes['out'+channel].gain.setTargetAtTime(level,state.audioCtx.currentTime,.02);
-                        el.querySelector('[data-quantum-main]').style.setProperty('--ai-angle',`${-135+level*270}deg`);
+                        el.querySelector('[data-quantum-main]').style.setProperty('--ai-angle',`${-135+level*270}deg`);el.querySelector('[data-quantum-main]').style.setProperty('--knob-angle',`${-135+level*270}deg`);
                         const slider=document.getElementById('ai-quantum-main');if(slider&&state.selectedDeviceId===dev.id)slider.value=level;
                     };
                     dev.setQuantumPhones=value=>{
                         const level=Math.max(0,Math.min(1,Number(value)||0));dev.state.quantumPhones=level;
                         for(const node of [phoneL,phoneR])node.gain.setTargetAtTime(dev.state.quantumDirect?level:0,state.audioCtx.currentTime,.02);
-                        el.querySelector('[data-quantum-phones]').style.setProperty('--ai-angle',`${-135+level*270}deg`);
+                        el.querySelector('[data-quantum-phones]').style.setProperty('--ai-angle',`${-135+level*270}deg`);el.querySelector('[data-quantum-phones]').style.setProperty('--knob-angle',`${-135+level*270}deg`);
                         const slider=document.getElementById('ai-quantum-phones');if(slider&&state.selectedDeviceId===dev.id)slider.value=level;
                     };
                     dev.setQuantumDirect=value=>{
-                        dev.state.quantumDirect=!!value;el.querySelector('[data-quantum-direct]').setAttribute('aria-pressed',String(dev.state.quantumDirect));
+                        dev.state.quantumDirect=!!value;el.querySelector('[data-quantum-direct]').setAttribute('aria-pressed',String(dev.state.quantumDirect));el.querySelector('[data-quantum-direct]').setAttribute('aria-label',`Monitoramento direto ${dev.state.quantumDirect?'ligado':'desligado'}`);
                         dev.setQuantumPhones(dev.state.quantumPhones);
                         const button=document.getElementById('ai-quantum-direct');if(button&&state.selectedDeviceId===dev.id){button.setAttribute('aria-pressed',String(dev.state.quantumDirect));button.textContent=`MONITORAMENTO VIRTUAL · ${dev.state.quantumDirect?'LIGADO':'DESLIGADO'}`;}
                     };
@@ -6363,6 +6442,11 @@ const Hardware = (() => {
                             dev.voltInputChannels=channels;
                             dev.voltInputs.forEach(({input},index)=>{if(index<channels)dev.micSplitter.connect(input,index);});
                             dev.voltMonoBridge.gain.setTargetAtTime(channels===1&&!dev.state.voltMono?1:0,state.audioCtx.currentTime,.02);
+                        }else if(type==='audioInterface'){
+                            dev.micSplitter.connect(dev.aiAirFilters[0],0);
+                            dev.aiAirFilters[0].connect(dev.aiDirectDelays[0]);dev.aiDirectDelays[0].connect(dev.nodes.genL);
+                            dev.micSplitter.connect(dev.aiAirFilters[1],channels===1?0:1);
+                            dev.aiAirFilters[1].connect(dev.aiDirectDelays[1]);dev.aiDirectDelays[1].connect(dev.nodes.genR);
                         }else{
                             dev.micSplitter.connect(dev.nodes.genL,0);
                             dev.micSplitter.connect(dev.nodes.genR,channels===1?0:1);
@@ -6479,6 +6563,7 @@ const Hardware = (() => {
                     propertyToggle.classList.toggle('is-on', dev.powered);
                 }
             }
+            syncMobileContextActions();
             dev.refreshTurntable?.();
             refreshCdDisplay(dev);
             animateDevicePower(dev);
@@ -7215,6 +7300,7 @@ const Hardware = (() => {
         function deleteDevice(dev) {
             if (!dev || !state.devices[dev.id]) return;
             dev.stopMicCapture?.(false);
+            dev.aiAirFilters?.forEach(node=>{try{node.disconnect();}catch{}});dev.aiDirectDelays?.forEach(node=>{try{node.disconnect();}catch{}});
             if(dev.spotifyVinyl){if(spotifyPlayingTurntable===dev.id){spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});}dev.spotifyVinyl.turntableId=null;dev.spotifyVinyl.el.classList.remove('is-on-platter');}
             dev.disposeCoverflow?.();
             dev.disposeLinear?.();
@@ -7581,6 +7667,7 @@ const Hardware = (() => {
             if (!preserveSelection) state.selectedDeviceIds = new Set(id ? [id] : []);
             state.selectedDeviceId = id;
             syncDeviceSelection();
+            syncMobileContextActions();
             if(!id) {
                 document.getElementById('inspector-title').textContent='Selecione um equipamento';
                 inspectorEmpty.classList.remove('hidden'); inspectorContent.classList.add('hidden');
@@ -7721,7 +7808,7 @@ const Hardware = (() => {
 
             if(CAPTURE_INTERFACE_TYPES.has(dev.type)){
                 const voltControls=dev.type==='audioInterfaceVolt'?`<div class="volt-inspector-channels">${[0,1,2,3].map(index=>`<div><strong>ENTRADA ${index+1}</strong><label>Ganho<input id="ai-volt-gain-${index}" type="range" min="0" max="1" step=".01" value="${dev.state.voltGains[index]}"></label><button type="button" id="ai-volt-vintage-${index}" aria-pressed="${dev.state.voltVintage[index]}">VINTAGE</button><button type="button" id="ai-volt-compressor-${index}">76 · ${['DESLIGADO','VOCAL','GUITARRA','RÁPIDO'][dev.state.voltCompressor[index]]}</button></div>`).join('')}</div><label>Entradas monitoradas<select id="ai-volt-source"><option value="12" ${dev.state.voltSource==='12'?'selected':''}>1 / 2</option><option value="34" ${dev.state.voltSource==='34'?'selected':''}>3 / 4</option><option value="all" ${dev.state.voltSource==='all'?'selected':''}>1 – 4</option></select></label><button id="ai-volt-mono" class="tt-insp-btn" type="button" aria-pressed="${dev.state.voltMono}">MONO · CENTRALIZAR ENTRADAS</button><label>Saída principal<input id="ai-volt-main" type="range" min="0" max="1" step=".01" value="${dev.state.voltMain}"></label>${[0,1].map(index=>`<label>Fones ${index+1}<input id="ai-volt-phone-${index}" type="range" min="0" max="1" step=".01" value="${dev.state.voltPhones[index]}"></label>`).join('')}`:'';
-                html+=`<section class="ai-inspector"><h3>Entrada do computador</h3><label>Dispositivo de captura<select id="ai-input-device"><option value="">Entrada padrão do sistema</option></select></label><button id="ai-capture-toggle" class="tt-insp-btn" type="button">${dev.state.playing?'PARAR CAPTURA':'INICIAR CAPTURA'}</button><p role="status" id="ai-capture-status">${dev.micMessage||'Selecione uma entrada e permita o acesso ao microfone.'}</p>${dev.type==='audioInterfaceVolt'?voltControls:`<label>Ganho 1<input id="ai-gain-L" type="range" min="0" max="1" step=".01" value="${dev.state.micGainL}"></label><label>Ganho 2<input id="ai-gain-R" type="range" min="0" max="1" step=".01" value="${dev.state.micGainR}"></label>`}${dev.type==='audioInterfaceEvo'?`<label>Monitor<input id="ai-monitor" type="range" min="0" max="1" step=".01" value="${dev.state.monitorLevel}"></label>`:''}${dev.type==='audioInterfaceQuantum'?`<label>Saída principal<input id="ai-quantum-main" type="range" min="0" max="1" step=".01" value="${dev.state.quantumMain}"></label><label>Fones virtuais<input id="ai-quantum-phones" type="range" min="0" max="1" step=".01" value="${dev.state.quantumPhones}"></label><button id="ai-quantum-direct" class="tt-insp-btn" type="button" aria-pressed="${dev.state.quantumDirect}">MONITORAMENTO VIRTUAL · ${dev.state.quantumDirect?'LIGADO':'DESLIGADO'}</button>`:''}<small>48 V e seleção de instrumento são controlados na interface física. Use fones para evitar realimentação.</small></section>`;
+                html+=`<section class="ai-inspector"><h3>Entrada do computador</h3><label>Dispositivo de captura<select id="ai-input-device"><option value="">Entrada padrão do sistema</option></select></label><button id="ai-capture-toggle" class="tt-insp-btn" type="button">${dev.state.playing?'PARAR CAPTURA':'INICIAR CAPTURA'}</button><p role="status" id="ai-capture-status">${dev.micMessage||'Selecione uma entrada e permita o acesso ao microfone.'}</p>${dev.type==='audioInterfaceVolt'?voltControls:`<label>Ganho 1<input id="ai-gain-L" type="range" min="0" max="1" step=".01" value="${dev.state.micGainL}"></label><label>Ganho 2<input id="ai-gain-R" type="range" min="0" max="1" step=".01" value="${dev.state.micGainR}"></label>`}${dev.type==='audioInterfaceEvo'?`<label>Monitor<input id="ai-monitor" type="range" min="0" max="1" step=".01" value="${dev.state.monitorLevel}"></label>`:''}${dev.type==='audioInterfaceQuantum'?`<label>Saída principal<input id="ai-quantum-main" type="range" min="0" max="1" step=".01" value="${dev.state.quantumMain}"></label><label>Fones virtuais<input id="ai-quantum-phones" type="range" min="0" max="1" step=".01" value="${dev.state.quantumPhones}"></label><button id="ai-quantum-direct" class="tt-insp-btn" type="button" aria-pressed="${dev.state.quantumDirect}">MONITORAMENTO VIRTUAL · ${dev.state.quantumDirect?'LIGADO':'DESLIGADO'}</button>`:''}<small>${dev.type==='audioInterface'?'48 V é controlado na interface física. INST altera a sensibilidade da entrada 2, AIR realça a presença e DIRECT alterna a latência simulada.':'48 V e seleção de instrumento são controlados na interface física.'} Use fones para evitar realimentação.</small></section>`;
             }
             if (SOURCE_TYPES.has(dev.type) && !TURNTABLE_TYPES.has(dev.type)&&!CAPTURE_INTERFACE_TYPES.has(dev.type)) html += `<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Reprodução</span><button id="source-inspector-play" type="button" class="tt-insp-btn ${dev.state.playing ? 'is-on' : ''}" aria-pressed="${!!dev.state.playing}">REPRODUZIR / PAUSAR</button></div>`;
             if (SOURCE_TYPES.has(dev.type)&&!SIGNAL_GENERATOR_TYPES.has(dev.type)&&!CAPTURE_INTERFACE_TYPES.has(dev.type)&&!(TURNTABLE_TYPES.has(dev.type)&&dev.spotifyVinyl)) html += `<div class="flex flex-col gap-2 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Música própria</span><button id="source-load-audio" type="button" class="tt-insp-btn">CARREGAR ÁUDIO</button><input id="source-audio-file" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac" hidden><div class="source-file-row"><p id="source-file-name" class="text-xs text-gray-300 break-words"></p><button id="source-remove-audio" type="button" aria-label="Remover arquivo de áudio" title="Remover arquivo" ${dev.audioBuffer ? '' : 'hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path class="source-trash-lid" d="M4 7h16M9 7V5h6v2"/><path class="source-trash-bin" d="M6.5 9 7.5 20h9L17.5 9M10 11v6m4-6v6"/></svg></button></div><p id="source-file-message" class="text-xs text-gray-400"></p></div>`;
@@ -9157,6 +9244,7 @@ const Hardware = (() => {
             Object.assign(dev.state,clean);dev.state.playing=false;
             if(CAPTURE_INTERFACE_TYPES.has(dev.type)){
                 for(const channel of ['L','R'])dev.setMicGain(channel,dev.state['micGain'+channel]);
+                if(dev.type==='audioInterface'){dev.setAiDirect(dev.state.aiDirect);dev.setAiInstrument(dev.state.aiInstrument);dev.setAiAir(dev.state.aiAir);dev.setAiOutput(dev.state.aiOutput);}
                 dev.setMonitorLevel?.(dev.state.monitorLevel);
                 dev.setQuantumMain?.(dev.state.quantumMain);dev.setQuantumDirect?.(dev.state.quantumDirect);dev.setQuantumPhones?.(dev.state.quantumPhones);
                 if(dev.type==='audioInterfaceVolt'){
