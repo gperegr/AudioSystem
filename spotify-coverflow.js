@@ -17,6 +17,7 @@ const SpotifyCoverflow=(()=>{
     const clientId=DEFAULT_CLIENT_ID;
     let sdkPromise=null,player=null,deviceId=null,playback=null,playbackUpdatedAt=0,trackRepeat=false,beforeRedirect=()=>{},refreshPromise=null,inspector=null;
     const extracted=new Set();
+    const trackLists=new Map();
     const tokenData=()=>{try{return JSON.parse(sessionStorage.getItem(TOKEN_KEY)||'null');}catch{return null;}};
     const base64=bytes=>btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
     const random=()=>base64(crypto.getRandomValues(new Uint8Array(48)));
@@ -49,7 +50,7 @@ const SpotifyCoverflow=(()=>{
         await beforeRedirect();
         location.assign('https://accounts.spotify.com/authorize?'+new URLSearchParams({response_type:'code',client_id:clientId,scope:SCOPES,redirect_uri:REDIRECT,code_challenge_method:'S256',code_challenge:challenge,state}));
     }
-    function logout(){disconnect();sessionStorage.removeItem(TOKEN_KEY);for(const mode of ['albums','playlists']){collections[mode]=[];loadedCollections[mode]=false;loadPromises[mode]=null;collectionStatus[mode]='';}setStatus('Conta desconectada.');}
+    function logout(){disconnect();sessionStorage.removeItem(TOKEN_KEY);trackLists.clear();for(const mode of ['albums','playlists']){collections[mode]=[];loadedCollections[mode]=false;loadPromises[mode]=null;collectionStatus[mode]='';}setStatus('Conta desconectada.');}
     async function spotifyFetch(url,options={}){
         for(let attempt=0;attempt<4;attempt++){
             const token=await getToken();if(!token)throw new Error('Conecte ao Spotify novamente.');
@@ -103,22 +104,45 @@ const SpotifyCoverflow=(()=>{
         catch(error){setStatus(error.message||'Não foi possível iniciar o player.');}
     }
     function disconnect(){if(player){player.pause().catch(()=>{});player.disconnect();}player=null;deviceId=null;playback=null;broadcast();}
-    async function playAlbum(album){
+    async function loadTracks(uri){
+        if(!/^spotify:(album|playlist):[A-Za-z0-9]+$/.test(uri))throw new Error('Disco inválido.');
+        if(trackLists.has(uri))return trackLists.get(uri);
+        const loading=(async()=>{
+            const [,kind,id]=uri.split(':'),tracks=[];
+            let next=`https://api.spotify.com/v1/${kind==='album'?'albums':'playlists'}/${id}/tracks?limit=50`;
+            while(next){
+                const response=await spotifyFetch(next);
+                if(!response.ok)throw new Error(`Não foi possível carregar as faixas (${response.status}).`);
+                const page=await response.json();
+                for(const entry of page.items||[]){const track=kind==='album'?entry:entry.track;tracks.push(track?.uri?{uri:track.uri,name:track.name||'Faixa sem título',duration:track.duration_ms||0,number:tracks.length+1}:null);}
+                next=page.next;
+            }
+            return tracks;
+        })();
+        trackLists.set(uri,loading);
+        try{return await loading;}catch(error){trackLists.delete(uri);throw error;}
+    }
+    async function playAlbum(album,trackIndex=null){
         try{
             if(!player||!deviceId){await ensurePlayer();for(let attempt=0;attempt<40&&!deviceId;attempt++)await new Promise(resolve=>setTimeout(resolve,100));if(!deviceId)throw new Error('O player ainda está conectando. Tente novamente.');}
             await player.activateElement();
             await player.setVolume(0);
-            const response=await spotifyFetch(`https://api.spotify.com/v1/me/player/play?device_id=${encodeURIComponent(deviceId)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({context_uri:album.uri})});
+            const response=await spotifyFetch(`https://api.spotify.com/v1/me/player/play?device_id=${encodeURIComponent(deviceId)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({context_uri:album.uri,...(Number.isInteger(trackIndex)?{offset:{position:trackIndex}}:{})})});
             if(response.status===403)throw new Error('Reprodução exige Spotify Premium.');
             if(!response.ok&&response.status!==204)throw new Error(`Não foi possível tocar o álbum (${response.status}).`);
         }catch(error){setStatus(error.message||'Não foi possível iniciar a reprodução.');throw error;}
+    }
+    async function selectTrack(album,index){
+        if(!deviceId)throw new Error('O player do Spotify não está conectado.');
+        const response=await spotifyFetch(`https://api.spotify.com/v1/me/player/play?device_id=${encodeURIComponent(deviceId)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({context_uri:album.uri,offset:{position:index}})});
+        if(!response.ok&&response.status!==204)throw new Error(`Não foi possível tocar a faixa (${response.status}).`);
     }
     async function pauseAlbum(){if(player)await player.pause();}
     async function setPlaybackVolume(value){if(player)await player.setVolume(Math.max(0,Math.min(1,value)));}
     function getPlaybackState(){
         const track=playback?.track_window?.current_track,duration=track?.duration_ms||0;
         const position=Math.min(duration,(playback?.position||0)+(playback&&!playback.paused?Date.now()-playbackUpdatedAt:0));
-        return {connected:!!deviceId,track:track?.name||'',duration:duration/1000,position:position/1000,repeat:trackRepeat,context:playback?.context?.uri||''};
+        return {connected:!!deviceId,track:track?.name||'',trackUri:track?.uri||'',duration:duration/1000,position:position/1000,repeat:trackRepeat,context:playback?.context?.uri||''};
     }
     async function seekTo(seconds){if(!player||!playback)return;await player.seek(Math.max(0,Math.min(playback.track_window?.current_track?.duration_ms||0,Math.round(seconds*1000))));}
     async function setTrackRepeat(enabled){
@@ -281,5 +305,5 @@ const SpotifyCoverflow=(()=>{
         }
         if(tokenData()){status='';await loadCollection('albums');}
     }
-    return {mount,inspectorHtml,bindInspector,initialize,login,logout,playAlbum,pauseAlbum,setPlaybackVolume,getPlaybackState,seekTo,setTrackRepeat,markExtracted,setBeforeRedirect(callback){beforeRedirect=callback;}};
+    return {mount,inspectorHtml,bindInspector,initialize,login,logout,playAlbum,loadTracks,selectTrack,pauseAlbum,setPlaybackVolume,getPlaybackState,seekTo,setTrackRepeat,markExtracted,setBeforeRedirect(callback){beforeRedirect=callback;}};
 })();

@@ -3584,6 +3584,45 @@ const Hardware = (() => {
             const repeat=spotify?playback.repeat:!!dev.state.repeat,disabled=spotify&&(!playback.connected||!active||!duration)?'disabled':'';
             return `<div class="audio-transport"><label for="source-progress">Transporte da música</label>${spotify?'<span id="source-track-title" class="spotify-track-title">Aguardando faixa do Spotify</span>':''}<div class="transport-time"><span id="source-position">${formatAudioTime(position)}</span><span id="source-duration">${formatAudioTime(duration)}</span></div><input id="source-progress" type="range" min="0" max="${Math.max(.1,duration)}" step="0.1" value="${position}" aria-label="Posição da faixa" ${disabled}><div class="transport-buttons"><button class="tt-insp-btn" id="source-rewind" type="button" title="Retroceder 10 segundos" aria-label="Retroceder 10 segundos" ${disabled}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8V4m0 4h4M5.4 8a8 8 0 1 1-1 8"/><text x="12" y="16" text-anchor="middle">10</text></svg></button><button class="tt-insp-btn" id="source-forward" type="button" title="Avançar 10 segundos" aria-label="Avançar 10 segundos" ${disabled}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 8V4m0 4h-4M18.6 8a8 8 0 1 0 1 8"/><text x="12" y="16" text-anchor="middle">10</text></svg></button><button class="tt-insp-btn ${repeat?'is-on':''}" id="source-repeat" type="button" title="Repetir faixa" aria-label="Repetir faixa" aria-pressed="${repeat}" ${disabled}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V7a3 3 0 0 1 3-3h11l-2.5-2.5M18 4l-2.5 2.5M20 15v2a3 3 0 0 1-3 3H6l2.5 2.5M6 20l2.5-2.5"/></svg></button></div></div>`;
         }
+        function spotifyTrackInspectorHtml(){
+            return '<section class="spotify-track-panel" aria-label="Faixas do disco"><h3>Faixas do disco</h3><span class="spotify-track-album"></span><div class="spotify-track-list" role="list"><p role="status">Carregando faixas…</p></div></section>';
+        }
+        async function bindSpotifyTrackInspector(dev){
+            const panel=document.querySelector('#inspector-content .spotify-track-panel');
+            if(!panel||!dev.spotifyVinyl)return;
+            const vinyl=dev.spotifyVinyl,uri=vinyl.uri,list=panel.querySelector('.spotify-track-list');
+            panel.querySelector('.spotify-track-album').textContent=vinyl.name;
+            try{
+                const tracks=await SpotifyCoverflow.loadTracks(uri);
+                if(!panel.isConnected||dev.spotifyVinyl?.uri!==uri)return;
+                list.replaceChildren();
+                tracks.forEach((track,index)=>{
+                    if(!track)return;
+                    const button=document.createElement('button');button.type='button';button.className='spotify-track-item';button.dataset.index=index;button.dataset.uri=track.uri;
+                    const number=document.createElement('span');number.className='spotify-track-number';number.textContent=String(track.number).padStart(2,'0');
+                    const title=document.createElement('span');title.className='spotify-track-name';title.textContent=track.name;
+                    const time=document.createElement('time');time.textContent=formatAudioTime(track.duration/1000);
+                    button.append(number,title,time);list.append(button);
+                });
+                if(!list.children.length)list.textContent='Nenhuma faixa disponível neste disco.';
+                list.addEventListener('click',async event=>{
+                    const button=event.target.closest('.spotify-track-item');if(!button||dev.spotifyVinyl?.uri!==uri)return;
+                    if(!dev.powered){spotifyVinylNotice('Ligue o toca-discos para reproduzir a faixa.');return;}
+                    if(spotifyPlayingTurntable&&spotifyPlayingTurntable!==dev.id){spotifyVinylNotice('Pare o outro toca-discos do Spotify antes de reproduzir este.');return;}
+                    const index=Number(button.dataset.index);
+                    try{if(dev.state.playing)await SpotifyCoverflow.selectTrack(vinyl,index);else await setSourcePlaying(dev,true,false,index);}
+                    catch(error){spotifyVinylNotice(error.message||'Não foi possível tocar a faixa.');}
+                });
+                updateSpotifyTrackSelection(dev);
+            }catch(error){if(panel.isConnected)list.textContent=error.message||'Não foi possível carregar as faixas.';}
+        }
+        function updateSpotifyTrackSelection(dev){
+            const panel=document.querySelector('#inspector-content .spotify-track-panel');if(!panel||!dev.spotifyVinyl)return;
+            const playback=SpotifyCoverflow.getPlaybackState(),current=playback.context===dev.spotifyVinyl.uri?playback.trackUri:'';
+            if(panel.dataset.currentTrack===current)return;
+            panel.dataset.currentTrack=current;
+            panel.querySelectorAll('.spotify-track-item').forEach(button=>{const active=!!current&&button.dataset.uri===current;button.classList.toggle('is-current',active);button.setAttribute('aria-current',active?'true':'false');});
+        }
         function bindTransportInspector(dev) {
             if(dev.spotifyVinyl){
                 const seek=seconds=>SpotifyCoverflow.seekTo(seconds).catch(error=>spotifyVinylNotice(error.message||'Não foi possível avançar a faixa.'));
@@ -3851,6 +3890,7 @@ const Hardware = (() => {
                 for(const id of ['source-rewind','source-forward','source-repeat'])document.getElementById(id).disabled=!ready;
                 document.getElementById('source-repeat').classList.toggle('is-on',playback.repeat);
                 document.getElementById('source-repeat').setAttribute('aria-pressed',String(playback.repeat));
+                updateSpotifyTrackSelection(selected);
             }else if(selected?.audioBuffer){const progress=document.getElementById('source-progress'),label=document.getElementById('source-position');const position=sourcePosition(selected);if(progress&&document.activeElement!==progress)progress.value=position;if(label)label.textContent=formatAudioTime(position);}
         }
 
@@ -4021,9 +4061,9 @@ const Hardware = (() => {
             scheduleCrackle();
         }
 
-        async function setSourcePlaying(dev, playing, mechanism=false) {
+        async function setSourcePlaying(dev, playing, mechanism=false, trackIndex=null) {
             if(dev.type==='streamIntegrated'&&playing&&dev.state.streamInput!=='library')dev.selectStreamInput('library');
-            if(dev.linearSetPlaying&&!mechanism)return dev.linearSetPlaying(playing);
+            if(dev.linearSetPlaying&&!mechanism){if(playing&&Number.isInteger(trackIndex))dev.pendingSpotifyTrack=trackIndex;return dev.linearSetPlaying(playing);}
             if(dev.state.damage&&playing)return;
             if(playing&&dev.type==='cdPlayer')dev.setTrayOpen?.(false);
             if (!SOURCE_TYPES.has(dev.type)) return;
@@ -4049,7 +4089,8 @@ const Hardware = (() => {
             if(dev.spotifyVinyl){
                 if(playing){
                     if(spotifyPlayingTurntable&&spotifyPlayingTurntable!==dev.id){spotifyVinylNotice('Pare o outro toca-discos do Spotify antes de reproduzir este.');return;}
-                    spotifyVolume=0;try{await SpotifyCoverflow.setPlaybackVolume(0);await SpotifyCoverflow.playAlbum(dev.spotifyVinyl);}catch{return;}
+                    spotifyVolume=0;try{await SpotifyCoverflow.setPlaybackVolume(0);await SpotifyCoverflow.playAlbum(dev.spotifyVinyl,Number.isInteger(trackIndex)?trackIndex:dev.pendingSpotifyTrack);}catch{return;}
+                    dev.pendingSpotifyTrack=null;
                     spotifyPlayingTurntable=dev.id;
                 }else if(spotifyPlayingTurntable===dev.id){
                     spotifyPlayingTurntable=null;spotifyVolume=0;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});
@@ -7464,6 +7505,7 @@ const Hardware = (() => {
             if (SOURCE_TYPES.has(dev.type)&&!SIGNAL_GENERATOR_TYPES.has(dev.type)) html += `<div class="flex flex-col gap-2 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Música própria</span><button id="source-load-audio" type="button" class="tt-insp-btn">CARREGAR ÁUDIO</button><input id="source-audio-file" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac" hidden><div class="source-file-row"><p id="source-file-name" class="text-xs text-gray-300 break-words"></p><button id="source-remove-audio" type="button" aria-label="Remover arquivo de áudio" title="Remover arquivo" ${dev.audioBuffer ? '' : 'hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path class="source-trash-lid" d="M4 7h16M9 7V5h6v2"/><path class="source-trash-bin" d="M6.5 9 7.5 20h9L17.5 9M10 11v6m4-6v6"/></svg></button></div><p id="source-file-message" class="text-xs text-gray-400"></p></div>`;
             if (dev.listeningProfile) html += `<section class="sonic-signature-panel"><h3>Assinatura sonora</h3>${listeningCurveHtml(dev)}</section>`;
             if(RADIO_RECEIVERS.has(dev.type))html+=radioInspectorHtml(dev);
+            if(dev.spotifyVinyl)html+=spotifyTrackInspectorHtml();
             if ((dev.spotifyVinyl||dev.audioBuffer)&&!RADIO_RECEIVERS.has(dev.type)) html += transportInspectorHtml(dev);
             if (EQ_TYPES.has(dev.type) || CROSSOVER_TYPES.has(dev.type) || BENCH_METER_TYPES.has(dev.type)) html += spectrumInspectorHtml(dev);
             if(hasRestorableSettings(dev))html += '<div class="flex flex-col gap-2 border-t border-gray-700 pt-4"><button id="restore-device-settings" type="button" class="tt-insp-btn w-full">RESTAURAR CONFIGURAÇÕES</button><p id="restore-settings-status" role="status" class="text-xs text-gray-400"></p></div>';
@@ -7504,6 +7546,7 @@ const Hardware = (() => {
             }
             if(RADIO_RECEIVERS.has(dev.type))bindRadioInspector(dev);
             if ((dev.spotifyVinyl||dev.audioBuffer)&&!RADIO_RECEIVERS.has(dev.type)) bindTransportInspector(dev);
+            if(dev.spotifyVinyl)bindSpotifyTrackInspector(dev);
             if(SIGNAL_GENERATOR_TYPES.has(dev.type))bindSignalInspector(dev);
             if (SOURCE_TYPES.has(dev.type)&&!SIGNAL_GENERATOR_TYPES.has(dev.type)) {
                 document.getElementById('source-file-name').textContent = dev.fileName || 'Nenhum arquivo carregado · som de demonstração';

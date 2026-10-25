@@ -1792,6 +1792,17 @@
         .interface-box .interface-ports {margin:0;min-height:0;}
         .interface-box .interface-ports>div {gap:6px;}
         .audio-transport {display:flex;flex-direction:column;gap:10px;border-top:1px solid #374151;padding-top:16px;color:#d1d5db;font:500 12px/1.4 "Inter",sans-serif;}
+        .spotify-track-panel {display:flex;flex-direction:column;gap:7px;padding-top:16px;border-top:1px solid #374151;color:#d1d5db;font:500 12px/1.4 "Inter",sans-serif;min-width:0;}
+        .spotify-track-panel h3 {font-size:14px;font-weight:600;}
+        .spotify-track-album {color:#9ca3af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .spotify-track-list {max-height:270px;overflow-y:auto;overscroll-behavior:contain;border:1px solid #374151;border-radius:8px;background:#151b22;}
+        .spotify-track-list>p {padding:12px;color:#9ca3af;}
+        .spotify-track-item {display:grid;grid-template-columns:25px minmax(0,1fr) auto;align-items:center;gap:6px;width:100%;padding:8px;text-align:left;border-bottom:1px solid #2b3642;color:#cbd5e1;font:500 11px/1.35 "Inter",sans-serif;}
+        .spotify-track-item:last-child {border-bottom:0;}
+        .spotify-track-item:hover,.spotify-track-item:focus-visible {background:#293b4a;color:#fff;outline:none;}
+        .spotify-track-item.is-current {background:#254258;color:#b9e4f6;}
+        .spotify-track-number,.spotify-track-item time {color:#91a4b3;font-variant-numeric:tabular-nums;}
+        .spotify-track-name {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
         .transport-time {display:flex;justify-content:space-between;color:#9ca3af;font:500 11px "Inter",sans-serif;}.transport-buttons {display:flex;gap:5px;}.transport-buttons button {flex:1;padding:8px 5px;font-size:9px;}
         .spectrum-panel {display:flex;flex-direction:column;gap:10px;padding-top:16px;border-top:1px solid #374151;color:#d1d5db;font:500 12px/1.5 "Inter",sans-serif;}
         .spectrum-panel h3 {font-size:14px;font-weight:600;}.spectrum-selectors {display:flex;gap:8px;}.spectrum-selectors label {flex:1;min-width:0;font-size:11px;color:#9ca3af;}.spectrum-selectors select {display:block;width:100%;margin-top:5px;padding:7px 5px;border:1px solid #4b5563;border-radius:4px;background:#22282e;color:#e5e7eb;font-size:11px;}
