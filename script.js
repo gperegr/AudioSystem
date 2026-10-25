@@ -540,7 +540,7 @@ const Hardware = (() => {
             const mark=document.createElement('span');mark.className='hw-neutral-mark';mark.setAttribute('aria-hidden','true');
             mark.style.rotate=(-135+(0-control.min)/(control.max-control.min)*270)+'deg';el.appendChild(mark);
         }
-        if(model==='inputDialSmall'||model==='outputDial'){
+        if(model==='inputDialSmall'||model==='inputDialCompact'||model==='outputDial'){
             const halo=document.createElementNS('http://www.w3.org/2000/svg','svg');halo.classList.add('ai-control-halo');halo.setAttribute('viewBox','0 0 100 100');halo.setAttribute('aria-hidden','true');
             halo.innerHTML='<path d="M19 81a44 44 0 1 1 62 0"/>';el.appendChild(halo);
         }
@@ -6299,8 +6299,9 @@ const Hardware = (() => {
                 dev.setMicGain=(channel,value)=>{
                     const gain=Math.max(0,Math.min(1,Number(value)||0));dev.state['micGain'+channel]=gain;
                     dev.nodes['gen'+channel].gain.setTargetAtTime(dev.state.playing?gain:0,state.audioCtx.currentTime,.02);
-                    const slider=document.getElementById(`ai-gain-${channel}`);if(slider&&state.selectedDeviceId===dev.id)slider.value=gain;
+                    const slider=document.getElementById(`ai-gain-${channel}`);if(slider&&state.selectedDeviceId===dev.id){slider.value=gain;slider.dispatchEvent(new Event('input',{bubbles:true}));}
                     const knob=el.querySelector(`[data-ai-gain="${channel}"]`);knob?.style.setProperty('--ai-turn',`${-135+gain*270}deg`);knob?.style.setProperty('--knob-angle',`${-135+gain*270}deg`);
+                    const halo=knob?.querySelector('.ai-control-halo path');if(halo)halo.style.strokeDasharray=`${gain*138} 138`;
                 };
                 dev.setAiLine=value=>{
                     const level=Math.max(0,Math.min(1,Number(value)||0));dev.state.aiLineLevel=level;
@@ -7522,8 +7523,9 @@ const Hardware = (() => {
             const min=Number(slider.min),max=Number(slider.max);
             const amount=Math.max(0,Math.min(1,(Number(slider.value)-min)/(max-min)));
             // The lower half is the normal blue range; energy builds above level five.
-            const energy=Math.max(0,(amount-.5)*2);
-            const color=[59,130,246].map((blue,i)=>Math.round(blue+([239,68,68][i]-blue)*energy));
+            const energy=slider.dataset.gainColor?amount:Math.max(0,(amount-.5)*2);
+            const target=slider.dataset.gainColor==='green'?[34,197,94]:slider.dataset.gainColor==='red'?[239,68,68]:[239,68,68];
+            const color=[59,130,246].map((blue,i)=>Math.round(blue+(target[i]-blue)*energy));
             control.style.setProperty('--gain-position',String(amount));
             control.style.setProperty('--gain-energy',String(energy));
             control.style.setProperty('--gain-color',energy===0?'var(--accent)':`rgb(${color.join(' ')})`);
@@ -7730,8 +7732,9 @@ const Hardware = (() => {
 
             if(CAPTURE_INTERFACE_TYPES.has(dev.type)){
                 const phoneCount=dev.type==='audioInterface4'?2:1;
+                const gainControls=dev.type==='audioInterface2'?'':['L','R'].map(ch=>`<label>Ganho ${ch}<input id="ai-gain-${ch}" class="gain-spark-slider" data-gain-color="${ch==='L'?'green':'red'}" type="range" min="0" max="1" step=".01" value="${dev.state['micGain'+ch]}" aria-label="Ganho ${ch}"></label>`).join('');
                 const phoneControls=dev.type==='audioInterface2'?'':Array.from({length:phoneCount},(_,index)=>`<label>Volume de fones${phoneCount>1?' '+(index+1):''}<input id="ai-phones-${index}" type="range" min="0" max="1" step=".01" value="${dev.state.aiPhoneLevels?.[index]??.75}"></label>`).join('');
-                html+=`<section class="ai-inspector"><h3>Entrada do computador</h3><label>Dispositivo de captura<select id="ai-input-device"><option value="">Entrada padrão do sistema</option></select></label><button id="ai-capture-toggle" class="tt-insp-btn" type="button">${dev.state.playing?'PARAR CAPTURA':'INICIAR CAPTURA'}</button><p role="status" id="ai-capture-status">${dev.micMessage||'Escolha um dispositivo de áudio e permita o acesso no navegador.'}</p><label>Nível de entrada L<input id="ai-gain-L" type="range" min="0" max="1" step=".01" value="${dev.state.micGainL}"></label><label>Nível de entrada R<input id="ai-gain-R" type="range" min="0" max="1" step=".01" value="${dev.state.micGainR}"></label><label>${dev.type==='audioInterface2'?'Volume geral · linha e fones':'Saída de linha'}<input id="ai-line" type="range" min="0" max="1" step=".01" value="${dev.state.aiLineLevel??.8}"></label>${phoneControls}<small>A captura é encaminhada sem efeitos para as saídas conectadas. O controle de saída pode ajustar linha e fones em conjunto ou separadamente.</small></section>`;
+                html+=`<section class="ai-inspector"><h3>Entrada do computador</h3><label>Dispositivo de captura<select id="ai-input-device"><option value="">Entrada padrão do sistema</option></select></label><button id="ai-capture-toggle" class="tt-insp-btn" type="button">${dev.state.playing?'PARAR CAPTURA':'INICIAR CAPTURA'}</button><p role="status" id="ai-capture-status">${dev.micMessage||'Escolha um dispositivo de áudio e permita o acesso no navegador.'}</p>${gainControls}<label>${dev.type==='audioInterface2'?'Volume geral · linha e fones':'Saída de linha'}<input id="ai-line" type="range" min="0" max="1" step=".01" value="${dev.state.aiLineLevel??.8}"></label>${phoneControls}<small>A captura é encaminhada sem efeitos para as saídas conectadas. ${dev.type==='audioInterface2'?'Esta interface oferece controle de volume, sem ajuste de ganho.':'Ajuste os ganhos L/R e os níveis de saída separadamente.'}</small></section>`;
             }
             if (SOURCE_TYPES.has(dev.type) && !TURNTABLE_TYPES.has(dev.type)&&!CAPTURE_INTERFACE_TYPES.has(dev.type)) html += `<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Reprodução</span><button id="source-inspector-play" type="button" class="tt-insp-btn ${dev.state.playing ? 'is-on' : ''}" aria-pressed="${!!dev.state.playing}">REPRODUZIR / PAUSAR</button></div>`;
             if (SOURCE_TYPES.has(dev.type)&&!SIGNAL_GENERATOR_TYPES.has(dev.type)&&!CAPTURE_INTERFACE_TYPES.has(dev.type)&&!(TURNTABLE_TYPES.has(dev.type)&&dev.spotifyVinyl)) html += `<div class="flex flex-col gap-2 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Música própria</span><button id="source-load-audio" type="button" class="tt-insp-btn">CARREGAR ÁUDIO</button><input id="source-audio-file" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac" hidden><div class="source-file-row"><p id="source-file-name" class="text-xs text-gray-300 break-words"></p><button id="source-remove-audio" type="button" aria-label="Remover arquivo de áudio" title="Remover arquivo" ${dev.audioBuffer ? '' : 'hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path class="source-trash-lid" d="M4 7h16M9 7V5h6v2"/><path class="source-trash-bin" d="M6.5 9 7.5 20h9L17.5 9M10 11v6m4-6v6"/></svg></button></div><p id="source-file-message" class="text-xs text-gray-400"></p></div>`;
@@ -7800,7 +7803,7 @@ const Hardware = (() => {
                 refreshCaptureInputs(dev,select);
                 select.addEventListener('change',()=>{const active=dev.state.playing;if(active)dev.stopMicCapture(false);dev.micDeviceId=select.value;if(active)dev.startMicCapture();});
                 document.getElementById('ai-capture-toggle').addEventListener('click',()=>setSourcePlaying(dev,!dev.state.playing));
-                for(const channel of ['L','R'])document.getElementById(`ai-gain-${channel}`).addEventListener('input',event=>dev.setMicGain(channel,event.target.value));
+                for(const channel of ['L','R'])document.getElementById(`ai-gain-${channel}`)?.addEventListener('input',event=>dev.setMicGain(channel,event.target.value));
                 document.getElementById('ai-line').addEventListener('input',event=>dev.setAiLine(event.target.value));
                 if(dev.type!=='audioInterface2')for(let index=0;index<(dev.type==='audioInterface4'?2:1);index++)document.getElementById(`ai-phones-${index}`).addEventListener('input',event=>dev.setAiPhones(index,event.target.value));
             }

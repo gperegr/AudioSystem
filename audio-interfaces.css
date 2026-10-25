@@ -125,3 +125,47 @@
 .ai-art-v3 .ai-interface-two-outputs .ai-socket-visual,
 .ai-art-v3 .ai-interface-three-outputs .ai-socket-visual,
 .ai-art-v3 .ai-interface-four-outputs .ai-socket-visual {display:none!important;}
+
+/* Center each channel label directly above its matching output socket. */
+.ai-art-v3 .ai-output-pair {display:flex;align-items:flex-start;justify-content:center;gap:22px;}
+.ai-art-v3 .ai-output-channel {display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;min-width:34px;}
+.ai-art-v3 .ai-output-channel .ai-lr {margin:0;color:#aeb3ba;font-size:8px;line-height:1;}
+.ai-art-v3 .ai-output-channel .ai-socket {display:flex;align-items:center;justify-content:center;}
+.ai-art-v3 .ai-interface-one-outputs,.ai-art-v3 .ai-interface-two-outputs,.ai-art-v3 .ai-interface-three-outputs,.ai-art-v3 .ai-interface-four-outputs {display:flex;align-items:center;justify-content:center;}
+.ai-art-v3 .ai-interface-four-monitor .ai-output-pair {gap:16px;}
+
+/* Shared baselines for the dark stereo interface face. */
+.ai-art-v3.graphite-interface .ai-interface-three-gain {
+  display:grid!important;grid-template-rows:18px 48px 26px;align-content:center;justify-items:center;align-self:center;
+  width:100%!important;min-height:92px;
+}
+.ai-art-v3.graphite-interface .ai-interface-three-gain label,
+.ai-art-v3.graphite-interface .ai-interface-three-main label {display:flex;align-items:center;justify-content:center;height:18px;margin:0!important;line-height:1!important;}
+.ai-art-v3.graphite-interface .ai-interface-three-gain .ai-dial {align-self:center;}
+.ai-art-v3.graphite-interface .ai-interface-three-gain .ai-socket-visual {align-self:center;margin:0!important;}
+.ai-art-v3.graphite-interface .ai-interface-three-main {display:grid!important;grid-template-rows:24px 1fr;align-content:center;justify-items:center;align-self:center;height:100%;}
+.ai-art-v3.graphite-interface .ai-interface-three-main .ai-dial {align-self:center;}
+.ai-art-v3.graphite-interface .ai-interface-three-usb {display:grid!important;grid-template-rows:1fr 8px;align-items:center;justify-items:center;align-self:center;height:74px;}
+.ai-art-v3.graphite-interface .ai-interface-three-phones {display:grid!important;grid-template-rows:38px 16px 28px;align-items:center;justify-items:center;align-self:center;}
+.ai-art-v3.graphite-interface .ai-interface-three-phones>svg {grid-row:2;}
+.ai-art-v3.graphite-interface .ai-interface-three-phones .ai-socket {grid-row:3;}
+.ai-art-v3.graphite-interface .ai-interface-three-marking {align-self:center;}
+.ai-art-v3.graphite-interface .ai-interface-three-outputs {align-self:center;}
+
+/* Balanced three group layout for the compact capture interface. */
+.ai-art-v3 .ai-interface-two {grid-template-columns:minmax(56px,1fr) minmax(100px,1.45fr) minmax(56px,1fr)!important;grid-template-rows:minmax(0,1fr) 36px!important;column-gap:10px!important;row-gap:4px!important;padding:12px 18px!important;}
+.ai-art-v3 .ai-interface-two-source,.ai-art-v3 .ai-interface-two-encoder,.ai-art-v3 .ai-interface-two-phones {display:flex!important;flex-direction:column;align-items:center;justify-content:center;align-self:stretch;gap:7px;min-width:0;}
+.ai-art-v3 .ai-interface-two-source {grid-column:1;grid-row:1;}
+.ai-art-v3 .ai-interface-two-source>small,.ai-art-v3 .ai-interface-two-encoder>small {display:block;position:static!important;margin:0!important;color:#c8c9ca;font:600 8px/1.1 'Inter',sans-serif;letter-spacing:.06em;}
+.ai-art-v3 .ai-interface-two-source .ai-key {flex:none;}
+.ai-art-v3 .ai-interface-two-encoder {grid-column:2;grid-row:1;gap:2px;}
+.ai-art-v3 .ai-interface-two-encoder .ai-dial {flex:none;}
+.ai-art-v3 .ai-interface-two-phones {grid-column:3;grid-row:1;gap:7px;}
+.ai-art-v3 .ai-interface-two-phones>svg {display:block;width:18px;height:18px;}
+.ai-art-v3 .ai-interface-two-phones .ai-socket {display:flex;align-items:center;justify-content:center;}
+.ai-art-v3 .ai-interface-two-outputs {grid-column:1 / -1!important;grid-row:2!important;justify-content:center!important;align-self:center;min-height:0;}
+
+.ai-art-v3 .ai-panel [data-ai-gain="L"] .ai-control-halo path {stroke:#35d879;}
+.ai-art-v3 .ai-panel [data-ai-gain="R"] .ai-control-halo path {stroke:#f04e55;}
+#inspector-content .gain-slider-control:has(input[data-gain-color="green"]) {--accent:#22c55e;}
+#inspector-content .gain-slider-control:has(input[data-gain-color="red"]) {--accent:#ef4444;}
