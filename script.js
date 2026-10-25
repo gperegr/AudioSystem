@@ -1327,6 +1327,7 @@ const Hardware = (() => {
         const savedAppPreferences=readAppPreferences();
         let connectionGuidanceEnabled=savedAppPreferences.connectionGuidanceEnabled!==false;
         let gravityEnabled=savedAppPreferences.gravityEnabled!==false;
+        let roomParticleAmount=Number.isFinite(savedAppPreferences.roomParticleAmount)?Math.max(0,Math.min(100,savedAppPreferences.roomParticleAmount)):50;
         let developerModeEnabled=savedAppPreferences.developerMode===true;
         let headphonePromptSeen=savedAppPreferences.headphonePromptSeen===true;
         state.listeningOutputLevel=Number.isFinite(savedAppPreferences.listeningOutputLevel)?Math.max(.5,Math.min(1.2,savedAppPreferences.listeningOutputLevel)):1;
@@ -1338,7 +1339,7 @@ const Hardware = (() => {
             appPreferencesSaveTimer=setTimeout(()=>{
                 if(!canvas.clientWidth||!canvas.clientHeight)return;
                 const focusX=(canvas.clientWidth/2-view.x)/view.zoom,focusY=(canvas.clientHeight/2-view.y)/view.zoom;
-                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,backdrop:state.canvasBackdrop,time:state.canvasTime,connectionGuidanceEnabled,gravityEnabled,developerMode:developerModeEnabled,headphonePromptSeen,catalogPinned:sidebarPinned.catalog,inspectorPinned:sidebarPinned.properties,listeningOutputLevel:state.listeningOutputLevel,listeningBass:state.listeningBass,listeningTreble:state.listeningTreble,zoom:view.zoom,focusX,focusY}));}catch{}
+                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,backdrop:state.canvasBackdrop,time:state.canvasTime,connectionGuidanceEnabled,gravityEnabled,roomParticleAmount,developerMode:developerModeEnabled,headphonePromptSeen,catalogPinned:sidebarPinned.catalog,inspectorPinned:sidebarPinned.properties,listeningOutputLevel:state.listeningOutputLevel,listeningBass:state.listeningBass,listeningTreble:state.listeningTreble,zoom:view.zoom,focusX,focusY}));}catch{}
             },450);
         }
         const appDialog=document.getElementById('app-confirm-dialog');
@@ -1637,7 +1638,7 @@ const Hardware = (() => {
             const daylight=time==='dawn';
             const dusk=time==='dusk';
             roomMoteBeams=RoomScenes.lights(mode,time).map((light,index)=>{
-                const count=dusk?28:daylight?24:12;
+                const count=Math.round((dusk?28:daylight?24:12)*roomParticleAmount/50);
                 const x=(240+light.cx*.8)/24,y=mode.startsWith('listening')?36:mode.startsWith('studio')?34:33;
                 const width=Math.min(32,Math.max(15,light.w*.8/24));
                 const color=light.rgb.join(' ');
@@ -1688,7 +1689,7 @@ const Hardware = (() => {
                         ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();
                     });
                 });
-                const count=state.canvasTime==='night'?5:10;
+                const count=Math.round((state.canvasTime==='night'?5:10)*roomParticleAmount/50);
                 const color=state.canvasTime==='night'?'198,217,229':'255,224,177';
                 for(let i=0;i<count;i++){
                     const phase=reduced?.5:(now/(9500+i%6*1100)+i*.317)%1;
@@ -3572,9 +3573,26 @@ const Hardware = (() => {
             updateRealtimePanels(performance.now(),true);
         }
         function transportInspectorHtml(dev) {
-            return `<div class="audio-transport"><label for="source-progress">Transporte da música</label><div class="transport-time"><span id="source-position">${formatAudioTime(sourcePosition(dev))}</span><span>${formatAudioTime(dev.audioBuffer.duration)}</span></div><input id="source-progress" type="range" min="0" max="${dev.audioBuffer.duration}" step="0.1" value="${sourcePosition(dev)}" aria-label="Posição da faixa"><div class="transport-buttons"><button class="tt-insp-btn" id="source-rewind" type="button" title="Retroceder 10 segundos" aria-label="Retroceder 10 segundos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8V4m0 4h4M5.4 8a8 8 0 1 1-1 8"/><text x="12" y="16" text-anchor="middle">10</text></svg></button><button class="tt-insp-btn" id="source-forward" type="button" title="Avançar 10 segundos" aria-label="Avançar 10 segundos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 8V4m0 4h-4M18.6 8a8 8 0 1 0 1 8"/><text x="12" y="16" text-anchor="middle">10</text></svg></button><button class="tt-insp-btn ${dev.state.repeat?'is-on':''}" id="source-repeat" type="button" title="Repetir faixa" aria-label="Repetir faixa" aria-pressed="${!!dev.state.repeat}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V7a3 3 0 0 1 3-3h11l-2.5-2.5M18 4l-2.5 2.5M20 15v2a3 3 0 0 1-3 3H6l2.5 2.5M6 20l2.5-2.5"/></svg></button></div></div>`;
+            const spotify=!!dev.spotifyVinyl,playback=spotify?SpotifyCoverflow.getPlaybackState():null;
+            const active=spotify&&(playback.context===dev.spotifyVinyl.uri||spotifyPlayingTurntable===dev.id);
+            const position=spotify?(active?playback.position:0):sourcePosition(dev),duration=spotify?(active?playback.duration:0):dev.audioBuffer.duration;
+            const repeat=spotify?playback.repeat:!!dev.state.repeat,disabled=spotify&&(!playback.connected||!active||!duration)?'disabled':'';
+            return `<div class="audio-transport"><label for="source-progress">Transporte da música</label>${spotify?'<span id="source-track-title" class="spotify-track-title">Aguardando faixa do Spotify</span>':''}<div class="transport-time"><span id="source-position">${formatAudioTime(position)}</span><span id="source-duration">${formatAudioTime(duration)}</span></div><input id="source-progress" type="range" min="0" max="${Math.max(.1,duration)}" step="0.1" value="${position}" aria-label="Posição da faixa" ${disabled}><div class="transport-buttons"><button class="tt-insp-btn" id="source-rewind" type="button" title="Retroceder 10 segundos" aria-label="Retroceder 10 segundos" ${disabled}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8V4m0 4h4M5.4 8a8 8 0 1 1-1 8"/><text x="12" y="16" text-anchor="middle">10</text></svg></button><button class="tt-insp-btn" id="source-forward" type="button" title="Avançar 10 segundos" aria-label="Avançar 10 segundos" ${disabled}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 8V4m0 4h-4M18.6 8a8 8 0 1 0 1 8"/><text x="12" y="16" text-anchor="middle">10</text></svg></button><button class="tt-insp-btn ${repeat?'is-on':''}" id="source-repeat" type="button" title="Repetir faixa" aria-label="Repetir faixa" aria-pressed="${repeat}" ${disabled}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V7a3 3 0 0 1 3-3h11l-2.5-2.5M18 4l-2.5 2.5M20 15v2a3 3 0 0 1-3 3H6l2.5 2.5M6 20l2.5-2.5"/></svg></button></div></div>`;
         }
         function bindTransportInspector(dev) {
+            if(dev.spotifyVinyl){
+                const seek=seconds=>SpotifyCoverflow.seekTo(seconds).catch(error=>spotifyVinylNotice(error.message||'Não foi possível avançar a faixa.'));
+                document.getElementById('source-progress').addEventListener('input',event=>{document.getElementById('source-position').textContent=formatAudioTime(Number(event.target.value));});
+                document.getElementById('source-progress').addEventListener('change',event=>seek(Number(event.target.value)));
+                document.getElementById('source-rewind').addEventListener('click',()=>seek(SpotifyCoverflow.getPlaybackState().position-10));
+                document.getElementById('source-forward').addEventListener('click',()=>seek(SpotifyCoverflow.getPlaybackState().position+10));
+                document.getElementById('source-repeat').addEventListener('click',async event=>{
+                    const enabled=event.currentTarget.getAttribute('aria-pressed')!=='true';
+                    try{await SpotifyCoverflow.setTrackRepeat(enabled);event.currentTarget.classList.toggle('is-on',enabled);event.currentTarget.setAttribute('aria-pressed',String(enabled));}
+                    catch(error){spotifyVinylNotice(error.message||'Não foi possível mudar a repetição.');}
+                });
+                return;
+            }
             document.getElementById('source-progress').addEventListener('input',event=>seekSource(dev,Number(event.target.value)));
             document.getElementById('source-rewind').addEventListener('click',()=>seekSource(dev,sourcePosition(dev)-10));
             document.getElementById('source-forward').addEventListener('click',()=>seekSource(dev,sourcePosition(dev)+10));
@@ -3817,7 +3835,18 @@ const Hardware = (() => {
             Object.values(state.devices).forEach(dev=>dev.refreshStreamDisplay?.());
             Object.values(state.devices).filter(isPassiveLoad).forEach(applySpeakerLoadDynamics);
             const selected=state.devices[state.selectedDeviceId];
-            if(selected?.audioBuffer){const progress=document.getElementById('source-progress'),label=document.getElementById('source-position');const position=sourcePosition(selected);if(progress&&document.activeElement!==progress)progress.value=position;if(label)label.textContent=formatAudioTime(position);}
+            if(selected?.spotifyVinyl&&document.getElementById('source-track-title')){
+                const playback=SpotifyCoverflow.getPlaybackState(),active=playback.context===selected.spotifyVinyl.uri||spotifyPlayingTurntable===selected.id;
+                const ready=playback.connected&&active&&playback.duration>0,position=ready?playback.position:0,duration=ready?playback.duration:0;
+                const progress=document.getElementById('source-progress');progress.max=Math.max(.1,duration);progress.disabled=!ready;
+                if(document.activeElement!==progress)progress.value=position;
+                if(document.activeElement!==progress)document.getElementById('source-position').textContent=formatAudioTime(position);
+                document.getElementById('source-duration').textContent=formatAudioTime(duration);
+                document.getElementById('source-track-title').textContent=ready?playback.track:'Aguardando faixa do Spotify';
+                for(const id of ['source-rewind','source-forward','source-repeat'])document.getElementById(id).disabled=!ready;
+                document.getElementById('source-repeat').classList.toggle('is-on',playback.repeat);
+                document.getElementById('source-repeat').setAttribute('aria-pressed',String(playback.repeat));
+            }else if(selected?.audioBuffer){const progress=document.getElementById('source-progress'),label=document.getElementById('source-position');const position=sourcePosition(selected);if(progress&&document.activeElement!==progress)progress.value=position;if(label)label.textContent=formatAudioTime(position);}
         }
 
         function readAudioTrackTitle(buffer){
@@ -4027,6 +4056,7 @@ const Hardware = (() => {
                 dev.demoStartedAt=playing?state.audioCtx.currentTime:null;
             }
             dev.state.playing = !!playing;
+            dev.spotifyVinyl?.el.classList.toggle('is-playing',dev.state.playing);
             syncVinylNoise(dev);
             syncTapeHiss(dev);
             syncSignalGenerator(dev);
@@ -7415,7 +7445,7 @@ const Hardware = (() => {
             if (SOURCE_TYPES.has(dev.type)&&!SIGNAL_GENERATOR_TYPES.has(dev.type)) html += `<div class="flex flex-col gap-2 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Música própria</span><button id="source-load-audio" type="button" class="tt-insp-btn">CARREGAR ÁUDIO</button><input id="source-audio-file" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac" hidden><div class="source-file-row"><p id="source-file-name" class="text-xs text-gray-300 break-words"></p><button id="source-remove-audio" type="button" aria-label="Remover arquivo de áudio" title="Remover arquivo" ${dev.audioBuffer ? '' : 'hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path class="source-trash-lid" d="M4 7h16M9 7V5h6v2"/><path class="source-trash-bin" d="M6.5 9 7.5 20h9L17.5 9M10 11v6m4-6v6"/></svg></button></div><p id="source-file-message" class="text-xs text-gray-400"></p></div>`;
             if (dev.listeningProfile) html += `<section class="sonic-signature-panel"><h3>Assinatura sonora</h3>${listeningCurveHtml(dev)}</section>`;
             if(RADIO_RECEIVERS.has(dev.type))html+=radioInspectorHtml(dev);
-            if (dev.audioBuffer&&!RADIO_RECEIVERS.has(dev.type)) html += transportInspectorHtml(dev);
+            if ((dev.spotifyVinyl||dev.audioBuffer)&&!RADIO_RECEIVERS.has(dev.type)) html += transportInspectorHtml(dev);
             if (EQ_TYPES.has(dev.type) || CROSSOVER_TYPES.has(dev.type) || BENCH_METER_TYPES.has(dev.type)) html += spectrumInspectorHtml(dev);
             if(hasRestorableSettings(dev))html += '<div class="flex flex-col gap-2 border-t border-gray-700 pt-4"><button id="restore-device-settings" type="button" class="tt-insp-btn w-full">RESTAURAR CONFIGURAÇÕES</button><p id="restore-settings-status" role="status" class="text-xs text-gray-400"></p></div>';
             html+=portSignalsInspectorHtml(dev);
@@ -7454,7 +7484,7 @@ const Hardware = (() => {
                 document.getElementById('spectrum-band')?.addEventListener('change',()=>setupSpectrum(dev));
             }
             if(RADIO_RECEIVERS.has(dev.type))bindRadioInspector(dev);
-            if (dev.audioBuffer&&!RADIO_RECEIVERS.has(dev.type)) bindTransportInspector(dev);
+            if ((dev.spotifyVinyl||dev.audioBuffer)&&!RADIO_RECEIVERS.has(dev.type)) bindTransportInspector(dev);
             if(SIGNAL_GENERATOR_TYPES.has(dev.type))bindSignalInspector(dev);
             if (SOURCE_TYPES.has(dev.type)&&!SIGNAL_GENERATOR_TYPES.has(dev.type)) {
                 document.getElementById('source-file-name').textContent = dev.fileName || 'Nenhum arquivo carregado · som de demonstração';
@@ -8620,7 +8650,7 @@ const Hardware = (() => {
                 const dx=fromX-item.x,dy=fromY-item.y;
                 item.el.animate([{transform:`translate(${dx}px,${dy}px) scaleY(32)`,opacity:.85,offset:0},{transform:'translate(0,-54px) scaleY(.16)',opacity:1,offset:.42},{transform:'translate(0,0) scaleY(1)',opacity:1,offset:1}],{duration:900,easing:'cubic-bezier(.2,.7,.22,1)'}).finished.then(finish,finish);
             }else finish();
-            if(!projectRestoring)spotifyVinylNotice('O Play controla o Spotify. Cabos e volumes determinam se você o ouve. O ruído do vinil pode tocar junto, mas os demais efeitos dos aparelhos não alteram a música.');scheduleProjectSave();return true;
+            if(!projectRestoring){selectDevice(dev.id,true);spotifyVinylNotice('O Play controla o Spotify. Cabos e volumes determinam se você o ouve. O ruído do vinil pode tocar junto, mas os demais efeitos dos aparelhos não alteram a música.');}scheduleProjectSave();return true;
         }
         function createSpotifyVinyl(record){
             if(!record||typeof record.uri!=='string'||!/^spotify:(album|playlist):[A-Za-z0-9]+$/.test(record.uri)||spotifyVinyls.has(record.uri))return null;
@@ -8630,9 +8660,9 @@ const Hardware = (() => {
             el.addEventListener('pointerdown',event=>{if(event.button!==0)return;event.preventDefault();event.stopPropagation();beginSpotifyVinylDrag(item,event);});
             return item;
         }
-        function removeSpotifyVinyl(item){if(item.turntableId){const dev=state.devices[item.turntableId];if(dev?.state.playing)setSourcePlaying(dev,false);if(dev)dev.spotifyVinyl=null;}spotifyVinyls.delete(item.uri);item.el.remove();refreshSpotifyVinyls();scheduleProjectSave();}
+        function removeSpotifyVinyl(item){if(item.turntableId){const dev=state.devices[item.turntableId];if(dev?.state.playing)setSourcePlaying(dev,false);if(dev){dev.spotifyVinyl=null;if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);}}spotifyVinyls.delete(item.uri);item.el.remove();refreshSpotifyVinyls();scheduleProjectSave();}
         function beginSpotifyVinylDrag(item,event){
-            const prior=state.devices[item.turntableId];if(prior){if(prior.state.playing)setSourcePlaying(prior,false);prior.spotifyVinyl=null;item.turntableId=null;item.el.classList.remove('is-on-platter','is-linear');}
+            const prior=state.devices[item.turntableId];if(prior){if(prior.state.playing)setSourcePlaying(prior,false);prior.spotifyVinyl=null;item.turntableId=null;item.el.classList.remove('is-on-platter','is-linear','is-playing');}
             const point=screenToWorld(event.clientX,event.clientY),offsetX=prior?SPOTIFY_VINYL_SIZE/2:point.x-item.x,offsetY=prior?SPOTIFY_VINYL_SIZE/2:point.y-item.y;item.el.classList.add('is-dragging');
             let autoLid=null;
             const showReturnTarget=ev=>{
@@ -8651,8 +8681,8 @@ const Hardware = (() => {
                 const dev=ev.type==='pointercancel'?null:hitDevice(ev.clientX,ev.clientY);
                 const placed=dev&&TURNTABLE_TYPES.has(dev.type)&&placeSpotifyVinyl(item,dev);
                 releaseAutoLid(!!placed&&autoLid===dev);
-                if(!placed&&ev.type!=='pointercancel'&&(isOverCatalog(ev)||dev?.type==='furnitureCoverflow')){removeSpotifyVinyl(item);playUiSound('discard');spotifyVinylNotice('Disco guardado na capa do álbum.');}
-                else if(!placed)scheduleProjectSave();
+                if(!placed&&ev.type!=='pointercancel'&&(isOverCatalog(ev)||dev?.type==='furnitureCoverflow')){removeSpotifyVinyl(item);if(prior&&state.selectedDeviceId===prior.id)selectDevice(prior.id,true);playUiSound('discard');spotifyVinylNotice('Disco guardado na capa do álbum.');}
+                else if(!placed){if(prior&&state.selectedDeviceId===prior.id)selectDevice(prior.id,true);scheduleProjectSave();}
             };
             showReturnTarget(event);
             window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',end,true);window.addEventListener('pointercancel',end,true);
@@ -8904,14 +8934,19 @@ const Hardware = (() => {
         clearCatalogFooter.className='app-settings-content';
         const themeSection=document.createElement('section');themeSection.className='settings-theme-section';themeSection.appendChild(canvasThemeControl);themeSection.appendChild(canvasGridControl);themeSection.appendChild(canvasBackdropControl);themeSection.appendChild(canvasTimeControl);
         const connectionHelpSetting=document.createElement('label');connectionHelpSetting.className='connection-help-setting';connectionHelpSetting.innerHTML='<input id="connection-help-enabled" type="checkbox"><span><strong>Orientação de conexões</strong><small>Mostra dicas e impede ligações incompatíveis. Desative para permitir erros quando os plugues encaixarem.</small></span>';
-        const connectionHelpCheckbox=connectionHelpSetting.querySelector('input');connectionHelpCheckbox.checked=connectionGuidanceEnabled;themeSection.appendChild(connectionHelpSetting);
+        const interactionSection=document.createElement('section');interactionSection.className='settings-theme-section';
+        const connectionHelpCheckbox=connectionHelpSetting.querySelector('input');connectionHelpCheckbox.checked=connectionGuidanceEnabled;interactionSection.appendChild(connectionHelpSetting);
         connectionHelpCheckbox.addEventListener('change',()=>{connectionGuidanceEnabled=connectionHelpCheckbox.checked;hideContextHelp();updatePortGuidance(true);scheduleAppPreferencesSave();});
         const gravitySetting=document.createElement('label');gravitySetting.className='connection-help-setting';gravitySetting.innerHTML='<input id="gravity-enabled" type="checkbox"><span><strong>Gravidade</strong><small>Ao soltar, equipamentos e móveis descem até o piso ou o primeiro apoio. Não afeta luminárias nem vinis.</small></span>';
-        const gravityCheckbox=gravitySetting.querySelector('input');gravityCheckbox.checked=gravityEnabled;themeSection.appendChild(gravitySetting);
+        const gravityCheckbox=gravitySetting.querySelector('input');gravityCheckbox.checked=gravityEnabled;interactionSection.appendChild(gravitySetting);
         gravityCheckbox.addEventListener('change',()=>{gravityEnabled=gravityCheckbox.checked;scheduleAppPreferencesSave();});
         const developerModeSetting=document.createElement('label');developerModeSetting.className='connection-help-setting';developerModeSetting.innerHTML='<input id="developer-mode-enabled" type="checkbox"><span><strong>Modo desenvolvedor</strong><small>Mostra a categoria DEBUG e os modelos de teste no catálogo.</small></span>';
-        const developerModeCheckbox=developerModeSetting.querySelector('input');developerModeCheckbox.checked=developerModeEnabled;themeSection.appendChild(developerModeSetting);
+        const developerModeCheckbox=developerModeSetting.querySelector('input');developerModeCheckbox.checked=developerModeEnabled;
         developerModeCheckbox.addEventListener('change',()=>{developerModeEnabled=developerModeCheckbox.checked;equipmentSearch.dispatchEvent(new Event('input'));scheduleAppPreferencesSave();});
+        const particleSetting=document.createElement('div');particleSetting.className='settings-particle-control';
+        particleSetting.innerHTML=`<label for="room-particle-amount">Partículas <output id="room-particle-value">${roomParticleAmount}%</output></label><input id="room-particle-amount" type="range" min="0" max="100" step="10" value="${roomParticleAmount}" aria-label="Quantidade de partículas no cenário"><small>0 desliga as partículas; 50 mantém a densidade padrão.</small>`;
+        particleSetting.querySelector('input').addEventListener('input',event=>{roomParticleAmount=Number(event.target.value);particleSetting.querySelector('output').textContent=roomParticleAmount+'%';updateRoomMotes(state.canvasBackdrop,state.canvasTime);scheduleAppPreferencesSave();});
+        themeSection.appendChild(particleSetting);
         clearCatalogFooter.insertBefore(themeSection,soundControls);
         setCanvasTheme(state.canvasTheme);
 
@@ -8934,6 +8969,52 @@ const Hardware = (() => {
         }
         roomSection.addEventListener('input',()=>{setRoomSettings({preset:document.getElementById('room-preset').value,intensity:Number(document.getElementById('room-intensity').value)});scheduleProjectSave();});
         setRoomSettings(state.environment);
+
+        const settingIcon=path=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+        const choiceIcons={
+            scene:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 15h20M7 15V9h4v6m3 0v-4h4v4"/>',
+            dots:'<circle cx="5" cy="5" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="19" cy="5" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="19" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="19" cy="19" r="1"/>',
+            lines:'<path d="M3 8h18M3 16h18M8 3v18m8-18v18"/>',hidden:'<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M5 19 19 5"/>',
+            studioIllustrated:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M6 10h12M8 15h8m-4-5v5"/>',
+            listeningIllustrated:'<path d="M3 4h18v16H3zM9 4v16M3 16h18"/><path d="M5 10h2"/>',
+            loftIllustrated:'<path d="M2 20V5h20v15H2ZM8 5v15m8-15v15M2 11h20"/>',
+            dawn:'<path d="M3 18h18M6 14a6 6 0 0 1 12 0M12 2v3M4 7l2 2m14-2-2 2"/>',
+            dusk:'<path d="M3 18h18M7 16a5 5 0 0 1 10 0M12 4v3M5 10l2 2m12-2-2 2"/>',
+            night:'<path d="M20 15.5A8 8 0 0 1 8.5 4a8 8 0 1 0 11.5 11.5ZM17 3v3m-1.5-1.5h3"/>'
+        };
+        const iconChoices=[
+            [canvasThemeControl,'canvas-theme',canvasThemes],
+            [canvasGridControl,'canvas-grid',canvasGridModes],
+            [canvasBackdropControl,'canvas-backdrop',canvasBackdropModes],
+            [canvasTimeControl,'canvas-time',canvasTimeModes]
+        ];
+        for(const [container,id,options] of iconChoices){
+            const select=container.querySelector('select');select.dataset.iconChoice='';select.hidden=true;container.classList.add('settings-icon-control');
+            const choices=document.createElement('div');choices.className='settings-icon-options';choices.setAttribute('role','group');choices.setAttribute('aria-label',container.firstElementChild.textContent);
+            for(const [value,label] of Object.entries(options)){
+                const button=document.createElement('button');button.type='button';button.dataset.value=value;button.title=label;button.setAttribute('aria-label',label);
+                button.innerHTML=id==='canvas-theme'&&value!=='scene'?'<span class="settings-color-dot" aria-hidden="true"></span>':settingIcon(choiceIcons[value]||'');
+                button.addEventListener('click',()=>{select.value=value;select.dispatchEvent(new Event('change',{bubbles:true}));});choices.appendChild(button);
+            }
+            container.appendChild(choices);
+            const sync=()=>choices.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.value===select.value)));
+            select.addEventListener('change',sync);new MutationObserver(sync).observe(canvas,{attributes:true,attributeFilter:['data-theme','data-grid','data-backdrop','data-time']});sync();
+        }
+        const syncParticleVisibility=()=>{particleSetting.hidden=canvas.dataset.theme!=='scene';};
+        new MutationObserver(syncParticleVisibility).observe(canvas,{attributes:true,attributeFilter:['data-theme']});syncParticleVisibility();
+        const settingsGroup=(title,icon,nodes,open=false)=>{
+            const group=document.createElement('details');group.className='settings-group';group.open=open;
+            const summary=document.createElement('summary');summary.innerHTML=settingIcon(icon)+`<span>${title}</span>`;
+            const content=document.createElement('div');content.className='settings-group-content';content.append(...nodes);group.append(summary,content);return group;
+        };
+        const clearButton=document.getElementById('clear-system');
+        clearCatalogFooter.replaceChildren(
+            settingsGroup('Visual','<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="1.5"/><path d="m4 17 5-5 3 3 3-4 5 6"/>',[themeSection],true),
+            settingsGroup('Interação','<path d="M8 12V5a2 2 0 0 1 4 0v5m0-3a2 2 0 0 1 4 0v4m0-2a2 2 0 0 1 4 0v6c0 4-3 6-7 6h-2c-3 0-5-2-6-5l-2-4a2 2 0 0 1 3-2l2 2"/>',[interactionSection]),
+            settingsGroup('Escuta','<path d="M4 13v-2a8 8 0 0 1 16 0v2M4 13h3v7H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 1-2Zm16 0h-3v7h2a2 2 0 0 0 2-2v-3a2 2 0 0 0-1-2Z"/>',[roomSection,headphoneCalibrationSetting,listeningLevels]),
+            settingsGroup('Projeto','<path d="M3 7V4h7l2 3h9v13H3z"/>',[projectTools,clearButton]),
+            settingsGroup('Avançado','<path d="m8 7-5 5 5 5m8-10 5 5-5 5M14 4l-4 16"/>',[developerModeSetting])
+        );
 
         settingsMenu.appendChild(clearCatalogFooter);
         MenuSlider.mount(settingsMenu);
@@ -8992,7 +9073,7 @@ const Hardware = (() => {
                 const count=active.select.options.length;for(let n=0,index=start;n<count;n++,index=(index+direction+count)%count){const option=active.select.options[index];if(option&&!option.disabled&&!option.parentElement.disabled)return index;}return active.index;
             }
             function enhance(select){
-                if(widgets.has(select)||select.multiple)return;
+                if(widgets.has(select)||select.multiple||select.dataset.iconChoice!==undefined)return;
                 const wrapper=document.createElement('span');wrapper.className='app-select';const button=document.createElement('button');button.type='button';button.className='app-select-trigger';button.setAttribute('role','combobox');button.setAttribute('aria-haspopup','listbox');button.setAttribute('aria-expanded','false');
                 if(select.closest('#inspector-content'))Hardware.button(button,'ui');
                 const popupId='app-select-list-'+(++sequence);button.setAttribute('aria-controls',popupId);
