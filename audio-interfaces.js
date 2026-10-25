@@ -7,7 +7,7 @@ const AudioInterfaceDesign = (() => {
     const icon = name => `<svg viewBox="0 0 24 24" aria-hidden="true">${icons[name]}</svg>`;
     const knob = (binding,label,model,size) => `<button type="button" class="ai-dial" ${binding} data-interface-knob="${model}" data-control-width="${size}" data-control-height="${size}" aria-label="${label}" title="${label}"></button>`;
     const key = (binding,label,content,model='interfaceRound',size=18) => `<button type="button" class="ai-key" ${binding} data-button-model="${model}" data-control-width="${size}" data-control-height="${size}" aria-label="${label}" title="${label}">${content}</button>`;
-    const jack = (node,signal,label,type='p10') => `<div class="ai-socket"><div class="port" data-type="${type}" data-io="out" data-node="${node}" data-signal="${signal}" title="${label}"></div></div>`;
+    const jack = (node,signal,label,type='p10') => `<span class="ai-socket ai-socket-visual" aria-hidden="true" title="${label}" data-visual-socket="${type}"></span>`;
     const capture = () => key('data-source-play aria-pressed="false"','Iniciar ou parar captura do computador',icon('usb'),'interfaceRound',18);
     const pair = () => `<span class="ai-lr">L</span>${jack('outL','line','Saída de linha esquerda · RCA','rca-l')}<span class="ai-lr">R</span>${jack('outR','line','Saída de linha direita · RCA','rca-r')}`;
     const captureOne = () => `<section class="audio-interface-face ai-panel ai-interface-one">
