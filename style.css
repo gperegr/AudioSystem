@@ -4709,29 +4709,6 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
     .mobile-context-actions button[data-context-action="remove"] {color:#ffd1cf;border-color:#765052;}
 }
 
-.guided-access {box-sizing:border-box;width:min(540px,calc(100vw - 28px));max-height:calc(100dvh - 40px);overflow:auto;padding:24px;border:1px solid #53616b;border-radius:20px;background:#202a33;color:#e4e9ec;box-shadow:0 24px 80px #0009;}
-.guided-access::backdrop {background:#070d15b3;}
-.guided-access h2 {font-size:23px;line-height:1.3;margin:20px 0 14px;}
-.guided-access p {line-height:1.65;color:#c8d4dc;margin:12px 0;}
-.guided-access button {min-height:44px;min-width:44px;padding:10px 16px;border:1px solid #52616d;border-radius:10px;background:#303f4c;color:#ecf1f4;cursor:pointer;}
-.guided-access button:disabled {opacity:.35;}
-.guided-access footer {display:flex;justify-content:space-between;gap:12px;margin-top:22px;}
-.guided-access .guide-example {display:block;width:100%;text-align:left;margin:8px 0;}
-@media(prefers-reduced-motion:no-preference){.guided-access[open]{animation:guide-appear .3s ease-out;}@keyframes guide-appear{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}}
-.guided-access svg {width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex:none;}
-.guide-diagram {display:flex;align-items:center;justify-content:space-between;gap:8px;margin:22px 0;}
-.guide-diagram-item {display:flex;flex:1;min-width:0;flex-direction:column;align-items:center;gap:10px;padding:14px 6px;border:1px solid #465764;border-radius:12px;color:#c8dce7;}
-.guide-diagram-item span {font-size:11px;text-align:center;line-height:1.3;}
-.guide-arrow {color:#849dac;}
-.guided-access .guide-example {display:flex;align-items:center;gap:12px;}
-.guided-access .guide-example svg {width:22px;height:22px;}
-@media(max-width:380px){.guided-access{padding:18px;}.guide-diagram{gap:4px;}.guide-diagram-item{padding:12px 3px;}.guide-diagram-item span{font-size:10px;}}
-.guided-access:not(.show-examples) {height:min(540px,calc(100dvh - 40px));}
-.guided-access:not(.show-examples)[open] {display:flex;flex-direction:column;}
-.guided-access:not(.show-examples) footer {margin-top:auto;padding-top:16px;flex-shrink:0;}
-.guided-access:not(.show-examples) .guide-diagram {flex-shrink:0;}
-.guided-access:not(.show-examples) p {font-size:14px;}
-
 /* Settings scroll as one panel; expanded categories keep their content height. */
 .app-settings-content {
     min-height:0;
@@ -4750,5 +4727,75 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
 .app-settings-content .settings-group-content>* {flex-shrink:0;min-width:0;max-width:100%;box-sizing:border-box;}
 .app-settings-content .headphone-calibration-setting button {height:auto;white-space:normal;padding:10px 12px;}
 .app-select-popup {max-width:calc(100vw - 16px);overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;}
-.guided-access>* {flex-shrink:0;}
-.guided-access {overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+
+/* Furniture is a support layer, including while selected; equipment stays clickable. */
+#audio-world>.device-node.furniture-node,
+#audio-world>.device-node.furniture-node.selected {z-index:2;}
+
+/* The interactive guide reserves space instead of covering the canvas. */
+:root {--tutorial-height:min(220px,42dvh);}
+.tutorial-bar[hidden] {display:none!important;}
+.tutorial-bar {position:fixed;left:0;right:0;bottom:var(--phone-nav-height,0px);z-index:105;height:var(--tutorial-height);box-sizing:border-box;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:8px;padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));background:#1c2732;color:#e4edf3;border-top:1px solid #526775;box-shadow:0 -6px 22px #0004;font:500 13px/1.45 var(--font-ui,'Inter',sans-serif);}
+.tutorial-bar header,.tutorial-bar footer {display:flex;align-items:center;gap:12px;min-width:0;}
+.tutorial-bar h2 {font-size:14px;font-weight:700;margin:0;flex:1;}
+.tutorial-bar h3 {display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600;margin:0 0 6px;}
+.tutorial-bar p {margin:4px 0;}
+.tutorial-bar svg,.tutorial-dialog svg {width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none;}
+.tutorial-bar button,.tutorial-bar select,.tutorial-dialog button {min-width:44px;min-height:44px;padding:7px 12px;box-sizing:border-box;border:1px solid #526b7b;border-radius:8px;background:#2c4050;color:#edf4f8;font:inherit;cursor:pointer;touch-action:manipulation;}
+.tutorial-bar button:disabled {opacity:.35;cursor:default;}
+.tutorial-bar button:focus-visible,.tutorial-bar select:focus-visible,.tutorial-dialog button:focus-visible {outline:2px solid #9dd4ed;outline-offset:2px;}
+.tutorial-instructions {overflow-y:auto;overscroll-behavior:contain;min-height:0;scrollbar-gutter:stable;padding-right:8px;}
+.tutorial-note {font-size:12px;color:#c0d5df;border-left:2px solid #84bbd0;padding-left:10px;}
+.tutorial-status {flex:1;color:#aacbd8;font-size:12px;}
+body.tutorial-open #workspace-shell {box-sizing:border-box;padding-bottom:calc(var(--tutorial-height) + var(--phone-nav-height,0px));}
+body.tutorial-open #equipment-catalog,body.tutorial-open #inspector {bottom:calc(var(--tutorial-height) + var(--phone-nav-height,0px))!important;height:auto!important;max-height:calc(100% - var(--tutorial-height) - var(--phone-nav-height,0px))!important;}
+body.tutorial-open .mobile-panel-backdrop:not([hidden]) {bottom:calc(var(--tutorial-height) + var(--phone-nav-height,0px))!important;}
+body.tutorial-open .mobile-context-actions {display:none!important;}
+body.tutorial-open .app-settings-content {max-height:calc(100dvh - 90px - var(--tutorial-height) - var(--phone-nav-height,0px));}
+.tutorial-target {outline:2px solid #97d7eb!important;outline-offset:5px;}
+.tutorial-dialog {box-sizing:border-box;width:min(540px,calc(100vw - 24px));max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain;padding:24px;background:#202c37;color:#e4edf4;border:1px solid #58717f;border-radius:18px;box-shadow:0 20px 65px #0009;font:500 14px/1.5 var(--font-ui,'Inter',sans-serif);}
+.tutorial-dialog::backdrop {background:#08101db3;}
+.tutorial-dialog h2 {font-size:22px;margin:0 0 12px;}
+.tutorial-dialog p {margin:12px 0;}
+.tutorial-dialog button {margin:6px 6px 6px 0;}
+.tutorial-dialog .tutorial-example-card {display:flex;align-items:center;gap:14px;width:100%;text-align:left;margin:10px 0;padding:12px;}
+.tutorial-example-card>span {display:flex;flex-direction:column;gap:3px;min-width:0;}
+.tutorial-example-card strong {font-size:14px;}.tutorial-example-card small {color:#b5c8d3;}
+@media(max-width:700px){
+    :root {--tutorial-height:min(240px,45dvh);}
+    .tutorial-bar {padding:8px 10px;gap:4px;}
+    .tutorial-bar header {gap:6px;}.tutorial-bar h2 {font-size:12px;}.tutorial-bar select {max-width:42%;font-size:12px;padding:5px;}
+    .tutorial-bar footer {gap:6px;flex-wrap:nowrap;}.tutorial-bar footer button {font-size:12px;padding:5px 8px;}
+    .tutorial-bar .tutorial-status {font-size:10px;min-width:0;}.tutorial-bar h3 {font-size:14px;}
+    body.tutorial-open #inspector {top:auto!important;height:min(48dvh,calc(100% - var(--tutorial-height) - var(--phone-nav-height,0px)))!important;}
+    .tutorial-dialog {padding:18px;}
+}
+@media(prefers-reduced-motion:no-preference){.tutorial-bar {animation:tutorial-enter .25s ease-out;}@keyframes tutorial-enter {from{opacity:0;translate:0 12px}to{opacity:1;translate:0 0}}}
+.tutorial-bar header .app-select {flex:0 1 220px;min-width:0;width:auto;}
+.tutorial-bar header .app-select-trigger {min-height:44px;height:44px;font-size:12px;}
+@media(max-width:700px){.tutorial-bar header .app-select {flex-basis:46%;max-width:46%;}.tutorial-bar header .app-select-trigger {padding:6px;font-size:12px;}}
+.tutorial-bar {overflow:hidden;}
+.tutorial-bar footer {position:relative;z-index:1;min-height:44px;background:#1c2732;}
+@media(hover:none) and (pointer:coarse) and (min-width:701px){
+    /* Tablet side panels are not modal drawers; their backdrop must not block them. */
+    .mobile-panel-backdrop:not([hidden]) {display:none!important;}
+}
+
+/* Spotify track rows and transport need their own layout, independent of button skins. */
+#inspector-content .spotify-track-panel {display:flex;flex-direction:column;gap:10px;min-width:0;padding:12px;border:1px solid #415362;border-radius:10px;background:#1b2731;}
+#inspector-content .spotify-track-panel h3 {margin:0;font-size:14px;line-height:1.4;font-weight:700;}
+#inspector-content .spotify-track-album {display:block;min-width:0;overflow-wrap:anywhere;color:#b7ccd8;font-size:13px;line-height:1.4;}
+#inspector-content .spotify-track-list {display:flex;flex-direction:column;gap:5px;max-height:min(360px,45dvh);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;min-width:0;scrollbar-gutter:stable;}
+#inspector-content .spotify-track-list .spotify-track-item {display:grid!important;grid-template-columns:26px minmax(0,1fr) 40px;align-items:center;gap:8px;box-sizing:border-box;width:100%;min-height:44px;height:auto!important;margin:0;padding:9px 7px!important;text-align:left!important;border:1px solid transparent;border-radius:6px;background:transparent;color:#e0e9ef;font:500 12px/1.4 var(--font-ui,'Inter',sans-serif);white-space:normal;}
+#inspector-content .spotify-track-number {text-align:center;font-variant-numeric:tabular-nums;color:#8fa8b8;}
+#inspector-content .spotify-track-name {min-width:0;overflow-wrap:anywhere;}
+#inspector-content .spotify-track-item time {text-align:right;white-space:nowrap;font-size:11px;font-variant-numeric:tabular-nums;color:#a4bac9;}
+#inspector-content .spotify-track-item:hover,#inspector-content .spotify-track-item:focus-visible {background:#2a3c4b;border-color:#668396;}
+#inspector-content .spotify-track-item.is-current {background:#294451;border-color:#78b2c9;}
+#inspector-content .audio-transport {display:flex;flex-direction:column;gap:10px;min-width:0;}
+#inspector-content .audio-transport>label {display:block;font-size:14px;line-height:1.4;}
+#inspector-content .audio-transport .spotify-track-title {display:block;width:100%;min-width:0;}
+#inspector-content .transport-time {display:flex;justify-content:space-between;gap:12px;min-width:0;font-size:12px;font-variant-numeric:tabular-nums;}
+#inspector-content .audio-transport .transport-buttons {display:grid;grid-template-columns:repeat(auto-fit,minmax(44px,1fr));gap:7px;min-width:0;}
+#inspector-content .audio-transport .transport-buttons button {width:100%;height:44px!important;min-height:44px;padding:6px!important;box-sizing:border-box;}
+#inspector-content .audio-transport .transport-buttons {gap:4px;}

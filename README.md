@@ -158,4 +158,14 @@ As [imagens da documentação](docs/images/README.md) são capturas do simulador
 
 ### Acesso guiado e exemplos
 
-Em Configurações → Acesso guiado, consulte o passo a passo de montagem, Spotify, captura externa e arquivos locais. A opção independente Configurações → Montagens de exemplo oferece cinco sistemas organizados em móveis. Na primeira abertura, o guia aparece após concluir ou pular a calibração. É possível pulá-lo e reabri-lo depois. Cinco exemplos acrescentam montagens conectadas ao projeto atual, sem iniciar reprodução ou captura. A gravidade começa desativada para novas preferências; escolhas já salvas são preservadas.
+**Configurações → Acesso guiado** abre um tutorial interativo no projeto atual. Uma faixa inferior orienta uma ação por vez, destaca os controles e oferece **Localizar**, **Voltar**, **Pular tópico** e **Sair**. A seta de avanço é habilitada quando o programa detecta a ação concluída. Nenhuma música, autenticação ou captura começa automaticamente. As alterações feitas durante a prática permanecem no projeto.
+
+Na primeira abertura, o convite aparece após concluir ou pular a calibração. É possível recusar, continuar depois ou recomeçar pelas configurações. O progresso também é preservado ao voltar da autenticação do Spotify. No tópico Spotify, o guia explica que equalizadores e outros efeitos não processam esse áudio: a cadeia controla audibilidade e volume.
+
+**Configurações → Montagens de exemplo** é uma opção independente, com cinco sistemas em móveis: CD/MP3 com caixas ativas; entrada externa com amplificador e caixas passivas; laboratório de equalização; fita com fones compartilhados; e coleção Spotify com toca-discos. O menu informa o requisito e o primeiro passo de cada exemplo. Quando o canvas contém objetos, é necessário confirmar a substituição. Exporte seu projeto se quiser guardá-lo para depois. O programa guarda a montagem atual no armazenamento local antes de substituí-la e a restaura com seus arquivos de áudio se o carregamento falhar. A substituição exige armazenamento local disponível e reinicia o histórico de movimentos. Fontes começam pausadas, sem captura ativa.
+
+A gravidade começa desativada para novas preferências; escolhas já salvas são preservadas.
+
+Para validar o tutorial: `node --test tests/guided-access.test.cjs`. A verificação opcional de navegador usa Playwright e Chromium: com um servidor local em execução, rode `node tests/guided-access.browser.cjs` (`TEST_BASE_URL` e `CHROMIUM_PATH` permitem ajustar o endereço e o executável).
+
+Capas e vinis soltos encaixam na grade ao serem largados no canvas, inclusive ao restaurar o projeto. O disco colocado em um toca-discos segue a posição exata do prato. Durante a abertura, a interface aparece depois da preparação do catálogo e da restauração do projeto; o HTML não mantém os antigos desenhos substituídos do catálogo.

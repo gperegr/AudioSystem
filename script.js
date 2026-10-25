@@ -1960,6 +1960,10 @@ const Hardware = (() => {
         const mobileControls=document.createElement('div');mobileControls.className='mobile-panel-controls';
         mobileControls.innerHTML='<button type="button" data-mobile-panel="catalog" aria-label="Equipamentos" data-tooltip="Equipamentos" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg><small>Equip.</small></button><button type="button" data-mobile-panel="properties" aria-label="Propriedades" data-tooltip="Propriedades" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="18" r="2"/></svg><small>Ajustes</small></button><button type="button" data-mobile-action="center" aria-label="Centralizar" data-tooltip="Centralizar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v5m0 8v5M3 12h5m8 0h5"/><circle cx="12" cy="12" r="4"/></svg><small>Centro</small></button><button type="button" data-mobile-action="undo" aria-label="Desfazer" data-tooltip="Desfazer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h9a7 7 0 0 1 0 14h-2"/></svg><small>Desfazer</small></button><button type="button" data-mobile-action="settings" aria-label="Configurações" data-tooltip="Configurações"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3m14 0h3"/></svg><small>Ajustes</small></button>';
         document.getElementById('app-topbar').lastElementChild.prepend(mobileControls);
+        // Fixed phone navigation must escape the topbar's scrolling container.
+        const phoneNavigationLayout=matchMedia('(max-width:700px)');
+        const placePhoneNavigation=()=>{if(phoneNavigationLayout.matches)document.body.append(mobileControls);else document.querySelector('#app-topbar>.topbar-controls').prepend(mobileControls);};
+        phoneNavigationLayout.addEventListener('change',placePhoneNavigation);placePhoneNavigation();
         const mobileContextActions=document.createElement('div');mobileContextActions.className='mobile-context-actions';mobileContextActions.hidden=true;mobileContextActions.setAttribute('aria-label','Ações do equipamento selecionado');
         mobileContextActions.innerHTML='<button type="button" data-context-action="power"><svg viewBox="0 0 24 24"><path d="M12 3v9"/><path d="M6.1 6.1a8 8 0 1 0 11.8 0"/></svg><span>Ligar</span></button><button type="button" data-context-action="play"><svg viewBox="0 0 24 24"><path d="m8 5 12 7-12 7z"/></svg><span>Reproduzir</span></button><button type="button" data-context-action="center"><svg viewBox="0 0 24 24"><path d="M12 2v6m0 8v6M2 12h6m8 0h6"/><circle cx="12" cy="12" r="4"/></svg><span>Centralizar</span></button><button type="button" data-context-action="remove"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5m4-5v5"/></svg><span>Remover</span></button>';
         document.body.appendChild(mobileContextActions);
@@ -6298,6 +6302,7 @@ const Hardware = (() => {
                     dev.powerNodes[1].connect(left);left.connect(output,0,0);dev.powerNodes[0].connect(right);right.connect(output,0,1);
                     return [left,right];
                 });
+                if(type==='audioInterface4')dev.nodes.outPhone1=dev.nodes.outPhone;
                 const interfaceLevelGain=control=>control<=.8?control/.8:10**(((control-.8)/.2)*12/20);
                 dev.setMicGain=(channel,value)=>{
                     const control=Math.max(0,Math.min(1,Number(value)||0));dev.state['micGain'+channel]=control;
@@ -6807,17 +6812,17 @@ const Hardware = (() => {
         }
 
         async function refreshCaptureInputs(dev,select=document.getElementById('ai-input-device')){
-            if(!select||!navigator.mediaDevices?.enumerateDevices)return;
-            const selected=dev.micDeviceId||select.value||'';
+            if(!navigator.mediaDevices?.enumerateDevices)return;
+            const selected=dev.micDeviceId||select?.value||'';
             try{
                 const devices=await navigator.mediaDevices.enumerateDevices();
-                if(!select.isConnected)return;
                 const inputs=devices.filter(device=>device.kind==='audioinput');
-                dev.captureInputLabelsAvailable=inputs.some(device=>!!device.label);
+                dev.captureInputLabelsAvailable=inputs.some(device=>!!device.label);GuidedAccess.notify();
+                if(!select?.isConnected)return;
                 select.replaceChildren(new Option('Entrada padrão do sistema',''));
                 inputs.forEach((device,index)=>select.add(new Option(device.label||`Entrada de áudio ${index+1}`,device.deviceId)));
                 select.value=inputs.some(device=>device.deviceId===selected)?selected:'';
-                dev.micDeviceId=select.value;
+                dev.micDeviceId=select.value;GuidedAccess.notify();
             }catch{}
         }
 
@@ -7641,6 +7646,7 @@ const Hardware = (() => {
         }
 
         function selectDevice(id, preserveSelection = false) {
+            GuidedAccess.notify();
             if(id&&!state.restoringProject&&!compactLayout.matches)openSidebar('properties',4000);
             if (id && state.selectedConnection) selectCable(null,false);
             disposeSpectrum();
@@ -7858,7 +7864,7 @@ const Hardware = (() => {
                 const select=document.getElementById('ai-input-device');
                 refreshCaptureInputs(dev,select);
                 document.getElementById('ai-authorize-inputs').addEventListener('click',event=>authorizeCaptureInputs(dev,event.currentTarget));
-                select.addEventListener('change',()=>{const active=dev.state.playing;if(active)dev.stopMicCapture(false);dev.micDeviceId=select.value;if(active)dev.startMicCapture();});
+                select.addEventListener('change',()=>{const active=dev.state.playing;if(active)dev.stopMicCapture(false);dev.micDeviceId=select.value;dev.captureInputChosen=true;if(active)dev.startMicCapture();});
                 document.getElementById('ai-capture-toggle').addEventListener('click',()=>setSourcePlaying(dev,!dev.state.playing));
                 for(const channel of ['L','R'])document.getElementById(`ai-gain-${channel}`)?.addEventListener('input',event=>dev.setMicGain(channel,event.target.value));
                 document.getElementById('ai-line').addEventListener('input',event=>dev.setAiLine(event.target.value));
@@ -8742,6 +8748,7 @@ const Hardware = (() => {
         }
 
         function updateCableFlows() {
+            GuidedAccess.notify();
             updateListeningControls();
             if(spotifyPlayingTurntable||spotifyVolume>0)scheduleSpotifyVolume();
             updateStackFeet();
@@ -9030,7 +9037,8 @@ const Hardware = (() => {
         function refreshSpotifyAlbums(){SpotifyCoverflow.markRemoved(new Set(spotifyAlbums.keys()));}
         const SPOTIFY_VINYL_SIZE=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--spotify-vinyl-size'));
         const SPOTIFY_ALBUM_SIZE=SPOTIFY_VINYL_SIZE+16;
-        function moveSpotifyAlbum(item,x,y){item.x=Math.max(0,Math.min(world.offsetWidth-SPOTIFY_ALBUM_SIZE,x));item.y=Math.max(0,Math.min(maxEquipmentBottom()-SPOTIFY_ALBUM_SIZE,y));item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';}
+        const spotifyGridCoordinate=(value,limit)=>Math.max(0,Math.min(Math.floor(limit/Hardware.sizes.grid)*Hardware.sizes.grid,snapCoordinate(value)));
+        function moveSpotifyAlbum(item,x,y,settle=false){item.x=settle?spotifyGridCoordinate(x,world.offsetWidth-SPOTIFY_ALBUM_SIZE):Math.max(0,Math.min(world.offsetWidth-SPOTIFY_ALBUM_SIZE,x));item.y=settle?spotifyGridCoordinate(y,maxEquipmentBottom()-SPOTIFY_ALBUM_SIZE):Math.max(0,Math.min(maxEquipmentBottom()-SPOTIFY_ALBUM_SIZE,y));item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';}
         function syncSpotifyAlbum(item){item.el.classList.toggle('has-vinyl',item.open&&!spotifyVinyls.has(item.uri));item.el.classList.toggle('is-open',item.open);}
         function removeSpotifyAlbum(item){spotifyAlbums.delete(item.uri);item.el.remove();refreshSpotifyAlbums();scheduleProjectSave();}
         function createSpotifyAlbum(record){
@@ -9038,9 +9046,9 @@ const Hardware = (() => {
             const item={id:record.id||'album_'+Math.random().toString(36).slice(2),uri:record.uri,name:String(record.name||'Álbum').slice(0,160),image:/^https:\/\//.test(record.image||'')?record.image:'',origin:record.origin||null,x:0,y:0,open:!!record.open};
             const el=document.createElement('div');el.className='spotify-canvas-album';el.tabIndex=0;el.setAttribute('aria-label',item.name+' · arraste ou clique para abrir');
             const cover=document.createElement('span');cover.className='spotify-canvas-album-cover';if(item.image)cover.style.backgroundImage=`url("${item.image.replaceAll('"','%22')}")`;
-            const disc=document.createElement('span');disc.className='spotify-canvas-album-disc';disc.title='Retirar o disco';el.append(disc,cover);item.el=el;world.append(el);spotifyAlbums.set(item.uri,item);moveSpotifyAlbum(item,Number(record.x)||0,Number(record.y)||0);syncSpotifyAlbum(item);refreshSpotifyAlbums();
+            const disc=document.createElement('span');disc.className='spotify-canvas-album-disc';disc.title='Retirar o disco';el.append(disc,cover);item.el=el;world.append(el);spotifyAlbums.set(item.uri,item);moveSpotifyAlbum(item,Number(record.x)||0,Number(record.y)||0,true);syncSpotifyAlbum(item);refreshSpotifyAlbums();
             disc.addEventListener('pointerdown',event=>{if(event.button!==0||spotifyVinyls.has(item.uri))return;event.preventDefault();event.stopPropagation();const at=screenToWorld(event.clientX,event.clientY),vinyl=createSpotifyVinyl({uri:item.uri,name:item.name,image:item.image,origin:item.origin,x:at.x-SPOTIFY_VINYL_SIZE/2,y:at.y-SPOTIFY_VINYL_SIZE/2});syncSpotifyAlbum(item);if(vinyl)beginSpotifyVinylDrag(vinyl,event);});
-            el.addEventListener('pointerdown',event=>{if(event.button!==0||event.target===disc)return;event.preventDefault();event.stopPropagation();const start=screenToWorld(event.clientX,event.clientY),offsetX=start.x-item.x,offsetY=start.y-item.y;let moved=false;const move=ev=>{if(ev.pointerId!==event.pointerId||ev.type==='pointercancel')return;const at=screenToWorld(ev.clientX,ev.clientY);if(!moved&&Math.hypot(ev.clientX-event.clientX,ev.clientY-event.clientY)<8)return;moved=true;el.classList.add('is-dragging');moveSpotifyAlbum(item,at.x-offsetX,at.y-offsetY);};const end=ev=>{if(ev.pointerId!==event.pointerId)return;window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',end,true);window.removeEventListener('pointercancel',end,true);el.classList.remove('is-dragging');el.style.pointerEvents='none';const overFurniture=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('.device-type-furnitureCoverflow');el.style.pointerEvents='';if(!moved){item.open=!item.open;syncSpotifyAlbum(item);}else if(ev.type!=='pointercancel'&&(isOverCatalog(ev)||overFurniture)){showDiscardCloud(ev.clientX,ev.clientY);removeSpotifyAlbum(item);return;}scheduleProjectSave();};window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',end,true);window.addEventListener('pointercancel',end,true);});
+            el.addEventListener('pointerdown',event=>{if(event.button!==0||event.target===disc)return;event.preventDefault();event.stopPropagation();const start=screenToWorld(event.clientX,event.clientY),offsetX=start.x-item.x,offsetY=start.y-item.y;let moved=false;const move=ev=>{if(ev.pointerId!==event.pointerId||ev.type==='pointercancel')return;const at=screenToWorld(ev.clientX,ev.clientY);if(!moved&&Math.hypot(ev.clientX-event.clientX,ev.clientY-event.clientY)<8)return;moved=true;el.classList.add('is-dragging');moveSpotifyAlbum(item,at.x-offsetX,at.y-offsetY);};const end=ev=>{if(ev.pointerId!==event.pointerId)return;window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',end,true);window.removeEventListener('pointercancel',end,true);el.classList.remove('is-dragging');el.style.pointerEvents='none';const overFurniture=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('.device-type-furnitureCoverflow');el.style.pointerEvents='';moveSpotifyAlbum(item,item.x,item.y,true);if(!moved){item.open=!item.open;syncSpotifyAlbum(item);}else if(ev.type!=='pointercancel'&&(isOverCatalog(ev)||overFurniture)){showDiscardCloud(ev.clientX,ev.clientY);removeSpotifyAlbum(item);return;}scheduleProjectSave();};window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',end,true);window.addEventListener('pointercancel',end,true);});
             return item;
         }
         document.addEventListener('spotify-album-pickup',event=>{const furniture=event.target.closest('.device-node'),data=event.detail;if(!furniture||!data||spotifyAlbums.has(data.uri))return;const at=screenToWorld(data.clientX,data.clientY),item=createSpotifyAlbum({...data,origin:furniture.id,x:at.x-SPOTIFY_ALBUM_SIZE/2,y:at.y-SPOTIFY_ALBUM_SIZE/2});if(item){item.el.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,button:0,pointerId:data.pointerId,clientX:data.clientX,clientY:data.clientY}));scheduleProjectSave();}});
@@ -9049,7 +9057,7 @@ const Hardware = (() => {
             const rect=marker.getBoundingClientRect();return screenToWorld(rect.left+rect.width/2,rect.top+rect.height/2);
         }
         function syncPlatterVinyls(affectedDeviceIds=null){for(const item of spotifyVinyls.values()){if(affectedDeviceIds&&!affectedDeviceIds.has(item.turntableId))continue;const dev=state.devices[item.turntableId];if(!dev)continue;const at=vinylPlatterCenter(dev);moveSpotifyVinyl(item,at.x-SPOTIFY_VINYL_SIZE/2,at.y-6);}}
-        function moveSpotifyVinyl(item,x,y){item.x=Math.max(0,Math.min(world.offsetWidth-SPOTIFY_VINYL_SIZE,x));item.y=Math.max(0,Math.min(maxEquipmentBottom()-(item.turntableId?12:SPOTIFY_VINYL_SIZE),y));item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';}
+        function moveSpotifyVinyl(item,x,y,settle=false){const snap=settle&&!item.turntableId;item.x=snap?spotifyGridCoordinate(x,world.offsetWidth-SPOTIFY_VINYL_SIZE):Math.max(0,Math.min(world.offsetWidth-SPOTIFY_VINYL_SIZE,x));item.y=snap?spotifyGridCoordinate(y,maxEquipmentBottom()-SPOTIFY_VINYL_SIZE):Math.max(0,Math.min(maxEquipmentBottom()-(item.turntableId?12:SPOTIFY_VINYL_SIZE),y));item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';}
         function placeSpotifyVinyl(item,dev,animate=true){
             if(dev.spotifyVinyl&&dev.spotifyVinyl!==item){spotifyVinylNotice('Este prato já tem um disco.');return false;}
             if(dev.state.playing)setSourcePlaying(dev,false);
@@ -9057,7 +9065,7 @@ const Hardware = (() => {
             const fromX=item.x,fromY=item.y;
             item.turntableId=dev.id;dev.spotifyVinyl=item;dev.spotifyNeedsRestart=true;if(dev.type==='turntableLinear'&&dev.state.tt?.disc==='none'){dev.state.tt.disc='lp';dev.refreshTurntable?.();}dev.setLidOpen?.(true);dev.el.classList.add('spotify-vinyl-placing');const center=vinylPlatterCenter(dev);moveSpotifyVinyl(item,center.x-SPOTIFY_VINYL_SIZE/2,center.y-6);
             item.el.classList.toggle('is-linear',dev.type==='turntableLinear');item.el.classList.add('is-on-platter');
-            const finish=()=>dev.el.classList.remove('spotify-vinyl-placing');
+            const finish=()=>{dev.el.classList.remove('spotify-vinyl-placing');GuidedAccess.notify();};
             if(animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
                 const dx=fromX-item.x,dy=fromY-item.y;
                 item.el.animate([{transform:`translate(${dx}px,${dy}px) scaleY(32)`,opacity:.85,offset:0},{transform:'translate(0,-54px) scaleY(.16)',opacity:1,offset:.42},{transform:'translate(0,0) scaleY(1)',opacity:1,offset:1}],{duration:900,easing:'cubic-bezier(.2,.7,.22,1)'}).finished.then(finish,finish);
@@ -9068,7 +9076,7 @@ const Hardware = (() => {
             if(!record||typeof record.uri!=='string'||!/^spotify:(album|playlist):[A-Za-z0-9]+$/.test(record.uri)||spotifyVinyls.has(record.uri))return null;
             const item={id:record.id||'vinyl_'+Math.random().toString(36).slice(2),uri:record.uri,name:String(record.name||'Disco do Spotify').slice(0,160),image:/^https:\/\//.test(record.image||'')?record.image:'',origin:record.origin||null,turntableId:null,x:0,y:0};
             const el=document.createElement('div');el.className='spotify-canvas-vinyl';el.tabIndex=0;el.title=item.name+' · arraste ao toca-discos ou de volta ao móvel';el.setAttribute('aria-label',el.title);
-            const label=document.createElement('span');if(item.image)label.style.backgroundImage=`url("${item.image.replaceAll('"','%22')}")`;el.append(label);item.el=el;world.append(el);spotifyVinyls.set(item.uri,item);moveSpotifyVinyl(item,Number(record.x)||0,Number(record.y)||0);refreshSpotifyVinyls();
+            const label=document.createElement('span');if(item.image)label.style.backgroundImage=`url("${item.image.replaceAll('"','%22')}")`;el.append(label);item.el=el;world.append(el);spotifyVinyls.set(item.uri,item);moveSpotifyVinyl(item,Number(record.x)||0,Number(record.y)||0,true);refreshSpotifyVinyls();
             el.addEventListener('pointerdown',event=>{if(event.button!==0)return;event.preventDefault();event.stopPropagation();beginSpotifyVinylDrag(item,event);});
             return item;
         }
@@ -9094,7 +9102,7 @@ const Hardware = (() => {
                 const placed=dev&&TURNTABLE_TYPES.has(dev.type)&&placeSpotifyVinyl(item,dev);
                 releaseAutoLid(!!placed&&autoLid===dev);
                 if(!placed&&ev.type!=='pointercancel'&&(isOverCatalog(ev)||dev?.type==='furnitureCoverflow')){showDiscardCloud(ev.clientX,ev.clientY);removeSpotifyVinyl(item);if(prior&&state.selectedDeviceId===prior.id)selectDevice(prior.id,true);playUiSound('discard');spotifyVinylNotice('Disco guardado na capa do álbum.');}
-                else if(!placed){if(prior&&state.selectedDeviceId===prior.id)selectDevice(prior.id,true);scheduleProjectSave();}
+                else if(!placed){moveSpotifyVinyl(item,item.x,item.y,true);if(prior&&state.selectedDeviceId===prior.id)selectDevice(prior.id,true);scheduleProjectSave();}
             };
             showReturnTarget(event);
             window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',end,true);window.addEventListener('pointercancel',end,true);
@@ -9127,6 +9135,7 @@ const Hardware = (() => {
         function scheduleSpotifyVolume(){if(spotifyVolumeTimer)return;spotifyVolumeTimer=setTimeout(()=>{spotifyVolumeTimer=0;const dev=state.devices[spotifyPlayingTurntable],target=dev&&dev.state.playing?spotifyPathVolume(dev):0;spotifyVolume+=Math.max(-.08,Math.min(.08,target-spotifyVolume));if(Math.abs(spotifyVolume-target)<.004)spotifyVolume=target;SpotifyCoverflow.setPlaybackVolume(spotifyVolume).catch(()=>{});if(spotifyPlayingTurntable&&Math.abs(spotifyVolume-target)>.004)scheduleSpotifyVolume();},100);}
         setInterval(()=>{if(spotifyPlayingTurntable)scheduleSpotifyVolume();},240);
         const PROJECT_FORMAT='audio-system-project',PROJECT_VERSION=1;
+        let exampleLoading=false;
         let projectDatabase=null,projectPersistenceBlocked=false,projectRestoring=false,projectSaving=false,projectSaveAgain=false,lastProjectSignature='',knownAudioKeys=new Set();
         const projectTools=document.createElement('section');projectTools.className='project-tools';
         projectTools.innerHTML='<div class="project-file-actions"><button type="button" id="export-project">Exportar projeto</button><button type="button" id="import-project">Abrir projeto</button></div><input id="project-file" type="file" accept=".json,application/json" hidden><span id="project-save-status" class="sr-only" role="status" aria-live="polite"></span>';
@@ -9179,8 +9188,8 @@ const Hardware = (() => {
         }
         const dbRead=(store,key)=>new Promise((resolve,reject)=>{const request=projectDatabase.transaction(store).objectStore(store).get(key);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});
         const dbKeys=()=>new Promise((resolve,reject)=>{const request=projectDatabase.transaction('audio').objectStore('audio').getAllKeys();request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});
-        async function saveLocalProject(force=false){
-            if(projectRestoring||projectPersistenceBlocked)return;
+        async function saveLocalProject(force=false,exampleCommit=false){
+            if(projectRestoring||projectPersistenceBlocked||(exampleLoading&&!exampleCommit))return;
             if(projectSaving){projectSaveAgain=true;return;}
             if(!force&&(isPatching||document.querySelector('.equipment-dragging')))return;
             const snapshot=projectCapture(),signature=JSON.stringify(snapshot);
@@ -9200,8 +9209,9 @@ const Hardware = (() => {
                 });
                 knownAudioKeys=used;lastProjectSignature=signature;
                 try{localStorage.setItem('audio-system-project-fallback',JSON.stringify(snapshot));}catch{}
-                projectStatus('Salvo neste navegador · músicas incluídas');
+                projectStatus('Salvo neste navegador · músicas incluídas');return true;
             }catch(error){
+                if(exampleCommit)throw error;
                 try{localStorage.setItem('audio-system-project-fallback',JSON.stringify(snapshot));projectStatus('Configurações salvas; áudio não confirmado. Exporte uma cópia.',true);}catch{projectStatus('Não foi possível salvar. Exporte o projeto para não perder a montagem.',true);}
             }finally{projectSaving=false;if(projectSaveAgain){projectSaveAgain=false;saveLocalProject();}}
         }
@@ -9335,7 +9345,7 @@ const Hardware = (() => {
         ['pointerup','input','change','click','keyup'].forEach(type=>document.addEventListener(type,scheduleProjectSave,{capture:true,passive:true}));
         setInterval(()=>saveLocalProject(),2500);
         document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveLocalProject(true);});
-        window.addEventListener('pagehide',()=>{if(projectRestoring||projectPersistenceBlocked)return;try{localStorage.setItem('audio-system-project-fallback',JSON.stringify({...projectCapture(),savedAt:Date.now()}));}catch{}saveLocalProject(true);});
+        window.addEventListener('pagehide',()=>{if(projectRestoring||projectPersistenceBlocked||exampleLoading)return;try{localStorage.setItem('audio-system-project-fallback',JSON.stringify({...projectCapture(),savedAt:Date.now()}));}catch{}saveLocalProject(true);});
         async function initializeProjectPersistence(){
             projectRestoring=true;
             const initialShield=document.createElement('div');initialShield.className='project-restore-shield';initialShield.textContent='Abrindo projeto local…';document.body.appendChild(initialShield);
@@ -9373,7 +9383,7 @@ const Hardware = (() => {
         const roomSection=document.createElement('section');roomSection.className='room-settings';
         roomSection.innerHTML='<label>Ambiente sonoro<select id="room-preset">'+Object.entries(ROOM_PRESETS).map(([key,value])=>`<option value="${key}">${value.name}</option>`).join('')+'</select></label><label for="room-intensity">Intensidade <output id="room-intensity-value">0/10</output></label><input id="room-intensity" type="range" min="0" max="10" step="1" value="0"><p>Reverberação estéreo na escuta final. Em zero, o áudio permanece seco.</p>';
         clearCatalogFooter.insertBefore(roomSection,soundControls);
-        SpotifyCoverflow.setBeforeRedirect(()=>saveLocalProject(true));
+        SpotifyCoverflow.setBeforeRedirect(()=>{guidedAccess.save();return saveLocalProject(true);});
         const headphoneCalibrationSetting=document.createElement('section');headphoneCalibrationSetting.className='headphone-calibration-setting';
         headphoneCalibrationSetting.innerHTML='<strong>Ajuste de escuta com fones</strong><p>Volume, detalhes, estéreo, graves, agudos e sons da interface.</p><button id="open-headphone-calibration" type="button">Calibrar volume dos fones</button>';
         clearCatalogFooter.insertBefore(headphoneCalibrationSetting,soundControls);
@@ -9540,102 +9550,173 @@ const Hardware = (() => {
         setupAppDropdowns();
 
 
-        const guideKey='audio-system-guide-v1',guide=document.createElement('dialog');guide.className='guided-access';document.body.appendChild(guide);
-        const guideIcons={
-            equipment:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8" cy="12" r="2"/><path d="M13 10h5m-5 4h5"/>',
-            hand:'<path d="M9 12V5a2 2 0 0 1 4 0v6m0-3a2 2 0 0 1 4 0v4m0-2a2 2 0 0 1 4 0v5c0 4-3 6-6 6h-2c-3 0-5-2-6-4l-3-4a2 2 0 0 1 3-2l2 2"/>',
-            controls:'<path d="M5 3v18M12 3v18M19 3v18M2 8h6m1 8h6m1-10h6"/>',
-            cable:'<path d="M7 3v5m-3-5v5m-1 0h5v3a2.5 2.5 0 0 1-5 0V8m2.5 6v3a4 4 0 0 0 8 0v-3m-2-3h4v3h-4zM13.5 11V7"/>',
-            speaker:'<rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="15" r="4"/><circle cx="12" cy="6" r="1"/>',
-            record:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M5 12a7 7 0 0 1 7-7m7 7a7 7 0 0 1-7 7"/>',
-            play:'<path d="m9 5 11 7-11 7Z"/>',
-            usb:'<path d="M12 3v17m-3-14 3-3 3 3m-3 9 6-5V6m-6 11-6-5V9"/><circle cx="6" cy="8" r="1"/><path d="M17 4h2v2h-2z"/>',
-            file:'<path d="M14 2H5v20h14V7ZM14 2v5h5M10 17v-6l5-1v6"/><circle cx="8.5" cy="17" r="1.5"/><circle cx="13.5" cy="16" r="1.5"/>',
-            headphones:'<path d="M4 14v-3a8 8 0 0 1 16 0v3M4 12h4v8H6a2 2 0 0 1-2-2Zm16 0h-4v8h2a2 2 0 0 0 2-2Z"/>'
-        };
-        const guideIcon=key=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+guideIcons[key]+'</svg>';
-        const steps=[
-            ['Monte seu sistema','Arraste do catálogo. Toque no aparelho para ajustar.',[['equipment','Catálogo'],['hand','Arraste'],['controls','Ajuste']]],
-            ['Conecte o som','Saída → entrada. Ligue os aparelhos e suba o volume aos poucos.',[['equipment','Fonte'],['cable','Amplificador'],['speaker','Caixas / fones']]],
-            ['Spotify','Conecte sua conta Premium. Abra a capa e leve o vinil ao prato. Use Play. O áudio do Spotify não pode ser processado pelos equipamentos: equalizadores e outros efeitos não são aplicados. Cabos e controles ajustam apenas a audibilidade e o volume.',[['record','Coleção'],['hand','Leve ao prato'],['play','Play']]],
-            ['Entrada externa','Permita o microfone e escolha seu dispositivo. Conecte LINE ou PHONES.',[['usb','Interface USB'],['controls','Iniciar captura'],['headphones','Conecte']]],
-            ['Arquivos MP3','Na fonte, toque em Carregar áudio. Escolha um arquivo e dê Play.',[['equipment','CD / Tape'],['file','Carregar áudio'],['play','Play']]]
-        ];
-        const examples=[
-            ['CD · caixas ativas',['cdPlayer','spkActiveCompact'],[[0,'outL',1,'inL'],[0,'outR',1,'inR']]],
-            ['Entrada externa · fones',['audioInterface1','headphone'],[[0,'outPhone',1,'in']]],
-            ['Laboratório · equalização',['signalGenerator','eqStudio','headphoneAmp','headphone'],[[0,'outL',1,'inL'],[0,'outR',1,'inR'],[1,'outL',2,'inL'],[1,'outR',2,'inR'],[2,'outPhone',3,'in']]],
-            ['Fita · escuta compartilhada',['tapeDeck','headphoneAmp4','headphone','hpStudio'],[[0,'outL',1,'inL'],[0,'outR',1,'inR'],[1,'outPhone1',2,'in'],[1,'outPhone2',3,'in']]],
-            ['Spotify · coleção de vinil',['furnitureCoverflow','turntable','headphoneAmp','headphone'],[[1,'outL',2,'inL'],[1,'outR',2,'inR'],[2,'outPhone',3,'in']]]
-        ];
-        let guidePage=0,guideExamplesMode=false;
-        function guideSeen(){try{return localStorage.getItem(guideKey)==='true';}catch{return false;}}
-        function finishGuide(){try{localStorage.setItem(guideKey,'true');}catch{}guide.close();}
-        function renderGuide(){
-            guide.replaceChildren();
-            const count=document.createElement('small');count.textContent=guideExamplesMode?'Montagens de exemplo':'Acesso guiado · '+(guidePage+1)+'/'+steps.length;
-            const title=document.createElement('h2');title.textContent=guideExamplesMode?'Escolha uma montagem':steps[guidePage][0];
-            const diagram=document.createElement('div');diagram.className='guide-diagram';
-            steps[guidePage][2].forEach(([icon,label],index)=>{
-                if(index){const arrow=document.createElement('span');arrow.className='guide-arrow';arrow.textContent='→';arrow.setAttribute('aria-hidden','true');diagram.append(arrow);}
-                const item=document.createElement('div');item.className='guide-diagram-item';item.innerHTML=guideIcon(icon);const caption=document.createElement('span');caption.textContent=label;item.append(caption);diagram.append(item);
-            });
-            const body=document.createElement('p');body.textContent=guideExamplesMode?'Acrescenta móveis, aparelhos e cabos ao projeto. Você inicia o áudio.':steps[guidePage][1];guide.append(count,title);if(!guideExamplesMode)guide.append(diagram);guide.append(body);
-            const status=document.createElement('p');status.setAttribute('role','status');
-            if(guideExamplesMode)examples.forEach(([name,types,links])=>{
-                const button=document.createElement('button');button.innerHTML=guideIcon(['speaker','usb','controls','headphones','record'][examples.findIndex(item=>item[0]===name)]);const caption=document.createElement('span');caption.textContent=name;button.append(caption);button.className='guide-example';guide.append(button);
-                button.addEventListener('click',()=>{
-                    const created=[];
-                    try{
-                        initAudio();
-                        const supports=[];
-                        const add=(type,x,y)=>{const before=new Set(Object.keys(state.devices));createDevice(type,x,y);const dev=Object.values(state.devices).find(item=>!before.has(item.id));if(!dev)throw new Error('Sem espaço para esta montagem.');return dev;};
-                        const lab=name.startsWith('Laboratório');
-                        const supportType=types[0]==='furnitureCoverflow'?'furnitureCoverflow':lab?'furnitureRackTall':'furnitureTable';
-                        const support=add(supportType,sceneSideInset()+80,600);supports.push(support);created.push(support);
-                        const anchorX=parseFloat(support.el.style.left),anchorY=parseFloat(support.el.style.top);
-                        let cursor=anchorX+32,currentSupport=support;
-                        const equipment=[];
-                        types.forEach((type,index)=>{
-                            if(type==='furnitureCoverflow'){equipment.push(support);return;}
-                            const dev=add(type,anchorX,100);created.push(dev);equipment.push(dev);
-                            if(lab){
-                                const surface=index===3?0:(index+1)*260;
-                                dev.el.style.left=(anchorX+(support.el.offsetWidth-dev.el.offsetWidth)/2)+'px';
-                                dev.el.style.top=(anchorY+surface-dev.el.offsetHeight-STACK_FEET.height)+'px';
-                            }else{
-                                let activeSupport=currentSupport;
-                                if(cursor+dev.el.offsetWidth>parseFloat(activeSupport.el.style.left)+activeSupport.el.offsetWidth-24){
-                                    activeSupport=add('furnitureTable',parseFloat(currentSupport.el.style.left)+currentSupport.el.offsetWidth+70,anchorY);currentSupport=activeSupport;supports.push(activeSupport);created.push(activeSupport);cursor=parseFloat(activeSupport.el.style.left)+32;
-                                }
-                                dev.el.style.left=cursor+'px';dev.el.style.top=(parseFloat(activeSupport.el.style.top)-dev.el.offsetHeight-STACK_FEET.height)+'px';cursor+=dev.el.offsetWidth+32;
-                            }
-                        });
-                        // Connection indexes refer only to the equipment, not its furniture.
-                        const assembly=equipment;
-                        links.forEach(([a,out,b,input])=>{const from=assembly[a].el.querySelector('[data-node="'+out+'"]'),to=assembly[b].el.querySelector('[data-node="'+input+'"]');if(!from||!to||!getPortCompatibility(from,to).compatible)throw new Error('Conexão indisponível para este exemplo.');});
-                        links.forEach(([a,out,b,input])=>connectProjectPorts(assembly[a],out,assembly[b],input));
-                        updateCables();updateCableFlows();scheduleProjectSave();guide.close();document.getElementById('fit-canvas').click();selectDevice(assembly.find(dev=>!FURNITURE_TYPES[dev.type])?.id||support.id,true);
-                    }catch(error){created.reverse().forEach(deleteDevice);status.textContent=error.message;}
-                });
-            });
-            guide.append(status);
-            if(guideExamplesMode){const close=document.createElement('button');close.textContent='Fechar';close.addEventListener('click',()=>guide.close());guide.append(close);return;}
-            const footer=document.createElement('footer');
-            [['←',()=>{guidePage--;renderGuide();},guidePage===0],['Pular',finishGuide,false],[guidePage===steps.length-1?'✓':'→',()=>{if(guidePage===steps.length-1)finishGuide();else{guidePage++;renderGuide();}},false]].forEach(([label,action,disabled])=>{const button=document.createElement('button');button.textContent=label;button.disabled=disabled;button.setAttribute('aria-label',label==='←'?'Etapa anterior':label==='→'?'Próxima etapa':label==='✓'?'Concluir':label);button.addEventListener('click',action);footer.append(button);});guide.append(footer);
+        const tutorialBindings={};
+        const tutorialFileSources=new Set(['cdPlayer','tapeDeck','streamer']);
+        function tutorialDevice(topic){
+            const matches=dev=>topic==='spotify'?TURNTABLE_TYPES.has(dev.type)&&!!dev.spotifyVinyl:topic==='capture'?CAPTURE_INTERFACE_TYPES.has(dev.type):tutorialFileSources.has(dev.type);
+            const selected=state.devices[state.selectedDeviceId];
+            let dev=state.devices[tutorialBindings[topic]];
+            if(selected&&matches(selected)){dev=selected;tutorialBindings[topic]=dev.id;}
+            if(!dev||!matches(dev)){dev=Object.values(state.devices).find(matches);tutorialBindings[topic]=dev?.id;}
+            return dev;
         }
-        function openGuidedAccess(){settingsMenu.open=false;guideExamplesMode=false;guide.classList.remove('show-examples');guidePage=0;renderGuide();if(!guide.open)guide.showModal();}
-        guide.addEventListener('cancel',()=>{if(!guideExamplesMode){try{localStorage.setItem(guideKey,'true');}catch{}}});
+        function tutorialCollection(){return Object.values(state.devices).find(dev=>dev.type==='furnitureCoverflow');}
+        function tutorialEdges(dev){return state.connections.filter(c=>!c.miswired&&c.outDeviceId===dev?.id).filter(c=>{const out=document.getElementById(c.outId),input=document.getElementById(c.inId);return out&&input&&(!out.dataset.channel||!input.dataset.channel||out.dataset.channel===input.dataset.channel)&&getPortCompatibility(out,input).compatible;});}
+        function tutorialStereoTo(dev,target){
+            const edges=tutorialEdges(dev).filter(c=>c.inDeviceId===target.id);
+            if(edges.some(c=>/Phone|Stereo/.test(document.getElementById(c.outId)?.dataset.node||'')))return true;
+            const outs=[...dev.el.querySelectorAll('.port[data-io="out"]')];
+            if(outs.some(port=>port.dataset.node==='outL')&&outs.some(port=>port.dataset.node==='outR'))return ['L','R'].every(ch=>edges.some(c=>document.getElementById(c.outId)?.dataset.node==='out'+ch));
+            return edges.length>0;
+        }
+        function tutorialAmplifier(dev){return Object.values(state.devices).find(other=>(POWER_OUTPUT_TYPES.has(other.type)||['headphoneAmp','headphoneAmpModern','headphoneAmp4'].includes(other.type))&&tutorialStereoTo(dev,other));}
+        function tutorialListeningPath(source){
+            const seen=new Set();
+            function visit(dev,input){
+                if(!dev||seen.has(dev.id))return false;if(isListeningDevice(dev))return true;seen.add(dev.id);
+                const found=tutorialEdges(dev).some(c=>{const output=document.getElementById(c.outId);if(input&&!routedInputPorts(dev,output).includes(input))return false;const next=state.devices[c.inDeviceId];if(dev===source&&!/Phone|Stereo/.test(output.dataset.node)&&next&&!tutorialStereoTo(dev,next))return false;return visit(next,document.getElementById(c.inId));});seen.delete(dev.id);return found;
+            }
+            return visit(source,null);
+        }
+        const tutorialLevels=dev=>JSON.stringify([dev?.state.micGainL,dev?.state.micGainR,dev?.state.aiLineLevel,dev?.state.aiPhoneLevels]);
+        function tutorialInspect(topic,step,context,observations){
+            const dev=tutorialDevice(topic),collection=tutorialCollection();let done=false,target=dev?.el;
+            const inspectorOpen=compactLayout.matches?document.body.classList.contains('mobile-properties-open'):!document.body.classList.contains('inspector-collapsed');
+            const fileKey=dev?.audioBuffer?(dev.mediaKey||dev.fileName+':'+dev.audioBuffer.duration):null;
+            if(topic==='mp3'&&fileKey&&dev.state.playing)observations.mp3PlayedKey=fileKey;
+            const ready=()=>{
+                if(!dev||dev.state.muted||!tutorialListeningPath(dev)||spotifyPathVolume(dev)<=0)return false;
+                if(CAPTURE_INTERFACE_TYPES.has(dev.type)){
+                    if(dev.state.micGainL<=0&&dev.state.micGainR<=0)return false;
+                    return tutorialEdges(dev).some(c=>{const node=document.getElementById(c.outId)?.dataset.node||'';return /^outPhone/.test(node)?dev.state.aiPhoneLevels[Number(node.slice(8)||1)-1]>0:dev.state.aiLineLevel>0;});
+                }
+                return true;
+            };
+            if(topic==='basic'){
+                if(step==='source')done=!!dev;
+                if(step==='properties'){done=!!dev&&state.selectedDeviceId===dev.id&&inspectorOpen;target=document.getElementById('inspector-title');}
+                if(step==='amplifier')done=!!dev&&!!tutorialAmplifier(dev);
+                if(step==='output')done=!!dev&&!!tutorialAmplifier(dev)&&tutorialListeningPath(dev);
+                if(step==='ready')done=!!dev&&!!tutorialAmplifier(dev)&&ready();
+            }else if(topic==='spotify'){
+                if(step==='account'){done=!!collection&&SpotifyCoverflow.getPlaybackState().connected;target=document.querySelector('[data-sp-action="connect"]')||collection?.el;}
+                if(step==='cover'){done=!!collection&&(!!collection.el.querySelector('.spotify-flow-card.is-open')||[...spotifyAlbums.values()].some(item=>item.open));target=collection?.el;}
+                if(step==='vinyl')done=!!dev&&!dev.el.classList.contains('spotify-vinyl-placing');
+                if(step==='ready')done=ready();
+                if(step==='play'){done=!!dev&&!!dev.state.playing&&!SpotifyCoverflow.getPlaybackState().paused&&ready();target=dev?.el.querySelector('[data-source-play],.at-startstop')||dev?.el;}
+            }else if(topic==='capture'){
+                if(step==='permission'){done=!!dev&&(!!dev.captureInputLabelsAvailable||!!dev.micStream);target=document.getElementById('ai-authorize-inputs')||target;}
+                if(step==='device'){done=!!dev&&(!!dev.captureInputChosen||!!dev.micDeviceId||!!dev.micStream);target=document.getElementById('ai-input-device')?.closest('label')||target;}
+                if(step==='capture'){done=!!dev?.micStream&&dev.micStream.getAudioTracks().some(track=>track.readyState==='live');target=document.getElementById('ai-capture-toggle')||target;}
+                if(step==='output')done=!!dev?.micStream&&ready();
+                if(step==='level'){
+                    if(dev&&context.device!==dev.id){context.device=dev.id;context.levels=tutorialLevels(dev);}
+                    done=!!dev&&!!dev.micStream&&tutorialLevels(dev)!==context.levels;
+                    target=document.getElementById(dev?.type==='audioInterface2'?'ai-line':'ai-gain-L')?.closest('label')||target;
+                }
+            }else if(topic==='mp3'){
+                if(step==='source')done=!!dev;
+                if(step==='file'){done=!!dev?.audioBuffer;target=document.getElementById('source-load-audio')||target;}
+                if(step==='ready')done=!!dev?.audioBuffer&&ready();
+                if(step==='play')done=!!dev?.audioBuffer&&!!dev.state.playing&&ready();
+                if(step==='pause')done=!!fileKey&&observations.mp3PlayedKey===fileKey&&!dev.state.playing;
+            }
+            const exists=topic==='spotify'?(step==='account'||step==='cover'?!!collection:!!dev):!!dev;
+            return {done,target:target?.isConnected?target:null,message:exists?'Faça a ação indicada':'Adicione ou selecione o aparelho necessário'};
+        }
+        function tutorialLocate(topic,step,action){
+            document.querySelectorAll('.tutorial-target').forEach(node=>node.classList.remove('tutorial-target'));
+            const collection=tutorialCollection();let dev=tutorialDevice(topic);
+            if(topic==='spotify'&&(step==='account'||step==='cover'))dev=collection;
+            const mobilePanel=key=>{if(compactLayout.matches){closeMobilePanels();document.body.classList.add(key==='catalog'?'mobile-catalog-open':'mobile-properties-open');syncMobilePanels();}else openSidebar(key,15000);};
+            let requestedType=null;
+            if(topic==='basic'&&step==='amplifier'&&dev&&!tutorialAmplifier(dev)){
+                const amp=Object.values(state.devices).find(item=>['headphoneAmp','headphoneAmpModern','headphoneAmp4'].includes(item.type)||POWER_OUTPUT_TYPES.has(item.type));
+                if(amp)dev=amp;else requestedType='headphoneAmp';
+            }
+            if(topic==='basic'&&step==='output'&&dev&&!tutorialListeningPath(tutorialDevice(topic)))requestedType='headphone';
+            if(!dev||requestedType){
+                const type=requestedType||(topic==='spotify'?(step==='account'||step==='cover'?'furnitureCoverflow':'turntable'):topic==='capture'?'audioInterface1':'cdPlayer');
+                mobilePanel('catalog');const search=document.getElementById('equipment-search');search.value='';search.dispatchEvent(new Event('input'));const card=equipmentCatalog.querySelector(`[data-template="${type}"]`);card?.scrollIntoView({block:'center'});return card;
+            }
+            selectDevice(dev.id,true);mobilePanel('properties');
+            const x=parseFloat(dev.el.style.left),y=parseFloat(dev.el.style.top),zoom=clampZoom(Math.min(view.zoom,1,(canvas.clientWidth-48)/dev.el.offsetWidth,(canvas.clientHeight-48)/dev.el.offsetHeight));
+            animateViewTo({zoom,x:canvas.clientWidth/2-(x+dev.el.offsetWidth/2)*zoom,y:canvas.clientHeight/2-(y+dev.el.offsetHeight/2)*zoom});
+            const selector={permission:'#ai-authorize-inputs',device:'#ai-input-device',capture:'#ai-capture-toggle',file:'#source-load-audio',level:dev.type==='audioInterface2'?'#ai-line':'#ai-gain-L',spotify:'[data-sp-action="connect"]'}[action];
+            const control=selector&&inspectorContent.querySelector(selector);control?.scrollIntoView({block:'nearest'});return control||dev.el;
+        }
+        function clearExampleHistory(){movementUndo.length=movementRedo.length=0;updateMovementHistoryButtons();}
+        function buildExample(spec){
+            [...spotifyVinyls.values()].forEach(removeSpotifyVinyl);[...spotifyAlbums.values()].forEach(removeSpotifyAlbum);Object.values(state.devices).forEach(deleteDevice);selectDevice(null);
+            state.hideCables=false;cableVisibilityButton.setAttribute('aria-pressed','false');state.restoringProject=true;
+            const add=type=>{const ids=new Set(Object.keys(state.devices));createDevice(type,sceneSideInset(),0);const dev=Object.values(state.devices).find(item=>!ids.has(item.id));if(!dev)throw new Error('Não foi possível criar '+(DEVICE_NAMES[type]||type));return dev;};
+            const support=add(spec.furniture),gear=spec.types.map(add),supports=[support],floor=maxEquipmentBottom();
+            const place=(dev,x,y)=>{dev.el.style.left=x+'px';dev.el.style.top=y+'px';};
+            const leftFloor=spec.floor?.includes(2)?gear[2].el.offsetWidth+64:0;
+            let supportX=sceneSideInset()+48+leftFloor;place(support,supportX,floor-support.el.offsetHeight);
+            const config=FURNITURE_TYPES[spec.furniture];
+            if(spec.shelves){
+                gear.forEach((dev,index)=>{
+                    const shelf=spec.shelves[index],surface=config.surfaces[shelf],gap=hasStackFeet(dev)?STACK_FEET.height:0;
+                    const available=shelf?surface-config.surfaces[shelf-1]-16:Infinity;
+                    if(dev.el.offsetHeight+gap>available||dev.el.offsetWidth>support.el.offsetWidth-2*config.inset)throw new Error('O aparelho não cabe no vão do rack.');
+                    place(dev,supportX+(support.el.offsetWidth-dev.el.offsetWidth)/2,parseFloat(support.el.style.top)+surface-gap-dev.el.offsetHeight);
+                });
+            }else{
+                let table=support,cursor=supportX+32;
+                gear.forEach((dev,index)=>{
+                    if(spec.floor?.includes(index))return;
+                    const width=dev.el.offsetWidth;
+                    if(width>table.el.offsetWidth-64)throw new Error('O aparelho não cabe sobre o móvel.');
+                    if(cursor+width>parseFloat(table.el.style.left)+table.el.offsetWidth-32){const x=parseFloat(table.el.style.left)+table.el.offsetWidth+64;table=add('furnitureTable');supports.push(table);place(table,x,floor-table.el.offsetHeight);cursor=x+32;}
+                    place(dev,cursor,parseFloat(table.el.style.top)-dev.el.offsetHeight-(hasStackFeet(dev)?STACK_FEET.height:0));cursor+=width+40;
+                });
+                if(spec.floor){place(gear[2],supportX-gear[2].el.offsetWidth-48,floor-gear[2].el.offsetHeight);place(gear[3],supportX+support.el.offsetWidth+48,floor-gear[3].el.offsetHeight);}
+            }
+            // Validate geometry and every port before making any connection.
+            const all=[...supports,...gear];
+            all.forEach(dev=>{const x=parseFloat(dev.el.style.left),y=parseFloat(dev.el.style.top);if(x<sceneSideInset()||y<0||x+dev.el.offsetWidth>world.offsetWidth-sceneSideInset()||y+dev.el.offsetHeight>floor+.5)throw new Error('A montagem não cabe na área disponível.');});
+            gear.forEach((a,index)=>gear.slice(index+1).forEach(b=>{const ax=parseFloat(a.el.style.left),ay=parseFloat(a.el.style.top),bx=parseFloat(b.el.style.left),by=parseFloat(b.el.style.top);if(ax<bx+b.el.offsetWidth&&ax+a.el.offsetWidth>bx&&ay<by+b.el.offsetHeight&&ay+a.el.offsetHeight>by)throw new Error('Há equipamentos sobrepostos na montagem.');}));
+            spec.links.forEach(([a,out,b,input])=>{const from=gear[a].el.querySelector(`[data-node="${out}"]`),to=gear[b].el.querySelector(`[data-node="${input}"]`);if(!from||!to||!getPortCompatibility(from,to).compatible)throw new Error('Conexão incompatível no exemplo.');});
+            spec.links.forEach(([a,out,b,input])=>connectProjectPorts(gear[a],out,gear[b],input));
+            updateCables();updateCableFlows();return {gear,supports};
+        }
+        let exampleAssembly=null;
+        const guidedAccess=GuidedAccess.mount({
+            closeSettings:()=>{settingsMenu.open=false;},
+            layout:()=>{requestAnimationFrame(()=>{stopViewMotion();applyView();});},
+            returnFocus:()=>{(phoneNavigationLayout.matches?mobileControls.querySelector('[data-mobile-action="settings"]'):settingsMenu.querySelector('summary'))?.focus({preventScroll:true});},
+            enter:(topic,step)=>{const dev=tutorialDevice(topic);return {device:dev?.id,levels:tutorialLevels(dev)};},
+            inspect:tutorialInspect,locate:tutorialLocate,clearContext:()=>{document.querySelectorAll('.tutorial-target').forEach(node=>node.classList.remove('tutorial-target'));},
+            hasContent:()=>Object.keys(state.devices).length>0||spotifyVinyls.size>0||spotifyAlbums.size>0,
+            examples:{
+                checkpoint:async()=>{
+                    if(!projectDatabase||projectPersistenceBlocked)throw new Error('O armazenamento local não está disponível. Exporte seu projeto e habilite o armazenamento antes de substituir a montagem.');
+                    // Let any existing write finish before freezing the scene and its audio blobs.
+                    exampleLoading=true;clearTimeout(projectSaveTimer);
+                    try{
+                        while(projectSaving)await new Promise(resolve=>setTimeout(resolve,20));
+                        if(await saveLocalProject(true,true)!==true)throw new Error('Não foi possível guardar a montagem atual.');
+                        return {snapshot:projectCapture(),audio:new Map(Object.values(state.devices).filter(dev=>dev.mediaKey&&dev.mediaBlob).map(dev=>[dev.mediaKey,dev.mediaBlob]))};
+                    }catch(error){exampleLoading=false;throw error;}
+                },
+                begin:()=>{stopViewMotion();cancelCableDrag();projectRestoring=true;state.restoringProject=true;},
+                build:spec=>{exampleAssembly=buildExample(spec);},
+                validate:spec=>{if(state.connections.length!==spec.links.length||exampleAssembly.gear.some(dev=>dev.state.playing||dev.micStream))throw new Error('A montagem não foi validada.');},
+                restore:previous=>restoreLocalProject(previous.snapshot,key=>Promise.resolve(previous.audio.get(key))),
+                recoveryFailed:previous=>{projectPersistenceBlocked=true;try{localStorage.setItem('audio-system-project-fallback',JSON.stringify(previous.snapshot));}catch{}},
+                end:()=>{state.restoringProject=false;projectRestoring=false;exampleLoading=false;clearExampleHistory();},
+                commit:async()=>{projectRestoring=false;await saveLocalProject(true,true);document.getElementById('fit-canvas').click();selectDevice(exampleAssembly.gear[0].id,true);}
+            }
+        });
         const guideSetting=document.createElement('section');guideSetting.className='headphone-calibration-setting';
-        guideSetting.innerHTML='<strong>Acesso guiado</strong><p>Spotify, entradas e MP3.</p><button type="button">Abrir guia</button>';
-        clearCatalogFooter.prepend(guideSetting);guideSetting.querySelector('button').addEventListener('click',openGuidedAccess);
+        guideSetting.innerHTML='<strong>Acesso guiado</strong><p>Pratique no seu projeto: conexões, Spotify, entrada externa e MP3.</p><button type="button">Abrir tutorial</button>';
         const examplesSetting=document.createElement('section');examplesSetting.className='headphone-calibration-setting';
-        examplesSetting.innerHTML='<strong>Montagens de exemplo</strong><p>Cinco sistemas em móveis, prontos para explorar.</p><button type="button">Escolher montagem</button>';
-        guideSetting.after(examplesSetting);
-        examplesSetting.querySelector('button').addEventListener('click',()=>{settingsMenu.open=false;guideExamplesMode=true;guide.classList.add('show-examples');renderGuide();if(!guide.open)guide.showModal();});
-        headphoneCalibrationDialog.addEventListener('close',()=>{if(!guideSeen())requestAnimationFrame(openGuidedAccess);});
+        examplesSetting.innerHTML='<strong>Montagens de exemplo</strong><p>Cinco sistemas em móveis. Substitui a montagem atual.</p><button type="button">Escolher montagem</button>';
+        clearCatalogFooter.prepend(guideSetting,examplesSetting);guideSetting.querySelector('button').addEventListener('click',guidedAccess.open);examplesSetting.querySelector('button').addEventListener('click',guidedAccess.openExamples);
+        headphoneCalibrationDialog.addEventListener('close',()=>{requestAnimationFrame(guidedAccess.offer);});
 
         SpotifyCoverflow.initialize().catch(()=>{});
-        initializeProjectPersistence().finally(()=>{if(!headphonePromptSeen)requestAnimationFrame(openHeadphoneCalibration);else if(!guideSeen())requestAnimationFrame(openGuidedAccess);});
+        initializeProjectPersistence().finally(()=>{requestAnimationFrame(()=>{document.documentElement.classList.remove('app-starting');document.getElementById('app-startup')?.remove();if(!headphonePromptSeen)openHeadphoneCalibration();else{guidedAccess.restore();guidedAccess.offer();}});});
 
         renderVisuals();

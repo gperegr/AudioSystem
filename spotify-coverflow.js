@@ -26,7 +26,7 @@ const SpotifyCoverflow=(()=>{
     const details=(item,mode)=>mode==='playlists'?`${artist(item)} · ${item.tracks?.total||0} faixas`:`${artist(item)} · ${(item.release_date||'').slice(0,4)}`;
     const shortTime=ms=>{const seconds=Math.max(0,Math.floor(ms/1000));return `${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;};
     const sleeveOffset=distance=>COVER_SPACING*distance;
-    function broadcast(){views.forEach(view=>view.refresh());}
+    function broadcast(){views.forEach(view=>view.refresh());window.GuidedAccess?.notify();}
     function setStatus(message){status=message;broadcast();}
     async function tokenRequest(params){
         const response=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:clientId,...params})});
