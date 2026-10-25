@@ -9624,7 +9624,7 @@ const Hardware = (() => {
             const exists=topic==='spotify'?(step==='account'||step==='cover'?!!collection:!!dev):!!dev;
             return {done,target:target?.isConnected?target:null,message:exists?'Faça a ação indicada':'Adicione ou selecione o aparelho necessário'};
         }
-        function tutorialLocate(topic,step,action){
+        async function tutorialLocate(topic,step,action){
             document.querySelectorAll('.tutorial-target').forEach(node=>node.classList.remove('tutorial-target'));
             const collection=tutorialCollection();let dev=tutorialDevice(topic);
             if(topic==='spotify'&&(step==='account'||step==='cover'))dev=collection;
@@ -9637,13 +9637,28 @@ const Hardware = (() => {
             if(topic==='basic'&&step==='output'&&dev&&!tutorialListeningPath(tutorialDevice(topic)))requestedType='headphone';
             if(!dev||requestedType){
                 const type=requestedType||(topic==='spotify'?(step==='account'||step==='cover'?'furnitureCoverflow':'turntable'):topic==='capture'?'audioInterface1':'cdPlayer');
-                mobilePanel('catalog');const search=document.getElementById('equipment-search');search.value='';search.dispatchEvent(new Event('input'));const card=equipmentCatalog.querySelector(`[data-template="${type}"]`);card?.scrollIntoView({block:'center'});return card;
+                mobilePanel('catalog');const search=document.getElementById('equipment-search');search.value='';search.dispatchEvent(new Event('input'));const card=equipmentCatalog.querySelector(`[data-template="${type}"]`);card?.scrollIntoView({block:'center',behavior:'instant'});await new Promise(resolve=>setTimeout(resolve,320));return card;
             }
             selectDevice(dev.id,true);mobilePanel('properties');
-            const x=parseFloat(dev.el.style.left),y=parseFloat(dev.el.style.top),zoom=clampZoom(Math.min(view.zoom,1,(canvas.clientWidth-48)/dev.el.offsetWidth,(canvas.clientHeight-48)/dev.el.offsetHeight));
-            animateViewTo({zoom,x:canvas.clientWidth/2-(x+dev.el.offsetWidth/2)*zoom,y:canvas.clientHeight/2-(y+dev.el.offsetHeight/2)*zoom});
+            if(!compactLayout.matches)closeSidebar('catalog');
             const selector={permission:'#ai-authorize-inputs',device:'#ai-input-device',capture:'#ai-capture-toggle',file:'#source-load-audio',level:dev.type==='audioInterface2'?'#ai-line':'#ai-gain-L',spotify:'[data-sp-action="connect"]'}[action];
-            const control=selector&&inspectorContent.querySelector(selector);control?.scrollIntoView({block:'nearest'});return control||dev.el;
+            const native=selector&&inspectorContent.querySelector(selector);
+            const control=native?.closest('.app-select')||native;
+            if(compactLayout.matches&&phoneNavigationLayout.matches){document.getElementById('inspector').dataset.sheetLevel='mid';}
+            await new Promise(resolve=>setTimeout(resolve,320));
+            control?.scrollIntoView({block:'center',behavior:'instant'});
+            const rect=canvas.getBoundingClientRect();let left=rect.left,right=rect.right,bottom=rect.bottom;
+            for(const panel of [equipmentCatalog,document.getElementById('inspector')]){
+                const r=panel.getBoundingClientRect();if(r.right<=rect.left||r.left>=rect.right||r.bottom<=rect.top||r.top>=rect.bottom||getComputedStyle(panel).visibility==='hidden')continue;
+                if(phoneNavigationLayout.matches&&panel.id==='inspector')bottom=Math.min(bottom,r.top);
+                else if(panel.id==='equipment-catalog')left=Math.max(left,r.right);else right=Math.min(right,r.left);
+            }
+            if(right-left<100){left=rect.left;right=rect.right;}
+            if(bottom-rect.top<100)bottom=rect.bottom;
+            const x=parseFloat(dev.el.style.left),y=parseFloat(dev.el.style.top),zoom=clampZoom(Math.min(1,(right-left-48)/dev.el.offsetWidth,(bottom-rect.top-48)/dev.el.offsetHeight));
+            animateViewTo({zoom,x:(left+right)/2-rect.left-(x+dev.el.offsetWidth/2)*zoom,y:(rect.top+bottom)/2-rect.top-(y+dev.el.offsetHeight/2)*zoom});
+            await new Promise(resolve=>setTimeout(resolve,320));
+            return control||dev.el;
         }
         function clearExampleHistory(){movementUndo.length=movementRedo.length=0;updateMovementHistoryButtons();}
         function buildExample(spec){

@@ -4799,3 +4799,12 @@ body.tutorial-open .app-settings-content {max-height:calc(100dvh - 90px - var(--
 #inspector-content .audio-transport .transport-buttons {display:grid;grid-template-columns:repeat(auto-fit,minmax(44px,1fr));gap:7px;min-width:0;}
 #inspector-content .audio-transport .transport-buttons button {width:100%;height:44px!important;min-height:44px;padding:6px!important;box-sizing:border-box;}
 #inspector-content .audio-transport .transport-buttons {gap:4px;}
+/* Keep tutorial navigation together and show located targets at screen scale. */
+.tutorial-bar>header,.tutorial-bar>.tutorial-instructions,.tutorial-bar>footer {width:min(100%,900px);margin-inline:auto;}
+.tutorial-bar header h2 {flex:0 1 auto;}
+.tutorial-bar footer {justify-content:flex-start;}
+.tutorial-bar .tutorial-status {flex:0 1 auto;margin-left:8px;}
+.tutorial-spotlight[hidden] {display:none;}
+.tutorial-spotlight {position:fixed;z-index:106;pointer-events:none;box-sizing:border-box;border:3px solid #b0e9fc;border-radius:9px;box-shadow:0 0 0 4px #172735b3,0 0 22px #85dafb99;}
+.tutorial-spotlight>span {position:absolute;left:6px;top:0;transform:translateY(-50%);padding:2px 9px;border-radius:6px;background:#b0e9fc;color:#142733;font:700 12px/1.5 var(--font-ui,'Inter',sans-serif);}
+@media(max-width:700px){.tutorial-bar .tutorial-status {margin-left:0;flex:1;font-size:10px;}}

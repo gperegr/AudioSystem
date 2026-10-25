@@ -68,7 +68,15 @@
         const dialog=el('dialog','tutorial-dialog');document.body.append(dialog);let opener=null;
         function showDialog(){opener=document.activeElement;if(!dialog.open)dialog.showModal();}
         dialog.addEventListener('close',()=>{if(opener?.isConnected)opener.focus({preventScroll:true});});
-        function clearHighlight(){highlight?.classList.remove('tutorial-target');highlight=null;}
+        const spotlight=el('div','tutorial-spotlight');spotlight.hidden=true;spotlight.setAttribute('aria-hidden','true');spotlight.append(el('span','','Aqui'));document.body.append(spotlight);
+        function clearHighlight(){highlight?.classList.remove('tutorial-target');highlight=null;spotlight.hidden=true;}
+        function positionHighlight(){
+            if(!active||!highlight?.isConnected){spotlight.hidden=true;return;}
+            const r=highlight.getBoundingClientRect(),barTop=bar.getBoundingClientRect().top;
+            const left=Math.max(4,r.left-4),top=Math.max(4,r.top-4),right=Math.min(innerWidth-4,r.right+4),bottom=Math.min(barTop-6,r.bottom+4);
+            if(right<=left||bottom<=top||!r.width||!r.height){spotlight.hidden=true;return;}
+            spotlight.hidden=false;Object.assign(spotlight.style,{left:left+'px',top:top+'px',width:(right-left)+'px',height:(bottom-top)+'px'});
+        }
         function stop(){progress.active=false;save();active=false;bar.hidden=true;document.body.classList.remove('tutorial-open');clearHighlight();adapter.layout();if(frame)cancelAnimationFrame(frame);frame=0;adapter.clearContext?.();adapter.returnFocus?.();}
         function start(restart=false){if(restart)progress={invited:true,topic:0,step:0,completed:[],observations:{},finished:false};progress.invited=true;progress.active=true;save();dialog.close();active=true;bar.hidden=false;document.body.classList.add('tutorial-open');adapter.layout();render();}
         function move(topic,step){progress.topic=topic;progress.step=step;stepContext=null;save();render();bar.querySelector('h2')?.focus({preventScroll:true});}
@@ -81,16 +89,17 @@
             const content=el('div','tutorial-instructions');const title=el('h3');title.innerHTML=icon(topic.icon);title.append(document.createTextNode(task[1]));content.append(title,el('p','',task[2]));if(topic.note)content.append(el('p','tutorial-note',topic.note));
             const footer=el('footer');const status=el('span','tutorial-status');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
             const back=button('←','Passo anterior',()=>progress.step?move(progress.topic,progress.step-1):move(progress.topic-1,topics[progress.topic-1].steps.length-1));back.disabled=progress.topic===0&&progress.step===0;
-            const locate=button('Localizar','Localizar controle deste passo',()=>{stepContext.locatedTarget=adapter.locate(topic.id,task[0],task[3]);notify();});
+            const locate=button('Localizar','Localizar controle deste passo',async()=>{const context=stepContext;locate.disabled=true;try{const target=await adapter.locate(topic.id,task[0],task[3]);if(context===stepContext){context.locatedTarget=target;notify();}}finally{locate.disabled=false;}});
             const skip=button('Pular tópico','Pular este tópico',()=>{if(progress.topic+1<topics.length)move(progress.topic+1,0);else stop();});
-            const forward=button('→','Próximo passo',next);forward.dataset.tutorialNext='';forward.disabled=true;footer.append(back,locate,skip,status,forward);bar.append(header,content,footer);stepContext=adapter.enter?.(topic.id,task[0])||{};notify();
+            const forward=button('→','Próximo passo',next);forward.dataset.tutorialNext='';forward.disabled=true;footer.append(back,locate,forward,skip,status);bar.append(header,content,footer);stepContext=adapter.enter?.(topic.id,task[0])||{};notify();
         }
         function check(){frame=0;if(!active||document.hidden)return;
             const topic=topics[progress.topic],task=topic.steps[progress.step];const result=adapter.inspect(topic.id,task[0],stepContext,progress.observations);
             const forward=bar.querySelector('[data-tutorial-next]');forward.disabled=!result.done;
             const text=result.done?'✓ Concluído':result.message||'Faça a ação indicada';const status=bar.querySelector('.tutorial-status');if(status.textContent!==text)status.textContent=text;
-            const target=stepContext.locatedTarget?.isConnected?stepContext.locatedTarget:result.target;
+            const target=!result.done&&stepContext.locatedTarget?.isConnected?stepContext.locatedTarget:result.target;
             if(highlight!==target){clearHighlight();highlight=target;if(highlight?.isConnected)highlight.classList.add('tutorial-target');}
+            positionHighlight();
             if(result.done){const id=topic.id+':'+task[0];if(!progress.completed.includes(id))progress.completed.push(id);}save();
         }
         function notify(){if(active&&!frame&&!document.hidden)frame=requestAnimationFrame(check);}
@@ -103,7 +112,7 @@
         function confirmExample(spec){if(!adapter.hasContent()){loadExample(spec);return;}dialog.replaceChildren(el('h2','','Substituir a montagem?'),el('p','','Todo o conteúdo do canvas será removido para carregar “'+spec.name+'”. Exporte seu projeto antes se quiser guardá-lo.'),button('Cancelar','Cancelar substituição',openExamples),button('Substituir','Substituir pelo exemplo',()=>loadExample(spec)));}
         async function loadExample(spec){stop();dialog.replaceChildren(el('h2','','Preparando montagem…'));try{await replaceExample(adapter.examples,spec);dialog.replaceChildren(el('h2','',spec.name),el('p','',spec.hint),button('Explorar','Explorar montagem',()=>dialog.close()));}
             catch(error){dialog.replaceChildren(el('h2','','Não foi possível carregar'),el('p','',error.message),button('Voltar','Voltar aos exemplos',openExamples));}}
-        for(const event of ['click','input','change','pointerup','keydown'])document.addEventListener(event,notify,{passive:true});document.addEventListener('visibilitychange',notify);
+        for(const event of ['click','input','change','pointerup','keydown'])document.addEventListener(event,notify,{passive:true});document.addEventListener('visibilitychange',notify);window.addEventListener('resize',notify);document.addEventListener('scroll',notify,{capture:true,passive:true});
         document.addEventListener('keydown',event=>{if(event.key==='Escape'&&active&&!dialog.open){stop();}});
         activeController={open,offer,openExamples,notify,save,restore(){let raw;try{raw=JSON.parse(storage.getItem(KEY)||'{}');}catch{}if(raw?.active)start();}};return activeController;
     }
