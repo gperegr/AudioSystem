@@ -2758,7 +2758,7 @@ const Hardware = (() => {
                 if(profile.bass){const filter=ctx.createBiquadFilter();filter.type='lowshelf';filter.frequency.value=140;filter.gain.value=profile.bass;append(filter);}
                 if(profile.treble){const filter=ctx.createBiquadFilter();filter.type='highshelf';filter.frequency.value=4500;filter.gain.value=profile.treble;append(filter);}
                 const headroom=ctx.createGain();headroom.gain.value=.25;append(headroom);
-                const shaper=ctx.createWaveShaper();shaper.curve=curve;shaper.oversample='2x';append(shaper);
+                const shaper=ctx.createWaveShaper();shaper.curve=curve;shaper.oversample=profile.drive>=.5?'2x':'none';append(shaper);
                 const restore=ctx.createGain();restore.gain.value=4;append(restore);
                 // Remove rectification DC while preserving silence at zero input.
                 const dc=ctx.createBiquadFilter();dc.type='highpass';dc.frequency.value=5;dc.Q.value=.707;append(dc);
@@ -2811,11 +2811,15 @@ const Hardware = (() => {
         const parallelOhms=values=>{const conductance=values.reduce((sum,value)=>sum+(Number.isFinite(value)&&value>0?1/value:0),0);return conductance>0?1/conductance:Infinity;};
         function amplifierChannelRms(dev,channel){return dev.electricalStages?.find(stage=>stage.channel===channel)?.rms||0;}
         function readElectricalStages(){
-            for(const dev of Object.values(state.devices))for(const stage of [...(dev.electricalStages||[]),...(dev.outputCircuits||[]).flatMap(circuit=>circuit.paths.filter(path=>path.analyzer))]){
+            const read=(dev,stage)=>{
                 stage.analyzer.getFloatTimeDomainData(stage.samples);let sum=0,peak=0;
                 for(const value of stage.samples){sum+=value*value;peak=Math.max(peak,Math.abs(value));}
                 stage.rms=dev.powered&&!dev.state.damage&&state.audioCtx.state==='running'?Math.sqrt(sum/stage.samples.length):0;
                 stage.clipping=stage.rms>0&&peak>stage.peakLimit*.94;
+            };
+            for(const dev of Object.values(state.devices)){
+                for(const stage of dev.electricalStages||[])read(dev,stage);
+                for(const circuit of dev.outputCircuits||[])for(const path of circuit.paths)if(path.analyzer)read(dev,path);
             }
         }
         const POWER_OUTPUT_TYPES=new Set(['receiver','powerAmp','powerStereo','powerVintage','streamIntegrated',...Object.keys(INTEGRATED_AMPS),...Object.keys(CUSTOM_POWER_AMPS)]);
@@ -3776,14 +3780,16 @@ const Hardware = (() => {
             dev.syncRadio();
         }
 
+        let audioMeterObserver=null;
+        const audioMeterDevices=new WeakMap();
         function setupAudioMeters(dev) {
-            const context=state.audioCtx, nodes=[], taps=[];
+            const context=state.audioCtx, nodes=[], taps=[], analyzers=[];
             const silent=context.createGain();silent.gain.value=0;silent.connect(context.destination);
             const channels=[[],[]];
             const analyze=(node,channel)=>{
-                const analyzer=context.createAnalyser();analyzer.fftSize=1024;
-                node.connect(analyzer);analyzer.connect(silent);taps.push([node,analyzer]);nodes.push(analyzer);
-                channels[channel].push({analyzer,data:new Float32Array(1024)});
+                const analyzer=context.createAnalyser();analyzer.fftSize=256;
+                node.connect(analyzer);analyzer.connect(silent);taps.push([node,analyzer]);nodes.push(analyzer);analyzers.push(analyzer);
+                channels[channel].push({analyzer,data:new Float32Array(analyzer.fftSize)});
             };
             // Receiver meters measure left and right outputs directly. Auxiliary
             // mono/sub and headphone outputs must not be folded into either reading.
@@ -3798,12 +3804,20 @@ const Hardware = (() => {
                 else {const split=context.createChannelSplitter(2);node.connect(split);taps.push([node,split]);nodes.push(split);analyzeChannel(split);}
             });
             function analyzeChannel(node){
-                [0,1].forEach(channel=>{const analyzer=context.createAnalyser();analyzer.fftSize=1024;node.connect(analyzer,channel);analyzer.connect(silent);nodes.push(analyzer);channels[channel].push({analyzer,data:new Float32Array(1024)});});
+                [0,1].forEach(channel=>{const analyzer=context.createAnalyser();analyzer.fftSize=256;node.connect(analyzer,channel);analyzer.connect(silent);taps.push([node,analyzer,channel]);nodes.push(analyzer);analyzers.push(analyzer);channels[channel].push({analyzer,data:new Float32Array(analyzer.fftSize)});});
             }
             if(!ports.length&&!RADIO_RECEIVERS.has(dev.type)){const node=dev.listeningGain||dev.outputPan||dev.analyzer;if(node){const split=context.createChannelSplitter(2);node.connect(split);taps.push([node,split]);nodes.push(split);analyzeChannel(split);}}
             if(!channels.some(list=>list.length)){silent.disconnect();return;}
-            dev.meters={channels,clipUntil:0,levels:[0,0],peaks:[0,0]};
-            dev.disposeMeters=()=>{taps.forEach(([node,target])=>{try{node.disconnect(target)}catch{}});nodes.forEach(node=>node.disconnect());silent.disconnect();};
+            dev.meters={channels,clipUntil:0,levels:[0,0],peaks:[0,0],visible:true};
+            dev.setMeterVisibility=visible=>{
+                if(dev.meters.visible===visible)return;dev.meters.visible=visible;
+                if(visible){taps.forEach(([node,target,output])=>output==null?node.connect(target):node.connect(target,output));analyzers.forEach(analyzer=>analyzer.connect(silent));}
+                else{taps.forEach(([node,target])=>{try{node.disconnect(target)}catch{}});analyzers.forEach(analyzer=>{try{analyzer.disconnect(silent)}catch{}});}
+            };
+            if(typeof IntersectionObserver==='function'){
+                audioMeterObserver||=new IntersectionObserver(entries=>entries.forEach(entry=>{const meterDev=audioMeterDevices.get(entry.target);meterDev?.setMeterVisibility?.(entry.isIntersecting&&entry.intersectionRatio>0);}),{threshold:0});
+                audioMeterDevices.set(dev.el,dev);audioMeterObserver.observe(dev.el);dev.disposeMeters=()=>{audioMeterObserver?.unobserve(dev.el);audioMeterDevices.delete(dev.el);taps.forEach(([node,target])=>{try{node.disconnect(target)}catch{}});nodes.forEach(node=>node.disconnect());silent.disconnect();};
+            }else{dev.setMeterVisibility(true);dev.disposeMeters=()=>{taps.forEach(([node,target])=>{try{node.disconnect(target)}catch{}});nodes.forEach(node=>node.disconnect());silent.disconnect();};}
         }
         // Audio controls update their graphs in target handlers before this bubbles.
         inspectorContent.addEventListener('input',()=>updateCableFlows());
@@ -3819,7 +3833,7 @@ const Hardware = (() => {
             Object.values(state.devices).forEach(dev=>{
                 refreshCdDisplay(dev);
                 Hardware.updateAccents(dev);
-                const meter=dev.meters;if(!meter)return;
+                const meter=dev.meters;if(!meter||!meter.visible)return;
                 [0,1].forEach(channel=>{
                     let peak=0,rms=0;
                     meter.channels[channel].forEach(tap=>{
@@ -4819,6 +4833,7 @@ const Hardware = (() => {
             Object.values(state.devices).forEach(dev=>{
                 if(SIGNAL_GENERATOR_TYPES.has(dev.type)){updateSignalGeneratorDisplay(dev);return;}
                 if(!EXTRA_AUDIO_TYPES.has(dev.type))return;
+                if(dev.meters&&!dev.meters.visible)return;
                 if(dev.type==='tapeDeck'||BENCH_METER_TYPES.has(dev.type))updateCalibratedVuEnvelope(dev,elapsed);
                 if(dev.type==='benchMeter')updateBenchLcd(dev,now);
                 dev.el.querySelectorAll('[data-live-vu]').forEach(needle=>{
@@ -5015,7 +5030,7 @@ const Hardware = (() => {
             }
             return [...group.values()];
         }
-        const ROOM_PRESETS={near:{name:'Audição próxima',decay:.18,predelay:.004,tone:12500},small:{name:'Sala pequena',decay:.65,predelay:.012,tone:8500},large:{name:'Sala ampla',decay:1.7,predelay:.025,tone:6500}};
+        const ROOM_PRESETS={near:{name:'Audição próxima',decay:.12,predelay:.004,tone:12500},small:{name:'Sala pequena',decay:.42,predelay:.012,tone:8500},large:{name:'Sala ampla',decay:1.05,predelay:.025,tone:6500}};
         function setupRoomAudio(){
             const context=state.audioCtx,input=state.masterGain,dry=context.createGain(),wet=context.createGain(),convolver=context.createConvolver(),delay=context.createDelay(.1),filter=context.createBiquadFilter();
             filter.type='lowpass';input.connect(dry);dry.connect(state.listeningToneInput);input.connect(delay);delay.connect(convolver);convolver.connect(filter);filter.connect(wet);wet.connect(state.listeningToneInput);
@@ -5168,6 +5183,7 @@ const Hardware = (() => {
             dev.applyStream();
         }
         function drawStreamLineSpectra(dev){
+            if(!dev.meters?.visible)return;
             const active=dev.powered&&state.audioCtx.state==='running',nyquist=state.audioCtx.sampleRate/2,maxHz=Math.min(20000,nyquist),points=96;
             dev.streamSpectra.forEach(({analyzer,data,trace,fill})=>{
                 if(active)analyzer.getFloatFrequencyData(data);
@@ -8559,7 +8575,7 @@ const Hardware = (() => {
             const sourceNodes=[dev.nodes['in'+channel],dev.nodes['out'+band+channel]];
             if(sourceNodes.some(node=>!node))return;
             const silent=state.audioCtx.createGain();silent.gain.value=0;silent.connect(state.audioCtx.destination);
-            const taps=sourceNodes.map(source=>{const analyzer=state.audioCtx.createAnalyser();analyzer.fftSize=8192;analyzer.smoothingTimeConstant=.65;analyzer.minDecibels=-100;analyzer.maxDecibels=0;source.connect(analyzer);analyzer.connect(silent);return{source,analyzer,data:new Float32Array(analyzer.frequencyBinCount)};});
+            const taps=sourceNodes.map(source=>{const analyzer=state.audioCtx.createAnalyser();analyzer.fftSize=4096;analyzer.smoothingTimeConstant=.65;analyzer.minDecibels=-100;analyzer.maxDecibels=0;source.connect(analyzer);analyzer.connect(silent);return{source,analyzer,data:new Float32Array(analyzer.frequencyBinCount)};});
             activeSpectrum={dev,canvas,silent,taps};
             drawSpectrum();
         }
