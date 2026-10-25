@@ -1908,8 +1908,8 @@
 .spotify-canvas-vinyl.is-linear {height:12px;margin-top:66px;border-radius:50%;background:linear-gradient(#74817b,#080c0d 38%,#292e2d 70%,#0a1010);}
 .spotify-canvas-vinyl.is-linear span,.spotify-canvas-vinyl.is-linear::after {display:none;}
 .spotify-canvas-vinyl {width:var(--spotify-vinyl-size);height:var(--spotify-vinyl-size);}
-.spotify-canvas-album {position:absolute;z-index:31;width:calc(var(--spotify-vinyl-size) + 16px);height:calc(var(--spotify-vinyl-size) + 16px);cursor:grab;touch-action:none;filter:drop-shadow(0 15px 15px #0009);}
-.spotify-canvas-album-cover {position:absolute;inset:0;z-index:2;background:#443b32 center/cover;border:5px solid #8f8068;box-sizing:border-box;box-shadow:inset 0 0 0 2px #28231e,0 4px 8px #0007;transition:transform .28s ease;}
+.spotify-canvas-album {position:absolute;z-index:9;width:calc(var(--spotify-vinyl-size) + 16px);height:calc(var(--spotify-vinyl-size) + 16px);cursor:grab;touch-action:none;}
+.spotify-canvas-album-cover {position:absolute;inset:0;z-index:2;background:#443b32 center/cover;box-sizing:border-box;transition:transform .28s ease;}
 .spotify-canvas-album-disc {position:absolute;inset:8px;z-index:1;border-radius:50%;background:repeating-radial-gradient(circle,#0a0d0e 0 3px,#24292b 3px 5px);visibility:hidden;transition:transform .28s ease;cursor:grab;}
 .spotify-canvas-album.is-open .spotify-canvas-album-cover {transform:translateX(-22%);}.spotify-canvas-album.is-open.has-vinyl .spotify-canvas-album-disc {visibility:visible;transform:translateX(22%);}
 .spotify-canvas-album.is-dragging {z-index:201;cursor:grabbing;}.spotify-canvas-album.is-dragging .spotify-canvas-album-disc {visibility:hidden!important;}
@@ -4486,6 +4486,7 @@ body.inspector-collapsed #inspector>.inspector-panel-header,body.inspector-colla
 body.catalog-pinned #canvas {margin-left:18rem;}
 body.properties-pinned #canvas {margin-right:18rem;}
 #equipment-catalog,#inspector {position:absolute;top:0;bottom:0;z-index:30;box-sizing:border-box;width:18rem;min-width:18rem;flex:none;margin:0;transition:transform 240ms cubic-bezier(.22,.7,.2,1);}
+#equipment-catalog {z-index:8;}
 #equipment-catalog {left:0;}
 #inspector {right:0;}
 body.catalog-collapsed #equipment-catalog {margin:0;transform:translateX(-100%);pointer-events:none;}
