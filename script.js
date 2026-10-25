@@ -6296,30 +6296,34 @@ const Hardware = (() => {
                     dev.powerNodes[1].connect(left);left.connect(output,0,0);dev.powerNodes[0].connect(right);right.connect(output,0,1);
                     return [left,right];
                 });
+                const interfaceLevelGain=control=>control<=.8?control/.8:10**(((control-.8)/.2)*12/20);
                 dev.setMicGain=(channel,value)=>{
-                    const gain=Math.max(0,Math.min(1,Number(value)||0));dev.state['micGain'+channel]=gain;
-                    dev.nodes['gen'+channel].gain.setTargetAtTime(dev.state.playing?gain:0,state.audioCtx.currentTime,.02);
-                    const slider=document.getElementById(`ai-gain-${channel}`);if(slider&&state.selectedDeviceId===dev.id){slider.value=gain;slider.dispatchEvent(new Event('input',{bubbles:true}));}
-                    const knob=el.querySelector(`[data-ai-gain="${channel}"]`);knob?.style.setProperty('--ai-turn',`${-135+gain*270}deg`);knob?.style.setProperty('--knob-angle',`${-135+gain*270}deg`);
-                    const halo=knob?.querySelector('.ai-control-halo path');if(halo)halo.style.strokeDasharray=`${gain*138} 138`;
+                    const control=Math.max(0,Math.min(1,Number(value)||0));dev.state['micGain'+channel]=control;
+                    // Preserve the old 0–80% range (0–unity gain), then provide up to
+                    // +12 dB of gain for quiet external sources.
+                    const linearGain=interfaceLevelGain(control);
+                    dev.nodes['gen'+channel].gain.setTargetAtTime(dev.state.playing?linearGain:0,state.audioCtx.currentTime,.02);
+                    const slider=document.getElementById(`ai-gain-${channel}`);if(slider&&state.selectedDeviceId===dev.id){slider.value=control;slider.dispatchEvent(new Event('input',{bubbles:true}));}
+                    const knob=el.querySelector(`[data-ai-gain="${channel}"]`);knob?.style.setProperty('--ai-turn',`${-135+control*270}deg`);knob?.style.setProperty('--knob-angle',`${-135+control*270}deg`);
+                    const halo=knob?.querySelector('.ai-control-halo path');if(halo)halo.style.strokeDasharray=`${control*138} 138`;
                 };
                 dev.setAiLine=value=>{
                     const level=Math.max(0,Math.min(1,Number(value)||0));dev.state.aiLineLevel=level;
-                    for(const channel of ['L','R'])dev.nodes['out'+channel].gain.setTargetAtTime(level,state.audioCtx.currentTime,.02);
+                    const linearGain=interfaceLevelGain(level);for(const channel of ['L','R'])dev.nodes['out'+channel].gain.setTargetAtTime(linearGain,state.audioCtx.currentTime,.02);
                     const slider=document.getElementById('ai-line');if(slider&&state.selectedDeviceId===dev.id)slider.value=level;
                     el.querySelector('[data-ai-line]')?.style.setProperty('--ai-turn',`${-135+level*270}deg`);
                 };
                 dev.setAiPhones=(index,value)=>{
                     if(value===undefined){value=index;index=0;}
                     index=Math.max(0,Math.min(phoneCount-1,Number(index)||0));const level=Math.max(0,Math.min(1,Number(value)||0));dev.state.aiPhoneLevels[index]=level;
-                    phoneStages[index].forEach(node=>node.gain.setTargetAtTime(level,state.audioCtx.currentTime,.02));
+                    const linearGain=interfaceLevelGain(level);phoneStages[index].forEach(node=>node.gain.setTargetAtTime(linearGain,state.audioCtx.currentTime,.02));
                     const slider=document.getElementById(`ai-phones-${index}`);if(slider&&state.selectedDeviceId===dev.id)slider.value=level;
                     el.querySelector(`[data-ai-phones="${index}"]`)?.style.setProperty('--ai-turn',`${-135+level*270}deg`);
                 };
                 if(type==='audioInterface2')dev.setAiLine=value=>{
                     const level=Math.max(0,Math.min(1,Number(value)||0));dev.state.aiLineLevel=level;
-                    for(const channel of ['L','R'])dev.nodes['out'+channel].gain.setTargetAtTime(level,state.audioCtx.currentTime,.02);
-                    phoneStages[0].forEach(node=>node.gain.setTargetAtTime(level,state.audioCtx.currentTime,.02));dev.state.aiPhoneLevels[0]=level;
+                    const linearGain=interfaceLevelGain(level);for(const channel of ['L','R'])dev.nodes['out'+channel].gain.setTargetAtTime(linearGain,state.audioCtx.currentTime,.02);
+                    phoneStages[0].forEach(node=>node.gain.setTargetAtTime(linearGain,state.audioCtx.currentTime,.02));dev.state.aiPhoneLevels[0]=level;
                     const slider=document.getElementById('ai-line');if(slider&&state.selectedDeviceId===dev.id)slider.value=level;
                     el.querySelector('[data-ai-line]')?.style.setProperty('--ai-turn',`${-135+level*270}deg`);
                 };
@@ -6340,12 +6344,24 @@ const Hardware = (() => {
                     const token=++dev.captureToken;dev.capturePending=true;
                     let captureStream=null;
                     try{
-                        await state.audioCtx.resume();
-                        const audio={...(dev.micDeviceId?{deviceId:{exact:dev.micDeviceId}}:{}),channelCount:{ideal:2},echoCancellation:false,noiseSuppression:false,autoGainControl:false};
-                        try{captureStream=await navigator.mediaDevices.getUserMedia({audio});}
-                        catch(error){
-                            if(['OverconstrainedError','NotFoundError'].includes(error.name)&&dev.micDeviceId){dev.micDeviceId='';captureStream=await navigator.mediaDevices.getUserMedia({audio:{channelCount:{ideal:2},echoCancellation:false,noiseSuppression:false,autoGainControl:false}});}
-                            else throw error;
+                        const selectedDevice=dev.micDeviceId;
+                        const audio={...(selectedDevice?{deviceId:{exact:selectedDevice}}:{}),channelCount:{ideal:2},echoCancellation:false,noiseSuppression:false,autoGainControl:false};
+                        // Start the permission request in the original click gesture. Safari can
+                        // lose that gesture if AudioContext.resume() is awaited first.
+                        const firstRequest=navigator.mediaDevices.getUserMedia({audio});
+                        const [captureResult,resumeResult]=await Promise.allSettled([firstRequest,state.audioCtx.resume()]);
+                        if(captureResult.status==='fulfilled')captureStream=captureResult.value;
+                        if(resumeResult.status==='rejected'){captureStream?.getTracks().forEach(track=>track.stop());throw resumeResult.reason;}
+                        if(captureResult.status==='rejected'){
+                            const error=captureResult.reason;
+                            // Safari versions vary in which processing constraints they expose.
+                            // Retry the chosen device without those optional constraints; never
+                            // silently switch an explicitly selected input to the built-in mic.
+                            if(['OverconstrainedError','TypeError'].includes(error.name)){
+                                const retryAudio=selectedDevice?{deviceId:{exact:selectedDevice}}:true;
+                                captureStream=await navigator.mediaDevices.getUserMedia({audio:retryAudio});
+                                if(state.audioCtx.state!=='running')await state.audioCtx.resume();
+                            }else throw error;
                         }
                         if(token!==dev.captureToken||!state.devices[dev.id]||!dev.powered){captureStream.getTracks().forEach(track=>track.stop());return;}
                         const stream=captureStream;
@@ -6361,10 +6377,10 @@ const Hardware = (() => {
                         captureStream?.getTracks().forEach(track=>track.stop());
                         dev.micSource?.disconnect();dev.micSplitter?.disconnect();dev.micAnalyser?.disconnect();dev.micSource=dev.micSplitter=dev.micAnalyser=null;dev.micStream=null;
                         const messages={
-                            NotAllowedError:'Acesso ao microfone negado. Permita o uso do microfone para este site nas configurações do navegador.',
-                            NotFoundError:'O navegador não encontrou uma entrada de áudio. Confira se a interface aparece em Som → Entrada no sistema.',
-                            NotReadableError:'A entrada foi encontrada, mas não pôde ser aberta. Feche outros apps que estejam usando a interface e tente novamente.',
-                            OverconstrainedError:'A entrada selecionada não está mais disponível. Escolha novamente a entrada de áudio.',
+                            NotAllowedError:'Permita o microfone para este site nas configurações do Safari e do macOS e tente novamente.',
+                            NotFoundError:'O Safari não encontrou essa entrada. Confira se a interface aparece em Ajustes do Sistema → Som → Entrada.',
+                            NotReadableError:'A entrada está ocupada ou bloqueada pelo macOS. Feche outros apps de áudio e confira a permissão de microfone do Safari.',
+                            OverconstrainedError:'A entrada selecionada não está disponível. Reconecte-a ou escolha outra entrada.',
                             SecurityError:'A captura foi bloqueada pelo navegador. Abra o programa em HTTPS ou localhost e confira as permissões do site.'
                         };
                         dev.micMessage=messages[error.name]||`Não foi possível iniciar a captura (${error.name||'erro de áudio'}). Confira a entrada selecionada e as permissões do navegador.`;
@@ -7734,7 +7750,7 @@ const Hardware = (() => {
                 const phoneCount=dev.type==='audioInterface4'?2:1;
                 const gainControls=dev.type==='audioInterface2'?'':['L','R'].map(ch=>`<label>Ganho ${ch}<input id="ai-gain-${ch}" class="gain-spark-slider" data-gain-color="${ch==='L'?'green':'red'}" type="range" min="0" max="1" step=".01" value="${dev.state['micGain'+ch]}" aria-label="Ganho ${ch}"></label>`).join('');
                 const phoneControls=dev.type==='audioInterface2'?'':Array.from({length:phoneCount},(_,index)=>`<label>Volume de fones${phoneCount>1?' '+(index+1):''}<input id="ai-phones-${index}" type="range" min="0" max="1" step=".01" value="${dev.state.aiPhoneLevels?.[index]??.75}"></label>`).join('');
-                html+=`<section class="ai-inspector"><h3>Entrada do computador</h3><label>Dispositivo de captura<select id="ai-input-device"><option value="">Entrada padrão do sistema</option></select></label><button id="ai-capture-toggle" class="tt-insp-btn" type="button">${dev.state.playing?'PARAR CAPTURA':'INICIAR CAPTURA'}</button><p role="status" id="ai-capture-status">${dev.micMessage||'Escolha um dispositivo de áudio e permita o acesso no navegador.'}</p>${gainControls}<label>${dev.type==='audioInterface2'?'Volume geral · linha e fones':'Saída de linha'}<input id="ai-line" type="range" min="0" max="1" step=".01" value="${dev.state.aiLineLevel??.8}"></label>${phoneControls}<small>A captura é encaminhada sem efeitos para as saídas conectadas. ${dev.type==='audioInterface2'?'Esta interface oferece controle de volume, sem ajuste de ganho.':'Ajuste os ganhos L/R e os níveis de saída separadamente.'}</small></section>`;
+                html+=`<section class="ai-inspector"><h3>Entrada do computador</h3><label>Dispositivo de captura<select id="ai-input-device"><option value="">Entrada padrão do sistema</option></select></label><button id="ai-capture-toggle" class="tt-insp-btn" type="button">${dev.state.playing?'PARAR CAPTURA':'INICIAR CAPTURA'}</button><p role="status" id="ai-capture-status">${dev.micMessage||'Escolha um dispositivo de áudio e permita o acesso no navegador.'}</p>${gainControls}<label>${dev.type==='audioInterface2'?'Volume geral · linha e fones':'Saída de linha'}<input id="ai-line" type="range" min="0" max="1" step=".01" value="${dev.state.aiLineLevel??.8}"></label>${phoneControls}<small>A captura é encaminhada sem efeitos para as saídas conectadas. ${dev.type==='audioInterface2'?'Esta interface não tem ganho de entrada; o volume compartilhado oferece até +12 dB.':'Os ganhos L/R e volumes de saída oferecem até +12 dB para compensar entradas baixas.'}</small></section>`;
             }
             if (SOURCE_TYPES.has(dev.type) && !TURNTABLE_TYPES.has(dev.type)&&!CAPTURE_INTERFACE_TYPES.has(dev.type)) html += `<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Reprodução</span><button id="source-inspector-play" type="button" class="tt-insp-btn ${dev.state.playing ? 'is-on' : ''}" aria-pressed="${!!dev.state.playing}">REPRODUZIR / PAUSAR</button></div>`;
             if (SOURCE_TYPES.has(dev.type)&&!SIGNAL_GENERATOR_TYPES.has(dev.type)&&!CAPTURE_INTERFACE_TYPES.has(dev.type)&&!(TURNTABLE_TYPES.has(dev.type)&&dev.spotifyVinyl)) html += `<div class="flex flex-col gap-2 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Música própria</span><button id="source-load-audio" type="button" class="tt-insp-btn">CARREGAR ÁUDIO</button><input id="source-audio-file" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac" hidden><div class="source-file-row"><p id="source-file-name" class="text-xs text-gray-300 break-words"></p><button id="source-remove-audio" type="button" aria-label="Remover arquivo de áudio" title="Remover arquivo" ${dev.audioBuffer ? '' : 'hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path class="source-trash-lid" d="M4 7h16M9 7V5h6v2"/><path class="source-trash-bin" d="M6.5 9 7.5 20h9L17.5 9M10 11v6m4-6v6"/></svg></button></div><p id="source-file-message" class="text-xs text-gray-400"></p></div>`;
