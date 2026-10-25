@@ -237,15 +237,13 @@ const SpotifyCoverflow=(()=>{
             element.setAttribute('aria-label',`${album.name} — ${artist(album)}`);
             const vinyl=document.createElement('span');vinyl.className='spotify-flow-vinyl';
             vinyl.title='Retirar disco da capa';vinyl.setAttribute('role','button');vinyl.setAttribute('aria-label',`Retirar ${album.name} da capa`);
-            vinyl.addEventListener('pointerdown',event=>{if(event.button!==0||extracted.has(album.uri))return;event.preventDefault();event.stopPropagation();host.dispatchEvent(new CustomEvent('spotify-vinyl-pickup',{bubbles:true,detail:{uri:album.uri,name:album.name,image:album.images?.[0]?.url||'',clientX:event.clientX,clientY:event.clientY,pointerId:event.pointerId}}));});
             const cover=document.createElement('img');cover.alt='';cover.loading='lazy';cover.referrerPolicy='no-referrer';
             const artUrl=(album.images||[]).filter(image=>image.width>=300).sort((a,b)=>a.width-b.width)[0]?.url||album.images?.[0]?.url;
             if(artUrl)cover.src=artUrl;
             const spine=document.createElement('span');spine.className='spotify-flow-spine spotify-flow-spine-right';const spineText=document.createElement('span');spineText.textContent=album.name;spine.append(spineText);
             if(artUrl)element.style.setProperty('--album-art',`url("${artUrl.replaceAll('"','%22')}")`);
             const label=document.createElement('i');label.className='spotify-flow-label';if(artUrl)label.style.backgroundImage=`url("${artUrl.replaceAll('"','%22')}")`;vinyl.append(label);
-            element.append(vinyl,cover,spine);element.addEventListener('click',event=>{event.stopPropagation();activate(index);});
-            element.addEventListener('keydown',event=>{if(!['Enter',' '].includes(event.key))return;event.preventDefault();event.stopPropagation();element.click();});
+            element.append(vinyl,cover,spine);
             return element;
         }
         function refresh(){
@@ -274,7 +272,7 @@ const SpotifyCoverflow=(()=>{
             for(const [index,node] of nodes)if(!visible.has(index)||node.dataset.uri!==ordered[index]?.uri){node.remove();nodes.delete(index);hits.get(index)?.remove();hits.delete(index);}
             for(const index of visible){
                 let node=nodes.get(index);if(!node){node=card(index);node.dataset.uri=ordered[index].uri;flow.append(node);nodes.set(index,node);}
-                let hit=hits.get(index);if(!hit){hit=document.createElement('div');hit.className='spotify-flow-hit';hit.dataset.index=index;hit.setAttribute('aria-hidden','true');hit.addEventListener('click',event=>{event.stopPropagation();activate(index);});hitLayer.append(hit);hits.set(index,hit);}
+                let hit=hits.get(index);if(!hit){hit=document.createElement('div');hit.className='spotify-flow-hit';hit.dataset.index=index;hit.setAttribute('aria-hidden','true');hitLayer.append(hit);hits.set(index,hit);}
                 hit.style.pointerEvents=index===selected?'none':'auto';
                 const distance=index-center,absolute=Math.abs(distance),side=Math.sign(distance);
                 const x=selected>=0?distance===0?-100:side*(500+sleeveOffset(absolute-1)):side*sleeveOffset(absolute)+edgeOffset;
@@ -302,11 +300,25 @@ const SpotifyCoverflow=(()=>{
         sort.addEventListener('change',()=>{active().sort=sort.value;nodes.forEach(node=>node.remove());nodes.clear();refresh();onChange();});
         position.addEventListener('input',()=>{active().selected=null;active().position=Number(position.value);refresh();onChange();});
         stage.addEventListener('wheel',event=>{event.preventDefault();event.stopPropagation();shift(Math.sign(Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY));},{passive:false});
-        stage.addEventListener('pointerdown',event=>{event.stopPropagation();if(event.button!==0)return;drag={x:event.clientX,index:current()>=0?current():active().position};dragged=false;if(event.target===stage)stage.setPointerCapture(event.pointerId);});
-        stage.addEventListener('pointermove',event=>{if(!drag)return;const scale=stage.getBoundingClientRect().width/stage.clientWidth;const delta=(drag.x-event.clientX)/(COVER_SPACING*scale);if(Math.abs(delta)<.1)return;if(!stage.hasPointerCapture(event.pointerId))stage.setPointerCapture(event.pointerId);dragged=true;host.classList.add('is-dragging');active().selected=null;active().position=clamp(drag.index+delta);refresh();});
+        stage.addEventListener('click',event=>{const target=event.target instanceof Element?event.target.closest('.spotify-flow-card,.spotify-flow-hit'):null;if(!target||!stage.contains(target)||target.closest('.spotify-flow-vinyl'))return;event.stopPropagation();activate(Number(target.dataset.index));});
+        stage.addEventListener('pointerdown',event=>{
+            const vinyl=event.target instanceof Element?event.target.closest('.spotify-flow-vinyl'):null;
+            if(vinyl&&stage.contains(vinyl)){
+                const card=vinyl.closest('.spotify-flow-card'),album=ordered[Number(card?.dataset.index)];
+                event.stopPropagation();
+                if(event.button!==0||!album||extracted.has(album.uri))return;
+                event.preventDefault();host.dispatchEvent(new CustomEvent('spotify-vinyl-pickup',{bubbles:true,detail:{uri:album.uri,name:album.name,image:album.images?.[0]?.url||'',clientX:event.clientX,clientY:event.clientY,pointerId:event.pointerId}}));return;
+            }
+            event.stopPropagation();if(event.button!==0)return;drag={x:event.clientX,index:current()>=0?current():active().position};dragged=false;if(event.target===stage)stage.setPointerCapture(event.pointerId);
+        });
+        stage.addEventListener('pointermove',event=>{if(!drag)return;const scale=stage.getBoundingClientRect().width/stage.clientWidth;const delta=(drag.x-event.clientX)/(COVER_SPACING*scale);if(Math.abs(delta)<.1)return;if(!stage.hasPointerCapture(event.pointerId))stage.setPointerCapture(event.pointerId);dragged=true;host.classList.add('is-dragging');active().selected=null;active().position=clamp(drag.index+delta);refresh();},{passive:true});
         const release=()=>{if(!drag)return;drag=null;host.classList.remove('is-dragging');if(dragged){suppressClickUntil=performance.now()+300;active().position=clamp(Math.round(active().position));refresh();onChange();dragged=false;}};
         stage.addEventListener('pointerup',release);stage.addEventListener('pointercancel',release);
-        stage.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End','Enter',' '].includes(event.key))return;if(event.target!==stage&&['Enter',' '].includes(event.key))return;event.preventDefault();event.stopPropagation();if(event.key==='ArrowLeft')shift(-1);else if(event.key==='ArrowRight')shift(1);else if(event.key==='Home')select(0);else if(event.key==='End')select(ordered.length-1);else activate(current()>=0?current():Math.round(active().position));});
+        stage.addEventListener('keydown',event=>{
+            const card=event.target instanceof Element?event.target.closest('.spotify-flow-card'):null;
+            if(card&&['Enter',' '].includes(event.key)){event.preventDefault();event.stopPropagation();activate(Number(card.dataset.index));return;}
+            if(!['ArrowLeft','ArrowRight','Home','End','Enter',' '].includes(event.key))return;if(event.target!==stage&&['Enter',' '].includes(event.key))return;event.preventDefault();event.stopPropagation();if(event.key==='ArrowLeft')shift(-1);else if(event.key==='ArrowRight')shift(1);else if(event.key==='Home')select(0);else if(event.key==='End')select(ordered.length-1);else activate(current()>=0?current():Math.round(active().position));
+        });
         const view={refresh};views.add(view);if(tokenData())status='';refresh();if(tokenData()){loadCollection(state.coverflowMode);ensurePlayer().catch(error=>setStatus(error.message));}
         return {refresh(){refresh();if(tokenData())loadCollection(state.coverflowMode);},dispose(){views.delete(view);nodes.clear();hitLayer.remove();hits.clear();}};
     }

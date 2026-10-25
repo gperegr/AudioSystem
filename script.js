@@ -807,10 +807,11 @@ const Hardware = (() => {
         device.style.setProperty('--lighting-silhouette-mask',`url("${mask.toDataURL()}")`);
         device.classList.add('lighting-shaped-silhouette');
     }
-    let lightingDemoFrame=0;
+    let lightingDemoDirty=false;
     const lightingGeometry=new WeakMap();
     let furnitureLightingGeometry={key:'',items:[]};
     let floorShadowKey='';
+    function elementWorldPosition(element){const position=state.devices[element.id]?.dragVisualPosition;return position||{x:element.offsetLeft,y:element.offsetTop};}
     function positionedSceneLights(scene,time,world){
         const imageDrop=parseFloat(world.style.getPropertyValue('--room-image-drop'))||0;
         const horizonShift=parseFloat(world.style.getPropertyValue('--room-horizon-shift'))||0;
@@ -845,7 +846,7 @@ const Hardware = (() => {
     function staticLightRect(element,owner,worldRect,scale){
         const world=owner.closest('#audio-world');
         const wallParallax=owner.classList.contains('wall-lamp-node')&&world?['--room-far-x','--room-far-y','--room-far-scale','--room-horizon-shift'].map(name=>world.style.getPropertyValue(name)).join('|'):'';
-        const key=owner.style.left+'|'+owner.style.top+'|'+owner.offsetWidth+'|'+owner.offsetHeight+'|'+wallParallax;
+        const position=elementWorldPosition(owner),key=position.x+'|'+position.y+'|'+owner.offsetWidth+'|'+owner.offsetHeight+'|'+wallParallax;
         const cached=staticLightGeometry.get(element);
         if(cached?.key===key)return cached.rect;
         const box=element.getBoundingClientRect();
@@ -870,9 +871,10 @@ const Hardware = (() => {
         return [...roomLights,...positionedObjectLights(world)].map(source=>sampleSceneLight(source,x,y)).reduce((best,source)=>source.weight>(best?.weight||0)?source:best,null);
     }
     function updateLightingDemo(){
-        if(lightingDemoFrame)return;
-        lightingDemoFrame=requestAnimationFrame(()=>{lightingDemoFrame=0;paintLightingDemo();});
+        lightingDemoDirty=true;
+        window.dispatchEvent(new Event('audio-lighting-dirty'));
     }
+    function renderLightingDemo(){if(!lightingDemoDirty)return;lightingDemoDirty=false;paintLightingDemo();}
     function paintFloorShadows(world,roomLights,equipment){
         const layer=world.querySelector(':scope > .room-floor-shadows'),canvas=document.getElementById('canvas');
         if(!layer)return;
@@ -880,7 +882,7 @@ const Hardware = (() => {
             if(floorShadowKey){layer.getContext('2d').clearRect(0,0,layer.width,layer.height);floorShadowKey='';}
             return;
         }
-        const furniture=[...world.querySelectorAll('.furniture-node')].map(el=>({el,x:el.offsetLeft,y:el.offsetTop,width:el.offsetWidth,height:el.offsetHeight,furniture:true}));
+        const furniture=[...world.querySelectorAll('.furniture-node')].map(el=>({...elementWorldPosition(el),el,width:el.offsetWidth,height:el.offsetHeight,furniture:true}));
         const allCasters=[...furniture,...equipment.map(box=>({...box,furniture:false}))];
         const worldHeight=world.offsetHeight,visibleTop=worldHeight-313;
         const worldRect=world.getBoundingClientRect(),viewRect=canvas.getBoundingClientRect(),viewScale=worldRect.width/world.offsetWidth;
@@ -962,7 +964,7 @@ const Hardware = (() => {
             const dy=Math.max(0,Math.abs(source.y-y)-(source.height+height)/2);
             return Math.hypot(dx,dy)<(source.reach||2100);
         }).map(source=>{const step=source.animated?4:8;return source.id+','+Math.round(source.x/step)+','+Math.round(source.y/step);}).join(';');
-        const furnitureKey=furnitureBodies.map(body=>{const node=body.closest('.furniture-node');return node.id+':'+node.style.left+':'+node.style.top;}).join('|');
+        const furnitureKey=furnitureBodies.map(body=>{const node=body.closest('.furniture-node'),position=elementWorldPosition(node);return node.id+':'+position.x+':'+position.y;}).join('|');
         if(furnitureLightingGeometry.key!==furnitureKey){
             const worldRect=world.getBoundingClientRect(),worldScale=worldRect.width/world.offsetWidth;
             const rectInWorld=element=>{const rect=element.getBoundingClientRect();return{x:(rect.left-worldRect.left)/worldScale,y:(rect.top-worldRect.top)/worldScale,width:rect.width/worldScale,height:rect.height/worldScale};};
@@ -973,14 +975,14 @@ const Hardware = (() => {
             })};
         }
         const furniture=furnitureLightingGeometry.items;
-        const stackBoxes=[...world.querySelectorAll('.device-node:not(.furniture-node):not(.device-type-pendantLamp):not(.wall-lamp-node)')].filter(el=>el.style.visibility!=='hidden').map(el=>({el,x:el.offsetLeft,y:el.offsetTop,width:el.offsetWidth,height:el.offsetHeight}));
+        const stackBoxes=[...world.querySelectorAll('.device-node:not(.furniture-node):not(.device-type-pendantLamp):not(.wall-lamp-node)')].filter(el=>el.style.visibility!=='hidden').map(el=>({...elementWorldPosition(el),el,width:el.offsetWidth,height:el.offsetHeight}));
         const stackTops=stackBoxes.filter(box=>box.width>=300&&(box.height<box.width*.8||box.el.classList.contains('device-type-tapeDeck')));
         paintFloorShadows(world,sceneEmitters,stackBoxes);
         world.querySelectorAll('.furniture-node.lighting-demo-target').forEach(node=>{
             const rect=node.getBoundingClientRect();
             if(rect.right<viewport.left||rect.left>viewport.right||rect.bottom<viewport.top||rect.top>viewport.bottom)return;
             const rack=furniture.find(item=>item.id===node.id);
-            const key=sceneName+'|'+lightKeyAt(node.offsetLeft+node.offsetWidth/2,node.offsetTop+node.offsetHeight/2,node.offsetWidth,node.offsetHeight)+'|'+node.offsetLeft+'|'+node.offsetTop+'|'+node.dataset.back;
+            const position=elementWorldPosition(node),key=sceneName+'|'+lightKeyAt(position.x+node.offsetWidth/2,position.y+node.offsetHeight/2,node.offsetWidth,node.offsetHeight)+'|'+position.x+'|'+position.y+'|'+node.dataset.back;
             if(node.dataset.lightPaintKey===key)return;
             node.dataset.lightPaintKey=key;
             rack?.visualParts.forEach(({el:part,x,y,width,height})=>{
@@ -1009,7 +1011,7 @@ const Hardware = (() => {
                 })};
                 lightingGeometry.set(device,geometry);
             }
-            const deviceX=device.offsetLeft,deviceY=device.offsetTop;
+            const {x:deviceX,y:deviceY}=elementWorldPosition(device);
             const centerX=deviceX+geometry.width/2,centerY=deviceY+geometry.height/2;
             const rack=furniture.find(item=>centerX>item.x+16&&centerX<item.x+item.width-16&&centerY>item.y+16&&centerY<item.y+item.height-16);
             const stackedAbove=stackTops.filter(upper=>upper.el!==device&&deviceY-upper.y-upper.height>=-.5&&deviceY-upper.y-upper.height<=20.5&&Math.min(deviceX+geometry.width,upper.x+upper.width)-Math.max(deviceX,upper.x)>=Math.min(geometry.width,upper.width)*.7);
@@ -1268,7 +1270,7 @@ const Hardware = (() => {
         if(spec.kind==='jack')return `<g transform="scale(${spec.scale})"><path d="M0 0 3 -2h12v4H3Z" fill="#ddbc77" stroke="#887044" stroke-width=".7"/><path d="M6 -2v4M11 -2v4" stroke="#20252a" stroke-width="1.1"/><rect x="15" y="-4" width="13" height="8" rx="2" fill="#363f45" stroke="#85949c" stroke-width="1"/><path d="M18 -3v6m3-6v6" stroke="#5d6c74"/></g>`;
         return `<path d="M0 0h7" stroke="#e2c283" stroke-width="2.5" stroke-linecap="round"/><rect x="5" y="-4" width="7" height="8" rx="1" fill="#bac2c5" stroke="#677780" stroke-width=".8"/><rect x="12" y="-5" width="13" height="10" rx="2" fill="#262e33" stroke="#788790" stroke-width=".8"/><rect x="14" y="-5" width="4" height="10" rx=".6" fill="${spec.color||'#cf4545'}"/>`;
     }
-    return Object.freeze({knobs,buttons,controlSizes,setControlSize,buttonSounds,movementSounds,movementSound,sliders,leds,plugs,accents,sizes,physics,updateAccents,updateLightingDemo,sceneLightAt,demoMarkup,bindDemo,sourceTransport,setButtonLabel,button:skinButton,bindKnob,bindLinear,slider,setLed,layout,mount,sync,dispose,inspector,plugMarkup});
+    return Object.freeze({knobs,buttons,controlSizes,setControlSize,buttonSounds,movementSounds,movementSound,sliders,leds,plugs,accents,sizes,physics,updateAccents,updateLightingDemo,renderLightingDemo,sceneLightAt,demoMarkup,bindDemo,sourceTransport,setButtonLabel,button:skinButton,bindKnob,bindLinear,slider,setLed,layout,mount,sync,dispose,inspector,plugMarkup});
 })();
 
         const DEFAULT_BACKDROP='loftIllustrated';
@@ -2388,9 +2390,9 @@ const Hardware = (() => {
             const step=now=>{
                 if(!state.devices[dev.id])return;
                 const progress=Math.min(1,(now-started)/duration),ease=progress*progress;
-                dev.el.style.top=(startY+(target.y-startY)*ease)+'px';updateCables();
+                dev.el.style.top=(startY+(target.y-startY)*ease)+'px';updateCables(new Set([dev.id]));
                 if(progress<1)frame=requestAnimationFrame(step);
-                else {frame=0;dev.cancelPlacementMotion=null;scheduleProjectSave();}
+                else {frame=0;dev.cancelPlacementMotion=null;updateCables();scheduleProjectSave();}
             };
             dev.cancelPlacementMotion=()=>{cancelAnimationFrame(frame);frame=0;dev.cancelPlacementMotion=null;};
             frame=requestAnimationFrame(step);
@@ -6756,6 +6758,7 @@ const Hardware = (() => {
                     const startX = e.clientX;
                     const startY = e.clientY;
                     const movingDevices = expandFurnitureGroup([...state.selectedDeviceIds].map(id => state.devices[id]).filter(Boolean));
+                    const transformDrag=typeof CSS!=='undefined'&&CSS.supports?.('translate','1px 1px');
                     const initialPositions = movingDevices.map(item => ({
                         dev:item,
                         x:parseFloat(item.el.style.left) || 0,
@@ -6767,6 +6770,8 @@ const Hardware = (() => {
                     const ignored = new Set(movingDevices.map(item => item.id));
                     let isDragging = false, frame = 0, lastTime = 0, released = false;
                     let targets = initialPositions.map(p=>({...p}));
+                    const visualPositions=new Map(initialPositions.map(p=>[p.dev.id,{x:p.x,y:p.y}]));
+                    const initialById=new Map(initialPositions.map(p=>[p.dev.id,{x:p.x,y:p.y}]));
                     const discardPreviews=new Map();
                     let discardPreviewLayer=null;
                     const discardGrabOffsets=new Map(movingDevices.map(item=>{const rect=item.el.getBoundingClientRect();return [item.id,{dx:rect.left-startX,dy:rect.top-startY}];}));
@@ -6794,7 +6799,7 @@ const Hardware = (() => {
                                     if(value!==attribute.value)copy.setAttribute(attribute.name,value);
                                 }});
                                 clone.setAttribute('aria-hidden','true');clone.inert=true;
-                                Object.assign(clone.style,{position:'fixed',margin:'0',width:item.el.offsetWidth+'px',height:item.el.offsetHeight+'px',transform:`scale(${view.zoom})`,transformOrigin:'0 0',zIndex:'10000',pointerEvents:'none',transition:'none'});
+                                Object.assign(clone.style,{position:'fixed',margin:'0',width:item.el.offsetWidth+'px',height:item.el.offsetHeight+'px',translate:'none',transform:`scale(${view.zoom})`,transformOrigin:'0 0',zIndex:'10000',pointerEvents:'none',transition:'none'});
                                 preview={clone,...discardGrabOffsets.get(item.id),visibility:item.el.style.visibility};
                                 discardPreviews.set(item.id,preview);discardPreviewLayer.appendChild(clone);item.el.style.visibility='hidden';
                             }
@@ -6808,7 +6813,7 @@ const Hardware = (() => {
                     }
 
                     movingDevices.forEach(item=>item.cancelPlacementMotion?.());
-                    const cancel = () => { clearDiscardPreview();cancelAnimationFrame(frame); frame=0;movingDevices.forEach(item=>{item.el.classList.remove('equipment-dragging','history-settling');}); };
+                    const cancel = () => { clearDiscardPreview();cancelAnimationFrame(frame); frame=0;movingDevices.forEach(item=>{item.el.style.translate='none';delete item.dragVisualPosition;item.el.classList.remove('equipment-dragging','history-settling');}); };
                     movingDevices.forEach(item=>item.cancelPlacementMotion=cancel);
                     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
                     let falling=new Map();
@@ -6818,7 +6823,7 @@ const Hardware = (() => {
                         const dt=Math.min(32,now-(lastTime||now-16));lastTime=now;
                         const blend=!released||reducedMotion?1:1-Math.exp(-dt/55);
                         const intermediate=targets.map(p=>{
-                            const x=parseFloat(p.dev.el.style.left)||0,y=parseFloat(p.dev.el.style.top)||0;
+                            const current=visualPositions.get(p.dev.id)||p,x=current.x,y=current.y;
                             const fall=falling.get(p.dev.id);
                             const progress=fall?Math.min(1,(now-fall.started)/fall.duration):0;
                             const nextY=fall?fall.y+(p.y-fall.y)*progress*progress:Math.abs(p.y-y)<.2?p.y:y+(p.y-y)*blend;
@@ -6827,15 +6832,17 @@ const Hardware = (() => {
                         const resolved=intermediate;
                         let moved=false;
                         resolved.forEach(p=>{
-                            const x=parseFloat(p.dev.el.style.left)||0,y=parseFloat(p.dev.el.style.top)||0;
+                            const current=visualPositions.get(p.dev.id)||p,x=current.x,y=current.y;
                             moved ||= Math.abs(x-p.x)+Math.abs(y-p.y)>.01;
-                            p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;
+                            visualPositions.set(p.dev.id,{x:p.x,y:p.y});p.dev.dragVisualPosition={x:p.x,y:p.y};
+                            if(transformDrag){const base=initialById.get(p.dev.id);p.dev.el.style.translate=`${p.x-base.x}px ${p.y-base.y}px`;}
+                            else{p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;}
                         });
-                        if(moved) updateCables();
+                        if(moved) updateCables(ignored);
                         const pending=resolved.some((p,i)=>Math.abs(p.x-targets[i].x)+Math.abs(p.y-targets[i].y)>.1);
                         if(pending&&moved) frame=requestAnimationFrame(animate);
                         else if(released){
-                            targets.forEach(p=>{p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;p.dev.el.classList.remove('equipment-dragging','history-settling');});
+                            targets.forEach(p=>{p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;p.dev.el.style.translate='none';delete p.dev.dragVisualPosition;p.dev.el.classList.remove('equipment-dragging','history-settling');});
                             updateCables();
                         }
                     };
@@ -7181,8 +7188,9 @@ const Hardware = (() => {
             updateCableFlows();
         }
 
-        function updateBluetoothLinks() {
+        function updateBluetoothLinks(affectedDeviceIds=null) {
             Object.values(state.devices).forEach(dev => {
+                if(affectedDeviceIds&&!affectedDeviceIds.has(dev.id)&&!affectedDeviceIds.has(dev.btPairedId))return;
                 if (!dev.btLinkEl || !dev.btPairedId || !BT_TX_TYPES.has(dev.type)) return;
                 const dest = state.devices[dev.btPairedId];
                 if (!dest) return;
@@ -7827,6 +7835,7 @@ const Hardware = (() => {
                 if (!startPort) return;
                 
                 isPatching = true;
+                scheduleVisuals();
                 startCableHum();
                 dragPhysics.displayedTarget=null;dragPhysics.frameTime=0;
                 updatePortGuidance();
@@ -8296,9 +8305,9 @@ const Hardware = (() => {
                     tempCableEl.classList.remove('active');
                     const connType = outP.dataset.type || inP.dataset.type;
                     const miswired=outP.dataset.io!=='out'||inP.dataset.io!=='in';
-                    const connection={outId:outP.id,inId:inP.id,el:tempCableEl,type:connType,wps:[],miswired};
+                    const connection={outId:outP.id,inId:inP.id,outDeviceId:outP.closest('.device-node')?.id,inDeviceId:inP.closest('.device-node')?.id,el:tempCableEl,type:connType,wps:[],miswired};
                     if(miswired)tempCableEl.dataset.miswired='true';
-                    state.connections.push(connection);animateCableSeat(connection,tPort);
+                    state.connections.push(connection);invalidateCableBundles();animateCableSeat(connection,tPort);
                     playUiSound('connect');
                     outP.classList.add('connected'); inP.classList.add('connected');
                     updatePortGuidance(true);
@@ -8348,6 +8357,7 @@ const Hardware = (() => {
                 }
             }
             state.connections.splice(idx, 1);
+            invalidateCableBundles();
             updateCableFlows();
             updatePortGuidance(true);
         }
@@ -8362,31 +8372,40 @@ const Hardware = (() => {
             updatePortGuidance();
         }
 
-        function getCableBundleOffset(connection) {
-            const outPort = document.getElementById(connection.outId);
-            const inPort = document.getElementById(connection.inId);
-            const outDevice = outPort?.closest('.device-node')?.id;
-            const inDevice = inPort?.closest('.device-node')?.id;
-            if (!outDevice || !inDevice) return 0;
-            const pairKey = [outDevice, inDevice].sort().join('|');
-            const bundle = state.connections.filter(item => {
-                const from = document.getElementById(item.outId)?.closest('.device-node')?.id;
-                const to = document.getElementById(item.inId)?.closest('.device-node')?.id;
-                return from && to && [from, to].sort().join('|') === pairKey;
-            });
-            const position = bundle.indexOf(connection);
-            return position < 0 ? 0 : (position - (bundle.length - 1) / 2) * 14;
+        let cableBundleRevision=0,cachedCableBundleRevision=-1;
+        const cableBundleOffsets=new WeakMap();
+        function invalidateCableBundles(){cableBundleRevision++;}
+        function connectionDevices(connection){
+            if(!connection.outDeviceId)connection.outDeviceId=document.getElementById(connection.outId)?.closest('.device-node')?.id||'';
+            if(!connection.inDeviceId)connection.inDeviceId=document.getElementById(connection.inId)?.closest('.device-node')?.id||'';
+            return [connection.outDeviceId,connection.inDeviceId];
         }
-
-        function updateCables() {
-            syncPlatterVinyls();
-            world.querySelectorAll('.device-type-pendantLamp').forEach(lamp=>{
-                const drop=Math.round(lamp.offsetTop+80)+'px';
-                if(lamp.style.getPropertyValue('--pendant-drop')!==drop)lamp.style.setProperty('--pendant-drop',drop);
+        function getCableBundleOffset(connection) {
+            if(cachedCableBundleRevision!==cableBundleRevision){
+                const bundles=new Map();
+                state.connections.forEach(item=>{
+                    const [from,to]=connectionDevices(item);if(!from||!to)return;
+                    const key=[from,to].sort().join('|'),bundle=bundles.get(key)||[];bundle.push(item);bundles.set(key,bundle);
+                });
+                bundles.forEach(bundle=>bundle.forEach((item,index)=>cableBundleOffsets.set(item,(index-(bundle.length-1)/2)*14)));
+                cachedCableBundleRevision=cableBundleRevision;
+            }
+            return cableBundleOffsets.get(connection)||0;
+        }
+        function updateStackFeetDuringMove(affectedDeviceIds){
+            const layer=document.getElementById('stack-feet');if(!layer)return;
+            layer.querySelectorAll('.auto-stack-foot').forEach(foot=>{
+                if(!affectedDeviceIds.has(foot.dataset.footOwner))return;
+                const owner=state.devices[foot.dataset.footOwner];if(!owner)return;
+                const position=owner.dragVisualPosition||{x:parseFloat(owner.el.style.left)||0,y:parseFloat(owner.el.style.top)||0};
+                foot.style.left=(position.x+Number(foot.dataset.offsetX))+'px';
+                foot.style.top=(position.y+Number(foot.dataset.offsetY))+'px';
             });
-            Hardware.updateLightingDemo();
-            updateStackFeet();
+        }
+        function updateCables(affectedDeviceIds=null) {
+            const partial=affectedDeviceIds instanceof Set;
             state.connections.forEach(c => {
+                if(partial){const [from,to]=connectionDevices(c);if(!affectedDeviceIds.has(from)&&!affectedDeviceIds.has(to))return;}
                 const p1 = document.getElementById(c.outId); const p2 = document.getElementById(c.inId);
                 c.el.dataset.slack=String(c.slack??5);
                 let settle=0;
@@ -8405,7 +8424,20 @@ const Hardware = (() => {
                 if(p1 && p2) drawCable(c.el, getPortCenter(p1), getPortCenter(p2), [], c.type, {x:0,y:settle}, getCableBundleOffset(c));
                 applyCableAppearance(c);
             });
-            updateBluetoothLinks();
+            updateBluetoothLinks(partial?affectedDeviceIds:null);
+            syncPlatterVinyls(partial?affectedDeviceIds:null);
+            if(partial){
+                affectedDeviceIds.forEach(id=>{
+                    const lamp=state.devices[id]?.el;
+                    if(lamp?.classList.contains('device-type-pendantLamp')){const drop=Math.round((state.devices[id].dragVisualPosition?.y??lamp.offsetTop)+80)+'px';if(lamp.style.getPropertyValue('--pendant-drop')!==drop)lamp.style.setProperty('--pendant-drop',drop);}
+                });
+                updateStackFeetDuringMove(affectedDeviceIds);
+            }else{
+                world.querySelectorAll('.device-type-pendantLamp').forEach(lamp=>{const drop=Math.round(lamp.offsetTop+80)+'px';if(lamp.style.getPropertyValue('--pendant-drop')!==drop)lamp.style.setProperty('--pendant-drop',drop);});
+                updateStackFeet();
+            }
+            Hardware.updateLightingDemo();
+            scheduleVisuals();
         }
 
         // --- PROPAGAÇÃO REAL DE ENERGIA/SINAL PELA CADEIA DE ÁUDIO ---
@@ -8543,6 +8575,7 @@ const Hardware = (() => {
                     }
                 });
             });
+            scheduleVisuals();
         }
 
         canvas.addEventListener('click', e => {
@@ -8613,18 +8646,20 @@ const Hardware = (() => {
             const el=document.createElementNS('http://www.w3.org/2000/svg','g');el.setAttribute('class','cable-group');svgLayer.appendChild(el);
             const type=output.dataset.type;drawCable(el,getPortCenter(output),getPortCenter(input),[],type);
             const miswired=output.dataset.io!=='out'||input.dataset.io!=='in';
-            state.connections.push({outId:output.id,inId:input.id,el,type,wps:[],miswired});if(miswired)el.dataset.miswired='true';else from.nodes[nodeOut].connect(to.nodes[nodeIn]);output.classList.add('connected');input.classList.add('connected');
+            state.connections.push({outId:output.id,inId:input.id,outDeviceId:from.id,inDeviceId:to.id,el,type,wps:[],miswired});invalidateCableBundles();if(miswired)el.dataset.miswired='true';else from.nodes[nodeOut].connect(to.nodes[nodeIn]);output.classList.add('connected');input.classList.add('connected');
         }
 
-        let pendantLightTick=0,pendantLightSignature='',visualFrame=0,visualTimer=0;
+        let pendantLightTick=0,pendantLightSignature='',visualFrame=0,visualTimer=0,visualRendering=false;
         function scheduleVisuals(delay=0){
-            if(document.visibilityState!=='visible'||visualFrame||visualTimer)return;
+            if(document.visibilityState!=='visible'||visualFrame)return;
+            if(visualTimer){if(delay)return;clearTimeout(visualTimer);visualTimer=0;}
             if(delay)visualTimer=setTimeout(()=>{visualTimer=0;visualFrame=requestAnimationFrame(renderVisuals);},delay);
             else visualFrame=requestAnimationFrame(renderVisuals);
         }
         function renderVisuals() {
             visualFrame=0;
             if(document.visibilityState!=='visible')return;
+            visualRendering=true;
             const now=performance.now();
             if(now-pendantLightTick>=90){
                 pendantLightTick=now;
@@ -8682,7 +8717,8 @@ const Hardware = (() => {
                     const woofers=dev.visualWoofers??=dev.el.querySelectorAll('.spk-woofer,.classic-box-woofer');
                     if (dev.analyzer && dev.dataArray && woofers.length) {
                         dev.analyzer.getByteFrequencyData(dev.dataArray);
-                        let avg = dev.dataArray.slice(0, 10).reduce((a,b)=>a+b,0)/10;
+                        let sum=0;for(let i=0;i<Math.min(10,dev.dataArray.length);i++)sum+=dev.dataArray[i];
+                        const avg=sum/Math.min(10,dev.dataArray.length);
                         const punch = (SUB_TYPES.has(dev.type) || PASSIVE_SUB_TYPES.has(dev.type)) ? .025 : .014;
                         const scale=1+(!reduced&&dev.powered!==false?(avg/255)*punch:0);
                         woofers.forEach(w=>{w.style.transform=`${w.classList.contains('classic-box-woofer')?'translateX(-50%) ':''}scale(${scale})`;});
@@ -8690,14 +8726,19 @@ const Hardware = (() => {
                 });
             }
             const devices=Object.values(state.devices);
-            const activeAudio=devices.some(dev=>dev.state?.playing||dev.state?.radioOn||(dev.meters&&dev.powered===true));
+            const activeAudio=devices.some(dev=>dev.state?.playing||dev.state?.radioOn||(dev.meters?.visible&&dev.powered===true&&dev.meters.peaks.some(peak=>peak>.001)));
             const activeCable=isPatching||state.connections.some(connection=>connection.seatStarted!=null);
-            scheduleVisuals(activeCable?0:activeAudio?33:pendantLightSignature?90:200);
+            Hardware.renderLightingDemo();
+            visualRendering=false;
+            scheduleVisuals(activeCable?0:activeAudio?33:pendantLightSignature?90:0);
         }
         document.addEventListener('visibilitychange',()=>{
             if(document.visibilityState==='visible')scheduleVisuals();
             else {cancelAnimationFrame(visualFrame);clearTimeout(visualTimer);visualFrame=0;visualTimer=0;}
         });
+        window.addEventListener('audio-lighting-dirty',()=>{if(!visualRendering)scheduleVisuals();});
+        for(const type of ['input','change','click','pointerup','keyup','wheel','scroll'])document.addEventListener(type,()=>scheduleVisuals(),{capture:true,passive:true});
+        window.addEventListener('resize',()=>scheduleVisuals(),{passive:true});
         const spotifyNotice=document.createElement('div');spotifyNotice.className='spotify-vinyl-notice';spotifyNotice.setAttribute('role','status');document.body.append(spotifyNotice);
         function spotifyVinylNotice(message){spotifyNotice.textContent=message;spotifyNotice.classList.add('is-visible');clearTimeout(spotifyNoticeTimer);spotifyNoticeTimer=setTimeout(()=>spotifyNotice.classList.remove('is-visible'),5200);}
         function refreshSpotifyVinyls(){SpotifyCoverflow.markExtracted(new Set([...spotifyVinyls.values()].map(item=>item.uri)));}
@@ -8706,7 +8747,7 @@ const Hardware = (() => {
             const marker=dev.el.querySelector(dev.type==='turntableLinear'?'.linear-disc-size':'[data-tt="record"]')||dev.el;
             const rect=marker.getBoundingClientRect();return screenToWorld(rect.left+rect.width/2,rect.top+rect.height/2);
         }
-        function syncPlatterVinyls(){for(const item of spotifyVinyls.values()){const dev=state.devices[item.turntableId];if(!dev)continue;const at=vinylPlatterCenter(dev);moveSpotifyVinyl(item,at.x-SPOTIFY_VINYL_SIZE/2,at.y-6);}}
+        function syncPlatterVinyls(affectedDeviceIds=null){for(const item of spotifyVinyls.values()){if(affectedDeviceIds&&!affectedDeviceIds.has(item.turntableId))continue;const dev=state.devices[item.turntableId];if(!dev)continue;const at=vinylPlatterCenter(dev);moveSpotifyVinyl(item,at.x-SPOTIFY_VINYL_SIZE/2,at.y-6);}}
         function moveSpotifyVinyl(item,x,y){item.x=Math.max(0,Math.min(world.offsetWidth-SPOTIFY_VINYL_SIZE,x));item.y=Math.max(0,Math.min(maxEquipmentBottom()-(item.turntableId?12:SPOTIFY_VINYL_SIZE),y));item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';}
         function placeSpotifyVinyl(item,dev,animate=true){
             if(dev.spotifyVinyl&&dev.spotifyVinyl!==item){spotifyVinylNotice('Este prato já tem um disco.');return false;}

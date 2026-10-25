@@ -1699,7 +1699,7 @@
         .cable-color-swatch:focus-visible {outline:2px solid #93c5fd;outline-offset:3px;}
         .cable-user-label {fill:#e2e8f0;stroke:#141b23;stroke-width:4px;paint-order:stroke;font:600 11px "Inter",sans-serif;text-anchor:middle;pointer-events:none;}
         .device-node.listening-muted {opacity:.65;}
-        :is(#audio-world,.equipment-preview-world) .device-node.equipment-dragging {z-index:150!important;opacity:.85;cursor:grabbing;}
+        :is(#audio-world,.equipment-preview-world) .device-node.equipment-dragging {z-index:150!important;opacity:.85;cursor:grabbing;will-change:translate,opacity;}
         .device-node.listening-solo {outline:2px solid #38bdf8;outline-offset:3px;}
         .catalog-discard-zone {position:absolute;inset:0;z-index:60;display:flex;align-items:center;padding:20px;background:#181d23;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .16s ease,visibility .16s;}
         .catalog-discard-content {width:100%;min-height:280px;padding:32px 18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;border:2px dashed #526070;border-radius:14px;text-align:center;color:#b4c0ce;transition:background .16s,border-color .16s,color .16s,transform .16s;}
