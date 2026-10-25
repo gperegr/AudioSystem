@@ -5,6 +5,7 @@ const SpotifyCoverflow=(()=>{
     const VERIFIER_KEY='audio-system-spotify-verifier';
     const STATE_KEY='audio-system-spotify-state';
     const COVER_SIZE=400;
+    const THUMB_SIZE=250;
     const COVER_SPACING=38;
     const CLOSED_RADIUS=76;
     const OPEN_RADIUS=18;
@@ -233,6 +234,10 @@ const SpotifyCoverflow=(()=>{
         const current=()=>ordered.findIndex(album=>album.uri===active().selected);
         const clamp=value=>Math.max(0,Math.min(Math.max(0,ordered.length-1),value));
         function activate(index){if(performance.now()<suppressClickUntil||!ordered[index])return;if(current()===index){active().selected=null;active().position=index;refresh();onChange();return;}select(index);}
+        function albumArt(album,large=false){
+            const images=(album.images||[]).filter(image=>image?.url).sort((a,b)=>(a.width||Infinity)-(b.width||Infinity));
+            return images.find(image=>(image.width||0)>=(large?COVER_SIZE:THUMB_SIZE))?.url||images.at(-1)?.url||'';
+        }
         function card(index){
             const album=ordered[index],element=document.createElement('div');element.className='spotify-flow-card';element.dataset.index=index;element.setAttribute('role','button');element.tabIndex=0;
             element.setAttribute('aria-label',`${album.name} — ${artist(album)}`);
@@ -240,7 +245,7 @@ const SpotifyCoverflow=(()=>{
             vinyl.title='Retirar disco da capa';vinyl.setAttribute('role','button');vinyl.setAttribute('aria-label',`Retirar ${album.name} da capa`);
             const cover=document.createElement('img');cover.alt='';cover.loading='lazy';cover.decoding='async';cover.referrerPolicy='no-referrer';
             cover.addEventListener('pointerdown',event=>{if(event.button!==0||current()!==index)return;event.stopPropagation();const startX=event.clientX,startY=event.clientY,pointerId=event.pointerId;const move=ev=>{if(ev.pointerId!==pointerId||Math.hypot(ev.clientX-startX,ev.clientY-startY)<9)return;cleanup();suppressClickUntil=performance.now()+350;host.dispatchEvent(new CustomEvent('spotify-album-pickup',{bubbles:true,detail:{uri:album.uri,name:album.name,image:album.images?.[0]?.url||'',clientX:ev.clientX,clientY:ev.clientY,pointerId}}));};const cleanup=()=>{window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',cleanup,true);window.removeEventListener('pointercancel',cleanup,true);};window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',cleanup,true);window.addEventListener('pointercancel',cleanup,true);});
-            const artUrl=(album.images||[]).filter(image=>image.width>=300).sort((a,b)=>a.width-b.width)[0]?.url||album.images?.[0]?.url;
+            const artUrl=albumArt(album,false);
             if(artUrl)cover.src=artUrl;
             const spine=document.createElement('span');spine.className='spotify-flow-spine spotify-flow-spine-right';const spineText=document.createElement('span');spineText.textContent=album.name;spine.append(spineText);
             if(artUrl)element.style.setProperty('--album-art',`url("${artUrl.replaceAll('"','%22')}")`);
@@ -275,6 +280,9 @@ const SpotifyCoverflow=(()=>{
             for(const [index,node] of nodes)if(!visible.has(index)||node.dataset.uri!==ordered[index]?.uri){node.remove();nodes.delete(index);hits.get(index)?.remove();hits.delete(index);}
             for(const index of visible){
                 let node=nodes.get(index);if(!node){node=card(index);node.dataset.uri=ordered[index].uri;flow.append(node);nodes.set(index,node);}
+                const cover=node.querySelector('img'),artUrl=albumArt(ordered[index],index===selected);
+                if(cover&&artUrl&&cover.src!==new URL(artUrl,location.href).href){cover.src=artUrl;cover.decoding='async';cover.fetchPriority=index===selected?'high':'low';}
+                if(artUrl)node.style.setProperty('--album-art',`url("${artUrl.replaceAll('"','%22')}")`);
                 let hit=hits.get(index);if(!hit){hit=document.createElement('div');hit.className='spotify-flow-hit';hit.dataset.index=index;hit.setAttribute('aria-hidden','true');hitLayer.append(hit);hits.set(index,hit);}
                 hit.style.pointerEvents=index===selected?'none':'auto';
                 const distance=index-center,absolute=Math.abs(distance),side=Math.sign(distance);
@@ -314,8 +322,9 @@ const SpotifyCoverflow=(()=>{
             }
             event.stopPropagation();if(event.button!==0)return;drag={x:event.clientX,index:current()>=0?current():active().position};dragged=false;if(event.target===stage)stage.setPointerCapture(event.pointerId);
         });
-        stage.addEventListener('pointermove',event=>{if(!drag)return;const scale=stage.getBoundingClientRect().width/stage.clientWidth;const delta=(drag.x-event.clientX)/(COVER_SPACING*scale);if(Math.abs(delta)<.1)return;if(!stage.hasPointerCapture(event.pointerId))stage.setPointerCapture(event.pointerId);dragged=true;host.classList.add('is-dragging');active().selected=null;active().position=clamp(drag.index+delta);refresh();},{passive:true});
-        const release=()=>{if(!drag)return;drag=null;host.classList.remove('is-dragging');if(dragged){suppressClickUntil=performance.now()+300;active().position=clamp(Math.round(active().position));refresh();onChange();dragged=false;}};
+        let dragFrame=0,pendingPosition=null;
+        stage.addEventListener('pointermove',event=>{if(!drag)return;const scale=stage.getBoundingClientRect().width/stage.clientWidth;const delta=(drag.x-event.clientX)/(COVER_SPACING*scale);if(Math.abs(delta)<.1)return;if(!stage.hasPointerCapture(event.pointerId))stage.setPointerCapture(event.pointerId);dragged=true;host.classList.add('is-dragging');active().selected=null;pendingPosition=clamp(drag.index+delta);if(!dragFrame)dragFrame=requestAnimationFrame(()=>{dragFrame=0;if(pendingPosition==null)return;active().position=pendingPosition;refresh();});},{passive:true});
+        const release=()=>{if(!drag)return;drag=null;if(dragFrame){cancelAnimationFrame(dragFrame);dragFrame=0;}if(pendingPosition!=null){active().position=pendingPosition;pendingPosition=null;}host.classList.remove('is-dragging');if(dragged){suppressClickUntil=performance.now()+300;active().position=clamp(Math.round(active().position));refresh();onChange();dragged=false;}};
         stage.addEventListener('pointerup',release);stage.addEventListener('pointercancel',release);
         stage.addEventListener('keydown',event=>{
             const card=event.target instanceof Element?event.target.closest('.spotify-flow-card'):null;
