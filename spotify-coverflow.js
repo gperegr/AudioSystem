@@ -16,7 +16,7 @@ const SpotifyCoverflow=(()=>{
     let status='Conecte sua conta Spotify para ver sua coleção.';
     const clientId=DEFAULT_CLIENT_ID;
     let sdkPromise=null,player=null,deviceId=null,playback=null,playbackUpdatedAt=0,trackRepeat=false,shuffleEnabled=false,beforeRedirect=()=>{},refreshPromise=null,inspector=null;
-    const extracted=new Set();
+    const extracted=new Set(),removed=new Set();
     const trackLists=new Map();
     const tokenData=()=>{try{return JSON.parse(sessionStorage.getItem(TOKEN_KEY)||'null');}catch{return null;}};
     const base64=bytes=>btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
@@ -171,6 +171,7 @@ const SpotifyCoverflow=(()=>{
         shuffleEnabled=!!enabled;broadcast();
     }
     function markExtracted(uris){extracted.clear();uris.forEach(uri=>extracted.add(uri));broadcast();}
+    function markRemoved(uris){removed.clear();uris.forEach(uri=>removed.add(uri));broadcast();}
     const artistCollator=new Intl.Collator('pt',{sensitivity:'base'});
     const sorters={added:(a,b)=>a._added-b._added,artist:(a,b)=>artistCollator.compare(artist(a),artist(b))||artistCollator.compare(a.name,b.name),name:(a,b)=>a.name.localeCompare(b.name),year:(a,b)=>(b.release_date||'').localeCompare(a.release_date||'')};
     const sorterFor=(mode,key)=>mode==='playlists'&&key==='year'?(a,b)=>(b.tracks?.total||0)-(a.tracks?.total||0):sorters[key]||sorters.added;
@@ -211,7 +212,7 @@ const SpotifyCoverflow=(()=>{
         const hitLayer=document.createElement('div');hitLayer.className='spotify-flow-hits';stage.append(hitLayer);
         const title=host.querySelector('.spotify-flow-title'),subtitle=host.querySelector('.spotify-flow-subtitle'),count=host.querySelector('.spotify-flow-count');
         const position=host.querySelector('.spotify-flow-position'),sort=host.querySelector('.spotify-flow-sort'),play=host.querySelector('.spotify-flow-play');
-        const nodes=new Map(),hits=new Map();let ordered=[],orderedSource=null,orderedSort=null,drag=null,dragged=false,suppressClickUntil=0;
+        const nodes=new Map(),hits=new Map();let ordered=[],allOrdered=[],orderedSource=null,orderedSort=null,drag=null,dragged=false,suppressClickUntil=0;
         state.coverflowMode=state.coverflowMode==='playlists'?'playlists':'albums';
         const saved=state.coverflowCollections||{};
         state.coverflowCollections=Object.fromEntries(['albums','playlists'].map(mode=>{
@@ -238,6 +239,7 @@ const SpotifyCoverflow=(()=>{
             const vinyl=document.createElement('span');vinyl.className='spotify-flow-vinyl';
             vinyl.title='Retirar disco da capa';vinyl.setAttribute('role','button');vinyl.setAttribute('aria-label',`Retirar ${album.name} da capa`);
             const cover=document.createElement('img');cover.alt='';cover.loading='lazy';cover.referrerPolicy='no-referrer';
+            cover.addEventListener('pointerdown',event=>{if(event.button!==0||current()!==index)return;event.stopPropagation();const startX=event.clientX,startY=event.clientY,pointerId=event.pointerId;const move=ev=>{if(ev.pointerId!==pointerId||Math.hypot(ev.clientX-startX,ev.clientY-startY)<9)return;cleanup();suppressClickUntil=performance.now()+350;host.dispatchEvent(new CustomEvent('spotify-album-pickup',{bubbles:true,detail:{uri:album.uri,name:album.name,image:album.images?.[0]?.url||'',clientX:ev.clientX,clientY:ev.clientY,pointerId}}));};const cleanup=()=>{window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',cleanup,true);window.removeEventListener('pointercancel',cleanup,true);};window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',cleanup,true);window.addEventListener('pointercancel',cleanup,true);});
             const artUrl=(album.images||[]).filter(image=>image.width>=300).sort((a,b)=>a.width-b.width)[0]?.url||album.images?.[0]?.url;
             if(artUrl)cover.src=artUrl;
             const spine=document.createElement('span');spine.className='spotify-flow-spine spotify-flow-spine-right';const spineText=document.createElement('span');spineText.textContent=album.name;spine.append(spineText);
@@ -249,7 +251,8 @@ const SpotifyCoverflow=(()=>{
         function refresh(){
             migrateLegacy();
             const mode=state.coverflowMode,items=collections[mode],selection=active();host.dataset.coverflowMode=mode;
-            if(orderedSource!==items||orderedSort!==selection.sort){ordered=[...items].sort(sorterFor(mode,selection.sort));orderedSource=items;orderedSort=selection.sort;}
+            if(orderedSource!==items||orderedSort!==selection.sort){allOrdered=[...items].sort(sorterFor(mode,selection.sort));orderedSource=items;orderedSort=selection.sort;}
+            ordered=allOrdered.filter(album=>!removed.has(album.uri));
             sort.value=selection.sort;
             sort.options[1].textContent=mode==='albums'?'Artista':'Criador';sort.options[3].textContent=mode==='albums'?'Ano':'Faixas';
             const selected=current();
@@ -336,5 +339,5 @@ const SpotifyCoverflow=(()=>{
         }
         if(tokenData()){status='';await loadCollection('albums');}
     }
-    return {mount,inspectorHtml,bindInspector,initialize,login,logout,playAlbum,resumeAlbum,loadTracks,selectTrack,pauseAlbum,setPlaybackVolume,getPlaybackState,seekTo,setTrackRepeat,setShuffle,markExtracted,setBeforeRedirect(callback){beforeRedirect=callback;}};
+    return {mount,inspectorHtml,bindInspector,initialize,login,logout,playAlbum,resumeAlbum,loadTracks,selectTrack,pauseAlbum,setPlaybackVolume,getPlaybackState,seekTo,setTrackRepeat,setShuffle,markExtracted,markRemoved,setBeforeRedirect(callback){beforeRedirect=callback;}};
 })();

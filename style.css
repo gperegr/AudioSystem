@@ -1895,6 +1895,11 @@
 .spotify-canvas-vinyl.is-linear {height:12px;margin-top:66px;border-radius:50%;background:linear-gradient(#74817b,#080c0d 38%,#292e2d 70%,#0a1010);}
 .spotify-canvas-vinyl.is-linear span,.spotify-canvas-vinyl.is-linear::after {display:none;}
 .spotify-canvas-vinyl {width:var(--spotify-vinyl-size);height:var(--spotify-vinyl-size);}
+.spotify-canvas-album {position:absolute;z-index:31;width:calc(var(--spotify-vinyl-size) + 16px);height:calc(var(--spotify-vinyl-size) + 16px);cursor:grab;touch-action:none;filter:drop-shadow(0 15px 15px #0009);}
+.spotify-canvas-album-cover {position:absolute;inset:0;z-index:2;background:#443b32 center/cover;border:5px solid #8f8068;box-sizing:border-box;box-shadow:inset 0 0 0 2px #28231e,0 4px 8px #0007;transition:transform .28s ease;}
+.spotify-canvas-album-disc {position:absolute;inset:8px;z-index:1;border-radius:50%;background:repeating-radial-gradient(circle,#0a0d0e 0 3px,#24292b 3px 5px);visibility:hidden;transition:transform .28s ease;cursor:grab;}
+.spotify-canvas-album.is-open .spotify-canvas-album-cover {transform:translateX(-22%);}.spotify-canvas-album.is-open.has-vinyl .spotify-canvas-album-disc {visibility:visible;transform:translateX(22%);}
+.spotify-canvas-album.is-dragging {z-index:201;cursor:grabbing;}.spotify-canvas-album.is-dragging .spotify-canvas-album-disc {visibility:hidden!important;}
 .spotify-canvas-vinyl.is-linear {width:var(--spotify-vinyl-size);height:12px;margin-top:0;}
 .spotify-canvas-vinyl.is-on-platter {height:12px;border-radius:50%;background:linear-gradient(#76817f,#080c0d 40%,#333b3a 74%,#0a1010);}
 .spotify-canvas-vinyl.is-on-platter span,.spotify-canvas-vinyl.is-on-platter::after {display:none;}

@@ -2498,7 +2498,7 @@ const Hardware = (() => {
         const SIGNAL_GENERATOR_TYPES=new Set(['signalGenerator','signalGeneratorVintage']);
         const CAPTURE_INTERFACE_TYPES=new Set(['audioInterface','audioInterfaceEvo','audioInterfaceQuantum','audioInterfaceVolt']);
         const SOURCE_TYPES = new Set([...TURNTABLE_TYPES, 'cdPlayer', 'streamer','streamIntegrated', 'btReceiverA','tapeDeck','signalGenerator','signalGeneratorVintage',...CAPTURE_INTERFACE_TYPES]);
-        const spotifyVinyls=new Map();
+        const spotifyVinyls=new Map(),spotifyAlbums=new Map();
         let spotifyPlayingTurntable=null,spotifyVolume=0,spotifyVolumeTimer=0,spotifyNoticeTimer=0;
         const EQ_TYPES = new Set(['eqStudio', 'eqVintage']);
         const BT_RX_TYPES = new Set(['btReceiverA']);
@@ -8972,8 +8972,24 @@ const Hardware = (() => {
         window.addEventListener('resize',()=>scheduleVisuals(),{passive:true});
         const spotifyNotice=document.createElement('div');spotifyNotice.className='spotify-vinyl-notice';spotifyNotice.setAttribute('role','status');document.body.append(spotifyNotice);
         function spotifyVinylNotice(message){spotifyNotice.textContent=message;spotifyNotice.classList.add('is-visible');clearTimeout(spotifyNoticeTimer);spotifyNoticeTimer=setTimeout(()=>spotifyNotice.classList.remove('is-visible'),5200);}
-        function refreshSpotifyVinyls(){SpotifyCoverflow.markExtracted(new Set([...spotifyVinyls.values()].map(item=>item.uri)));}
+        function refreshSpotifyVinyls(){SpotifyCoverflow.markExtracted(new Set([...spotifyVinyls.values()].map(item=>item.uri)));spotifyAlbums.forEach(syncSpotifyAlbum);}
+        function refreshSpotifyAlbums(){SpotifyCoverflow.markRemoved(new Set(spotifyAlbums.keys()));}
         const SPOTIFY_VINYL_SIZE=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--spotify-vinyl-size'));
+        const SPOTIFY_ALBUM_SIZE=SPOTIFY_VINYL_SIZE+16;
+        function moveSpotifyAlbum(item,x,y){item.x=Math.max(0,Math.min(world.offsetWidth-SPOTIFY_ALBUM_SIZE,x));item.y=Math.max(0,Math.min(maxEquipmentBottom()-SPOTIFY_ALBUM_SIZE,y));item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';}
+        function syncSpotifyAlbum(item){item.el.classList.toggle('has-vinyl',item.open&&!spotifyVinyls.has(item.uri));item.el.classList.toggle('is-open',item.open);}
+        function removeSpotifyAlbum(item){spotifyAlbums.delete(item.uri);item.el.remove();refreshSpotifyAlbums();scheduleProjectSave();}
+        function createSpotifyAlbum(record){
+            if(!record||!/^spotify:(album|playlist):[A-Za-z0-9]+$/.test(record.uri||'')||spotifyAlbums.has(record.uri))return null;
+            const item={id:record.id||'album_'+Math.random().toString(36).slice(2),uri:record.uri,name:String(record.name||'Álbum').slice(0,160),image:/^https:\/\//.test(record.image||'')?record.image:'',origin:record.origin||null,x:0,y:0,open:!!record.open};
+            const el=document.createElement('div');el.className='spotify-canvas-album';el.tabIndex=0;el.setAttribute('aria-label',item.name+' · arraste ou clique para abrir');
+            const cover=document.createElement('span');cover.className='spotify-canvas-album-cover';if(item.image)cover.style.backgroundImage=`url("${item.image.replaceAll('"','%22')}")`;
+            const disc=document.createElement('span');disc.className='spotify-canvas-album-disc';disc.title='Retirar o disco';el.append(disc,cover);item.el=el;world.append(el);spotifyAlbums.set(item.uri,item);moveSpotifyAlbum(item,Number(record.x)||0,Number(record.y)||0);syncSpotifyAlbum(item);refreshSpotifyAlbums();
+            disc.addEventListener('pointerdown',event=>{if(event.button!==0||spotifyVinyls.has(item.uri))return;event.preventDefault();event.stopPropagation();const at=screenToWorld(event.clientX,event.clientY),vinyl=createSpotifyVinyl({uri:item.uri,name:item.name,image:item.image,origin:item.origin,x:at.x-SPOTIFY_VINYL_SIZE/2,y:at.y-SPOTIFY_VINYL_SIZE/2});syncSpotifyAlbum(item);if(vinyl)beginSpotifyVinylDrag(vinyl,event);});
+            el.addEventListener('pointerdown',event=>{if(event.button!==0||event.target===disc)return;event.preventDefault();event.stopPropagation();const start=screenToWorld(event.clientX,event.clientY),offsetX=start.x-item.x,offsetY=start.y-item.y;let moved=false;const move=ev=>{if(ev.pointerId!==event.pointerId)return;const at=screenToWorld(ev.clientX,ev.clientY);if(!moved&&Math.hypot(ev.clientX-event.clientX,ev.clientY-event.clientY)<8)return;moved=true;el.classList.add('is-dragging');moveSpotifyAlbum(item,at.x-offsetX,at.y-offsetY);};const end=ev=>{if(ev.pointerId!==event.pointerId)return;window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',end,true);window.removeEventListener('pointercancel',end,true);el.classList.remove('is-dragging');el.style.pointerEvents='none';const overFurniture=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('.device-type-furnitureCoverflow');el.style.pointerEvents='';if(!moved){item.open=!item.open;syncSpotifyAlbum(item);}else if(ev.type!=='pointercancel'&&(isOverCatalog(ev)||overFurniture)){removeSpotifyAlbum(item);return;}scheduleProjectSave();};window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',end,true);window.addEventListener('pointercancel',end,true);});
+            return item;
+        }
+        document.addEventListener('spotify-album-pickup',event=>{const furniture=event.target.closest('.device-node'),data=event.detail;if(!furniture||!data||spotifyAlbums.has(data.uri))return;const at=screenToWorld(data.clientX,data.clientY),item=createSpotifyAlbum({...data,origin:furniture.id,x:at.x-SPOTIFY_ALBUM_SIZE/2,y:at.y-SPOTIFY_ALBUM_SIZE/2});if(item){item.el.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,button:0,pointerId:data.pointerId,clientX:data.clientX,clientY:data.clientY}));scheduleProjectSave();}});
         function vinylPlatterCenter(dev){
             const marker=dev.el.querySelector(dev.type==='turntableLinear'?'.linear-disc-size':'[data-tt="record"]')||dev.el;
             const rect=marker.getBoundingClientRect();return screenToWorld(rect.left+rect.width/2,rect.top+rect.height/2);
@@ -9071,7 +9087,8 @@ const Hardware = (() => {
             const connections=state.connections.map(c=>{const out=document.getElementById(c.outId),input=document.getElementById(c.inId);return {from:out?.closest('.device-node')?.id,out:out?.dataset.node,to:input?.closest('.device-node')?.id,input:input?.dataset.node,label:c.label||'',color:c.color||null,hidden:!!c.hidden,slack:c.slack??5};});
             const catalogScroll=equipmentCatalog.querySelector('.overflow-y-auto');
             const vinyls=[...spotifyVinyls.values()].map(item=>({id:item.id,uri:item.uri,name:item.name,image:item.image,origin:item.origin,x:item.x,y:item.y,turntableId:item.turntableId}));
-            return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,vinyls,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{
+            const albums=[...spotifyAlbums.values()].map(item=>({id:item.id,uri:item.uri,name:item.name,image:item.image,origin:item.origin,x:item.x,y:item.y,open:item.open}));
+            return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,vinyls,albums,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{
                 environment:{...(state.environment||DEFAULT_ROOM_SETTINGS)},
                 canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'scene',canvasBackdrop:state.canvasBackdrop||DEFAULT_BACKDROP,canvasTime:state.canvasTime||'dusk',
                 soundVolume:state.uiSoundVolume??DEFAULT_UI_SOUND_VOLUME,hideCables:!!state.hideCables,
@@ -9196,7 +9213,7 @@ const Hardware = (() => {
             const shield=document.createElement('div');shield.className='project-restore-shield';shield.textContent='Restaurando montagem local…';document.body.appendChild(shield);
             const ids=new Map(),restored=[],warnings=[];
             try{
-                stopViewMotion();cancelCableDrag();spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});spotifyVinyls.forEach(item=>item.el.remove());spotifyVinyls.clear();refreshSpotifyVinyls();Object.values(state.devices).forEach(deleteDevice);
+                stopViewMotion();cancelCableDrag();spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});spotifyVinyls.forEach(item=>item.el.remove());spotifyVinyls.clear();spotifyAlbums.forEach(item=>item.el.remove());spotifyAlbums.clear();refreshSpotifyVinyls();refreshSpotifyAlbums();Object.values(state.devices).forEach(deleteDevice);
                 world.style.removeProperty('min-width');world.style.removeProperty('min-height');
                 const ui=snapshot.ui||{};setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setCanvasTime(ui.canvasTime||(ui.canvasBackdrop==='night'?'night':'dusk'));setCanvasBackdrop(ui.canvasBackdrop);
                 for(const saved of snapshot.devices){
@@ -9229,6 +9246,7 @@ const Hardware = (() => {
                 });
                 restored.forEach(([saved,dev])=>{const other=state.devices[ids.get(saved.pairedId)];if(other&&BT_TX_TYPES.has(dev.type)&&canPair(dev,other))pairDevices(dev,other);});
                 for(const record of Array.isArray(snapshot.vinyls)?snapshot.vinyls.slice(0,200):[]){const item=createSpotifyVinyl({...record,origin:ids.get(record.origin)||null});const platter=state.devices[ids.get(record.turntableId)];if(item&&platter&&TURNTABLE_TYPES.has(platter.type))placeSpotifyVinyl(item,platter,false);}
+                for(const record of Array.isArray(snapshot.albums)?snapshot.albums.slice(0,200):[])createSpotifyAlbum({...record,origin:ids.get(record.origin)||null});
                 setRoomSettings(ui.environment);
                 cableVisibilityButton.setAttribute('aria-pressed',String(!!ui.hideCables));
                 state.uiSoundVolume=typeof ui.soundVolume==='number'?Math.max(0,Math.min(1,ui.soundVolume)):DEFAULT_UI_SOUND_VOLUME;state.hideCables=!!ui.hideCables;
