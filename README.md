@@ -35,6 +35,8 @@ flowchart LR
 
 As fontes musicais oferecem demonstração quando não há música própria. Para ouvir um arquivo local, selecione a fonte e use **Música própria → CARREGAR ÁUDIO**. MP3 e WAV são opções comuns; a compatibilidade depende do navegador. O Streamer Integrado também lê metadados e capa de MP3/FLAC quando disponíveis.
 
+As interfaces **Solo**, **EVO 4**, **Quantum LT 2** e **Volt 476P** captam uma entrada de áudio escolhida no navegador e entregam o sinal aos cabos do simulador. Selecione o aparelho e clique em **Iniciar captura** para conceder permissão; os ganhos do painel e do menu ajustam os canais. Na EVO 4, os botões 1/2/Monitor escolhem o parâmetro do dial central e o Smartgain ajusta o ganho a partir do nível captado naquele momento. Na Quantum LT 2, o dial MAIN ajusta as saídas L/R; DIRECT habilita o monitoramento virtual na saída P10 de fones, com volume próprio. A Volt 476P pede até quatro canais ao navegador, reúne os canais em estéreo e oferece Vintage, compressor 76, seleção de entradas monitoradas, opção MONO e duas saídas virtuais de fones. Vintage e 76 são aproximações digitais do aplicativo; a quantidade de canais disponíveis depende do navegador e do driver. Esses controles não alteram os controles físicos da interface USB. A captura exige HTTPS ou localhost. Alimentação 48 V e seleção de instrumento são controladas na interface física. A captura não é retomada automaticamente ao abrir um projeto.
+
 ## Entradas, saídas e níveis
 
 | Sinal | Origem | Destino |
