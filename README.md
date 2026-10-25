@@ -155,3 +155,7 @@ node --test tests/*.test.cjs
 A suíte cobre ativação/retomada do áudio, movimento de grupos em móveis e coerência dos indicadores de assinatura sonora. Consulte [modelo de sinais e limites elétricos](REVISAO-SINAIS.md), [biblioteca de controles](COMPONENTES.md) e [fontes dos equipamentos](assets/fonts/README.md).
 
 As [imagens da documentação](docs/images/README.md) são capturas do simulador; os diagramas mostram percursos de sinal. Os modelos são aproximações virtuais: W, Ω, dB e os gráficos não são medições de equipamentos físicos nem previsão do volume acústico na sala. Para um sistema real, consulte as especificações dos fabricantes.
+
+### Acesso guiado e exemplos
+
+Em Configurações → Acesso guiado, consulte o passo a passo de montagem, Spotify, captura externa e arquivos locais. Na primeira abertura, o guia aparece após concluir ou pular a calibração. É possível pulá-lo e reabri-lo depois. Cinco exemplos acrescentam montagens conectadas ao projeto atual, sem iniciar reprodução ou captura. A gravidade começa desativada para novas preferências; escolhas já salvas são preservadas.

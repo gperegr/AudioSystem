@@ -1345,7 +1345,7 @@ const Hardware = (() => {
         function readAppPreferences(){try{const value=JSON.parse(localStorage.getItem(APP_PREFERENCES_KEY)||'{}');return value&&typeof value==='object'?value:{};}catch{return {};}}
         const savedAppPreferences=readAppPreferences();
         let connectionGuidanceEnabled=savedAppPreferences.connectionGuidanceEnabled!==false;
-        let gravityEnabled=savedAppPreferences.gravityEnabled!==false;
+        let gravityEnabled=savedAppPreferences.gravityEnabled===true;
         let roomParticleAmount=Number.isFinite(savedAppPreferences.roomParticleAmount)?Math.max(0,Math.min(100,savedAppPreferences.roomParticleAmount/(savedAppPreferences.particleScaleVersion===2?1:2))):25;
         if(Number.isFinite(savedAppPreferences.roomParticleAmount)&&savedAppPreferences.particleScaleVersion!==2){
             try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({...savedAppPreferences,roomParticleAmount,particleScaleVersion:2}));}catch{}
@@ -6303,7 +6303,7 @@ const Hardware = (() => {
                     // +12 dB of gain for quiet external sources.
                     const linearGain=interfaceLevelGain(control);
                     dev.nodes['gen'+channel].gain.setTargetAtTime(dev.state.playing?linearGain:0,state.audioCtx.currentTime,.02);
-                    const slider=document.getElementById(`ai-gain-${channel}`);if(slider&&state.selectedDeviceId===dev.id){slider.value=control;slider.dispatchEvent(new Event('input',{bubbles:true}));}
+                    const slider=document.getElementById(`ai-gain-${channel}`);if(slider&&state.selectedDeviceId===dev.id){slider.value=control;syncInspectorGainVisual(slider);}
                     const knob=el.querySelector(`[data-ai-gain="${channel}"]`);knob?.style.setProperty('--ai-turn',`${-135+control*270}deg`);knob?.style.setProperty('--knob-angle',`${-135+control*270}deg`);
                     const halo=knob?.querySelector('.ai-control-halo path');if(halo)halo.style.strokeDasharray=`${control*138} 138`;
                 };
@@ -6345,15 +6345,12 @@ const Hardware = (() => {
                     let captureStream=null;
                     try{
                         const selectedDevice=dev.micDeviceId;
-                        const audio={...(selectedDevice?{deviceId:{exact:selectedDevice}}:{}),channelCount:{ideal:2},echoCancellation:false,noiseSuppression:false,autoGainControl:false};
+                        const audio=dev.captureInputLabelsAvailable?{...(selectedDevice?{deviceId:{exact:selectedDevice}}:{}),channelCount:{ideal:2},echoCancellation:false,noiseSuppression:false,autoGainControl:false}:true;
                         // Start the permission request in the original click gesture. Safari can
                         // lose that gesture if AudioContext.resume() is awaited first.
                         const firstRequest=navigator.mediaDevices.getUserMedia({audio});
-                        const [captureResult,resumeResult]=await Promise.allSettled([firstRequest,state.audioCtx.resume()]);
-                        if(captureResult.status==='fulfilled')captureStream=captureResult.value;
-                        if(resumeResult.status==='rejected'){captureStream?.getTracks().forEach(track=>track.stop());throw resumeResult.reason;}
-                        if(captureResult.status==='rejected'){
-                            const error=captureResult.reason;
+                        state.audioCtx.resume().catch(()=>{});
+                        try{captureStream=await firstRequest;}catch(error){
                             // Safari versions vary in which processing constraints they expose.
                             // Retry the chosen device without those optional constraints; never
                             // silently switch an explicitly selected input to the built-in mic.
@@ -6813,11 +6810,33 @@ const Hardware = (() => {
                 const devices=await navigator.mediaDevices.enumerateDevices();
                 if(!select.isConnected)return;
                 const inputs=devices.filter(device=>device.kind==='audioinput');
+                dev.captureInputLabelsAvailable=inputs.some(device=>!!device.label);
                 select.replaceChildren(new Option('Entrada padrão do sistema',''));
                 inputs.forEach((device,index)=>select.add(new Option(device.label||`Entrada de áudio ${index+1}`,device.deviceId)));
                 select.value=inputs.some(device=>device.deviceId===selected)?selected:'';
                 dev.micDeviceId=select.value;
             }catch{}
+        }
+
+        async function authorizeCaptureInputs(dev,button){
+            const status=document.getElementById('ai-capture-status');
+            const report=message=>{dev.micMessage=message;if(status?.isConnected)status.textContent=message;};
+            if(!navigator.mediaDevices?.getUserMedia){report('Abra em HTTPS ou localhost para permitir o microfone.');return;}
+            let permissionStream;
+            button.disabled=true;
+            report('Aguardando permissão do microfone…');
+            try{
+                // Bare request directly from the user's click: no AudioContext, device ID,
+                // or optional capture constraints can block Safari's permission discovery.
+                permissionStream=await navigator.mediaDevices.getUserMedia({audio:true});
+                await refreshCaptureInputs(dev);
+                report('Acesso autorizado. Escolha sua interface e toque em Iniciar captura.');
+            }catch(error){
+                report(error.name==='NotAllowedError'
+                    ?'Microfone bloqueado. No Safari: Ajustes → Sites → Microfone → Permitir para este site. No macOS: Ajustes do Sistema → Privacidade e Segurança → Microfone → Safari. Depois recarregue.'
+                    :error.name==='NotFoundError'?'Nenhuma entrada disponível. Confira Ajustes do Sistema → Som → Entrada.'
+                    :'Não foi possível acessar o microfone ('+(error.name||'erro')+'). Confira as permissões do site e do macOS.');
+            }finally{permissionStream?.getTracks().forEach(track=>track.stop());if(button.isConnected)button.disabled=false;}
         }
 
         function bindDeviceEvents(dev) {
@@ -7750,7 +7769,7 @@ const Hardware = (() => {
                 const phoneCount=dev.type==='audioInterface4'?2:1;
                 const gainControls=dev.type==='audioInterface2'?'':['L','R'].map(ch=>`<label>Ganho ${ch}<input id="ai-gain-${ch}" class="gain-spark-slider" data-gain-color="${ch==='L'?'green':'red'}" type="range" min="0" max="1" step=".01" value="${dev.state['micGain'+ch]}" aria-label="Ganho ${ch}"></label>`).join('');
                 const phoneControls=dev.type==='audioInterface2'?'':Array.from({length:phoneCount},(_,index)=>`<label>Volume de fones${phoneCount>1?' '+(index+1):''}<input id="ai-phones-${index}" type="range" min="0" max="1" step=".01" value="${dev.state.aiPhoneLevels?.[index]??.75}"></label>`).join('');
-                html+=`<section class="ai-inspector"><h3>Entrada do computador</h3><label>Dispositivo de captura<select id="ai-input-device"><option value="">Entrada padrão do sistema</option></select></label><button id="ai-capture-toggle" class="tt-insp-btn" type="button">${dev.state.playing?'PARAR CAPTURA':'INICIAR CAPTURA'}</button><p role="status" id="ai-capture-status">${dev.micMessage||'Escolha um dispositivo de áudio e permita o acesso no navegador.'}</p>${gainControls}<label>${dev.type==='audioInterface2'?'Volume geral · linha e fones':'Saída de linha'}<input id="ai-line" type="range" min="0" max="1" step=".01" value="${dev.state.aiLineLevel??.8}"></label>${phoneControls}<small>A captura é encaminhada sem efeitos para as saídas conectadas. ${dev.type==='audioInterface2'?'Esta interface não tem ganho de entrada; o volume compartilhado oferece até +12 dB.':'Os ganhos L/R e volumes de saída oferecem até +12 dB para compensar entradas baixas.'}</small></section>`;
+                html+=`<section class="ai-inspector"><h3>Entrada do computador</h3><button id="ai-authorize-inputs" class="tt-insp-btn" type="button">AUTORIZAR / BUSCAR ENTRADAS</button><label>Dispositivo de captura<select id="ai-input-device"><option value="">Entrada padrão do sistema</option></select></label><button id="ai-capture-toggle" class="tt-insp-btn" type="button">${dev.state.playing?'PARAR CAPTURA':'INICIAR CAPTURA'}</button><p role="status" id="ai-capture-status">${dev.micMessage||'Escolha um dispositivo de áudio e permita o acesso no navegador.'}</p>${gainControls}<label>${dev.type==='audioInterface2'?'Volume geral · linha e fones':'Saída de linha'}<input id="ai-line" type="range" min="0" max="1" step=".01" value="${dev.state.aiLineLevel??.8}"></label>${phoneControls}<small>A captura é encaminhada sem efeitos para as saídas conectadas. ${dev.type==='audioInterface2'?'Esta interface não tem ganho de entrada; o volume compartilhado oferece até +12 dB.':'Os ganhos L/R e volumes de saída oferecem até +12 dB para compensar entradas baixas.'}</small></section>`;
             }
             if (SOURCE_TYPES.has(dev.type) && !TURNTABLE_TYPES.has(dev.type)&&!CAPTURE_INTERFACE_TYPES.has(dev.type)) html += `<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Reprodução</span><button id="source-inspector-play" type="button" class="tt-insp-btn ${dev.state.playing ? 'is-on' : ''}" aria-pressed="${!!dev.state.playing}">REPRODUZIR / PAUSAR</button></div>`;
             if (SOURCE_TYPES.has(dev.type)&&!SIGNAL_GENERATOR_TYPES.has(dev.type)&&!CAPTURE_INTERFACE_TYPES.has(dev.type)&&!(TURNTABLE_TYPES.has(dev.type)&&dev.spotifyVinyl)) html += `<div class="flex flex-col gap-2 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Música própria</span><button id="source-load-audio" type="button" class="tt-insp-btn">CARREGAR ÁUDIO</button><input id="source-audio-file" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac" hidden><div class="source-file-row"><p id="source-file-name" class="text-xs text-gray-300 break-words"></p><button id="source-remove-audio" type="button" aria-label="Remover arquivo de áudio" title="Remover arquivo" ${dev.audioBuffer ? '' : 'hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path class="source-trash-lid" d="M4 7h16M9 7V5h6v2"/><path class="source-trash-bin" d="M6.5 9 7.5 20h9L17.5 9M10 11v6m4-6v6"/></svg></button></div><p id="source-file-message" class="text-xs text-gray-400"></p></div>`;
@@ -7817,6 +7836,7 @@ const Hardware = (() => {
             if(CAPTURE_INTERFACE_TYPES.has(dev.type)){
                 const select=document.getElementById('ai-input-device');
                 refreshCaptureInputs(dev,select);
+                document.getElementById('ai-authorize-inputs').addEventListener('click',event=>authorizeCaptureInputs(dev,event.currentTarget));
                 select.addEventListener('change',()=>{const active=dev.state.playing;if(active)dev.stopMicCapture(false);dev.micDeviceId=select.value;if(active)dev.startMicCapture();});
                 document.getElementById('ai-capture-toggle').addEventListener('click',()=>setSourcePlaying(dev,!dev.state.playing));
                 for(const channel of ['L','R'])document.getElementById(`ai-gain-${channel}`)?.addEventListener('input',event=>dev.setMicGain(channel,event.target.value));
@@ -9498,7 +9518,75 @@ const Hardware = (() => {
         }
         setupAppDropdowns();
 
+
+        const guideKey='audio-system-guide-v1',guide=document.createElement('dialog');guide.className='guided-access';document.body.appendChild(guide);
+        const guideIcons={
+            equipment:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8" cy="12" r="2"/><path d="M13 10h5m-5 4h5"/>',
+            hand:'<path d="M9 12V5a2 2 0 0 1 4 0v6m0-3a2 2 0 0 1 4 0v4m0-2a2 2 0 0 1 4 0v5c0 4-3 6-6 6h-2c-3 0-5-2-6-4l-3-4a2 2 0 0 1 3-2l2 2"/>',
+            controls:'<path d="M5 3v18M12 3v18M19 3v18M2 8h6m1 8h6m1-10h6"/>',
+            cable:'<path d="M7 3v5m-3-5v5m-1 0h5v3a2.5 2.5 0 0 1-5 0V8m2.5 6v3a4 4 0 0 0 8 0v-3m-2-3h4v3h-4zM13.5 11V7"/>',
+            speaker:'<rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="15" r="4"/><circle cx="12" cy="6" r="1"/>',
+            record:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M5 12a7 7 0 0 1 7-7m7 7a7 7 0 0 1-7 7"/>',
+            play:'<path d="m9 5 11 7-11 7Z"/>',
+            usb:'<path d="M12 3v17m-3-14 3-3 3 3m-3 9 6-5V6m-6 11-6-5V9"/><circle cx="6" cy="8" r="1"/><path d="M17 4h2v2h-2z"/>',
+            file:'<path d="M14 2H5v20h14V7ZM14 2v5h5M10 17v-6l5-1v6"/><circle cx="8.5" cy="17" r="1.5"/><circle cx="13.5" cy="16" r="1.5"/>',
+            headphones:'<path d="M4 14v-3a8 8 0 0 1 16 0v3M4 12h4v8H6a2 2 0 0 1-2-2Zm16 0h-4v8h2a2 2 0 0 0 2-2Z"/>'
+        };
+        const guideIcon=key=>'<svg viewBox="0 0 24 24" aria-hidden="true">'+guideIcons[key]+'</svg>';
+        const steps=[
+            ['Monte seu sistema','Arraste do catálogo. Toque no aparelho para ajustar.',[['equipment','Catálogo'],['hand','Arraste'],['controls','Ajuste']]],
+            ['Conecte o som','Saída → entrada. Ligue os aparelhos e suba o volume aos poucos.',[['equipment','Fonte'],['cable','Amplificador'],['speaker','Caixas / fones']]],
+            ['Spotify','Conecte sua conta Premium. Abra a capa e leve o vinil ao prato. Use Play. Cabos controlam volume; efeitos não alteram o Spotify.',[['record','Coleção'],['hand','Leve ao prato'],['play','Play']]],
+            ['Entrada externa','Permita o microfone e escolha seu dispositivo. Conecte LINE ou PHONES.',[['usb','Interface USB'],['controls','Iniciar captura'],['headphones','Conecte']]],
+            ['Arquivos MP3','Na fonte, toque em Carregar áudio. Escolha um arquivo e dê Play.',[['equipment','CD / Tape'],['file','Carregar áudio'],['play','Play']]],
+            ['Experimente','Adicione uma montagem. Nada começa a tocar sozinho.',[['equipment','5 exemplos'],['cable','Já conectados'],['play','Você inicia']]]
+        ];
+        const examples=[
+            ['CD · caixas ativas',['cdPlayer','spkActiveCompact'],[[0,'outL',1,'inL'],[0,'outR',1,'inR']]],
+            ['Entrada externa · fones',['audioInterface1','headphone'],[[0,'outPhone',1,'in']]],
+            ['Laboratório · equalização',['signalGenerator','eqStudio','headphoneAmp','headphone'],[[0,'outL',1,'inL'],[0,'outR',1,'inR'],[1,'outL',2,'inL'],[1,'outR',2,'inR'],[2,'outPhone',3,'in']]],
+            ['Fita · escuta compartilhada',['tapeDeck','headphoneAmp4','headphone','hpStudio'],[[0,'outL',1,'inL'],[0,'outR',1,'inR'],[1,'outPhone1',2,'in'],[1,'outPhone2',3,'in']]],
+            ['Spotify · coleção de vinil',['furnitureCoverflow','turntable','headphoneAmp','headphone'],[[1,'outL',2,'inL'],[1,'outR',2,'inR'],[2,'outPhone',3,'in']]]
+        ];
+        let guidePage=0;
+        function guideSeen(){try{return localStorage.getItem(guideKey)==='true';}catch{return false;}}
+        function finishGuide(){try{localStorage.setItem(guideKey,'true');}catch{}guide.close();}
+        function renderGuide(){
+            guide.replaceChildren();
+            const count=document.createElement('small');count.textContent='Acesso guiado · '+(guidePage+1)+'/'+steps.length;
+            const title=document.createElement('h2');title.textContent=steps[guidePage][0];
+            const diagram=document.createElement('div');diagram.className='guide-diagram';
+            steps[guidePage][2].forEach(([icon,label],index)=>{
+                if(index){const arrow=document.createElement('span');arrow.className='guide-arrow';arrow.textContent='→';arrow.setAttribute('aria-hidden','true');diagram.append(arrow);}
+                const item=document.createElement('div');item.className='guide-diagram-item';item.innerHTML=guideIcon(icon);const caption=document.createElement('span');caption.textContent=label;item.append(caption);diagram.append(item);
+            });
+            const body=document.createElement('p');body.textContent=steps[guidePage][1];guide.append(count,title,diagram,body);
+            const status=document.createElement('p');status.setAttribute('role','status');
+            if(guidePage===steps.length-1)examples.forEach(([name,types,links])=>{
+                const button=document.createElement('button');button.innerHTML=guideIcon(['speaker','usb','controls','headphones','record'][examples.findIndex(item=>item[0]===name)]);const caption=document.createElement('span');caption.textContent=name;button.append(caption);button.className='guide-example';guide.append(button);
+                button.addEventListener('click',()=>{
+                    const created=[];
+                    try{
+                        initAudio();
+                        types.forEach((type,index)=>{const before=new Set(Object.keys(state.devices));createDevice(type,sceneSideInset()+60+(index%2)*650,100+Math.floor(index/2)*320);const dev=Object.values(state.devices).find(item=>!before.has(item.id));if(!dev)throw new Error('Sem espaço para esta montagem.');created.push(dev);});
+                        links.forEach(([a,out,b,input])=>{const from=created[a].el.querySelector('[data-node="'+out+'"]'),to=created[b].el.querySelector('[data-node="'+input+'"]');if(!from||!to||!getPortCompatibility(from,to).compatible)throw new Error('Conexão indisponível para este exemplo.');});
+                        links.forEach(([a,out,b,input])=>connectProjectPorts(created[a],out,created[b],input));
+                        updateCables();updateCableFlows();scheduleProjectSave();finishGuide();document.getElementById('fit-canvas').click();selectDevice(created[0].id,true);
+                    }catch(error){created.reverse().forEach(deleteDevice);status.textContent=error.message;}
+                });
+            });
+            guide.append(status);
+            const footer=document.createElement('footer');
+            [['←',()=>{guidePage--;renderGuide();},guidePage===0],['Pular',finishGuide,false],[guidePage===steps.length-1?'✓':'→',()=>{if(guidePage===steps.length-1)finishGuide();else{guidePage++;renderGuide();}},false]].forEach(([label,action,disabled])=>{const button=document.createElement('button');button.textContent=label;button.disabled=disabled;button.setAttribute('aria-label',label==='←'?'Etapa anterior':label==='→'?'Próxima etapa':label==='✓'?'Concluir':label);button.addEventListener('click',action);footer.append(button);});guide.append(footer);
+        }
+        function openGuidedAccess(){settingsMenu.open=false;guidePage=0;renderGuide();if(!guide.open)guide.showModal();}
+        guide.addEventListener('cancel',()=>{try{localStorage.setItem(guideKey,'true');}catch{}});
+        const guideSetting=document.createElement('section');guideSetting.className='headphone-calibration-setting';
+        guideSetting.innerHTML='<strong>Acesso guiado</strong><p>Spotify, entradas, MP3 e cinco montagens.</p><button type="button">Abrir guia e exemplos</button>';
+        clearCatalogFooter.prepend(guideSetting);guideSetting.querySelector('button').addEventListener('click',openGuidedAccess);
+        headphoneCalibrationDialog.addEventListener('close',()=>{if(!guideSeen())requestAnimationFrame(openGuidedAccess);});
+
         SpotifyCoverflow.initialize().catch(()=>{});
-        initializeProjectPersistence().finally(()=>{if(!headphonePromptSeen)requestAnimationFrame(openHeadphoneCalibration);});
+        initializeProjectPersistence().finally(()=>{if(!headphonePromptSeen)requestAnimationFrame(openHeadphoneCalibration);else if(!guideSeen())requestAnimationFrame(openGuidedAccess);});
 
         renderVisuals();
