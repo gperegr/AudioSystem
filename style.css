@@ -4726,3 +4726,29 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
 .guided-access .guide-example {display:flex;align-items:center;gap:12px;}
 .guided-access .guide-example svg {width:22px;height:22px;}
 @media(max-width:380px){.guided-access{padding:18px;}.guide-diagram{gap:4px;}.guide-diagram-item{padding:12px 3px;}.guide-diagram-item span{font-size:10px;}}
+.guided-access:not(.show-examples) {height:min(540px,calc(100dvh - 40px));}
+.guided-access:not(.show-examples)[open] {display:flex;flex-direction:column;}
+.guided-access:not(.show-examples) footer {margin-top:auto;padding-top:16px;flex-shrink:0;}
+.guided-access:not(.show-examples) .guide-diagram {flex-shrink:0;}
+.guided-access:not(.show-examples) p {font-size:14px;}
+
+/* Settings scroll as one panel; expanded categories keep their content height. */
+.app-settings-content {
+    min-height:0;
+    max-height:calc(100dvh - 90px - var(--phone-nav-height,0px) - env(safe-area-inset-bottom,0px));
+    overflow-y:auto;
+    overflow-x:hidden;
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-gutter:stable;
+    touch-action:pan-y;
+}
+.app-settings-content>* {flex:0 0 auto;min-width:0;max-width:100%;box-sizing:border-box;}
+.app-settings-content .settings-group {min-height:min-content;}
+.app-settings-content .settings-group>summary {box-sizing:border-box;flex-shrink:0;}
+.app-settings-content .settings-group-content {min-height:0;max-width:100%;box-sizing:border-box;}
+.app-settings-content .settings-group-content>* {flex-shrink:0;min-width:0;max-width:100%;box-sizing:border-box;}
+.app-settings-content .headphone-calibration-setting button {height:auto;white-space:normal;padding:10px 12px;}
+.app-select-popup {max-width:calc(100vw - 16px);overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.guided-access>* {flex-shrink:0;}
+.guided-access {overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}

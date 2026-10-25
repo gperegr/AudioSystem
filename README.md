@@ -158,4 +158,4 @@ As [imagens da documentação](docs/images/README.md) são capturas do simulador
 
 ### Acesso guiado e exemplos
 
-Em Configurações → Acesso guiado, consulte o passo a passo de montagem, Spotify, captura externa e arquivos locais. Na primeira abertura, o guia aparece após concluir ou pular a calibração. É possível pulá-lo e reabri-lo depois. Cinco exemplos acrescentam montagens conectadas ao projeto atual, sem iniciar reprodução ou captura. A gravidade começa desativada para novas preferências; escolhas já salvas são preservadas.
+Em Configurações → Acesso guiado, consulte o passo a passo de montagem, Spotify, captura externa e arquivos locais. A opção independente Configurações → Montagens de exemplo oferece cinco sistemas organizados em móveis. Na primeira abertura, o guia aparece após concluir ou pular a calibração. É possível pulá-lo e reabri-lo depois. Cinco exemplos acrescentam montagens conectadas ao projeto atual, sem iniciar reprodução ou captura. A gravidade começa desativada para novas preferências; escolhas já salvas são preservadas.

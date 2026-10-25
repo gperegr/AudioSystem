@@ -9536,10 +9536,9 @@ const Hardware = (() => {
         const steps=[
             ['Monte seu sistema','Arraste do catálogo. Toque no aparelho para ajustar.',[['equipment','Catálogo'],['hand','Arraste'],['controls','Ajuste']]],
             ['Conecte o som','Saída → entrada. Ligue os aparelhos e suba o volume aos poucos.',[['equipment','Fonte'],['cable','Amplificador'],['speaker','Caixas / fones']]],
-            ['Spotify','Conecte sua conta Premium. Abra a capa e leve o vinil ao prato. Use Play. Cabos controlam volume; efeitos não alteram o Spotify.',[['record','Coleção'],['hand','Leve ao prato'],['play','Play']]],
+            ['Spotify','Conecte sua conta Premium. Abra a capa e leve o vinil ao prato. Use Play. O áudio do Spotify não pode ser processado pelos equipamentos: equalizadores e outros efeitos não são aplicados. Cabos e controles ajustam apenas a audibilidade e o volume.',[['record','Coleção'],['hand','Leve ao prato'],['play','Play']]],
             ['Entrada externa','Permita o microfone e escolha seu dispositivo. Conecte LINE ou PHONES.',[['usb','Interface USB'],['controls','Iniciar captura'],['headphones','Conecte']]],
-            ['Arquivos MP3','Na fonte, toque em Carregar áudio. Escolha um arquivo e dê Play.',[['equipment','CD / Tape'],['file','Carregar áudio'],['play','Play']]],
-            ['Experimente','Adicione uma montagem. Nada começa a tocar sozinho.',[['equipment','5 exemplos'],['cable','Já conectados'],['play','Você inicia']]]
+            ['Arquivos MP3','Na fonte, toque em Carregar áudio. Escolha um arquivo e dê Play.',[['equipment','CD / Tape'],['file','Carregar áudio'],['play','Play']]]
         ];
         const examples=[
             ['CD · caixas ativas',['cdPlayer','spkActiveCompact'],[[0,'outL',1,'inL'],[0,'outR',1,'inR']]],
@@ -9548,42 +9547,71 @@ const Hardware = (() => {
             ['Fita · escuta compartilhada',['tapeDeck','headphoneAmp4','headphone','hpStudio'],[[0,'outL',1,'inL'],[0,'outR',1,'inR'],[1,'outPhone1',2,'in'],[1,'outPhone2',3,'in']]],
             ['Spotify · coleção de vinil',['furnitureCoverflow','turntable','headphoneAmp','headphone'],[[1,'outL',2,'inL'],[1,'outR',2,'inR'],[2,'outPhone',3,'in']]]
         ];
-        let guidePage=0;
+        let guidePage=0,guideExamplesMode=false;
         function guideSeen(){try{return localStorage.getItem(guideKey)==='true';}catch{return false;}}
         function finishGuide(){try{localStorage.setItem(guideKey,'true');}catch{}guide.close();}
         function renderGuide(){
             guide.replaceChildren();
-            const count=document.createElement('small');count.textContent='Acesso guiado · '+(guidePage+1)+'/'+steps.length;
-            const title=document.createElement('h2');title.textContent=steps[guidePage][0];
+            const count=document.createElement('small');count.textContent=guideExamplesMode?'Montagens de exemplo':'Acesso guiado · '+(guidePage+1)+'/'+steps.length;
+            const title=document.createElement('h2');title.textContent=guideExamplesMode?'Escolha uma montagem':steps[guidePage][0];
             const diagram=document.createElement('div');diagram.className='guide-diagram';
             steps[guidePage][2].forEach(([icon,label],index)=>{
                 if(index){const arrow=document.createElement('span');arrow.className='guide-arrow';arrow.textContent='→';arrow.setAttribute('aria-hidden','true');diagram.append(arrow);}
                 const item=document.createElement('div');item.className='guide-diagram-item';item.innerHTML=guideIcon(icon);const caption=document.createElement('span');caption.textContent=label;item.append(caption);diagram.append(item);
             });
-            const body=document.createElement('p');body.textContent=steps[guidePage][1];guide.append(count,title,diagram,body);
+            const body=document.createElement('p');body.textContent=guideExamplesMode?'Acrescenta móveis, aparelhos e cabos ao projeto. Você inicia o áudio.':steps[guidePage][1];guide.append(count,title);if(!guideExamplesMode)guide.append(diagram);guide.append(body);
             const status=document.createElement('p');status.setAttribute('role','status');
-            if(guidePage===steps.length-1)examples.forEach(([name,types,links])=>{
+            if(guideExamplesMode)examples.forEach(([name,types,links])=>{
                 const button=document.createElement('button');button.innerHTML=guideIcon(['speaker','usb','controls','headphones','record'][examples.findIndex(item=>item[0]===name)]);const caption=document.createElement('span');caption.textContent=name;button.append(caption);button.className='guide-example';guide.append(button);
                 button.addEventListener('click',()=>{
                     const created=[];
                     try{
                         initAudio();
-                        types.forEach((type,index)=>{const before=new Set(Object.keys(state.devices));createDevice(type,sceneSideInset()+60+(index%2)*650,100+Math.floor(index/2)*320);const dev=Object.values(state.devices).find(item=>!before.has(item.id));if(!dev)throw new Error('Sem espaço para esta montagem.');created.push(dev);});
-                        links.forEach(([a,out,b,input])=>{const from=created[a].el.querySelector('[data-node="'+out+'"]'),to=created[b].el.querySelector('[data-node="'+input+'"]');if(!from||!to||!getPortCompatibility(from,to).compatible)throw new Error('Conexão indisponível para este exemplo.');});
-                        links.forEach(([a,out,b,input])=>connectProjectPorts(created[a],out,created[b],input));
-                        updateCables();updateCableFlows();scheduleProjectSave();finishGuide();document.getElementById('fit-canvas').click();selectDevice(created[0].id,true);
+                        const supports=[];
+                        const add=(type,x,y)=>{const before=new Set(Object.keys(state.devices));createDevice(type,x,y);const dev=Object.values(state.devices).find(item=>!before.has(item.id));if(!dev)throw new Error('Sem espaço para esta montagem.');return dev;};
+                        const lab=name.startsWith('Laboratório');
+                        const supportType=types[0]==='furnitureCoverflow'?'furnitureCoverflow':lab?'furnitureRackTall':'furnitureTable';
+                        const support=add(supportType,sceneSideInset()+80,600);supports.push(support);created.push(support);
+                        const anchorX=parseFloat(support.el.style.left),anchorY=parseFloat(support.el.style.top);
+                        let cursor=anchorX+32,currentSupport=support;
+                        const equipment=[];
+                        types.forEach((type,index)=>{
+                            if(type==='furnitureCoverflow'){equipment.push(support);return;}
+                            const dev=add(type,anchorX,100);created.push(dev);equipment.push(dev);
+                            if(lab){
+                                const surface=index===3?0:(index+1)*260;
+                                dev.el.style.left=(anchorX+(support.el.offsetWidth-dev.el.offsetWidth)/2)+'px';
+                                dev.el.style.top=(anchorY+surface-dev.el.offsetHeight-STACK_FEET.height)+'px';
+                            }else{
+                                let activeSupport=currentSupport;
+                                if(cursor+dev.el.offsetWidth>parseFloat(activeSupport.el.style.left)+activeSupport.el.offsetWidth-24){
+                                    activeSupport=add('furnitureTable',parseFloat(currentSupport.el.style.left)+currentSupport.el.offsetWidth+70,anchorY);currentSupport=activeSupport;supports.push(activeSupport);created.push(activeSupport);cursor=parseFloat(activeSupport.el.style.left)+32;
+                                }
+                                dev.el.style.left=cursor+'px';dev.el.style.top=(parseFloat(activeSupport.el.style.top)-dev.el.offsetHeight-STACK_FEET.height)+'px';cursor+=dev.el.offsetWidth+32;
+                            }
+                        });
+                        // Connection indexes refer only to the equipment, not its furniture.
+                        const assembly=equipment;
+                        links.forEach(([a,out,b,input])=>{const from=assembly[a].el.querySelector('[data-node="'+out+'"]'),to=assembly[b].el.querySelector('[data-node="'+input+'"]');if(!from||!to||!getPortCompatibility(from,to).compatible)throw new Error('Conexão indisponível para este exemplo.');});
+                        links.forEach(([a,out,b,input])=>connectProjectPorts(assembly[a],out,assembly[b],input));
+                        updateCables();updateCableFlows();scheduleProjectSave();guide.close();document.getElementById('fit-canvas').click();selectDevice(assembly.find(dev=>!FURNITURE_TYPES[dev.type])?.id||support.id,true);
                     }catch(error){created.reverse().forEach(deleteDevice);status.textContent=error.message;}
                 });
             });
             guide.append(status);
+            if(guideExamplesMode){const close=document.createElement('button');close.textContent='Fechar';close.addEventListener('click',()=>guide.close());guide.append(close);return;}
             const footer=document.createElement('footer');
             [['←',()=>{guidePage--;renderGuide();},guidePage===0],['Pular',finishGuide,false],[guidePage===steps.length-1?'✓':'→',()=>{if(guidePage===steps.length-1)finishGuide();else{guidePage++;renderGuide();}},false]].forEach(([label,action,disabled])=>{const button=document.createElement('button');button.textContent=label;button.disabled=disabled;button.setAttribute('aria-label',label==='←'?'Etapa anterior':label==='→'?'Próxima etapa':label==='✓'?'Concluir':label);button.addEventListener('click',action);footer.append(button);});guide.append(footer);
         }
-        function openGuidedAccess(){settingsMenu.open=false;guidePage=0;renderGuide();if(!guide.open)guide.showModal();}
-        guide.addEventListener('cancel',()=>{try{localStorage.setItem(guideKey,'true');}catch{}});
+        function openGuidedAccess(){settingsMenu.open=false;guideExamplesMode=false;guide.classList.remove('show-examples');guidePage=0;renderGuide();if(!guide.open)guide.showModal();}
+        guide.addEventListener('cancel',()=>{if(!guideExamplesMode){try{localStorage.setItem(guideKey,'true');}catch{}}});
         const guideSetting=document.createElement('section');guideSetting.className='headphone-calibration-setting';
-        guideSetting.innerHTML='<strong>Acesso guiado</strong><p>Spotify, entradas, MP3 e cinco montagens.</p><button type="button">Abrir guia e exemplos</button>';
+        guideSetting.innerHTML='<strong>Acesso guiado</strong><p>Spotify, entradas e MP3.</p><button type="button">Abrir guia</button>';
         clearCatalogFooter.prepend(guideSetting);guideSetting.querySelector('button').addEventListener('click',openGuidedAccess);
+        const examplesSetting=document.createElement('section');examplesSetting.className='headphone-calibration-setting';
+        examplesSetting.innerHTML='<strong>Montagens de exemplo</strong><p>Cinco sistemas em móveis, prontos para explorar.</p><button type="button">Escolher montagem</button>';
+        guideSetting.after(examplesSetting);
+        examplesSetting.querySelector('button').addEventListener('click',()=>{settingsMenu.open=false;guideExamplesMode=true;guide.classList.add('show-examples');renderGuide();if(!guide.open)guide.showModal();});
         headphoneCalibrationDialog.addEventListener('close',()=>{if(!guideSeen())requestAnimationFrame(openGuidedAccess);});
 
         SpotifyCoverflow.initialize().catch(()=>{});
