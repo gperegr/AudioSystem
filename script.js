@@ -852,38 +852,6 @@ const Hardware = (() => {
         const rect={x:(box.left-worldRect.left)/scale,y:(box.top-worldRect.top)/scale,width:box.width/scale,height:box.height/scale};
         staticLightGeometry.set(element,{key,rect});return rect;
     }
-    let roomFixtureLightKey='';
-    function paintRoomFixtureLight(world,sources,scene,time){
-        const layer=world.querySelector('.room-fixture-glow');
-        if(!layer)return;
-        const key=[scene,time,world.offsetWidth,world.offsetHeight,...sources.map(source=>`${source.fixture}:${Math.round(source.x/3)},${Math.round(source.y/3)}:${source.strength.toFixed(2)}:${source.rgb.join(',')}`)].join('|');
-        if(key===roomFixtureLightKey)return;
-        roomFixtureLightKey=key;
-        const resolution=.33,width=world.offsetWidth,height=world.offsetHeight;
-        if(layer.width!==Math.round(width*resolution)||layer.height!==Math.round(height*resolution)){
-            layer.width=Math.round(width*resolution);layer.height=Math.round(height*resolution);
-        }
-        const ctx=layer.getContext('2d');ctx.setTransform(resolution,0,0,resolution,0,0);ctx.clearRect(0,0,width,height);
-        if(!scene)return;
-        const glow=(source,x,y,rx,ry,alpha)=>{
-            ctx.save();ctx.translate(x,y);ctx.scale(rx,ry);
-            const gradient=ctx.createRadialGradient(0,0,.02,0,0,1),color=source.rgb.join(',');
-            gradient.addColorStop(0,`rgba(${color},${Math.min(.65,alpha).toFixed(3)})`);
-            gradient.addColorStop(.38,`rgba(${color},${(alpha*.48).toFixed(3)})`);
-            gradient.addColorStop(1,`rgba(${color},0)`);
-            ctx.fillStyle=gradient;ctx.fillRect(-1,-1,2,2);ctx.restore();
-        };
-        const timeStrength=time==='night'?1.3:time==='dawn'?0.85:1;
-        sources.forEach(source=>{
-            const shaded=['dome','pendant','table'].includes(source.fixture);
-            const radius=source.fixture==='pendant'?760:source.fixture==='table'?520:source.fixture==='dome'?560:490;
-            const alpha=(shaded?0.35:0.29)*source.strength*timeStrength;
-            if(shaded){
-                glow(source,source.x,source.y+radius*.42,radius*.9,radius*.78,alpha);
-                glow(source,source.x,source.y+85,radius*.48,radius*.44,alpha*.43);
-            }else glow(source,source.x,source.y,radius,radius*.82,alpha);
-        });
-    }
     function sampleSceneLight(source,x,y){
         const emitterX=source.emitterX??source.x,emitterY=source.emitterY??source.y;
         const nearestX=Math.max(emitterX-source.width/2,Math.min(emitterX+source.width/2,x));
@@ -989,7 +957,6 @@ const Hardware = (() => {
         const sceneTime=document.getElementById('canvas').dataset.time;
         const fixtureEmitters=positionedObjectLights(world);
         const sceneEmitters=[...positionedSceneLights(sceneName,sceneTime,world),...fixtureEmitters];
-        paintRoomFixtureLight(world,fixtureEmitters,sceneName,sceneTime);
         const lightKeyAt=(x,y,width,height)=>sceneTime+':'+sceneEmitters.filter(source=>{
             const dx=Math.max(0,Math.abs(source.x-x)-(source.width+width)/2);
             const dy=Math.max(0,Math.abs(source.y-y)-(source.height+height)/2);
@@ -1549,7 +1516,7 @@ const Hardware = (() => {
         const floorPlacementBottom=()=>Math.floor((world.offsetHeight-ROOM_FLOOR_OVERLAP)/Hardware.sizes.grid)*Hardware.sizes.grid;
         document.documentElement.classList.add('lighting-demo-enabled');
         const roomBackdrop=document.createElement('div');roomBackdrop.id='room-backdrop';roomBackdrop.setAttribute('aria-hidden','true');
-        roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far is-visible" alt="" draggable="false"><canvas class="room-fixture-glow"></canvas><i class="room-grid-overlay"></i>';
+        roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far is-visible" alt="" draggable="false"><i class="room-grid-overlay"></i>';
         const roomMotes=document.createElement('div');roomMotes.className='room-motes';roomMotes.setAttribute('aria-hidden','true');
         const roomMoteCanvas=document.createElement('canvas');roomMoteCanvas.className='room-mote-canvas';roomMoteCanvas.setAttribute('aria-hidden','true');
         const roomMoteContext=roomMoteCanvas.getContext('2d',{alpha:true});
@@ -1597,7 +1564,6 @@ const Hardware = (() => {
         canvasBackdropControl.innerHTML='<span>Cenário</span><select id="canvas-backdrop" aria-label="Cenário de fundo">'+Object.entries(canvasBackdropModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
         const canvasTimeControl=document.createElement('label');canvasTimeControl.className='canvas-theme-control';
         canvasTimeControl.innerHTML='<span>Hora do dia</span><select id="canvas-time" aria-label="Hora do dia">'+Object.entries(canvasTimeModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
-        const roomImageBrightness={dawn:'1.08',dusk:'.91',night:'.95'};
         let roomImageRequest=0,roomImageTarget='';
         function positionRoomImage(image,horizon){
             const imageHorizon=Number.isFinite(horizon)?horizon:Number(image.dataset.roomHorizon);
@@ -1606,29 +1572,24 @@ const Hardware = (() => {
             const farScale=parseFloat(world.style.getPropertyValue('--room-far-scale'))||1;
             image.style.setProperty('--room-horizon-shift',((ROOM_HORIZON_IMAGE_Y-imageHorizon)*world.offsetHeight*1.1/720*farScale).toFixed(1)+'px');
         }
-        function showRoomImage(src,time,illustrated=false,horizon=ROOM_HORIZON_IMAGE_Y){
-            const target=src+(illustrated?'|'+time:'');
-            if(target===roomImageTarget)return;
-            roomImageTarget=target;
+        function showRoomImage(src,horizon=ROOM_HORIZON_IMAGE_Y){
+            if(src===roomImageTarget){roomBackdrop.querySelectorAll('.room-scene-image').forEach(image=>positionRoomImage(image,horizon));return;}
+            roomImageTarget=src;
             const request=++roomImageRequest,images=[...roomBackdrop.querySelectorAll('.room-scene-image')];
-            const brightness=roomImageBrightness[time]||roomImageBrightness.dusk;
-            const timeFilter=illustrated?({dawn:'hue-rotate(-8deg) saturate(.95) brightness(1.04)',dusk:'brightness(1)',night:'sepia(.18) hue-rotate(175deg) saturate(.62) brightness(.5)'}[time]||'brightness(1)'):'brightness(1)';
             if(!images[0].getAttribute('src')||state.restoringProject||matchMedia('(prefers-reduced-motion: reduce)').matches){
                 images.slice(1).forEach(image=>image.remove());
-                images[0].style.setProperty('--room-image-brightness',brightness);
-                images[0].style.setProperty('--room-image-time-filter',timeFilter);
                 positionRoomImage(images[0],horizon);
                 images[0].src=src;images[0].classList.add('is-visible');
                 return;
             }
             const next=document.createElement('img');
             next.className='room-scene-image room-layer-far';next.alt='';next.draggable=false;
-            next.style.setProperty('--room-image-brightness',brightness);next.style.setProperty('--room-image-time-filter',timeFilter);next.src=src;
+            next.src=src;
             positionRoomImage(next,horizon);
             next.decode().then(()=>{
                 if(request!==roomImageRequest)return;
                 const previous=[...roomBackdrop.querySelectorAll('.room-scene-image')];
-                roomBackdrop.insertBefore(next,roomBackdrop.querySelector('.room-fixture-glow'));
+                roomBackdrop.insertBefore(next,roomBackdrop.querySelector('.room-grid-overlay'));
                 void next.offsetWidth;
                 requestAnimationFrame(()=>{
                     if(request!==roomImageRequest){next.remove();return;}
@@ -1655,7 +1616,6 @@ const Hardware = (() => {
                 });
                 return {x:x/100,y:y/100,width:width/100,rgb:color,strength,particles};
             });
-            roomMotes.innerHTML=roomMoteBeams.map(beam=>`<div class="room-mote-beam room-mote-window" style="--beam-x:${beam.x*100}%;--beam-y:${beam.y*100}%;--beam-width:${beam.width*100}%;--beam-color:${beam.rgb};--beam-strength:${beam.strength.toFixed(2)}"></div>`).join('');
             startRoomMotes();
         }
         function stopRoomMotes(){cancelAnimationFrame(roomMoteFrame);clearTimeout(roomMoteTimer);roomMoteFrame=0;roomMoteTimer=0;}
@@ -1717,7 +1677,7 @@ const Hardware = (() => {
             const scene=RoomScenes.scenes[mode];
             const imageName=scene.image+(scene.timeImages===false||state.canvasTime==='dusk'?'':'-'+state.canvasTime);
             const src=`./assets/rooms/${imageName}.webp?v=aligned-floor`;
-            showRoomImage(src,state.canvasTime,scene.timeImages===false,scene.horizon?.[state.canvasTime]);
+            showRoomImage(src,scene.horizon?.[state.canvasTime]);
             requestAnimationFrame(applyView);
             state.canvasFloor=scene.floor;canvas.dataset.floor=state.canvasFloor;
             updateRoomMotes(mode,state.canvasTime);
