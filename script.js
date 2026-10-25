@@ -2310,18 +2310,21 @@ const Hardware = (() => {
             Hardware.updateLightingDemo();
         }
         const STACK_FEET=Object.freeze({width:22,height:20,insetRatio:.1});
+        const hasStackFeet=dev=>!FURNITURE_TYPES[dev.type]&&dev.type!=='pendantLamp'&&!WALL_LAMP_TYPES[dev.type]&&dev.el.offsetWidth>=300&&(dev.el.offsetHeight<dev.el.offsetWidth*.8||dev.type==='tapeDeck');
         const maxEquipmentBottom=()=>canvas.dataset.theme==='scene'?floorPlacementBottom():world.offsetHeight;
         const sceneSideInset=()=>canvas.dataset.theme==='scene'?ROOM_SIDE_INSET:0;
         function snapOnEquipment(dev,x,y){
             if(FURNITURE_TYPES[dev.type])return{x,y};
             const width=dev.el.offsetWidth,height=dev.el.offsetHeight;
             let best=null;
+            let touching=null;
             // All three chassis heights leave the same physical space for their feet.
             if(!best&&dev.el.dataset.chassis){
                 Object.values(state.devices).forEach(lower=>{
                     if(lower===dev||!lower.el.dataset.chassis)return;
                     const lx=parseFloat(lower.el.style.left)||0,ly=parseFloat(lower.el.style.top)||0;
                     const overlap=Math.min(x+width,lx+lower.el.offsetWidth)-Math.max(x,lx);
+                    if(overlap>=Math.min(width,lower.el.offsetWidth)*.7&&Math.abs(y+height-ly)<=Math.max(4,4/view.zoom))touching={x,y:ly-height};
                     let targetY=ly-height-STACK_FEET.height;
                     // All chassis use the same bottom-edge grid, including mixed-height stacks.
                     // Keep the invariant even for older projects with positions between grid lines.
@@ -2330,7 +2333,7 @@ const Hardware = (() => {
                     if(targetY>=0&&overlap>=Math.min(width,lower.el.offsetWidth)*.7&&distance<=14/view.zoom&&(!best||distance<best.distance))best={distance,x,y:targetY};
                 });
             }
-            return best||{x,y};
+            return touching||best||{x,y};
         }
 
         function placementShapes(dev, x, y) {
@@ -2400,9 +2403,11 @@ const Hardware = (() => {
                     for(const obstacle of obstacles){
                         const overlap=Math.min(shape.x+shape.width,obstacle.x+obstacle.width)-Math.max(shape.x,obstacle.x);
                         if(overlap<Math.min(12,shape.width*.2))continue;
-                        const feet=p.dev.el.dataset.chassis&&obstacle.dev.el.dataset.chassis?STACK_FEET.height:0;
-                        const gap=obstacle.y-shape.y-shape.height-feet;
-                        if(gap>=-.5)distance=Math.min(distance,Math.max(0,gap));
+                        const furniture=FURNITURE_TYPES[obstacle.dev.type],supportX=parseFloat(obstacle.dev.el.style.left)||0;
+                        const shelf=furniture?.surfaces.some(surface=>Math.abs(obstacle.y-(parseFloat(obstacle.dev.el.style.top)||0)-surface)<.5);
+                        const feet=hasStackFeet(p.dev)&&((furniture&&shelf&&p.x>=supportX+furniture.inset-1&&p.x+p.dev.el.offsetWidth<=supportX+furniture.width-furniture.inset+1)||(!furniture&&hasStackFeet(obstacle.dev)&&overlap>=Math.min(shape.width,obstacle.width)*.7))?STACK_FEET.height:0;
+                        const gap=obstacle.y-shape.y-shape.height;
+                        if(gap>=-.5)distance=Math.min(distance,Math.max(0,gap-feet));
                     }
                 }
             }
@@ -2414,11 +2419,11 @@ const Hardware = (() => {
             const target=gravityDropTargets([{dev,x:parseFloat(dev.el.style.left)||0,y:startY}],new Set([dev.id]))[0];
             if(target.y-startY<1)return;
             if(matchMedia('(prefers-reduced-motion: reduce)').matches){dev.el.style.top=target.y+'px';updateCables();scheduleProjectSave();return;}
-            const started=performance.now(),duration=Math.min(620,280+(target.y-startY)*.18);
+            const started=performance.now(),duration=Math.min(1150,540+(target.y-startY)*.24);
             let frame=0;
             const step=now=>{
                 if(!state.devices[dev.id])return;
-                const progress=Math.min(1,(now-started)/duration),ease=1-(1-progress)**3;
+                const progress=Math.min(1,(now-started)/duration),ease=progress*progress;
                 dev.el.style.top=(startY+(target.y-startY)*ease)+'px';updateCables();
                 if(progress<1)frame=requestAnimationFrame(step);
                 else {frame=0;dev.cancelPlacementMotion=null;scheduleProjectSave();}
@@ -2444,7 +2449,7 @@ const Hardware = (() => {
                 dev, x:parseFloat(dev.el.style.left)||0, y:parseFloat(dev.el.style.top)||0,
                 width:dev.el.offsetWidth, height:dev.el.offsetHeight
             }));
-            const equipment = boxes.filter(b => !FURNITURE_TYPES[b.dev.type] && b.dev.type!=='pendantLamp' && !WALL_LAMP_TYPES[b.dev.type] && b.width >= 300 && (b.height < b.width * .8 || b.dev.type==='tapeDeck'));
+            const equipment = boxes.filter(b => hasStackFeet(b.dev));
             const retainedFeet=new Set();
             const reducedFeetMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
             const nextSupports=new Map();
@@ -6757,6 +6762,7 @@ const Hardware = (() => {
                     const cancel = () => { clearDiscardPreview();cancelAnimationFrame(frame); frame=0;movingDevices.forEach(item=>{item.el.classList.remove('equipment-dragging','history-settling');}); };
                     movingDevices.forEach(item=>item.cancelPlacementMotion=cancel);
                     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+                    let falling=new Map();
                     const animate = now => {
                         frame=0;
                         if (!targets.every(p=>state.devices[p.dev.id])) return;
@@ -6764,7 +6770,10 @@ const Hardware = (() => {
                         const blend=!released||reducedMotion?1:1-Math.exp(-dt/55);
                         const intermediate=targets.map(p=>{
                             const x=parseFloat(p.dev.el.style.left)||0,y=parseFloat(p.dev.el.style.top)||0;
-                            return {dev:p.dev,x:Math.abs(p.x-x)<.2?p.x:x+(p.x-x)*blend,y:Math.abs(p.y-y)<.2?p.y:y+(p.y-y)*blend};
+                            const fall=falling.get(p.dev.id);
+                            const progress=fall?Math.min(1,(now-fall.started)/fall.duration):0;
+                            const nextY=fall?fall.y+(p.y-fall.y)*progress*progress:Math.abs(p.y-y)<.2?p.y:y+(p.y-y)*blend;
+                            return {dev:p.dev,x:Math.abs(p.x-x)<.2?p.x:x+(p.x-x)*blend,y:nextY};
                         });
                         const resolved=intermediate;
                         let moved=false;
@@ -6793,7 +6802,17 @@ const Hardware = (() => {
                             const target=settle&&initialPositions.length===1?snapOnEquipment(p.dev,x,y):{x,y};
                             return {dev:p.dev,x:target.x,y:target.y};
                         });
-                        if(settle){targets=settleEquipmentDrop(targets,ignored,initialPositions);if(targets!==initialPositions)targets=gravityDropTargets(targets,ignored);}
+                        if(settle){
+                            targets=settleEquipmentDrop(targets,ignored,initialPositions);
+                            if(targets!==initialPositions){
+                                const beforeGravity=targets;
+                                targets=gravityDropTargets(targets,ignored);
+                                if(!reducedMotion)falling=new Map(targets.filter((p,i)=>p.y-beforeGravity[i].y>1).map(p=>{
+                                    const y=parseFloat(p.dev.el.style.top)||0;
+                                    return [p.dev.id,{y,started:performance.now(),duration:Math.min(1150,540+(p.y-y)*.24)}];
+                                }));
+                            }
+                        }
                         if(!frame){lastTime=0;frame=requestAnimationFrame(animate);}
                     };
                     const move = ev => {
