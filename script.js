@@ -1337,7 +1337,7 @@ const Hardware = (() => {
             appPreferencesSaveTimer=setTimeout(()=>{
                 if(!canvas.clientWidth||!canvas.clientHeight)return;
                 const focusX=(canvas.clientWidth/2-view.x)/view.zoom,focusY=(canvas.clientHeight/2-view.y)/view.zoom;
-                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,backdrop:state.canvasBackdrop,time:state.canvasTime,connectionGuidanceEnabled,developerMode:developerModeEnabled,headphonePromptSeen,listeningOutputLevel:state.listeningOutputLevel,listeningBass:state.listeningBass,listeningTreble:state.listeningTreble,zoom:view.zoom,focusX,focusY}));}catch{}
+                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,backdrop:state.canvasBackdrop,time:state.canvasTime,connectionGuidanceEnabled,developerMode:developerModeEnabled,headphonePromptSeen,catalogPinned:sidebarPinned.catalog,inspectorPinned:sidebarPinned.properties,listeningOutputLevel:state.listeningOutputLevel,listeningBass:state.listeningBass,listeningTreble:state.listeningTreble,zoom:view.zoom,focusX,focusY}));}catch{}
             },450);
         }
         const appDialog=document.getElementById('app-confirm-dialog');
@@ -1636,20 +1636,21 @@ const Hardware = (() => {
             const daylight=time==='dawn';
             const dusk=time==='dusk';
             roomMoteBeams=RoomScenes.lights(mode,time).map((light,index)=>{
-                const count=dusk?64:daylight?56:32;
-                const x=(240+light.cx*.8)/24,y=(268+light.cy*.8)/16;
+                const count=dusk?28:daylight?24:12;
+                const x=(240+light.cx*.8)/24,y=mode.startsWith('listening')?36:mode.startsWith('studio')?34:33;
+                const width=Math.min(32,Math.max(15,light.w*.8/24));
                 const color=light.rgb.join(' ');
                 const strength=Math.min(1,light.strength*(daylight?1.15:time==='night'?.28:.8));
                 const particles=Array.from({length:count},(_,particle)=>{
                     const seed=index*37+particle*17;
                     const px=12+(seed*43)%76,py=9+(seed*29)%82;
-                    const size=dusk?(particle%7===0?13:particle%3===0?9.5:7):daylight?(particle%7===0?7.5:particle%3===0?5.5:4):(particle%7===0?5:particle%3===0?3.6:2.5);
+                    const size=dusk?(particle%7===0?7:particle%3===0?5:3.5):daylight?(particle%7===0?5:particle%3===0?3.5:2.5):(particle%7===0?3.5:2);
                     const duration=(11+seed%9)*(dusk?.75:1);
                     return {x:px/100,y:py/100,size,duration:duration*1000,delay:(seed%41)*430,drift:(seed%2?-1:1)*(13+seed%19)};
                 });
-                return {x:x/100,y:y/100,rgb:color,strength,particles};
+                return {x:x/100,y:y/100,width:width/100,rgb:color,strength,particles};
             });
-            roomMotes.innerHTML=roomMoteBeams.map(beam=>`<div class="room-mote-beam room-mote-window" style="--beam-x:${beam.x*100}%;--beam-y:${beam.y*100}%;--beam-color:${beam.rgb};--beam-strength:${beam.strength.toFixed(2)}"></div>`).join('');
+            roomMotes.innerHTML=roomMoteBeams.map(beam=>`<div class="room-mote-beam room-mote-window" style="--beam-x:${beam.x*100}%;--beam-y:${beam.y*100}%;--beam-width:${beam.width*100}%;--beam-color:${beam.rgb};--beam-strength:${beam.strength.toFixed(2)}"></div>`).join('');
             startRoomMotes();
         }
         function stopRoomMotes(){cancelAnimationFrame(roomMoteFrame);clearTimeout(roomMoteTimer);roomMoteFrame=0;roomMoteTimer=0;}
@@ -1669,7 +1670,7 @@ const Hardware = (() => {
                 const farX=read('--room-far-x'),farY=read('--room-far-y'),drop=read('--room-image-drop'),horizon=read('--room-horizon-shift'),scale=read('--room-far-scale')||1;
                 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
                 roomMoteBeams.forEach(beam=>{
-                    const beamWidth=sceneWidth*.23*scale,beamHeight=sceneHeight*.36*scale;
+                    const beamWidth=sceneWidth*beam.width*scale,beamHeight=sceneHeight*.30*scale;
                     const left=offsetX+(sceneWidth*beam.x+farX-beamWidth/2)*sceneZoom,top=offsetY+(sceneHeight*beam.y+farY+drop+horizon)*sceneZoom;
                     ctx.fillStyle=`rgb(${beam.rgb.replaceAll(' ', ',')})`;
                     beam.particles.forEach(particle=>{
@@ -1678,18 +1679,19 @@ const Hardware = (() => {
                         const eased=(1-Math.cos(Math.PI*progress))/2;
                         const alpha=reduced?.38:progress<.24?progress/.24*.72:progress<.78?.72-(progress-.24)/.54*.26:(1-progress)/.22*.46;
                         const localX=particle.x+particle.drift*eased/beamWidth,localY=particle.y+(15-60*eased)/beamHeight;
-                        if(localX<.2*(1-localY)||localX>1-.2*(1-localY)||localY<0||localY>1)return;
-                        ctx.globalAlpha=beam.strength*.88*alpha;
+                        const falloff=Math.max(0,1-Math.hypot((localX-.5)/.65,(localY-.25)/.95));
+                        if(!falloff)return;
+                        ctx.globalAlpha=beam.strength*.7*alpha*falloff;
                         const x=left+beamWidth*localX*sceneZoom,y=top+beamHeight*localY*sceneZoom,radius=particle.size*scale*sceneZoom/2;
                         if(x+radius<0||x-radius>width||y+radius<0||y-radius>height)return;
                         ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();
                     });
                 });
-                const count=state.canvasTime==='night'?14:24;
+                const count=state.canvasTime==='night'?5:10;
                 const color=state.canvasTime==='night'?'198,217,229':'255,224,177';
                 for(let i=0;i<count;i++){
                     const phase=reduced?.5:(now/(9500+i%6*1100)+i*.317)%1;
-                    const fade=Math.sin(Math.PI*phase),size=18+i%6*5;
+                    const fade=Math.sin(Math.PI*phase),size=9+i%4*3;
                     const x=((i*73+19)%101)/101*width+Math.sin(now/6200+i*2.7)*12;
                     const y=((i*47+13)%89)/89*height-phase*42;
                     if(x+size<0||x-size>width||y+size<0||y-size>height)continue;
@@ -1951,7 +1953,7 @@ const Hardware = (() => {
         const mobileCatalogClose=document.createElement('button');mobileCatalogClose.type='button';mobileCatalogClose.className='mobile-catalog-close';mobileCatalogClose.textContent='Fechar equipamentos ×';equipmentCatalog.prepend(mobileCatalogClose);
         function syncMobilePanels(){
             const catalogOpen=compactLayout.matches&&document.body.classList.contains('mobile-catalog-open'),propertiesOpen=compactLayout.matches&&document.body.classList.contains('mobile-properties-open');
-            equipmentCatalog.inert=compactLayout.matches&&!catalogOpen;document.getElementById('inspector').inert=compactLayout.matches&&!propertiesOpen;
+            equipmentCatalog.inert=compactLayout.matches?!catalogOpen:document.body.classList.contains('catalog-collapsed');document.getElementById('inspector').inert=compactLayout.matches?!propertiesOpen:document.body.classList.contains('inspector-collapsed');
             mobileBackdrop.hidden=!(catalogOpen||propertiesOpen);
             mobileControls.querySelector('[data-mobile-panel="catalog"]').setAttribute('aria-expanded',String(catalogOpen));mobileControls.querySelector('[data-mobile-panel="properties"]').setAttribute('aria-expanded',String(propertiesOpen));
         }
@@ -1969,13 +1971,42 @@ const Hardware = (() => {
         document.getElementById('inspector').prepend(mobileInspectorClose);
         mobileControls.querySelector('[data-mobile-panel="catalog"]').setAttribute('aria-controls','equipment-catalog');
         mobileControls.querySelector('[data-mobile-panel="properties"]').setAttribute('aria-controls','inspector');
-        const sidebarToggles=[['catalog-sidebar-toggle','catalog-collapsed','catalog'],['inspector-sidebar-toggle','inspector-collapsed','properties']];
-        sidebarToggles.forEach(([id,collapsedClass,key])=>document.getElementById(id).addEventListener('click',event=>{
-            if(compactLayout.matches){closeMobilePanels();mobileControls.querySelector(`[data-mobile-panel="${key}"]`).focus();return;}
-            const collapsed=document.body.classList.toggle(collapsedClass),button=event.currentTarget;
-            button.setAttribute('aria-expanded',String(!collapsed));button.setAttribute('aria-label',`${collapsed?'Expandir':'Recolher'} ${key==='catalog'?'equipamentos':'propriedades'}`);button.title=button.getAttribute('aria-label');button.textContent=key==='catalog'?(collapsed?'›':'‹'):(collapsed?'‹':'›');
-            window.dispatchEvent(new Event('resize'));
-        }));
+        const sidebarConfig={catalog:{panel:equipmentCatalog,button:document.getElementById('catalog-sidebar-toggle'),pin:document.getElementById('catalog-sidebar-pin'),collapsed:'catalog-collapsed',name:'equipamentos'},properties:{panel:document.getElementById('inspector'),button:document.getElementById('inspector-sidebar-toggle'),pin:document.getElementById('inspector-sidebar-pin'),collapsed:'inspector-collapsed',name:'propriedades'}};
+        const sidebarPinned={catalog:savedAppPreferences.catalogPinned===true,properties:savedAppPreferences.inspectorPinned===true};
+        const sidebarTimers={catalog:0,properties:0},sidebarHoverTimers={catalog:0,properties:0},sidebarHoverOpenedAt={catalog:0,properties:0};
+        function syncSidebar(key){
+            const config=sidebarConfig[key],closed=document.body.classList.contains(config.collapsed),label=`${closed?'Expandir':'Recolher'} ${config.name}`;
+            config.button.setAttribute('aria-expanded',String(!closed));config.button.setAttribute('aria-label',label);config.button.title=label;config.button.textContent=key==='catalog'?(closed?'›':'‹'):(closed?'‹':'›');
+            config.pin.setAttribute('aria-pressed',String(sidebarPinned[key]));config.pin.setAttribute('aria-label',`${sidebarPinned[key]?'Soltar':'Fixar'} painel de ${config.name}`);config.pin.title=sidebarPinned[key]?'Soltar painel':'Fixar painel aberto';
+            if(!compactLayout.matches)config.panel.inert=closed;
+        }
+        function cancelSidebarTimer(key){clearTimeout(sidebarTimers[key]);sidebarTimers[key]=0;clearTimeout(sidebarHoverTimers[key]);sidebarHoverTimers[key]=0;}
+        function closeSidebar(key){if(compactLayout.matches||sidebarPinned[key]||document.body.classList.contains(sidebarConfig[key].collapsed))return;cancelSidebarTimer(key);document.body.classList.add(sidebarConfig[key].collapsed);syncSidebar(key);window.dispatchEvent(new Event('resize'));}
+        function scheduleSidebarClose(key,delay=800){
+            if(compactLayout.matches||sidebarPinned[key])return;clearTimeout(sidebarTimers[key]);sidebarTimers[key]=setTimeout(()=>{
+                const panel=sidebarConfig[key].panel;if(panel.matches(':hover')||panel.contains(document.activeElement))return;
+                closeSidebar(key);
+            },delay);
+        }
+        function openSidebar(key,delay=3200){
+            if(compactLayout.matches)return;cancelSidebarTimer(key);const wasClosed=document.body.classList.contains(sidebarConfig[key].collapsed);document.body.classList.remove(sidebarConfig[key].collapsed);syncSidebar(key);if(wasClosed)window.dispatchEvent(new Event('resize'));
+            if(!sidebarPinned[key])scheduleSidebarClose(key,delay);
+        }
+        for(const [key,config] of Object.entries(sidebarConfig)){
+            config.button.addEventListener('click',()=>{if(compactLayout.matches)return;if(document.body.classList.contains(config.collapsed))openSidebar(key);else if(Date.now()-sidebarHoverOpenedAt[key]>800){sidebarPinned[key]=false;closeSidebar(key);scheduleAppPreferencesSave();}config.button.focus();});
+            config.button.addEventListener('pointerenter',event=>{if(compactLayout.matches||event.pointerType==='touch'||!document.body.classList.contains(config.collapsed))return;sidebarHoverTimers[key]=setTimeout(()=>{openSidebar(key);sidebarHoverOpenedAt[key]=Date.now();},230);});
+            config.button.addEventListener('pointerleave',()=>clearTimeout(sidebarHoverTimers[key]));
+            config.panel.addEventListener('pointerenter',()=>cancelSidebarTimer(key));
+            config.panel.addEventListener('pointerleave',()=>scheduleSidebarClose(key));
+            config.panel.addEventListener('focusin',()=>cancelSidebarTimer(key));
+            config.panel.addEventListener('focusout',()=>scheduleSidebarClose(key,1200));
+            config.pin.addEventListener('click',()=>{sidebarPinned[key]=!sidebarPinned[key];if(sidebarPinned[key])openSidebar(key);else scheduleSidebarClose(key,1800);syncSidebar(key);scheduleAppPreferencesSave();});
+        }
+        if(!sidebarPinned.properties)document.body.classList.add('inspector-collapsed');
+        syncSidebar('catalog');syncSidebar('properties');
+        canvas.addEventListener('pointerdown',()=>{closeSidebar('catalog');closeSidebar('properties');},{capture:true});
+        document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!compactLayout.matches){closeSidebar('catalog');closeSidebar('properties');}});
+        compactLayout.addEventListener('change',()=>{for(const key of Object.keys(sidebarConfig))syncSidebar(key);});
         new MutationObserver(syncMobilePanels).observe(document.body,{attributes:true,attributeFilter:['class']});
         syncMobilePanels();
         document.addEventListener('click',event=>{if(compactLayout.matches&&event.target.closest('.app-settings>summary'))closeMobilePanels();});
@@ -3960,7 +3991,7 @@ const Hardware = (() => {
                 dev.demoStartedAt=playing?state.audioCtx.currentTime:null;
             }
             dev.state.playing = !!playing;
-            if(dev.spotifyVinyl)stopVinylNoise(dev);else syncVinylNoise(dev);
+            syncVinylNoise(dev);
             syncTapeHiss(dev);
             syncSignalGenerator(dev);
             if (dev.state.playing && dev.audioBuffer) startFilePlayback(dev);
@@ -7199,6 +7230,7 @@ const Hardware = (() => {
         }
 
         function selectDevice(id, preserveSelection = false) {
+            if(id&&!state.restoringProject&&!compactLayout.matches)openSidebar('properties',4000);
             if (id && state.selectedConnection) selectCable(null,false);
             disposeSpectrum();
             if (!preserveSelection) state.selectedDeviceIds = new Set(id ? [id] : []);
@@ -8532,20 +8564,26 @@ const Hardware = (() => {
         const spotifyNotice=document.createElement('div');spotifyNotice.className='spotify-vinyl-notice';spotifyNotice.setAttribute('role','status');document.body.append(spotifyNotice);
         function spotifyVinylNotice(message){spotifyNotice.textContent=message;spotifyNotice.classList.add('is-visible');clearTimeout(spotifyNoticeTimer);spotifyNoticeTimer=setTimeout(()=>spotifyNotice.classList.remove('is-visible'),5200);}
         function refreshSpotifyVinyls(){SpotifyCoverflow.markExtracted(new Set([...spotifyVinyls.values()].map(item=>item.uri)));}
+        const SPOTIFY_VINYL_SIZE=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--spotify-vinyl-size'));
         function vinylPlatterCenter(dev){
             const marker=dev.el.querySelector(dev.type==='turntableLinear'?'.linear-disc-size':'[data-tt="record"]')||dev.el;
             const rect=marker.getBoundingClientRect();return screenToWorld(rect.left+rect.width/2,rect.top+rect.height/2);
         }
-        function syncPlatterVinyls(){for(const item of spotifyVinyls.values()){const dev=state.devices[item.turntableId];if(!dev)continue;const at=vinylPlatterCenter(dev);moveSpotifyVinyl(item,at.x-72,at.y-72);}}
-        function moveSpotifyVinyl(item,x,y){item.x=Math.max(0,Math.min(world.offsetWidth-150,x));item.y=Math.max(0,Math.min(maxEquipmentBottom()-150,y));item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';}
+        function syncPlatterVinyls(){for(const item of spotifyVinyls.values()){const dev=state.devices[item.turntableId];if(!dev)continue;const at=vinylPlatterCenter(dev);moveSpotifyVinyl(item,at.x-SPOTIFY_VINYL_SIZE/2,at.y-6);}}
+        function moveSpotifyVinyl(item,x,y){item.x=Math.max(0,Math.min(world.offsetWidth-SPOTIFY_VINYL_SIZE,x));item.y=Math.max(0,Math.min(maxEquipmentBottom()-(item.turntableId?12:SPOTIFY_VINYL_SIZE),y));item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';}
         function placeSpotifyVinyl(item,dev,animate=true){
             if(dev.spotifyVinyl&&dev.spotifyVinyl!==item){spotifyVinylNotice('Este prato já tem um disco.');return false;}
             if(dev.state.playing)setSourcePlaying(dev,false);
             if(item.turntableId&&state.devices[item.turntableId]){const previous=state.devices[item.turntableId];if(previous.state.playing)setSourcePlaying(previous,false);previous.spotifyVinyl=null;}
-            item.turntableId=dev.id;dev.spotifyVinyl=item;const center=vinylPlatterCenter(dev);moveSpotifyVinyl(item,center.x-72,center.y-72);
+            const fromX=item.x,fromY=item.y;
+            item.turntableId=dev.id;dev.spotifyVinyl=item;dev.setLidOpen?.(true);dev.el.classList.add('spotify-vinyl-placing');const center=vinylPlatterCenter(dev);moveSpotifyVinyl(item,center.x-SPOTIFY_VINYL_SIZE/2,center.y-6);
             item.el.classList.toggle('is-linear',dev.type==='turntableLinear');item.el.classList.add('is-on-platter');
-            if(animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches)item.el.animate([{transform:'translateY(-80px) scale(1.12)',opacity:.7},{transform:'translateY(0) scale(1)',opacity:1}],{duration:480,easing:'cubic-bezier(.2,.8,.2,1)'});
-            if(!projectRestoring)spotifyVinylNotice('O Play do toca-discos controla este álbum. Cabos e volumes determinam se você o ouve; efeitos sonoros dos aparelhos não são aplicados.');scheduleProjectSave();return true;
+            const finish=()=>dev.el.classList.remove('spotify-vinyl-placing');
+            if(animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
+                const dx=fromX-item.x,dy=fromY-item.y;
+                item.el.animate([{transform:`translate(${dx}px,${dy}px) scaleY(32)`,opacity:.85,offset:0},{transform:'translate(0,-54px) scaleY(.16)',opacity:1,offset:.42},{transform:'translate(0,0) scaleY(1)',opacity:1,offset:1}],{duration:900,easing:'cubic-bezier(.2,.7,.22,1)'}).finished.then(finish,finish);
+            }else finish();
+            if(!projectRestoring)spotifyVinylNotice('O Play controla o Spotify. Cabos e volumes determinam se você o ouve. O ruído do vinil pode tocar junto, mas os demais efeitos dos aparelhos não alteram a música.');scheduleProjectSave();return true;
         }
         function createSpotifyVinyl(record){
             if(!record||typeof record.uri!=='string'||!/^spotify:(album|playlist):[A-Za-z0-9]+$/.test(record.uri)||spotifyVinyls.has(record.uri))return null;
@@ -8558,19 +8596,33 @@ const Hardware = (() => {
         function removeSpotifyVinyl(item){if(item.turntableId){const dev=state.devices[item.turntableId];if(dev?.state.playing)setSourcePlaying(dev,false);if(dev)dev.spotifyVinyl=null;}spotifyVinyls.delete(item.uri);item.el.remove();refreshSpotifyVinyls();scheduleProjectSave();}
         function beginSpotifyVinylDrag(item,event){
             const prior=state.devices[item.turntableId];if(prior){if(prior.state.playing)setSourcePlaying(prior,false);prior.spotifyVinyl=null;item.turntableId=null;item.el.classList.remove('is-on-platter','is-linear');}
-            const point=screenToWorld(event.clientX,event.clientY),offsetX=point.x-item.x,offsetY=point.y-item.y;item.el.classList.add('is-dragging');
-            const move=ev=>{if(ev.pointerId!==event.pointerId)return;const at=screenToWorld(ev.clientX,ev.clientY);moveSpotifyVinyl(item,at.x-offsetX,at.y-offsetY);};
-            const end=ev=>{if(ev.pointerId!==event.pointerId)return;window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',end,true);window.removeEventListener('pointercancel',end,true);item.el.classList.remove('is-dragging');
-                item.el.style.pointerEvents='none';const target=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('.device-node');item.el.style.pointerEvents='';const dev=state.devices[target?.id];
-                if(dev&&TURNTABLE_TYPES.has(dev.type))placeSpotifyVinyl(item,dev);
-                else if(dev?.type==='furnitureCoverflow'){removeSpotifyVinyl(item);spotifyVinylNotice('Disco guardado na coleção.');}
-                else scheduleProjectSave();
+            const point=screenToWorld(event.clientX,event.clientY),offsetX=prior?SPOTIFY_VINYL_SIZE/2:point.x-item.x,offsetY=prior?SPOTIFY_VINYL_SIZE/2:point.y-item.y;item.el.classList.add('is-dragging');
+            let autoLid=null;
+            const showReturnTarget=ev=>{
+                if(compactLayout.matches){if(ev.clientX<28&&!document.body.classList.contains('mobile-catalog-open')){document.body.classList.add('mobile-catalog-open');syncMobilePanels();}}
+                else if(ev.clientX<32&&document.body.classList.contains('catalog-collapsed'))openSidebar('catalog',6000);
+                equipmentCatalog.classList.add('discard-ready');discardZone.setAttribute('aria-hidden','false');
+                discardZone.querySelector('strong').textContent=isOverCatalog(ev)?'Solte para guardar o disco':'Arraste aqui para guardar o disco';
+                discardZone.querySelector('[data-discard-caption]').textContent='O vinil volta para a capa do álbum na coleção.';
+                equipmentCatalog.classList.toggle('return-drag-over',isOverCatalog(ev));
             };
+            const clearReturnTarget=()=>{equipmentCatalog.classList.remove('return-drag-over','discard-ready');discardZone.setAttribute('aria-hidden','true');};
+            const hitDevice=(x,y)=>{item.el.style.pointerEvents='none';const target=document.elementFromPoint(x,y)?.closest('.device-node');item.el.style.pointerEvents='';return state.devices[target?.id];};
+            const releaseAutoLid=keepOpen=>{if(autoLid&&!keepOpen&&state.devices[autoLid.id]===autoLid)autoLid.setLidOpen?.(false);autoLid=null;};
+            const move=ev=>{if(ev.pointerId!==event.pointerId)return;const at=screenToWorld(ev.clientX,ev.clientY);moveSpotifyVinyl(item,at.x-offsetX,at.y-offsetY);showReturnTarget(ev);const hovered=hitDevice(ev.clientX,ev.clientY);const next=hovered&&TURNTABLE_TYPES.has(hovered.type)?hovered:null;if(next!==autoLid){releaseAutoLid(false);if(next&&!next.state.lidOpen){next.setLidOpen?.(true);autoLid=next;}}};
+            const end=ev=>{if(ev.pointerId!==event.pointerId)return;window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',end,true);window.removeEventListener('pointercancel',end,true);item.el.classList.remove('is-dragging');clearReturnTarget();
+                const dev=ev.type==='pointercancel'?null:hitDevice(ev.clientX,ev.clientY);
+                const placed=dev&&TURNTABLE_TYPES.has(dev.type)&&placeSpotifyVinyl(item,dev);
+                releaseAutoLid(!!placed&&autoLid===dev);
+                if(!placed&&ev.type!=='pointercancel'&&(isOverCatalog(ev)||dev?.type==='furnitureCoverflow')){removeSpotifyVinyl(item);playUiSound('discard');spotifyVinylNotice('Disco guardado na capa do álbum.');}
+                else if(!placed)scheduleProjectSave();
+            };
+            showReturnTarget(event);
             window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',end,true);window.addEventListener('pointercancel',end,true);
         }
         document.addEventListener('spotify-vinyl-pickup',event=>{
             const furniture=event.target.closest('.device-node'),data=event.detail;if(!furniture||!data||spotifyVinyls.has(data.uri))return;
-            const at=screenToWorld(data.clientX,data.clientY),item=createSpotifyVinyl({...data,origin:furniture.id,x:at.x-72,y:at.y-72});if(item)beginSpotifyVinylDrag(item,{...data,button:0});
+            const at=screenToWorld(data.clientX,data.clientY),item=createSpotifyVinyl({...data,origin:furniture.id,x:at.x-SPOTIFY_VINYL_SIZE/2,y:at.y-SPOTIFY_VINYL_SIZE/2});if(item)beginSpotifyVinylDrag(item,{...data,button:0});
         });
         function spotifyPathVolume(source){
             const solo=Object.values(state.devices).some(dev=>isListeningDevice(dev)&&dev.state.solo),seen=new Set();let best=0;
@@ -8847,7 +8899,6 @@ const Hardware = (() => {
         MenuSlider.mount(settingsMenu);
         const topbarControls=document.getElementById('app-topbar').lastElementChild;
         topbarControls.appendChild(settingsMenu);
-        topbarControls.appendChild(document.getElementById('inspector-sidebar-toggle'));
         topbarControls.insertBefore(document.querySelector('.canvas-tools'),settingsMenu);
         document.addEventListener('pointerdown',event=>{if(settingsMenu.open&&!settingsMenu.contains(event.target)&&!event.target.closest('.app-select-popup'))settingsMenu.open=false;});
         document.addEventListener('keydown',event=>{if(event.key==='Escape'&&settingsMenu.open){settingsMenu.open=false;settingsMenu.querySelector('summary').focus();}});
