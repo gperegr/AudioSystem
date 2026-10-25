@@ -4415,7 +4415,7 @@ body.inspector-collapsed #inspector {width:18rem;min-width:18rem;flex:0 0 18rem;
 body.inspector-collapsed #inspector>.inspector-panel-header,body.inspector-collapsed #inspector>#inspector-empty,body.inspector-collapsed #inspector>#inspector-content {display:none!important;}
 #app-topbar .topbar-controls>.sidebar-toggle {width:40px;height:40px;}
 #workspace-shell {position:relative;min-width:0;}
-#canvas {flex:1 1 auto;width:auto;min-width:0;transition:margin-left .9s cubic-bezier(.22,.65,.2,1),margin-right .9s cubic-bezier(.22,.65,.2,1);}
+#canvas {flex:1 1 auto;width:auto;min-width:0;transition:margin-left .9s cubic-bezier(.45,0,.55,1),margin-right .9s cubic-bezier(.45,0,.55,1);}
 body.catalog-pinned #canvas {margin-left:18rem;}
 body.properties-pinned #canvas {margin-right:18rem;}
 #equipment-catalog,#inspector {position:absolute;top:0;bottom:0;z-index:30;box-sizing:border-box;width:18rem;min-width:18rem;flex:none;margin:0;transition:transform 240ms cubic-bezier(.22,.7,.2,1);}
