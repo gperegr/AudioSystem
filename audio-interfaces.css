@@ -169,3 +169,36 @@
 .ai-art-v3 .ai-panel [data-ai-gain="R"] .ai-control-halo path {stroke:#f04e55;}
 #inspector-content .gain-slider-control:has(input[data-gain-color="green"]) {--accent:#22c55e;}
 #inspector-content .gain-slider-control:has(input[data-gain-color="red"]) {--accent:#ef4444;}
+
+/* Faces without input artwork: keep USB capture and the usable outputs. */
+.ai-art-v3 .ai-interface-one {grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.4fr) 42px minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) 34px!important;column-gap:6px!important;row-gap:4px!important;}
+.ai-art-v3 .ai-interface-one-gain1 {grid-column:1;grid-row:1;}
+.ai-art-v3 .ai-interface-one-gain2 {grid-column:2;grid-row:1;}
+.ai-art-v3 .ai-interface-one-output {grid-column:3;grid-row:1;align-self:center;}
+.ai-art-v3 .ai-interface-one-usb {grid-column:4;grid-row:1;align-self:center;justify-self:center;}
+.ai-art-v3 .ai-interface-one-phones {grid-column:5;grid-row:1 / 3;align-self:center;justify-self:center;}
+.ai-art-v3 .ai-interface-one-outputs {grid-column:1 / 4;grid-row:2;justify-self:center;}
+.ai-art-v3 .ai-interface-one-marking,.ai-art-v3 .ai-interface-one-separator {display:none!important;}
+/* Keep the Solo's gain captions attached to their knobs and inside the face. */
+.ai-art-v3.red-interface .ai-interface-one-gain {
+  position:static!important;display:flex!important;box-sizing:border-box;flex-direction:column;align-items:center;justify-content:center;
+  align-self:stretch;height:100%!important;min-height:0;width:100%!important;gap:5px;
+}
+.ai-art-v3.red-interface .ai-interface-one-gain label {
+  position:static!important;display:block;width:100%;margin:0!important;padding:0!important;
+  text-align:center;line-height:1.2!important;white-space:nowrap;font-size:8px!important;
+}
+.ai-art-v3.red-interface .ai-interface-one-gain .ai-dial {flex:none;align-self:center;margin:0!important;}
+.ai-art-v3 .ai-interface-three {grid-template-columns:minmax(0,1fr) 42px minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) 34px!important;column-gap:8px!important;row-gap:4px!important;}
+.ai-art-v3 .ai-interface-three-main {grid-column:1;grid-row:1;justify-self:center;}
+.ai-art-v3 .ai-interface-three-usb {grid-column:2;grid-row:1;justify-self:center;}
+.ai-art-v3 .ai-interface-three-phones {grid-column:3;grid-row:1 / 3;justify-self:center;}
+.ai-art-v3 .ai-interface-three-outputs {grid-column:1 / 3;grid-row:2;justify-self:center;}
+.ai-art-v3 .ai-interface-three-marking {display:none!important;}
+:is(#audio-world,.equipment-preview-world) .ai-art-v3 .ai-interface-four {grid-template-columns:minmax(0,1.2fr) 42px minmax(0,1.4fr)!important;grid-template-rows:22px minmax(0,1fr)!important;column-gap:10px!important;row-gap:5px!important;}
+.ai-art-v3 .ai-interface-four-top {grid-column:1 / -1;grid-row:1;}
+.ai-art-v3 .ai-interface-four-top>strong,.ai-art-v3 .ai-interface-four-top>small {display:none!important;}
+.ai-art-v3 .ai-interface-four-connect {margin:0 auto!important;}
+.ai-art-v3 .ai-interface-four-channels {display:none!important;}
+.ai-art-v3 .ai-interface-four-monitor {grid-column:1;grid-row:2;justify-self:center;align-self:center;}
+.ai-art-v3 .ai-interface-four-phones {grid-column:3;grid-row:2;justify-content:center;align-self:center;}
