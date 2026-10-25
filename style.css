@@ -4911,3 +4911,41 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
 :is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-main.hw-knob::before {z-index:1;}
 :is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-main .hw-knob-face,:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-phone-knob .hw-knob-face,:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-gain .hw-knob-face {z-index:2;}
 :is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-main .hw-knob-indicator,:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-phone-knob .hw-knob-indicator,:is(#audio-world,.equipment-preview-world) .quantum-interface .quantum-gain .hw-knob-indicator {z-index:3;}
+
+/* Audient EVO 4: compact desktop face with the single encoder and I/O visible together. */
+.device-node.audio-interface.evo-interface {position:relative!important;overflow:hidden;border:1px solid #101213!important;border-radius:24px!important;background:linear-gradient(160deg,#454648 0%,#363739 52%,#292a2c 100%)!important;box-shadow:inset 0 1px #ffffff42,inset 0 -2px 4px #0009,0 8px 18px #0009!important;color:#f0f0f0;}
+.evo-interface>.device-header {display:none!important;}
+.evo-interface .evo-face {position:absolute;inset:0;display:block!important;padding:0!important;background:none!important;}
+.evo-interface .evo-brand {position:absolute;right:5%;top:8%;text-align:right!important;z-index:4;}
+.evo-interface .evo-brand strong {font:700 20px/1 "Inter",sans-serif;letter-spacing:-.07em;color:#f2f2f2;}
+.evo-interface .evo-brand small {margin-top:3px;color:#b9babc;font:500 6px/1 "Inter",sans-serif;letter-spacing:.08em;}
+.evo-interface .evo-input-bank {position:absolute;left:12%;top:23%;width:14%;height:65%;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:12px 1fr 1fr 10px;align-items:center;justify-items:center;gap:3px;}
+.evo-interface .evo-input-title,.evo-interface .evo-io-caption,.evo-interface .evo-output-title {grid-column:1/-1;color:#c4c5c6;font:600 6px/1 "Inter",sans-serif;letter-spacing:.08em;}
+.evo-interface .evo-combo {position:relative;display:grid;place-items:center;width:26px;height:26px;border:3px solid #121416;border-radius:50%;background:radial-gradient(circle,#050607 0 38%,#17191a 43% 52%,#77797b 56% 64%,#242628 68%);box-shadow:0 2px 3px #000b,inset 0 1px 2px #ffffff38;}
+.evo-interface .evo-combo i {position:absolute;inset:5px;border:1px solid #404244;border-radius:50%;}
+.evo-interface .evo-combo b {position:absolute;top:-9px;right:-7px;display:grid;place-items:center;width:13px;height:13px;border:1px solid #4a4b4d;border-radius:50%;background:#303133;color:#f1f1f1;font:600 7px/1 "Inter",sans-serif;}
+.evo-interface .evo-io-caption {font-size:5px;color:#aeb0b1;}
+.evo-interface .evo-left-controls {position:absolute;left:2%;top:17%;width:9%;height:77%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;z-index:3;}
+.evo-interface .evo-48v {display:grid;place-items:center;width:21px;height:21px;border:1px solid #121416;border-radius:50%;background:radial-gradient(circle at 35% 25%,#505153,#252628 72%);color:#ddd;font:500 5px/1 "Inter",sans-serif;box-shadow:0 2px 3px #0008;}
+.evo-interface .evo-round {display:grid;place-items:center;flex:0 0 21px;width:21px;height:21px;padding:0;border:1px solid #171819;border-radius:50%;background:radial-gradient(circle at 34% 25%,#4c4d4f,#222325 70%);color:#e7e8e9;font:600 8px/1 "Inter",sans-serif;box-shadow:0 2px 3px #0008,inset 0 1px #ffffff22;cursor:pointer;}
+.evo-interface .evo-round[aria-pressed="true"] {box-shadow:0 0 0 1px #f5f5f566,0 0 6px #ffffff3a,inset 0 1px #ffffff33;}
+.evo-interface .evo-capture {display:grid;place-items:center;width:49px;height:24px;min-height:24px!important;margin:0;padding:0;border:1px solid #3c9d39;border-radius:16px;background:linear-gradient(#6ed64d,#48b934);color:white;box-shadow:0 2px 4px #0008,inset 0 1px #ffffff66;}
+.evo-interface .evo-capture svg {width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+.evo-interface.ai-live .evo-capture {background:linear-gradient(#91eb69,#58c943);box-shadow:0 0 10px #77ed56aa,inset 0 1px #ffffff88;}
+.evo-interface .evo-main-control {position:absolute;left:36%;top:12%;width:30%;height:80%;display:grid;place-items:center;}
+.evo-interface .evo-led-ring {position:absolute;width:100px;height:100px;border-radius:50%;background:repeating-conic-gradient(from -135deg,#f4f4f3 0deg 2.5deg,transparent 3deg 15deg);-webkit-mask:radial-gradient(circle,transparent 0 71%,#000 73% 81%,transparent 83%);mask:radial-gradient(circle,transparent 0 71%,#000 73% 81%,transparent 83%);filter:drop-shadow(0 0 2px #ffffff65);}
+.evo-interface.ai-signal .evo-led-ring {background:repeating-conic-gradient(from -135deg,#70d64c 0deg 2.5deg,transparent 3deg 15deg);}
+.evo-interface .evo-main-knob {position:relative;z-index:1;width:72px!important;height:72px!important;margin:0!important;border:3px solid #111315!important;border-radius:50%!important;background:radial-gradient(circle at 35% 25%,#535456,#303133 61%,#1b1c1e 78%)!important;box-shadow:inset 0 1px 3px #ffffff30,inset 0 -3px 4px #000b,0 3px 6px #000b!important;}
+.evo-interface .evo-main-knob::before {content:none!important;}
+.evo-interface .evo-main-knob::after {top:9px!important;width:2px!important;height:12px!important;background:#eee!important;transform-origin:50% 21px!important;}
+.evo-interface .evo-main-control small {position:absolute;bottom:0;color:#d2d3d4;font:500 6px/1 "Inter",sans-serif;letter-spacing:.1em;}
+.evo-interface .evo-right-controls {position:absolute;right:2%;top:41%;width:9%;height:53%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;z-index:3;}
+.evo-interface .evo-right-controls .evo-round {width:22px;height:22px;flex-basis:22px;}
+.evo-interface .evo-right-controls svg {width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+.evo-interface .evo-right-controls .evo-smart {color:#ededed;}
+.evo-interface .evo-output-jack {position:absolute;left:-106%;bottom:-3%;display:flex;flex-direction:column;align-items:center;gap:3px;color:#bcbec0;font:600 5px/1 "Inter",sans-serif;}
+.evo-interface .evo-output-jack .port {width:20px;height:20px;min-width:20px;min-height:20px;border:3px solid #161819;border-radius:50%;background:radial-gradient(circle,#030405 0 42%,#17191a 46% 57%,#8a8d8e 60% 67%,#202224 70%);box-shadow:0 2px 3px #000a,inset 0 1px 2px #ffffff30;}
+.evo-interface .evo-output-bank {position:absolute;right:13%;top:48%;width:22%;height:36%;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:10px 1fr 8px;justify-items:center;align-items:center;gap:2px;}
+.evo-interface .evo-output-bank .port {width:18px;height:18px;min-width:18px;min-height:18px;border:3px solid #17191a;border-radius:50%;background:radial-gradient(circle,#030405 0 43%,#1a1c1d 47% 56%,#858889 60% 66%,#202224 70%);box-shadow:0 2px 3px #000a,inset 0 1px 2px #ffffff25;}
+.evo-interface .evo-usb-led {position:absolute;right:-12%;top:-71%;width:6px;height:6px;border-radius:50%;background:#686b6d;box-shadow:0 0 2px #aaa;}
+.evo-interface.ai-live .evo-usb-led {background:#64a6ff;box-shadow:0 0 7px #3e91ff;}
