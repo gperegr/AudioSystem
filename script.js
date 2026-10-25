@@ -1981,6 +1981,7 @@ const Hardware = (() => {
         const sidebarTimers={catalog:0,properties:0},sidebarHoverTimers={catalog:0,properties:0},sidebarHoverOpenedAt={catalog:0,properties:0};
         function syncSidebar(key){
             const config=sidebarConfig[key],closed=document.body.classList.contains(config.collapsed),label=`${closed?'Expandir':'Recolher'} ${config.name}`;
+            document.body.classList.toggle(`${key}-pinned`,sidebarPinned[key]&&!closed&&!compactLayout.matches);
             config.button.setAttribute('aria-expanded',String(!closed));config.button.setAttribute('aria-label',label);config.button.title=label;config.button.textContent=key==='catalog'?(closed?'›':'‹'):(closed?'‹':'›');
             config.pin.setAttribute('aria-pressed',String(sidebarPinned[key]));config.pin.setAttribute('aria-label',`${sidebarPinned[key]?'Soltar':'Fixar'} painel de ${config.name}`);config.pin.title=sidebarPinned[key]?'Soltar painel':'Fixar painel aberto';
             if(!compactLayout.matches)config.panel.inert=closed;
@@ -3641,7 +3642,7 @@ const Hardware = (() => {
                     catch(error){spotifyVinylNotice(error.message||'Não foi possível mudar a ordem aleatória.');}
                 });
                 document.getElementById('source-progress').addEventListener('input',event=>{document.getElementById('source-position').textContent=formatAudioTime(Number(event.target.value));});
-                document.getElementById('source-progress').addEventListener('change',event=>seek(Number(event.target.value)));
+                document.getElementById('source-progress').addEventListener('change',event=>{seek(Number(event.target.value));event.target.blur();});
                 document.getElementById('source-rewind').addEventListener('click',()=>seek(SpotifyCoverflow.getPlaybackState().position-10));
                 document.getElementById('source-forward').addEventListener('click',()=>seek(SpotifyCoverflow.getPlaybackState().position+10));
                 document.getElementById('source-repeat').addEventListener('click',async event=>{
@@ -4112,11 +4113,19 @@ const Hardware = (() => {
             if(dev.spotifyVinyl){
                 if(playing){
                     if(spotifyPlayingTurntable&&spotifyPlayingTurntable!==dev.id){spotifyVinylNotice('Pare o outro toca-discos do Spotify antes de reproduzir este.');return;}
-                    spotifyVolume=0;try{await SpotifyCoverflow.setPlaybackVolume(0);await SpotifyCoverflow.playAlbum(dev.spotifyVinyl,Number.isInteger(trackIndex)?trackIndex:dev.pendingSpotifyTrack);}catch{return;}
+                    spotifyVolume=0;
+                    try{
+                        await SpotifyCoverflow.setPlaybackVolume(0);
+                        const chosenTrack=Number.isInteger(trackIndex)?trackIndex:dev.pendingSpotifyTrack;
+                        const resumed=!dev.spotifyNeedsRestart&&!Number.isInteger(chosenTrack)&&await SpotifyCoverflow.resumeAlbum(dev.spotifyVinyl.uri);
+                        if(!resumed)await SpotifyCoverflow.playAlbum(dev.spotifyVinyl,chosenTrack);
+                    }catch{return;}
+                    dev.spotifyNeedsRestart=false;
                     dev.pendingSpotifyTrack=null;
                     spotifyPlayingTurntable=dev.id;
                 }else if(spotifyPlayingTurntable===dev.id){
-                    spotifyPlayingTurntable=null;spotifyVolume=0;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});
+                    spotifyPlayingTurntable=null;spotifyVolume=0;
+                    try{await SpotifyCoverflow.setPlaybackVolume(0);await SpotifyCoverflow.pauseAlbum();}catch{}
                 }
             }
             stopFilePlayback(dev);
@@ -8728,7 +8737,7 @@ const Hardware = (() => {
             if(dev.state.playing)setSourcePlaying(dev,false);
             if(item.turntableId&&state.devices[item.turntableId]){const previous=state.devices[item.turntableId];if(previous.state.playing)setSourcePlaying(previous,false);previous.spotifyVinyl=null;}
             const fromX=item.x,fromY=item.y;
-            item.turntableId=dev.id;dev.spotifyVinyl=item;dev.setLidOpen?.(true);dev.el.classList.add('spotify-vinyl-placing');const center=vinylPlatterCenter(dev);moveSpotifyVinyl(item,center.x-SPOTIFY_VINYL_SIZE/2,center.y-6);
+            item.turntableId=dev.id;dev.spotifyVinyl=item;dev.spotifyNeedsRestart=true;dev.setLidOpen?.(true);dev.el.classList.add('spotify-vinyl-placing');const center=vinylPlatterCenter(dev);moveSpotifyVinyl(item,center.x-SPOTIFY_VINYL_SIZE/2,center.y-6);
             item.el.classList.toggle('is-linear',dev.type==='turntableLinear');item.el.classList.add('is-on-platter');
             const finish=()=>dev.el.classList.remove('spotify-vinyl-placing');
             if(animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){

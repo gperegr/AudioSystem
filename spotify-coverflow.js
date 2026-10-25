@@ -132,19 +132,32 @@ const SpotifyCoverflow=(()=>{
             if(!response.ok&&response.status!==204)throw new Error(`Não foi possível tocar o álbum (${response.status}).`);
         }catch(error){setStatus(error.message||'Não foi possível iniciar a reprodução.');throw error;}
     }
+    async function resumeAlbum(uri){
+        if(!player||!deviceId||playback?.context?.uri!==uri||!playback.paused)return false;
+        await player.activateElement();
+        await player.resume();
+        playback.paused=false;playbackUpdatedAt=Date.now();broadcast();
+        return true;
+    }
     async function selectTrack(album,index){
         if(!deviceId)throw new Error('O player do Spotify não está conectado.');
         const response=await spotifyFetch(`https://api.spotify.com/v1/me/player/play?device_id=${encodeURIComponent(deviceId)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({context_uri:album.uri,offset:{position:index}})});
         if(!response.ok&&response.status!==204)throw new Error(`Não foi possível tocar a faixa (${response.status}).`);
     }
-    async function pauseAlbum(){if(player)await player.pause();}
+    async function pauseAlbum(){if(player){await player.pause();if(playback){playback.position=Math.min(playback.track_window?.current_track?.duration_ms||0,(playback.position||0)+(playback.paused?0:Date.now()-playbackUpdatedAt));playback.paused=true;playbackUpdatedAt=Date.now();broadcast();}}}
     async function setPlaybackVolume(value){if(player)await player.setVolume(Math.max(0,Math.min(1,value)));}
     function getPlaybackState(){
         const track=playback?.track_window?.current_track,duration=track?.duration_ms||0;
         const position=Math.min(duration,(playback?.position||0)+(playback&&!playback.paused?Date.now()-playbackUpdatedAt:0));
-        return {connected:!!deviceId,track:track?.name||'',trackUri:track?.uri||'',duration:duration/1000,position:position/1000,repeat:trackRepeat,shuffle:shuffleEnabled,context:playback?.context?.uri||''};
+        return {connected:!!deviceId,paused:playback?.paused!==false,track:track?.name||'',trackUri:track?.uri||'',duration:duration/1000,position:position/1000,repeat:trackRepeat,shuffle:shuffleEnabled,context:playback?.context?.uri||''};
     }
-    async function seekTo(seconds){if(!player||!playback)return;await player.seek(Math.max(0,Math.min(playback.track_window?.current_track?.duration_ms||0,Math.round(seconds*1000))));}
+    async function seekTo(seconds){
+        if(!deviceId||!playback)throw new Error('A faixa do Spotify ainda não está pronta.');
+        const position=Math.max(0,Math.min(playback.track_window?.current_track?.duration_ms||0,Math.round(seconds*1000)));
+        const response=await spotifyFetch(`https://api.spotify.com/v1/me/player/seek?position_ms=${position}&device_id=${encodeURIComponent(deviceId)}`,{method:'PUT'});
+        if(!response.ok&&response.status!==204)throw new Error(`Não foi possível mudar a posição da faixa (${response.status}).`);
+        playback.position=position;playbackUpdatedAt=Date.now();broadcast();
+    }
     async function setTrackRepeat(enabled){
         if(!deviceId)return;
         const response=await spotifyFetch(`https://api.spotify.com/v1/me/player/repeat?state=${enabled?'track':'off'}&device_id=${encodeURIComponent(deviceId)}`,{method:'PUT'});
@@ -311,5 +324,5 @@ const SpotifyCoverflow=(()=>{
         }
         if(tokenData()){status='';await loadCollection('albums');}
     }
-    return {mount,inspectorHtml,bindInspector,initialize,login,logout,playAlbum,loadTracks,selectTrack,pauseAlbum,setPlaybackVolume,getPlaybackState,seekTo,setTrackRepeat,setShuffle,markExtracted,setBeforeRedirect(callback){beforeRedirect=callback;}};
+    return {mount,inspectorHtml,bindInspector,initialize,login,logout,playAlbum,resumeAlbum,loadTracks,selectTrack,pauseAlbum,setPlaybackVolume,getPlaybackState,seekTo,setTrackRepeat,setShuffle,markExtracted,setBeforeRedirect(callback){beforeRedirect=callback;}};
 })();

@@ -4415,7 +4415,9 @@ body.inspector-collapsed #inspector {width:18rem;min-width:18rem;flex:0 0 18rem;
 body.inspector-collapsed #inspector>.inspector-panel-header,body.inspector-collapsed #inspector>#inspector-empty,body.inspector-collapsed #inspector>#inspector-content {display:none!important;}
 #app-topbar .topbar-controls>.sidebar-toggle {width:40px;height:40px;}
 #workspace-shell {position:relative;min-width:0;}
-#canvas {flex:1 1 100%;width:100%;min-width:0;}
+#canvas {flex:1 1 auto;width:auto;min-width:0;transition:margin-left .9s cubic-bezier(.22,.65,.2,1),margin-right .9s cubic-bezier(.22,.65,.2,1);}
+body.catalog-pinned #canvas {margin-left:18rem;}
+body.properties-pinned #canvas {margin-right:18rem;}
 #equipment-catalog,#inspector {position:absolute;top:0;bottom:0;z-index:30;box-sizing:border-box;width:18rem;min-width:18rem;flex:none;margin:0;transition:transform 240ms cubic-bezier(.22,.7,.2,1);}
 #equipment-catalog {left:0;}
 #inspector {right:0;}
@@ -4432,9 +4434,10 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
 .sidebar-pin[aria-pressed="true"] svg {transform:rotate(0);}
 .sidebar-pin:hover,.sidebar-pin:focus-visible {color:#fff;border-color:#90aabb;}
 .sidebar-pin:focus-visible {outline:2px solid #8fc7e4;outline-offset:2px;}
-@media(prefers-reduced-motion:reduce){#equipment-catalog,#inspector,.sidebar-toggle{transition:none!important;}}
+@media(prefers-reduced-motion:reduce){#equipment-catalog,#inspector,.sidebar-toggle,#canvas{transition:none!important;}}
 
 @media(max-width:1000px),(hover:none) and (pointer:coarse) and (max-width:1400px) {
+    body.catalog-pinned #canvas,body.properties-pinned #canvas {margin-left:0;margin-right:0;}
     #app-topbar>.topbar-controls {flex:1 1 0;min-width:0;justify-content:flex-start;gap:5px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;}
     #app-topbar>.topbar-controls::-webkit-scrollbar {display:none;}
     #app-topbar .canvas-tools {position:static;left:auto;top:auto;transform:none;flex:0 0 auto;width:max-content;max-width:none;gap:2px;padding:0;overflow:visible;}
