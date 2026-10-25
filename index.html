@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Audio System Simulator</title>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -489,7 +490,7 @@
     <template id="tpl-headphoneSide">
         <div class="device-header"><span></span></div>
         <div class="headphone-body"><div class="headphone-object">
-            <img class="headphone-artwork" src="./assets/headphones/over-ear.svg" alt="" draggable="false" aria-hidden="true">
+            <img class="headphone-artwork" src="./assets/headphones/over-ear.svg" alt="" loading="lazy" decoding="async" draggable="false" aria-hidden="true">
         </div><div class="headphone-controls"><span></span><div class="port" data-type="p2" data-io="in" data-node="in" data-signal="headphone" title="Entrada de fones · P2 TRS estéreo"></div><button class="btn-bt-pair">BLUETOOTH</button></div></div>
     </template>
 

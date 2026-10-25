@@ -238,7 +238,7 @@ const SpotifyCoverflow=(()=>{
             element.setAttribute('aria-label',`${album.name} — ${artist(album)}`);
             const vinyl=document.createElement('span');vinyl.className='spotify-flow-vinyl';
             vinyl.title='Retirar disco da capa';vinyl.setAttribute('role','button');vinyl.setAttribute('aria-label',`Retirar ${album.name} da capa`);
-            const cover=document.createElement('img');cover.alt='';cover.loading='lazy';cover.referrerPolicy='no-referrer';
+            const cover=document.createElement('img');cover.alt='';cover.loading='lazy';cover.decoding='async';cover.referrerPolicy='no-referrer';
             cover.addEventListener('pointerdown',event=>{if(event.button!==0||current()!==index)return;event.stopPropagation();const startX=event.clientX,startY=event.clientY,pointerId=event.pointerId;const move=ev=>{if(ev.pointerId!==pointerId||Math.hypot(ev.clientX-startX,ev.clientY-startY)<9)return;cleanup();suppressClickUntil=performance.now()+350;host.dispatchEvent(new CustomEvent('spotify-album-pickup',{bubbles:true,detail:{uri:album.uri,name:album.name,image:album.images?.[0]?.url||'',clientX:ev.clientX,clientY:ev.clientY,pointerId}}));};const cleanup=()=>{window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',cleanup,true);window.removeEventListener('pointercancel',cleanup,true);};window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',cleanup,true);window.addEventListener('pointercancel',cleanup,true);});
             const artUrl=(album.images||[]).filter(image=>image.width>=300).sort((a,b)=>a.width-b.width)[0]?.url||album.images?.[0]?.url;
             if(artUrl)cover.src=artUrl;

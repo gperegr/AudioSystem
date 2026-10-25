@@ -1518,7 +1518,7 @@ const Hardware = (() => {
         const floorPlacementBottom=()=>Math.floor((world.offsetHeight-ROOM_FLOOR_OVERLAP)/Hardware.sizes.grid)*Hardware.sizes.grid;
         document.documentElement.classList.add('lighting-demo-enabled');
         const roomBackdrop=document.createElement('div');roomBackdrop.id='room-backdrop';roomBackdrop.setAttribute('aria-hidden','true');
-        roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far is-visible" alt="" draggable="false"><i class="room-grid-overlay"></i>';
+        roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far is-visible" alt="" decoding="async" draggable="false"><i class="room-grid-overlay"></i>';
         const roomMotes=document.createElement('div');roomMotes.className='room-motes';roomMotes.setAttribute('aria-hidden','true');
         const roomMoteCanvas=document.createElement('canvas');roomMoteCanvas.className='room-mote-canvas';roomMoteCanvas.setAttribute('aria-hidden','true');
         const roomMoteContext=roomMoteCanvas.getContext('2d',{alpha:true});
@@ -1585,7 +1585,7 @@ const Hardware = (() => {
                 return;
             }
             const next=document.createElement('img');
-            next.className='room-scene-image room-layer-far';next.alt='';next.draggable=false;
+            next.className='room-scene-image room-layer-far';next.alt='';next.loading='eager';next.decoding='async';next.draggable=false;
             next.src=src;
             positionRoomImage(next,horizon);
             next.decode().then(()=>{
@@ -2271,7 +2271,7 @@ const Hardware = (() => {
             dev.el.dataset.benchBackdrop=String(settings.benchBackdrop);
             dev.el.querySelector('.bench-scene')?.remove();
             const scene=document.createElement('div');scene.className='bench-scene';scene.setAttribute('aria-hidden','true');
-            scene.innerHTML='<div class="bench-backdrop">'+benchAcousticMarkup()+'</div>'+settings.benchDecorations.map(key=>`<img class="bench-decoration bench-decoration-${key}" src="./assets/decorations/${BENCH_DECORATION_ASSETS[key]}.svg" alt="" draggable="false">`).join('');
+            scene.innerHTML='<div class="bench-backdrop">'+benchAcousticMarkup()+'</div>'+settings.benchDecorations.map(key=>`<img class="bench-decoration bench-decoration-${key}" src="./assets/decorations/${BENCH_DECORATION_ASSETS[key]}.svg" alt="" loading="lazy" decoding="async" draggable="false">`).join('');
             dev.el.querySelector('.furniture-body').prepend(scene);
             Hardware.updateLightingDemo();
         }
@@ -5069,7 +5069,7 @@ const Hardware = (() => {
                 <div class="stream-heat-sink stream-heat-left"></div><div class="stream-heat-sink stream-heat-right"></div>
                 <div class="stream-glass"><div class="stream-power" data-power-slot><button class="power-btn" title="Ligar / desligar"></button></div><div class="stream-phone"><div class="port" data-type="p2" data-io="out" data-node="outPhone" data-signal="headphone" title="Fones P2 estéreo · silencia as caixas ao conectar"></div><small>PHONES</small></div>
                     <section class="stream-screen" aria-label="Tela do streamer"><header><span data-stream-source-label>DEMONSTRAÇÃO</span><span data-stream-state>PAUSADO</span></header>
-                        <div class="stream-now"><button class="stream-cover" data-button-model="ui" data-stream-cover title="Informações da faixa" aria-label="Mostrar informações da faixa"><img src="assets/artwork/stream-cover.svg" alt="Capa da faixa"></button><div class="stream-track"><strong data-stream-title>Horizonte azul</strong><span data-stream-artist>Sessão de demonstração</span><span data-stream-album>Escuta tranquila</span><small data-stream-format>FONTE INTERNA</small></div></div>
+                        <div class="stream-now"><button class="stream-cover" data-button-model="ui" data-stream-cover title="Informações da faixa" aria-label="Mostrar informações da faixa"><img src="assets/artwork/stream-cover.svg" alt="Capa da faixa" loading="lazy" decoding="async"></button><div class="stream-track"><strong data-stream-title>Horizonte azul</strong><span data-stream-artist>Sessão de demonstração</span><span data-stream-album>Escuta tranquila</span><small data-stream-format>FONTE INTERNA</small></div></div>
                         <div class="stream-track-info" hidden><strong data-stream-info-title>Informações da reprodução</strong><p data-stream-info></p><button data-button-model="ui" data-stream-back>VOLTAR</button></div>
                         <div class="stream-home" hidden><span>ESCOLHA A FONTE</span><button data-button-model="ui" data-stream-input="library" aria-label="Selecionar música interna"><span class="stream-input-icon" aria-hidden="true">${icon('<path d="M9 18V5l12-2v13M9 8l12-2"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>')}</span><b>Música</b><small>Arquivo / demonstração</small></button><button data-button-model="ui" data-stream-input="line" aria-label="Selecionar entrada de linha"><span class="stream-input-icon" aria-hidden="true">${icon('<path d="M8 3v5m8-5v5M6 8h12v4a6 6 0 0 1-12 0ZM12 18v4"/>')}</span><b>Linha</b><small>Entrada RCA estéreo</small></button></div>
                         <div class="stream-timeline"><input type="range" data-stream-seek data-hardware-slider="seek" min="0" max="180" step="0.1" value="0" aria-label="Posição da faixa"><div><time data-stream-elapsed>0:00</time><span data-stream-screen-volume>VOL 30</span><time data-stream-duration>3:00</time></div></div>
@@ -6519,6 +6519,7 @@ const Hardware = (() => {
             const duration=()=>dev.audioBuffer?.duration||180;
             const leadIn=()=>tt.disc==='single'?297:380;
             const leadOut=()=>tt.disc==='single'?255:270;
+            const hasDisc=()=>tt.disc!=='none'||!!dev.spotifyVinyl;
             const position=()=>dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?(state.audioCtx.currentTime-dev.demoStartedAt)*dev.ttRate():0);
             const pause=()=>{
                 const seconds=position();
@@ -6568,11 +6569,11 @@ const Hardware = (() => {
                 if(operation!==mechanism.operation||mechanism.disposed||!dev.powered)return;
                 if(state.audioCtx.state!=='running'){mechanism.message='Clique novamente para ativar o áudio';refresh();return;}
                 mechanism.message='';mechanism.cue=0;
-                if(mechanism.phase==='raised'&&tt.disc!=='none'){
+                if(mechanism.phase==='raised'&&hasDisc()){
                     mechanism.phase='lowering';mechanism.target=Math.min(leadIn(),mechanism.arm);mechanism.deadline=performance.now()+430;
                 }else{
                     // The sensor traverses the rim before a diameter is accepted.
-                    mechanism.phase='scanning';mechanism.target=tt.disc==='none'?245:leadIn();mechanism.deadline=performance.now()+1250;
+                    mechanism.phase='scanning';mechanism.target=hasDisc()?leadIn():245;mechanism.deadline=performance.now()+1250;
                     tt.speed=tt.disc==='single'?45:33;tt.pitch=tt['trim'+tt.speed];
                     dev.fileOffset=0;dev.demoOffset=0;
                 }
@@ -6594,7 +6595,7 @@ const Hardware = (() => {
                     }
                     mechanism.cue=0;return;
                 }
-                if(!dev.powered||tt.disc==='none')return;
+                if(!dev.powered||!hasDisc())return;
                 mechanism.operation++;pause();mechanism.message='';mechanism.phase='raised';mechanism.cue=direction;mechanism.target=mechanism.arm;refresh();
             };
             const changeRate=callback=>{
@@ -6630,7 +6631,7 @@ const Hardware = (() => {
                 if(mechanism.disposed)return;
                 if(!dev.powered&&mechanism.phase!=='idle'&&mechanism.phase!=='returning')dev.linearStop();
                 if(mechanism.phase==='scanning'&&now>=mechanism.deadline){
-                    if(tt.disc==='none'){mechanism.message='Sem disco · retorno automático';dev.linearStop();}
+                    if(!hasDisc()){mechanism.message='Sem disco · retorno automático';dev.linearStop();}
                     else {mechanism.phase='lowering';mechanism.deadline=now+430;refresh();}
                 }else if(mechanism.phase==='lowering'&&now>=mechanism.deadline&&Math.abs(mechanism.arm-mechanism.target)<.8){
                     mechanism.phase='playing';
@@ -7723,7 +7724,7 @@ const Hardware = (() => {
                 html+=`<section class="ai-inspector"><h3>Entrada do computador</h3><label>Dispositivo de captura<select id="ai-input-device"><option value="">Entrada padrão do sistema</option></select></label><button id="ai-capture-toggle" class="tt-insp-btn" type="button">${dev.state.playing?'PARAR CAPTURA':'INICIAR CAPTURA'}</button><p role="status" id="ai-capture-status">${dev.micMessage||'Selecione uma entrada e permita o acesso ao microfone.'}</p>${dev.type==='audioInterfaceVolt'?voltControls:`<label>Ganho 1<input id="ai-gain-L" type="range" min="0" max="1" step=".01" value="${dev.state.micGainL}"></label><label>Ganho 2<input id="ai-gain-R" type="range" min="0" max="1" step=".01" value="${dev.state.micGainR}"></label>`}${dev.type==='audioInterfaceEvo'?`<label>Monitor<input id="ai-monitor" type="range" min="0" max="1" step=".01" value="${dev.state.monitorLevel}"></label>`:''}${dev.type==='audioInterfaceQuantum'?`<label>Saída principal<input id="ai-quantum-main" type="range" min="0" max="1" step=".01" value="${dev.state.quantumMain}"></label><label>Fones virtuais<input id="ai-quantum-phones" type="range" min="0" max="1" step=".01" value="${dev.state.quantumPhones}"></label><button id="ai-quantum-direct" class="tt-insp-btn" type="button" aria-pressed="${dev.state.quantumDirect}">MONITORAMENTO VIRTUAL · ${dev.state.quantumDirect?'LIGADO':'DESLIGADO'}</button>`:''}<small>48 V e seleção de instrumento são controlados na interface física. Use fones para evitar realimentação.</small></section>`;
             }
             if (SOURCE_TYPES.has(dev.type) && !TURNTABLE_TYPES.has(dev.type)&&!CAPTURE_INTERFACE_TYPES.has(dev.type)) html += `<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Reprodução</span><button id="source-inspector-play" type="button" class="tt-insp-btn ${dev.state.playing ? 'is-on' : ''}" aria-pressed="${!!dev.state.playing}">REPRODUZIR / PAUSAR</button></div>`;
-            if (SOURCE_TYPES.has(dev.type)&&!SIGNAL_GENERATOR_TYPES.has(dev.type)&&!CAPTURE_INTERFACE_TYPES.has(dev.type)) html += `<div class="flex flex-col gap-2 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Música própria</span><button id="source-load-audio" type="button" class="tt-insp-btn">CARREGAR ÁUDIO</button><input id="source-audio-file" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac" hidden><div class="source-file-row"><p id="source-file-name" class="text-xs text-gray-300 break-words"></p><button id="source-remove-audio" type="button" aria-label="Remover arquivo de áudio" title="Remover arquivo" ${dev.audioBuffer ? '' : 'hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path class="source-trash-lid" d="M4 7h16M9 7V5h6v2"/><path class="source-trash-bin" d="M6.5 9 7.5 20h9L17.5 9M10 11v6m4-6v6"/></svg></button></div><p id="source-file-message" class="text-xs text-gray-400"></p></div>`;
+            if (SOURCE_TYPES.has(dev.type)&&!SIGNAL_GENERATOR_TYPES.has(dev.type)&&!CAPTURE_INTERFACE_TYPES.has(dev.type)&&!(TURNTABLE_TYPES.has(dev.type)&&dev.spotifyVinyl)) html += `<div class="flex flex-col gap-2 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Música própria</span><button id="source-load-audio" type="button" class="tt-insp-btn">CARREGAR ÁUDIO</button><input id="source-audio-file" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac" hidden><div class="source-file-row"><p id="source-file-name" class="text-xs text-gray-300 break-words"></p><button id="source-remove-audio" type="button" aria-label="Remover arquivo de áudio" title="Remover arquivo" ${dev.audioBuffer ? '' : 'hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path class="source-trash-lid" d="M4 7h16M9 7V5h6v2"/><path class="source-trash-bin" d="M6.5 9 7.5 20h9L17.5 9M10 11v6m4-6v6"/></svg></button></div><p id="source-file-message" class="text-xs text-gray-400"></p></div>`;
             if (dev.listeningProfile) html += `<section class="sonic-signature-panel"><h3>Assinatura sonora</h3>${listeningCurveHtml(dev)}</section>`;
             if(RADIO_RECEIVERS.has(dev.type))html+=radioInspectorHtml(dev);
             if(dev.spotifyVinyl)html+=spotifyTrackInspectorHtml();
@@ -7769,7 +7770,7 @@ const Hardware = (() => {
             if ((dev.spotifyVinyl||dev.audioBuffer)&&!RADIO_RECEIVERS.has(dev.type)) bindTransportInspector(dev);
             if(dev.spotifyVinyl)bindSpotifyTrackInspector(dev);
             if(SIGNAL_GENERATOR_TYPES.has(dev.type))bindSignalInspector(dev);
-            if (SOURCE_TYPES.has(dev.type)&&!SIGNAL_GENERATOR_TYPES.has(dev.type)&&!CAPTURE_INTERFACE_TYPES.has(dev.type)) {
+            if (document.getElementById('source-audio-file')) {
                 document.getElementById('source-file-name').textContent = dev.fileName || 'Nenhum arquivo carregado · som de demonstração';
                 document.getElementById('source-file-message').textContent = dev.fileMessage || (dev.audioBuffer ? `Duração: ${Math.floor(dev.audioBuffer.duration / 60)}:${String(Math.floor(dev.audioBuffer.duration % 60)).padStart(2,'0')}` : 'MP3, WAV e outros formatos de áudio compatíveis com o navegador.');
                 const input = document.getElementById('source-audio-file');
@@ -8986,7 +8987,7 @@ const Hardware = (() => {
             const cover=document.createElement('span');cover.className='spotify-canvas-album-cover';if(item.image)cover.style.backgroundImage=`url("${item.image.replaceAll('"','%22')}")`;
             const disc=document.createElement('span');disc.className='spotify-canvas-album-disc';disc.title='Retirar o disco';el.append(disc,cover);item.el=el;world.append(el);spotifyAlbums.set(item.uri,item);moveSpotifyAlbum(item,Number(record.x)||0,Number(record.y)||0);syncSpotifyAlbum(item);refreshSpotifyAlbums();
             disc.addEventListener('pointerdown',event=>{if(event.button!==0||spotifyVinyls.has(item.uri))return;event.preventDefault();event.stopPropagation();const at=screenToWorld(event.clientX,event.clientY),vinyl=createSpotifyVinyl({uri:item.uri,name:item.name,image:item.image,origin:item.origin,x:at.x-SPOTIFY_VINYL_SIZE/2,y:at.y-SPOTIFY_VINYL_SIZE/2});syncSpotifyAlbum(item);if(vinyl)beginSpotifyVinylDrag(vinyl,event);});
-            el.addEventListener('pointerdown',event=>{if(event.button!==0||event.target===disc)return;event.preventDefault();event.stopPropagation();const start=screenToWorld(event.clientX,event.clientY),offsetX=start.x-item.x,offsetY=start.y-item.y;let moved=false;const move=ev=>{if(ev.pointerId!==event.pointerId)return;const at=screenToWorld(ev.clientX,ev.clientY);if(!moved&&Math.hypot(ev.clientX-event.clientX,ev.clientY-event.clientY)<8)return;moved=true;el.classList.add('is-dragging');moveSpotifyAlbum(item,at.x-offsetX,at.y-offsetY);};const end=ev=>{if(ev.pointerId!==event.pointerId)return;window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',end,true);window.removeEventListener('pointercancel',end,true);el.classList.remove('is-dragging');el.style.pointerEvents='none';const overFurniture=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('.device-type-furnitureCoverflow');el.style.pointerEvents='';if(!moved){item.open=!item.open;syncSpotifyAlbum(item);}else if(ev.type!=='pointercancel'&&(isOverCatalog(ev)||overFurniture)){removeSpotifyAlbum(item);return;}scheduleProjectSave();};window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',end,true);window.addEventListener('pointercancel',end,true);});
+            el.addEventListener('pointerdown',event=>{if(event.button!==0||event.target===disc)return;event.preventDefault();event.stopPropagation();const start=screenToWorld(event.clientX,event.clientY),offsetX=start.x-item.x,offsetY=start.y-item.y;let moved=false;const move=ev=>{if(ev.pointerId!==event.pointerId||ev.type==='pointercancel')return;const at=screenToWorld(ev.clientX,ev.clientY);if(!moved&&Math.hypot(ev.clientX-event.clientX,ev.clientY-event.clientY)<8)return;moved=true;el.classList.add('is-dragging');moveSpotifyAlbum(item,at.x-offsetX,at.y-offsetY);};const end=ev=>{if(ev.pointerId!==event.pointerId)return;window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',end,true);window.removeEventListener('pointercancel',end,true);el.classList.remove('is-dragging');el.style.pointerEvents='none';const overFurniture=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('.device-type-furnitureCoverflow');el.style.pointerEvents='';if(!moved){item.open=!item.open;syncSpotifyAlbum(item);}else if(ev.type!=='pointercancel'&&(isOverCatalog(ev)||overFurniture)){showDiscardCloud(ev.clientX,ev.clientY);removeSpotifyAlbum(item);return;}scheduleProjectSave();};window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',end,true);window.addEventListener('pointercancel',end,true);});
             return item;
         }
         document.addEventListener('spotify-album-pickup',event=>{const furniture=event.target.closest('.device-node'),data=event.detail;if(!furniture||!data||spotifyAlbums.has(data.uri))return;const at=screenToWorld(data.clientX,data.clientY),item=createSpotifyAlbum({...data,origin:furniture.id,x:at.x-SPOTIFY_ALBUM_SIZE/2,y:at.y-SPOTIFY_ALBUM_SIZE/2});if(item){item.el.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,button:0,pointerId:data.pointerId,clientX:data.clientX,clientY:data.clientY}));scheduleProjectSave();}});
@@ -9001,7 +9002,7 @@ const Hardware = (() => {
             if(dev.state.playing)setSourcePlaying(dev,false);
             if(item.turntableId&&state.devices[item.turntableId]){const previous=state.devices[item.turntableId];if(previous.state.playing)setSourcePlaying(previous,false);previous.spotifyVinyl=null;}
             const fromX=item.x,fromY=item.y;
-            item.turntableId=dev.id;dev.spotifyVinyl=item;dev.spotifyNeedsRestart=true;dev.setLidOpen?.(true);dev.el.classList.add('spotify-vinyl-placing');const center=vinylPlatterCenter(dev);moveSpotifyVinyl(item,center.x-SPOTIFY_VINYL_SIZE/2,center.y-6);
+            item.turntableId=dev.id;dev.spotifyVinyl=item;dev.spotifyNeedsRestart=true;if(dev.type==='turntableLinear'&&dev.state.tt?.disc==='none'){dev.state.tt.disc='lp';dev.refreshTurntable?.();}dev.setLidOpen?.(true);dev.el.classList.add('spotify-vinyl-placing');const center=vinylPlatterCenter(dev);moveSpotifyVinyl(item,center.x-SPOTIFY_VINYL_SIZE/2,center.y-6);
             item.el.classList.toggle('is-linear',dev.type==='turntableLinear');item.el.classList.add('is-on-platter');
             const finish=()=>dev.el.classList.remove('spotify-vinyl-placing');
             if(animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
@@ -9020,7 +9021,7 @@ const Hardware = (() => {
         }
         function removeSpotifyVinyl(item){if(item.turntableId){const dev=state.devices[item.turntableId];if(dev?.state.playing)setSourcePlaying(dev,false);if(dev){dev.spotifyVinyl=null;if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);}}spotifyVinyls.delete(item.uri);item.el.remove();refreshSpotifyVinyls();scheduleProjectSave();}
         function beginSpotifyVinylDrag(item,event){
-            const prior=state.devices[item.turntableId];if(prior){if(prior.state.playing)setSourcePlaying(prior,false);prior.spotifyVinyl=null;item.turntableId=null;item.el.classList.remove('is-on-platter','is-linear','is-playing');}
+            const prior=state.devices[item.turntableId];if(prior){if(prior.state.playing)setSourcePlaying(prior,false);prior.spotifyVinyl=null;item.turntableId=null;item.el.classList.remove('is-on-platter','is-linear','is-playing');if(state.selectedDeviceId===prior.id)selectDevice(prior.id,true);}
             const point=screenToWorld(event.clientX,event.clientY),offsetX=prior?SPOTIFY_VINYL_SIZE/2:point.x-item.x,offsetY=prior?SPOTIFY_VINYL_SIZE/2:point.y-item.y;item.el.classList.add('is-dragging');
             let autoLid=null;
             const showReturnTarget=ev=>{
@@ -9039,7 +9040,7 @@ const Hardware = (() => {
                 const dev=ev.type==='pointercancel'?null:hitDevice(ev.clientX,ev.clientY);
                 const placed=dev&&TURNTABLE_TYPES.has(dev.type)&&placeSpotifyVinyl(item,dev);
                 releaseAutoLid(!!placed&&autoLid===dev);
-                if(!placed&&ev.type!=='pointercancel'&&(isOverCatalog(ev)||dev?.type==='furnitureCoverflow')){removeSpotifyVinyl(item);if(prior&&state.selectedDeviceId===prior.id)selectDevice(prior.id,true);playUiSound('discard');spotifyVinylNotice('Disco guardado na capa do álbum.');}
+                if(!placed&&ev.type!=='pointercancel'&&(isOverCatalog(ev)||dev?.type==='furnitureCoverflow')){showDiscardCloud(ev.clientX,ev.clientY);removeSpotifyVinyl(item);if(prior&&state.selectedDeviceId===prior.id)selectDevice(prior.id,true);playUiSound('discard');spotifyVinylNotice('Disco guardado na capa do álbum.');}
                 else if(!placed){if(prior&&state.selectedDeviceId===prior.id)selectDevice(prior.id,true);scheduleProjectSave();}
             };
             showReturnTarget(event);
@@ -9285,7 +9286,7 @@ const Hardware = (() => {
             }catch(error){if(replacing){try{await restoreLocalProject(previous,key=>Promise.resolve(previousAudio.get(key)));}catch{projectPersistenceBlocked=true;}}projectStatus('Não foi possível abrir: '+error.message,true);}finally{event.target.value='';}
         };
         let projectSaveTimer;
-        function scheduleProjectSave(){if(projectRestoring)return;clearTimeout(projectSaveTimer);projectSaveTimer=setTimeout(()=>saveLocalProject(),650);}
+        function scheduleProjectSave(){if(projectRestoring)return;clearTimeout(projectSaveTimer);projectSaveTimer=setTimeout(()=>saveLocalProject(),350);}
         ['pointerup','input','change','click','keyup'].forEach(type=>document.addEventListener(type,scheduleProjectSave,{capture:true,passive:true}));
         setInterval(()=>saveLocalProject(),2500);
         document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveLocalProject(true);});

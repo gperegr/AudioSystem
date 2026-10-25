@@ -4492,6 +4492,25 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
 
 @media(max-width:1000px),(hover:none) and (pointer:coarse) and (max-width:1400px) {
     body.catalog-pinned #canvas,body.properties-pinned #canvas {margin-left:0;margin-right:0;}
+    /* The panels are positioned inside the workspace, below the top bar. */
+    #equipment-catalog,#inspector,
+    body.catalog-collapsed #equipment-catalog,body.inspector-collapsed #inspector {
+        top:0;bottom:0;z-index:70;width:min(360px,calc(100vw - 24px));min-width:0;
+        height:100%;max-height:100%;margin:0;padding-bottom:env(safe-area-inset-bottom,0px);
+        overflow-x:hidden;visibility:hidden;pointer-events:none;
+    }
+    body.catalog-collapsed #equipment-catalog {transform:translateX(-100%);}
+    body.inspector-collapsed #inspector {transform:translateX(100%);}
+    body.mobile-catalog-open #equipment-catalog,
+    body.mobile-properties-open #inspector,
+    body.mobile-catalog-open.catalog-collapsed #equipment-catalog,
+    body.mobile-properties-open.inspector-collapsed #inspector {
+        transform:translateX(0);visibility:visible;pointer-events:auto;
+    }
+    body.catalog-collapsed #equipment-catalog .catalog-panel-header {justify-content:space-between;padding:6px 12px;}
+    body.catalog-collapsed #equipment-catalog .catalog-search {display:flex!important;min-width:0;}
+    body.catalog-collapsed #equipment-catalog>.overflow-y-auto {display:block!important;min-height:0;overflow-y:auto!important;-webkit-overflow-scrolling:touch;}
+    body.inspector-collapsed #inspector>:is(#inspector-empty,#inspector-content):not(.hidden) {display:flex!important;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
     #app-topbar>.topbar-controls {flex:1 1 0;min-width:0;justify-content:flex-start;gap:5px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;}
     #app-topbar>.topbar-controls::-webkit-scrollbar {display:none;}
     #app-topbar .canvas-tools {position:static;left:auto;top:auto;transform:none;flex:0 0 auto;width:max-content;max-width:none;gap:2px;padding:0;overflow:visible;}
@@ -4534,6 +4553,10 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
     #app-topbar>.topbar-controls {gap:3px;}
     #app-topbar .app-brand {gap:0;}
     .mobile-panel-controls button {width:44px;min-width:44px;padding:5px;}
+}
+@media(max-width:600px) {
+    #app-topbar .app-brand {font-size:0;}
+    #app-topbar .app-brand svg {flex:none;}
 }
 
 .connection-help-setting {display:flex;align-items:flex-start;gap:10px;padding:11px 12px;border:1px solid #394857;border-radius:7px;background:#202a34;color:#dbe5ed;cursor:pointer;}
