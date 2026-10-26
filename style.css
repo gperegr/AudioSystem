@@ -229,7 +229,7 @@
         .sp-cab.sp-modern { border:1px solid #33363c; border-radius:9.6px; background:linear-gradient(160deg,#292c31,#1b1d21 55%,#232529); box-shadow:inset 1px 1px rgba(255,255,255,.08),inset -2.4px -2.4px rgba(0,0,0,.5),0 9.6px 16.8px rgba(0,0,0,.3); }
         .sp-cab.sp-vintage { padding:9.6px; border-radius:3.6px; background:linear-gradient(160deg,#613f20,#4a2f17); box-shadow:inset 1px 1px rgba(255,220,170,.2),inset -2.4px -2.4px rgba(0,0,0,.45),0 9.6px 16.8px rgba(0,0,0,.3); }
         .sp-face { position:relative; flex:1; min-height:0; width:100%; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; padding:26.4px 0 16.8px; }
-        .sp-vintage .sp-face { padding:16.8px 0 14.4px; background:repeating-linear-gradient(90deg,#82603a 0 9.6px,#704f2f 9.6px 13.2px); box-shadow:inset 0 0 0 1px rgba(0,0,0,.28); }
+        .sp-vintage .sp-face { padding:16.8px 0 14.4px; background:var(--material-wood-grain),linear-gradient(108deg,#966841,#654124 60%,#835a36); box-shadow:inset 0 0 0 1px rgba(0,0,0,.28); }
         .sp-tweeter { position:relative; flex:none; width:91.2px; height:91.2px; border-radius:50%; background:radial-gradient(circle at 40% 34%,#26282b,#060707 72%); box-shadow:0 3.6px 7.2px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.6); }
         .sp-tweeter i { position:absolute; inset:19%; border-radius:50%; background:radial-gradient(circle at 38% 30%,#3a3d41,#0b0c0d 68%); box-shadow:inset 0 1px 2.4px rgba(255,255,255,.1); }
         .sp-woofer { position:relative; flex:none; width:216px; height:216px; margin-top:19.2px; border-radius:50%; background:radial-gradient(circle at 40% 34%,#25272a,#040505 72%); box-shadow:0 6px 10.8px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.7); }
@@ -266,7 +266,7 @@
         /* Caixa passiva clássica com grade removível e base metálica */
         .classic-box-body { display:flex; flex-direction:column; align-items:center; }
         .classic-box-cab { position:relative; width:336px; box-sizing:border-box; padding:12px 12px 0; border:2px solid #0b0d0f; border-radius:5px 5px 0 0; background:linear-gradient(145deg,#30353a,#15181b 70%); box-shadow:inset 1px 1px rgba(255,255,255,.09),inset -3px -3px rgba(0,0,0,.55),0 12px 22px rgba(0,0,0,.34); }
-        .classic-box-cab:is(.classic-box-orange,.classic-box-black) { border-color:#6e3814; background:repeating-linear-gradient(90deg,#945020 0 7px,#713a18 7px 10px); box-shadow:inset 1px 1px rgba(255,204,120,.26),inset -3px -3px rgba(0,0,0,.5),0 12px 22px rgba(0,0,0,.34); }
+        .classic-box-cab:is(.classic-box-orange,.classic-box-black) { border-color:#6e3814; background:var(--material-wood-grain),linear-gradient(108deg,#966841,#654124 60%,#835a36); box-shadow:inset 1px 1px rgba(255,204,120,.26),inset -3px -3px rgba(0,0,0,.5),0 12px 22px rgba(0,0,0,.34); }
         .classic-box-baffle { position:relative; height:440px; overflow:hidden; border:3px solid #060708; background:linear-gradient(145deg,#1d201f,#080909 72%); box-shadow:inset 0 0 0 1px rgba(255,255,255,.05); }
         .classic-box-exposed { position:absolute; inset:0; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:105px 110px 1fr; gap:10px; padding:18px; box-sizing:border-box; }
         .classic-box-control-panel { display:grid; grid-template-columns:1fr 1fr; gap:8px; align-content:start; padding:12px 9px; border:1px solid #35393a; background:#070809; color:#d8dbdc; font:700 7px/1.2 "Inter",sans-serif; letter-spacing:.13em; }
@@ -298,7 +298,7 @@
         .classic-box-base { width:238px; height:32px; margin:auto; border:5px solid #080a0b; border-top:0; background:linear-gradient(90deg,#101214,#31363a 48%,#101214); box-shadow:0 7px 0 #050606,0 12px 11px rgba(0,0,0,.38); }
         /* Geometria da caixa clássica: áreas independentes para drivers, terminal e suporte. */
         .classic-box-cab { padding:12px 12px 0; background:linear-gradient(115deg,#303436,#202426 70%); }
-        .classic-box-cab:is(.classic-box-orange,.classic-box-black) { background:repeating-linear-gradient(91deg,#ffffff04 0 1px,transparent 1px 9px),linear-gradient(100deg,#805232,#644027 48%,#8b5935); }
+        .classic-box-cab:is(.classic-box-orange,.classic-box-black) { background:var(--material-wood-grain),linear-gradient(100deg,#805232,#644027 48%,#8b5935); }
         .classic-box-baffle { height:462px; background:#131412; }
         .classic-box-exposed { display:block; padding:0; }
         .classic-box-control-panel { position:absolute; left:16px; top:17px; width:110px; height:76px; box-sizing:border-box; padding:10px 8px; gap:6px; }
@@ -1085,7 +1085,7 @@
             padding:10px;
             border:3px solid #56351e;
             border-radius:8px;
-            background:repeating-linear-gradient(92deg,rgba(255,220,173,.055) 0 2px,transparent 2px 7px),linear-gradient(115deg,#9b6034 0%,#754323 24%,#a36a3d 50%,#70401f 76%,#9a5d31 100%);
+            background:var(--material-wood-grain),linear-gradient(115deg,#9b6034 0%,#754323 24%,#a36a3d 50%,#70401f 76%,#9a5d31 100%);
             box-shadow:inset 2px 1px 4px rgba(255,225,184,.3),inset -3px -3px 7px rgba(34,14,5,.55),0 10px 18px rgba(0,0,0,.32);
         }
         .device-node.device-type-eqVintage,
@@ -1353,7 +1353,7 @@
         .device-node.device-family-vintage {
             border-color:#57351e !important;
             background:
-                repeating-linear-gradient(90deg,rgba(255,224,185,.10) 0 1px,rgba(42,22,10,.08) 1px 3px,transparent 3px 7px),
+                var(--material-wood-grain),
                 repeating-linear-gradient(0deg,rgba(255,238,210,.035) 0 1px,transparent 1px 5px),
                 linear-gradient(112deg,#a16a42 0%,#754423 22%,#9b6037 48%,#61391f 76%,#986039 100%) !important;
             box-shadow:inset 1px 1px 2px rgba(255,235,205,.38),inset -3px -3px 7px rgba(33,15,6,.58),0 10px 18px rgba(0,0,0,.32) !important;
@@ -1370,14 +1370,14 @@
         .device-node.device-type-headphoneAmp > .p-3\.5 > div {
             border-color:#827f75 !important;
             background-image:
-                repeating-linear-gradient(0deg,rgba(255,255,255,.075) 0 1px,rgba(40,40,38,.035) 1px 2px),
+                var(--material-brushed-steel),
                 linear-gradient(180deg,#d9d8d1,#a6a59e 48%,#c5c4bc) !important;
             box-shadow:inset 0 1px rgba(255,255,255,.76),inset 0 -2px 4px rgba(44,43,39,.2),0 2px 4px rgba(0,0,0,.24);
         }
         .device-node.device-family-vintage .port { box-shadow:inset 0 1px rgba(255,255,255,.12),0 1px 2px rgba(0,0,0,.48); }
         /* Frente inspirada nos receivers de bancada: instrumentos acima, controles abaixo. */
         .device-node.device-type-receiver {height:190px;min-height:190px;max-height:190px;padding:6px 12px;border-radius:3px;}
-        .device-node.device-type-receiver > .p-4 {padding:9px!important;gap:9px;background:repeating-linear-gradient(0deg,#ffffff0b 0 1px,#00000003 1px 2px),linear-gradient(#e5e2d8,#bcb9af);border:1px solid #aaa79e;border-radius:2px;}
+        .device-node.device-type-receiver > .p-4 {padding:9px!important;gap:9px;background:var(--material-brushed-steel),linear-gradient(#e5e2d8,#bcb9af);border:1px solid #aaa79e;border-radius:2px;}
         .device-node.device-type-receiver > .p-4 > .receiver-front {display:flex;flex-direction:column;gap:10px;padding:0;border:0;background:none!important;box-shadow:none;}
         .receiver-instruments {display:flex;align-items:center;gap:8px;}
         .receiver-vu {position:relative;flex:none;width:45px;height:35px;border:2px solid #25251f;border-radius:2px;background:linear-gradient(#e4c991,#f0d9a6);color:#383023;box-shadow:inset 0 2px 4px #0004;overflow:hidden;}
@@ -1405,8 +1405,8 @@
         /* Shared 5.3:1 chassis proportions. */
         .device-node.device-type-receiver,
         .device-node.device-type-powerAmp {width:760px!important;min-width:760px!important;max-width:760px!important;height:144px!important;min-height:144px!important;max-height:144px!important;box-sizing:border-box;border-radius:3px!important;overflow:visible;}
-        .device-node.device-type-receiver {padding:0 24px!important;border:0!important;background:repeating-linear-gradient(90deg,#774324 0 3px,#9e6037 3px 6px,#633b26 6px 7px)!important;}
-        .device-node.device-type-receiver > .p-4 {position:relative;display:block;height:144px!important;min-height:0!important;box-sizing:border-box;padding:18px 22px!important;border:0;border-radius:0;background:repeating-linear-gradient(0deg,#fff1 0 1px,transparent 1px 3px),linear-gradient(#e7e5df,#c9c7bf 85%,#b7b5ae)!important;}
+        .device-node.device-type-receiver {padding:0 24px!important;border:0!important;background:var(--material-wood-grain),linear-gradient(108deg,#966841,#654124 60%,#835a36)!important;}
+        .device-node.device-type-receiver > .p-4 {position:relative;display:block;height:144px!important;min-height:0!important;box-sizing:border-box;padding:18px 22px!important;border:0;border-radius:0;background:var(--material-brushed-steel),linear-gradient(#e7e5df,#c9c7bf 85%,#b7b5ae)!important;}
         .receiver-instruments {height:56px;gap:14px;}
         .receiver-vu {width:70px;height:44px;}
         .receiver-vu span {font-size:7px;line-height:18px;}
@@ -1464,7 +1464,7 @@
         /* 7-band equalizers: one uninterrupted front, with consistent proportions. */
         .device-node.device-type-eqStudio,.device-node.device-type-eqVintage {width:760px!important;min-width:760px!important;height:108px!important;min-height:108px!important;max-height:108px!important;padding:0 24px!important;border:0!important;border-radius:2px!important;box-sizing:border-box;}
         .device-node.device-type-eqStudio {background:linear-gradient(#353a3d,#202527 20%)!important;}
-        .device-node.device-type-eqVintage {background:repeating-linear-gradient(90deg,#774324 0 3px,#9e6037 3px 6px,#633b26 6px 7px)!important;}
+        .device-node.device-type-eqVintage {background:var(--material-wood-grain),linear-gradient(108deg,#966841,#654124 60%,#835a36)!important;}
         .device-node .graphic-eq-face {display:grid;grid-template-columns:56px minmax(0,1fr) 56px 32px;align-items:center;gap:12px;height:108px;box-sizing:border-box;padding:14px 18px;color:#92999e;background:#202527;}
         .device-type-eqVintage .graphic-eq-face {color:#484843;background:repeating-linear-gradient(0deg,#fff1 0 1px,transparent 1px 3px),linear-gradient(#e7e5df,#c9c7bf 85%,#b7b5ae);}
         .graphic-eq-bank {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;height:76px;}
@@ -1492,10 +1492,10 @@
         :root {--rack-width:760px;--rack-unit:36px;--rack-rail:24px;--rack-gap:12px;}
         .device-node.rack-device {width:var(--rack-width)!important;min-width:var(--rack-width)!important;max-width:var(--rack-width)!important;height:calc(var(--rack-units) * var(--rack-unit))!important;min-height:calc(var(--rack-units) * var(--rack-unit))!important;max-height:calc(var(--rack-units) * var(--rack-unit))!important;padding:0 var(--rack-rail)!important;border:0!important;border-radius:2px!important;box-sizing:border-box;box-shadow:inset 0 1px #ffffff25,0 7px 12px #0004;}
         .device-node.rack-device:not(.device-family-vintage) {background:linear-gradient(#343a3d,#202527 20%)!important;}
-        .device-node.rack-device.device-family-vintage {background:repeating-linear-gradient(90deg,#774324 0 3px,#9e6037 3px 6px,#633b26 6px 7px)!important;}
+        .device-node.rack-device.device-family-vintage {background:var(--material-wood-grain),linear-gradient(108deg,#966841,#654124 60%,#835a36)!important;}
         .rack-device .port {width:17px!important;height:17px!important;min-width:17px;border-width:3px;}
         .device-node.rack-standard > .rack-face {height:100%;box-sizing:border-box;display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 32px;align-items:center;gap:var(--rack-gap)!important;padding:14px 18px!important;border:0!important;border-radius:0!important;background:#202527!important;}
-        .device-node.rack-standard.device-family-vintage > .rack-face {background:repeating-linear-gradient(0deg,#fff1 0 1px,transparent 1px 3px),linear-gradient(#e7e5df,#c9c7bf 85%,#b7b5ae)!important;}
+        .device-node.rack-standard.device-family-vintage > .rack-face {background:var(--material-brushed-steel),linear-gradient(#e7e5df,#c9c7bf 85%,#b7b5ae)!important;}
         .rack-standard .rack-face > div:not(.rack-power-slot) {min-width:0;margin:0;box-sizing:border-box;}
         .rack-standard .rack-face > div:not(.rack-power-slot):not(.mixer-face) {border-radius:2px;}
         .rack-standard .rack-power-slot {position:relative;display:flex;align-items:center;justify-content:center;width:32px;height:28px;}
@@ -1520,7 +1520,7 @@
         .device-node.rack-standard:is(.device-type-rcaSwitch,.device-type-speakerSwitch,.device-type-speakerSwitchVintage) > .rack-face {grid-template-columns:220px minmax(0,1fr);}
         .rack-standard .speaker-switch-io {gap:12px;}
         .stereo-power-face {height:108px;display:grid;grid-template-columns:52px 92px 46px 28px 46px 92px 88px 32px;gap:12px;align-items:center;padding:14px 18px;box-sizing:border-box;background:#202527;color:#949b9f;}
-        .device-family-vintage .stereo-power-face {background:repeating-linear-gradient(0deg,#fff1 0 1px,transparent 1px 3px),linear-gradient(#e7e5df,#c9c7bf);color:#494a46;}
+        .device-family-vintage .stereo-power-face {background:var(--material-brushed-steel),linear-gradient(#e7e5df,#c9c7bf);color:#494a46;}
         .stereo-power-face span {font:700 5.5px/1 "Inter",sans-serif;letter-spacing:.7px;white-space:nowrap;}
         .stereo-power-inputs,.stereo-power-outputs,.stereo-power-gain,.stereo-power-energy {display:flex;flex-direction:column;align-items:center;gap:7px;}
         .stereo-power-pair {display:flex;gap:5px;}
@@ -1539,7 +1539,7 @@
         .stereo-power .power-indicator {display:none;}
         .device-node.rack-device.selector-rack {--rack-units:2.75;}
         .selector-face {height:100%;box-sizing:border-box;padding:14px 30px;display:grid;grid-template-columns:1fr 1px 1fr 1fr;align-items:center;gap:28px;background:linear-gradient(#292f32,#202527 18%);color:#a2a8ac;}
-        .device-family-vintage .selector-face {background:repeating-linear-gradient(0deg,#fff1 0 1px,transparent 1px 3px),linear-gradient(#e7e5df,#cccac2);color:#4b4c47;}
+        .device-family-vintage .selector-face {background:var(--material-brushed-steel),linear-gradient(#e7e5df,#cccac2);color:#4b4c47;}
         .selector-divider {height:66px;background:currentColor;opacity:.3;}
         .selector-station {display:flex;flex-direction:column;align-items:center;gap:7px;}
         .selector-pair {display:flex;gap:6px;}
@@ -1571,16 +1571,16 @@
         .device-family-vintage .xover-group + .xover-group {border-left-color:#0002;}
         .xover-panel .rack-power-slot {justify-self:center;align-self:center;}
         .matrix-face {height:108px;box-sizing:border-box;display:grid;grid-template-columns:repeat(3,1fr) 1px repeat(4,1fr);gap:12px;padding:16px 24px;align-items:center;background:linear-gradient(#292f32,#202527 18%);color:#a2a8ac;}
-        .device-family-vintage .matrix-face {background:repeating-linear-gradient(0deg,#fff1 0 1px,transparent 1px 3px),linear-gradient(#e7e5df,#cccac2);color:#4b4c47;}
+        .device-family-vintage .matrix-face {background:var(--material-brushed-steel),linear-gradient(#e7e5df,#cccac2);color:#4b4c47;}
         .matrix-face .selector-key.input-key {width:18px;height:18px;border-radius:50%;border:2px solid #62696c;background:linear-gradient(#cfd3d4,#969ea1);}
         .matrix-face .input-key::after {content:'';position:absolute;left:5px;top:5px;width:3px;height:13px;border-radius:2px;background:#e1e5e5;box-shadow:1px 0 1px #0008;transition:transform .12s;}
         .matrix-face .input-key.active::after {transform:translateY(-9px);}
         .matrix-face .input-key::before {left:5px;background:#214825;}
         .matrix-face .input-key.active::before {background:#48d653;box-shadow:0 0 6px #48d653;}
         .device-node.phone-amp {width:440px!important;min-width:440px!important;height:110px!important;min-height:110px!important;max-height:110px!important;padding:0 18px!important;border:0!important;border-radius:4px!important;background:linear-gradient(#353b3e,#202527 12%)!important;box-sizing:border-box;}
-        .device-node.phone-amp.device-family-vintage {border-radius:0!important;background:repeating-linear-gradient(90deg,#774324 0 3px,#9e6037 3px 6px,#633b26 6px 7px)!important;}
+        .device-node.phone-amp.device-family-vintage {border-radius:0!important;background:var(--material-wood-grain),linear-gradient(108deg,#966841,#654124 60%,#835a36)!important;}
         .phone-amp-face {height:110px;box-sizing:border-box;display:grid;grid-template-columns:30px 62px 76px 52px 42px;gap:12px;align-items:center;justify-content:center;background:#202527;color:#949b9f;}
-        .device-family-vintage .phone-amp-face {background:repeating-linear-gradient(0deg,#fff1 0 1px,transparent 1px 3px),linear-gradient(#e7e5df,#c9c7bf);color:#484b45;}
+        .device-family-vintage .phone-amp-face {background:var(--material-brushed-steel),linear-gradient(#e7e5df,#c9c7bf);color:#484b45;}
         .phone-amp-group {display:flex;flex-direction:column;align-items:center;gap:9px;position:relative;}
         .phone-amp-group > span {font:700 6px/1 "Inter",sans-serif;letter-spacing:.7px;white-space:nowrap;}
         .phone-amp-pair {display:flex;gap:6px;}
@@ -1609,7 +1609,7 @@
         .device-node.device-type-subwoofer .sp-sub {width:290px;height:350px;}.device-node.device-type-subwoofer .sp-sub .sp-woofer {width:182px;height:182px;}
         .device-node .sp-sub.sp-sub-pro {width:390px;height:410px;border-color:#562d30;background:linear-gradient(145deg,#442d30,#171314 20%,#100b0c 74%,#321d20);}.device-node .sp-sub.sp-sub-pro .sp-face {background:linear-gradient(145deg,#241617,#090607 75%);}.device-node .sp-sub.sp-sub-pro .sp-woofer {width:246px;height:246px;border-color:#56252a;box-shadow:0 0 0 3px #8c3036,0 4px 12px #0009;}.device-node .sp-sub.sp-sub-pro .sp-panel {border-color:#51272b;}
         .device-node .sp-sub.sp-sub-passive {width:340px;height:340px;}.device-node .sp-sub.sp-sub-passive .sp-woofer {width:218px;height:218px;}.device-node .sp-sub.sp-sub-passive .sp-panel {min-height:56px;}.device-node .sp-sub.sp-sub-passive .sp-terminal {border-color:#6f7b76;background:#080a09;}
-        .device-node .sp-sub.sp-vintage {padding:10px;border-color:#5c351d;border-radius:4px;background:repeating-linear-gradient(90deg,#7d4826 0 3px,#a56436 3px 6px,#5e351e 6px 8px);}.device-node .sp-sub.sp-vintage .sp-face {background:linear-gradient(145deg,#3d291b,#1b120c 72%);}.device-node .sp-sub.sp-vintage .sp-woofer {border-color:#70421f;box-shadow:0 0 0 3px #b0783e,0 4px 10px #0008;}.device-node .sp-sub.sp-vintage .sp-panel {border-color:#754722;background:#1c120b;}.device-node .sp-sub.sp-vintage .sp-conn > span {color:#e2c38b;}
+        .device-node .sp-sub.sp-vintage {padding:10px;border-color:#5c351d;border-radius:4px;background:var(--material-wood-grain),linear-gradient(108deg,#966841,#654124 60%,#835a36);}.device-node .sp-sub.sp-vintage .sp-face {background:linear-gradient(145deg,#3d291b,#1b120c 72%);}.device-node .sp-sub.sp-vintage .sp-woofer {border-color:#70421f;box-shadow:0 0 0 3px #b0783e,0 4px 10px #0008;}.device-node .sp-sub.sp-vintage .sp-panel {border-color:#754722;background:#1c120b;}.device-node .sp-sub.sp-vintage .sp-conn > span {color:#e2c38b;}
         /* Mixer front: each input channel has its own vertical strip and a separate master area. */
         .device-node.rack-standard:is(.device-type-mixer,.device-type-mixerVintage) > .rack-face {grid-template-columns:minmax(0,1fr) 126px 36px!important;align-items:stretch!important;gap:16px!important;padding:14px 18px!important;}
         .rack-standard .mixer-face {display:grid!important;grid-template-rows:14px minmax(0,1fr);gap:9px;padding:0!important;min-height:0;}
@@ -1646,7 +1646,7 @@
         .mixer-rack-fader output { position:absolute; right:-23px; bottom:0; color:#9ccbe0; font:700 6px/1 "Inter",sans-serif; }
         .mixer-rack-output { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; border-left:1px solid #465157; color:#c6d2d7; }
         .mixer-rack-output > span { font:800 8px/1 "Inter",sans-serif; letter-spacing:.11em; }.mixer-rack-output small { color:#74909a; font:700 6px/1 "Inter",sans-serif; letter-spacing:.08em; }.mixer-rack-output .port { width:19px!important; height:19px!important; min-width:19px!important; border-width:3px!important; }
-        .device-node.device-type-mixerVintage > .mixer-rack-panel.rack-face { color:#50483a; background:repeating-linear-gradient(0deg,rgba(255,255,255,.16) 0 1px,transparent 1px 3px),linear-gradient(180deg,#ddd9cc,#c4bdab)!important; }
+        .device-node.device-type-mixerVintage > .mixer-rack-panel.rack-face { color:#50483a; background:var(--material-brushed-steel),linear-gradient(180deg,#ddd9cc,#c4bdab)!important; }
         .device-type-mixerVintage .mixer-rack-inputs header { border-color:#908675; }.device-type-mixerVintage .mixer-rack-inputs header strong,.device-type-mixerVintage .mixer-rack-strip strong { color:#37362f; }.device-type-mixerVintage .mixer-rack-inputs header span,.device-type-mixerVintage .mixer-rack-strip small,.device-type-mixerVintage .mixer-rack-output small { color:#6c6557; }
         .device-type-mixerVintage .mixer-rack-strip { border-color:#8e8577; background:linear-gradient(180deg,#e6e1d3,#bcb4a4); box-shadow:inset 0 1px rgba(255,255,255,.7),inset 0 -2px 3px rgba(60,55,45,.12); }.device-type-mixerVintage .mixer-rack-fader::before { background:linear-gradient(90deg,#393a36,#92938b,#393a36); }.device-type-mixerVintage .mixer-rack-fader .mixer-level-control::-webkit-slider-thumb { border-color:#6e716a; background:linear-gradient(180deg,#eeeae0,#a29f94); }.device-type-mixerVintage .mixer-rack-fader output { color:#514b40; }.device-type-mixerVintage .mixer-rack-output { border-color:#908675; color:#403e37; }
         /* Acabamento final do mixer e isolamento dos estilos globais de range. */
@@ -1686,7 +1686,7 @@
         .device-node.device-type-hpStudio .headphone-cup::after {background:repeating-linear-gradient(90deg,#131d23 0 2px,#53616a 2px 3px);border-color:#1b252a;}
         .device-node.device-type-hpClassic .headphone-band {border-color:#523923;box-shadow:inset 0 3px 2px #d7b68c33,0 -2px 0 #ab855b;}
         .device-node.device-type-hpClassic .headphone-band::after {border-color:#2a2017;}
-        .device-node.device-type-hpClassic .headphone-cup {border-color:#ad8c61;background:repeating-linear-gradient(92deg,#ffffff07 0 1px,transparent 1px 5px),linear-gradient(110deg,#94683f,#52351f 60%,#332115);}
+        .device-node.device-type-hpClassic .headphone-cup {border-color:#ad8c61;background:var(--material-wood-grain),linear-gradient(110deg,#94683f,#52351f 60%,#332115);}
         .device-node.device-type-hpClassic .headphone-cup::after {border-color:#30251c;background:radial-gradient(ellipse at 35% 25%,#805b3a,#3f2e20 75%);box-shadow:inset 0 1px 3px #e7c28b33,0 0 0 1px #ad8c61;}
         .device-node.device-type-hpClassic .headphone-controls {background:linear-gradient(#e0dcd0,#bcb6a8);border-color:#827665;box-shadow:inset 0 1px #fff9,0 3px 7px #0003;}
         .device-node.device-type-hpClassic .headphone-controls > span {color:#444538;}
@@ -1735,7 +1735,7 @@
         .device-type-turntable .at-plinth {display:grid;grid-template-columns:minmax(0,1fr) 122px;grid-template-rows:100px 88px;column-gap:10px;row-gap:0;}
         .device-type-turntable .at-deck {box-sizing:border-box;grid-column:1 / -1;width:100%;height:100px;border:1px solid #465259;border-radius:3px;background:linear-gradient(#101719,#182024);overflow:hidden;}
         .device-type-turntable .at-deck::before {content:'';position:absolute;left:0;right:0;bottom:0;height:23px;background:linear-gradient(#77858b 0,#48565c 3px,#252f34 8px,#1c252a);border-radius:2px 2px 0 0;box-shadow:inset 0 1px #a8b7bd55;}
-        .device-type-turntableVintage .at-deck::before {background:repeating-linear-gradient(0deg,#ffffff0b 0 1px,transparent 1px 3px),linear-gradient(#d9d9cf 0,#b9bdb2 3px,#989f94 8px,#8a9287);box-shadow:inset 0 1px #f4f2dd77;}
+        .device-type-turntableVintage .at-deck::before {background:var(--material-brushed-steel),linear-gradient(#d9d9cf 0,#b9bdb2 3px,#989f94 8px,#8a9287);box-shadow:inset 0 1px #f4f2dd77;}
         .device-type-turntable .at-platter {left:30px;top:56px;width:350px;height:21px;border-radius:5px;background:linear-gradient(#d4dadb,#6e7e85 28%,#29363d 48%,#9aabb2 55%,#384951);box-shadow:0 4px 5px #0009;}
         .device-type-turntable .at-record {inset:auto;left:0;right:0;top:-5px;height:7px;border-radius:50%;background:linear-gradient(#050708,#2d3438,#07090a);box-shadow:0 1px 1px #000;animation:none!important;}
         .device-type-turntable .at-label,.device-type-turntable .at-spindle,.device-type-turntable .at-sheen {display:none;}
@@ -1867,18 +1867,18 @@
 .spotify-coverflow-inspector small {color:#91a3af;}
 @media (prefers-reduced-motion:reduce) {.device-type-furnitureCoverflow .spotify-flow-card,.device-type-furnitureCoverflow .spotify-flow-vinyl {transition:none;}.device-type-furnitureCoverflow .spotify-flow-label {animation:none;}}
         .furniture-node[data-back="true"] .rack-body::before {content:'';position:absolute;inset:var(--back-top,16px) 20px var(--back-bottom,60px);pointer-events:none;background:linear-gradient(100deg,#20262b,#101519 65%,#191e23);box-shadow:inset 0 10px 24px #0009,inset 12px 0 20px #0005,inset -12px 0 20px #0005;}
-        .furniture-node[data-back="true"][data-material="metal"] .rack-body::before {background:repeating-linear-gradient(0deg,#ffffff06 0 1px,transparent 1px 3px),linear-gradient(100deg,#68747b,#414b52 60%,#59666e);}
-        .furniture-node[data-back="true"][data-material="lightWood"] .rack-body::before {background:repeating-linear-gradient(2deg,#d3aa7710 0 1px,transparent 1px 7px,#2e1d1315 7px 9px),linear-gradient(100deg,#997749,#705436 60%,#8c6a43);}
-        .furniture-node[data-back="true"][data-material="darkWood"] .rack-body::before {background:repeating-linear-gradient(2deg,#a8794e10 0 1px,transparent 1px 7px,#180e0918 7px 9px),linear-gradient(100deg,#4c301e,#291c13 60%,#3e291b);}
+        .furniture-node[data-back="true"][data-material="metal"] .rack-body::before {background:var(--material-brushed-steel),linear-gradient(100deg,#68747b,#414b52 60%,#59666e);}
+        .furniture-node[data-back="true"][data-material="lightWood"] .rack-body::before {background:var(--material-wood-grain),linear-gradient(100deg,#997749,#705436 60%,#8c6a43);}
+        .furniture-node[data-back="true"][data-material="darkWood"] .rack-body::before {background:var(--material-wood-grain),linear-gradient(100deg,#4c301e,#291c13 60%,#3e291b);}
         .furniture-part {position:absolute;box-sizing:border-box;pointer-events:auto;cursor:grab;border:1px solid #4b5156;border-radius:2px;background:linear-gradient(100deg,#343a3e,#191e21 55%,#282e31);box-shadow:inset 0 1px #ffffff1a,inset -2px -2px #0005,0 3px 5px #0003;}
         .furniture-part:active {cursor:grabbing;}
-        .furniture-node[data-material="metal"] .furniture-part {border-color:#858f95;background:repeating-linear-gradient(0deg,#ffffff14 0 1px,transparent 1px 3px),linear-gradient(100deg,#d0d6d9,#879299 48%,#bec7cc 78%,#7c898f);box-shadow:inset 0 1px #fff9,inset -1px -2px #3f4d5366,0 3px 5px #0003;}
-        .furniture-node[data-material="lightWood"] .furniture-part {border-color:#ac8758;background:repeating-linear-gradient(2deg,#ffffff10 0 1px,transparent 1px 7px,#80532312 7px 9px),linear-gradient(100deg,#e6c697,#c9a374 50%,#dfbc87);box-shadow:inset 0 1px #fff5,inset -1px -2px #76512d55,0 3px 5px #0003;}
-        .furniture-node[data-material="darkWood"] .furniture-part {border-color:#51331f;background:repeating-linear-gradient(2deg,#dba26e12 0 1px,transparent 1px 6px,#1c100913 6px 8px),linear-gradient(100deg,#785135,#4c301e 52%,#65412a);box-shadow:inset 0 1px #d8b18333,inset -1px -2px #21110777,0 3px 5px #0003;}
+        .furniture-node[data-material="metal"] .furniture-part {border-color:#858f95;background:var(--material-brushed-steel),linear-gradient(100deg,#d0d6d9,#879299 48%,#bec7cc 78%,#7c898f);box-shadow:inset 0 1px #fff9,inset -1px -2px #3f4d5366,0 3px 5px #0003;}
+        .furniture-node[data-material="lightWood"] .furniture-part {border-color:#ac8758;background:var(--material-wood-grain),linear-gradient(100deg,#e6c697,#c9a374 50%,#dfbc87);box-shadow:inset 0 1px #fff5,inset -1px -2px #76512d55,0 3px 5px #0003;}
+        .furniture-node[data-material="darkWood"] .furniture-part {border-color:#51331f;background:var(--material-wood-grain),linear-gradient(100deg,#785135,#4c301e 52%,#65412a);box-shadow:inset 0 1px #d8b18333,inset -1px -2px #21110777,0 3px 5px #0003;}
         .furniture-node .furniture-leg {border-radius:0 0 3px 3px;}
         .furniture-node.device-type-furnitureHairpin {--hairpin-back:#332115;}
         .furniture-node.device-type-furnitureHairpin[data-material="lightWood"] {--hairpin-back:#987653;}
-        .furniture-node.device-type-furnitureHairpin[data-back="true"] .rack-body::before {inset:28px 24px 130px;background:repeating-linear-gradient(2deg,#fff9e408 0 1px,transparent 1px 8px),linear-gradient(180deg,#08090988,var(--hairpin-back) 29%,var(--hairpin-back) 76%,#08090966);background-color:var(--hairpin-back);box-shadow:inset 0 18px 27px #0008,inset 11px 0 20px #0005,inset -11px 0 20px #0005;}
+        .furniture-node.device-type-furnitureHairpin[data-back="true"] .rack-body::before {inset:28px 24px 130px;background:var(--material-wood-grain),linear-gradient(180deg,#08090988,var(--hairpin-back) 29%,var(--hairpin-back) 76%,#08090966);background-color:var(--hairpin-back);box-shadow:inset 0 18px 27px #0008,inset 11px 0 20px #0005,inset -11px 0 20px #0005;}
         .hairpin-record-bay {position:absolute;top:30px;width:220px;height:426px;overflow:hidden;z-index:1;pointer-events:none;box-shadow:inset 0 12px 18px #0004;}
         .hairpin-record-sleeve {position:absolute;bottom:2px;left:var(--sleeve-x);width:var(--sleeve-width);height:var(--sleeve-height);box-sizing:border-box;transform:rotate(var(--sleeve-angle));transform-origin:50% 100%;border:1px solid #1717157a;border-left-color:#ffffff42;border-radius:1px;background:repeating-linear-gradient(180deg,transparent 0 32px,#ffffff31 32px 34px,transparent 34px 69px,#211a1829 69px 72px),linear-gradient(90deg,#0007,var(--sleeve-color) 24%,var(--sleeve-color) 70%,#fff6);box-shadow:1px 2px 2px #0008,inset 1px 0 #fff4;}
         .hairpin-record-sleeve:nth-child(3n) {background:repeating-linear-gradient(180deg,transparent 0 20px,#f2dab46b 20px 22px,transparent 22px 76px,#1117 76px 81px),linear-gradient(90deg,#0008,var(--sleeve-color) 28%,#f1d6ad80 66%,#0008);}
@@ -1892,7 +1892,7 @@
         :root.lighting-demo-enabled .device-type-furnitureHairpin .furniture-hairpin-leg::after {display:none;}
         .furniture-node:is(.device-type-furnitureRecordOne,.device-type-furnitureRecordThree) {--record-back:#38251a;}
         .furniture-node:is(.device-type-furnitureRecordOne,.device-type-furnitureRecordThree)[data-material="lightWood"] {--record-back:#a58259;}
-        .furniture-node:is(.device-type-furnitureRecordOne,.device-type-furnitureRecordThree)[data-back="true"] .rack-body::before {inset:28px 26px 70px;background:repeating-linear-gradient(2deg,#fff8e608 0 1px,transparent 1px 8px),linear-gradient(180deg,#08070677,var(--record-back) 20%,var(--record-back) 80%,#08070655);background-color:var(--record-back);box-shadow:inset 0 22px 25px #0008,inset 12px 0 20px #0005,inset -12px 0 20px #0005;}
+        .furniture-node:is(.device-type-furnitureRecordOne,.device-type-furnitureRecordThree)[data-back="true"] .rack-body::before {inset:28px 26px 70px;background:var(--material-wood-grain),linear-gradient(180deg,#08070677,var(--record-back) 20%,var(--record-back) 80%,#08070655);background-color:var(--record-back);box-shadow:inset 0 22px 25px #0008,inset 12px 0 20px #0005,inset -12px 0 20px #0005;}
         .device-type-furnitureRecordOne .furniture-top,.device-type-furnitureRecordThree .furniture-top {border-radius:3px 3px 0 0;box-shadow:inset 0 2px #fff5,inset 0 -5px 7px #0005,0 4px 7px #0004;}
         .device-type-furnitureRecordOne .furniture-shelf,.device-type-furnitureRecordThree .furniture-shelf {box-shadow:inset 0 1px #fff4,inset 0 -5px 7px #0006,0 6px 8px #0004;}
         .device-type-furnitureRecordThree .furniture-divider {box-shadow:inset 2px 0 3px #fff2,inset -4px 0 6px #0006,4px 0 5px #0003;}
@@ -1918,10 +1918,10 @@
         .device-node .headphone-body {position:relative;gap:0;}
         .device-node .headphone-object {height:302px;filter:none;isolation:isolate;}
         .headphone-stand {position:absolute;inset:0;z-index:0;pointer-events:none;}
-        .headphone-stand-post {position:absolute;left:102px;top:38px;width:36px;height:230px;border:1px solid #68452a;border-radius:2px;background:repeating-linear-gradient(89deg,#fff1 0 1px,transparent 1px 5px,#38251422 5px 7px),linear-gradient(100deg,#b58b5c,#88613e 65%,#68462b);box-shadow:inset 1px 0 #e7c79a66,inset -3px 0 #37211255,3px 2px 5px #0003;}
+        .headphone-stand-post {position:absolute;left:102px;top:38px;width:36px;height:230px;border:1px solid #68452a;border-radius:2px;background:var(--material-wood-grain),linear-gradient(100deg,#b58b5c,#88613e 65%,#68462b);box-shadow:inset 1px 0 #e7c79a66,inset -3px 0 #37211255,3px 2px 5px #0003;}
         .headphone-stand-cradle {position:absolute;left:88px;top:19px;width:64px;height:38px;border:1px solid #765034;border-radius:19px;background:linear-gradient(180deg,#c29a6d,#906744 68%,#624025);box-shadow:inset 0 1px #f1d0a166,0 3px 4px #0005;}
         .headphone-stand-cradle::before {content:'';position:absolute;left:-1px;top:-1px;width:36px;height:38px;box-sizing:border-box;border:1px solid #a37b50;border-radius:50%;background:repeating-radial-gradient(ellipse at 45% 45%,#d2ac7955 0 1px,#92653c33 2px 3px),linear-gradient(100deg,#cba271,#aa7d50);box-shadow:inset 1px 0 #ffe4b477;}
-        .headphone-stand-base {position:absolute;left:15px;top:264px;width:210px;height:38px;box-sizing:border-box;border:1px solid #624127;border-radius:6px 6px 4px 4px;background:repeating-linear-gradient(2deg,#d8ae7f12 0 1px,transparent 1px 5px),linear-gradient(#b58a5d 0 6px,#765135 7px,#563822);box-shadow:inset 0 1px #edcba188,inset -2px -2px #38201155,0 3px 4px #0003;}
+        .headphone-stand-base {position:absolute;left:15px;top:264px;width:210px;height:38px;box-sizing:border-box;border:1px solid #624127;border-radius:6px 6px 4px 4px;background:var(--material-wood-grain),linear-gradient(#b58a5d 0 6px,#765135 7px,#563822);box-shadow:inset 0 1px #edcba188,inset -2px -2px #38201155,0 3px 4px #0003;}
         .device-node .headphone-band {z-index:2;}.device-node .headphone-cups {z-index:3;top:100px;bottom:auto;height:111px;filter:drop-shadow(0 5px 5px #0005);}
         .device-node .headphone-controls,.device-node.device-type-hpClassic .headphone-controls {position:absolute;left:25px;bottom:5px;z-index:4;box-sizing:border-box;width:200px;height:28px;min-height:28px;gap:8px;padding:3px 4px;border:0;border-radius:2px;background:transparent;box-shadow:none;}
         .device-node .headphone-controls>span,.device-node.device-type-hpClassic .headphone-controls>span {font-size:6px;letter-spacing:.03em;color:#f1dfc5;}
@@ -1939,10 +1939,10 @@
         .device-node.device-type-hpClassic .headphone-band {border-color:#433024;box-shadow:inset 0 2px 2px #cba37633,0 -1px 0 #9b805d;}
         .device-node.device-type-hpClassic .headphone-cup {border-color:#9e8059;background:linear-gradient(90deg,#b18b59,#795333 35%,#45301f 85%);}.device-node.device-type-hpClassic .headphone-cup:last-child {background:linear-gradient(270deg,#b18b59,#795333 35%,#45301f 85%);}
         .device-node.device-type-hpClassic .headphone-cup::after {border-color:#2b221b;background:linear-gradient(90deg,#17130f,#574333 55%,#241c16);}
-        .headphone-stand-post {left:106px;top:42px;width:28px;height:226px;border-color:#795437;border-radius:1px;background:repeating-linear-gradient(90deg,#f2d5ad0c 0 1px,transparent 1px 8px),linear-gradient(90deg,#a57b52,#b38c62 45%,#8a623f);box-shadow:inset 1px 0 #e3c19766,inset -1px 0 #54331e55,2px 1px 3px #0002;}
+        .headphone-stand-post {left:106px;top:42px;width:28px;height:226px;border-color:#795437;border-radius:1px;background:var(--material-wood-grain),linear-gradient(90deg,#a57b52,#b38c62 45%,#8a623f);box-shadow:inset 1px 0 #e3c19766,inset -1px 0 #54331e55,2px 1px 3px #0002;}
         .headphone-stand-cradle {left:88px;top:19px;width:64px;height:25px;box-sizing:border-box;border:1px solid #88613d;border-radius:50% 50% 4px 4px;background:linear-gradient(#c6a077,#ac8358 62%,#795234);box-shadow:inset 0 1px #efcfab77,0 2px 2px #0003;}
         .headphone-stand-cradle::before {content:none;}
-        .headphone-stand-base {left:15px;top:264px;width:210px;height:38px;border-color:#765236;border-radius:3px;background:repeating-linear-gradient(0deg,#edc7950a 0 1px,transparent 1px 8px),linear-gradient(#c09b71 0 3px,#956d48 4px,#7f593b);box-shadow:inset 0 1px #f1d0a977,inset 0 -2px #4a2c1a55,0 2px 3px #0003;}
+        .headphone-stand-base {left:15px;top:264px;width:210px;height:38px;border-color:#765236;border-radius:3px;background:var(--material-wood-grain),linear-gradient(#c09b71 0 3px,#956d48 4px,#7f593b);box-shadow:inset 0 1px #f1d0a977,inset 0 -2px #4a2c1a55,0 2px 3px #0003;}
         .device-node .headphone-controls,.device-node.device-type-hpClassic .headphone-controls {left:34px;bottom:7px;width:182px;height:24px;min-height:24px;padding:3px 7px;gap:8px;border:1px solid #313d45;border-radius:2px;background:linear-gradient(#27333a,#1b252b);box-shadow:inset 0 1px #ffffff0d;}
         .device-node .headphone-controls>span,.device-node.device-type-hpClassic .headphone-controls>span {color:#b9c8d0;font-size:6px;}
         .device-node .headphone-controls .btn-bt-pair {padding:3px 6px;font-size:7px;border-color:#5c6c76;background:linear-gradient(#4b5c65,#26333b);color:#d5e0e6;}
@@ -2314,7 +2314,7 @@
         .bench-lcd-scale span {position:absolute;transform:translateX(-50%);white-space:nowrap;}
         .bench-lcd footer {font:600 5px/1 "Inter",sans-serif;color:#5f998e;text-align:center;letter-spacing:.5px;}
         .bench-lcd.is-off {color:#3b5550;background:#102023;}.bench-lcd.is-off footer,.bench-lcd.is-off .bench-lcd-scale {color:#3b5550;}
-        .device-type-benchMeterVintage .bench-face {background:repeating-linear-gradient(0deg,#ffffff14 0 1px,transparent 1px 3px),linear-gradient(110deg,#dfdcd0,#b9b8ad 65%,#c9c8bb);color:#4d5044;}
+        .device-type-benchMeterVintage .bench-face {background:var(--material-brushed-steel),linear-gradient(110deg,#dfdcd0,#b9b8ad 65%,#c9c8bb);color:#4d5044;}
         .device-type-benchMeterVintage .extra-vu {border-color:#403f32;background:linear-gradient(#bfb88c,#e8ddad);box-shadow:inset 0 2px 5px #0005,0 1px #fff5;}
         .device-type-benchMeterVintage .bench-screen {border-color:#4b4c3d;background:#171f16;color:#c5d393;}
         .device-type-benchMeterVintage .extra-io small {color:#555748;}
@@ -2364,7 +2364,7 @@
         .device-node.headphone-equipment .headphone-cup::after,.device-node.headphone-equipment .headphone-cup:last-child::after {left:5px;right:5px;top:5px;bottom:5px;width:auto;height:auto;box-sizing:border-box;border:5px solid #161e22;border-radius:23px;background:linear-gradient(110deg,#172229,#303c43 55%,#152026);box-shadow:inset 1px 1px 4px #0009,0 0 0 1px #8e9c9e33;}
         .device-node.headphone-equipment.device-type-hpStudio .headphone-cup {border-color:#9cabb2;background:linear-gradient(115deg,#8e9ca4,#425965 40%,#1e3540);}
         .device-node.headphone-equipment.device-type-hpStudio .headphone-cup::after {border-color:#111c24;background:repeating-linear-gradient(90deg,transparent 0 2px,#8cabb133 2px 3px),repeating-linear-gradient(0deg,#11212a 0 2px,#63848b44 2px 3px);}
-        .device-node.headphone-equipment.device-type-hpClassic .headphone-cup {border-color:#9a7954;background:repeating-linear-gradient(88deg,#dfba7822 0 1px,transparent 1px 4px,#3a251318 4px 6px),linear-gradient(100deg,#b18e62,#795739 60%,#9e7b4f);}
+        .device-node.headphone-equipment.device-type-hpClassic .headphone-cup {border-color:#9a7954;background:var(--material-wood-grain),linear-gradient(100deg,#b18e62,#795739 60%,#9e7b4f);}
         .device-node.headphone-equipment.device-type-hpClassic .headphone-cup::after {left:7px;right:7px;border-color:#30251c;background:radial-gradient(ellipse at 40% 32%,#62513d,#30271f 65%,#1d1a15);box-shadow:inset 0 1px 3px #0009,0 0 0 1px #d3b38755;}
         .device-node.headphone-equipment.device-type-hpClassic .headphone-cup::before {border-color:#7b735f;background:linear-gradient(90deg,#746e58,#cac0a3 45%,#887e63);}
         .device-node.headphone-equipment.device-type-hpMonitor .headphone-cup {width:57px;border-radius:19px;border-color:#93815c;background:repeating-linear-gradient(38deg,#c5bf9d0b 0 1px,transparent 1px 3px),repeating-linear-gradient(-38deg,#c5bf9d0a 0 1px,#181c16 1px 3px);}
@@ -2403,7 +2403,7 @@
         .device-type-hpMax .headphone-cup-hardware>i {width:1px;height:3px;border:0;border-radius:1px;background:#6f899555;}.device-type-hpMax .headphone-cup-hardware>i:nth-child(1) {left:4px;top:40px;}.device-type-hpMax .headphone-cup-hardware>i:nth-child(2) {right:4px;top:40px;}.device-type-hpMax .headphone-cup-hardware>i:nth-child(3) {left:4px;bottom:26px;}.device-type-hpMax .headphone-cup-hardware>i:nth-child(4) {right:4px;bottom:26px;}
         .device-type-hpMax .headphone-cup-hardware>b {position:absolute;right:8px;top:18px;width:1px;height:11px;background:#ffffff88;border-radius:50%;box-shadow:0 14px 0 #ffffff44;}
 
-        .headphone-equipment .headphone-stand-base {height:22px;border-radius:4px 4px 3px 3px;background:repeating-linear-gradient(2deg,#d8ae7f12 0 1px,transparent 1px 5px),linear-gradient(#b58a5d 0 4px,#765135 5px,#563822);}
+        .headphone-equipment .headphone-stand-base {height:22px;border-radius:4px 4px 3px 3px;background:var(--material-wood-grain),linear-gradient(#b58a5d 0 4px,#765135 5px,#563822);}
         .device-node.headphone-equipment .headphone-object {height:286px;}
 
         /* Scale the full headphone assembly; keep P2 sockets at the shared connector size. */
@@ -2489,7 +2489,7 @@
         .finish-minimal .integrated-sources button[aria-pressed="true"] {color:#88ee7a;box-shadow:inset 0 1px 4px #0009,0 0 5px #65d76e33;}
         .integrated-green-window {display:grid;place-items:center;width:105px;height:65px;background:radial-gradient(ellipse,#70d76c0b,transparent 70%);}
         .integrated-green-window i {width:16px;height:16px;border-radius:50%;border:1px solid #538e4d;box-shadow:inset 0 0 4px #78d76c33,0 0 7px #7fdb6133;background:radial-gradient(circle,#92e48655,#203e22 65%);}
-        .integrated-face.finish-silver {border-left:10px solid #735235;border-right:10px solid #735235;border-top-color:#bdc1ba;border-bottom-color:#8a918d;background:repeating-linear-gradient(0deg,#ffffff25 0 1px,transparent 1px 3px),linear-gradient(110deg,#e0e2da,#aeb7b0 65%,#d0d5ce);}
+        .integrated-face.finish-silver {border-left:10px solid #735235;border-right:10px solid #735235;border-top-color:#bdc1ba;border-bottom-color:#8a918d;background:var(--material-brushed-steel),linear-gradient(110deg,#e0e2da,#aeb7b0 65%,#d0d5ce);}
         .finish-silver .integrated-connections small,.finish-silver .integrated-knob-group>span,.finish-silver .integrated-sources>span,.finish-silver .integrated-power small {color:#464f47;}
         .finish-silver .integrated-sources button,.finish-silver .integrated-direct {background:linear-gradient(#e3e6db,#a8b2a7);border-color:#818d83;color:#4b574d;}
         .finish-silver .integrated-sources button[aria-pressed="true"],.finish-silver .integrated-direct[aria-pressed="true"] {background:#9da99a;color:#223c2a;border-color:#65795e;}
@@ -2603,7 +2603,7 @@
         .tower-grille {position:absolute;top:8px;left:8px;right:8px;bottom:70px;z-index:4;padding:0;box-sizing:border-box;border:3px solid #26392d;border-radius:3px;background:repeating-linear-gradient(0deg,#d8e6d909 0 1px,transparent 1px 3px),repeating-linear-gradient(90deg,#0009 0 1px,transparent 1px 3px),#273b2d;box-shadow:inset 0 0 12px #0009;cursor:pointer;transition:opacity .18s,translate .18s;}
         .floorstanding-speaker.grille-off .tower-grille {opacity:0;translate:0 -5px;pointer-events:none;}
         .tower-baffle>.grille-restore {right:8px;top:8px;font-size:6px;padding:5px;}
-        .tower-diamond .tower-cabinet {top:80px;border-radius:42px 42px 25px 25px;border-left:12px solid #826242;border-right:12px solid #6c4d32;background:repeating-linear-gradient(91deg,#8b623c 0 2px,#a7825622 2px 5px),#75512e;}
+        .tower-diamond .tower-cabinet {top:80px;border-radius:42px 42px 25px 25px;border-left:12px solid #826242;border-right:12px solid #6c4d32;background:var(--material-wood-grain),#75512e;}
         .tower-diamond .tower-baffle {inset:6px 0 0;border-radius:32px 32px 15px 15px;background:linear-gradient(100deg,#4b554c,#0b1911 18%,#15261b 80%,#4d5a4e);box-shadow:inset 0 0 0 1px #8a9f8c33;}
         .tower-diamond .tower-mid .tower-cone {inset:5%;background:repeating-conic-gradient(#d3d9c728 0deg 2deg,#53625433 2deg 4deg),radial-gradient(circle at 38% 28%,#dde4d1,#92a48f 70%,#6b7c68);}
         .tower-diamond .tower-mid .tower-cone>b {inset:35%;background:radial-gradient(circle at 35% 25%,#d6ddca,#63765f);}
@@ -2648,7 +2648,7 @@
         .shelf-finish-coax .tower-cone>b {display:none;}
         .shelf-coax-dome {position:absolute;inset:35%;border:2px solid #77452b;border-radius:50%;background:repeating-conic-gradient(#eec18a 0deg 12deg,#8e542d 12deg 24deg);box-shadow:0 0 0 4px #ba7a49,0 2px 5px #0008;}
         .shelf-finish-coax .bookshelf-grille {border-radius:32px;}
-        .shelf-finish-wood .bookshelf-cabinet {border:9px solid #673522;border-radius:3px;background:repeating-linear-gradient(94deg,#e3af7733 0 1px,transparent 1px 5px),repeating-linear-gradient(87deg,#321b1722 0 2px,transparent 2px 13px),linear-gradient(100deg,#ad6645,#793b29 48%,#b5754f);box-shadow:inset 1px 1px #ffd5ac88,inset -2px 0 #321b15,0 7px 12px #0005;}
+        .shelf-finish-wood .bookshelf-cabinet {border:9px solid #673522;border-radius:3px;background:var(--material-wood-grain),repeating-linear-gradient(87deg,#321b1722 0 2px,transparent 2px 13px),linear-gradient(100deg,#ad6645,#793b29 48%,#b5754f);box-shadow:inset 1px 1px #ffd5ac88,inset -2px 0 #321b15,0 7px 12px #0005;}
         .shelf-finish-wood .shelf-tweeter {border:3px solid #5b5c5c;background:linear-gradient(120deg,#393c3e,#15181a);}
         .shelf-finish-wood .shelf-tweeter .tower-cone {inset:20%;background:radial-gradient(circle,#303238 20%,#111316 60%,#595c5c 64%,#1b1e22 74%);}
         .shelf-finish-wood .shelf-tweeter .tower-cone>b {inset:20%;background:radial-gradient(circle at 35% 30%,#52565c,#111318 70%);}
@@ -2686,12 +2686,12 @@
         .glass-pre-dial>small {font:400 4.5px/1 Arial,sans-serif;letter-spacing:1px;margin-top:-3px;}
         .glass-pre-source {left:55px;top:35px;}.glass-pre-bass {left:210px;top:51px;}.glass-pre-treble {left:320px;top:51px;}.glass-pre-balance {left:430px;top:51px;}.glass-pre-volume {right:54px;top:32px;}
         .glass-pre-reflections {position:absolute;inset:0;pointer-events:none;background:linear-gradient(122deg,#ffffff0a 0 12%,transparent 12.2% 62%,#faffee05 62.2% 69%,transparent 69.2%);}
-        .glass-pre-switch-row {position:absolute;left:20px;right:20px;top:130px;height:49px;display:flex;align-items:center;justify-content:space-around;box-sizing:border-box;padding:4px 8px 3px;border-top:1px solid #f4f7e8aa;border-bottom:1px solid #657e72;background:repeating-linear-gradient(0deg,#ffffff22 0 .5px,transparent .5px 2px),linear-gradient(110deg,#b7c6bd,#e2e9d8 35%,#b3c8b9 75%,#d6e1ce);box-shadow:inset 0 1px #f5f8e7,0 1px #071510;}
+        .glass-pre-switch-row {position:absolute;left:20px;right:20px;top:130px;height:49px;display:flex;align-items:center;justify-content:space-around;box-sizing:border-box;padding:4px 8px 3px;border-top:1px solid #f4f7e8aa;border-bottom:1px solid #657e72;background:var(--material-brushed-steel),linear-gradient(110deg,#b7c6bd,#e2e9d8 35%,#b3c8b9 75%,#d6e1ce);box-shadow:inset 0 1px #f5f8e7,0 1px #071510;}
         .glass-pre-switch {display:flex;flex-direction:column;align-items:center;gap:4px;width:71px;}
         .glass-pre-switch>span {font:600 5px/1 Arial,sans-serif;letter-spacing:.6px;color:#355646;white-space:nowrap;}
         .glass-pre-switch [data-power-slot] {width:18px;height:27px;}
         .glass-pre-switch .power-control-panel {position:relative!important;inset:auto!important;margin:0!important;padding:0!important;transform:none!important;}
-        .glass-pre-end {position:absolute;top:5px;bottom:41px;width:18px;box-sizing:border-box;border:1px solid #7d938a;border-radius:3px;background:repeating-linear-gradient(0deg,#ffffff3a 0 .5px,transparent .5px 2px),linear-gradient(90deg,#a1b9ab,#e6eddb 30%,#bfd0bf 64%,#718e7d);box-shadow:inset 1px 0 #faffee99,2px 0 3px #0005;}
+        .glass-pre-end {position:absolute;top:5px;bottom:41px;width:18px;box-sizing:border-box;border:1px solid #7d938a;border-radius:3px;background:var(--material-brushed-steel),linear-gradient(90deg,#a1b9ab,#e6eddb 30%,#bfd0bf 64%,#718e7d);box-shadow:inset 1px 0 #faffee99,2px 0 3px #0005;}
         .glass-pre-end-left {left:1px;}.glass-pre-end-right {right:1px;}
         .glass-pre-end i {position:absolute;left:5px;width:6px;height:6px;border:1px solid #839c8c;border-radius:50%;background:linear-gradient(130deg,#eff6df,#819d8a);box-shadow:0 1px 1px #405c4777;}.glass-pre-end i:first-child {top:10px;}.glass-pre-end i:last-child {bottom:10px;}.glass-pre-end i::after {content:'';position:absolute;left:1px;top:2px;width:4px;height:1px;transform:rotate(-28deg);background:#536f5b;}
         .glass-pre-face .glass-pre-connections {position:absolute;left:20px;right:20px;top:180px;height:41px!important;box-sizing:border-box;display:flex;align-items:center;justify-content:space-around;margin:0;padding:4px 8px!important;border:0!important;border-radius:0 0 2px 2px;background:linear-gradient(#142321,#0b1719)!important;box-shadow:inset 0 -1px #5c776444;}
@@ -2728,7 +2728,7 @@
         .utility-face .utility-connections {position:relative;flex:none;box-sizing:border-box;height:55px!important;display:flex;justify-content:space-around;align-items:center;padding:4px 8px!important;margin:0;border:0!important;background:#3e4c35!important;}.utility-connections>div {display:flex;flex-direction:column;align-items:center;gap:6px;}.utility-connections small {font:600 5px/1 Arial,sans-serif;color:#c9d2b5;}.utility-connections .integrated-port-pair {display:flex;gap:14px;}
         :is(#audio-world,.equipment-preview-world) .device-node.device-type-prePrecision {width:560px!important;min-width:560px!important;max-width:560px!important;height:210px!important;min-height:210px!important;max-height:210px!important;padding:0!important;background:none!important;box-shadow:none!important;}
         .precision-face {position:relative;width:560px;height:210px;box-sizing:border-box;padding:0;border:2px solid #697e78;border-radius:3px;background:linear-gradient(110deg,#b4c2ba,#f0f0dd 35%,#a3b7ac);box-shadow:inset 0 1px #ffffe3,0 3px 5px #0005;}
-        .precision-front {position:relative;height:153px;border-top:6px solid #cdd2cf;border-bottom:2px solid #65716c;box-sizing:border-box;background:repeating-linear-gradient(0deg,#f8ffed1a 0 .5px,transparent .5px 2px),linear-gradient(110deg,#c4cdca,#e2e5dc 46%,#b2bfba);}
+        .precision-front {position:relative;height:153px;border-top:6px solid #cdd2cf;border-bottom:2px solid #65716c;box-sizing:border-box;background:var(--material-brushed-steel),linear-gradient(110deg,#c4cdca,#e2e5dc 46%,#b2bfba);}
         .precision-front .hw-knob-face {background:linear-gradient(125deg,#48524f,#26332f 75%)!important;}
         .precision-engraving {position:absolute;top:10px;left:18px;font:600 6px/1 Arial,sans-serif;letter-spacing:1.4px;color:#3b5b4b;}
         .precision-screw {position:absolute;width:6px;height:6px;border-radius:50%;border:1px solid #7b9487;background:linear-gradient(135deg,#eef5d8,#7a9685);box-shadow:0 1px 1px #324f3e55;}.precision-screw::after {content:'';position:absolute;top:2px;left:1px;width:4px;height:1px;background:#455f50;transform:rotate(-30deg);}.precision-screw-a {left:5px;top:4px;}.precision-screw-b {right:5px;top:4px;}.precision-screw-c {left:5px;bottom:5px;}.precision-screw-d {right:5px;bottom:5px;}
@@ -3380,7 +3380,7 @@
     position:relative;isolation:isolate;display:grid!important;grid-template-columns:minmax(0,1fr) 32px!important;grid-template-rows:40px minmax(0,1fr)!important;
     gap:6px 10px!important;padding:9px 14px!important;align-items:stretch!important;
     border:1px solid #56666e!important;border-radius:5px!important;
-    background:repeating-linear-gradient(0deg,#e1eef505 0 .5px,#00000009 .5px 1px),linear-gradient(120deg,#39464d,#222d34 38%,#1a242b 75%,#344149)!important;
+    background:var(--material-brushed-steel),linear-gradient(120deg,#39464d,#222d34 38%,#1a242b 75%,#344149)!important;
     box-shadow:inset 0 1px #d3e4ed55,inset 0 -2px #080f15bb,0 3px 5px #0006;
 }
 :is(#audio-world,.equipment-preview-world) .device-node:is(.device-type-btReceiverA,.device-type-btTransmitterPro)>.bt-face::after {
@@ -3541,8 +3541,8 @@
 .phone-housing-screws i:nth-child(3) {left:17px;bottom:8px;}
 .phone-housing-screws i:nth-child(4) {right:17px;bottom:8px;}
 /* Vintage: polished wood cheeks surrounding a satin metal faceplate. */
-:is(#audio-world,.equipment-preview-world) .device-type-headphoneAmp>.phone-amp-face {box-sizing:border-box;padding:16px 24px!important;grid-template-columns:34px 64px 66px 52px 44px;gap:10px!important;border:1px solid #584530;border-radius:4px;background:repeating-linear-gradient(0deg,#ffffff15 0 .5px,#3b442a0a .5px 1px),linear-gradient(125deg,#e6e5d3,#bcc4ad 65%,#d6dbc5);box-shadow:inset 0 1px #ffffe0b3,inset 0 -2px #73816b,0 4px 6px #0004;color:#495341;}
-:is(#audio-world,.equipment-preview-world) .device-type-headphoneAmp .phone-housing-cheek {width:13px;border-color:#4a2d1b;background:repeating-linear-gradient(92deg,transparent 0 2px,#2d1a0d33 2px 2.7px,#deb07b18 2.7px 4px),linear-gradient(90deg,#3d2618,#a47448 22%,#765031 65%,#51321e);box-shadow:inset 1px 0 #d7ac7477,inset -1px 0 #24170ecc;}
+:is(#audio-world,.equipment-preview-world) .device-type-headphoneAmp>.phone-amp-face {box-sizing:border-box;padding:16px 24px!important;grid-template-columns:34px 64px 66px 52px 44px;gap:10px!important;border:1px solid #584530;border-radius:4px;background:var(--material-brushed-steel),linear-gradient(125deg,#e6e5d3,#bcc4ad 65%,#d6dbc5);box-shadow:inset 0 1px #ffffe0b3,inset 0 -2px #73816b,0 4px 6px #0004;color:#495341;}
+:is(#audio-world,.equipment-preview-world) .device-type-headphoneAmp .phone-housing-cheek {width:13px;border-color:#4a2d1b;background:var(--material-wood-grain),linear-gradient(90deg,#3d2618,#a47448 22%,#765031 65%,#51321e);box-shadow:inset 1px 0 #d7ac7477,inset -1px 0 #24170ecc;}
 :is(#audio-world,.equipment-preview-world) .device-type-headphoneAmp .phone-housing-frame {inset:4px 15px;border-color:#7d8b6b77;border-top-color:#f3f4d899;box-shadow:inset 0 -1px #f3f3d84d,0 1px #f2f4d455;}
 :is(#audio-world,.equipment-preview-world) .device-type-headphoneAmp .phone-housing-vent {background:repeating-linear-gradient(90deg,#48563a 0 2px,transparent 2px 4px);border-color:#879572;box-shadow:0 1px #f9fcdd77;}
 :is(#audio-world,.equipment-preview-world) .device-type-headphoneAmp .phone-amp-group {box-sizing:border-box;width:100%;height:56px;display:grid;grid-template-rows:28px 10px;align-content:center;justify-items:center;align-items:center;gap:4px!important;padding:5px 2px;border:0;border-radius:0;background:none;box-shadow:none;}
@@ -3551,7 +3551,7 @@
 :is(#audio-world,.equipment-preview-world) .device-type-headphoneAmp .phone-volume {justify-self:center;align-self:center;}
 :is(#audio-world,.equipment-preview-world) .device-type-headphoneAmp .phone-amp-group>span {font-size:6px;line-height:10px;letter-spacing:.025em;color:#303a29;}
 /* Modern: anodized shell, fine machining and a recessed connection strip. */
-:is(#audio-world,.equipment-preview-world) .device-type-headphoneAmpModern>.phone-amp-face {box-sizing:border-box;padding:16px 18px!important;gap:8px!important;border:1px solid #637b83;border-radius:5px;background:repeating-linear-gradient(0deg,#def3ff05 0 .5px,#00000009 .5px 1px),linear-gradient(125deg,#3a4c57,#1a303b 55%,#263f49);box-shadow:inset 0 1px #c5e0e477,inset 0 -2px #0b1d27,0 4px 6px #0005;color:#9db6bf;}
+:is(#audio-world,.equipment-preview-world) .device-type-headphoneAmpModern>.phone-amp-face {box-sizing:border-box;padding:16px 18px!important;gap:8px!important;border:1px solid #637b83;border-radius:5px;background:var(--material-brushed-steel),linear-gradient(125deg,#3a4c57,#1a303b 55%,#263f49);box-shadow:inset 0 1px #c5e0e477,inset 0 -2px #0b1d27,0 4px 6px #0005;color:#9db6bf;}
 :is(#audio-world,.equipment-preview-world) .device-type-headphoneAmpModern .phone-housing-cheek {width:7px;background:linear-gradient(90deg,#9caeb3,#536c74 40%,#243d48);border-color:#516971;}
 :is(#audio-world,.equipment-preview-world) .device-type-headphoneAmpModern .phone-housing-frame {inset:5px 10px;border-color:#7497a033;border-bottom-color:#0d2530;}
 :is(#audio-world,.equipment-preview-world) .device-type-headphoneAmpModern .phone-housing-screws i {border-color:#506e7a;background:linear-gradient(140deg,#b3cbd1,#5a7885 60%,#213c4b);width:2px;height:2px;}
@@ -3561,7 +3561,7 @@
 :is(#audio-world,.equipment-preview-world) .device-type-headphoneAmpModern .phone-volume {justify-self:center;align-self:center;}
 :is(#audio-world,.equipment-preview-world) .device-type-headphoneAmpModern .phone-amp-group>span {font-size:6px;line-height:10px;letter-spacing:.025em;color:#d1dfe0;}
 /* Four channels: rack cheeks, panel seams and four individually recessed channel bays. */
-:is(#audio-world,.equipment-preview-world) .device-type-headphoneAmp4>.amp4-rack-face {padding:14px 22px!important;gap:18px;border:1px solid #63717b;border-radius:3px;background:repeating-linear-gradient(0deg,#d8eaff06 0 .5px,#0000000a .5px 1px),linear-gradient(110deg,#3c4852,#202d36 45%,#2d3b45);box-shadow:inset 0 1px #d6e2eb66,inset 0 -2px #101d29,0 4px 7px #0005;}
+:is(#audio-world,.equipment-preview-world) .device-type-headphoneAmp4>.amp4-rack-face {padding:14px 22px!important;gap:18px;border:1px solid #63717b;border-radius:3px;background:var(--material-brushed-steel),linear-gradient(110deg,#3c4852,#202d36 45%,#2d3b45);box-shadow:inset 0 1px #d6e2eb66,inset 0 -2px #101d29,0 4px 7px #0005;}
 :is(#audio-world,.equipment-preview-world) .device-type-headphoneAmp4 .phone-housing-cheek {width:13px;background:repeating-linear-gradient(0deg,#ffffff0a 0 1px,transparent 1px 2px),linear-gradient(90deg,#73818a,#344551 35%,#1b2b37);border-color:#142332;}
 :is(#audio-world,.equipment-preview-world) .device-type-headphoneAmp4 .phone-housing-frame {inset:5px 16px;border-color:#6f858f44;border-bottom-color:#0c202f;}
 :is(#audio-world,.equipment-preview-world) .device-type-headphoneAmp4 .phone-housing-screws i {left:4px;right:auto;width:3px;height:5px;border-radius:2px;background:linear-gradient(135deg,#a5b5bc,#4c616e 65%);}
@@ -3915,7 +3915,7 @@
 .acoustic-foam::after {content:'';position:absolute;inset:0;opacity:.25;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23aaa' filter='url(%23grain)' opacity='.7' d='M0 0h160v160H0z'/%3E%3C/svg%3E");mix-blend-mode:soft-light;}
 .bench-backdrop>.acoustic-foam {position:relative;--foam-pitch:32px;}
 [data-bench-backdrop="false"] .bench-backdrop {display:none;}
-.device-node[data-bench-surface="wood"] .furniture-top {border-color:#785437;background:repeating-linear-gradient(2deg,#dfb98518 0 2px,transparent 2px 9px,#33201414 9px 11px),linear-gradient(100deg,#a77a4c,#745033 55%,#b58a59);box-shadow:inset 0 2px #efd5ac55,0 4px 8px #0005;}
+.device-node[data-bench-surface="wood"] .furniture-top {border-color:#785437;background:var(--material-wood-grain),linear-gradient(100deg,#a77a4c,#745033 55%,#b58a59);box-shadow:inset 0 2px #efd5ac55,0 4px 8px #0005;}
 .device-node[data-bench-surface="felt"] .furniture-top {border-color:#354a41;background:repeating-linear-gradient(35deg,#ffffff08 0 1px,transparent 1px 3px),repeating-linear-gradient(-35deg,#0000000b 0 1px,transparent 1px 4px),linear-gradient(#50665a,#35483e);box-shadow:inset 0 2px 3px #ffffff16,0 3px 6px #0005;}
 .device-node[data-bench-surface="studio"] .furniture-top {border-color:#49525c;background:repeating-linear-gradient(90deg,#ffffff06 0 1px,transparent 1px 5px),linear-gradient(#454d58,#252d36);box-shadow:inset 0 2px #91a1ae55,0 3px 8px #0006;}
 /* A 12-inch LP and its sleeve share the equipment's physical scale;

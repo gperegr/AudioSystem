@@ -765,6 +765,15 @@ const Hardware = (() => {
     function setLed(el,on,clipping=false){
         el.classList.toggle('is-signal',!!on);el.classList.toggle('is-lit',!!on);el.classList.toggle('is-clipping',!!on&&!!clipping);el.dataset.lit=String(!!on);
     }
+    function mountMaterialReflections(device){
+        const panes='.extra-vu,.integrated-gauge,.bias-meter,.eq-vintage-meter,.receiver-vu,.cd-lcd,.poweramp-screen,.custom-pre-screen,.integrated-green-window,.receiver-radio,.bench-lcd,.bench-screen,.signal-screen';
+        device.querySelectorAll(panes).forEach(pane=>{
+            if(pane.querySelector(':scope > .equipment-glass-reflection'))return;
+            if(getComputedStyle(pane).position==='static')pane.style.position='relative';
+            const reflection=document.createElement('span');reflection.className='equipment-glass-reflection';
+            reflection.setAttribute('aria-hidden','true');pane.appendChild(reflection);
+        });
+    }
     function mount(dev){
         dev.el.style.setProperty('--hw-motion',physics.settleMs+'ms');dev.el.style.setProperty('--hw-press',physics.pressMs+'ms');dev.el.style.setProperty('--hw-led-clip',leds.clip.color);
         dev.el.querySelectorAll('[data-hardware-knob]').forEach(el=>{
@@ -778,6 +787,7 @@ const Hardware = (() => {
             el.dataset.ledModel=model;el.classList.add('hw-led');el.style.setProperty('--hw-led-color',spec.color);el.style.setProperty('--hw-led-size',spec.size+'px');
         });
         dev.el.querySelectorAll('.port').forEach(el=>{el.dataset.socketModel=el.dataset.type;});
+        mountMaterialReflections(dev.el);
         if(dev.type!=='hardwareDemo')mountLightingDemo(dev.el);
         sync(dev);
     }

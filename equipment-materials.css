@@ -1,0 +1,27 @@
+/* Static, shared textures: decoded once and reused across equipment and previews. */
+:root {
+    --material-wood-grain:url('./assets/textures/wood-grain.svg');
+    --material-brushed-steel:url('./assets/textures/brushed-steel.svg');
+}
+.device-node .equipment-glass-reflection,
+.device-type-tapeDeck [data-tape-counter]::after {
+    content:'';position:absolute;inset:1px;z-index:6;display:block;border-radius:inherit;
+    pointer-events:none!important;user-select:none;overflow:hidden;
+    background:linear-gradient(121deg,transparent 4%,#f1f7ff0d 5%,#f1f7ff04 27%,transparent 28% 73%,#ffffff12 73.1%,transparent 73.5%),radial-gradient(ellipse at var(--scene-light-a-x,25%) var(--scene-light-a-y,15%),#edf5ff0c,transparent 68%);
+    box-shadow:inset 0 1px #ffffff16,inset 1px 0 #ffffff08;
+}
+/* Existing glass panes retain their original layers and receive the same quiet reflection. */
+.glass-pre-reflections,.stream-glass-reflection,.precision-meter-glass {
+    background:linear-gradient(121deg,#f1f7ff0c,transparent 27% 72%,#ffffff0a 73%,transparent 78%),radial-gradient(ellipse at var(--scene-light-a-x,25%) var(--scene-light-a-y,15%),#edf5ff0c,transparent 68%);
+}
+.device-type-tapeDeck .extra-vu::after {background:none;}
+
+.device-type-tapeDeck [data-tape-counter] {position:relative;}
+:is(#audio-world,.equipment-preview-world) .device-node.audio-interface.ai-art-v3.wood-interface {
+    border-left-color:transparent!important;border-right-color:transparent!important;
+    background:var(--material-brushed-steel) padding-box,linear-gradient(120deg,#dedfcf,#c4c6b9) padding-box,var(--material-wood-grain) border-box,linear-gradient(110deg,#88613f,#51341f) border-box!important;
+}
+:is(#audio-world,.equipment-preview-world) .integrated-face.finish-silver {
+    border-left-color:transparent;border-right-color:transparent;
+    background:var(--material-brushed-steel) padding-box,linear-gradient(110deg,#e0e2da,#aeb7b0 65%,#d0d5ce) padding-box,var(--material-wood-grain) border-box,linear-gradient(110deg,#88613f,#51341f) border-box;
+}
