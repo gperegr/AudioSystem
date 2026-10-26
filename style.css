@@ -2821,9 +2821,13 @@
         .linear-readout small {font-size:5px;line-height:7px;align-self:center;margin-bottom:0;}
         .device-type-turntableLinear.power-off .linear-readout {opacity:.18;}
         .linear-operation {position:absolute;top:180px;left:27px;width:123px;text-align:center;font:500 5px/1.2 Arial,sans-serif;letter-spacing:.4px;color:#485945;pointer-events:none;}
-        .linear-keys {position:absolute;left:333px;top:143px;width:273px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 7px;}
+        .linear-keys {position:absolute;left:336px;top:145px;width:268px;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px 8px;}
         .linear-key-pair {display:flex;gap:4px;width:100%;}
-        .linear-key-pair:first-child {grid-column:span 2;}
+        .linear-key-pair:first-child {grid-column:1 / span 2;grid-row:1;}
+        .linear-key-pair:nth-child(2) {grid-column:5 / span 2;grid-row:1;}
+        .linear-keys [data-linear-lift] {grid-column:3 / span 2;grid-row:1;}
+        .linear-keys [data-linear-start] {grid-column:1 / span 3;grid-row:2;}
+        .linear-keys [data-linear-stop] {grid-column:4 / span 3;grid-row:2;}
         .device-type-turntableLinear .linear-keys button {position:relative;box-sizing:border-box;flex-shrink:0;width:100%!important;height:29px!important;padding:0;border:1px solid #59695c;border-radius:1px;background:repeating-linear-gradient(0deg,#fff1 0 .5px,transparent .5px 2px),linear-gradient(#eeeee1,#c9cec1 49%,#a4b29e 51%,#d9dfce);box-shadow:inset 0 1px #ffffe9,inset 0 -1px #52654c,0 2px 2px #14271466;color:#293e28;font:600 6px/1 Arial,sans-serif;letter-spacing:.6px;cursor:pointer;}
         .device-type-turntableLinear .linear-key-pair button {width:0!important;min-width:0;flex:1;}
         .device-type-turntableLinear .linear-keys button[aria-pressed="true"] {color:#863d26;background:linear-gradient(#c2c9ba,#e2e5d8);box-shadow:inset 0 1px 3px #15291455,0 1px #f2f5e5;}

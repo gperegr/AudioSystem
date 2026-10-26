@@ -62,9 +62,10 @@ const Hardware = (() => {
         integratedUtility:{'.power-btn':{width:18,height:27},'[data-integrated-source]':{width:28,height:17},'[data-utility-toggle],.integrated-direct':{width:33,height:17},'[data-integrated-knob="volume"]':{width:61,height:61}},
         prePrecision:{'.power-btn':{width:16,height:25},'[data-pre-toggle],[data-precision-gain]':{width:24,height:34},'[data-pre-rotary]':{width:37,height:37},'[data-integrated-knob="volume"]':{width:64,height:64},'[data-integrated-knob="balance"]':{width:26,height:26}},
         turntableLinear: {
-            '.linear-keys button':{width:60,height:27},
-            '[data-linear-speed]':{width:28,height:27},
-            '[data-linear-cue]':{width:28,height:27},
+            '.linear-keys button':{width:130,height:28},
+            '[data-linear-lift]':{width:84,height:28},
+            '[data-linear-speed]':{width:40,height:28},
+            '[data-linear-cue]':{width:40,height:28},
             '.power-btn':{width:14,height:20},
             '.tt-lid-button':{width:22,height:18},
         },
@@ -741,6 +742,7 @@ const Hardware = (() => {
     }
     function dispose(dev){if(readoutOwner&&dev.el.contains(readoutOwner))hideKnobReadout(0);dev.el.querySelectorAll('[data-hardware-knob],[data-hardware-linear],[data-hardware-feedback]').forEach(el=>releases.get(el)?.());}
     function layout({type,el}){
+        if(AudioAdapterDesign.models[type]){AudioAdapterDesign.layout(el,type);return;}
         const interfaceDesign=typeof AudioInterfaceDesign!=='undefined'&&AudioInterfaceDesign.models[type];
         if(interfaceDesign){
             const {chassisHeight,chassisWidth}=interfaceDesign,width=sizes.widths[chassisWidth],height=sizes.heights[chassisHeight];el.dataset.chassis=chassisHeight;el.dataset.chassisWidth=chassisWidth;
@@ -1050,9 +1052,10 @@ const Hardware = (() => {
             const visibleRect=device.getBoundingClientRect();
             if(visibleRect.right<viewport.left||visibleRect.left>viewport.right||visibleRect.bottom<viewport.top||visibleRect.top>viewport.bottom)return;
             let geometry=lightingGeometry.get(device);
-            if(!geometry){
+            const orientation=device.dataset.adapterRotation||'';
+            if(!geometry||geometry.width!==device.offsetWidth||geometry.height!==device.offsetHeight||geometry.orientation!==orientation){
                 const scale=visibleRect.width/device.offsetWidth;
-                geometry={width:device.offsetWidth,height:device.offsetHeight,lastPosition:'',surfaces:[...device.querySelectorAll(':scope > .lighting-shadow-surface')].map(face=>{
+                geometry={width:device.offsetWidth,height:device.offsetHeight,orientation,lastPosition:'',surfaces:[...device.querySelectorAll(':scope > .lighting-shadow-surface')].map(face=>{
                     const faceRect=face.getBoundingClientRect();
                     return {face,x:(faceRect.left-visibleRect.left)/scale,y:(faceRect.top-visibleRect.top)/scale,controls:[...face.querySelectorAll(lightingProjectedParts)].filter(control=>control.getClientRects().length).map(control=>{
                         const rect=control.getBoundingClientRect();
@@ -2579,6 +2582,22 @@ const Hardware = (() => {
             speakerConverter:{name:'AMPLIFICADO → LINHA',input:'wire',output:'rca',inputSignal:'amplified',outputSignal:'line',description:'Conversor de nível alto para baixo: atenua uma saída SPEAKER amplificada para uma entrada de linha RCA. Não serve para saída de fones.'}
         };
         const TURNTABLE_TYPES = new Set(['turntable', 'turntableVintage','turntableLinear']);
+        function rotateAudioAdapter(dev,delta){
+            if(!AudioAdapterDesign.models[dev.type])return;
+            const old=dev.state.adapterRotation||0,x=parseFloat(dev.el.style.left)||0,y=parseFloat(dev.el.style.top)||0;
+            const center={x:x+dev.el.offsetWidth/2,y:y+dev.el.offsetHeight/2};
+            const next=AudioAdapterDesign.layout(dev.el,dev.type,old+delta);
+            const target={x:Math.max(sceneSideInset(),Math.min(world.offsetWidth-dev.el.offsetWidth-sceneSideInset(),snapCoordinate(center.x-dev.el.offsetWidth/2))),y:Math.max(0,Math.min(maxEquipmentBottom()-dev.el.offsetHeight,snapCoordinate(center.y-dev.el.offsetHeight/2)))};
+            const status=inspectorContent.querySelector('[data-adapter-rotation-status]');
+            if(!canPlaceEquipment(dev,target.x,target.y)){
+                AudioAdapterDesign.layout(dev.el,dev.type,old);
+                if(status)status.textContent='Afaste o adaptador dos outros objetos para girar.';
+                return;
+            }
+            dev.state.adapterRotation=next;dev.el.style.left=target.x+'px';dev.el.style.top=target.y+'px';
+            const output=inspectorContent.querySelector('[data-adapter-angle]');if(output)output.textContent=next+'°';if(status)status.textContent='';
+            updateCables(new Set([dev.id]));updateStackFeet();window.dispatchEvent(new Event('audio-lighting-dirty'));scheduleProjectSave();
+        }
         const BENCH_METER_TYPES=new Set(['benchMeter','benchMeterVintage']);
         const SIGNAL_GENERATOR_TYPES=new Set(['signalGenerator','signalGeneratorVintage']);
         const CAPTURE_INTERFACE_TYPES=new Set(['audioInterface1','audioInterface2','audioInterface3','audioInterface4']);
@@ -4336,7 +4355,7 @@ const Hardware = (() => {
             } else if (FURNITURE_TYPES[type]) {
                 drawing = type === 'furnitureTable' ? '<path d="M5 15h46v5H5zM10 20v20m36-20v20M12 26h32"/>' : type === 'furnitureNiche' ? '<path d="M6 10h44v28H6zM11 15h34v18H11z"/>' : '<path d="M9 5h38v34H9zM9 16h38M9 27h38M13 39v4m30-4v4"/>';
             } else if (INTERFACE_DEVICES[type]) {
-                drawing = '<rect x="6" y="11" width="44" height="24" rx="3"/><circle cx="14" cy="23" r="3"/><circle cx="42" cy="23" r="3"/><path d="M21 23h14m-4-4 4 4-4 4"/>' + (INTERFACE_DEVICES[type].passive ? '' : '<path d="m26 13-3 6h6l-3 6"/>');
+                drawing = AudioAdapterDesign.models[type]?AudioAdapterDesign.icon(type):'<rect x="6" y="11" width="44" height="24" rx="3"/><circle cx="14" cy="23" r="3"/><circle cx="42" cy="23" r="3"/><path d="M21 23h14m-4-4 4 4-4 4"/><path d="m26 13-3 6h6l-3 6"/>';
             } else if(type==='streamIntegrated'){
                 drawing='<path d="M5 12h46v27H5ZM19 12V8h18v4M5 34h46M8 15v17m40-17v17"/><rect x="17" y="17" width="23" height="14" rx="1"/><path d="m20 27 5-5 5 3 6-5m9-3v2m0 4v2M10 38h4m28 0h4"/><circle cx="11" cy="28" r="2"/>';
             } else if(type==='turntableLinear'){
@@ -5843,9 +5862,10 @@ const Hardware = (() => {
             if(type==='headphoneAmp4')el.querySelector('[data-power-slot]').appendChild(el.querySelector('.power-btn'));
             if (INTERFACE_DEVICES[type]) {
                 const config = INTERFACE_DEVICES[type];
-                el.classList.add('interface-box');
+                el.classList.add(AudioAdapterDesign.models[type]?'passive-adapter':'interface-box');
                 const ports = (io,format) => ['p10','p2'].includes(format) ? `<div class="port" data-type="${format}" data-io="${io}" data-node="${io}Stereo" title="${io==='in'?'Entrada':'Saída'} ${format==='p2'?'P2':'P10'} TRS estéreo"></div>` : `<div class="interface-pair">${['L','R'].map(ch=>`<div class="port" data-type="${format==='wire'?'wire':'rca-'+ch.toLowerCase()}" data-io="${io}" data-node="${io}${ch}" title="${io==='in'?'Entrada':'Saída'} ${format==='wire'?'SPEAKER · fio':'RCA'} ${ch}"></div>`).join('')}</div>`;
                 el.innerHTML = `<div class="device-header"><span>${deviceName}</span></div><section class="interface-face"><header>${config.name}</header><div class="interface-ports"><div><small>ENTRADA · ${config.input==='rca'?'RCA L/R':config.input==='wire'?'FIO L/R':config.input==='p2'?'P2 TRS':'P10 TRS'}</small>${ports('in',config.input)}</div><span aria-hidden="true">→</span><div><small>SAÍDA · ${config.output==='rca'?'RCA L/R':config.output==='p2'?'P2 TRS':'P10 TRS'}</small>${ports('out',config.output)}</div></div><footer>${config.passive?'PASSIVO · PRESERVA O SINAL':'CONVERSÃO DE NÍVEL'}</footer></section>`;
+                if(AudioAdapterDesign.models[type])el.innerHTML=AudioAdapterDesign.markup(type,id);
             }
             if(CAPTURE_INTERFACE_TYPES.has(type)){
                 const design=AudioInterfaceDesign.models[type];
@@ -5961,6 +5981,7 @@ const Hardware = (() => {
                 if(FURNITURE_TYPES[type].back){dev.state.hasBack=true;el.dataset.back='true';}
             } else if (INTERFACE_DEVICES[type]) {
                 const config = INTERFACE_DEVICES[type];
+                if(AudioAdapterDesign.models[type])dev.state.adapterRotation=0;
                 dev.nodes.inL = state.audioCtx.createGain(); dev.nodes.inR = state.audioCtx.createGain();
                 dev.nodes.outL = state.audioCtx.createGain(); dev.nodes.outR = state.audioCtx.createGain();
                 ['L','R'].forEach(ch=>{
@@ -7813,6 +7834,7 @@ const Hardware = (() => {
                 if(dev.type==='furnitureTable')html+=`<fieldset class="bench-options"><legend>Ambiente da bancada</legend><label for="bench-surface">Superfície</label><select id="bench-surface">${Object.entries(BENCH_SURFACES).map(([key,label])=>`<option value="${key}" ${dev.state.benchSurface===key?'selected':''}>${label}</option>`).join('')}</select><label><input type="checkbox" id="bench-backdrop" ${dev.state.benchBackdrop===true?'checked':''}> Painel acústico</label><span>Objetos decorativos</span>${Object.entries(BENCH_DECORATIONS).map(([key,label])=>`<label><input type="checkbox" data-bench-decoration="${key}" ${dev.state.benchDecorations?.includes(key)?'checked':''}> ${label}</label>`).join('')}</fieldset>`;
             } else if (INTERFACE_DEVICES[dev.type]) {
                 html += `<p class="text-sm text-gray-400">${INTERFACE_DEVICES[dev.type].description}</p>`;
+                if(AudioAdapterDesign.models[dev.type])html+=`<section class="adapter-rotation"><span>Orientação</span><div><button type="button" class="tt-insp-btn" data-adapter-rotate="-90" aria-label="Girar 90 graus para a esquerda"><svg viewBox="0 0 24 24"><path d="M4 4v6h6M4 10a8 8 0 1 1 0 5"/></svg></button><output data-adapter-angle>${dev.state.adapterRotation||0}°</output><button type="button" class="tt-insp-btn" data-adapter-rotate="90" aria-label="Girar 90 graus para a direita"><svg viewBox="0 0 24 24"><path d="M20 4v6h-6m6 0a8 8 0 1 0 0 5"/></svg></button></div><p>Gire em passos de 90°. Os conectores acompanham o adaptador.</p><p data-adapter-rotation-status role="status"></p></section>`;
             } else if (dev.type === 'cdPlayer') {
                 html += `<div class="text-sm text-gray-400 mt-2">Fonte digital estéreo. Conecte as saídas RCA R/L a um pré, receiver ou monitor ativo do mesmo lado.</div>`;
             } else if (['powerStereo','powerVintage'].includes(dev.type)||CUSTOM_POWER_AMPS[dev.type]) {
@@ -7863,6 +7885,7 @@ const Hardware = (() => {
             bindIntegratedInspector(dev);
             bindCustomPreampInspector(dev);
             bindExtraInspector(dev);
+            inspectorContent.querySelectorAll('[data-adapter-rotate]').forEach(button=>button.addEventListener('click',()=>rotateAudioAdapter(dev,Number(button.dataset.adapterRotate))));
             inspectorContent.querySelectorAll('[data-vinyl-noise]').forEach(button=>button.addEventListener('click',()=>{
                 dev.state.vinylNoiseLevel=button.dataset.vinylNoise;
                 dev.vinylNoise?.gain.gain.setTargetAtTime(VINYL_NOISE_LEVELS[dev.state.vinylNoiseLevel].gain,state.audioCtx.currentTime,.04);
@@ -9257,6 +9280,7 @@ const Hardware = (() => {
             const clean=projectJSON(saved.settings||{}),tt=clean.tt;delete clean.tt;
             clean.damage=['speaker-level-overload','speaker-thermal-overload'].includes(clean.damage?.kind)?{kind:clean.damage.kind}:null;
             Object.assign(dev.state,clean);dev.state.playing=false;
+            if(AudioAdapterDesign.models[dev.type])AudioAdapterDesign.layout(dev.el,dev.type,dev.state.adapterRotation=AudioAdapterDesign.angle(dev.state.adapterRotation));
             if(CAPTURE_INTERFACE_TYPES.has(dev.type)){
                 for(const channel of ['L','R'])dev.setMicGain(channel,dev.state['micGain'+channel]);
                 dev.setAiLine(dev.state.aiLineLevel??.8);
@@ -9314,6 +9338,7 @@ const Hardware = (() => {
                     if(['lightPoint','acousticHorizontal','acousticVertical'].includes(saved.type))continue; // Discard retired items from older projects.
                     const before=new Set(Object.keys(state.devices));createDevice(saved.type,Math.min(saved.x,world.offsetWidth-150),Math.min(saved.y,maxEquipmentBottom()-150));
                     const dev=Object.values(state.devices).find(item=>!before.has(item.id));if(!dev)throw new Error('Não foi possível restaurar um equipamento.');
+                    if(AudioAdapterDesign.models[dev.type])AudioAdapterDesign.layout(dev.el,dev.type,saved.settings?.adapterRotation);
                     ids.set(saved.id,dev.id);restored.push([saved,dev]);
                     const inset=sceneSideInset(),bottom=WALL_LAMP_TYPES[dev.type]?wallPlacementBottom():maxEquipmentBottom();
                     if(saved.x>=inset&&saved.x+dev.el.offsetWidth<=world.offsetWidth-inset)dev.el.style.left=`${saved.x}px`;

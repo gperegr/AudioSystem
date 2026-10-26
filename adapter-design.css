@@ -1,0 +1,11 @@
+/* The root swaps its bounds on quarter turns; only the artwork and sockets rotate. */
+.device-node.passive-adapter {position:absolute;isolation:isolate;box-sizing:border-box;padding:0!important;border:0!important;border-radius:0;background:transparent!important;box-shadow:none!important;}
+.passive-adapter .adapter-object {position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(var(--adapter-angle,0deg));transform-origin:center;}
+.adapter-object>svg {display:block;pointer-events:none;filter:drop-shadow(0 3px 2px #0005);}
+.adapter-object .adapter-port {position:absolute;margin:0!important;transform:translate(-50%,-50%);z-index:3;}
+.adapter-rotation {display:flex;flex-direction:column;gap:10px;}
+.adapter-rotation>div {display:flex;gap:8px;align-items:center;}
+.adapter-rotation button {min-width:44px;min-height:44px;display:grid;place-items:center;}
+.adapter-rotation svg {width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+.adapter-rotation output {flex:1;text-align:center;font-variant-numeric:tabular-nums;}
+.adapter-rotation p {font-size:12px;line-height:1.4;color:#aebeca;margin:0;}
