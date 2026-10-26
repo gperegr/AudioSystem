@@ -2588,6 +2588,7 @@ const Hardware = (() => {
         const TURNTABLE_TYPES = new Set(['turntable', 'turntableVintage','turntableLinear']);
         function rotateAudioAdapter(dev,delta){
             if(!AudioAdapterDesign.models[dev.type])return;
+            dev.adapterErrorMotion?.cancel();
             const old=dev.state.adapterRotation||0,x=parseFloat(dev.el.style.left)||0,y=parseFloat(dev.el.style.top)||0;
             const center={x:x+dev.el.offsetWidth/2,y:y+dev.el.offsetHeight/2};
             const next=AudioAdapterDesign.layout(dev.el,dev.type,old+delta);
@@ -2595,6 +2596,8 @@ const Hardware = (() => {
             const status=inspectorContent.querySelector('[data-adapter-rotation-status]');
             if(!canPlaceEquipment(dev,target.x,target.y)){
                 AudioAdapterDesign.layout(dev.el,dev.type,old);
+                const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+                dev.adapterErrorMotion=dev.el.animate(reduced?[{opacity:1},{opacity:.65},{opacity:1}]:[0,-6,5,-4,3,-1,0].map(x=>({transform:`translateX(${x}px)`})),{duration:reduced?240:340,easing:'ease-out'});
                 if(status)status.textContent='Afaste o adaptador dos outros objetos para girar.';
                 return;
             }
