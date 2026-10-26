@@ -81,7 +81,7 @@ A categoria **Móveis** inclui a **Luminária pendente**, que acompanha a altura
 
 ### Coleção de discos do Spotify
 
-Em **Móveis**, adicione **Coleção de Discos · Spotify**. O móvel tem a largura do **Rack para Discos · 3 Colunas** e acabamentos de madeira clara ou escura. Arraste, role ou use as setas sobre as capas para percorrer seus álbuns salvos. Selecione uma capa para abrir o disco; clique novamente ou use o botão de reprodução para tocar. A barra inferior permite ir diretamente a uma posição e ordenar a coleção. Apenas as capas próximas da posição atual são renderizadas.
+Em **Móveis**, adicione **Coleção de Discos · Spotify**, com acabamentos de madeira clara ou escura. Arraste, role ou use as setas sobre as capas para percorrer seus álbuns salvos. Selecione uma capa para abrir o disco; clique novamente ou use o botão de reprodução para tocar. A barra inferior permite ir diretamente a uma posição e ordenar a coleção. Apenas as capas próximas da posição atual são renderizadas.
 
 Para conectar, cadastre o **Redirect URI** mostrado em **Configurações → Spotify** no [Spotify for Developers](https://developer.spotify.com/dashboard). O Client ID fornecido pelo projeto já vem preenchido e pode ser alterado nessa seção. Abra o AudioSystem em HTTPS ou em `http://127.0.0.1` com um servidor local: a autorização PKCE e o Web Playback SDK não funcionam ao abrir `index.html` diretamente como arquivo. Uma conta **Spotify Premium** é necessária para a reprodução pelo navegador. O player Spotify é compartilhado entre os móveis e seu áudio não passa pelos cabos ou pelo sistema de sinais simulados.
 
