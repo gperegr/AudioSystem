@@ -5790,9 +5790,13 @@ const Hardware = (() => {
             if(tpl) el.innerHTML = tpl.innerHTML;
             else { el.innerHTML = `<div class="device-header"><span>${type}</span></div><div class="p-4"><span class="text-[8px] font-bold">INPUT · RCA R</span><div class="port" data-type="rca-r" data-io="in" data-node="in" title="Entrada RCA direita R"></div></div>`; }
             if (type === 'turntableVintage') el.querySelector('.device-header span').textContent = deviceName;
+            if(ACTIVE_SPK.has(type)){
+                el.classList.add('active-speaker');
+                el.querySelectorAll(type==='spkActiveRounded'?'.sp-woofer':'.sp-woofer,.sp-tweeter').forEach(driver=>driver.insertAdjacentHTML('beforeend','<span class="speaker-driver-screws" aria-hidden="true"></span>'));
+            }
             if(['spkPassiveGridBlack','spkPassiveGridOrange'].includes(type)){
                 el.querySelector('.device-header span').textContent=deviceName;
-                el.querySelectorAll('.classic-box-tweeter,.classic-box-midrange,.classic-box-woofer').forEach(driver=>driver.insertAdjacentHTML('beforeend','<i class="classic-driver-screws" aria-hidden="true"></i>'));
+                el.querySelectorAll('.classic-box-tweeter,.classic-box-midrange,.classic-box-woofer').forEach(driver=>driver.insertAdjacentHTML('beforeend','<i class="speaker-driver-screws" aria-hidden="true"></i>'));
                 const trims=el.querySelectorAll('.classic-box-control-panel span');trims.forEach((trim,i)=>trim.insertAdjacentHTML('beforeend',i?'HIGH':'MID'));
                 el.querySelector('.classic-box-base').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 244 27" aria-hidden="true"><defs><linearGradient id="${id}-stand" x2="0" y2="1"><stop stop-color="#525852"/><stop offset=".25" stop-color="#292e29"/><stop offset="1" stop-color="#0c100d"/></linearGradient></defs><path data-stand-silhouette d="M1 0h242v6H1Z" fill="url(#${id}-stand)" stroke="#111712" stroke-width=".7"/><path d="M3 1h238" stroke="#9ba392" stroke-width=".6"/><path data-stand-silhouette d="M11 6h15l9 17H19Zm222 0h-15l-9 17h16Z" fill="url(#${id}-stand)" stroke="#131914" stroke-width=".7"/><path d="m13 7 8 15m210-15-8 15" stroke="#707b69" stroke-width=".7"/><path data-stand-silhouette d="M31 17h182v4H31Z" fill="#161d16"/><path d="M32 17.5h180" stroke="#4d5847" stroke-width=".5"/><path data-stand-silhouette d="M17 23h23v4H17Zm187 0h23v4h-23Z" fill="#111511"/><path d="M18 24h21m166 0h21" stroke="#475140" stroke-width=".65"/><path d="M14 2h17m182 0h17" stroke="#0e150d" stroke-width="2"/><circle cx="23" cy="10" r="1.4" fill="#a1aa95"/><circle cx="221" cy="10" r="1.4" fill="#a1aa95"/></svg>`;
             }

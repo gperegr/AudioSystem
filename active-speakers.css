@@ -1,0 +1,34 @@
+/* Static shared material layers; original cabinet and control geometry is retained. */
+.active-speaker .speaker-driver-screws {inset:2%;}
+.active-speaker .sp-woofer {box-shadow:0 0 0 1px #080b0dcc,0 2px 3px #0008,inset 0 1px #c3ccc426;}
+.active-speaker .sp-woofer::before {background:repeating-radial-gradient(circle,#161b1e 0 2px,#354047 2.7px 3.5px,#141a1e 4px 6px);box-shadow:inset 0 1px 2px #c0ccc31f,inset 0 -2px 3px #0009;}
+.active-speaker .sp-cone {box-shadow:inset 0 0 0 1px #0a0e1055,inset 0 0 7px #0005,0 1px 2px #0007;}
+.active-speaker .sp-cone b {background:radial-gradient(circle at 38% 28%,#525a5b,#1d2528 48%,#0b1115 85%);box-shadow:inset 0 1px #c1cac522,0 1px 3px #0009;}
+.active-speaker .sp-panel {position:relative;isolation:isolate;}
+.active-speaker .sp-panel::before {content:'';position:absolute;inset:-7px -8px;z-index:-1;pointer-events:none;border:1px solid #a3a99b22;border-radius:3px;background:linear-gradient(#ffffff05,#00000012);box-shadow:inset 0 1px #dce2d00d;}
+.active-speaker .sp-tweeter {box-shadow:inset 0 0 0 1px #8b98995c,inset 0 0 0 3px #131a1d,0 2px 4px #0007;}
+.active-speaker:not(.device-type-spkActiveRounded) .sp-tweeter>i {background:url('./assets/textures/driver-weave.svg') center/4px 4px,radial-gradient(circle at 38% 28%,#535c5d,#171d22 60%,#080d11);box-shadow:inset 0 1px 2px #c6d0ce22,0 0 0 2px #11171b,0 0 0 3px #65716f44;}
+/* Walnut monitor: softer paper cone, veneered edges and a woven removable grille. */
+:is(#audio-world,.equipment-preview-world) .device-type-spkActiveMonitor .sp-cab.sp-vintage {background:linear-gradient(90deg,#23160c88,transparent 5% 94%,#1c100b88),var(--material-wood-grain) center/384px 192px,linear-gradient(105deg,#9c754b,#614024 62%,#986c40);box-shadow:inset 1px 1px #f4cf8d6b,inset -2px -2px 3px #28140799,0 6px 12px #0005;}
+:is(#audio-world,.equipment-preview-world) .device-type-spkActiveMonitor .sp-vintage .sp-face {background:linear-gradient(90deg,#1c100b2b,transparent 12% 88%,#1c100b44),url('./assets/textures/vintage-walnut.svg') center/100% 100%;box-shadow:inset 0 0 0 1px #3e2513aa,inset 1px 2px 4px #22140c66;}
+.device-type-spkActiveMonitor .sp-cone {background:url('./assets/textures/speaker-paper.svg') center/80px 80px,repeating-radial-gradient(circle,transparent 0 11px,#4d55463b 11.5px 12px,transparent 12.5px 16px),radial-gradient(circle at 38% 28%,#d5d3c9,#aaa99e 67%,#787b70);}
+:is(#audio-world,.equipment-preview-world) .device-type-spkActiveMonitor .fabric-grille {border-color:#51452f;box-shadow:inset 0 0 0 1px #c2ab7355,inset 0 0 7px #15150ecc,0 2px 3px #0008;}
+/* Graphite bookshelf: a fine matte coating and a silver composite cone. */
+.device-type-spkActiveBookshelf .sp-cab.sp-modern {background:url('./assets/textures/speaker-coating.svg') center/64px 64px,linear-gradient(110deg,#41474a,#242a2d 15% 85%,#171e22);box-shadow:inset 1px 1px #c4ccce38,inset -2px -2px 3px #05090d99,0 6px 11px #0005;}
+.device-type-spkActiveBookshelf .sp-face {background:linear-gradient(90deg,#0002,transparent 7% 93%,#0003);box-shadow:inset 0 1px #ccd6d111;}
+.device-type-spkActiveBookshelf .sp-cone {background:url('./assets/textures/driver-weave.svg') center/5px 5px,radial-gradient(circle at 38% 28%,#d2d9d5,#9eaca9 60%,#647675);}
+.device-type-spkActiveBookshelf .sp-panel::before {background:var(--material-brushed-steel) center/256px 64px,linear-gradient(#293338,#151e23);}
+/* White compact: satin lacquer, champagne mounting rims and a woven gold diaphragm. */
+.device-type-spkActiveCompact .compact-white {background:url('./assets/textures/speaker-coating.svg') center/64px 64px,linear-gradient(110deg,#f5f4ee,#dedfd8 88%,#bec3bb);box-shadow:inset 1px 1px #fff,inset -1px -2px 3px #7e887655,0 6px 10px #0004;}
+.device-type-spkActiveCompact .compact-white .sp-face {background:linear-gradient(110deg,#fffdf7,#eaede5);box-shadow:inset 0 1px #fff,inset 1px 0 #fff9;}
+.device-type-spkActiveCompact .sp-woofer {border-color:#a2a797;box-shadow:inset 0 0 0 4px #151b15,0 0 0 1px #ecebd499,0 2px 3px #0005;}
+.device-type-spkActiveCompact .sp-cone {background:url('./assets/textures/driver-weave.svg') center/4px 4px,radial-gradient(circle at 35% 25%,#f4dd91,#dcb950 65%,#b99535);}
+.device-type-spkActiveCompact .sp-panel::before {content:none;}
+.device-type-spkActiveCompact .sp-panel {position:absolute;}
+/* Rounded monitor: cast-alloy grain, a continuous waveguide and a ribbed isolator. */
+.device-type-spkActiveRounded .sp-cab {background:url('./assets/textures/speaker-coating.svg') center/48px 48px,linear-gradient(115deg,#7a8487,#414d53 53%,#5c686d);box-shadow:inset 2px 2px 3px #ced7d344,inset -3px -2px 5px #08141c77,0 5px 8px #0005;}
+.device-type-spkActiveRounded .sp-tweeter {background:url('./assets/textures/speaker-coating.svg') center/48px 48px,radial-gradient(ellipse at 50% 53%,#111b20 0 17%,#253238 24%,#3d4b51 38%,#56646a 58%,#647176 73%,#48565c 91%);box-shadow:inset 0 1px 2px #c3cdce44,inset 0 -2px 4px #17222888,0 1px 1px #141e2377;}
+.device-type-spkActiveRounded .sp-cone {background:url('./assets/textures/speaker-paper.svg') center/80px 80px,radial-gradient(circle at 35% 30%,#657173,#303d43 70%,#182931);}
+.device-type-spkActiveRounded .sp-panel {position:absolute;}
+.device-type-spkActiveRounded .sp-panel::before {content:none;}
+.device-type-spkActiveRounded .sp-body::after {background:repeating-linear-gradient(0deg,transparent 0 2px,#0006 2px 3px),linear-gradient(#303c3c,#0b1416);box-shadow:inset 0 1px #74827c88,0 2px 3px #0006;}
