@@ -989,7 +989,9 @@ const Hardware = (() => {
             const baseY=Math.max(visibleTop+8,Math.min(worldHeight-12,bottom));
             const base=point(centerX,baseY),edge=point(centerX+box.width/2,baseY);
             const radius=Math.min(540,Math.abs(edge.x-base.x));
-            ellipse(base.x,base.y,Math.max(18,radius),box.furniture?35:20,(box.furniture ? .23 : .13)*heightFade);
+            ellipse(base.x,base.y,Math.max(18,radius*.72),box.furniture?19:11,(box.furniture ? .27 : .18)*heightFade);
+            // A compact contact core anchors the object to the floor beneath it.
+            ellipse(base.x,base.y+2,Math.max(12,Math.min(110,box.width*.22)),box.furniture?7:4,(box.furniture ? .30 : .25)*heightFade);
             const samples=lights.map(light=>sampleSceneLight(light,centerX,box.y+box.height*.55)).filter(light=>light.weight>.08).sort((a,b)=>b.weight-a.weight).slice(0,2);
             const total=samples.reduce((sum,light)=>sum+light.weight,0)+.45;
             samples.forEach(light=>{
@@ -8104,6 +8106,9 @@ const Hardware = (() => {
                 }
                 const body=plug.querySelector('.plug-seat-body');
                 body?.setAttribute('transform',`translate(${container.dataset.seatEnd===end?Number(container.dataset.seatOffset||0):0} 0)`);
+                if(body&&!body.querySelector('.plug-entry-shadow')){
+                    const shadow=document.createElementNS('http://www.w3.org/2000/svg','ellipse');shadow.setAttribute('class','plug-entry-shadow');shadow.setAttribute('cx','1');shadow.setAttribute('cy','0');shadow.setAttribute('rx',cableType==='p2'?'3':'5');shadow.setAttribute('ry',cableType==='p2'?'3':'4');body.insertBefore(shadow,body.firstChild);
+                }
                 plug.style.opacity=container.dataset.seating==='true'?container.dataset.seatOpacity||'1':'1';
                 const {tip,angle,rear}=endpoints[index];
                 plug.setAttribute('transform', `translate(${tip.x} ${tip.y}) rotate(${angle})`);
@@ -8119,6 +8124,12 @@ const Hardware = (() => {
                     if(!boot){boot=document.createElementNS('http://www.w3.org/2000/svg','path');boot.setAttribute('class','plug-strain-relief');(body||plug).insertBefore(boot,(body||plug).firstChild);}
                     boot.setAttribute('d',`M ${rear-1} 0 L ${rear+8} 0`);
                     boot.setAttribute('fill','none');boot.setAttribute('stroke','#252d32');boot.setAttribute('stroke-width',String(cableGeometry(cableType).outer));boot.setAttribute('stroke-linecap','round');
+                    let collar=plug.querySelector('.plug-collar');
+                    if(!collar){collar=document.createElementNS('http://www.w3.org/2000/svg','path');collar.setAttribute('class','plug-collar');(body||plug).appendChild(collar);}
+                    collar.setAttribute('d',`M ${rear-1} -3.1 L ${rear+1.2} -3.1 L ${rear+1.2} 3.1 L ${rear-1} 3.1 Z`);
+                    let ridges=plug.querySelector('.plug-boot-ridge');
+                    if(!ridges){ridges=document.createElementNS('http://www.w3.org/2000/svg','path');ridges.setAttribute('class','plug-boot-ridge');(body||plug).appendChild(ridges);}
+                    ridges.setAttribute('d',`M ${rear+3} -2.5v5 M ${rear+5} -2.5v5 M ${rear+7} -2.5v5`);
                 }
 
             });

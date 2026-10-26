@@ -1,0 +1,85 @@
+/* Shared finish pass: preserve each device's design while tightening scene contrast and detail. */
+
+/* Scene light should tint a finish gently, leaving dark materials dark. */
+#canvas[data-theme="scene"][data-time="night"] {--room-equipment-shade:#09132610;}
+:root.lighting-demo-enabled #canvas .lighting-demo-target>.lighting-incident-overlay::before {
+    filter:saturate(.62);
+}
+
+/* Small, close shadows keep equipment grounded on the floor or furniture. */
+:is(#audio-world,.equipment-preview-world) .device-node:not(.furniture-node) {
+    filter:drop-shadow(0 2px 1.5px rgb(0 0 0 / .35));
+}
+:is(#audio-world,.equipment-preview-world) .device-node.selected {
+    filter:drop-shadow(0 2px 1.5px rgb(0 0 0 / .36)) drop-shadow(0 0 1px rgb(183 207 220 / .62));
+}
+
+/* Selection reads as a fine silhouette instead of a broad blue glow. */
+:is(#audio-world,.equipment-preview-world) .device-node.selected {
+    z-index:15;
+}
+:is(#audio-world,.equipment-preview-world) .device-node :is(.hw-knob,.hw-button,.port,.spotify-canvas-vinyl),
+:is(#audio-world,.equipment-preview-world) .device-node :is(.at-platter,.at-record,.tt-platter,.tt-record) {
+    transition:filter .16s ease,box-shadow .16s ease,transform .16s ease;
+}
+:is(#audio-world,.equipment-preview-world) .device-node :is(.hw-knob,.hw-button,.port):hover {
+    filter:brightness(1.12) drop-shadow(0 0 2px rgb(220 236 242 / .45));
+}
+:is(#audio-world,.equipment-preview-world) .device-node :is(.at-platter,.at-record,.tt-platter,.tt-record):hover {
+    filter:brightness(1.08) drop-shadow(0 0 2px rgb(220 236 242 / .36));
+}
+.spotify-canvas-vinyl:hover,.spotify-canvas-vinyl:focus-visible {
+    filter:brightness(1.1) drop-shadow(0 2px 4px #000a) drop-shadow(0 0 2px #e1d7c8aa);
+}
+:is(#audio-world,.equipment-preview-world) .device-node .port:hover {
+    box-shadow:0 0 0 2px rgb(231 238 236 / .38),0 0 5px currentColor;
+}
+
+/* Refine the typography shared by device names and small faceplate markings. */
+:is(#audio-world,.equipment-preview-world) .device-header {
+    text-shadow:0 1px 1px rgb(0 0 0 / .4);
+    -webkit-font-smoothing:antialiased;
+}
+:is(#audio-world,.equipment-preview-world) :is(.sp-brand,.sp-model,.sp-label,.sp-spec,.device-caption,.port-label) {
+    line-height:1.2;
+    text-shadow:0 1px 1px rgb(0 0 0 / .36);
+    -webkit-font-smoothing:antialiased;
+}
+
+/* Furniture grain follows each board; fine edge lines suggest veneer and joinery. */
+.furniture-node[data-material="lightWood"] :is(.furniture-side,.furniture-leg) {
+    background-size:100% 100%,128px 384px,100% 100%;
+    background-position:0 0,center center,0 0;
+}
+.furniture-node[data-material="darkWood"] :is(.furniture-side,.furniture-leg) {
+    background-size:100% 100%,128px 384px,100% 100%;
+    background-position:0 0,center center,0 0;
+}
+.furniture-node[data-material="lightWood"] :is(.furniture-shelf,.furniture-top) {
+    background-position:0 0,left center,0 0;
+}
+.furniture-node[data-material="darkWood"] :is(.furniture-shelf,.furniture-top) {
+    background-position:0 0,right center,0 0;
+}
+.furniture-node .furniture-part:is(.furniture-top,.furniture-shelf,.furniture-side):not(.furniture-caster)::before {
+    content:"";position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:inherit;
+    background:linear-gradient(90deg,#0002,transparent 2px calc(100% - 2px),#fff2),
+        radial-gradient(circle at 7px 7px,#35251a99 0 1px,transparent 1.5px),
+        radial-gradient(circle at calc(100% - 7px) 7px,#35251a88 0 1px,transparent 1.5px);
+    box-shadow:inset 0 0 0 1px rgb(255 255 255 / .08),inset 0 -1px rgb(0 0 0 / .18);
+}
+.furniture-node[data-material="metal"] .furniture-part:is(.furniture-top,.furniture-shelf,.furniture-side)::before {
+    background:linear-gradient(90deg,#0002,transparent 2px calc(100% - 2px),#fff3);
+    box-shadow:inset 0 0 0 1px rgb(255 255 255 / .12),inset 0 -1px rgb(0 0 0 / .2);
+}
+
+/* Add a visible plug collar and ribbed strain relief while keeping the connector endpoints unchanged. */
+.plug-entry-shadow {fill:#000;opacity:.27;filter:blur(1px);}
+.plug-collar {fill:#aeb9bb;stroke:#414b50;stroke-width:.65;}
+.plug-boot-ridge {fill:none;stroke:#11171a;stroke-width:1.15;stroke-linecap:round;opacity:.88;}
+.cable-plug {filter:drop-shadow(var(--plug-shadow-x,0px) var(--plug-shadow-y,1px) 1px #0008);}
+.cable-group:hover .plug-collar {filter:brightness(1.18);}
+
+@media (prefers-reduced-motion:reduce) {
+    :is(#audio-world,.equipment-preview-world) .device-node :is(.hw-knob,.hw-button,.port,.spotify-canvas-vinyl,.at-platter,.at-record,.tt-platter,.tt-record) {transition:none;}
+}

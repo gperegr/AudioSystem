@@ -3793,8 +3793,8 @@
 #canvas {isolation:isolate;}
 #canvas[data-theme="scene"] {--bg-canvas:#18232b;--canvas-grid:#3a4c55;}
 #canvas[data-theme="scene"][data-time="dawn"] {--room-equipment-shade:transparent;}
-#canvas[data-theme="scene"][data-time="dusk"] {--room-equipment-shade:#27120b0a;}
-#canvas[data-theme="scene"][data-time="night"] {--room-equipment-shade:#0913262b;}
+#canvas[data-theme="scene"][data-time="dusk"] {--room-equipment-shade:#27120b05;}
+#canvas[data-theme="scene"][data-time="night"] {--room-equipment-shade:#09132618;}
 #canvas[data-theme="scene"] #audio-world {background-image:none;}
 #canvas>#audio-world {z-index:1;}
 #room-backdrop {position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:#283139;}
@@ -4395,7 +4395,7 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
 :root.lighting-demo-enabled .lighting-demo-target .lighting-shadow-surface {isolation:isolate;}
 .lighting-incident-overlay {display:none;}
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .lighting-demo-target>.lighting-incident-overlay {position:absolute;inset:0;z-index:35;display:block;pointer-events:none;background:var(--room-equipment-shade,transparent);}
-:root.lighting-demo-enabled #canvas .lighting-demo-target>.lighting-incident-overlay::before {content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse var(--scene-light-a-radius-x,52%) var(--scene-light-a-radius-y,70%) at var(--scene-light-a-x,50%) var(--scene-light-a-y,50%),rgb(var(--scene-light-a-rgb,0 0 0)/calc(.44 * var(--scene-light-a-strength,0))),transparent 100%),radial-gradient(ellipse var(--scene-light-b-radius-x,52%) var(--scene-light-b-radius-y,70%) at var(--scene-light-b-x,50%) var(--scene-light-b-y,50%),rgb(var(--scene-light-b-rgb,0 0 0)/calc(.44 * var(--scene-light-b-strength,0))),transparent 100%),radial-gradient(ellipse var(--scene-light-c-radius-x,52%) var(--scene-light-c-radius-y,70%) at var(--scene-light-c-x,50%) var(--scene-light-c-y,50%),rgb(var(--scene-light-c-rgb,0 0 0)/calc(.44 * var(--scene-light-c-strength,0))),transparent 100%);}
+:root.lighting-demo-enabled #canvas .lighting-demo-target>.lighting-incident-overlay::before {content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse var(--scene-light-a-radius-x,52%) var(--scene-light-a-radius-y,70%) at var(--scene-light-a-x,50%) var(--scene-light-a-y,50%),rgb(var(--scene-light-a-rgb,0 0 0)/calc(.20 * var(--scene-light-a-strength,0))),transparent 100%),radial-gradient(ellipse var(--scene-light-b-radius-x,52%) var(--scene-light-b-radius-y,70%) at var(--scene-light-b-x,50%) var(--scene-light-b-y,50%),rgb(var(--scene-light-b-rgb,0 0 0)/calc(.20 * var(--scene-light-b-strength,0))),transparent 100%),radial-gradient(ellipse var(--scene-light-c-radius-x,52%) var(--scene-light-c-radius-y,70%) at var(--scene-light-c-x,50%) var(--scene-light-c-y,50%),rgb(var(--scene-light-c-rgb,0 0 0)/calc(.20 * var(--scene-light-c-strength,0))),transparent 100%);}
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .lighting-shaped-silhouette>:is(.lighting-incident-overlay,.lighting-furniture-shadow) {mask-image:var(--lighting-silhouette-mask);mask-size:100% 100%;mask-repeat:no-repeat;}
 .lighting-control-shadow {display:none;}
 .lighting-stack-shadow {display:none;}
@@ -4409,7 +4409,7 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .furniture-node[data-back="true"] .rack-body>.lighting-furniture-interior.is-active {position:absolute;inset:0;z-index:0;display:block;width:100%;height:100%;pointer-events:none;}
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .furniture-node[data-back="true"] .rack-body>.furniture-part {z-index:1;}
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .furniture-node[data-back="true"] .rack-body>.furniture-side {z-index:2;}
-:root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .furniture-node.lighting-demo-target .furniture-part::after {content:"";position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse 100% 140% at var(--demo-scene-light-x,50%) var(--demo-scene-light-y,50%),rgb(var(--demo-scene-light-rgb,0 0 0)/calc(.30 * var(--demo-scene-light-strength,0))),transparent 100%);}
+:root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .furniture-node.lighting-demo-target .furniture-part::after {content:"";position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse 100% 140% at var(--demo-scene-light-x,50%) var(--demo-scene-light-y,50%),rgb(var(--demo-scene-light-rgb,0 0 0)/calc(.14 * var(--demo-scene-light-strength,0))),transparent 100%);}
 /* The receiver source well is part of the chassis; its keys sit above the projected shadows. */
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .device-type-powerAmp>.poweramp-body.lighting-shadow-surface::before {content:"";position:absolute;left:82px;right:169px;top:82px;height:34px;box-sizing:border-box;border:1px solid #11191d;border-radius:3px;background:linear-gradient(#10171b,#263138);box-shadow:inset 0 2px 4px #000a,0 1px #ffffff24;pointer-events:none;z-index:0;}
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .device-type-powerAmp>.poweramp-body.lighting-shadow-surface>* {z-index:2;}
