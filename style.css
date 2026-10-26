@@ -263,67 +263,12 @@
         .sp-term-ch { display:flex; flex-direction:column; align-items:center; gap:3px; }
         .sp-term-ch em { font:700 7px/1 "Inter",sans-serif; font-style:normal; color:#d1d5db; }
         .sp-term-ch em.is-r { color:#f87171; }
-        /* Caixa passiva clássica com grade removível e base metálica */
-        .classic-box-body { display:flex; flex-direction:column; align-items:center; }
-        .classic-box-cab { position:relative; width:336px; box-sizing:border-box; padding:12px 12px 0; border:2px solid #0b0d0f; border-radius:5px 5px 0 0; background:linear-gradient(145deg,#30353a,#15181b 70%); box-shadow:inset 1px 1px rgba(255,255,255,.09),inset -3px -3px rgba(0,0,0,.55),0 12px 22px rgba(0,0,0,.34); }
-        .classic-box-cab:is(.classic-box-orange,.classic-box-black) { border-color:#6e3814; background:var(--material-wood-grain),linear-gradient(108deg,#966841,#654124 60%,#835a36); box-shadow:inset 1px 1px rgba(255,204,120,.26),inset -3px -3px rgba(0,0,0,.5),0 12px 22px rgba(0,0,0,.34); }
-        .classic-box-baffle { position:relative; height:440px; overflow:hidden; border:3px solid #060708; background:linear-gradient(145deg,#1d201f,#080909 72%); box-shadow:inset 0 0 0 1px rgba(255,255,255,.05); }
-        .classic-box-exposed { position:absolute; inset:0; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:105px 110px 1fr; gap:10px; padding:18px; box-sizing:border-box; }
-        .classic-box-control-panel { display:grid; grid-template-columns:1fr 1fr; gap:8px; align-content:start; padding:12px 9px; border:1px solid #35393a; background:#070809; color:#d8dbdc; font:700 7px/1.2 "Inter",sans-serif; letter-spacing:.13em; }
-        .classic-box-control-panel b { grid-column:1 / -1; font-size:8px; }
-        .classic-box-control-panel span { display:flex; flex-direction:column; align-items:center; gap:4px; color:#aeb3b5; }
-        .classic-box-control-panel i { width:20px; height:20px; border:2px solid #6f7980; border-radius:50%; background:radial-gradient(circle at 35% 30%,#41474b,#131619 70%); }
-        .classic-box-driver { position:relative; align-self:center; justify-self:center; border-radius:50%; background:radial-gradient(circle at 38% 30%,#373b3f,#060708 68%); box-shadow:0 2px 5px rgba(0,0,0,.8),0 0 0 3px #050506,0 0 0 5px #242728; }
-        .classic-box-driver::after { content:''; position:absolute; inset:28%; border-radius:50%; background:radial-gradient(circle at 36% 29%,#d7d8d2,#8d918d 65%,#3c403f); box-shadow:inset 0 0 4px rgba(0,0,0,.6); }
-        .classic-box-tweeter { width:68px; height:68px; grid-column:2; grid-row:1; }
-        .classic-box-tweeter::after { inset:31%; background:radial-gradient(circle at 38% 32%,#4f5356,#090a0b 70%); }
-        .classic-box-mid { width:82px; height:82px; grid-column:1; grid-row:2; }
-        .classic-box-midrange { width:100px; height:100px; grid-column:2; grid-row:2; }
-        .classic-box-woofer { width:218px; height:218px; grid-column:1 / -1; grid-row:3; align-self:end; }
-        .classic-box-woofer::after { inset:12%; background:radial-gradient(circle at 36% 29%,#e7dec4,#cfc39e 56%,#9a8d6c 100%); box-shadow:inset 0 0 0 1px rgba(44,37,27,.35),inset 0 0 5px rgba(0,0,0,.45); }
-        .classic-box-woofer::before { content:''; position:absolute; z-index:1; inset:40%; border-radius:50%; background:radial-gradient(circle at 35% 30%,#ebe4d0,#95896c); box-shadow:0 0 0 2px rgba(0,0,0,.18); }
-        .speaker-grille.classic-box-grille { position:absolute; z-index:4; inset:0; width:100%; height:100%; padding:14px; border:0; cursor:pointer; background:#1a1c1e; box-sizing:border-box; }
-        .speaker-grille.classic-box-grille::before { content:''; position:absolute; inset:12px; border:3px solid #050606; background:repeating-linear-gradient(90deg,transparent 0 29px,#0b0c0d 29px 34px),repeating-linear-gradient(0deg,transparent 0 29px,#0b0c0d 29px 34px),linear-gradient(135deg,#3a3d40,#151718 70%); box-shadow:inset 0 0 18px rgba(0,0,0,.8); }
-        .speaker-grille.classic-box-grille::after { content:''; position:absolute; inset:18px; opacity:.58; pointer-events:none; background:radial-gradient(ellipse at 35% 28%,rgba(255,255,255,.15),transparent 43%); }
-        .classic-box-orange .speaker-grille.classic-box-grille { background:#bf4b0c; }
-        .classic-box-orange .speaker-grille.classic-box-grille::before { background:repeating-linear-gradient(90deg,transparent 0 29px,#8c2e06 29px 34px),repeating-linear-gradient(0deg,transparent 0 29px,#8c2e06 29px 34px),linear-gradient(135deg,#ff851d,#c54108 70%); border-color:#431602; }
+        /* Shared removable-grille controls. Classic cabinet styles live in classic-speakers.css. */
         .grille-restore { position:absolute; z-index:5; right:13px; top:13px; display:none; padding:6px 8px; border:1px solid #69737a; border-radius:3px; color:#edf1f2; background:#171b1e; font:700 8px/1 "Inter",sans-serif; letter-spacing:.08em; cursor:pointer; }
         .device-node.grille-off .speaker-grille.classic-box-grille { display:none; }
         .device-node.grille-off .grille-restore { display:grid; place-items:center; opacity:0; visibility:hidden; pointer-events:none; }
         .device-node.grille-off:hover .grille-restore { opacity:1; visibility:visible; pointer-events:auto; }
         .grille-restore svg {display:block;width:15px;height:15px;flex:none;pointer-events:none;}
-        .classic-box-connection { display:flex; align-items:center; justify-content:center; gap:7px; height:45px; margin:0 20px; border:2px solid #08090a; border-top:0; color:#bbc2c5; background:linear-gradient(180deg,#202428,#101214); font:700 7px/1 "Inter",sans-serif; letter-spacing:.1em; }
-        .classic-box-connection .port { width:20px !important; height:20px !important; min-width:20px; border-width:3px !important; }
-        .classic-box-orange + .classic-box-connection { color:#e8d0a6; background:linear-gradient(180deg,#5b2d13,#241109); }
-        .classic-box-base { width:238px; height:32px; margin:auto; border:5px solid #080a0b; border-top:0; background:linear-gradient(90deg,#101214,#31363a 48%,#101214); box-shadow:0 7px 0 #050606,0 12px 11px rgba(0,0,0,.38); }
-        /* Geometria da caixa clássica: áreas independentes para drivers, terminal e suporte. */
-        .classic-box-cab { padding:12px 12px 0; background:linear-gradient(115deg,#303436,#202426 70%); }
-        .classic-box-cab:is(.classic-box-orange,.classic-box-black) { background:var(--material-wood-grain),linear-gradient(100deg,#805232,#644027 48%,#8b5935); }
-        .classic-box-baffle { height:462px; background:#131412; }
-        .classic-box-exposed { display:block; padding:0; }
-        .classic-box-control-panel { position:absolute; left:16px; top:17px; width:110px; height:76px; box-sizing:border-box; padding:10px 8px; gap:6px; }
-        .classic-box-control-panel b { font-size:7px; }.classic-box-control-panel i { width:16px;height:16px; }
-        .classic-box-driver { position:absolute; box-sizing:border-box; }
-        .classic-box-tweeter { right:23px;top:22px;width:73px;height:73px; }
-        .classic-box-mid { left:30px;top:125px;width:76px;height:76px;background:radial-gradient(circle at 45% 40%,#030404,#050606 60%,#343630 64%,#101211 75%); }
-        .classic-box-mid::after { content:none; }
-        .classic-box-midrange { right:20px;top:118px;width:96px;height:96px; }
-        .classic-box-midrange::after { inset:15%;background:radial-gradient(circle at 38% 32%,#ebe2c6,#ccbd92 70%,#9c9175); }
-        .classic-box-woofer { left:50%;top:236px;transform:translateX(-50%);width:204px;height:204px; }
-        .classic-box-woofer::after { inset:12%;background:repeating-radial-gradient(circle at center,transparent 0 12px,#82785855 12px 13px,transparent 13px 15px),radial-gradient(circle at 38% 30%,#e8dfc2,#c9ba91); }
-        .speaker-grille.classic-box-grille { display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(12,minmax(0,1fr));gap:3px;padding:7px;background:#111313; }
-        .speaker-grille.classic-box-grille::before,.speaker-grille.classic-box-grille::after { content:none; }
-        .classic-box-grille > i { min-width:0;min-height:0;border-radius:2px;border:1px solid #323638;background:linear-gradient(135deg,#434749,#202325 65%,#111314);box-shadow:inset 2px 2px 2px #ffffff0c,inset -3px -3px 3px #0009;pointer-events:none; }
-        .classic-box-orange .speaker-grille.classic-box-grille { background:#a43d08; }
-        .classic-box-orange .classic-box-grille > i { border-color:#dc6417;background:linear-gradient(135deg,#ff9b35,#ec650c 47%,#ae3404);box-shadow:inset 2px 2px 2px #ffd08355,inset -3px -3px 4px #742001aa; }
-        .classic-box-baffle .grille-restore { top:12px;left:12px;right:auto;padding:4px 6px;font-size:6px;letter-spacing:.04em; }
-        .classic-box-connection { height:38px;margin:8px 0 10px;border:1px solid #373c3d;border-radius:2px;background:#141718; }
-        .classic-box-base { position:relative;box-sizing:border-box;width:244px;height:27px;margin:0 auto;border:5px solid #101214;border-top:0;background:transparent;box-shadow:inset 1px 0 #555c60,1px 2px 2px #0008; }
-        .classic-box-base::before { content:'';position:absolute;left:-5px;right:-5px;top:0;height:6px;background:linear-gradient(#353a3d,#0a0b0c); }
-        .classic-box-body { padding-bottom:0; }
-        :is(.classic-box-orange,.classic-box-black) .classic-box-woofer {width:240px;height:240px;top:211px;}
-        :is(.classic-box-orange,.classic-box-black) .classic-box-woofer::after {background:repeating-radial-gradient(circle,transparent 0 12px,#a7a99f55 12px 13px,transparent 13px 15px),radial-gradient(circle at 38% 30%,#f2f0e6,#d3d5ca);}
-        :is(.classic-box-orange,.classic-box-black) .classic-box-woofer::before {background:radial-gradient(circle at 35% 30%,#eeeede,#aaaFA2);}
         /* Toca-discos · vista superior, preto */
         .device-node.device-type-turntable {
             width:590px; padding:16.8px; box-sizing:border-box;

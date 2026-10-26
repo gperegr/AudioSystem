@@ -810,7 +810,7 @@ const Hardware = (() => {
         updateLightingDemo();
     }
     function mountLightingSilhouette(device){
-        if(!device.matches('.device-type-powerValve,.device-type-turntable,.device-type-turntableVintage,.device-type-turntableLinear,.device-type-streamIntegrated,.headphone-equipment,.floorstanding-speaker,.bookshelf-speaker')&&!device.querySelector('.sp-cab'))return;
+        if(!device.matches('.device-type-powerValve,.device-type-turntable,.device-type-turntableVintage,.device-type-turntableLinear,.device-type-streamIntegrated,.headphone-equipment,.floorstanding-speaker,.bookshelf-speaker')&&!device.querySelector('.sp-cab,.classic-box-cab'))return;
         const width=device.offsetWidth,height=device.offsetHeight,deviceRect=device.getBoundingClientRect();
         if(!width||!height||!deviceRect.width)return;
         const scale=width/deviceRect.width,mask=document.createElement('canvas');mask.width=width;mask.height=height;
@@ -841,6 +841,10 @@ const Hardware = (() => {
                 else if(art.tagName.toLowerCase()==='img')art.addEventListener('load',()=>mountLightingSilhouette(device),{once:true});
             }
             device.querySelectorAll('.headphone-stand-post,.headphone-stand-cradle,.headphone-stand-base').forEach(part=>fill(box(part),parseFloat(getComputedStyle(part).borderTopLeftRadius)||2));
+        }else if(device.querySelector('.classic-box-cab')){
+            fill(box(device.querySelector('.classic-box-cab')),3);
+            const stand=device.querySelector('.classic-box-base');
+            if(stand){const rect=box(stand);ctx.save();ctx.translate(rect.x,rect.y);ctx.scale(rect.width/244,rect.height/27);stand.querySelectorAll('[data-stand-silhouette]').forEach(part=>ctx.fill(new Path2D(part.getAttribute('d'))));ctx.restore();}
         }else if(device.classList.contains('floorstanding-speaker')||device.classList.contains('bookshelf-speaker')||device.querySelector('.sp-cab')){
             device.querySelectorAll('.sp-cab,.bookshelf-cabinet,.tower-cabinet,.tower-plinth,.tower-foot,.tower-top-tweeter,.shelf-top-tweeter').forEach(part=>fill(box(part),parseFloat(getComputedStyle(part).borderTopLeftRadius)||3));
         }else if(device.classList.contains('device-type-turntableLinear')){
@@ -4323,8 +4327,8 @@ const Hardware = (() => {
             crossoverVintage: 'Crossover vintage que separa o áudio em três faixas de frequência.',
             spkPassiveWood: 'Caixa passiva: recebe sinal amplificado do receiver ou amplificador por fio.',
             spkPassiveCarbon: 'Caixa passiva: recebe sinal amplificado do receiver ou amplificador por fio.',
-            spkPassiveGridBlack: 'Caixa passiva de três vias com tweeter, dois transdutores de médios, woofer, crossover interno e grade preta removível. Impedância nominal de 4 Ω; amplificação recomendada até 200 W.',
-            spkPassiveGridOrange: 'Caixa passiva de três vias com tweeter, dois transdutores de médios, woofer, crossover interno e grade laranja removível. Impedância nominal de 4 Ω; amplificação recomendada até 200 W.',
+            spkPassiveGridBlack: 'Caixa passiva de três vias com tweeter, médio, woofer de cone claro, duto frontal e grade preta removível. Gabinete de madeira e suporte metálico. Impedância nominal de 4 Ω; amplificação recomendada até 200 W.',
+            spkPassiveGridOrange: 'Caixa passiva de três vias com tweeter, médio, woofer de cone claro, duto frontal e grade laranja removível. Gabinete de madeira e suporte metálico. Impedância nominal de 4 Ω; amplificação recomendada até 200 W.',
             spkActiveMonitor: 'Caixa ativa: recebe sinal de linha RCA mono, com volume próprio; o lado L/R vem da saída conectada.',
             spkActiveCompact:'Caixa ativa compacta com RCA L/R e AUX P2 de linha, controle de volume e assinatura sonora própria. Preserva os canais estéreo.',
             spkActiveRounded:'Monitor ativo de duas vias, gabinete arredondado, guia de ondas e apoio isolante. Entrada mono P10 de linha adaptada para o simulador, volume e alimentação próprios. Use duas unidades para estéreo.',
@@ -5786,7 +5790,12 @@ const Hardware = (() => {
             if(tpl) el.innerHTML = tpl.innerHTML;
             else { el.innerHTML = `<div class="device-header"><span>${type}</span></div><div class="p-4"><span class="text-[8px] font-bold">INPUT · RCA R</span><div class="port" data-type="rca-r" data-io="in" data-node="in" title="Entrada RCA direita R"></div></div>`; }
             if (type === 'turntableVintage') el.querySelector('.device-header span').textContent = deviceName;
-            if(['spkPassiveGridBlack','spkPassiveGridOrange'].includes(type))el.querySelector('.device-header span').textContent=deviceName;
+            if(['spkPassiveGridBlack','spkPassiveGridOrange'].includes(type)){
+                el.querySelector('.device-header span').textContent=deviceName;
+                el.querySelectorAll('.classic-box-tweeter,.classic-box-midrange,.classic-box-woofer').forEach(driver=>driver.insertAdjacentHTML('beforeend','<i class="classic-driver-screws" aria-hidden="true"></i>'));
+                const trims=el.querySelectorAll('.classic-box-control-panel span');trims.forEach((trim,i)=>trim.insertAdjacentHTML('beforeend',i?'HIGH':'MID'));
+                el.querySelector('.classic-box-base').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 244 27" aria-hidden="true"><defs><linearGradient id="${id}-stand" x2="0" y2="1"><stop stop-color="#525852"/><stop offset=".25" stop-color="#292e29"/><stop offset="1" stop-color="#0c100d"/></linearGradient></defs><path data-stand-silhouette d="M1 0h242v6H1Z" fill="url(#${id}-stand)" stroke="#111712" stroke-width=".7"/><path d="M3 1h238" stroke="#9ba392" stroke-width=".6"/><path data-stand-silhouette d="M11 6h15l9 17H19Zm222 0h-15l-9 17h16Z" fill="url(#${id}-stand)" stroke="#131914" stroke-width=".7"/><path d="m13 7 8 15m210-15-8 15" stroke="#707b69" stroke-width=".7"/><path data-stand-silhouette d="M31 17h182v4H31Z" fill="#161d16"/><path d="M32 17.5h180" stroke="#4d5847" stroke-width=".5"/><path data-stand-silhouette d="M17 23h23v4H17Zm187 0h23v4h-23Z" fill="#111511"/><path d="M18 24h21m166 0h21" stroke="#475140" stroke-width=".65"/><path d="M14 2h17m182 0h17" stroke="#0e150d" stroke-width="2"/><circle cx="23" cy="10" r="1.4" fill="#a1aa95"/><circle cx="221" cy="10" r="1.4" fill="#a1aa95"/></svg>`;
+            }
             if(type==='turntableLinear')el.innerHTML=tpl.innerHTML.replaceAll('linear-art-',`${id}-art-`);
             
             if(type==='hardwareDemo')el.innerHTML=Hardware.demoMarkup();
@@ -6971,9 +6980,6 @@ const Hardware = (() => {
             }
             const grille = dev.el.querySelector('.speaker-grille');
             if (grille) {
-                if (grille.classList.contains('classic-box-grille') && !grille.children.length) {
-                    grille.innerHTML = '<i aria-hidden="true"></i>'.repeat(96);
-                }
                 const toggleGrille = e => {
                     e.stopPropagation();
                     const removed = dev.el.classList.toggle('grille-off');
