@@ -77,14 +77,46 @@
 .furniture-node .furniture-part:is(.furniture-top,.furniture-shelf,.furniture-side):not(.furniture-caster)::before {
     content:"";position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:inherit;
     background:linear-gradient(90deg,#0002,transparent 2px calc(100% - 2px),#fff2),
-        radial-gradient(circle at 7px 7px,#35251a99 0 1px,transparent 1.5px),
-        radial-gradient(circle at calc(100% - 7px) 7px,#35251a88 0 1px,transparent 1.5px);
+        radial-gradient(ellipse at 35% 25%,#d7bd8d 0 1px,#745739 1.2px 1.8px,#382c23 2px,transparent 2.4px),
+        radial-gradient(ellipse at 35% 25%,#e7d3a8 0 .35px,transparent .5px),
+        radial-gradient(ellipse at 35% 25%,#d7bd8d 0 1px,#745739 1.2px 1.8px,#382c23 2px,transparent 2.4px),
+        radial-gradient(ellipse at 35% 25%,#e7d3a8 0 .35px,transparent .5px),
+        radial-gradient(ellipse at 35% 25%,#d7bd8d 0 1px,#745739 1.2px 1.8px,#382c23 2px,transparent 2.4px),
+        radial-gradient(ellipse at 35% 25%,#e7d3a8 0 .35px,transparent .5px),
+        radial-gradient(ellipse at 35% 25%,#d7bd8d 0 1px,#745739 1.2px 1.8px,#382c23 2px,transparent 2.4px),
+        radial-gradient(ellipse at 35% 25%,#e7d3a8 0 .35px,transparent .5px);
+    background-size:100% 100%,5px 5px,5px 5px,5px 5px,5px 5px,5px 5px,5px 5px,5px 5px,5px 5px;
+    background-position:0 0,5px 5px,5px 5px,calc(100% - 5px) 5px,calc(100% - 5px) 5px,5px calc(100% - 5px),5px calc(100% - 5px),calc(100% - 5px) calc(100% - 5px),calc(100% - 5px) calc(100% - 5px);
+    background-repeat:no-repeat;
     box-shadow:inset 0 0 0 1px rgb(255 255 255 / .08),inset 0 -1px rgb(0 0 0 / .18);
 }
 .furniture-node[data-material="metal"] .furniture-part:is(.furniture-top,.furniture-shelf,.furniture-side)::before {
-    background:linear-gradient(90deg,#0002,transparent 2px calc(100% - 2px),#fff3);
+    background:linear-gradient(90deg,#0002,transparent 2px calc(100% - 2px),#fff3),
+        radial-gradient(ellipse at 35% 25%,#e0e6e6 0 1px,#667277 1.2px 1.8px,#263136 2px,transparent 2.4px),
+        radial-gradient(ellipse at 35% 25%,#f5f7f3 0 .35px,transparent .5px),
+        radial-gradient(ellipse at 35% 25%,#e0e6e6 0 1px,#667277 1.2px 1.8px,#263136 2px,transparent 2.4px),
+        radial-gradient(ellipse at 35% 25%,#f5f7f3 0 .35px,transparent .5px),
+        radial-gradient(ellipse at 35% 25%,#e0e6e6 0 1px,#667277 1.2px 1.8px,#263136 2px,transparent 2.4px),
+        radial-gradient(ellipse at 35% 25%,#f5f7f3 0 .35px,transparent .5px),
+        radial-gradient(ellipse at 35% 25%,#e0e6e6 0 1px,#667277 1.2px 1.8px,#263136 2px,transparent 2.4px),
+        radial-gradient(ellipse at 35% 25%,#f5f7f3 0 .35px,transparent .5px);
+    background-size:100% 100%,5px 5px,5px 5px,5px 5px,5px 5px,5px 5px,5px 5px,5px 5px,5px 5px;
+    background-position:0 0,5px 5px,5px 5px,calc(100% - 5px) 5px,calc(100% - 5px) 5px,5px calc(100% - 5px),5px calc(100% - 5px),calc(100% - 5px) calc(100% - 5px),calc(100% - 5px) calc(100% - 5px);
+    background-repeat:no-repeat;
     box-shadow:inset 0 0 0 1px rgb(255 255 255 / .12),inset 0 -1px rgb(0 0 0 / .2);
 }
+
+/* Small faceplate fasteners and a fine cabinet joint, painted once with each device. */
+.assembly-detail-surface {position:relative;}
+.assembly-details {position:absolute;inset:0;z-index:0;overflow:hidden;border-radius:inherit;pointer-events:none;}
+.assembly-details::before {content:"";position:absolute;inset:3px;border:1px solid rgb(235 241 237 / .12);border-radius:inherit;box-shadow:inset 0 1px rgb(255 255 255 / .08);}
+.assembly-fastener {position:absolute;width:5px;height:5px;border:1px solid #263238;border-radius:50%;box-sizing:border-box;background:radial-gradient(circle at 32% 28%,#e1e7e3 0 1px,#889398 1.3px 2px,#263238 2.2px);box-shadow:0 1px 1px #0008;}
+.assembly-fastener::after {content:"";position:absolute;left:1px;right:1px;top:1px;height:1px;background:#354247;transform:rotate(-38deg);}
+.assembly-fastener--tl {left:5px;top:5px;}.assembly-fastener--tr {right:5px;top:5px;}.assembly-fastener--bl {left:5px;bottom:5px;}.assembly-fastener--br {right:5px;bottom:5px;}
+.assembly-details--warm .assembly-fastener {border-color:#4e3925;background:radial-gradient(circle at 32% 28%,#eee0ba 0 1px,#a4824e 1.3px 2px,#4e3925 2.2px);}
+.assembly-details--warm .assembly-fastener::after {background:#604a2c;}
+.assembly-details--steel .assembly-fastener {border-color:#364147;background:radial-gradient(circle at 32% 28%,#f0f2ed 0 1px,#aab2b1 1.3px 2px,#455158 2.2px);}
+.assembly-details--steel .assembly-fastener::after {background:#4c585d;}
 
 /* Add a visible plug collar and ribbed strain relief while keeping the connector endpoints unchanged. */
 .plug-entry-shadow {fill:#000;opacity:.27;filter:blur(1px);}

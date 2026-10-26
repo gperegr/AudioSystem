@@ -5970,6 +5970,20 @@ const Hardware = (() => {
                 detail.innerHTML='<span class="phone-housing-cheek is-left"></span><span class="phone-housing-cheek is-right"></span><span class="phone-housing-frame"></span><span class="phone-housing-vent"></span><span class="phone-housing-screws"><i></i><i></i><i></i><i></i></span>';
                 el.querySelector('.phone-amp-face,.amp4-rack-face').prepend(detail);
             }
+            const assemblySurface=el.querySelector([
+                '.audio-interface-face','.integrated-face','.receiver-front','.poweramp-body',
+                '.eq-studio-face','.eq-vintage-face','.mixer-rack-panel','.xover-panel',
+                '.selector-face','.signal-face','.bench-face','.streamer-face','.cd-face',
+                '.interface-face','.custom-pre-face','.custom-power-face'
+            ].join(','));
+            if(assemblySurface&&!assemblySurface.querySelector('.assembly-details')){
+                assemblySurface.classList.add('assembly-detail-surface');
+                const assembly=document.createElement('span');
+                assembly.className=`assembly-details assembly-details--${el.classList.contains('device-family-vintage')?'warm':el.classList.contains('device-family-studio')?'steel':'dark'}`;
+                assembly.setAttribute('aria-hidden','true');
+                assembly.innerHTML='<i class="assembly-fastener assembly-fastener--tl"></i><i class="assembly-fastener assembly-fastener--tr"></i><i class="assembly-fastener assembly-fastener--bl"></i><i class="assembly-fastener assembly-fastener--br"></i>';
+                assemblySurface.appendChild(assembly);
+            }
             standardizeStereoPorts(el);
             el.querySelectorAll('.port[data-type="wire"]').forEach(port=>{
                 port.innerHTML='<svg class="spring-terminal-art" viewBox="0 0 32 22" aria-hidden="true"><rect x=".5" y=".5" width="31" height="21" rx="1.8" fill="#2e3938" stroke="#66716b" stroke-width=".8"/><rect x="5.5" y="2" width="21" height="18" rx="1" fill="#16201e" stroke="#46534d" stroke-width=".6"/><circle cx="2.9" cy="11" r="1.05" fill="#aeb9ad"/><circle cx="29.1" cy="11" r="1.05" fill="#aeb9ad"/><rect x="7" y="3" width="7.5" height="7.3" rx=".6" fill="#c93237" stroke="#ed6c66" stroke-width=".4"/><path d="M7.8 5.2h6M7.8 7.1h6M7.8 9h6" stroke="#8a1e25" stroke-width=".5"/><rect x="17.5" y="3" width="7.5" height="7.3" rx=".6" fill="#171c1b" stroke="#515e55" stroke-width=".4"/><path d="M18.3 5.2h6M18.3 7.1h6M18.3 9h6" stroke="#050909" stroke-width=".6"/><path d="M7 12h7.5v6H7zM17.5 12H25v6h-7.5z" fill="#26352e" stroke="#415146" stroke-width=".5"/><ellipse class="spring-terminal-hole" cx="10.8" cy="15" rx="2" ry="1.6" fill="#0b1010"/><ellipse class="spring-terminal-hole" cx="21.3" cy="15" rx="2" ry="1.6" fill="#0b1010"/><path d="M9.5 16.6h2.6M20 16.6h2.6" stroke="#9da68c" stroke-width=".5"/></svg>';
