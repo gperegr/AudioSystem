@@ -1,12 +1,12 @@
 /* Passive audio adapters. Artwork and connector positions share canvas coordinates. */
 const AudioAdapterDesign = (() => {
     const models = Object.freeze({
-        adapterP2P10:{input:'p2',output:'p10',width:228,height:70,finish:'gold'},
-        adapterP10P2:{input:'p10',output:'p2',width:228,height:70,finish:'silver'},
-        adapterP2Rca:{input:'p2',output:'rca',width:300,height:128},
-        adapterP10Rca:{input:'p10',output:'rca',width:300,height:128},
-        adapterRcaP2:{input:'rca',output:'p2',width:300,height:128},
-        adapterRcaP10:{input:'rca',output:'p10',width:300,height:128}
+        adapterP2P10:{input:'p2',output:'p10',width:74,height:23,artWidth:228,artHeight:70,artScale:.32,finish:'gold'},
+        adapterP10P2:{input:'p10',output:'p2',width:74,height:23,artWidth:228,artHeight:70,artScale:.32,finish:'silver'},
+        adapterP2Rca:{input:'p2',output:'rca',width:180,height:77,artWidth:300,artHeight:128,artScale:.6},
+        adapterP10Rca:{input:'p10',output:'rca',width:180,height:77,artWidth:300,artHeight:128,artScale:.6},
+        adapterRcaP2:{input:'rca',output:'p2',width:180,height:77,artWidth:300,artHeight:128,artScale:.6},
+        adapterRcaP10:{input:'rca',output:'p10',width:180,height:77,artWidth:300,artHeight:128,artScale:.6}
     });
     const angle = value => {const n=Number(value);return Number.isFinite(n)?((Math.round(n/90)*90)%360+360)%360:0;};
     const silhouettes=new Map();
@@ -39,13 +39,15 @@ const AudioAdapterDesign = (() => {
             if(rcaIn){art+=plug(98,32,true,'#d5d6cc',true)+plug(98,96,true,'#ab3d36',true)+plug(198,64,false,'#20292d',false);}
             else {art+=plug(102,64,false,'#20292d',true)+plug(198,32,true,'#d5d6cc',false)+plug(198,96,true,'#ab3d36',false);}
         }
-        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${m.width} ${m.height}" width="${m.width}" height="${m.height}" aria-hidden="true">${defs}${art}</svg>`;
+        const sourceWidth=m.artWidth||m.width,sourceHeight=m.artHeight||m.height,scale=m.artScale||1,offsetX=(m.width-sourceWidth*scale)/2,offsetY=(m.height-sourceHeight*scale)/2;
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${m.width} ${m.height}" width="${m.width}" height="${m.height}" aria-hidden="true">${defs}<g transform="translate(${offsetX} ${offsetY}) scale(${scale})">${art}</g></svg>`;
     }
     function ports(type){
         const m=models[type];
         return ['input','output'].flatMap(side=>{
-            const io=side==='input'?'in':'out',format=m[side],x=side==='input'?(m.finish?18:format==='rca'?28:26):m.width-18;
-            return (format==='rca'?['L','R']:['Stereo']).map((ch,i)=>({x,y:format==='rca'?(i?96:32):m.height/2,io,node:io+ch,format:format==='rca'?'rca-'+ch.toLowerCase():format,label:`${io==='in'?'Entrada':'Saída'} ${format==='rca'?'RCA '+ch:format.toUpperCase()+' TRS estéreo'}`}));
+            const io=side==='input'?'in':'out',format=m[side],sourceWidth=m.artWidth||m.width,sourceHeight=m.artHeight||m.height,scale=m.artScale||1,offsetX=(m.width-sourceWidth*scale)/2,offsetY=(m.height-sourceHeight*scale)/2;
+            const x=(side==='input'?(m.finish?18:format==='rca'?28:26):sourceWidth-18)*scale+offsetX;
+            return (format==='rca'?['L','R']:['Stereo']).map((ch,i)=>({x,y=(format==='rca'?(i?96:32):sourceHeight/2)*scale+offsetY,io,node:io+ch,format:format==='rca'?'rca-'+ch.toLowerCase():format,label:`${io==='in'?'Entrada':'Saída'} ${format==='rca'?'RCA '+ch:format.toUpperCase()+' TRS estéreo'}`}));
         });
     }
     function markup(type,prefix){const m=models[type];return `<div class="device-header"><span>Adaptador ${m.input.toUpperCase()} → ${m.output.toUpperCase()}</span></div><div class="adapter-object" style="width:${m.width}px;height:${m.height}px">${svg(type,prefix)}${ports(type).map(p=>`<div class="port adapter-port" style="left:${p.x}px;top:${p.y}px" data-type="${p.format}" data-io="${p.io}" data-node="${p.node}" title="${p.label}"></div>`).join('')}</div>`;}
