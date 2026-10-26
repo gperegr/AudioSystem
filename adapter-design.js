@@ -47,7 +47,7 @@ const AudioAdapterDesign = (() => {
         return ['input','output'].flatMap(side=>{
             const io=side==='input'?'in':'out',format=m[side],sourceWidth=m.artWidth||m.width,sourceHeight=m.artHeight||m.height,scale=m.artScale||1,offsetX=(m.width-sourceWidth*scale)/2,offsetY=(m.height-sourceHeight*scale)/2;
             const x=(side==='input'?(m.finish?18:format==='rca'?28:26):sourceWidth-18)*scale+offsetX;
-            return (format==='rca'?['L','R']:['Stereo']).map((ch,i)=>({x,y=(format==='rca'?(i?96:32):sourceHeight/2)*scale+offsetY,io,node:io+ch,format:format==='rca'?'rca-'+ch.toLowerCase():format,label:`${io==='in'?'Entrada':'Saída'} ${format==='rca'?'RCA '+ch:format.toUpperCase()+' TRS estéreo'}`}));
+            return (format==='rca'?['L','R']:['Stereo']).map((ch,i)=>({x,y:(format==='rca'?(i?96:32):sourceHeight/2)*scale+offsetY,io,node:io+ch,format:format==='rca'?'rca-'+ch.toLowerCase():format,label:`${io==='in'?'Entrada':'Saída'} ${format==='rca'?'RCA '+ch:format.toUpperCase()+' TRS estéreo'}`}));
         });
     }
     function markup(type,prefix){const m=models[type];return `<div class="device-header"><span>Adaptador ${m.input.toUpperCase()} → ${m.output.toUpperCase()}</span></div><div class="adapter-object" style="width:${m.width}px;height:${m.height}px">${svg(type,prefix)}${ports(type).map(p=>`<div class="port adapter-port" style="left:${p.x}px;top:${p.y}px" data-type="${p.format}" data-io="${p.io}" data-node="${p.node}" title="${p.label}"></div>`).join('')}</div>`;}
