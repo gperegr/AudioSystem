@@ -2026,62 +2026,6 @@
         .correlation-scale>div {position:relative;flex:1;height:4px;background:linear-gradient(90deg,#b75b55,#676c55,#439c82);border-radius:3px;}
         .correlation-scale i {position:absolute;left:50%;top:-2px;width:3px;height:8px;background:#6ee7b7;transform:translateX(-50%);}
         [data-correlation-value] {display:block;text-align:center;margin-top:4px;font:600 6px "Inter",sans-serif;}
-        .device-node.device-type-tapeDeck {width:480px;height:440px;box-sizing:border-box;padding:8px!important;border:1px solid #303536!important;border-radius:5px;background:linear-gradient(100deg,#4a4c48,#202524)!important;box-shadow:inset 0 1px #ffffff25,0 8px 14px #0005;}
-        .tape-face {position:relative;height:100%;box-sizing:border-box;border:1px solid #8f918a;border-radius:2px;background:repeating-linear-gradient(0deg,#ffffff0b 0 1px,transparent 1px 3px),linear-gradient(110deg,#d5d5c9,#b0b2a7 60%,#c1c4b7);color:#343a35;}
-        .tape-face>header {display:flex;align-items:center;justify-content:space-between;position:absolute;top:11px;left:16px;right:16px;font:700 7px "Inter",sans-serif;letter-spacing:.12em;}.tape-face>header>strong {font-size:10px;}
-        .tape-reels {position:absolute;left:20px;right:20px;top:39px;display:flex;justify-content:space-between;}
-        .tape-reel {position:relative;width:178px;height:178px;border:2px solid #8e948e;border-radius:50%;box-sizing:border-box;background:#7b807a;box-shadow:0 3px 6px #0005,inset 0 0 0 4px #d2d5cd;}
-        .tape-winding {position:absolute;inset:16px;border-radius:50%;background:repeating-radial-gradient(circle,#4d3829 0 1px,#654a35 1px 2px);box-shadow:0 0 0 2px #252b28;}
-        .reel-1 .tape-winding {inset:25px;}
-        .reel-metal {position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 30deg,#e0e3dc 0 30deg,transparent 30deg 90deg,#b9c0b7 90deg 150deg,transparent 150deg 210deg,#d7dbd3 210deg 270deg,transparent 270deg 330deg,#e0e3dc 330deg);animation:reel-turn 4s linear infinite;animation-play-state:paused;box-shadow:inset 0 0 0 7px #b9c0b8,inset 0 0 0 9px #eef0e8;}
-        .reel-metal>b {position:absolute;inset:63px;border-radius:50%;background:radial-gradient(circle,#151b18 0 18%,#c3cac2 20% 48%,#323c36 50% 61%,#dbe0d7 63%);box-shadow:0 1px 3px #0009;}
-        .tape-running .reel-metal {animation-play-state:running;}.tape-running .reel-1 .reel-metal {animation-duration:4.8s;}
-        .tape-path {position:absolute;left:58px;right:58px;top:207px;height:48px;border-top:2px solid #493425;display:flex;justify-content:space-between;align-items:center;}
-        .tape-path>i {width:18px;height:18px;border:4px solid #727970;box-sizing:border-box;border-radius:50%;background:#202723;box-shadow:0 1px 2px #0007;}
-        .tape-path>b {position:absolute;left:63px;right:63px;top:12px;padding:11px 0;text-align:center;border:1px solid #202722;border-radius:3px;background:linear-gradient(#465047,#202722);color:#c9d0c4;font:700 6px "Inter",sans-serif;letter-spacing:.1em;}
-        .tape-control-panel {position:absolute;left:0;right:0;bottom:0;height:146px;box-sizing:border-box;padding:13px 16px;background:linear-gradient(#303a33,#1c261f);border-top:3px solid #949c8e;display:grid;grid-template-columns:1fr 190px;grid-template-rows:66px 1fr;gap:10px;color:#d5dccf;}
-        .tape-transport {display:flex;flex-direction:column;gap:12px;align-items:flex-start;}
-        .tape-transport>output {padding:4px 10px;border:2px solid #101810;border-radius:2px;background:#0b170f;color:#a7c894;font:700 15px "Inter",sans-serif;letter-spacing:.15em;}
-        .tape-transport>div {display:flex;gap:4px;}.tape-transport button {height:20px;min-width:23px;padding:0 5px;border:1px solid #525c51;border-radius:2px;background:linear-gradient(#d0d5c9,#929d8b);color:#1e281d;font:700 6px "Inter",sans-serif;}
-        .tape-transport [data-source-play] {min-width:78px;}
-        .tape-control-panel .extra-vu {height:62px;}
-        .tape-bottom {grid-column:1/-1;display:flex;align-items:center;gap:35px;padding-top:2px;}
-        .tape-bottom .extra-io {flex-direction:row;gap:14px;}
-        .tape-level {flex-direction:row;gap:9px;}.tape-level small {font:700 6px "Inter",sans-serif;}
-        .tape-bottom .extra-power {margin-left:auto;}
-        @keyframes reel-turn {to{transform:rotate(360deg);}}
-        @media(prefers-reduced-motion:reduce){.reel-metal{animation:none;}}
-
-
-        .device-node.device-type-tapeDeck {border-color:#353a3c!important;background:linear-gradient(90deg,#272d2f,#535a5b 2%,#303739 98%,#171c1e)!important;box-shadow:inset 0 1px #ffffff40,0 9px 16px #0005;}
-        .tape-face {border-color:#a4aaa4;background:repeating-linear-gradient(0deg,#ffffff09 0 1px,transparent 1px 3px),linear-gradient(110deg,#dfe3dc,#bac3bb 65%,#d0d6ce);box-shadow:inset 0 1px #fff8,inset 0 -2px 3px #0002;}
-        .tape-face>header {padding-bottom:8px;border-bottom:1px solid #7f8b7c55;letter-spacing:.1em;}
-        .tape-face>header>span {color:#646f63;font-size:6px;}
-        .tape-reels {top:44px;}
-        .tape-reel {border:1px solid #8c9790;background:radial-gradient(circle,#202823 0 60%,#647169 62% 72%,#aeb8ae 73%);box-shadow:0 4px 7px #0005,inset 0 0 0 3px #e2e8de;}
-        .reel-metal {background:none;box-shadow:none;}
-        .reel-metal>svg {display:block;width:100%;height:100%;filter:drop-shadow(0 1px 1px #0007);}
-        .reel-metal>b {inset:66px;background:radial-gradient(circle,#151c17 0 20%,#dbe2d8 22% 37%,#39483c 40% 65%,#b3bfb1 68%);box-shadow:0 2px 3px #0007;}
-        .tape-path {top:216px;height:47px;border:0;}
-        .tape-path>svg {position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
-        .tape-path>i {position:relative;z-index:1;border:3px solid #bcc5b9;background:radial-gradient(circle,#151e17 0 35%,#455448 40%);box-shadow:0 1px 3px #0007;}
-        .tape-path>b {top:13px;padding:10px 0;background:linear-gradient(#4a554b,#263228);border-color:#788474;box-shadow:0 2px 3px #0004,inset 0 1px #ffffff25;letter-spacing:.12em;}
-        .tape-control-panel {border-top:2px solid #8b9887;background:linear-gradient(110deg,#38453a,#253328 70%,#2f3e30);box-shadow:inset 0 1px #ffffff20;}
-        .tape-transport>output {background:#0e1b12;border-color:#17271a;color:#c6d9ae;box-shadow:inset 0 1px 3px #0008;font-size:16px;}
-        .tape-transport button {border-color:#788572;background:linear-gradient(#e0e6d8,#a1b096);box-shadow:inset 0 1px #fff8,0 1px 2px #0006;border-radius:2px;}
-        .tape-transport button:active {background:#94a486;box-shadow:inset 0 1px 2px #0005;}
-        .tape-control-panel .extra-vu {background:linear-gradient(#c1bd9f,#e1d5ab);border-color:#18251b;box-shadow:inset 0 1px 4px #0005,0 1px #ffffff20;}
-        .tape-bottom {border-top:1px solid #8e9b8055;padding-top:8px;}
-
-        .tape-reels {z-index:2;}
-        .tape-threading {position:absolute;left:0;right:0;top:0;height:274px;pointer-events:none;}
-        .tape-threading>svg {display:block;width:100%;height:100%;overflow:visible;}
-        .tape-guide {position:absolute;top:230px;width:18px;height:18px;box-sizing:border-box;border:3px solid #b6c1b1;border-radius:50%;background:radial-gradient(circle,#142017 0 30%,#435143 36% 58%,#8a9988 64%);box-shadow:0 1px 2px #0007;}
-        .tape-guide-left {left:58px;}.tape-guide-right {right:58px;}
-        .tape-head-cover {position:absolute;left:121px;right:121px;top:227px;height:35px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px solid #7d8b77;border-radius:3px;background:linear-gradient(#4a554b,#263228);box-shadow:0 2px 3px #0004,inset 0 1px #ffffff25;}
-        .tape-head-cover>span {font:700 6px "Inter",sans-serif;letter-spacing:.12em;color:#d0d8c7;}
-        .tape-head-cover>small {font:500 4px "Inter",sans-serif;letter-spacing:.08em;color:#9fae96;}
-        .calibrated-tape-vu>svg {display:block;width:100%;height:100%;}
 
 
         :is(#audio-world,.equipment-preview-world) .device-node .port[data-type="wire"] {width:26px!important;min-width:26px!important;max-width:26px!important;height:18px!important;min-height:18px!important;max-height:18px!important;aspect-ratio:auto!important;border:0!important;border-radius:2px!important;background:transparent!important;}
@@ -3427,11 +3371,7 @@
 
 :is(#audio-world,.equipment-preview-world) .hw-mechanical-key .hw-mechanical-key-legend {position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 12px/1 Inter,sans-serif;letter-spacing:0;color:#344236;text-shadow:0 1px #ffffdc88;white-space:nowrap;}
 :is(#audio-world,.equipment-preview-world) .hw-mechanical-key .hw-mechanical-key-legend .at-led {position:static;display:block;margin:0;transform:none;}
-:is(#audio-world,.equipment-preview-world) .device-type-tapeDeck .tape-transport [data-source-play] {min-width:36px!important;}
 
-:is(#audio-world,.equipment-preview-world) .device-type-tapeDeck .tape-transport {justify-content:center;align-items:flex-start;gap:0;}
-:is(#audio-world,.equipment-preview-world) .device-type-tapeDeck .tape-transport>div {align-items:center;gap:6px;}
-:is(#audio-world,.equipment-preview-world) .device-type-tapeDeck .tape-transport-icon {display:block;width:20px;height:20px;fill:currentColor;flex-shrink:0;overflow:visible;pointer-events:none;}
 
 /* Bluetooth desktop units: machined chassis, inset glass and isolated connector bank. */
 :is(#audio-world,.equipment-preview-world) .device-node:is(.device-type-btReceiverA,.device-type-btTransmitterPro) {--bt-accent:#85cbd0;--bt-dim:#263f44;}
@@ -3690,10 +3630,6 @@
 :is(#audio-world,.equipment-preview-world) .device-node.rack-standard.device-type-cdPlayer>.cd-player-face.rack-face {grid-template-columns:230px minmax(0,1fr) 64px 100px 30px!important;gap:14px!important;align-items:center!important;}
 :is(#audio-world,.equipment-preview-world) .device-node.rack-standard.device-type-streamer>.rack-face {grid-template-columns:minmax(0,1fr) 64px 150px 66px 30px!important;gap:14px!important;}
 :is(#audio-world,.equipment-preview-world) .device-type-cdPlayer .cd-play-control {justify-content:center;gap:0;}
-:is(#audio-world,.equipment-preview-world) .device-type-tapeDeck .tape-transport>div {gap:7px;}
-:is(#audio-world,.equipment-preview-world) .device-type-tapeDeck .tape-bottom {gap:24px;align-items:center;}
-:is(#audio-world,.equipment-preview-world) .device-type-tapeDeck .tape-level {gap:10px;}
-:is(#audio-world,.equipment-preview-world) .device-type-tapeDeck .tape-transport-icon {width:19px;height:19px;}
 :is(#audio-world,.equipment-preview-world) .device-type-turntable .at-ctl {gap:7px;align-items:center;}
 /* Instruments and routing: consistent command rows without oversized small selectors. */
 :is(#audio-world,.equipment-preview-world) .device-type-signalGenerator .signal-face {grid-template-columns:190px minmax(0,1fr) 62px 28px;gap:14px;padding:14px 18px;}

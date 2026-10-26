@@ -90,8 +90,8 @@ const Hardware = (() => {
         },
         tapeDeck: {
             ".power-btn": {width:20, height:30},
-            "[data-tape-level]": {width:32, height:32},
-            ".tape-transport button": {width:34, height:30},
+            "[data-tape-level]": {width:36, height:36},
+            ".tape-transport button": {width:36, height:30},
         },
         signalGenerator: {
             ".power-btn": {width:20, height:30},
@@ -524,7 +524,7 @@ const Hardware = (() => {
         if(el.matches('[data-bias-gain]'))return 'machined';
         if(el.matches('.phone-volume'))return vintage?'ivory':'recessed';
         if(el.matches('.is-large,[data-receiver-control="volume"]'))return ['integratedBlue','integratedMinimal','preDisplay'].includes(dev.type)?'touchDisc':'skirted';
-        if(el.matches('[data-tape-level]'))return 'bakelite';
+        if(el.matches('[data-tape-level]'))return 'silverFluted';
         if(el.matches('[data-pre-knob]'))return 'recessed';
         return vintage||silver?'machined':'recessed';
     }
@@ -781,10 +781,10 @@ const Hardware = (() => {
         if(dev.type!=='hardwareDemo')mountLightingDemo(dev.el);
         sync(dev);
     }
+    const lightingProjectedParts='.hw-knob,.hw-button,.hw-linear,.port,.pre-handle,.dual-handle,.bench-handle,.graphic-eq-handle,.mixer-rack-handle,[data-lighting-relief]';
     function mountLightingDemo(device){
         const furniture=device.classList.contains('furniture-node');
-        const projectedParts='.hw-knob,.hw-button,.hw-linear,.port,.pre-handle,.dual-handle,.bench-handle,.graphic-eq-handle,.mixer-rack-handle';
-        const controls=[...device.querySelectorAll(projectedParts)].filter(control=>control.getClientRects().length);
+        const controls=[...device.querySelectorAll(lightingProjectedParts)].filter(control=>control.getClientRects().length);
         const surfaces=new Set();
         controls.forEach(control=>{
             let surface=control;
@@ -1054,7 +1054,7 @@ const Hardware = (() => {
                 const scale=visibleRect.width/device.offsetWidth;
                 geometry={width:device.offsetWidth,height:device.offsetHeight,lastPosition:'',surfaces:[...device.querySelectorAll(':scope > .lighting-shadow-surface')].map(face=>{
                     const faceRect=face.getBoundingClientRect();
-                    return {face,x:(faceRect.left-visibleRect.left)/scale,y:(faceRect.top-visibleRect.top)/scale,controls:[...face.querySelectorAll('.hw-knob,.hw-button,.hw-linear,.port,.pre-handle,.dual-handle,.bench-handle,.graphic-eq-handle,.mixer-rack-handle')].filter(control=>control.getClientRects().length).map(control=>{
+                    return {face,x:(faceRect.left-visibleRect.left)/scale,y:(faceRect.top-visibleRect.top)/scale,controls:[...face.querySelectorAll(lightingProjectedParts)].filter(control=>control.getClientRects().length).map(control=>{
                         const rect=control.getBoundingClientRect();
                         return {el:control,x:(rect.left+rect.width/2-visibleRect.left)/scale,y:(rect.top+rect.height/2-visibleRect.top)/scale,faceX:(rect.left+rect.width/2-faceRect.left)/scale,faceY:(rect.top+rect.height/2-faceRect.top)/scale,width:rect.width/scale,height:rect.height/scale,last:''};
                     })};
@@ -1092,7 +1092,8 @@ const Hardware = (() => {
                     const {el:control,x,y,width,height:controlHeight}=entry;
                     const cx=deviceX+x,cy=deviceY+y,knob=control.classList.contains('hw-knob'),plug=control.classList.contains('port'),slider=control.classList.contains('hw-linear'),handle=control.matches('.pre-handle,.dual-handle,.bench-handle,.graphic-eq-handle,.mixer-rack-handle');
                     const finish=control.dataset.knobFinish,buttonModel=control.dataset.buttonModel;
-                    const height=handle?18:plug?1.8:slider?3:knob?(finish==='disc'?5:finish==='recessed'?7:finish==='halo'?13:11):['chromeLever','industrialToggle','powerLarge'].includes(buttonModel)?8:['flushMetal','membrane','plainKey'].includes(buttonModel)?2.5:5;
+                    const relief=Number(control.dataset.lightingRelief);
+                    const height=Number.isFinite(relief)?Math.max(0,Math.min(24,relief)):handle?18:plug?1.8:slider?3:knob?(finish==='disc'?5:finish==='recessed'?7:finish==='halo'?13:11):['chromeLever','industrialToggle','powerLarge'].includes(buttonModel)?8:['flushMetal','membrane','plainKey'].includes(buttonModel)?2.5:5;
                     const maxProjection=handle?30:plug?Math.min(4,Math.min(width,controlHeight)*.4+1):Math.min(18,Math.min(width,controlHeight)*.8+4);
                     // The streamer's top dial sits behind the front rim, so it cannot cast onto the face.
                     if(!device.classList.contains('device-type-streamIntegrated')||!control.matches('[data-stream-volume]')){
@@ -1102,12 +1103,12 @@ const Hardware = (() => {
                             let sceneX=(cx-source.x)*height/source.elevation,sceneY=(cy-source.y)*height/source.elevation;
                             const travel=Math.hypot(sceneX,sceneY),limit=Math.min(maxProjection,12);
                             if(travel>limit){sceneX*=limit/travel;sceneY*=limit/travel;}
-                            frontShadows.push({x,y,width,height:controlHeight,sx:sceneX,sy:sceneY,knob:knob||(plug&&control.dataset.type!=='wire'),plug,slider,handle,weight:scene.weight*.95,softness:scene.spread});
+                            frontShadows.push({x,y,width,height:controlHeight,sx:sceneX,sy:sceneY,knob:knob||(plug&&control.dataset.type!=='wire')||control.dataset.lightingShape==='round',plug,slider,handle,weight:scene.weight*.95,softness:scene.spread});
                         });
                     }
                     const highlightX=shadowScene?.x||cx,highlightY=shadowScene?.y||cy;
                     const direction=Math.max(70,Math.hypot(cx-highlightX,cy-highlightY));
-                    const values=[(50+clamp((highlightX-cx)/direction,-1)*34).toFixed(0)+'%',(50+clamp((highlightY-cy)/direction,-1)*34).toFixed(0)+'%'];
+                    const values=[(50+clamp((highlightX-cx)/direction,1)*34).toFixed(0)+'%',(50+clamp((highlightY-cy)/direction,1)*34).toFixed(0)+'%'];
                     const key=values.join('|');if(entry.last===key)return;
                     entry.last=key;
                     control.style.setProperty('--demo-highlight-x',values[0]);
@@ -2505,7 +2506,7 @@ const Hardware = (() => {
             // Above furniture backs (1–2), always below equipment chassis (10+).
             layer.style.zIndex = '3';
             const boxes = Object.values(state.devices).map(dev => ({
-                dev, x:parseFloat(dev.el.style.left)||0, y:parseFloat(dev.el.style.top)||0,
+                dev, x:dev.dragVisualPosition?.x??(parseFloat(dev.el.style.left)||0), y:dev.dragVisualPosition?.y??(parseFloat(dev.el.style.top)||0),
                 width:dev.el.offsetWidth, height:dev.el.offsetHeight
             }));
             const equipment = boxes.filter(b => hasStackFeet(b.dev));
@@ -2563,8 +2564,8 @@ const Hardware = (() => {
                 const owner=state.devices[foot.dataset.footOwner];
                 if(!owner){foot.remove();return;}
                 // Retracting feet keep following their owner, even while it is dragged away.
-                foot.style.left=((parseFloat(owner.el.style.left)||0)+Number(foot.dataset.offsetX))+'px';
-                foot.style.top=((parseFloat(owner.el.style.top)||0)+Number(foot.dataset.offsetY))+'px';
+                foot.style.left=((owner.dragVisualPosition?.x??(parseFloat(owner.el.style.left)||0))+Number(foot.dataset.offsetX))+'px';
+                foot.style.top=((owner.dragVisualPosition?.y??(parseFloat(owner.el.style.top)||0))+Number(foot.dataset.offsetY))+'px';
                 foot.style.visibility=owner.el.style.visibility==='hidden'?'hidden':'visible';
                 if(retainedFeet.has(foot)||foot.dataset.retracting==='true')return;
                 if(reducedFeetMotion){foot.remove();return;}
@@ -4770,11 +4771,37 @@ const Hardware = (() => {
             screen.querySelector('[data-bench-clip]').classList.toggle('is-clipping',dev.powered&&now<(dev.meters?.clipUntil||0));
         }
 
+        function tapeDeckMarkup(){
+            const reelMetal='<svg viewBox="0 0 180 180" aria-hidden="true"><path fill="var(--tape-metal)" stroke="#edf0ea" stroke-width=".8" fill-rule="evenodd" d="M90 3 A87 87 0 1 1 90 177 A87 87 0 1 1 90 3 Z M47.68 31.75 A72 72 0 0 1 132.32 31.75 L115.27 55.21 A43 43 0 0 0 64.73 55.21 Z M161.61 82.47 A72 72 0 0 1 119.29 155.78 L107.49 129.28 A43 43 0 0 0 132.76 85.51 Z M60.71 155.78 A72 72 0 0 1 18.39 82.47 L47.24 85.51 A43 43 0 0 0 72.51 129.28 Z"/><circle cx="90" cy="90" r="83" fill="none" stroke="#89918e" stroke-width=".8"/><circle cx="90" cy="90" r="79.5" fill="none" stroke="#eef0e9" stroke-width=".5"/><circle cx="90" cy="90" r="29" fill="#929b96" stroke="#e6e9e2" stroke-width="1.3"/></svg>';
+            const keys=[
+                ['data-tape-back','Retroceder dez segundos','<path d="M10 5 2 12l8 7V5Zm10 0-8 7 8 7V5Z"/>'],
+                ['data-source-play','Reproduzir ou pausar fita','<path class="tape-symbol-play" d="M7 4v16l13-8Z"/><path class="tape-symbol-pause" d="M6 5h5v14H6zM15 5h5v14h-5z"/>'],
+                ['data-tape-stop','Parar e rebobinar','<path d="M7 7h10v10H7z"/>'],
+                ['data-tape-forward','Avançar dez segundos','<path d="m3 5 8 7-8 7V5Zm10 0 8 7-8 7V5Z"/>']
+            ];
+            return `<div class="device-header"><span>Tape deck · rolo aberto</span></div>
+                <section class="tape-face">
+                    <header><strong>TAPE DECK <small>STEREO</small></strong><span>OPEN REEL · TWO TRACK</span></header>
+                    ${['tl','tr','bl','br'].map(corner=>`<i class="tape-screw tape-screw-${corner}" aria-hidden="true"></i>`).join('')}
+                    <div class="tape-reels">${[0,1].map(i=>`<div class="tape-reel reel-${i}" data-lighting-relief="11" data-lighting-shape="round"><div class="tape-winding"></div><div class="reel-metal">${reelMetal}<b></b></div></div>`).join('')}</div>
+                    <div class="tape-threading" aria-label="Fita contornando as guias e passando pelos cabeçotes">
+                        <svg viewBox="0 0 462 274" aria-hidden="true"><path d="M39.4 147.1 L58.2 240.8 A9 9 0 0 0 67 248 H395 A9 9 0 0 0 404 240 L414.7 139.6" fill="none" stroke="#3d291e" stroke-width="2.2"/><path d="M39.4 147.1 L58.2 240.8 M404 240 L414.7 139.6" fill="none" stroke="#ad825b" stroke-width=".5"/></svg>
+                        <i class="tape-guide tape-guide-left" data-lighting-relief="4" data-lighting-shape="round"></i><i class="tape-guide tape-guide-right" data-lighting-relief="4" data-lighting-shape="round"></i>
+                        <div class="tape-head-cover" data-lighting-relief="6"><span>ANALOG <b>STEREO</b></span><small>PRECISION TAPE TRANSPORT</small></div>
+                    </div>
+                    <div class="tape-control-panel">
+                        <div class="tape-transport"><div class="tape-readout"><output data-tape-counter aria-label="Tempo da fita">00:00</output><span class="tape-play-status"><i aria-hidden="true"></i>PLAY</span></div><div class="tape-keys">${keys.map(([attr,label,symbol])=>`<button type="button" ${attr} aria-label="${label}"${attr==='data-source-play'?' aria-pressed="false"':''}><svg class="tape-transport-icon" viewBox="0 0 26 24" aria-hidden="true">${symbol}</svg></button>`).join('')}</div></div>
+                        ${extraVu(true)}
+                        <div class="tape-bottom"><div class="extra-io"><small>LINE OUT <span>L / R</span></small>${extraPair('out','out')}</div><label class="tape-level"><button class="receiver-dial" data-tape-level aria-label="Nível de saída" role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="80"></button><small>OUTPUT</small></label><div class="extra-power" data-power-slot><small>POWER</small><button class="power-btn" aria-label="Ligar ou desligar Tape Deck"></button></div></div>
+                    </div>
+                </section>`;
+        }
+
         function extraDeviceMarkup(type){
             const power='<div class="extra-power" data-power-slot><button class="power-btn"></button></div>';
             if(type==='preamp')return `<div class="device-header"><span>Pré · Slim</span></div><section class="extra-rack preamp-face"><div class="preamp-inputs"><strong>PRÉ-AMPLIFICADOR</strong><div class="preamp-sources">${['AUX','CD','TAPE','PHONO'].map((name,i)=>`<div><button data-pre-source="${i+1}">${name}</button>${extraPair('in','in'+(i+1),i===3?'phono':undefined)}</div>`).join('')}</div></div><div class="preamp-knobs">${[['volume','VOLUME'],['bass','GRAVES'],['treble','AGUDOS']].map(([key,label])=>`<label><button class="receiver-dial" data-pre-knob="${key}" aria-label="${label}" role="slider" aria-valuemin="${key==='volume'?0:-12}" aria-valuemax="${key==='volume'?100:12}"></button><span>${label}</span></label>`).join('')}</div><div class="extra-io"><small>LINE OUT</small>${extraPair('out','out')}</div>${power}</section>`;
             if(BENCH_METER_TYPES.has(type))return `<div class="device-header"><span>${type==='benchMeterVintage'?'Medidor de bancada vintage':'Medidor de áudio de bancada'}</span></div><section class="extra-rack bench-face"><span class="bench-handle is-left" aria-hidden="true"><i></i></span><span class="bench-handle is-right" aria-hidden="true"><i></i></span><div class="extra-io"><small>LINE IN</small>${extraPair('in','in')}<small>LINE OUT</small>${extraPair('out','out')}</div>${type==='benchMeterVintage'?extraVu(true):benchLcdMarkup()}<div class="bench-screen"><canvas data-bench-spectrum width="360" height="72" aria-label="Espectro real dos canais L e R"></canvas><div class="correlation-scale"><span>−1</span><div><i data-correlation-dot></i></div><span>+1</span></div><output data-correlation-value>SEM SINAL</output></div>${power}</section>`;
-            return `<div class="device-header"><span>Tape deck · rolo aberto</span></div><section class="tape-face"><header><strong>STEREO TAPE DECK</strong><span>OPEN REEL · TWO TRACK</span></header><div class="tape-reels">${[0,1].map(i=>`<div class="tape-reel reel-${i}"><div class="tape-winding"></div><div class="reel-metal"><svg viewBox="0 0 180 180" aria-hidden="true"><path fill="#bfc7c4" stroke="#e7ece7" stroke-width="1" fill-rule="evenodd" d="M90 3a87 87 0 1 1 0 174a87 87 0 1 1 0-174 M68 42a22 22 0 1 0 44 0a22 22 0 1 0-44 0 M26 116a22 22 0 1 0 44 0a22 22 0 1 0-44 0 M110 116a22 22 0 1 0 44 0a22 22 0 1 0-44 0"/><circle cx="90" cy="90" r="82" fill="none" stroke="#7f8b85" stroke-width="1.2"/><circle cx="90" cy="90" r="27" fill="#8f9b94" stroke="#e1e7de" stroke-width="2"/></svg><b></b></div></div>`).join('')}</div><div class="tape-threading" aria-label="Fita contornando as guias e passando pelos cabeçotes"><svg viewBox="0 0 462 274" aria-hidden="true"><path d="M39.4 147.1 L58.2 240.8 A9 9 0 0 0 67 248 H395 A9 9 0 0 0 404 240 L414.7 139.6" fill="none" stroke="#513723" stroke-width="2.2" stroke-linecap="butt"/><path d="M39.4 147.1 L58.2 240.8 M404 240 L414.7 139.6" fill="none" stroke="#997255" stroke-width=".5"/></svg><i class="tape-guide tape-guide-left"></i><i class="tape-guide tape-guide-right"></i><div class="tape-head-cover"><span>ANALOG · STEREO</span><small>PRECISION TAPE TRANSPORT</small></div></div><div class="tape-control-panel"><div class="tape-transport"><div><button data-tape-back aria-label="Retroceder dez segundos"><svg class="tape-transport-icon" viewBox="0 0 26 24" aria-hidden="true"><path d="M10 5 2 12l8 7V5Zm10 0-8 7 8 7V5Z"/></svg></button><button data-source-play aria-label="Reproduzir ou pausar fita" aria-pressed="false"><svg class="tape-transport-icon" viewBox="0 0 26 24" aria-hidden="true"><path d="M3 5v14l9-7Z"/><path d="M15 5h3v14h-3zM21 5h3v14h-3z"/></svg></button><button data-tape-stop aria-label="Parar e rebobinar"><svg class="tape-transport-icon" viewBox="0 0 26 24" aria-hidden="true"><path d="M7 7h10v10H7z"/></svg></button><button data-tape-forward aria-label="Avançar dez segundos"><svg class="tape-transport-icon" viewBox="0 0 26 24" aria-hidden="true"><path d="m3 5 8 7-8 7V5Zm10 0 8 7-8 7V5Z"/></svg></button></div></div>${extraVu(true)}<div class="tape-bottom"><div class="extra-io"><small>LINE OUT · L/R</small>${extraPair('out','out')}</div><label class="tape-level"><button class="receiver-dial" data-tape-level aria-label="Nível de saída" role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="80"></button><small>OUTPUT</small></label>${power}</div></div></section>`;
+            return tapeDeckMarkup();
         }
         function setupExtraRouting(dev){
             const context=state.audioCtx;
@@ -4891,7 +4918,7 @@ const Hardware = (() => {
             const elapsed=lastTransportFrame==null?0:Math.max(0,Math.min(.1,(now-lastTransportFrame)/1000));lastTransportFrame=now;
             const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
             Object.values(state.devices).forEach(dev=>{
-                if(dev.type==='tapeDeck')updateTapeReels(dev,tapePosition(dev),elapsed,isSourceRunning(dev));
+                if(dev.type==='tapeDeck'&&dev.meters?.visible!==false)updateTapeReels(dev,tapePosition(dev),elapsed,isSourceRunning(dev));
                 if(!TURNTABLE_TYPES.has(dev.type))return;
                 const running=dev.powered&&dev.state.tt?.running;
                 const target=running?(dev.type==='turntableLinear'?(dev.state.tt.speed===45?45:100/3)*6*(1+dev.state.tt.pitch*.03):200*(dev.ttRate?.()||1)):0;
@@ -4908,27 +4935,49 @@ const Hardware = (() => {
         function updateTapeReels(dev,seconds,elapsed,running){
             const duration=dev.audioBuffer?.duration||180;
             const target=Math.max(0,Math.min(duration,seconds));
+            const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
             const previous=dev.tapeVisualPosition??target;
             const difference=target-previous;
-            const visual=Math.abs(difference)<.03?target:previous+difference*(1-Math.exp(-elapsed/.22));
+            const visual=reduced||Math.abs(difference)<.03?target:previous+difference*(1-Math.exp(-elapsed/.22));
             dev.tapeVisualPosition=visual;
-            const progress=visual/duration;
-            const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-            const delta=visual-previous;
-            const radii=[Math.sqrt(28**2+(79**2-28**2)*(1-progress)),Math.sqrt(28**2+(79**2-28**2)*progress)];
-            dev.tapeReelAngles||=[0,0];
-            dev.el.querySelectorAll('.tape-reel').forEach((reel,index)=>{
-                const radius=radii[index];reel.querySelector('.tape-winding').style.inset=(88-radius)+'px';
-                const metal=reel.querySelector('.reel-metal');
-                if(!reduced){dev.tapeReelAngles[index]=(dev.tapeReelAngles[index]+(Math.abs(delta)>.002?Math.max(-7,Math.min(7,delta))*130:running?elapsed*130:0)*(60/radius))%360;}
-                metal.style.transform=`rotate(${dev.tapeReelAngles[index]}deg)`;
+            // Cache stationary geometry. Rotating a flange never invalidates the lighting cache.
+            const parts=dev.tapeVisualParts||=(Array.from(dev.el.querySelectorAll('.tape-reel'),reel=>({
+                winding:reel.querySelector('.tape-winding'),metal:reel.querySelector('.reel-metal'),radius:null
+            })));
+            const radii=[Math.sqrt(28**2+(79**2-28**2)*(1-visual/duration)),Math.sqrt(28**2+(79**2-28**2)*visual/duration)];
+            dev.tapeReelAngles||=[0,0];dev.tapeReelSpeeds||=[0,0];
+            const seeking=Math.abs(visual-previous-(running?elapsed:0))>.07;
+            const transportRate=seeking?Math.max(-55,Math.min(55,(visual-previous)/Math.max(.001,elapsed))):running?1:0;
+            parts.forEach((part,index)=>{
+                const radius=radii[index];
+                if(part.radius===null||Math.abs(radius-part.radius)>.025){
+                    part.winding.style.transform=`scale(${(radius/79).toFixed(4)})`;part.radius=radius;
+                }
+                const speed=dev.tapeReelSpeeds[index],goal=reduced?0:transportRate*130*60/radius,response=(running||seeking) ? .18 : .38;
+                const decay=Math.exp(-elapsed/response);
+                const next=Math.abs(goal+(speed-goal)*decay)<.08?0:goal+(speed-goal)*decay;
+                const travel=reduced?0:goal*elapsed+(speed-goal)*response*(1-decay);
+                dev.tapeReelSpeeds[index]=next;
+                if(Math.abs(travel)>.0001){
+                    dev.tapeReelAngles[index]=(dev.tapeReelAngles[index]+travel)%360;
+                    part.metal.style.transform=`rotate(${dev.tapeReelAngles[index].toFixed(3)}deg)`;
+                }
             });
-            // The free tape leaves each changing winding tangentially toward its guide.
-            const tangent=(cx,cy,r,px,py,side)=>{const dx=px-cx,dy=py-cy,d2=dx*dx+dy*dy,k=r*r/d2,t=r*Math.sqrt(Math.max(0,d2-r*r))/d2;return {x:cx+k*dx+side*t*(-dy),y:cy+k*dy+side*t*dx};};
-            const a=tangent(109,133,radii[0],67,239,1),b=tangent(353,133,radii[1],395,239,-1);
-            const paths=dev.el.querySelectorAll('.tape-threading>svg>path');
-            paths[0]?.setAttribute('d',`M${a.x} ${a.y} L58.2 240.8 A9 9 0 0 0 67 248 H395 A9 9 0 0 0 404 240 L${b.x} ${b.y}`);
-            paths[1]?.setAttribute('d',`M${a.x} ${a.y} L58.2 240.8 M404 240 L${b.x} ${b.y}`);
+            if(dev.tapeThreadPosition==null||Math.abs(visual-dev.tapeThreadPosition)>.025){
+                // The free tape leaves each changing winding tangentially toward its guide.
+                const tangent=(cx,cy,r,px,py,side)=>{const dx=px-cx,dy=py-cy,d2=dx*dx+dy*dy,k=r*r/d2,t=r*Math.sqrt(Math.max(0,d2-r*r))/d2;return {x:cx+k*dx+side*t*(-dy),y:cy+k*dy+side*t*dx};};
+                const a=tangent(109,133,radii[0],67,239,1),b=tangent(353,133,radii[1],395,239,-1);
+                const paths=dev.tapeThreadPaths||=dev.el.querySelectorAll('.tape-threading>svg>path');
+                paths[0]?.setAttribute('d',`M${a.x} ${a.y} L58.2 240.8 A9 9 0 0 0 67 248 H395 A9 9 0 0 0 404 240 L${b.x} ${b.y}`);
+                paths[1]?.setAttribute('d',`M${a.x} ${a.y} L58.2 240.8 M404 240 L${b.x} ${b.y}`);
+                dev.tapeThreadPosition=visual;
+            }
+            const counterSeconds=Math.floor(target);
+            if(dev.tapeCounterSeconds!==counterSeconds){
+                const counter=dev.tapeCounter||=dev.el.querySelector('[data-tape-counter]');
+                if(counter)counter.textContent=`${String(Math.floor(counterSeconds/60)).padStart(2,'0')}:${String(counterSeconds%60).padStart(2,'0')}`;
+                dev.tapeCounterSeconds=counterSeconds;
+            }
         }
         let lastExtraDisplay=0;
         function updateExtraDisplays(now){
@@ -8684,14 +8733,8 @@ const Hardware = (() => {
             return cableBundleOffsets.get(connection)||0;
         }
         function updateStackFeetDuringMove(affectedDeviceIds){
-            const layer=document.getElementById('stack-feet');if(!layer)return;
-            layer.querySelectorAll('.auto-stack-foot').forEach(foot=>{
-                if(!affectedDeviceIds.has(foot.dataset.footOwner))return;
-                const owner=state.devices[foot.dataset.footOwner];if(!owner)return;
-                const position=owner.dragVisualPosition||{x:parseFloat(owner.el.style.left)||0,y:parseFloat(owner.el.style.top)||0};
-                foot.style.left=(position.x+Number(foot.dataset.offsetX))+'px';
-                foot.style.top=(position.y+Number(foot.dataset.offsetY))+'px';
-            });
+            // Re-evaluate supports at the live drag position, including equipment below it.
+            updateStackFeet();
         }
         function updateCables(affectedDeviceIds=null) {
             const partial=affectedDeviceIds instanceof Set;
