@@ -80,6 +80,55 @@
 .cable-plug {filter:drop-shadow(var(--plug-shadow-x,0px) var(--plug-shadow-y,1px) 1px #0008);}
 .cable-group:hover .plug-collar {filter:brightness(1.18);}
 
+/* Displays and meters warm up and fade down with the power switch. */
+:is(#audio-world,.equipment-preview-world) .device-node :is(
+    .device-display,.cd-lcd,.poweramp-screen,.receiver-radio,.custom-pre-screen,
+    .signal-screen,.bench-lcd,.bench-screen,.integrated-gauge,.integrated-gauges,
+    .integrated-green-window,.bias-meter,.extra-vu,.poweramp-meter,.stream-screen
+) {
+    transition:opacity .9s ease-in-out,filter .9s ease-in-out,box-shadow .9s ease-in-out,
+        background-color .9s ease-in-out,text-shadow .9s ease-in-out;
+}
+:is(#audio-world,.equipment-preview-world) .device-node :is(
+    .device-display,.cd-lcd,.poweramp-screen,.receiver-radio,.custom-pre-screen,
+    .signal-screen,.bench-lcd,.bench-screen,.stream-screen
+) > * {
+    transition:opacity .72s ease-in-out,filter .72s ease-in-out;
+}
+:is(#audio-world,.equipment-preview-world) .device-node.power-off :is(
+    .device-display,.cd-lcd,.poweramp-screen,.receiver-radio,.custom-pre-screen,
+    .signal-screen,.bench-lcd,.bench-screen,.stream-screen
+) > * {
+    opacity:0!important;
+    filter:brightness(.05)!important;
+}
+:is(#audio-world,.equipment-preview-world) .device-node.power-off :is(
+    .device-display,.cd-lcd,.poweramp-screen,.receiver-radio,.custom-pre-screen,
+    .signal-screen,.bench-lcd,.bench-screen,.stream-screen
+) {
+    opacity:.68;
+    filter:brightness(.16) saturate(.4);
+    box-shadow:inset 0 1px 5px #000c!important;
+    text-shadow:none!important;
+}
+:is(#audio-world,.equipment-preview-world) .device-node.power-off :is(
+    .integrated-gauge,.integrated-gauges,.integrated-green-window,.bias-meter,
+    .extra-vu,.poweramp-meter
+) {
+    filter:brightness(.34) saturate(.62);
+    box-shadow:inset 0 1px 5px #0009!important;
+}
+:is(#audio-world,.equipment-preview-world) .device-node .stream-screen {
+    transition:opacity .9s ease-in-out,filter .9s ease-in-out,visibility 0s linear 0s;
+}
+:is(#audio-world,.equipment-preview-world) .device-node.power-off .stream-screen {
+    opacity:0!important;
+    visibility:hidden;
+    transition:opacity .9s ease-in-out,filter .9s ease-in-out,visibility 0s linear .9s;
+}
+
 @media (prefers-reduced-motion:reduce) {
     :is(#audio-world,.equipment-preview-world) .device-node :is(.hw-knob,.hw-button,.port,.spotify-canvas-vinyl,.at-platter,.at-record,.tt-platter,.tt-record) {transition:none;}
+    :is(#audio-world,.equipment-preview-world) .device-node :is(.device-display,.cd-lcd,.poweramp-screen,.receiver-radio,.custom-pre-screen,.signal-screen,.bench-lcd,.bench-screen,.integrated-gauge,.integrated-gauges,.integrated-green-window,.bias-meter,.extra-vu,.poweramp-meter,.stream-screen),
+    :is(#audio-world,.equipment-preview-world) .device-node :is(.device-display,.cd-lcd,.poweramp-screen,.receiver-radio,.custom-pre-screen,.signal-screen,.bench-lcd,.bench-screen,.stream-screen) > * {transition:none!important;}
 }

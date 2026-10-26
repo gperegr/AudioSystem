@@ -6527,11 +6527,11 @@ const Hardware = (() => {
             const animations=[];
             const fade=(element,delay,duration)=>{
                 const opacity=getComputedStyle(element).opacity;
-                animations.push(element.animate([{opacity:0},{opacity}],{delay,duration,easing:'ease-out',fill:'backwards'}));
+                animations.push(element.animate([{opacity:0},{opacity}],{delay,duration,easing:'ease-in-out',fill:'backwards'}));
             };
-            dev.el.querySelectorAll('.hw-led,.device-led,.hw-bar-lens').forEach(element=>fade(element,0,220));
+            dev.el.querySelectorAll('.hw-led,.device-led,.hw-bar-lens').forEach(element=>fade(element,0,760));
             const screens='.device-display,.cd-lcd,.poweramp-screen,.receiver-radio,.custom-pre-screen,.signal-screen,.bench-lcd,.bench-screen,.integrated-gauges,.integrated-green-window,.bias-meter,.extra-vu';
-            [...dev.el.querySelectorAll(screens)].filter(element=>!element.parentElement.closest(screens)).forEach((element,index)=>fade(element,70+Math.min(index,2)*40,300));
+            [...dev.el.querySelectorAll(screens)].filter(element=>!element.parentElement.closest(screens)).forEach((element,index)=>fade(element,90+Math.min(index,2)*80,900));
             dev.el.querySelectorAll('[data-integrated-needle],[data-bias-needle],[data-live-vu],.receiver-vu i').forEach(element=>{
                 animations.push(element.animate([{translate:'-1px 1.5px'},{translate:'.3px -.4px',offset:.7},{translate:'0px 0px'}],{delay:130,duration:420,easing:'ease-out',fill:'backwards'}));
             });
