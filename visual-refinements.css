@@ -131,6 +131,22 @@
     filter:brightness(.34) saturate(.62);
     box-shadow:inset 0 1px 5px #0009!important;
 }
+/* Tube warmth is a state transition, not a permanent animation loop. */
+:is(#audio-world,.equipment-preview-world) .device-type-powerValve .valve-svg-glow {
+    opacity:0;
+    transition:opacity 2.4s ease-in-out;
+}
+:is(#audio-world,.equipment-preview-world) .device-type-powerValve:not(.power-off):not(.device-damaged) .valve-svg-glow {
+    opacity:.88;
+}
+/* The streamer heat sinks pick up a faint warm edge while carrying audio. */
+:is(#audio-world,.equipment-preview-world) .device-type-streamIntegrated .stream-heat-sink {
+    transition:filter 850ms ease,border-color 850ms ease;
+}
+:is(#audio-world,.equipment-preview-world) .device-type-streamIntegrated.device-has-signal:not(.power-off) .stream-heat-sink {
+    border-color:#5c5144;
+    filter:drop-shadow(0 0 2px rgb(222 151 92 / .32));
+}
 :is(#audio-world,.equipment-preview-world) .device-node .stream-screen {
     transition:opacity .9s ease-in-out,filter .9s ease-in-out,visibility 0s linear 0s;
 }
@@ -144,4 +160,6 @@
     :is(#audio-world,.equipment-preview-world) .device-node :is(.hw-knob,.hw-button,.port,.spotify-flow-vinyl,.spotify-canvas-vinyl,.at-platter,.at-record,.tt-platter,.tt-record) {transition:none;}
     :is(#audio-world,.equipment-preview-world) .device-node :is(.device-display,.cd-lcd,.poweramp-screen,.receiver-radio,.custom-pre-screen,.signal-screen,.bench-lcd,.bench-screen,.integrated-gauge,.integrated-gauges,.integrated-green-window,.bias-meter,.extra-vu,.poweramp-meter,.stream-screen),
     :is(#audio-world,.equipment-preview-world) .device-node :is(.device-display,.cd-lcd,.poweramp-screen,.receiver-radio,.custom-pre-screen,.signal-screen,.bench-lcd,.bench-screen,.stream-screen) > * {transition:none!important;}
+    :is(#audio-world,.equipment-preview-world) .device-type-powerValve .valve-svg-glow,
+    :is(#audio-world,.equipment-preview-world) .device-type-streamIntegrated .stream-heat-sink {transition:none!important;}
 }

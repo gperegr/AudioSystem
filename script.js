@@ -2891,7 +2891,6 @@ const Hardware = (() => {
                 const output=ctx.createGain();append(output);const variants=byNode.get(input)||{};variants[outputKind]=output;byNode.set(input,variants);dev.nodes[key]=output;
             }
             if(dev.type==='powerValve'){
-                dev.valveHeat=0;dev.valveGlowNodes=[...dev.el.querySelectorAll('.valve-svg-glow')];dev.valveGlowNodes.forEach(node=>node.style.opacity='0');
                 dev.syncValvePower=()=>{const t=ctx.currentTime;dev.valveWarmGains.forEach(gain=>{gain.gain.cancelAndHoldAtTime(t);gain.gain.linearRampToValueAtTime(dev.powered?1:0,t+(dev.powered?3:.03));});};dev.syncValvePower();
             }
         }
@@ -5697,10 +5696,6 @@ const Hardware = (() => {
         function updateCustomPowerDisplays(now){
             if(now-lastCustomPowerDisplay<16)return;const elapsed=Math.min(.1,(now-lastCustomPowerDisplay)/1000);lastCustomPowerDisplay=now;
             Object.values(state.devices).filter(dev=>CUSTOM_POWER_AMPS[dev.type]).forEach(dev=>{
-                if(dev.type==='powerValve'){
-                    const target=dev.powered?1:0;dev.valveHeat+=(target-dev.valveHeat)*(1-Math.exp(-elapsed/(dev.powered?1.8:2.5)));
-                    dev.valveGlowNodes.forEach((node,index)=>{node.style.opacity=(dev.valveHeat*(.93+(index%4)*.02)).toFixed(3);});
-                }
                 dev.el.querySelectorAll('[data-dual-led]').forEach(led=>{
                     const peak=dev.meters?.peaks[Number(led.dataset.dualLed)]||0,active=dev.powered&&peak>.0001;Hardware.setLed(led,active,peak>=.99);
                 });
