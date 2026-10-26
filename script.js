@@ -827,7 +827,7 @@ const Hardware = (() => {
             }
             fill(box(device.querySelector('.custom-power-connections')),4);
         }else if(device.classList.contains('device-type-streamIntegrated')){
-            device.querySelectorAll('.stream-housing,.stream-heat-sink,.stream-glass,.stream-service-rail,.stream-foot,[data-stream-volume]').forEach(part=>fill(box(part),3));
+            device.querySelectorAll('.stream-housing,.stream-heat-sink,.stream-glass,.stream-service-rail,[data-stream-volume]').forEach(part=>fill(box(part),3));
         }else if(device.classList.contains('headphone-equipment')){
             const art=device.querySelector('.headphone-artwork,.kuba-art');
             if(art){
@@ -852,7 +852,7 @@ const Hardware = (() => {
             if(art){
                 const rect=box(art),unitX=rect.width/660,unitY=rect.height/252;
                 const part=(x,y,w,h,r=0)=>fill({x:rect.x+x*unitX,y:rect.y+y*unitY,width:w*unitX,height:h*unitY},r);
-                part(4,122,652,116,3);part(37,237,37,15,3);part(586,237,37,15,3);
+                part(4,122,652,116,3);
                 part(35,102,380,18,3);part(41,40,511,9,2);part(559,56,69,66,2);
             }
         }else{
@@ -5243,7 +5243,7 @@ const Hardware = (() => {
                         <button data-stream-action="next" data-button-model="roundKey" title="Avançar 10 segundos" aria-label="Avançar 10 segundos">${icon('<path d="M19 5v14M5 5l10 7-10 7Z"/>')}</button>
                         <button data-stream-action="mute" data-button-model="roundKey" title="Silenciar / restaurar volume" aria-label="Silenciar ou restaurar volume" aria-pressed="false">${icon('<path d="M3 9v6h4l5 5V4L7 9Zm13-1 5 8m0-8-5 8"/>')}</button>
                     </div><div class="stream-glass-reflection" aria-hidden="true"></div></div>
-                <div class="stream-service-rail"><label><small>LINE IN</small>${pair('in','line','line')}</label><label><small>PRE OUT</small>${pair('out','pre','line')}</label><label><small>SPEAKERS · L / R</small>${pair('out','speaker','amplified','wire')}</label></div><i class="stream-foot stream-foot-left"></i><i class="stream-foot stream-foot-right"></i>
+                <div class="stream-service-rail"><label><small>LINE IN</small>${pair('in','line','line')}</label><label><small>PRE OUT</small>${pair('out','pre','line')}</label><label><small>SPEAKERS · L / R</small>${pair('out','speaker','amplified','wire')}</label></div>
             </section>`;
         }
         function readStreamMetadata(buffer){
