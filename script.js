@@ -2368,7 +2368,7 @@ const Hardware = (() => {
             Hardware.updateLightingDemo();
         }
         const STACK_FEET=Object.freeze({width:22,height:20,insetRatio:.1});
-        const hasStackFeet=dev=>!FURNITURE_TYPES[dev.type]&&dev.type!=='pendantLamp'&&!WALL_LAMP_TYPES[dev.type]&&dev.el.offsetWidth>=300&&(dev.el.offsetHeight<dev.el.offsetWidth*.8||dev.type==='tapeDeck');
+        const hasStackFeet=dev=>!FURNITURE_TYPES[dev.type]&&!INTERFACE_DEVICES[dev.type]?.passive&&dev.type!=='pendantLamp'&&!WALL_LAMP_TYPES[dev.type]&&dev.el.offsetWidth>=300&&(dev.el.offsetHeight<dev.el.offsetWidth*.8||dev.type==='tapeDeck');
         const maxEquipmentBottom=()=>canvas.dataset.theme==='scene'?floorPlacementBottom():world.offsetHeight;
         const sceneSideInset=()=>canvas.dataset.theme==='scene'?ROOM_SIDE_INSET:0;
         function snapOnEquipment(dev,x,y){
