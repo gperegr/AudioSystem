@@ -1,0 +1,28 @@
+/* Floorstanding speakers share material textures while keeping their original silhouettes. */
+.floorstanding-speaker .tower-driver {box-shadow:0 0 0 1px #87998b55,inset 0 1px 2px #e5f5eb33,inset 0 -2px 3px #02090499,0 2px 4px #0008;}
+.floorstanding-speaker .tower-driver-screws i {background:linear-gradient(135deg,#9eaa9c,#344539 50%,#101b13);box-shadow:inset 0 0 0 .4px #07110a,0 1px 1px #0008;}
+.floorstanding-speaker .tower-driver-screws i::after {content:'';position:absolute;left:0;right:0;top:0;height:1px;background:#07110b;transform:rotate(-35deg);}
+.floorstanding-speaker .tower-cone {box-shadow:inset 0 0 6px #0008,inset 0 1px #dbe8cf22,0 0 0 2px #0b160f;}
+.floorstanding-speaker .tower-terminal {background:var(--material-brushed-steel) center/256px 64px,linear-gradient(#35483a,#102017);box-shadow:inset 0 1px #c7d2be22,inset 0 -1px #0007,0 1px 2px #0006;}
+.floorstanding-speaker .tower-terminal::before {content:'';position:absolute;inset:4px;pointer-events:none;background:radial-gradient(circle at 2px 2px,#a8b39b 0 1px,#1c2c1c 1.2px 1.7px,transparent 2px),radial-gradient(circle at calc(100% - 2px) 2px,#a8b39b 0 1px,#1c2c1c 1.2px 1.7px,transparent 2px);}
+.floorstanding-speaker .tower-plinth::before {content:'';position:absolute;inset:2px;border-radius:inherit;pointer-events:none;border-top:1px solid #e5f1da55;border-bottom:1px solid #08110a99;}
+.floorstanding-speaker .tower-foot {background:var(--material-brushed-steel) center/128px 32px,linear-gradient(90deg,#34483c,#101f16 55%,#6f8271);box-shadow:inset 1px 0 #b8c7ad55,inset 0 -2px #040b07,0 1px 2px #0007;}
+.floorstanding-speaker .tower-foot::after {content:'';position:absolute;left:1px;right:1px;bottom:0;height:3px;border-radius:0 0 2px 2px;background:#0b110d;border-top:1px solid #4c5c4c;}
+/* Curved walnut cabinet and separate metal tweeter housing. */
+.tower-diamond .tower-cabinet {background:linear-gradient(90deg,#1a100c55,transparent 12% 85%,#1a100c66),var(--material-wood-grain) center/256px 384px,linear-gradient(100deg,#947047,#69472b 60%,#92673f);box-shadow:inset 1px 1px #e3bb7a66,inset -2px 0 3px #25170888,0 6px 10px #0005;}
+.tower-diamond .tower-baffle {background:url('./assets/textures/speaker-coating.svg') center/64px 64px,linear-gradient(100deg,#4b554c,#0b1911 18%,#15261b 80%,#4d5a4e);}
+.tower-diamond .tower-mid .tower-cone {background:url('./assets/textures/driver-weave.svg') center/4px 4px,radial-gradient(circle at 38% 28%,#dde4d1,#92a48f 70%,#6b7c68);}
+.tower-diamond .tower-bass .tower-cone {background:url('./assets/textures/speaker-paper.svg') center/80px 80px,repeating-radial-gradient(circle,transparent 0 10px,#06140955 10.5px 11px,transparent 11.5px 15px),radial-gradient(circle at 35% 28%,#48584b,#15281b 75%);}
+.tower-diamond .tower-top-tweeter {background:var(--material-brushed-steel) center/256px 64px,linear-gradient(110deg,#78867b,#13251b 50%,#4a6050);box-shadow:inset 1px 1px #e0e9d255,inset 0 -1px 2px #030c0799,0 2px 4px #0008;}
+/* White coaxial tower: satin lacquer and finely woven light diaphragms. */
+.tower-coax .tower-cabinet {background:url('./assets/textures/speaker-coating.svg') center/64px 64px,linear-gradient(100deg,#f4f5f1,#cfd5d2 70%,#e9ede8);box-shadow:inset 1px 1px #fff9,inset -2px 0 3px #5b706444,0 5px 9px #0005;}
+.tower-coax .tower-baffle {background:linear-gradient(90deg,#617a6410,transparent 5% 95%,#617a641c),linear-gradient(105deg,#eff1ec,#dde2dc 75%,#edf0e9);}
+.tower-coax .tower-bass .tower-cone {background:url('./assets/textures/driver-weave.svg') center/5px 5px,radial-gradient(ellipse at 38% 25%,#f2f4ed,#becdc1 65%,#8a9e8e);}
+.tower-coax .tower-coax-tweeter {box-shadow:0 0 0 2px #a3bf8d,inset 0 1px #e0efc999,0 1px 2px #213c2488;}
+.tower-coax .tower-plinth {background:var(--material-brushed-steel) center/256px 64px,linear-gradient(#c8d7c0,#718c65 40%,#344e2c);}
+/* Flax cones and green lacquer, with the original glass base kept transparent. */
+.tower-flax .tower-cabinet {background:url('./assets/textures/speaker-coating.svg') center/64px 64px,linear-gradient(105deg,#6b996d,#1c472a 40%,#477b4a);box-shadow:inset 1px 1px #c7e0b355,inset -1px -1px #071d0c99,0 6px 10px #0005;}
+.tower-flax .tower-baffle {background:url('./assets/textures/speaker-coating.svg') center/64px 64px,linear-gradient(105deg,#314c36,#132b19 75%);}
+.tower-flax .tower-bass .tower-cone,.tower-flax .tower-mid .tower-cone {background:url('./assets/textures/driver-weave.svg') center/6px 6px,url('./assets/textures/speaker-paper.svg') center/80px 80px,radial-gradient(circle at 36% 25%,#e8d69c,#b69f5e 68%,#887d45);}
+.tower-flax .tower-front-vent {background:linear-gradient(#020c04,#15341a);box-shadow:inset 0 3px 5px #000c,inset 0 -1px #a0bd7c33,0 1px #a8c39355;}
+.tower-flax .tower-plinth {box-shadow:inset 0 2px #e1f7db66,inset 0 -2px #051a0b88,0 3px 5px #0005;}
