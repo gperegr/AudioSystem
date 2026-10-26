@@ -18,21 +18,34 @@
 :is(#audio-world,.equipment-preview-world) .device-node.selected {
     z-index:15;
 }
-:is(#audio-world,.equipment-preview-world) .device-node :is(.hw-knob,.hw-button,.port,.spotify-canvas-vinyl),
+:is(#audio-world,.equipment-preview-world) .device-node :is(.hw-knob,.hw-button,.port,.spotify-flow-vinyl,.spotify-canvas-vinyl),
 :is(#audio-world,.equipment-preview-world) .device-node :is(.at-platter,.at-record,.tt-platter,.tt-record) {
     transition:filter .16s ease,box-shadow .16s ease,transform .16s ease;
 }
-:is(#audio-world,.equipment-preview-world) .device-node :is(.hw-knob,.hw-button,.port):hover {
-    filter:brightness(1.12) drop-shadow(0 0 2px rgb(220 236 242 / .45));
-}
-:is(#audio-world,.equipment-preview-world) .device-node :is(.at-platter,.at-record,.tt-platter,.tt-record):hover {
-    filter:brightness(1.08) drop-shadow(0 0 2px rgb(220 236 242 / .36));
-}
-.spotify-canvas-vinyl:hover,.spotify-canvas-vinyl:focus-visible {
-    filter:brightness(1.1) drop-shadow(0 2px 4px #000a) drop-shadow(0 0 2px #e1d7c8aa);
-}
-:is(#audio-world,.equipment-preview-world) .device-node .port:hover {
-    box-shadow:0 0 0 2px rgb(231 238 236 / .38),0 0 5px currentColor;
+:is(#audio-world,.equipment-preview-world) .device-node :is(.hw-knob,.hw-button,.port,.spotify-flow-vinyl,.at-platter,.at-record,.tt-platter,.tt-record) {transition-duration:190ms;}
+.spotify-canvas-vinyl:focus-visible {outline:1px solid #ded8c7;outline-offset:3px;}
+@media (hover:hover) and (pointer:fine) {
+    :is(#audio-world,.equipment-preview-world) .device-node .hw-knob:hover:not(:active) {
+        outline:1px solid rgb(224 222 204 / .72);outline-offset:2px;
+        filter:brightness(1.13) drop-shadow(0 0 3px rgb(219 225 211 / .5));
+    }
+    :is(#audio-world,.equipment-preview-world) .device-node .hw-button:hover:not(:active) {
+        filter:brightness(1.12) drop-shadow(0 0 2px rgb(220 236 242 / .44));
+    }
+    :is(#audio-world,.equipment-preview-world) .device-node .port:hover:not(.port-compatible):not(.port-source):not(.port-incompatible) {
+        transform:scale(1.12);
+        box-shadow:0 0 0 1.5px rgb(231 238 236 / .72),0 0 5px rgb(210 226 222 / .4);
+        filter:brightness(1.18);
+    }
+    :is(#audio-world,.equipment-preview-world) .device-node :is(.at-platter,.at-record,.tt-platter,.tt-record):hover,
+    :is(#audio-world,.equipment-preview-world) .device-node .spotify-flow-vinyl:hover {
+        filter:brightness(1.13) drop-shadow(0 0 3px rgb(223 218 197 / .58));
+        box-shadow:0 0 0 1px rgb(229 223 204 / .58),0 2px 5px rgb(0 0 0 / .46);
+    }
+    .spotify-canvas-vinyl:not(.is-dragging):hover {
+        outline:1px solid rgb(229 223 204 / .72);outline-offset:3px;
+        filter:brightness(1.12) drop-shadow(0 2px 4px #000a) drop-shadow(0 0 3px #e1d7c8aa);
+    }
 }
 
 /* Refine the typography shared by device names and small faceplate markings. */
@@ -128,7 +141,7 @@
 }
 
 @media (prefers-reduced-motion:reduce) {
-    :is(#audio-world,.equipment-preview-world) .device-node :is(.hw-knob,.hw-button,.port,.spotify-canvas-vinyl,.at-platter,.at-record,.tt-platter,.tt-record) {transition:none;}
+    :is(#audio-world,.equipment-preview-world) .device-node :is(.hw-knob,.hw-button,.port,.spotify-flow-vinyl,.spotify-canvas-vinyl,.at-platter,.at-record,.tt-platter,.tt-record) {transition:none;}
     :is(#audio-world,.equipment-preview-world) .device-node :is(.device-display,.cd-lcd,.poweramp-screen,.receiver-radio,.custom-pre-screen,.signal-screen,.bench-lcd,.bench-screen,.integrated-gauge,.integrated-gauges,.integrated-green-window,.bias-meter,.extra-vu,.poweramp-meter,.stream-screen),
     :is(#audio-world,.equipment-preview-world) .device-node :is(.device-display,.cd-lcd,.poweramp-screen,.receiver-radio,.custom-pre-screen,.signal-screen,.bench-lcd,.bench-screen,.stream-screen) > * {transition:none!important;}
 }
