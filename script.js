@@ -5797,6 +5797,10 @@ const Hardware = (() => {
                 el.classList.add('active-speaker');
                 el.querySelectorAll(type==='spkActiveRounded'?'.sp-woofer':'.sp-woofer,.sp-tweeter').forEach(driver=>driver.insertAdjacentHTML('beforeend','<span class="speaker-driver-screws" aria-hidden="true"></span>'));
             }
+            if(['subwooferCube','subwooferPassive','subwooferPassiveVintage','subwooferPro'].includes(type)){
+                el.classList.add('detailed-subwoofer');
+                el.querySelector('.sp-woofer').insertAdjacentHTML('beforeend','<span class="speaker-driver-screws" aria-hidden="true"></span>');
+            }
             if(BOOKSHELF_SPEAKERS[type]||['spkPassiveWood','spkPassiveCarbon'].includes(type)){
                 el.classList.add('passive-bookshelf-details');
                 if(!BOOKSHELF_SPEAKERS[type])el.querySelectorAll('.sp-woofer,.sp-tweeter').forEach(driver=>driver.insertAdjacentHTML('beforeend','<span class="speaker-driver-screws" aria-hidden="true"></span>'));
