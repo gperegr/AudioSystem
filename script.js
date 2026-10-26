@@ -1968,7 +1968,7 @@ const Hardware = (() => {
         document.documentElement.classList.toggle('has-touch-input',navigator.maxTouchPoints>0);
         touchMoveModeButton.addEventListener('click',()=>{touchMovementMode=!touchMovementMode;touchMoveModeButton.setAttribute('aria-pressed',String(touchMovementMode));touchMoveModeButton.dataset.tooltip=touchMovementMode?'Modo Touch ativo · toque e arraste para mover imediatamente':'Modo Touch desligado · segure brevemente um equipamento antes de arrastá-lo';});
         const mobileControls=document.createElement('div');mobileControls.className='mobile-panel-controls';
-        mobileControls.innerHTML='<button type="button" data-mobile-panel="catalog" aria-label="Equipamentos" data-tooltip="Equipamentos" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg><small>Equip.</small></button><button type="button" data-mobile-panel="properties" aria-label="Propriedades" data-tooltip="Propriedades" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="18" r="2"/></svg><small>Ajustes</small></button><button type="button" data-mobile-action="center" aria-label="Centralizar" data-tooltip="Centralizar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v5m0 8v5M3 12h5m8 0h5"/><circle cx="12" cy="12" r="4"/></svg><small>Centro</small></button><button type="button" data-mobile-action="undo" aria-label="Desfazer" data-tooltip="Desfazer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h9a7 7 0 0 1 0 14h-2"/></svg><small>Desfazer</small></button><button type="button" data-mobile-action="settings" aria-label="Configurações" data-tooltip="Configurações"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3m14 0h3"/></svg><small>Ajustes</small></button>';
+        mobileControls.innerHTML='<button type="button" data-mobile-panel="catalog" aria-label="Equipamentos" data-tooltip="Equipamentos" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg><small>Equip.</small></button><button type="button" data-mobile-panel="properties" aria-label="Propriedades" data-tooltip="Propriedades" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="18" r="2"/></svg><small>Ajustes</small></button><button type="button" data-mobile-action="center" aria-label="Centralizar" data-tooltip="Centralizar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v5m0 8v5M3 12h5m8 0h5"/><circle cx="12" cy="12" r="4"/></svg><small>Centro</small></button><button type="button" data-mobile-action="undo" aria-label="Desfazer" data-tooltip="Desfazer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h9a7 7 0 0 1 0 14h-2"/></svg><small>Desfazer</small></button><button type="button" data-mobile-action="redo" aria-label="Refazer" data-tooltip="Refazer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5m5 5h-9a7 7 0 0 0 0 14h2"/></svg><small>Refazer</small></button><button type="button" data-mobile-action="settings" aria-label="Configurações" data-tooltip="Configurações"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3m14 0h3"/></svg><small>Ajustes</small></button>';
         document.getElementById('app-topbar').lastElementChild.prepend(mobileControls);
         // Fixed phone navigation must escape the topbar's scrolling container.
         const phoneNavigationLayout=matchMedia('(max-width:700px)');
@@ -1989,7 +1989,7 @@ const Hardware = (() => {
             if(button.dataset.contextAction==='power'){dev.el.querySelector('.power-btn')?.click();setTimeout(syncMobileContextActions,0);}
             if(button.dataset.contextAction==='play')dev.el.querySelector('[data-source-play],.at-startstop')?.click();
             if(button.dataset.contextAction==='center')centerDeviceSet([dev]);
-            if(button.dataset.contextAction==='remove'){deleteDevice(dev);scheduleProjectSave();}
+            if(button.dataset.contextAction==='remove'){deleteDevice(dev,true);scheduleProjectSave();}
         });
         const compactLayout=matchMedia('(max-width:1000px), (hover:none) and (pointer:coarse) and (max-width:1400px)');
         compactLayout.addEventListener('change',syncMobileContextActions);
@@ -2017,6 +2017,7 @@ const Hardware = (() => {
         mobileControls.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{
             if(button.dataset.mobileAction==='center'){document.getElementById('center-devices')?.click();return;}
             if(button.dataset.mobileAction==='undo'){document.getElementById('undo-movement')?.click();return;}
+            if(button.dataset.mobileAction==='redo'){document.getElementById('redo-movement')?.click();return;}
             if(button.dataset.mobileAction==='settings'){document.querySelector('.app-settings>summary')?.click();return;}
             const className=button.dataset.mobilePanel==='catalog'?'mobile-catalog-open':'mobile-properties-open',open=document.body.classList.contains(className);
             closeMobilePanels();if(!open){document.querySelector('.app-settings')?.removeAttribute('open');document.body.classList.add(className);syncMobilePanels();(button.dataset.mobilePanel==='catalog'?mobileCatalogClose:mobileInspectorClose).focus({preventScroll:true});}
@@ -4610,7 +4611,7 @@ const Hardware = (() => {
         let contextHelpTarget=null,contextHelpTimer=0,contextHelpPreviousDescription=null;
         function hideContextHelp(){clearTimeout(contextHelpTimer);contextHelp.classList.remove('is-visible');if(contextHelpTarget){if(contextHelpPreviousDescription)contextHelpTarget.setAttribute('aria-describedby',contextHelpPreviousDescription);else contextHelpTarget.removeAttribute('aria-describedby');}contextHelpTarget=null;contextHelpPreviousDescription=null;}
         function positionContextHelp(target){
-            const rect=(target.closest('.device-node')||target).getBoundingClientRect(),tip=contextHelp.getBoundingClientRect(),gap=10,w=tip.width,h=tip.height,vw=innerWidth,vh=innerHeight;
+            const rect=target.getBoundingClientRect(),tip=contextHelp.getBoundingClientRect(),gap=10,w=tip.width,h=tip.height,vw=innerWidth,vh=innerHeight;
             const candidates=[{x:rect.right+gap,y:rect.top+(rect.height-h)/2},{x:rect.left-w-gap,y:rect.top+(rect.height-h)/2},{x:rect.left+(rect.width-w)/2,y:rect.bottom+gap},{x:rect.left+(rect.width-w)/2,y:rect.top-h-gap}];
             const overlaps=(x,y)=>x<rect.right&&x+w>rect.left&&y<rect.bottom&&y+h>rect.top;
             const valid=candidates.find(({x,y})=>x>=8&&x+w<=vw-8&&y>=8&&y+h<=vh-8&&!overlaps(x,y));
@@ -4624,6 +4625,7 @@ const Hardware = (() => {
             if(port){heading=port.dataset.baseTitle||port.getAttribute('aria-label')||'Conector';message=port.getAttribute('title')||`${port.dataset.io==='out'?'Saída':'Entrada'} ${port.dataset.format||port.dataset.type||'de áudio'} · sinal ${signalName(getPortSignal(port))}.`;}
             else if(control){heading=control.getAttribute('aria-label')||control.labels?.[0]?.textContent?.trim()||control.title||control.textContent.trim()||'Controle';message=control.title||control.getAttribute('aria-description')||control.labels?.[0]?.textContent?.trim()||'Ajuste este controle para configurar o equipamento.';}
             else return;
+            target=port||control;
             if(!message||contextHelpTarget===target)return;
             hideContextHelp();contextHelpTarget=target;contextHelpPreviousDescription=target.getAttribute('aria-describedby');target.setAttribute('aria-describedby',[contextHelpPreviousDescription,'context-help'].filter(Boolean).join(' '));
             contextHelp.querySelector('strong').textContent=heading;contextHelp.querySelector('span').textContent=message;
@@ -4633,6 +4635,18 @@ const Hardware = (() => {
         document.addEventListener('pointerout',event=>{const target=event.target instanceof Element?event.target:null,device=target?.closest('.device-node');if(!device||event.relatedTarget instanceof Node&&device.contains(event.relatedTarget))return;if(!contextHelpTarget||!device.contains(contextHelpTarget))return;if(!contextHelpTarget.matches(':focus')&&!contextHelpTarget.contains(document.activeElement))hideContextHelp();});
         document.addEventListener('focusin',event=>{const target=event.target instanceof Element?event.target:null;if(target?.closest('.device-node'))showContextHelp(target,0);});
         document.addEventListener('focusout',event=>{if(contextHelpTarget===event.target||contextHelpTarget?.contains(event.target))setTimeout(()=>{if(!contextHelpTarget?.matches(':hover')&&!contextHelpTarget?.contains(document.activeElement))hideContextHelp();},0);});
+        let contextTouchTarget=null,contextTouchStart=null;
+        document.addEventListener('pointerdown',event=>{
+            if(event.pointerType!=='touch'||!connectionGuidanceEnabled)return;
+            const candidate=event.target instanceof Element?event.target.closest('.device-node .port,.device-node button,.device-node input,.device-node select,.device-node [role="switch"],.device-node [role="slider"]'):null;
+            if(!candidate)return;
+            clearTimeout(contextHelpTimer);contextTouchTarget=candidate;contextTouchStart={x:event.clientX,y:event.clientY};
+            contextHelpTimer=setTimeout(()=>{if(contextTouchTarget===candidate)showContextHelp(candidate,0);},620);
+        },true);
+        document.addEventListener('pointermove',event=>{if(event.pointerType!=='touch'||!contextTouchTarget||!contextTouchStart)return;if(Math.hypot(event.clientX-contextTouchStart.x,event.clientY-contextTouchStart.y)>9){clearTimeout(contextHelpTimer);contextTouchTarget=null;contextTouchStart=null;}},true);
+        document.addEventListener('pointerup',event=>{if(event.pointerType!=='touch')return;clearTimeout(contextHelpTimer);contextTouchTarget=null;contextTouchStart=null;},true);
+        document.addEventListener('pointercancel',()=>{clearTimeout(contextHelpTimer);contextTouchTarget=null;contextTouchStart=null;},true);
+        document.addEventListener('pointerdown',event=>{if(event.pointerType==='touch'&&contextHelpTarget&&!contextHelpTarget.contains(event.target))hideContextHelp();},false);
         const equipmentSearch = document.getElementById('equipment-search');
         const catalogSections = [...equipmentCatalog.querySelectorAll('.mb-6')].filter(section => section.querySelector('.catalog-item'));
         const catalogSearchSynonyms={optica:['optical','toslink','digital'],optical:['optica','toslink','digital'],digital:['optica','optical','toslink'],entrada:['input'],input:['entrada'],saida:['output'],output:['saida'],linha:['line'],line:['linha'],phono:['vinil','toca discos','riaa'],rca:['analogo','audio'],p2:['minijack','fone','headphone'],p10:['jack','fone','headphone','6 35 mm'],wire:['fio','borne','caixa passiva'],fio:['wire','borne','caixa passiva'],passiva:['passive','amplificado','speaker'],passivo:['passive','amplificado','speaker'],caixa:['speaker','alto falante'],fone:['headphone','p2','p10'],bluetooth:['sem fio','wireless'],potencia:['amplificado','speaker']};
@@ -5724,8 +5738,8 @@ const Hardware = (() => {
             const drivers=type==='floorDiamond'?driver('mid',140,38)+driver('bass',172,270)+driver('bass',172,502):type==='floorCoax'?driver('bass',160,50)+driver('bass',160,255)+driver('coax',128,511)+driver('bass',160,735)+driver('bass',160,940):driver('mid',166,20)+driver('tweeter',52,214)+driver('bass',166,300)+driver('bass',166,498)+driver('bass',166,696);
             return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><section class="tower-body tower-${config.finish}">${type==='floorDiamond'?'<div class="tower-top-tweeter" aria-hidden="true"><i><b></b></i></div>':''}<div class="tower-cabinet"><div class="tower-baffle">${drivers}${type==='floorFlax'?'<div class="tower-front-vent" aria-hidden="true"></div>':''}<div class="tower-terminal"><div class="port" data-type="wire" data-io="in" data-node="in" data-signal="amplified" title="Entrada amplificada para caixa passiva"></div><small>SPEAKER IN</small></div></div></div><div class="tower-plinth" aria-hidden="true"></div><i class="tower-foot foot-left" aria-hidden="true"></i><i class="tower-foot foot-right" aria-hidden="true"></i></section>`;
         }
-        function createPendantLamp(x,y){
-            const id='dev_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+        function createPendantLamp(x,y,requestedId=null){
+            const id=requestedId||'dev_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
             const el=document.createElement('div');
             el.id=id;el.className='device-node device-type-pendantLamp';el.dataset.equipmentType='pendantLamp';
             el.tabIndex=0;el.setAttribute('aria-label','Luminária pendente. Arraste pela cúpula para mover.');
@@ -5747,8 +5761,8 @@ const Hardware = (() => {
             const dev={id,type:'pendantLamp',el,nodes:{},state:{},powered:true};
             state.devices[id]=dev;bindDeviceEvents(dev);selectDevice(id);updateCables();scheduleProjectSave();
         }
-        function createWallLamp(type,x,y){
-            const id='dev_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+        function createWallLamp(type,x,y,requestedId=null){
+            const id=requestedId||'dev_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
             const model=WALL_LAMP_TYPES[type];
             const el=document.createElement('div');
             el.id=id;el.className=`device-node wall-lamp-node device-type-${type}`;
@@ -5768,11 +5782,11 @@ const Hardware = (() => {
             const dev={id,type,el,nodes:{},state:{},powered:true};
             state.devices[id]=dev;bindDeviceEvents(dev);selectDevice(id);updateCables();scheduleProjectSave();
         }
-        function createDevice(type, x, y) {
-            if(type==='pendantLamp')return createPendantLamp(x,y);
-            if(WALL_LAMP_TYPES[type])return createWallLamp(type,x,y);
+        function createDevice(type, x, y, requestedId=null) {
+            if(type==='pendantLamp')return createPendantLamp(x,y,requestedId);
+            if(WALL_LAMP_TYPES[type])return createWallLamp(type,x,y,requestedId);
             initAudio();
-            const id = 'dev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+            const id = requestedId||'dev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
             const el = document.createElement('div');
             el.className = 'device-node';el.dataset.equipmentType=type;
             el.classList.add(`device-type-${type}`);
@@ -7272,7 +7286,7 @@ const Hardware = (() => {
                         if(isDragging)movingDevices.forEach(item=>item.el.classList.add('history-settling'));
                         if(isDragging&&isOverCatalog(ev)){
                             playUiSound('discard');showDiscardCloud(ev.clientX,ev.clientY);
-                            cancel();initialPositions.forEach(p=>{if(state.devices[p.dev.id])deleteDevice(p.dev);});
+                            cancel();recordDeletedDevices(initialPositions.map(p=>p.dev));initialPositions.forEach(p=>{if(state.devices[p.dev.id])deleteDevice(p.dev,false);});
                         }else if(isDragging){aim(ev,true);recordMovement(initialPositions,targets);playUiSound('drop');}else cancel();
                     };
 
@@ -7377,8 +7391,9 @@ const Hardware = (() => {
             }
             setTimeout(()=>cloud.remove(),560);
         }
-        function deleteDevice(dev) {
+        function deleteDevice(dev,recordHistory=false) {
             if (!dev || !state.devices[dev.id]) return;
+            if(recordHistory)recordDeletedDevices([dev]);
             dev.stopMicCapture?.(false);
             if(dev.spotifyVinyl){if(spotifyPlayingTurntable===dev.id){spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});}dev.spotifyVinyl.turntableId=null;dev.spotifyVinyl.el.classList.remove('is-on-platter');}
             dev.disposeCoverflow?.();
@@ -7634,7 +7649,7 @@ const Hardware = (() => {
 
         const movementUndo=[],movementRedo=[];
         const historyTools=document.createElement('div');historyTools.className='movement-history-tools';
-        historyTools.innerHTML='<button type="button" id="undo-movement" aria-label="Desfazer movimento" data-tooltip="Desfazer movimento · Ctrl/Cmd+Z" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h9a7 7 0 0 1 0 14h-2"/></svg></button><button type="button" id="redo-movement" aria-label="Refazer movimento" data-tooltip="Refazer movimento · Ctrl/Cmd+Shift+Z" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5m5 5h-9a7 7 0 0 0 0 14h2"/></svg></button>';
+        historyTools.innerHTML='<button type="button" id="undo-movement" aria-label="Desfazer última ação" data-tooltip="Desfazer última ação · Ctrl/Cmd+Z" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h9a7 7 0 0 1 0 14h-2"/></svg></button><button type="button" id="redo-movement" aria-label="Refazer última ação" data-tooltip="Refazer última ação · Ctrl/Cmd+Shift+Z" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5m5 5h-9a7 7 0 0 0 0 14h2"/></svg></button>';
         document.querySelector('.canvas-tools').prepend(historyTools);
         const toolbarTooltip=document.createElement('div');toolbarTooltip.id='toolbar-tooltip';toolbarTooltip.setAttribute('role','tooltip');document.body.appendChild(toolbarTooltip);
         let toolbarTooltipTimer=0,toolbarTooltipTarget=null,toolbarTooltipPreviousDescription='',touchTooltipTarget=null;
@@ -7648,23 +7663,78 @@ const Hardware = (() => {
         document.addEventListener('focusin',event=>{const target=event.target instanceof Element?event.target.closest('#app-topbar [data-tooltip]'):null;if(target)scheduleToolbarTooltip(target);});
         document.addEventListener('focusout',event=>{if(event.target instanceof Element&&event.target.matches('#app-topbar [data-tooltip]')&&!event.target.matches(':hover'))hideToolbarTooltip();});
         function updateMovementHistoryButtons(){
-            const valid=entry=>entry.before.every(p=>state.devices[p.id]);
+            const valid=entry=>entry.kind!=='move'||entry.before.every(p=>state.devices[p.id]);
             for(const stack of [movementUndo,movementRedo])for(let i=stack.length-1;i>=0;i--)if(!valid(stack[i]))stack.splice(i,1);
-            document.getElementById('undo-movement').disabled=!movementUndo.length;
-            document.getElementById('redo-movement').disabled=!movementRedo.length;
+            const undo=document.getElementById('undo-movement'),redo=document.getElementById('redo-movement'),label=entry=>!entry?'última ação':entry.kind==='move'?'movimento':entry.kind==='delete-device'?'remoção de equipamento':entry.kind==='delete-spotify'?'remoção de álbum ou disco':'ação';
+            undo.disabled=!movementUndo.length;redo.disabled=!movementRedo.length;
+            mobileControls.querySelector('[data-mobile-action="undo"]').disabled=undo.disabled;mobileControls.querySelector('[data-mobile-action="redo"]').disabled=redo.disabled;
+            undo.dataset.tooltip=`Desfazer ${label(movementUndo.at(-1))} · Ctrl/Cmd+Z`;undo.setAttribute('aria-label',`Desfazer ${label(movementUndo.at(-1))}`);
+            redo.dataset.tooltip=`Refazer ${label(movementRedo.at(-1))} · Ctrl/Cmd+Shift+Z`;redo.setAttribute('aria-label',`Refazer ${label(movementRedo.at(-1))}`);
         }
         function recordMovement(before,after){
             const positions=list=>list.map(p=>({id:p.dev.id,x:p.x,y:p.y}));
             if(!before.some((p,i)=>Math.abs(p.x-after[i].x)+Math.abs(p.y-after[i].y)>.1))return;
-            movementUndo.push({before:positions(before),after:positions(after)});if(movementUndo.length>100)movementUndo.shift();
+            movementUndo.push({kind:'move',before:positions(before),after:positions(after)});if(movementUndo.length>100)movementUndo.shift();
             movementRedo.length=0;updateMovementHistoryButtons();
         }
-        function replayMovement(redo=false){
+        function recordDeletedDevices(devices){
+            const existing=devices.filter(dev=>dev&&state.devices[dev.id]);if(!existing.length)return;
+            const snapshot=projectCapture(),ids=new Set(existing.map(dev=>dev.id)),records=existing.map(dev=>({saved:snapshot.devices.find(item=>item.id===dev.id),audio:dev.mediaBlob||null,vinylUri:dev.spotifyVinyl?.uri||null})).filter(item=>item.saved);
+            const connections=snapshot.connections.filter(connection=>ids.has(connection.from)||ids.has(connection.to));
+            movementUndo.push({kind:'delete-device',records,connections,selected:[...state.selectedDeviceIds]});if(movementUndo.length>100)movementUndo.shift();
+            movementRedo.length=0;updateMovementHistoryButtons();
+        }
+        function recordDeletedSpotify(kind,item){
+            if(!item)return;
+            const origin=item.dragStart||item,record={id:item.id,uri:item.uri,name:item.name,image:item.image,origin:item.origin,x:origin.x,y:origin.y};
+            if(kind==='album')record.open=item.open;
+            else record.turntableId=item.dragStart?.turntableId||item.turntableId||null;
+            movementUndo.push({kind:'delete-spotify',itemKind:kind,record});if(movementUndo.length>100)movementUndo.shift();
+            movementRedo.length=0;updateMovementHistoryButtons();
+        }
+        async function restoreDeletedDevices(entry,restore){
+            if(!restore){entry.records.forEach(({saved})=>{const dev=state.devices[saved.id];if(dev)deleteDevice(dev,false);});return;}
+            projectRestoring=true;state.restoringProject=true;
+            try{
+                for(const {saved,audio} of entry.records){
+                    if(state.devices[saved.id])continue;
+                    createDevice(saved.type,saved.x,saved.y,saved.id);const dev=state.devices[saved.id];if(!dev)throw new Error('Não foi possível restaurar o equipamento removido.');
+                    applySavedDevice(dev,saved);dev.fileName=saved.fileName||'';dev.trackTitle=saved.trackTitle||'';dev.demoOffset=Math.max(0,Number(saved.position)||0);
+                    if(audio instanceof Blob){try{const bytes=await audio.arrayBuffer(),metadata=dev.type==='streamIntegrated'?readStreamMetadata(bytes):null;dev.audioBuffer=await state.audioCtx.decodeAudioData(bytes);dev.mediaBlob=audio;dev.mediaKey=saved.mediaKey;dev.fileOffset=Math.max(0,Math.min(Number(saved.position)||0,dev.audioBuffer.duration));if(metadata)dev.setStreamMetadata(metadata);}catch{dev.fileMessage='Recarregue o arquivo de áudio para continuar.';}}
+                }
+                for(const {saved} of entry.records){const dev=state.devices[saved.id],paired=state.devices[saved.pairedId];if(dev&&paired&&BT_TX_TYPES.has(dev.type)&&canPair(dev,paired))pairDevices(dev,paired);}
+                for(const connection of entry.connections){
+                    const from=state.devices[connection.from],to=state.devices[connection.to];if(!from||!to)continue;
+                    const already=state.connections.some(c=>c.outDeviceId===from.id&&c.inDeviceId===to.id&&document.getElementById(c.outId)?.dataset.node===connection.out&&document.getElementById(c.inId)?.dataset.node===connection.input);if(already)continue;
+                    try{connectProjectPorts(from,connection.out,to,connection.input);const cable=state.connections.at(-1);Object.assign(cable,{label:connection.label||'',color:connection.color||null,hidden:!!connection.hidden,slack:connection.slack??5});applyCableAppearance(cable);}catch{}
+                }
+                for(const {saved,vinylUri} of entry.records){const dev=state.devices[saved.id],vinyl=vinylUri&&spotifyVinyls.get(vinylUri);if(dev&&vinyl&&!dev.spotifyVinyl){vinyl.turntableId=dev.id;dev.spotifyVinyl=vinyl;vinyl.el.classList.add('is-on-platter');vinyl.el.classList.toggle('is-linear',dev.type==='turntableLinear');moveSpotifyVinyl(vinyl,vinyl.x,vinyl.y);}}
+                setDeviceSelection(entry.selected.filter(id=>state.devices[id]));if(!state.selectedDeviceIds.size&&entry.records[0])selectDevice(entry.records[0].saved.id,true);
+            }finally{projectRestoring=false;state.restoringProject=false;updateCables();updateBluetoothLinks();updateCableFlows();scheduleProjectSave();}
+        }
+        async function replayHistoryEntry(entry,redo){
+            if(entry.kind==='move'){
+                const positions=redo?entry.after:entry.before;
+                positions.forEach(p=>{const dev=state.devices[p.id];if(dev){dev.cancelPlacementMotion?.();dev.el.style.left=`${p.x}px`;dev.el.style.top=`${p.y}px`;}});updateCables();
+            }else if(entry.kind==='delete-device')await restoreDeletedDevices(entry,!redo);
+            else if(entry.kind==='delete-spotify'){
+                if(entry.itemKind==='album'){
+                    const current=spotifyAlbums.get(entry.record.uri);
+                    if(redo&&current)removeSpotifyAlbum(current,false);else if(!redo&&!current)createSpotifyAlbum(entry.record);
+                }else{
+                    const current=spotifyVinyls.get(entry.record.uri);
+                    if(redo&&current)removeSpotifyVinyl(current,false);
+                    else if(!redo&&!current){const vinyl=createSpotifyVinyl({...entry.record,turntableId:null});const dev=state.devices[entry.record.turntableId];if(vinyl&&dev&&!dev.spotifyVinyl)placeSpotifyVinyl(vinyl,dev,false);}
+                }
+            }
+            scheduleProjectSave();updateMovementHistoryButtons();
+        }
+        async function replayMovement(redo=false){
             if(isPatching||document.querySelector('.equipment-dragging:not(.history-settling)'))return;
-            updateMovementHistoryButtons();const from=redo?movementRedo:movementUndo,to=redo?movementUndo:movementRedo,entry=from.pop();if(!entry)return;
-            const positions=redo?entry.after:entry.before;
-            positions.forEach(p=>{const dev=state.devices[p.id];dev.cancelPlacementMotion?.();dev.el.style.left=`${p.x}px`;dev.el.style.top=`${p.y}px`;});
-            to.push(entry);updateCables();updateMovementHistoryButtons();scheduleProjectSave();
+            updateMovementHistoryButtons();const from=redo?movementRedo:movementUndo,to=redo?movementUndo:movementRedo,entry=from.at(-1);if(!entry)return;
+            try{await replayHistoryEntry(entry,redo);from.pop();to.push(entry);}
+            catch(error){projectStatus(`Não foi possível ${redo?'refazer':'desfazer'}: ${error.message}`,true);}
+            updateMovementHistoryButtons();
         }
         document.getElementById('undo-movement').onclick=()=>replayMovement(false);
         document.getElementById('redo-movement').onclick=()=>replayMovement(true);
@@ -7903,10 +7973,12 @@ const Hardware = (() => {
             if (EQ_TYPES.has(dev.type) || CROSSOVER_TYPES.has(dev.type) || BENCH_METER_TYPES.has(dev.type)) html += spectrumInspectorHtml(dev);
             if(hasRestorableSettings(dev))html += '<div class="flex flex-col gap-2 border-t border-gray-700 pt-4"><button id="restore-device-settings" type="button" class="tt-insp-btn w-full">RESTAURAR CONFIGURAÇÕES</button><p id="restore-settings-status" role="status" class="text-xs text-gray-400"></p></div>';
             html+=portSignalsInspectorHtml(dev);
+            if(dev.el.querySelector('.port'))html+=`<section id="audio-path-diagnosis" class="audio-path-diagnosis" aria-live="polite"><h3>Diagnóstico do caminho</h3><p data-audio-path-message></p></section>`;
             html+=listeningInspectorHtml(dev);
             if(dev.el.querySelector('.speaker-grille'))html+=`<button type="button" class="tt-insp-btn" id="inspector-grille" aria-pressed="${dev.el.classList.contains('grille-off')}">GRADE</button>`;
             Hardware.sync(dev);
             inspectorContent.innerHTML = conciseEquipmentInspector(html);
+            refreshAudioPathDiagnosis();
             Hardware.inspector(inspectorContent);
             MenuSlider.mount(inspectorContent);
             if(dev.type==='furnitureCoverflow')SpotifyCoverflow.bindInspector(inspectorContent,dev.el.querySelector('.spotify-coverflow-host'));
@@ -8292,6 +8364,51 @@ const Hardware = (() => {
         function portSignalsInspectorHtml(dev){
             if(!dev.el.querySelector('.port'))return '';
             return `<section class="port-signal-panel"><h3>Sinais de entrada e saída</h3><div id="port-signal-rows">${portSignalsMarkup(dev)}</div></section>`;
+        }
+        function audioPathDiagnosis(dev,visited=new Set()){
+            if(!dev)return 'Selecione um equipamento para verificar o caminho do áudio.';
+            if(visited.has(dev.id))return 'Há um ciclo de conexões. Revise a cadeia para encontrar uma rota de saída.';
+            const seen=new Set(visited);seen.add(dev.id);
+            const source=SOURCE_TYPES.has(dev.type)||SIGNAL_GENERATOR_TYPES.has(dev.type);
+            if(dev.state.damage||dev.el.classList.contains('device-damaged'))return `${DEVICE_NAMES[dev.type]||'O equipamento'} está em proteção. Reduza o nível de entrada e restaure o aparelho.`;
+            if(dev.powered===false)return `${DEVICE_NAMES[dev.type]||'O equipamento'} está desligado. Ligue-o para deixar o sinal passar.`;
+            if(isListeningDevice(dev)&&(dev.state.muted||dev.state.streamMute))return 'A saída está silenciada. Desative o mute no equipamento.';
+            if(isListeningDevice(dev)&&((typeof dev.state.volume==='number'&&dev.state.volume<=.001)||(Array.isArray(dev.state.channelVolumes)&&Math.max(...dev.state.channelVolumes)<=.001)))return 'O volume desta saída está zerado. Aumente o volume no aparelho ou no painel lateral.';
+            if(source&&!dev.state.playing)return dev.audioBuffer||dev.spotifyVinyl?'A fonte está pausada. Pressione Play para iniciar o áudio.':'Inicie a fonte com Play ou carregue uma faixa neste equipamento.';
+            const incoming=state.connections.filter(c=>c.inDeviceId===dev.id),outputs=state.connections.filter(c=>c.outDeviceId===dev.id);
+            if(source&&dev.state.playing&&!outputs.length)return 'A fonte está tocando, mas nenhuma saída está conectada. Ligue uma saída a um próximo equipamento.';
+            if(!incoming.length&&!source)return 'Nenhuma entrada está conectada. Ligue uma fonte à entrada compatível deste equipamento.';
+            for(const cable of incoming){
+                const input=document.getElementById(cable.inId),output=document.getElementById(cable.outId),upstream=state.devices[cable.outDeviceId];
+                if(cable.miswired)return 'Um cabo está ligado entre duas entradas ou duas saídas e não transporta áudio. Corrija a direção da ligação.';
+                if(!input||!output||!upstream)return 'Uma ponta do cabo não está ligada a um equipamento. Reconecte esse trecho.';
+                const compatibility=getPortCompatibility(output,input);
+                if(!compatibility.compatible)return `O cabo chega a uma entrada incompatível: ${compatibility.reason}`;
+                if(RADIO_RECEIVERS.has(dev.type)){
+                    const selected=dev.state.receiverInput||'line1',prefix=selected==='line1'?'in':selected;
+                    if(selected==='fm'||!new RegExp('^'+prefix+'[LR]$').test(input.dataset.node))return 'O cabo entra numa fonte diferente da selecionada no receiver. Selecione a entrada ligada ao cabo.';
+                }
+                if(dev.type==='streamIntegrated'&&dev.state.streamInput!=='line')return 'O streamer está selecionado noutra entrada. Mude a entrada para LINE.';
+                if(controlAmpConfig(dev.type)&&!input.dataset.node.startsWith(dev.state.integratedSource===3&&controlAmpConfig(dev.type).phono!==false?'phono':'line'+dev.state.integratedSource))return 'A entrada selecionada no amplificador não corresponde ao cabo. Selecione a entrada ligada.';
+                if(dev.type==='preamp'&&!input.dataset.node.startsWith('in'+dev.state.preSource))return 'A fonte selecionada no pré-amplificador não corresponde ao cabo. Selecione a entrada ligada.';
+                if(MATRIX_TYPES.has(dev.type)&&!input.dataset.node.startsWith(`in${dev.state.matrixInput}`))return 'A matriz está selecionada para outra entrada. Selecione a entrada ligada.';
+                if(!upstream.el.classList.contains('device-has-signal'))return audioPathDiagnosis(upstream,seen);
+            }
+            if(dev.el.classList.contains('device-has-signal')){
+                if(isListeningDevice(dev))return 'O sinal chega à saída. Se ainda não ouvir, confira o volume do sistema, do navegador ou dos fones.';
+                if(!outputs.length)return 'O sinal chega a este equipamento, mas nenhuma saída está conectada ao próximo estágio. Ligue a saída correta a uma entrada compatível.';
+                return 'O sinal chega a este equipamento.';
+            }
+            if(controlAmpConfig(dev.type)&&(dev.state.preMuted||dev.state.volume<=.001))return 'O amplificador está no mute ou com volume zerado.';
+            if(dev.state.muted||dev.state.volume<=.001)return 'O sinal chega, mas este equipamento está silenciado ou com volume zerado.';
+            return 'O sinal não está chegando. Confira a energia, a entrada selecionada e os cabos deste trecho.';
+        }
+        function refreshAudioPathDiagnosis(){
+            const panel=document.getElementById('audio-path-diagnosis');if(!panel)return;
+            const dev=state.devices[state.selectedDeviceId],message=panel.querySelector('[data-audio-path-message]');
+            if(!dev||!message)return;
+            const next=audioPathDiagnosis(dev);if(message.textContent!==next)message.textContent=next;
+            panel.dataset.signal=dev.el.classList.contains('device-has-signal')?'active':'idle';
         }
         function refreshPortSignalInspector(){
             const dev=state.devices[state.selectedDeviceId],container=document.getElementById('port-signal-rows');
@@ -8967,6 +9084,7 @@ const Hardware = (() => {
                     }
                 });
             });
+            refreshAudioPathDiagnosis();
             scheduleVisuals();
         }
 
@@ -9138,9 +9256,18 @@ const Hardware = (() => {
         const SPOTIFY_VINYL_SIZE=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--spotify-vinyl-size'));
         const SPOTIFY_ALBUM_SIZE=SPOTIFY_VINYL_SIZE+16;
         const spotifyGridCoordinate=(value,limit)=>Math.max(0,Math.min(Math.floor(limit/Hardware.sizes.grid)*Hardware.sizes.grid,snapCoordinate(value)));
+        function createSpotifyDragGhost(element,event){
+            const rect=element.getBoundingClientRect(),ghost=element.cloneNode(true),worldStyle=getComputedStyle(world),scale=rect.width/Math.max(1,element.offsetWidth);
+            for(const property of worldStyle)if(property.startsWith('--'))ghost.style.setProperty(property,worldStyle.getPropertyValue(property));
+            Object.assign(ghost.style,{position:'fixed',left:rect.left+'px',top:rect.top+'px',width:element.offsetWidth+'px',height:element.offsetHeight+'px',margin:'0',transform:`scale(${scale})`,transformOrigin:'0 0',transition:'none',zIndex:'10010',pointerEvents:'none'});
+            ghost.setAttribute('aria-hidden','true');ghost.inert=true;document.body.appendChild(ghost);
+            const previousVisibility=element.style.visibility;element.style.visibility='hidden';
+            const offsetX=event.clientX-rect.left,offsetY=event.clientY-rect.top;
+            return {move(ev){ghost.style.left=(ev.clientX-offsetX)+'px';ghost.style.top=(ev.clientY-offsetY)+'px';},restore(){ghost.remove();element.style.visibility=previousVisibility;}};
+        }
         function moveSpotifyAlbum(item,x,y,settle=false){item.x=settle?spotifyGridCoordinate(x,world.offsetWidth-SPOTIFY_ALBUM_SIZE):Math.max(0,Math.min(world.offsetWidth-SPOTIFY_ALBUM_SIZE,x));item.y=settle?spotifyGridCoordinate(y,maxEquipmentBottom()-SPOTIFY_ALBUM_SIZE):Math.max(0,Math.min(maxEquipmentBottom()-SPOTIFY_ALBUM_SIZE,y));item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';}
         function syncSpotifyAlbum(item){item.el.classList.toggle('has-vinyl',item.open&&!spotifyVinyls.has(item.uri));item.el.classList.toggle('is-open',item.open);}
-        function removeSpotifyAlbum(item){spotifyAlbums.delete(item.uri);item.el.remove();refreshSpotifyAlbums();scheduleProjectSave();}
+        function removeSpotifyAlbum(item,recordHistory=true){if(recordHistory)recordDeletedSpotify('album',item);spotifyAlbums.delete(item.uri);item.el.remove();refreshSpotifyAlbums();scheduleProjectSave();}
         function createSpotifyAlbum(record){
             if(!record||!/^spotify:(album|playlist):[A-Za-z0-9]+$/.test(record.uri||'')||spotifyAlbums.has(record.uri))return null;
             const item={id:record.id||'album_'+Math.random().toString(36).slice(2),uri:record.uri,name:String(record.name||'Álbum').slice(0,160),image:/^https:\/\//.test(record.image||'')?record.image:'',origin:record.origin||null,x:0,y:0,open:!!record.open};
@@ -9148,7 +9275,7 @@ const Hardware = (() => {
             const cover=document.createElement('span');cover.className='spotify-canvas-album-cover';if(item.image)cover.style.backgroundImage=`url("${item.image.replaceAll('"','%22')}")`;
             const disc=document.createElement('span');disc.className='spotify-canvas-album-disc';disc.title='Retirar o disco';el.append(disc,cover);item.el=el;world.append(el);spotifyAlbums.set(item.uri,item);moveSpotifyAlbum(item,Number(record.x)||0,Number(record.y)||0,true);syncSpotifyAlbum(item);refreshSpotifyAlbums();
             disc.addEventListener('pointerdown',event=>{if(event.button!==0||spotifyVinyls.has(item.uri))return;event.preventDefault();event.stopPropagation();const at=screenToWorld(event.clientX,event.clientY),vinyl=createSpotifyVinyl({uri:item.uri,name:item.name,image:item.image,origin:item.origin,x:at.x-SPOTIFY_VINYL_SIZE/2,y:at.y-SPOTIFY_VINYL_SIZE/2});syncSpotifyAlbum(item);if(vinyl)beginSpotifyVinylDrag(vinyl,event);});
-            el.addEventListener('pointerdown',event=>{if(event.button!==0||event.target===disc)return;event.preventDefault();event.stopPropagation();const start=screenToWorld(event.clientX,event.clientY),offsetX=start.x-item.x,offsetY=start.y-item.y;let moved=false;const move=ev=>{if(ev.pointerId!==event.pointerId||ev.type==='pointercancel')return;const at=screenToWorld(ev.clientX,ev.clientY);if(!moved&&Math.hypot(ev.clientX-event.clientX,ev.clientY-event.clientY)<8)return;moved=true;el.classList.add('is-dragging');moveSpotifyAlbum(item,at.x-offsetX,at.y-offsetY);};const end=ev=>{if(ev.pointerId!==event.pointerId)return;window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',end,true);window.removeEventListener('pointercancel',end,true);el.classList.remove('is-dragging');el.style.pointerEvents='none';const overFurniture=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('.device-type-furnitureCoverflow');el.style.pointerEvents='';moveSpotifyAlbum(item,item.x,item.y,true);if(!moved){item.open=!item.open;syncSpotifyAlbum(item);}else if(ev.type!=='pointercancel'&&(isOverCatalog(ev)||overFurniture)){showDiscardCloud(ev.clientX,ev.clientY);removeSpotifyAlbum(item);return;}scheduleProjectSave();};window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',end,true);window.addEventListener('pointercancel',end,true);});
+            el.addEventListener('pointerdown',event=>{if(event.button!==0||event.target===disc)return;event.preventDefault();event.stopPropagation();item.dragStart={x:item.x,y:item.y};const start=screenToWorld(event.clientX,event.clientY),offsetX=start.x-item.x,offsetY=start.y-item.y;let moved=false,ghost=null;const move=ev=>{if(ev.pointerId!==event.pointerId||ev.type==='pointercancel')return;const at=screenToWorld(ev.clientX,ev.clientY);if(!moved&&Math.hypot(ev.clientX-event.clientX,ev.clientY-event.clientY)<8)return;if(!moved){moved=true;el.classList.add('is-dragging');ghost=createSpotifyDragGhost(el,event);}moveSpotifyAlbum(item,at.x-offsetX,at.y-offsetY);ghost?.move(ev);};const end=ev=>{if(ev.pointerId!==event.pointerId)return;window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',end,true);window.removeEventListener('pointercancel',end,true);ghost?.restore();el.classList.remove('is-dragging');el.style.pointerEvents='none';const overFurniture=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('.device-type-furnitureCoverflow');el.style.pointerEvents='';moveSpotifyAlbum(item,item.x,item.y,true);if(!moved){item.open=!item.open;syncSpotifyAlbum(item);}else if(ev.type!=='pointercancel'&&(isOverCatalog(ev)||overFurniture)){showDiscardCloud(ev.clientX,ev.clientY);removeSpotifyAlbum(item);return;}item.dragStart=null;scheduleProjectSave();};window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',end,true);window.addEventListener('pointercancel',end,true);});
             return item;
         }
         document.addEventListener('spotify-album-pickup',event=>{const furniture=event.target.closest('.device-node'),data=event.detail;if(!furniture||!data||spotifyAlbums.has(data.uri))return;const at=screenToWorld(data.clientX,data.clientY),item=createSpotifyAlbum({...data,origin:furniture.id,x:at.x-SPOTIFY_ALBUM_SIZE/2,y:at.y-SPOTIFY_ALBUM_SIZE/2});if(item){item.el.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,button:0,pointerId:data.pointerId,clientX:data.clientX,clientY:data.clientY}));scheduleProjectSave();}});
@@ -9163,7 +9290,7 @@ const Hardware = (() => {
             if(dev.state.playing)setSourcePlaying(dev,false);
             if(item.turntableId&&state.devices[item.turntableId]){const previous=state.devices[item.turntableId];if(previous.state.playing)setSourcePlaying(previous,false);previous.spotifyVinyl=null;}
             const fromX=item.x,fromY=item.y;
-            item.turntableId=dev.id;dev.spotifyVinyl=item;dev.spotifyNeedsRestart=true;if(dev.type==='turntableLinear'&&dev.state.tt?.disc==='none'){dev.state.tt.disc='lp';dev.refreshTurntable?.();}dev.setLidOpen?.(true);dev.el.classList.add('spotify-vinyl-placing');const center=vinylPlatterCenter(dev);moveSpotifyVinyl(item,center.x-SPOTIFY_VINYL_SIZE/2,center.y-6);
+            item.turntableId=dev.id;item.dragStart=null;dev.spotifyVinyl=item;dev.spotifyNeedsRestart=true;if(dev.type==='turntableLinear'&&dev.state.tt?.disc==='none'){dev.state.tt.disc='lp';dev.refreshTurntable?.();}dev.setLidOpen?.(true);dev.el.classList.add('spotify-vinyl-placing');const center=vinylPlatterCenter(dev);moveSpotifyVinyl(item,center.x-SPOTIFY_VINYL_SIZE/2,center.y-6);
             item.el.classList.toggle('is-linear',dev.type==='turntableLinear');item.el.classList.add('is-on-platter');
             const finish=()=>{dev.el.classList.remove('spotify-vinyl-placing');GuidedAccess.notify();};
             if(animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
@@ -9180,10 +9307,10 @@ const Hardware = (() => {
             el.addEventListener('pointerdown',event=>{if(event.button!==0)return;event.preventDefault();event.stopPropagation();beginSpotifyVinylDrag(item,event);});
             return item;
         }
-        function removeSpotifyVinyl(item){if(item.turntableId){const dev=state.devices[item.turntableId];if(dev?.state.playing)setSourcePlaying(dev,false);if(dev){dev.spotifyVinyl=null;if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);}}spotifyVinyls.delete(item.uri);item.el.remove();refreshSpotifyVinyls();scheduleProjectSave();}
+        function removeSpotifyVinyl(item,recordHistory=true){if(recordHistory)recordDeletedSpotify('vinyl',item);if(item.turntableId){const dev=state.devices[item.turntableId];if(dev?.state.playing)setSourcePlaying(dev,false);if(dev){dev.spotifyVinyl=null;if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);}}spotifyVinyls.delete(item.uri);item.el.remove();refreshSpotifyVinyls();scheduleProjectSave();}
         function beginSpotifyVinylDrag(item,event){
-            const prior=state.devices[item.turntableId];if(prior){if(prior.state.playing)setSourcePlaying(prior,false);prior.spotifyVinyl=null;item.turntableId=null;item.el.classList.remove('is-on-platter','is-linear','is-playing');if(state.selectedDeviceId===prior.id)selectDevice(prior.id,true);}
-            const point=screenToWorld(event.clientX,event.clientY),offsetX=prior?SPOTIFY_VINYL_SIZE/2:point.x-item.x,offsetY=prior?SPOTIFY_VINYL_SIZE/2:point.y-item.y;item.el.classList.add('is-dragging');
+            const prior=state.devices[item.turntableId];item.dragStart={x:item.x,y:item.y,turntableId:prior?.id||null};if(prior){if(prior.state.playing)setSourcePlaying(prior,false);prior.spotifyVinyl=null;item.turntableId=null;item.el.classList.remove('is-on-platter','is-linear','is-playing');if(state.selectedDeviceId===prior.id)selectDevice(prior.id,true);}
+            const point=screenToWorld(event.clientX,event.clientY),offsetX=prior?SPOTIFY_VINYL_SIZE/2:point.x-item.x,offsetY=prior?SPOTIFY_VINYL_SIZE/2:point.y-item.y;item.el.classList.add('is-dragging');const ghost=createSpotifyDragGhost(item.el,event);
             let autoLid=null;
             const showReturnTarget=ev=>{
                 if(compactLayout.matches){if(ev.clientX<28&&!document.body.classList.contains('mobile-catalog-open')){document.body.classList.add('mobile-catalog-open');syncMobilePanels();}}
@@ -9196,13 +9323,13 @@ const Hardware = (() => {
             const clearReturnTarget=()=>{equipmentCatalog.classList.remove('return-drag-over','discard-ready');discardZone.setAttribute('aria-hidden','true');};
             const hitDevice=(x,y)=>{item.el.style.pointerEvents='none';const target=document.elementFromPoint(x,y)?.closest('.device-node');item.el.style.pointerEvents='';return state.devices[target?.id];};
             const releaseAutoLid=keepOpen=>{if(autoLid&&!keepOpen&&state.devices[autoLid.id]===autoLid)autoLid.setLidOpen?.(false);autoLid=null;};
-            const move=ev=>{if(ev.pointerId!==event.pointerId)return;const at=screenToWorld(ev.clientX,ev.clientY);moveSpotifyVinyl(item,at.x-offsetX,at.y-offsetY);showReturnTarget(ev);const hovered=hitDevice(ev.clientX,ev.clientY);const next=hovered&&TURNTABLE_TYPES.has(hovered.type)?hovered:null;if(next!==autoLid){releaseAutoLid(false);if(next&&!next.state.lidOpen){next.setLidOpen?.(true);autoLid=next;}}};
-            const end=ev=>{if(ev.pointerId!==event.pointerId)return;window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',end,true);window.removeEventListener('pointercancel',end,true);item.el.classList.remove('is-dragging');clearReturnTarget();
+            const move=ev=>{if(ev.pointerId!==event.pointerId)return;const at=screenToWorld(ev.clientX,ev.clientY);moveSpotifyVinyl(item,at.x-offsetX,at.y-offsetY);ghost.move(ev);showReturnTarget(ev);const hovered=hitDevice(ev.clientX,ev.clientY);const next=hovered&&TURNTABLE_TYPES.has(hovered.type)?hovered:null;if(next!==autoLid){releaseAutoLid(false);if(next&&!next.state.lidOpen){next.setLidOpen?.(true);autoLid=next;}}};
+            const end=ev=>{if(ev.pointerId!==event.pointerId)return;window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',end,true);window.removeEventListener('pointercancel',end,true);ghost.restore();item.el.classList.remove('is-dragging');clearReturnTarget();
                 const dev=ev.type==='pointercancel'?null:hitDevice(ev.clientX,ev.clientY);
                 const placed=dev&&TURNTABLE_TYPES.has(dev.type)&&placeSpotifyVinyl(item,dev);
                 releaseAutoLid(!!placed&&autoLid===dev);
                 if(!placed&&ev.type!=='pointercancel'&&(isOverCatalog(ev)||dev?.type==='furnitureCoverflow')){showDiscardCloud(ev.clientX,ev.clientY);removeSpotifyVinyl(item);if(prior&&state.selectedDeviceId===prior.id)selectDevice(prior.id,true);playUiSound('discard');spotifyVinylNotice('Disco guardado na capa do álbum.');}
-                else if(!placed){moveSpotifyVinyl(item,item.x,item.y,true);if(prior&&state.selectedDeviceId===prior.id)selectDevice(prior.id,true);scheduleProjectSave();}
+                else if(!placed){moveSpotifyVinyl(item,item.x,item.y,true);item.dragStart=null;if(prior&&state.selectedDeviceId===prior.id)selectDevice(prior.id,true);scheduleProjectSave();}
             };
             showReturnTarget(event);
             window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',end,true);window.addEventListener('pointercancel',end,true);
