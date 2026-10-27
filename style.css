@@ -4642,6 +4642,9 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
 /* Furniture is a support layer, including while selected; equipment stays clickable. */
 #audio-world>.device-node.furniture-node,
 #audio-world>.device-node.furniture-node.selected {z-index:2;}
+/* The decorative CD set sits on top of furniture so its cases remain visible. */
+#audio-world>.device-node.furniture-node.device-type-cdCollection,
+#audio-world>.device-node.furniture-node.device-type-cdCollection.selected {z-index:3;}
 
 /* The interactive guide reserves space instead of covering the canvas. */
 :root {--tutorial-height:min(220px,42dvh);}
