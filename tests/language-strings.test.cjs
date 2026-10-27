@@ -47,6 +47,16 @@ test('furniture material labels and select options translate',()=>{
     for(const [portuguese,english]of Object.entries(expected))assert.equal(context.translate(portuguese),english,portuguese);
 });
 
+test('speaker signature and model specification labels translate',()=>{
+    const expected={
+        'Assinatura sonora':'Sound signature','Neutro':'Neutral',
+        'Sinais de entrada e saída':'Input and output signals','Características do modelo':'Model specifications',
+        'Impedância nominal':'Nominal impedance','Amplificação recomendada':'Recommended amplifier power',
+        'Escuta desta saída':'Output monitoring'
+    };
+    for(const [portuguese,english]of Object.entries(expected))assert.equal(context.translate(portuguese),english,portuguese);
+});
+
 test('the linear turntable inspector and its changing states are translated',()=>{
     const expected={
         'Energia':'Power','LIGAR / DESLIGAR':'Power on / off','Disco sobre o prato':'Record on the platter',
