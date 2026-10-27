@@ -2350,7 +2350,7 @@ const Hardware = (() => {
             }else if(type==='cdCollection'){
                 const colors=['#7d2529','#294d55','#a06d38','#343c65','#697341','#663b58','#9a4930','#355f52'];
                 const cases=Array.from({length:47},(_,index)=>`<span class="cd-collection-case" style="--case-x:${26+index*15}px;--case-height:${212+(index%4)*3}px;--case-color:${colors[index%colors.length]}" aria-hidden="true"><i></i><b>${String(index+1).padStart(2,'0')}</b></span>`).join('');
-                parts=part('cd-collection-body',0,0,config.width,config.height,`<span class="cd-collection-cases">${cases}</span><span class="cd-collection-base"></span>`);
+                parts=part('cd-collection-body',0,0,config.width,config.height,`<span class="cd-collection-cases">${cases}</span>`);
             }else if(config.rack){
                 const bodyHeight=config.surfaces.at(-1)+16;
                 parts=config.surfaces.map(y=>part('furniture-shelf',20,y,config.width-40,16)).join('')+part('furniture-leg',28,bodyHeight,20,44)+part('furniture-leg',config.width-48,bodyHeight,20,44)+part('furniture-side',0,0,20,bodyHeight)+part('furniture-side',config.width-20,0,20,bodyHeight);
