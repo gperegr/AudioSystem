@@ -1824,20 +1824,6 @@
         .furniture-node[data-material="lightWood"] .furniture-part::after {background:linear-gradient(180deg,#fff3,transparent 15%,transparent 84%,#70451d24);box-shadow:inset 0 0 0 1px #fff2;}
         .furniture-node[data-material="darkWood"] .furniture-part::after {background:linear-gradient(180deg,#fff2,transparent 14%,transparent 80%,#10090444);box-shadow:inset 0 0 0 1px #ffffff0b;}
         .furniture-node .furniture-leg {border-radius:0 0 3px 3px;}
-        .furniture-node.device-type-furnitureHairpin {--hairpin-back:#332115;}
-        .furniture-node.device-type-furnitureHairpin[data-material="lightWood"] {--hairpin-back:#987653;}
-        .furniture-node.device-type-furnitureHairpin[data-back="true"] .rack-body::before {inset:28px 24px 130px;background:var(--material-wood-grain),linear-gradient(180deg,#08090988,var(--hairpin-back) 29%,var(--hairpin-back) 76%,#08090966);background-color:var(--hairpin-back);box-shadow:inset 0 18px 27px #0008,inset 11px 0 20px #0005,inset -11px 0 20px #0005;}
-        .hairpin-record-bay {position:absolute;top:30px;width:220px;height:426px;overflow:hidden;z-index:1;pointer-events:none;box-shadow:inset 0 12px 18px #0004;}
-        .hairpin-record-sleeve {position:absolute;bottom:2px;left:var(--sleeve-x);width:var(--sleeve-width);height:var(--sleeve-height);box-sizing:border-box;transform:rotate(var(--sleeve-angle));transform-origin:50% 100%;border:1px solid #1717157a;border-left-color:#ffffff42;border-radius:1px;background:repeating-linear-gradient(180deg,transparent 0 32px,#ffffff31 32px 34px,transparent 34px 69px,#211a1829 69px 72px),linear-gradient(90deg,#0007,var(--sleeve-color) 24%,var(--sleeve-color) 70%,#fff6);box-shadow:1px 2px 2px #0008,inset 1px 0 #fff4;}
-        .hairpin-record-sleeve:nth-child(3n) {background:repeating-linear-gradient(180deg,transparent 0 20px,#f2dab46b 20px 22px,transparent 22px 76px,#1117 76px 81px),linear-gradient(90deg,#0008,var(--sleeve-color) 28%,#f1d6ad80 66%,#0008);}
-        .hairpin-record-sleeve:nth-child(4n) {background:repeating-linear-gradient(180deg,transparent 0 95px,#fff5 95px 98px,transparent 98px 108px,#0005 108px 111px),linear-gradient(90deg,#0007,var(--sleeve-color) 24%,var(--sleeve-color) 78%,#fff5);}
-        .device-type-furnitureHairpin .furniture-top {border-radius:3px 3px 0 0;box-shadow:inset 0 2px #fff5,inset 0 -4px 6px #0005,0 4px 6px #0004;}
-        .device-type-furnitureHairpin .furniture-shelf {box-shadow:inset 0 1px #fff4,inset 0 -4px 7px #0006,0 6px 8px #0004;}
-        .device-type-furnitureHairpin .furniture-divider {box-shadow:inset 2px 0 3px #fff2,inset -3px 0 5px #0007,3px 0 5px #0003;}
-        .furniture-node.device-type-furnitureHairpin .furniture-hairpin-leg {border:0!important;background:transparent!important;box-shadow:none!important;}
-        .device-type-furnitureHairpin .furniture-hairpin-leg svg {display:block;width:100%;height:100%;overflow:visible;fill:none;stroke:#151919;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(2px 3px 2px #0007);}
-        .device-type-furnitureHairpin .furniture-hairpin-leg .hairpin-glint {stroke:#a7aaa1;stroke-width:.85;opacity:.62;}
-        :root.lighting-demo-enabled .device-type-furnitureHairpin .furniture-hairpin-leg::after {display:none;}
         .furniture-caster .caster-stem {position:absolute;left:16px;top:0;width:10px;height:16px;border:1px solid #555651;background:linear-gradient(90deg,#272a29,#a3a39a 46%,#343837);box-shadow:1px 1px 2px #0008;}
         .furniture-caster .caster-wheel {position:absolute;left:6px;top:14px;width:30px;height:24px;border:2px solid #252827;border-radius:8px 8px 11px 11px;background:linear-gradient(90deg,#252827,#66645b 42%,#282a29 80%);box-shadow:inset 2px 0 2px #ffffff33,2px 4px 4px #0008;}
         .furniture-node .device-header {pointer-events:none;}
@@ -3908,12 +3894,6 @@
 .device-type-wallLampDome .wall-lamp-socket {left:calc(50% - 33px);top:74px;width:66px;height:68px;}
 .device-type-wallLampDome .wall-lamp-bulb {top:143px;height:106px;}
 .wall-lamp-dome-shade {position:absolute;left:calc(50% - 151px);top:116px;width:302px;height:83px;z-index:4;filter:drop-shadow(0 6px 5px #0009);}
-.device-type-wallLampBare {width:190px;height:225px;}
-.device-type-wallLampBare .wall-lamp-plate {top:74px;width:94px;height:104px;}
-.device-type-wallLampBare .wall-lamp-arm {left:calc(50% - 9px);top:92px;width:18px;height:90px;}
-.device-type-wallLampBare .wall-lamp-arm::after {display:none;}
-.device-type-wallLampBare .wall-lamp-socket {left:calc(50% - 25px);top:123px;width:50px;height:69px;}
-.device-type-wallLampBare .wall-lamp-bulb {left:calc(50% - 31px);top:19px;width:62px;height:111px;transform:rotate(180deg);}
 .device-type-pendantLamp {width:504px;height:276px;overflow:visible;cursor:grab;}
 .device-type-pendantLamp:active {cursor:grabbing;}
 .device-type-pendantLamp>.device-header {display:none!important;}

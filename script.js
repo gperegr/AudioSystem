@@ -2259,7 +2259,7 @@ const Hardware = (() => {
         });
 
         const DEVICE_NAMES = {
-            furnitureRack:'Rack de Áudio', furnitureHairpin:'Rack Vintage · Alfinete', furnitureCoverflow:'Coleção de Discos · Spotify', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureRackSixTall:'Rack com Vãos Altos · 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio', pendantLamp:'Luminária pendente', wallLampCage:'Arandela industrial', wallLampDome:'Arandela de prato', wallLampBare:'Arandela de filamento',
+            furnitureRack:'Rack de Áudio', furnitureCoverflow:'Coleção de Discos · Spotify', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureRackSixTall:'Rack com Vãos Altos · 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio', pendantLamp:'Luminária pendente', wallLampCage:'Arandela industrial', wallLampDome:'Arandela de prato',
             adapterRcaP2:'Adaptador RCA → P2', adapterP2Rca:'Adaptador P2 → RCA', adapterP10P2:'Adaptador P10 → P2', adapterP2P10:'Adaptador P2 → P10', adapterRcaP10:'Adaptador RCA → P10', adapterP10Rca:'Adaptador P10 → RCA', phonoConverter:'Conversor Phono → Linha', speakerConverter:'Conversor Amplificado → Linha',
             turntable: 'Toca-discos', turntableVintage: 'Toca-discos Vintage', turntableLinear:'Toca-discos Tangencial',
             hardwareDemo:'Modelo · Controles',signalGeneratorVintage:'Gerador de Sinais Vintage', signalGenerator:'Gerador de Sinais', cdPlayer: 'CD Player', tapeDeck:'Tape Deck de Rolo', preamp:'Pré · Slim',preReference:'Pré · Visor Verde',preControl:'Pré · Controle 2.1',preDisplay:'Pré · Tela Central', benchMeter:'Medidor de Bancada', benchMeterVintage:'Medidor de Bancada Vintage',
@@ -2323,12 +2323,11 @@ const Hardware = (() => {
             furnitureRackTall:{width:840,height:840,surfaces:[0,260,520,780],inset:20,rack:true,back:true,description:'Use os vãos mais altos para acomodar equipamentos maiores ou empilhados.'},
             furnitureRackSix:{width:840,height:1120,surfaces:[0,210,420,630,840,1050],inset:20,rack:true,back:true,description:'Seis vãos de 194 px para equipamentos baixos e médios.'},
             furnitureRackSixTall:{width:840,height:1370,surfaces:[0,260,520,780,1040,1300],inset:20,rack:true,back:true,description:'Seis vãos de 244 px para acomodar equipamentos médios e altos.'},
-            furnitureHairpin:{width:1320,height:610,surfaces:[0,238,456],inset:24,rack:true,back:true,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Rack baixo de madeira com dois vãos centrais, nichos laterais e pés alfinete de metal.'},
             furnitureCoverflow:{width:2440,height:514,surfaces:[0],inset:26,rack:true,back:true,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Coleção de álbuns e playlists do Spotify. Retire um vinil da capa aberta e coloque-o em um toca-discos; cabos e volumes controlam a escuta.'},
             furnitureTable:{width:1680,height:760,surfaces:[0],inset:20,description:'Apoie os equipamentos sobre o tampo. Arraste a mesa pelo tampo ou pelos pés.'},
             furnitureNiche:{width:840,height:280,surfaces:[0,260],inset:20,back:true,description:'Acomode um equipamento dentro do nicho ou sobre ele.'}
         };
-        const WALL_LAMP_TYPES=Object.freeze({wallLampCage:'cage',wallLampDome:'dome',wallLampBare:'bare'});
+        const WALL_LAMP_TYPES=Object.freeze({wallLampCage:'cage',wallLampDome:'dome'});
         const FURNITURE_MATERIALS = {metal:'Metal',black:'Preto',lightWood:'Madeira clara',darkWood:'Madeira escura'};
         const furnitureMaterialsFor=type=>Object.fromEntries(Object.entries(FURNITURE_MATERIALS).filter(([key])=>!FURNITURE_TYPES[type]?.materials||FURNITURE_TYPES[type].materials.includes(key)));
         const furnitureMaterialFor=(type,value)=>Object.hasOwn(furnitureMaterialsFor(type),value)?value:(FURNITURE_TYPES[type]?.defaultMaterial||'black');
@@ -2347,21 +2346,13 @@ const Hardware = (() => {
                     part('furniture-top',0,0,config.width,28)+part('furniture-side',0,28,26,416)+part('furniture-side',config.width-26,28,26,416)+part('furniture-shelf',0,444,config.width,30)+part('furniture-caster',42,474,42,40,'<span class="caster-stem"></span><span class="caster-wheel"></span>')+part('furniture-caster',config.width-84,474,42,40,'<span class="caster-stem"></span><span class="caster-wheel"></span>');
             }else if(type==='furnitureTable'){
                 parts=part('furniture-top',0,0,config.width,28)+part('furniture-leg',60,28,40,config.height-28)+part('furniture-leg',config.width-100,28,40,config.height-28)+part('furniture-brace',100,80,config.width-200,20);
-            }else if(type==='furnitureHairpin'){
-                const pin='<svg viewBox="0 0 80 130" aria-hidden="true"><path d="M9 3 28 115Q34 129 40 115L61 3M20 3 32 108Q34 116 36 108L50 3"/><path class="hairpin-glint" d="M12 5 30 114M58 5 39 114"/></svg>';
-                const sleeves=[
-                    [[50,13,400,-6,'#bd9668'],[66,13,397,-6,'#435e66'],[82,13,405,-6,'#a26d51'],[111,13,394,1,'#c7b68d'],[127,13,402,1,'#474f49'],[143,13,398,1,'#8d634b'],[190,13,406,-3,'#ad9b78'],[207,13,396,-3,'#344858']],
-                    [[10,13,403,3,'#6b7780'],[26,13,395,3,'#b78d67'],[67,13,401,-1,'#4b6255'],[83,13,397,-1,'#d3b996'],[99,13,405,-1,'#8a5544'],[125,13,394,5,'#a7a086'],[141,13,402,5,'#374d5e'],[157,13,399,5,'#c09263']]
-                ];
-                const recordBay=(side,x)=>`<div class="hairpin-record-bay" style="left:${x}px" aria-hidden="true">${sleeves[side].map(([left,width,height,angle,color])=>`<span class="hairpin-record-sleeve" style="--sleeve-x:${left}px;--sleeve-width:${width}px;--sleeve-height:${height}px;--sleeve-angle:${angle}deg;--sleeve-color:${color}"></span>`).join('')}</div>`;
-                parts=recordBay(0,24)+recordBay(1,1076)+part('furniture-top',0,0,1320,28)+part('furniture-shelf',264,238,792,24)+part('furniture-shelf',0,456,1320,24)+part('furniture-side',0,28,24,428)+part('furniture-side',1296,28,24,428)+part('furniture-side furniture-divider',244,28,20,428)+part('furniture-side furniture-divider',1056,28,20,428)+part('furniture-hairpin-leg',38,480,80,130,pin)+part('furniture-hairpin-leg',1202,480,80,130,pin);
             }else if(config.rack){
                 const bodyHeight=config.surfaces.at(-1)+16;
                 parts=config.surfaces.map(y=>part('furniture-shelf',20,y,config.width-40,16)).join('')+part('furniture-leg',28,bodyHeight,20,44)+part('furniture-leg',config.width-48,bodyHeight,20,44)+part('furniture-side',0,0,20,bodyHeight)+part('furniture-side',config.width-20,0,20,bodyHeight);
             }else{
                 parts=part('furniture-side',0,0,20,280)+part('furniture-side',820,0,20,280)+part('furniture-top',0,0,840,20)+part('furniture-shelf',0,260,840,20);
             }
-            return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><div class="furniture-body ${config.back?'rack-body':''} ${config.rack?'furniture-rack':''}" style="width:${config.width}px;height:${config.height}px;--back-top:${type==='furnitureHairpin'?28:config.rack?16:20}px;--back-bottom:${type==='furnitureHairpin'?130:config.rack?60:20}px">${parts}</div>`;
+            return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><div class="furniture-body ${config.back?'rack-body':''} ${config.rack?'furniture-rack':''}" style="width:${config.width}px;height:${config.height}px;--back-top:${config.rack?16:20}px;--back-bottom:${config.rack?60:20}px">${parts}</div>`;
         }
         const BENCH_SURFACES={wood:'Madeira',felt:'Feltro',studio:'Estúdio'};
         const BENCH_DECORATIONS={records:'Discos',covers:'Capas',cds:'CDs',lamp:'Luminária'};
@@ -4340,7 +4331,6 @@ const Hardware = (() => {
             pendantLamp:'Luminária pendente com cúpula metálica, cabo até o teto, lâmpada de filamento e luz amarela direcional.',
             wallLampCage:'Arandela industrial com vidro e grade de proteção. Emite luz âmbar em todas as direções.',
             wallLampDome:'Arandela com prato metálico e lâmpada de filamento. A cúpula direciona a luz para baixo.',
-            wallLampBare:'Arandela de parede com lâmpada de filamento exposta e luz âmbar ampla.',
             ...Object.fromEntries(Object.entries(INTERFACE_DEVICES).map(([key,config])=>[key,config.description])),
             turntableVintage: 'Toca-discos vintage com madeira e aço escovado, ajuste de pitch e saída RCA LINE ou PHONO.',
             turntableLinear:'Toca-discos tangencial automático com dois braços paralelos, detecção simulada de diâmetro, velocidades de 33⅓ e 45 rpm, cue e retorno automático.',
@@ -4407,8 +4397,7 @@ const Hardware = (() => {
             } else if(WALL_LAMP_TYPES[type]){
                 drawing={
                     wallLampCage:'<ellipse cx="28" cy="6" rx="9" ry="3"/><path d="M28 9v4m-6 0h12l2 6H20zM17 19h22v17q-3 8-11 8t-11-8zM17 26h22M18 35h20M22 20v20m12-20v20"/><path d="M24 22q-2 11 4 15 6-4 4-15m-6 6 2-3 2 3-2 3"/>',
-                    wallLampDome:'<ellipse cx="28" cy="6" rx="9" ry="3"/><path d="M28 9v9m-5 0h10l2 4H21zM5 31q10-10 23-10t23 10q-23 8-46 0zM23 33v6q0 5 5 5t5-5v-6m-7 3 2-2 2 2-2 3"/>',
-                    wallLampBare:'<circle cx="28" cy="32" r="11"/><circle cx="20" cy="31" r="1"/><circle cx="36" cy="31" r="1"/><path d="M22 30h12v9H22zM28 28v2M21 26q-3-5-2-10 1-9 9-10 8 1 9 10 1 5-2 10zM24 16l4 4 4-4m-4 4v5M24 39h8"/>'
+                    wallLampDome:'<ellipse cx="28" cy="6" rx="9" ry="3"/><path d="M28 9v9m-5 0h10l2 4H21zM5 31q10-10 23-10t23 10q-23 8-46 0zM23 33v6q0 5 5 5t5-5v-6m-7 3 2-2 2 2-2 3"/>'
                 }[type];
             } else if (FURNITURE_TYPES[type]) {
                 drawing = type === 'furnitureTable' ? '<path d="M5 15h46v5H5zM10 20v20m36-20v20M12 26h32"/>' : type === 'furnitureNiche' ? '<path d="M6 10h44v28H6zM11 15h34v18H11z"/>' : '<path d="M9 5h38v34H9zM9 16h38M9 27h38M13 39v4m30-4v4"/>';
@@ -4509,7 +4498,6 @@ const Hardware = (() => {
             if(details[type])drawing=details[type];
             if(['spkPassiveGridBlack','spkPassiveGridOrange'].includes(type))drawing='<rect x="14" y="2" width="28" height="36" rx="1"/><path d="M18 6v28m7-28v28m6-28v28m7-28v28M17 11h22M17 18h22M17 25h22M17 32h22M18 39v4h20v-4"/>';
             if(FURNITURE_TYPES[type]?.rack){const count=type==='furnitureRackSix'||type==='furnitureRackSixTall'?6:4;drawing='<path d="M8 3h40v38H8zM12 41v3m32-3v3"/>'+Array.from({length:count},(_,i)=>`<path d="M10 ${5+i*34/(count-1)}h36"/>`).join('');}
-            if(type==='furnitureHairpin')drawing='<path d="M4 14h48v20H4zM7 14v20m10-20v20m22-20v20m10-20v20M17 24h22M7 34l3 9 3-9m30 0 3 9 3-9"/>';
             if(type==='furnitureCoverflow')drawing='<path d="M3 6h50v34H3zM6 9h44v25H6zM6 36h44M9 40v3m38-3v3"/><path d="M9 13v19m4-19v19m4-19v19m4-19v19"/><rect x="25" y="12" width="13" height="19" rx="1"/><circle cx="40" cy="22" r="8"/><circle cx="40" cy="22" r="2"/><path d="M40 14v2m7 6h-2m-5 8v-2m-6-6h2"/><path d="M49 13v19"/>';
             if(type==='turntableVintage')drawing='<path d="M5 7h46v32H5zM8 10v26m40-26v26"/><circle cx="24" cy="22" r="12"/><circle cx="24" cy="22" r="3"/><path d="M43 12v12l-6 6M12 35h6"/>';
             if(type==='eqVintage')drawing=rack+'<path d="M8 12v20m40-20v20M14 15v14m7-14v14m7-14v14m7-14v14m7-14v14M12 22h4m3-4h4m3 7h4m3-5h4m3 4h4"/>';
@@ -4527,7 +4515,7 @@ const Hardware = (() => {
                 headphoneAmp:'#c6ab87',headphoneAmpModern:'#91b7c7',headphoneAmp4:'#a1b7c0',eqStudio:'#9eb7c5',eqVintage:'#c5ad86',mixer:'#a4b6c6',mixerVintage:'#bfa385',
                 crossover:'#93b8bf',crossoverVintage:'#c3ae8b',btReceiverA:'#8abac8',btTransmitterPro:'#99b7cc',
                 rcaSwitch:'#a4b5c1',rcaSwitchVintage:'#bda98a',speakerSwitch:'#9eb8bc',speakerSwitchVintage:'#c1a785',rcaMatrix:'#9bacc3',rcaMatrixVintage:'#b9a88b',
-                furnitureRack:'#a5b3ad',furnitureHairpin:'#b99470',furnitureCoverflow:'#c19a71',furnitureRackTall:'#a0b1ab',furnitureRackSix:'#9baaa6',furnitureRackSixTall:'#92a5a0',furnitureTable:'#baa48a',furnitureNiche:'#b7a58d',pendantLamp:'#e6b674',wallLampCage:'#d8b879',wallLampDome:'#d9ae75',wallLampBare:'#e1b874'
+                furnitureRack:'#a5b3ad',furnitureCoverflow:'#c19a71',furnitureRackTall:'#a0b1ab',furnitureRackSix:'#9baaa6',furnitureRackSixTall:'#92a5a0',furnitureTable:'#baa48a',furnitureNiche:'#b7a58d',pendantLamp:'#e6b674',wallLampCage:'#d8b879',wallLampDome:'#d9ae75'
             };
             const color=colors[type]||(INTERFACE_DEVICES[type]?.passive?'#b6b5aa':DEVICE_FAMILIES[type]==='vintage'?'#c0ab8a':'#a0b8c4');
             drawing=drawing.replace(/ opacity="[^"]*"/g,'');
@@ -9566,7 +9554,7 @@ const Hardware = (() => {
                 world.style.removeProperty('min-width');world.style.removeProperty('min-height');
                 const ui=snapshot.ui||{};setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setCanvasTime(ui.canvasTime||(ui.canvasBackdrop==='night'?'night':'dusk'));setCanvasBackdrop(ui.canvasBackdrop);
                 for(const saved of snapshot.devices){
-                    if(['lightPoint','acousticHorizontal','acousticVertical'].includes(saved.type))continue; // Discard retired items from older projects.
+                    if(!DEVICE_NAMES[saved.type]||['lightPoint','acousticHorizontal','acousticVertical'].includes(saved.type))continue; // Discard unknown or retired items from older projects.
                     const before=new Set(Object.keys(state.devices));createDevice(saved.type,Math.min(saved.x,world.offsetWidth-150),Math.min(saved.y,maxEquipmentBottom()-150));
                     const dev=Object.values(state.devices).find(item=>!before.has(item.id));if(!dev)throw new Error('Não foi possível restaurar um equipamento.');
                     if(AudioAdapterDesign.models[dev.type])AudioAdapterDesign.layout(dev.el,dev.type,saved.settings?.adapterRotation);

@@ -45,10 +45,10 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
         assert(await page.evaluate(()=>{const d={el:document.querySelector('.device-type-tapeDeck').cloneNode(true)};__tape.updateTapeReels(d,100,.1,true);return d.tapeReelAngles.every(a=>a===0)&&d.tapeVisualPosition===100;}));
         await page.emulateMedia({reducedMotion:'no-preference'});
         // One actual movable fixture lights the new stationary reliefs; rotating does not repaint shadows.
-        await page.evaluate(()=>{RoomScenes.lights=()=>[];document.querySelector('#canvas').dataset.theme='dark';__tape.createDevice('wallLampBare',700,650);Hardware.updateLightingDemo();});await page.waitForTimeout(180);
+        await page.evaluate(()=>{RoomScenes.lights=()=>[];document.querySelector('#canvas').dataset.theme='dark';__tape.createDevice('wallLampCage',700,650);Hardware.updateLightingDemo();});await page.waitForTimeout(180);
         const lightSample=()=>page.evaluate(()=>{const d=document.querySelector('.device-type-tapeDeck');return {highlight:parseFloat(d.querySelector('.tape-reel').style.getPropertyValue('--demo-highlight-x')),shadow:d.querySelector('.lighting-control-shadow').toDataURL()};});
         const left=await lightSample();
-        await page.evaluate(()=>{const lamp=Object.values(__tape.state.devices).find(d=>d.type==='wallLampBare');lamp.el.style.left='1600px';Hardware.updateLightingDemo();});await page.waitForTimeout(180);
+        await page.evaluate(()=>{const lamp=Object.values(__tape.state.devices).find(d=>d.type==='wallLampCage');lamp.el.style.left='1600px';Hardware.updateLightingDemo();});await page.waitForTimeout(180);
         const right=await lightSample();assert(left.highlight<50&&right.highlight>50);assert.notEqual(left.shadow,right.shadow);
         await page.evaluate(()=>{const d=Object.values(__tape.state.devices).find(d=>d.type==='tapeDeck');__tape.updateTapeReels(d,20,.05,true);});await page.waitForTimeout(100);assert.equal((await lightSample()).shadow,right.shadow);
         await page.evaluate(()=>{const d=Object.values(__tape.state.devices).find(d=>d.type==='tapeDeck');__tape.selectDevice(d.id);document.documentElement.classList.remove('lighting-demo-enabled');});
