@@ -41,8 +41,8 @@
             const farX=Math.max(-90,Math.min(90,-view.x/view.zoom*.09)),farY=Math.max(-55,Math.min(55,-view.y/view.zoom*.06));
             const farScale=Math.max(.9,Math.min(1.08,1-(view.zoom-1)*.08));
             const floorScale=Math.max(.94,Math.min(1.04,1-(view.zoom-1)*.04));
-            const scene=RoomScenes.scenes[state.canvasBackdrop];
-            const horizonShift=(ROOM_HORIZON_IMAGE_Y-(scene?.horizon?.[state.canvasTime]??ROOM_HORIZON_IMAGE_Y))*world.offsetHeight*1.1/720*farScale;
+            const scene=RoomScenes.scenes[appState.canvas.backdrop];
+            const horizonShift=(ROOM_HORIZON_IMAGE_Y-(scene?.horizon?.[appState.canvas.time]??ROOM_HORIZON_IMAGE_Y))*world.offsetHeight*1.1/720*farScale;
             world.style.setProperty('--room-far-x',farX.toFixed(1)+'px');world.style.setProperty('--room-far-y',farY.toFixed(1)+'px');
             world.style.setProperty('--room-far-scale',farScale.toFixed(3));
             world.style.setProperty('--room-horizon-shift',horizonShift.toFixed(1)+'px');
@@ -78,7 +78,7 @@
             setZoomAt(view.zoom*Math.exp(-Math.max(-160,Math.min(160,pixels))*.001),e.clientX,e.clientY);
         },{passive:false});
         document.getElementById('fit-canvas').addEventListener('click', () => {
-            const devices = Object.values(state.devices);
+            const devices = Object.values(appState.project.devices);
             if (!devices.length) { animateViewTo({zoom:1,x:0,y:0}); return; }
             const bounds = devices.reduce((b, dev) => {
                 const left = parseFloat(dev.el.style.left) || 0, top = parseFloat(dev.el.style.top) || 0;
@@ -145,14 +145,14 @@
         mobileContextActions.innerHTML='<button type="button" data-context-action="power"><svg viewBox="0 0 24 24"><path d="M12 3v9"/><path d="M6.1 6.1a8 8 0 1 0 11.8 0"/></svg><span>Ligar</span></button><button type="button" data-context-action="play"><svg viewBox="0 0 24 24"><path d="m8 5 12 7-12 7z"/></svg><span>Reproduzir</span></button><button type="button" data-context-action="center"><svg viewBox="0 0 24 24"><path d="M12 2v6m0 8v6M2 12h6m8 0h6"/><circle cx="12" cy="12" r="4"/></svg><span>Centralizar</span></button><button type="button" data-context-action="remove"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5m4-5v5"/></svg><span>Remover</span></button>';
         document.body.appendChild(mobileContextActions);
         function syncMobileContextActions(){
-            const id=state.selectedDeviceId,dev=id&&state.devices[id];mobileContextActions.hidden=!compactTouchLayout.matches||!dev||document.body.classList.contains('mobile-catalog-open')||document.body.classList.contains('mobile-properties-open');
+            const id=appState.interface.selectedDeviceId,dev=id&&appState.project.devices[id];mobileContextActions.hidden=!compactTouchLayout.matches||!dev||document.body.classList.contains('mobile-catalog-open')||document.body.classList.contains('mobile-properties-open');
             if(!dev)return;
             const power=mobileContextActions.querySelector('[data-context-action="power"]'),play=mobileContextActions.querySelector('[data-context-action="play"]');
             power.hidden=!dev.el.querySelector('.power-btn');power.querySelector('span').textContent=dev.powered===false?'Ligar':'Desligar';power.setAttribute('aria-label',dev.powered===false?'Ligar equipamento':'Desligar equipamento');
             const playControl=dev.el.querySelector('[data-source-play],.at-startstop');play.hidden=!playControl||!SOURCE_TYPES.has(dev.type);play.querySelector('span').textContent=dev.state.playing?'Pausar':'Reproduzir';play.setAttribute('aria-label',dev.state.playing?'Pausar':'Reproduzir');play.dataset.target=dev.id;
         }
         mobileContextActions.addEventListener('click',event=>{
-            const button=event.target.closest('[data-context-action]');if(!button)return;const dev=state.devices[state.selectedDeviceId];if(!dev)return;
+            const button=event.target.closest('[data-context-action]');if(!button)return;const dev=appState.project.devices[appState.interface.selectedDeviceId];if(!dev)return;
             if(button.dataset.contextAction==='power'){dev.el.querySelector('.power-btn')?.click();setTimeout(syncMobileContextActions,0);}
             if(button.dataset.contextAction==='play')dev.el.querySelector('[data-source-play],.at-startstop')?.click();
             if(button.dataset.contextAction==='center')centerDeviceSet([dev]);
@@ -263,33 +263,33 @@
         mobileCategoryNav.addEventListener('click',event=>{const button=event.target.closest('[data-category-target]');if(!button)return;const title=button.dataset.categoryTarget,sections=[...equipmentCatalog.querySelectorAll('.flex-1.overflow-y-auto>.mb-6')],section=sections.find(candidate=>AudioSystemLanguage.sourceText(candidate.querySelector('h3')?.textContent.trim()||'').startsWith(title));section?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});});
 
         function syncDeviceSelection() {
-            Object.values(state.devices).forEach(dev => {
-                dev.el.classList.toggle('selected', state.selectedDeviceIds.has(dev.id));
+            Object.values(appState.project.devices).forEach(dev => {
+                dev.el.classList.toggle('selected', appState.interface.selectedDeviceIds.has(dev.id));
             });
-            const count = state.selectedDeviceIds.size;
+            const count = appState.interface.selectedDeviceIds.size;
             selectionCount.textContent = count ? `${count} selecionado${count === 1 ? '' : 's'}` : '';
         }
 
         function setDeviceSelection(ids, focusId = null) {
-            state.selectedDeviceIds = new Set([...ids].filter(id => state.devices[id]));
-            const focus = focusId && state.selectedDeviceIds.has(focusId)
+            appStateStore.actions.setSelectedDevices(new Set([...ids].filter(id => appState.project.devices[id])));
+            const focus = focusId && appState.interface.selectedDeviceIds.has(focusId)
                 ? focusId
-                : [...state.selectedDeviceIds].at(-1) || null;
+                : [...appState.interface.selectedDeviceIds].at(-1) || null;
             selectDevice(focus, true);
         }
 
         function toggleDeviceSelection(id) {
-            const next = new Set(state.selectedDeviceIds);
+            const next = new Set(appState.interface.selectedDeviceIds);
             if (next.has(id)) next.delete(id);
             else next.add(id);
             setDeviceSelection(next, next.has(id) ? id : null);
         }
 
         function devicesForCanvasAction(useSelection = true) {
-            if (useSelection && state.selectedDeviceIds.size) {
-                return [...state.selectedDeviceIds].map(id => state.devices[id]).filter(Boolean);
+            if (useSelection && appState.interface.selectedDeviceIds.size) {
+                return [...appState.interface.selectedDeviceIds].map(id => appState.project.devices[id]).filter(Boolean);
             }
-            return Object.values(state.devices);
+            return Object.values(appState.project.devices);
         }
 
         function centerDeviceSet(devices) {
@@ -315,7 +315,7 @@
         }
 
         function organizeDevices() {
-            const selected = state.selectedDeviceIds.size > 1;
+            const selected = appState.interface.selectedDeviceIds.size > 1;
             const devices = devicesForCanvasAction(selected);
             if (!devices.length) return;
             const order = ['turntable','turntableVintage','turntableLinear','cdPlayer','streamer','btReceiverA','btTransmitterPro','receiver','eqStudio','eqVintage','mixer','mixerVintage','crossover','crossoverVintage','rcaSwitch','speakerSwitch','speakerSwitchVintage','headphoneAmp','headphoneAmp4','powerAmp','spkPassiveWood','spkPassiveCarbon','spkPassiveGridBlack','spkPassiveGridOrange','spkActiveMonitor','spkActiveBookshelf','subwoofer','subwooferCube','subwooferPro','subwooferPassive','subwooferPassiveVintage','headphone','hpStudio','hpClassic'];
@@ -350,7 +350,7 @@
             const key = e.key.toLowerCase();
             if ((e.metaKey || e.ctrlKey) && key === 'a') {
                 e.preventDefault();
-                setDeviceSelection(Object.keys(state.devices), Object.keys(state.devices)[0] || null);
+                setDeviceSelection(Object.keys(appState.project.devices), Object.keys(appState.project.devices)[0] || null);
             } else if (key === 'escape') {
                 selectCable(null);
                 selectDevice(null);
@@ -384,8 +384,8 @@
                     const box = selectionMarquee.getBoundingClientRect();
                     selectionMarquee.style.display = 'none';
                     if (!moved) return;
-                    const next = new Set(state.selectedDeviceIds);
-                    Object.values(state.devices).forEach(dev => {
+                    const next = new Set(appState.interface.selectedDeviceIds);
+                    Object.values(appState.project.devices).forEach(dev => {
                         const deviceRect = dev.el.getBoundingClientRect();
                         const intersects = deviceRect.left <= box.right && deviceRect.right >= box.left && deviceRect.top <= box.bottom && deviceRect.bottom >= box.top;
                         if (intersects) next.add(dev.id);

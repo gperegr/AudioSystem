@@ -108,7 +108,7 @@
         }
         function listeningProfilePreviewHtml(type){
             const profile=LISTENING_PROFILES[type]||{label:'Resposta neutra',bands:[0,0,0]};
-            const sampleRate=state.audioCtx?.sampleRate||48000,frequencies=Float32Array.from({length:181},(_,i)=>20*1000**(i/180)),response=new Float64Array(frequencies.length);
+            const sampleRate=appState.audio.context?.sampleRate||48000,frequencies=Float32Array.from({length:181},(_,i)=>20*1000**(i/180)),response=new Float64Array(frequencies.length);
             let specs=profile.bassAlignment?floorListeningFilters(profile,sampleRate):profile.filterSpecs;
             if(!profile.bassAlignment&&!profile.filterSpecs){
                 specs=[...(profile.highpass?[{type:'highpass',frequency:profile.highpass,Q:Math.SQRT1_2}]:[]),{type:'lowshelf',frequency:120,Q:.7,gain:profile.bands?.[0]||0},{type:'peaking',frequency:1600,Q:.7,gain:profile.bands?.[1]||0},{type:'highshelf',frequency:5500,Q:.7,gain:profile.bands?.[2]||0}];
@@ -200,7 +200,7 @@
         }
         function installAmplificationVoicing(dev){
             const profile=AMPLIFICATION_VOICINGS[dev.type];if(!profile)return;
-            const ctx=state.audioCtx,byNode=new Map(),curve=modelSaturationCurve(profile);dev.amplificationProfile=profile;dev.modelAudioNodes||=[];dev.valveWarmGains=[];
+            const ctx=appState.audio.context,byNode=new Map(),curve=modelSaturationCurve(profile);dev.amplificationProfile=profile;dev.modelAudioNodes||=[];dev.valveWarmGains=[];
             const outputPorts=[...dev.el.querySelectorAll('.port[data-io="out"]')];
             for(const port of outputPorts){
                 const key=port.dataset.node,input=dev.nodes[key];if(!input)continue;
@@ -266,10 +266,10 @@
             const read=(dev,stage)=>{
                 stage.analyzer.getFloatTimeDomainData(stage.samples);let sum=0,peak=0;
                 for(const value of stage.samples){sum+=value*value;peak=Math.max(peak,Math.abs(value));}
-                stage.rms=dev.powered&&!dev.state.damage&&state.audioCtx.state==='running'?Math.sqrt(sum/stage.samples.length):0;
+                stage.rms=dev.powered&&!dev.state.damage&&appState.audio.context.state==='running'?Math.sqrt(sum/stage.samples.length):0;
                 stage.clipping=stage.rms>0&&peak>stage.peakLimit*.94;
             };
-            for(const dev of Object.values(state.devices)){
+            for(const dev of Object.values(appState.project.devices)){
                 for(const stage of dev.electricalStages||[])read(dev,stage);
                 for(const circuit of dev.outputCircuits||[])for(const path of circuit.paths)if(path.analyzer)read(dev,path);
             }
@@ -296,7 +296,7 @@
         });
         const isRecommendedSpeakerPower=type=>!!(FLOOR_SPEAKERS[type]?.recommended||BOOKSHELF_SPEAKERS[type]?.recommended||FIXED_PASSIVE_SPECS[type]?.recommended);
         function connectPhonoPlayback(dev,gain,destination){
-            const ctx=state.audioCtx,before=ctx.createGain(),clip=ctx.createWaveShaper(),after=ctx.createGain();
+            const ctx=appState.audio.context,before=ctx.createGain(),clip=ctx.createWaveShaper(),after=ctx.createGain();
             before.gain.value=.25;after.gain.value=4;clip.curve=electricalLimitCurve(1.4);clip.oversample='2x';
             gain.connect(before);before.connect(clip);clip.connect(after);after.connect(destination);
             (dev.modelAudioNodes||=[]).push(before,clip,after);
@@ -327,7 +327,7 @@
                 if(stage.load===ohms)return;stage.load=ohms;
                 const protectedLoad=ohms<spec.minOhms-.01;
                 const referenceLoad=Number.isFinite(ohms)?ohms:8,available=ampPowerAtLoad(dev.type,referenceLoad),limit=peakLimitForWatts(available,referenceLoad);
-                stage.peakLimit=limit;stage.shaper.curve=electricalLimitCurve(limit);stage.gate.gain.setTargetAtTime(protectedLoad?0:1,state.audioCtx.currentTime,.025);
+                stage.peakLimit=limit;stage.shaper.curve=electricalLimitCurve(limit);stage.gate.gain.setTargetAtTime(protectedLoad?0:1,appState.audio.context.currentTime,.025);
             });
         }
         function electricalStatusMarkup(dev){
@@ -355,8 +355,8 @@
             if(dev.state.damage)gain=0;
             dev.simulatedInputWatts=power;
             dev.powerStatusVisual={...(dev.powerStatusVisual||{}),currentWatts:power,overloaded:dev.speakerOverloaded};
-            if(state.selectedDeviceId===dev.id){const status=document.getElementById('power-load-status');if(status)status.innerHTML=electricalStatusMarkup(dev);}
-            dev.listeningGain.gain.setTargetAtTime(gain,state.audioCtx.currentTime,.06);
+            if(appState.interface.selectedDeviceId===dev.id){const status=document.getElementById('power-load-status');if(status)status.innerHTML=electricalStatusMarkup(dev);}
+            dev.listeningGain.gain.setTargetAtTime(gain,appState.audio.context.currentTime,.06);
         }
         const isPassiveLoad=dev=>PASSIVE_SPK.has(dev.type)||PASSIVE_SUB_TYPES.has(dev.type);
         function installListeningControls(dev){
@@ -364,14 +364,14 @@
             dev.state.muted=false;dev.state.solo=false;
             const output=dev.outputPan||dev.analyzer;
             if(!output)return;
-            dev.listeningGain=state.audioCtx.createGain();
-            output.disconnect(state.masterGain);output.connect(dev.listeningGain);dev.listeningGain.connect(state.masterGain);
+            dev.listeningGain=appState.audio.context.createGain();
+            output.disconnect(appState.audio.masterGain);output.connect(dev.listeningGain);dev.listeningGain.connect(appState.audio.masterGain);
         }
         const portChannel=port=>port?.dataset.channel||(/[LR]$/.exec(port?.dataset.node||'')?.[0])||'';
         const isSignalPassthrough=dev=>!!INTERFACE_DEVICES[dev.type]?.passive||RCA_SWITCH_TYPES.has(dev.type)||MATRIX_TYPES.has(dev.type)||SPEAKER_SWITCH_TYPES.has(dev.type);
         function prospectiveConnections(prospective){
-            if(!prospective)return state.connections;
-            return [...state.connections.filter(c=>!c.miswired&&c.inId!==prospective.input.id&&c.outId!==prospective.output.id),{outId:prospective.output.id,inId:prospective.input.id}];
+            if(!prospective)return appState.project.connections;
+            return [...appState.project.connections.filter(c=>!c.miswired&&c.inId!==prospective.input.id&&c.outId!==prospective.output.id),{outId:prospective.output.id,inId:prospective.input.id}];
         }
         function routedInputPorts(dev,output,channelHint=''){
             const channel=portChannel(output)||channelHint;
@@ -390,7 +390,7 @@
             if(!output||seen.has(output.id))return [];
             const next=new Set(seen);next.add(output.id);const channel=sourceChannel||portChannel(output),localChannel=portChannel(output)||routingChannel;
             return prospectiveConnections(prospective).filter(c=>c.outId===output.id).flatMap(c=>{
-                const input=document.getElementById(c.inId),dev=state.devices[input?.closest('.device-node')?.id];
+                const input=document.getElementById(c.inId),dev=appState.project.devices[input?.closest('.device-node')?.id];
                 if(!dev)return [];
                 const nextChannel=portChannel(input)||localChannel;
                 if(!isSignalPassthrough(dev))return [{dev,input,channel:channel||portChannel(input),ohms:inputOhms(dev,input)}];
@@ -405,7 +405,7 @@
             return [...new Map(ports.flatMap(port=>terminalLoads(port,prospective)).map(load=>[load.input.id+':'+load.channel,load])).values()];
         }
         function installOutputCircuits(dev){
-            const ctx=state.audioCtx,byNode=new Map();dev.outputCircuits=[];
+            const ctx=appState.audio.context,byNode=new Map();dev.outputCircuits=[];
             for(const port of dev.el.querySelectorAll('.port[data-io="out"]')){
                 const node=dev.nodes[port.dataset.node];if(!node)continue;
                 if(byNode.has(node)){const circuit=byNode.get(node);circuit.ports.push(port);dev.nodes[port.dataset.node]=circuit.output;continue;}
@@ -434,8 +434,8 @@
             }
         }
         function updateOutputCircuitLoads(){
-            Object.values(state.devices).forEach(dev=>dev.refreshStreamRouting?.());
-            for(const dev of Object.values(state.devices))for(const circuit of dev.outputCircuits||[]){
+            Object.values(appState.project.devices).forEach(dev=>dev.refreshStreamRouting?.());
+            for(const dev of Object.values(appState.project.devices))for(const circuit of dev.outputCircuits||[]){
                 circuit.signal=getPortSignal(circuit.ports[0]);if(circuit.signal==='amplified')continue;
                 // RCA and stereo jacks of a source share their channel's output buffer.
                 const shared=SOURCE_TYPES.has(dev.type)?dev.outputCircuits.filter(other=>getPortSignal(other.ports[0])===circuit.signal):[circuit];
@@ -446,7 +446,7 @@
                     if(path.loadSignature===signature)continue;path.loadSignature=signature;path.load=ohms;
                     const phones=!!path.shaper,spec=phones?headphoneOutputSpec(dev):{outputOhms:isSignalPassthrough(dev)?0:TURNTABLE_TYPES.has(dev.type)&&dev.state.tt?.output==='phono'?600:100};
                     const divider=Number.isFinite(ohms)?ohms/(ohms+spec.outputOhms):1;
-                    path.loadGain.gain.setTargetAtTime(divider,state.audioCtx.currentTime,.025);
+                    path.loadGain.gain.setTargetAtTime(divider,appState.audio.context.currentTime,.025);
                     if(phones){
                         const availableVrms=Math.min(spec.voltsRms,Number.isFinite(ohms)?spec.currentRms*ohms:spec.voltsRms);
                         path.peakLimit=Math.SQRT2*availableVrms/ELECTRICAL_MODEL.lineVoltsPerUnit;
@@ -457,20 +457,20 @@
         }
         function amplifierOrigins(output,seen=new Set(),channelHint=''){
             if(!output||seen.has(output.id))return [];
-            const dev=state.devices[output.closest('.device-node')?.id];if(!dev||!isSelectedSwitchOutput(dev,output))return [];
+            const dev=appState.project.devices[output.closest('.device-node')?.id];if(!dev||!isSelectedSwitchOutput(dev,output))return [];
             const channel=portChannel(output)||channelHint;
             if(POWER_OUTPUT_TYPES.has(dev.type)&&getPortSignal(output)==='amplified')return [{amp:dev,channel,key:dev.id+':'+channel}];
             if(!isSignalPassthrough(dev))return [];
             const next=new Set(seen);next.add(output.id);const inputs=routedInputPorts(dev,output,channel);
-            return state.connections.filter(c=>!c.miswired&&inputs.some(port=>port.id===c.inId)).flatMap(c=>amplifierOrigins(document.getElementById(c.outId),next,portChannel(document.getElementById(c.inId))||channel));
+            return appState.project.connections.filter(c=>!c.miswired&&inputs.some(port=>port.id===c.inId)).flatMap(c=>amplifierOrigins(document.getElementById(c.outId),next,portChannel(document.getElementById(c.inId))||channel));
         }
         function amplifierRoutes(dev){
-            const routes=state.connections.filter(c=>!c.miswired&&document.getElementById(c.inId)?.closest('.device-node')?.id===dev.id).flatMap(c=>amplifierOrigins(document.getElementById(c.outId)));
+            const routes=appState.project.connections.filter(c=>!c.miswired&&document.getElementById(c.inId)?.closest('.device-node')?.id===dev.id).flatMap(c=>amplifierOrigins(document.getElementById(c.outId)));
             return [...new Map(routes.map(route=>[route.key,route])).values()];
         }
         function updateListeningControls(){
-            if(!state.audioCtx)return;
-            const devices=Object.values(state.devices),sinks=devices.filter(isListeningDevice);
+            if(!appState.audio.context)return;
+            const devices=Object.values(appState.project.devices),sinks=devices.filter(isListeningDevice);
             const solo=sinks.some(dev=>dev.state.solo),loads=new Map(),routes=new Map();
             sinks.filter(isPassiveLoad).forEach(dev=>{
                 const list=amplifierRoutes(dev);routes.set(dev.id,list);
@@ -511,11 +511,11 @@
                 if(isPassiveLoad(dev))dev.powerStatusVisual={channels:statusChannels,notes:statusNotes};
                 const audible=!dev.state.damage&&!dev.state.muted&&(!solo||dev.state.solo);
                 dev.electricalBaseGain=audible?gain:0;
-                if(isPassiveLoad(dev))applySpeakerLoadDynamics(dev);else dev.listeningGain?.gain.setTargetAtTime(audible?gain:0,state.audioCtx.currentTime,.025);
+                if(isPassiveLoad(dev))applySpeakerLoadDynamics(dev);else dev.listeningGain?.gain.setTargetAtTime(audible?gain:0,appState.audio.context.currentTime,.025);
                 dev.el.classList.toggle('listening-muted',!audible||gain===0);
                 dev.el.classList.toggle('listening-solo',!!dev.state.solo);
             });
-            ampWarnings.forEach((notes,id)=>state.devices[id].powerStatus=notes.map(note=>note.detail).join(' '));
+            ampWarnings.forEach((notes,id)=>appState.project.devices[id].powerStatus=notes.map(note=>note.detail).join(' '));
             devices.filter(dev=>FIXED_AMP_SPECS[dev.type]).forEach(dev=>{
                 const channels=['L','R'].map(ch=>{const ohms=dev.channelLoads?.[ch]??Infinity,min=dev.state.minOhms||0,state=!Number.isFinite(ohms)?'empty':ohms<min-.01?'protection':'compatible',label=Number.isFinite(ohms)?(ohms>=1000?(ohms/1000).toFixed(1)+' kΩ':ohms.toFixed(1)+' Ω'):'Sem carga',watts=Number.isFinite(ohms)?Math.round(ampPowerAtLoad(dev.type,ohms)):null;return {channel:ch,label,watts,state,detail:`Canal ${ch}: ${label}${watts!==null?`, até ${watts} W`:''}${state==='protection'?`; abaixo da carga mínima de ${min} Ω`:''}.`};});
                 const valveWarning=dev.type==='powerValve'&&Object.values(dev.channelLoads||{}).some(load=>!Number.isFinite(load)||load>16)?{state:'attention',detail:'Valvulado: use uma carga de caixa adequada; circuito aberto não equivale a 8 Ω.'}:null;
@@ -524,7 +524,7 @@
                 dev.powerStatusVisual={channels,notes};
             });
 
-            const selected=state.devices[state.selectedDeviceId];
+            const selected=appState.project.devices[appState.interface.selectedDeviceId];
             const status=document.getElementById('power-load-status');if(status&&selected)status.innerHTML=electricalStatusMarkup(selected);
         }
         function listeningInspectorHtml(dev){
@@ -551,7 +551,7 @@
             updateListeningControls();
         }
         function applyCableAppearance(connection){
-            const hidden=!!state.hideCables||!!connection.hidden;
+            const hidden=!!appState.canvas.hideCables||!!connection.hidden;
             connection.el.style.display=hidden?'none':'';
             connection.el.querySelectorAll('.cable-path,.wire-braid-red').forEach(path=>{
                 if(connection.color)path.style.setProperty('stroke',connection.color,'important');else path.style.removeProperty('stroke');
@@ -567,7 +567,7 @@
         function renderCableProperties(){
             let panel=document.getElementById('cable-properties');
             if(!panel){panel=document.createElement('section');panel.id='cable-properties';panel.className='p-5 border-t border-gray-700 flex flex-col gap-3';document.getElementById('inspector').appendChild(panel);}
-            const connection=state.selectedConnection;panel.hidden=!connection;
+            const connection=appState.interface.selectedConnection;panel.hidden=!connection;
             if(!connection)return;
             panel.innerHTML='<label for="cable-label" class="text-sm text-gray-300">Etiqueta</label><div class="cable-label-row"><input id="cable-label" type="text" maxlength="60" class="p-2 rounded bg-gray-800 border border-gray-600 text-gray-100" placeholder="Nome do cabo"><button id="cable-visibility" type="button" aria-description="Ocultar altera apenas o visual; o áudio continua passando." data-tooltip="Ocultar altera apenas o visual; o áudio continua passando."><svg viewBox="0 0 24 24" aria-hidden="true"><path class="cable-eye-open" d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle class="cable-eye-open" cx="12" cy="12" r="2.8"/><path class="cable-eye-closed" d="M2 13c3-3 6-4 10-4s7 1 10 4M6 16l-2 2m8-1v3m6-4 2 2"/></svg></button></div><div class="flex flex-col gap-3"><div class="flex items-center justify-between"><span class="text-sm text-gray-300">Cor</span><button id="cable-color-reset" type="button" class="text-xs text-blue-300">Padrão</button></div><div id="cable-color-palette" class="cable-color-palette" role="group" aria-label="Cor do cabo"></div></div>';
             const out=document.getElementById(connection.outId),input=document.getElementById(connection.inId);
@@ -600,27 +600,27 @@
         }
 
         function wireSpeakerIn(dev, stereo = false) {
-            dev.analyzer = state.audioCtx.createAnalyser();
+            dev.analyzer = appState.audio.context.createAnalyser();
             dev.dataArray = new Uint8Array(dev.analyzer.frequencyBinCount);
             if (stereo) {
-                dev.nodes.inR = state.audioCtx.createGain();
-                dev.nodes.inL = state.audioCtx.createGain();
+                dev.nodes.inR = appState.audio.context.createGain();
+                dev.nodes.inL = appState.audio.context.createGain();
                 const compact=dev.type==='spkActiveCompact';
-                const summer = compact?state.audioCtx.createChannelMerger(2):state.audioCtx.createGain();
+                const summer = compact?appState.audio.context.createChannelMerger(2):appState.audio.context.createGain();
                 // A porta RCA mono das caixas ativas usa este mesmo ponto de entrada.
                 dev.nodes.in = summer;
                 if(compact){
                     dev.nodes.inR.connect(summer,0,1);dev.nodes.inL.connect(summer,0,0);
-                    dev.nodes.inStereo=state.audioCtx.createGain();
-                    dev.auxSplitter=state.audioCtx.createChannelSplitter(2);
+                    dev.nodes.inStereo=appState.audio.context.createGain();
+                    dev.auxSplitter=appState.audio.context.createChannelSplitter(2);
                     dev.nodes.inStereo.connect(dev.auxSplitter);
                     dev.auxSplitter.connect(dev.nodes.inL,0);dev.auxSplitter.connect(dev.nodes.inR,1);
                 }else{dev.nodes.inR.connect(summer);dev.nodes.inL.connect(summer);}
-                dev.volumeNode = state.audioCtx.createGain();
+                dev.volumeNode = appState.audio.context.createGain();
                 summer.connect(dev.volumeNode);
                 dev.volumeNode.connect(dev.powerGain);
             } else {
-                dev.nodes.in = state.audioCtx.createGain();
+                dev.nodes.in = appState.audio.context.createGain();
                 dev.nodes.in.connect(dev.powerGain);
             }
             dev.listeningProfile=LISTENING_PROFILES[dev.type];
@@ -628,23 +628,23 @@
             dev.voicingNodes=[];
             if(dev.listeningProfile){
                 // Identical filters process both channels without mixing L and R.
-                const trim=state.audioCtx.createGain();
+                const trim=appState.audio.context.createGain();
                 trim.gain.value=10**((dev.listeningProfile.headroomDb??-4)/20);
                 output.connect(trim);output=trim;dev.voicingNodes.push(trim);
                 if(dev.listeningProfile.bassAlignment||dev.listeningProfile.filterSpecs){
-                    const specs=dev.listeningProfile.bassAlignment?floorListeningFilters(dev.listeningProfile,state.audioCtx.sampleRate):dev.listeningProfile.filterSpecs;
+                    const specs=dev.listeningProfile.bassAlignment?floorListeningFilters(dev.listeningProfile,appState.audio.context.sampleRate):dev.listeningProfile.filterSpecs;
                     specs.forEach(spec=>{
-                        const coefficients=speakerFilterCoefficients(spec,state.audioCtx.sampleRate);
-                        const filter=state.audioCtx.createIIRFilter(coefficients.feedforward,coefficients.feedback);
+                        const coefficients=speakerFilterCoefficients(spec,appState.audio.context.sampleRate);
+                        const filter=appState.audio.context.createIIRFilter(coefficients.feedforward,coefficients.feedback);
                         output.connect(filter);output=filter;dev.voicingNodes.push(filter);
                     });
                 }else{
                 if(dev.listeningProfile.highpass){
-                    const filter=state.audioCtx.createBiquadFilter();filter.type='highpass';filter.frequency.value=dev.listeningProfile.highpass;filter.Q.value=Math.SQRT1_2;
+                    const filter=appState.audio.context.createBiquadFilter();filter.type='highpass';filter.frequency.value=dev.listeningProfile.highpass;filter.Q.value=Math.SQRT1_2;
                     output.connect(filter);output=filter;dev.voicingNodes.push(filter);
                 }
                 ['lowshelf','peaking','highshelf'].forEach((type,index)=>{
-                    const filter=state.audioCtx.createBiquadFilter();
+                    const filter=appState.audio.context.createBiquadFilter();
                     filter.type=type;filter.frequency.value=[120,1600,5500][index];
                     filter.Q.value=.7;filter.gain.value=dev.listeningProfile.bands[index];
                     output.connect(filter);output=filter;dev.voicingNodes.push(filter);
@@ -653,17 +653,17 @@
             }
             output.connect(dev.analyzer);
             if (PASSIVE_SPK.has(dev.type) || ACTIVE_SPK.has(dev.type)) {
-                dev.outputPan = state.audioCtx.createStereoPanner();
+                dev.outputPan = appState.audio.context.createStereoPanner();
                 dev.analyzer.connect(dev.outputPan);
-                dev.outputPan.connect(state.masterGain);
-            } else dev.analyzer.connect(state.masterGain);
+                dev.outputPan.connect(appState.audio.masterGain);
+            } else dev.analyzer.connect(appState.audio.masterGain);
         }
 
         function setMixerVolume(dev, channel, value) {
             const level = Math.max(0, Math.min(1, Number(value)));
             dev.state.channelVolumes ||= [0.8, 0.8, 0.8];
             dev.state.channelVolumes[channel] = level;
-            ['R', 'L'].forEach(side => { if (dev.channelGains?.[channel]?.[side]) dev.channelGains[channel][side].gain.setTargetAtTime(level, state.audioCtx.currentTime, 0.015); });
+            ['R', 'L'].forEach(side => { if (dev.channelGains?.[channel]?.[side]) dev.channelGains[channel][side].gain.setTargetAtTime(level, appState.audio.context.currentTime, 0.015); });
             const output = dev.el.querySelector(`[data-mixer-value="${channel}"]`);
             if (output) output.textContent = `${Math.round(level * 100)}%`;
             const onDevice = dev.el.querySelector(`[data-mixer-channel="${channel}"]`);

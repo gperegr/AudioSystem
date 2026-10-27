@@ -1,13 +1,13 @@
 /* Room audio, streamers, integrated amplifiers, preamps, and speaker renderers. */
         const ROOM_PRESETS={near:{name:'Audição próxima',decay:.12,predelay:.004,tone:12500},small:{name:'Sala pequena',decay:.42,predelay:.012,tone:8500},large:{name:'Sala ampla',decay:1.05,predelay:.025,tone:6500}};
         function setupRoomAudio(){
-            const context=state.audioCtx,input=state.masterGain,dry=context.createGain(),wet=context.createGain(),convolver=context.createConvolver(),delay=context.createDelay(.1),filter=context.createBiquadFilter();
-            filter.type='lowpass';input.connect(dry);dry.connect(state.listeningToneInput);input.connect(delay);delay.connect(convolver);convolver.connect(filter);filter.connect(wet);wet.connect(state.listeningToneInput);
-            state.roomAudio={dry,wet,convolver,delay,filter,preset:null,impulses:new Map()};applyRoomAudio();
+            const context=appState.audio.context,input=appState.audio.masterGain,dry=context.createGain(),wet=context.createGain(),convolver=context.createConvolver(),delay=context.createDelay(.1),filter=context.createBiquadFilter();
+            filter.type='lowpass';input.connect(dry);dry.connect(appState.audio.listeningToneInput);input.connect(delay);delay.connect(convolver);convolver.connect(filter);filter.connect(wet);wet.connect(appState.audio.listeningToneInput);
+            appStateStore.actions.setAudioRuntime('roomAudio',{dry,wet,convolver,delay,filter,preset:null,impulses:new Map()});applyRoomAudio();
         }
         function applyRoomAudio(){
-            const s=state.environment||(state.environment={...DEFAULT_ROOM_SETTINGS}),preset=ROOM_PRESETS[s.preset]||ROOM_PRESETS.small,graph=state.roomAudio;if(!graph)return;
-            const context=state.audioCtx,t=context.currentTime;
+            const s=appState.audio.environment||DEFAULT_ROOM_SETTINGS,preset=ROOM_PRESETS[s.preset]||ROOM_PRESETS.small,graph=appState.audio.roomAudio;if(!graph)return;
+            const context=appState.audio.context,t=context.currentTime;
             if(graph.preset!==s.preset){
                 if(!graph.impulses.has(s.preset)){
                     const length=Math.ceil(context.sampleRate*preset.decay),buffer=context.createBuffer(2,length,context.sampleRate);let seed=5371;
@@ -86,7 +86,7 @@
             return result;
         }
         function configureStreamIntegrated(dev){
-            const ctx=state.audioCtx,el=dev.el,owned=dev.modelAudioNodes||=[];
+            const ctx=appState.audio.context,el=dev.el,owned=dev.modelAudioNodes||=[];
             const gain=(value=1)=>{const node=ctx.createGain();node.gain.value=value;owned.push(node);return node;};
             Object.assign(dev.state,{volume:.3,streamInput:'library',streamMute:false,streamPage:'playing'});
             dev.streamChannels=[];dev.powerNodes=[];dev.nodes.outPhone=ctx.createChannelMerger(2);owned.push(dev.nodes.outPhone);
@@ -124,7 +124,7 @@
                 q('[data-stream-action="mute"]').setAttribute('aria-pressed',String(st.streamMute));q('[data-stream-action="play"]').setAttribute('aria-pressed',String(dev.powered&&st.playing));
                 el.querySelectorAll('[data-stream-input]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.streamInput===st.streamInput)));
                 if(!library&&page==='playing')drawStreamLineSpectra(dev);
-                if(state.selectedDeviceId===dev.id){const slider=document.getElementById('stream-volume');if(slider&&document.activeElement!==slider)slider.value=volume;const value=document.getElementById('stream-volume-label');if(value)value.textContent=volume+'%';document.getElementById('stream-mute')?.setAttribute('aria-pressed',String(st.streamMute));document.querySelectorAll('[data-stream-inspector-input]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.streamInspectorInput===st.streamInput)));}
+                if(appState.interface.selectedDeviceId===dev.id){const slider=document.getElementById('stream-volume');if(slider&&document.activeElement!==slider)slider.value=volume;const value=document.getElementById('stream-volume-label');if(value)value.textContent=volume+'%';document.getElementById('stream-mute')?.setAttribute('aria-pressed',String(st.streamMute));document.querySelectorAll('[data-stream-inspector-input]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.streamInspectorInput===st.streamInput)));}
             };
             dev.applyStream=()=>{
                 const st=dev.state;st.volume=Math.max(0,Math.min(1,Number(st.volume)||0));st.streamInput=st.streamInput==='line'?'line':'library';st.streamMute=!!st.streamMute;st.streamPage=['playing','home','info'].includes(st.streamPage)?st.streamPage:'playing';
@@ -132,7 +132,7 @@
                 dev.refreshStreamDisplay();Hardware.sync(dev);
             };
             dev.refreshStreamRouting=()=>{
-                const connected=state.connections.some(c=>c.outId===q('[data-node="outPhone"]').id);if(connected===dev.streamPhonesConnected)return;dev.streamPhonesConnected=connected;
+                const connected=appState.project.connections.some(c=>c.outId===q('[data-node="outPhone"]').id);if(connected===dev.streamPhonesConnected)return;dev.streamPhonesConnected=connected;
                 dev.streamChannels.forEach(({speaker})=>speaker.gain.setTargetAtTime(connected?0:1,ctx.currentTime,.02));
             };
             dev.selectStreamInput=input=>{dev.state.streamInput=input==='line'?'line':'library';dev.state.streamPage='playing';if(dev.state.streamInput==='line')setSourcePlaying(dev,false);dev.applyStream();updateCableFlows();scheduleProjectSave();};
@@ -153,7 +153,7 @@
         }
         function drawStreamLineSpectra(dev){
             if(!dev.meters?.visible)return;
-            const active=dev.powered&&state.audioCtx.state==='running',nyquist=state.audioCtx.sampleRate/2,maxHz=Math.min(20000,nyquist),points=96;
+            const active=dev.powered&&appState.audio.context.state==='running',nyquist=appState.audio.context.sampleRate/2,maxHz=Math.min(20000,nyquist),points=96;
             dev.streamSpectra.forEach(({analyzer,data,trace,fill})=>{
                 if(active)analyzer.getFloatFrequencyData(data);
                 const path=[];
@@ -187,7 +187,7 @@
                 <div class="integrated-connections utility-connections">${[0,1,2].map((i)=>`<div><small>${['AUX','TUNER','TAPE'][i]}</small>${hardwarePair('in','line'+i)}</div>`).join('')}<div><small>PHONO</small>${hardwarePair('in','phono','phono')}</div><div><small>PRE OUT</small>${hardwarePair('out','pre')}</div><div><small>SPEAKERS L/R</small>${hardwarePair('out','speaker','amplified')}</div></div></section>`;
         }
         function configureUtilityAmp(dev){
-            const ctx=state.audioCtx,monoGates=[];Object.assign(dev.state,{utilityLoudness:false,utilityMono:false});
+            const ctx=appState.audio.context,monoGates=[];Object.assign(dev.state,{utilityLoudness:false,utilityMono:false});
             dev.integratedFilters.forEach(({bass},output)=>{
                 dev.nodes['in'+['L','R'][output]].disconnect(bass);
                 ['L','R'].forEach((ch,input)=>{const gain=ctx.createGain();dev.nodes['in'+ch].connect(gain);gain.connect(bass);monoGates.push({gain,input,output});(dev.modelAudioNodes||=[]).push(gain);});
@@ -199,7 +199,7 @@
                 dev.integratedFilters.forEach(({bass,treble})=>{bass.gain.setTargetAtTime((st.direct?0:st.bass)+(st.utilityLoudness?6*(1-st.volume):0),ctx.currentTime,.025);treble.gain.setTargetAtTime((st.direct?0:st.treble)+(st.utilityLoudness?2*(1-st.volume):0),ctx.currentTime,.025);});
                 dev.el.querySelectorAll('[data-utility-toggle]').forEach(button=>button.setAttribute('aria-pressed',String(st[button.dataset.utilityToggle])));
             };
-            dev.el.querySelectorAll('[data-utility-toggle]').forEach(button=>button.onclick=()=>{dev.state[button.dataset.utilityToggle]=!dev.state[button.dataset.utilityToggle];dev.applyIntegrated();if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();});
+            dev.el.querySelectorAll('[data-utility-toggle]').forEach(button=>button.onclick=()=>{dev.state[button.dataset.utilityToggle]=!dev.state[button.dataset.utilityToggle];dev.applyIntegrated();if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();});
             dev.applyIntegrated();
         }
         const GLASS_PREAMP_SWITCHES=[['glassLowCut','LOW FILTER'],['glassHighCut','HIGH FILTER'],['glassLoudness','LOUDNESS']];
@@ -221,7 +221,7 @@
             </section>`;
         }
         function configureGlassPreamp(dev){
-            const ctx=state.audioCtx,filters=[];
+            const ctx=appState.audio.context,filters=[];
             Object.assign(dev.state,{glassLowCut:false,glassHighCut:false,glassLoudness:false});
             dev.integratedFilters.forEach(({treble,volume})=>{
                 const highpass=ctx.createBiquadFilter(),lowpass=ctx.createBiquadFilter();highpass.type='highpass';lowpass.type='lowpass';highpass.Q.value=lowpass.Q.value=Math.SQRT1_2;
@@ -235,7 +235,7 @@
                 dev.el.querySelectorAll('[data-glass-toggle]').forEach(button=>button.setAttribute('aria-pressed',String(st[button.dataset.glassToggle])));
                 dev.el.querySelectorAll('[data-pre-toggle],[data-glass-toggle],[data-integrated-direct]').forEach(button=>button.dataset.togglePosition=button.getAttribute('aria-pressed')==='true'?'2':'0');
             };
-            dev.el.querySelectorAll('[data-glass-toggle]').forEach(button=>button.addEventListener('click',()=>{const key=button.dataset.glassToggle;dev.state[key]=!dev.state[key];dev.applyIntegrated();updateCableFlows();if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();}));
+            dev.el.querySelectorAll('[data-glass-toggle]').forEach(button=>button.addEventListener('click',()=>{const key=button.dataset.glassToggle;dev.state[key]=!dev.state[key];dev.applyIntegrated();updateCableFlows();if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();}));
             dev.applyIntegrated();
         }
         function glassPreampInspector(dev){
@@ -264,13 +264,13 @@
             dev.applyIntegrated=()=>{
                 const st=dev.state;st.precisionGain=[0,6,12].includes(st.precisionGain)?st.precisionGain:0;apply();
                 dev.el.querySelector('[data-precision-gain]').dataset.togglePosition=String(st.precisionGain/6);dev.el.querySelector('[data-precision-gain]').setAttribute('aria-label',`Ganho de saída: ${st.precisionGain} dB. Clique para alternar 0, 6 e 12 dB.`);dev.el.querySelector('[data-precision-gain-label]').textContent=(st.precisionGain?'+':'')+st.precisionGain+' dB';
-                if(state.selectedDeviceId===dev.id){const slider=inspectorContent.querySelector('[data-precision-inspector-gain]');if(slider){slider.value=String(st.precisionGain);syncInspectorGainVisual(slider);const value=inspectorContent.querySelector('[data-precision-gain-value]');if(value)value.textContent=(st.precisionGain?'+':'')+st.precisionGain+' dB';}}
+                if(appState.interface.selectedDeviceId===dev.id){const slider=inspectorContent.querySelector('[data-precision-inspector-gain]');if(slider){slider.value=String(st.precisionGain);syncInspectorGainVisual(slider);const value=inspectorContent.querySelector('[data-precision-gain-value]');if(value)value.textContent=(st.precisionGain?'+':'')+st.precisionGain+' dB';}}
                 dev.el.querySelectorAll('[data-pre-toggle]').forEach(button=>button.dataset.togglePosition=st[button.dataset.preToggle]?'2':'0');
             };
             dev.el.querySelector('[data-precision-gain]').onclick=()=>{dev.state.precisionGain=(dev.state.precisionGain+6)%18;dev.applyIntegrated();scheduleProjectSave();};dev.applyIntegrated();
         }
         function updateReferenceHardware(now){
-            Object.values(state.devices).forEach(dev=>{
+            Object.values(appState.project.devices).forEach(dev=>{
                 if(dev.type==='integratedUtility'){
                     const power=dev.powered?Math.max(...['L','R'].map(ch=>wattsAtLoad(amplifierChannelRms(dev,ch),dev.channelLoads?.[ch]??8))):0;
                     dev.el.querySelectorAll('[data-utility-led]').forEach((led,i)=>led.classList.toggle('is-on',power>=[.1,1,5,10,20][i]));
@@ -297,7 +297,7 @@
             return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><section class="integrated-face finish-${config.finish}"><div class="integrated-main"><div class="integrated-power"><div data-power-slot><button class="power-btn" title="Ligar ou desligar"></button></div><i class="integrated-status-led" aria-hidden="true"></i><div class="port" data-type="p10" data-io="out" data-node="outPhone" data-signal="headphone" title="Saída de fones P10 estéreo"></div><small>PHONES</small></div>${type==='integratedMinimal'?knob('volume','VOLUME',true):sources}${config.meters?integratedGauge(config.watts):'<div class="integrated-green-window" aria-hidden="true"><i></i></div>'}${type==='integratedMinimal'?sources:knob('volume','VOLUME',true)}${config.tone?`<div class="integrated-tones">${knob('bass','BASS')}${knob('treble','TREBLE')}${knob('balance','BALANCE')}<button type="button" class="integrated-direct" data-integrated-direct aria-pressed="false">DIRECT</button></div>`:''}</div><div class="integrated-connections">${[0,1,2].map(i=>`<div><small>LINE ${i+1}</small>${ports('in','line'+i,'rca','line')}</div>`).join('')}<div><small>PHONO</small>${ports('in','phono','rca','phono')}</div><div><small>PRE OUT</small>${ports('out','pre','rca','line')}</div><div><small>SPEAKERS · L/R</small>${ports('out','speaker','wire','amplified')}</div></div></section>`;
         }
         function configureIntegratedAmp(dev){
-            const config=controlAmpConfig(dev.type),ctx=state.audioCtx;
+            const config=controlAmpConfig(dev.type),ctx=appState.audio.context;
             Object.assign(dev.state,{integratedSource:0,balance:0,direct:false});
             dev.integratedGates=[];dev.integratedFilters=[];dev.powerNodes=[];
             dev.nodes.outPhone=ctx.createChannelMerger(2);
@@ -336,11 +336,11 @@
                 });
             };
             dev.applyIntegrated();
-            dev.el.querySelectorAll('[data-integrated-source]').forEach(button=>button.addEventListener('click',()=>{dev.state.integratedSource=Number(button.dataset.integratedSource);dev.applyIntegrated();updateCableFlows();if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();}));
-            dev.el.querySelector('[data-integrated-direct]')?.addEventListener('click',()=>{dev.state.direct=!dev.state.direct;dev.applyIntegrated();if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();});
+            dev.el.querySelectorAll('[data-integrated-source]').forEach(button=>button.addEventListener('click',()=>{dev.state.integratedSource=Number(button.dataset.integratedSource);dev.applyIntegrated();updateCableFlows();if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();}));
+            dev.el.querySelector('[data-integrated-direct]')?.addEventListener('click',()=>{dev.state.direct=!dev.state.direct;dev.applyIntegrated();if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();});
             dev.el.querySelectorAll('[data-integrated-knob]').forEach(knob=>{
                 const key=knob.dataset.integratedKnob,min=key==='volume'||key==='subLevel'?0:key==='balance'?-1:-10,max=['volume','subLevel','balance'].includes(key)?1:10;
-                const set=value=>{dev.state[key]=Number((min+Math.round(Math.max(0,Math.min(1,(value-min)/(max-min)))*10)/10*(max-min)).toFixed(3));dev.applyIntegrated();const input=document.querySelector(`[data-integrated-setting="${key}"],[data-custom-pre-setting="${key}"]`);if(input&&state.selectedDeviceId===dev.id){input.value=dev.state[key];input.previousElementSibling.querySelector('output').textContent=integratedSettingText(key,dev.state[key]);}scheduleProjectSave();};
+                const set=value=>{dev.state[key]=Number((min+Math.round(Math.max(0,Math.min(1,(value-min)/(max-min)))*10)/10*(max-min)).toFixed(3));dev.applyIntegrated();const input=document.querySelector(`[data-integrated-setting="${key}"],[data-custom-pre-setting="${key}"]`);if(input&&appState.interface.selectedDeviceId===dev.id){input.value=dev.state[key];input.previousElementSibling.querySelector('output').textContent=integratedSettingText(key,dev.state[key]);}scheduleProjectSave();};
                 Hardware.bindKnob(knob,{get:()=>dev.state[key],set,min,max});
             });
         }
@@ -358,11 +358,11 @@
         let lastIntegratedDisplay=0;
         function updateIntegratedDisplays(now){
             if(now-lastIntegratedDisplay<80)return;const elapsed=Math.min(.3,(now-lastIntegratedDisplay)/1000);lastIntegratedDisplay=now;
-            Object.values(state.devices).filter(dev=>CUSTOM_PREAMPS[dev.type]).forEach(dev=>{
+            Object.values(appState.project.devices).filter(dev=>CUSTOM_PREAMPS[dev.type]).forEach(dev=>{
                 dev.el.querySelectorAll('[data-pre-level]').forEach(bar=>{const level=dev.powered?dev.meters?.levels[Number(bar.dataset.preLevel)]||0:0;bar.style.width=Math.max(0,Math.min(100,(audioDb(level)+60)/60*100))+'%';});
                 drawReferencePreampDisplay(dev);
             });
-            Object.values(state.devices).filter(dev=>INTEGRATED_AMPS[dev.type]?.meters).forEach(dev=>{
+            Object.values(appState.project.devices).filter(dev=>INTEGRATED_AMPS[dev.type]?.meters).forEach(dev=>{
                 dev.integratedEnvelope||=[0,0];
                 dev.el.querySelectorAll('[data-integrated-needle]').forEach(needle=>{
                     const i=Number(needle.dataset.integratedNeedle),value=dev.powered?amplifierChannelRms(dev,i?'R':'L'):0;
@@ -402,7 +402,7 @@
             return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><section class="integrated-face custom-pre-face pre-finish-${config.finish}">${type==='preReference'?'<i class="pre-handle handle-left" aria-hidden="true"></i><i class="pre-handle handle-right" aria-hidden="true"></i>':''}<div class="custom-pre-main">${encoder}<div class="custom-pre-center">${screen}<div class="custom-pre-switches"><div data-power-slot><button class="power-btn" title="Ligar ou desligar"></button></div>${toggle('preMuted','MUTE')}${type==='preReference'?toggle('preMono','MONO')+toggle('preInvert','INVERT'):config.tone?'<button type="button" class="integrated-direct" data-integrated-direct aria-pressed="false">DIRECT</button>':''}</div></div>${knob('volume','VOLUME',true)}${config.tone?`<div class="custom-pre-tones">${knob('bass','BASS')}${knob('treble','TREBLE')}${knob('balance','BALANCE')}${config.crossover?knob('subLevel','SUB'):''}</div>`:knob('balance','BALANCE')}</div><div class="integrated-connections">${[0,1,2,3].map(index=>`<div><small>${index===3&&config.phono?'PHONO':'LINE '+(index+1)}</small>${port('in',index===3&&config.phono?'phono':'line'+index,index===3&&config.phono?'phono':'line')}</div>`).join('')}<div><small>LINE OUT</small>${port('out','pre','line')}</div>${config.sub?'<div><small>SUB · MONO</small><div class="port" data-type="rca" data-io="out" data-node="subOut" data-signal="line" data-role="lfe-out" title="Subwoofer · saída mono em nível de linha"></div></div>':''}${config.phones?`<div><small>PHONES</small><div class="port" data-type="${config.finish==='control'?'p2':'p10'}" data-io="out" data-node="outPhone" data-signal="headphone" title="Saída estéreo para fones"></div></div>`:''}</div><div hidden>${controlAmpSources(type).map((name,index)=>`<button data-integrated-source="${index}">${name}</button>`).join('')}</div></section>`;
         }
         function configureCustomPreamp(dev){
-            const config=CUSTOM_PREAMPS[dev.type],ctx=state.audioCtx;
+            const config=CUSTOM_PREAMPS[dev.type],ctx=appState.audio.context;
             Object.assign(dev.state,{preMuted:false,preMono:false,preInvert:false,subLevel:.8,subFrequency:80});
             // A matrix before the output gates provides real mono and polarity inversion.
             const matrix=[];
@@ -433,7 +433,7 @@
             const rotor=dev.el.querySelector('[data-pre-rotary]');
             const setSource=index=>{dev.el.querySelector(`[data-integrated-source="${Math.max(0,Math.min(3,index))}"]`).click();};
             Hardware.bindKnob(rotor,{get:()=>dev.state.integratedSource,set:setSource,min:0,max:3,step:1,format:value=>controlAmpSources(dev.type)[value]});
-            dev.el.querySelectorAll('[data-pre-toggle]').forEach(button=>button.addEventListener('click',()=>{const key=button.dataset.preToggle;dev.state[key]=!dev.state[key];dev.applyIntegrated();updateCableFlows();if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();}));
+            dev.el.querySelectorAll('[data-pre-toggle]').forEach(button=>button.addEventListener('click',()=>{const key=button.dataset.preToggle;dev.state[key]=!dev.state[key];dev.applyIntegrated();updateCableFlows();if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();}));
             dev.applyIntegrated();
         }
         function customPreampInspectorHtml(dev){
@@ -473,7 +473,7 @@
             return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><section class="custom-power-face power-finish-${config.finish}"><div class="custom-power-main">${type==='powerValve'?valveArt:type==='powerBias'?biasArt:dualArt}</div>${connectorRow}</section>`;
         }
         function configureCustomPower(dev){
-            const ctx=state.audioCtx,gains={};dev.powerNodes=[];dev.state.channelGain={L:DEFAULT_POWER_GAIN,R:DEFAULT_POWER_GAIN};
+            const ctx=appState.audio.context,gains={};dev.powerNodes=[];dev.state.channelGain={L:DEFAULT_POWER_GAIN,R:DEFAULT_POWER_GAIN};
             ['L','R'].forEach(ch=>{
                 const input=dev.nodes['in'+ch]=ctx.createGain(),gain=gains[ch]=ctx.createGain(),power=ctx.createGain(),stage=ctx.createGain(),output=dev.nodes['out'+ch]=ctx.createGain();
                 stage.gain.value=1.35;input.connect(gain);gain.connect(power);power.connect(stage);stage.connect(output);dev.powerNodes.push(power);
@@ -481,7 +481,7 @@
             dev.setChannelGain=(ch,value)=>{
                 const bounded=Math.max(0,Math.min(1,Number(value)||0)),level=dev.type==='powerBias'?Math.round(bounded*10)/10:bounded;dev.state.channelGain[ch]=level;gains[ch].gain.setTargetAtTime(level,ctx.currentTime,.02);
                 const knob=dev.el.querySelector(`[data-bias-gain="${ch}"]`);if(knob){knob.style.setProperty('--gain-angle',(-135+level*270)+'deg');knob.setAttribute('aria-valuenow',String(Math.round(level*10)));knob.setAttribute('aria-valuetext',Math.round(level*10)+' de 10');}
-                const slider=state.selectedDeviceId===dev.id?document.getElementById('power-gain-'+ch):null;if(slider){slider.value=level;syncInspectorGainVisual(slider);}
+                const slider=appState.interface.selectedDeviceId===dev.id?document.getElementById('power-gain-'+ch):null;if(slider){slider.value=level;syncInspectorGainVisual(slider);}
             };
             ['L','R'].forEach(ch=>{
                 const knob=dev.el.querySelector(`[data-bias-gain="${ch}"]`);
@@ -492,7 +492,7 @@
         let lastCustomPowerDisplay=0;
         function updateCustomPowerDisplays(now){
             if(now-lastCustomPowerDisplay<16)return;const elapsed=Math.min(.1,(now-lastCustomPowerDisplay)/1000);lastCustomPowerDisplay=now;
-            Object.values(state.devices).filter(dev=>CUSTOM_POWER_AMPS[dev.type]).forEach(dev=>{
+            Object.values(appState.project.devices).filter(dev=>CUSTOM_POWER_AMPS[dev.type]).forEach(dev=>{
                 dev.el.querySelectorAll('[data-dual-led]').forEach(led=>{
                     const peak=dev.meters?.peaks[Number(led.dataset.dualLed)]||0,active=dev.powered&&peak>.0001;Hardware.setLed(led,active,peak>=.99);
                 });
@@ -543,7 +543,7 @@
             el.style.top=Math.max(0,Math.min(maxEquipmentBottom()-276,y))+'px';
             world.appendChild(el);
             const dev={id,type:'pendantLamp',el,nodes:{},state:{},powered:true};
-            state.devices[id]=dev;bindDeviceEvents(dev);selectDevice(id);updateCables();scheduleProjectSave();
+            appStateStore.actions.registerDevice(dev);bindDeviceEvents(dev);selectDevice(id);updateCables();scheduleProjectSave();
         }
         function createWallLamp(type,x,y,requestedId=null){
             const id=requestedId||'dev_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
@@ -564,5 +564,5 @@
             el.style.left=Math.max(sceneSideInset(),Math.min(world.offsetWidth-el.offsetWidth-sceneSideInset(),snapCoordinate(localX)))+'px';
             el.style.top=Math.max(0,Math.min(wallPlacementBottom()-el.offsetHeight,snapCoordinate(localY)))+'px';
             const dev={id,type,el,nodes:{},state:{},powered:true};
-            state.devices[id]=dev;bindDeviceEvents(dev);selectDevice(id);updateCables();scheduleProjectSave();
+            appStateStore.actions.registerDevice(dev);bindDeviceEvents(dev);selectDevice(id);updateCables();scheduleProjectSave();
         }

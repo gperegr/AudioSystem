@@ -3,7 +3,7 @@
         function configurePlaybackSession(){
             try{
                 if(navigator.audioSession){
-                    const capturing=Object.values(state.devices).some(dev=>dev.capturePending||dev.authorizingCapture||dev.micStream);
+                    const capturing=Object.values(appState.project.devices).some(dev=>dev.capturePending||dev.authorizingCapture||dev.micStream);
                     const sessionType=capturing?'play-and-record':'playback';
                     if(navigator.audioSession.type!==sessionType)navigator.audioSession.type=sessionType;
                     return navigator.audioSession.type===sessionType;
@@ -26,38 +26,38 @@
             if(legacyPlaybackAudio.paused)legacyPlaybackAudio.play()?.catch(()=>{});
         }
         function initAudio() {
-            if (state.audioCtx) return;
+            if (appState.audio.context) return;
             configurePlaybackSession();
-            state.audioCtx = new (window.AudioContext || window.webkitAudioContext)({latencyHint:'interactive'});
-            state.masterGain = state.audioCtx.createGain();
+            appStateStore.actions.setAudioRuntime('context',new (window.AudioContext || window.webkitAudioContext)({latencyHint:'interactive'}));
+            appStateStore.actions.setAudioRuntime('masterGain',appState.audio.context.createGain());
             // Add a little more listening level while leaving headroom for summed sources.
-            state.masterGain.gain.value = 0.7*state.listeningOutputLevel;
-            const bass=state.audioCtx.createBiquadFilter(),treble=state.audioCtx.createBiquadFilter();
-            bass.type='lowshelf';bass.frequency.value=140;bass.gain.value=state.listeningBass;
-            treble.type='highshelf';treble.frequency.value=4500;treble.gain.value=state.listeningTreble;
-            const peakGuard=state.audioCtx.createDynamicsCompressor();
+            appState.audio.masterGain.gain.value = 0.7*appState.preferences.listening.outputLevel;
+            const bass=appState.audio.context.createBiquadFilter(),treble=appState.audio.context.createBiquadFilter();
+            bass.type='lowshelf';bass.frequency.value=140;bass.gain.value=appState.preferences.listening.bass;
+            treble.type='highshelf';treble.frequency.value=4500;treble.gain.value=appState.preferences.listening.treble;
+            const peakGuard=appState.audio.context.createDynamicsCompressor();
             peakGuard.threshold.value=-4;peakGuard.knee.value=0;peakGuard.ratio.value=12;peakGuard.attack.value=.003;peakGuard.release.value=.12;
-            bass.connect(treble);treble.connect(peakGuard);peakGuard.connect(state.audioCtx.destination);
-            state.listeningToneInput=bass;state.listeningToneFilters={bass,treble};
+            bass.connect(treble);treble.connect(peakGuard);peakGuard.connect(appState.audio.context.destination);
+            appStateStore.actions.setAudioRuntime('listeningToneInput',bass);appStateStore.actions.setAudioRuntime('listeningToneFilters',{bass,treble});
             setupRoomAudio();
-            state.audioCtx.addEventListener('statechange', () => {
-                if(state.audioCtx.state==='interrupted')audioNeedsGestureRecovery=true;
+            appState.audio.context.addEventListener('statechange', () => {
+                if(appState.audio.context.state==='interrupted')audioNeedsGestureRecovery=true;
                 updateCableFlows();
             });
         }
         function setListeningOutputLevel(value){
-            state.listeningOutputLevel=Math.round(Math.max(.5,Math.min(1.2,Number(value)||1))*100)/100;
-            if(state.masterGain)state.masterGain.gain.setTargetAtTime(.7*state.listeningOutputLevel,state.audioCtx.currentTime,.04);
+            appStateStore.actions.setListeningPreferences({outputLevel:Math.round(Math.max(.5,Math.min(1.2,Number(value)||1))*100)/100});
+            if(appState.audio.masterGain)appState.audio.masterGain.gain.setTargetAtTime(.7*appState.preferences.listening.outputLevel,appState.audio.context.currentTime,.04);
             const slider=document.getElementById('listening-output-level'),output=document.getElementById('listening-output-value');
-            if(slider)slider.value=Math.round(state.listeningOutputLevel*100);
-            if(output)output.textContent=Math.round(state.listeningOutputLevel*100)+'%';
+            if(slider)slider.value=Math.round(appState.preferences.listening.outputLevel*100);
+            if(output)output.textContent=Math.round(appState.preferences.listening.outputLevel*100)+'%';
             scheduleAppPreferencesSave();
         }
         function setListeningTone(kind,value){
             if(kind!=='bass'&&kind!=='treble')return;
             const amount=Math.max(-6,Math.min(6,Math.round(Number(value)||0)));
-            state[kind==='bass'?'listeningBass':'listeningTreble']=amount;
-            if(state.listeningToneFilters)state.listeningToneFilters[kind].gain.setTargetAtTime(amount,state.audioCtx.currentTime,.045);
+            appStateStore.actions.setListeningPreferences({[kind]:amount});
+            if(appState.audio.listeningToneFilters)appState.audio.listeningToneFilters[kind].gain.setTargetAtTime(amount,appState.audio.context.currentTime,.045);
             const slider=document.getElementById(`listening-${kind}-level`),output=document.getElementById(`listening-${kind}-value`);
             if(slider)slider.value=amount;
             if(output)output.textContent=`${amount>0?'+':''}${amount} dB`;
@@ -68,7 +68,7 @@
             if(event.type==='pointerdown'&&(event.pointerType==='touch'||event.button!==0))return;
             if(event.type==='keydown'&&(event.repeat||event.ctrlKey||event.metaKey||event.altKey||['Shift','Control','Alt','Meta','Escape'].includes(event.key)))return;
             try{
-                initAudio();const context=state.audioCtx;
+                initAudio();const context=appState.audio.context;
                 prepareLegacyPlayback();
                 // Start inside the trusted gesture, before any await. Touch Safari may
                 // ignore pointerdown but accepts touchend/click and a started buffer.
@@ -81,7 +81,7 @@
         }
         for(const name of ['pointerdown','pointerup','touchend','click','keydown'])document.addEventListener(name,activateAudioFromGesture,{capture:true,passive:true});
         function resumeAudioAfterReturn(){
-            const context=state.audioCtx;
+            const context=appState.audio.context;
             if(!context||!audioPrimed||document.visibilityState==='hidden'||context.state==='closed')return;
             prepareLegacyPlayback();
             if(context.state!=='running')context.resume().then(()=>{if(context.state!=='running')audioNeedsGestureRecovery=true;updateCableFlows();}).catch(()=>{audioNeedsGestureRecovery=true;});
@@ -100,9 +100,9 @@
         const interactionGain=value=>Math.min(1.4,Math.max(0,value)*1.3);
         function ensureUiEffectsBus(context){
             if(uiEffectsGain)return;
-            uiEffectsGain=context.createGain();uiEffectsGain.gain.value=interactionGain(state.uiSoundVolume);
+            uiEffectsGain=context.createGain();uiEffectsGain.gain.value=interactionGain(appState.preferences.uiSoundVolume);
             uiEffectsLimiter=context.createDynamicsCompressor();uiEffectsLimiter.threshold.value=-14;uiEffectsLimiter.knee.value=12;uiEffectsLimiter.ratio.value=6;uiEffectsLimiter.attack.value=.003;uiEffectsLimiter.release.value=.12;
-            uiEffectsGain.connect(uiEffectsLimiter);uiEffectsLimiter.connect(state.listeningToneInput);
+            uiEffectsGain.connect(uiEffectsLimiter);uiEffectsLimiter.connect(appState.audio.listeningToneInput);
         }
         const uiSoundProfiles={
             click:{duration:.065,frequency:1100,noise:.09,tone:210,body:.014},
@@ -120,7 +120,7 @@
             ...Hardware.movementSounds
         };
         function prepareUiAudio(){
-            initAudio();const context=state.audioCtx;
+            initAudio();const context=appState.audio.context;
             ensureUiEffectsBus(context);
             if(!uiNoiseBuffer){
                 uiNoiseBuffer=context.createBuffer(1,context.sampleRate,context.sampleRate);
@@ -136,13 +136,13 @@
             if(!control&&event.target.closest('.device-node,.catalog-item'))playUiSound('pickup');
         },{capture:true});
         async function playUiSound(kind = 'click', options = {}) {
-            if(state.restoringProject)return;
+            if(appState.project.restoringProject)return;
             const now=performance.now(),profile=uiSoundProfiles[kind]||uiSoundProfiles.click;
             if(now-(uiSoundTimes[kind]??-Infinity)<(profile.cooldown??(kind==='drag'?140:kind==='adjust'?95:55)))return;
             uiSoundTimes[kind]=now;
-            if(state.uiSoundVolume===0)return;
+            if(appState.preferences.uiSoundVolume===0)return;
             try{
-                initAudio();const context=state.audioCtx;
+                initAudio();const context=appState.audio.context;
                 if(context.state!=='running')await context.resume();
                 if(context.state!=='running')return;
                 prepareUiAudio();
@@ -192,7 +192,7 @@
             element.addEventListener('scroll',()=>{
                 const now=performance.now(),position=element.scrollTop,travel=Math.abs(position-lastPosition),elapsed=Math.max(8,now-lastTime);
                 lastPosition=position;lastTime=now;
-                if(!armed||(inputType==='wheel'&&!wheelScrollMotions.get(element)?.frame)||now-lastMovement>220||state.restoringProject||document.visibilityState!=='visible'||!element.clientHeight||getComputedStyle(element).visibility==='hidden'){
+                if(!armed||(inputType==='wheel'&&!wheelScrollMotions.get(element)?.frame)||now-lastMovement>220||appState.project.restoringProject||document.visibilityState!=='visible'||!element.clientHeight||getComputedStyle(element).visibility==='hidden'){
                     armed=false;distance=0;return;
                 }
                 lastMovement=now;
@@ -202,7 +202,7 @@
                 // Discard excess travel instead of queuing sounds after the list has stopped.
                 if(distance<16)return;
                 distance%=16;
-                if(state.uiSoundVolume===0||state.audioCtx?.state!=='running')return;
+                if(appState.preferences.uiSoundVolume===0||appState.audio.context?.state!=='running')return;
                 const intensity=Math.min(1,speed/1400);
                 playUiSound('catalogGear',{level:.4+intensity*.55,pitch:.85+intensity*.35});
             },{passive:true});
@@ -213,7 +213,7 @@
             cableHumRequest++;
             const voice=cableHumVoice;cableHumVoice=null;
             if(!voice)return;
-            const now=state.audioCtx.currentTime;
+            const now=appState.audio.context.currentTime;
             voice.gain.gain.cancelAndHoldAtTime(now);
             voice.gain.gain.linearRampToValueAtTime(0,now+.006);
             voice.oscillator.stop(now+.008);
@@ -221,11 +221,11 @@
         async function startCableHum(){
             stopCableHum();const request=cableHumRequest;
             try{
-                initAudio();const context=state.audioCtx;
+                initAudio();const context=appState.audio.context;
                 if(context.state!=='running')await context.resume();
                 if(request!==cableHumRequest||!isPatching||context.state!=='running')return;
                 prepareUiAudio();
-                uiEffectsGain.gain.setTargetAtTime(interactionGain(state.uiSoundVolume),context.currentTime,.02);
+                uiEffectsGain.gain.setTargetAtTime(interactionGain(appState.preferences.uiSoundVolume),context.currentTime,.02);
                 const oscillator=context.createOscillator(),filter=context.createBiquadFilter(),gain=context.createGain();
                 const real=new Float32Array(7),imag=new Float32Array([0,1,.28,.16,.07,.03,.02]);
                 oscillator.setPeriodicWave(context.createPeriodicWave(real,imag));oscillator.frequency.value=60;
@@ -252,12 +252,12 @@
         clearCatalogFooter.prepend(soundControls);
         function setInteractionVolume(percent){
             const value=Math.max(0,Math.min(100,Number(percent)||0));
-            state.uiSoundVolume=value/100;
+            appStateStore.actions.setPreference('uiSoundVolume',value/100);
             document.getElementById('ui-sound-volume').value=value;
             document.getElementById('ui-sound-value').textContent=value?`${value}%`:'desligados';
             document.getElementById('headphone-calibration-ui-slider').value=value;
             document.getElementById('headphone-calibration-ui-value').textContent=value?`${value}%`:'desligados';
-            uiEffectsGain?.gain.setTargetAtTime(interactionGain(state.uiSoundVolume),state.audioCtx.currentTime,.02);
+            uiEffectsGain?.gain.setTargetAtTime(interactionGain(appState.preferences.uiSoundVolume),appState.audio.context.currentTime,.02);
             scheduleProjectSave();
         }
         soundControls.querySelector('input').addEventListener('input',event=>setInteractionVolume(event.target.value));
@@ -279,7 +279,7 @@
         function controlClickSound(control){
             if(control.matches('[role="slider"]'))return 'click';
             const device=control.closest('.device-type-receiver,.device-type-powerAmp');
-            const inspectorReceiver=control.closest('#inspector')&&RADIO_RECEIVERS.has(state.devices[state.selectedDeviceId]?.type)&&control.matches('[data-receiver-inspector-input],#radio-input-toggle,#inspector-power-toggle');
+            const inspectorReceiver=control.closest('#inspector')&&RADIO_RECEIVERS.has(appState.project.devices[appState.interface.selectedDeviceId]?.type)&&control.matches('[data-receiver-inspector-input],#radio-input-toggle,#inspector-power-toggle');
             return device||inspectorReceiver?'receiverClick':'click';
         }
         document.addEventListener('pointerdown',event=>{
@@ -295,21 +295,21 @@
         });
 
         function playNote(freq, type, duration, vol, timeOffset, destNode) {
-            if (!state.audioCtx) return;
-            const osc = state.audioCtx.createOscillator();
-            const gain = state.audioCtx.createGain();
+            if (!appState.audio.context) return;
+            const osc = appState.audio.context.createOscillator();
+            const gain = appState.audio.context.createGain();
             osc.type = type; osc.frequency.value = freq;
-            gain.gain.setValueAtTime(vol, state.audioCtx.currentTime + timeOffset);
-            gain.gain.exponentialRampToValueAtTime(0.0001, state.audioCtx.currentTime + timeOffset + duration);
+            gain.gain.setValueAtTime(vol, appState.audio.context.currentTime + timeOffset);
+            gain.gain.exponentialRampToValueAtTime(0.0001, appState.audio.context.currentTime + timeOffset + duration);
             osc.connect(gain); gain.connect(destNode);
-            osc.start(state.audioCtx.currentTime + timeOffset);
-            osc.stop(state.audioCtx.currentTime + timeOffset + duration);
+            osc.start(appState.audio.context.currentTime + timeOffset);
+            osc.stop(appState.audio.context.currentTime + timeOffset + duration);
         }
 
         function sourcePosition(dev) {
             if (!dev.audioBuffer) return 0;
             const playback = dev.filePlayback;
-            let position = (dev.fileOffset || 0) + (playback ? (state.audioCtx.currentTime - playback.startedAt) * playback.rate : 0);
+            let position = (dev.fileOffset || 0) + (playback ? (appState.audio.context.currentTime - playback.startedAt) * playback.rate : 0);
             if (dev.state.repeat) position %= dev.audioBuffer.duration;
             return Math.max(0, Math.min(dev.audioBuffer.duration, position));
         }
@@ -426,7 +426,7 @@
             return Math.exp(-((distance/.24)**2));
         }
         function setupReceiverRadio(dev){
-            const ctx=state.audioCtx;
+            const ctx=appState.audio.context;
             Object.assign(dev.state,{receiverInput:'line1',radioOn:false,radioFrequency:88,radioStation:randomFmStation()});
             dev.radioMusic={};dev.radioLine={};dev.receiverInputGates=[];dev.receiverInputNodes=[];
             ['L','R'].forEach(ch=>{
@@ -454,7 +454,7 @@
                 if(!RECEIVER_INPUTS.some(([value])=>value===key))return;
                 dev.state.receiverInput=key;dev.state.radioOn=key==='fm';dev.syncRadio();updateCableFlows();scheduleProjectSave();
             };
-            dev.el.querySelectorAll('[data-receiver-input]').forEach(button=>{button.addEventListener('pointerdown',e=>e.stopPropagation());button.addEventListener('click',()=>{dev.selectReceiverInput(button.dataset.receiverInput);if(dev.state.radioOn)ctx.resume().then(()=>{if(state.devices[dev.id]){dev.syncRadio();updateCableFlows();}}).catch(()=>{});});});
+            dev.el.querySelectorAll('[data-receiver-input]').forEach(button=>{button.addEventListener('pointerdown',e=>e.stopPropagation());button.addEventListener('click',()=>{dev.selectReceiverInput(button.dataset.receiverInput);if(dev.state.radioOn)ctx.resume().then(()=>{if(appState.project.devices[dev.id]){dev.syncRadio();updateCableFlows();}}).catch(()=>{});});});
             dev.radioNoiseGain=ctx.createGain();dev.radioNoiseGain.gain.value=0;
             const filter=dev.radioNoiseFilter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=6500;
             filter.connect(dev.radioNoiseGain);['L','R'].forEach(ch=>dev.radioNoiseGain.connect(dev.receiverRadioTargets[ch]));
@@ -463,7 +463,7 @@
                 ['L','R'].forEach(ch=>{dev.radioLine[ch].gain.setTargetAtTime(dev.state.radioOn?0:1,t,.025);dev.radioMusic[ch].gain.setTargetAtTime(on?q*.7:0,t,.03);});
                 dev.receiverInputGates.forEach(({gate,key})=>gate.gain.setTargetAtTime(key===dev.state.receiverInput?1:0,t,.025));
                 dev.el.querySelectorAll('[data-receiver-input]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.receiverInput===dev.state.receiverInput)));
-                if(state.selectedDeviceId===dev.id)document.querySelectorAll('[data-receiver-inspector-input]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.receiverInspectorInput===dev.state.receiverInput)));
+                if(appState.interface.selectedDeviceId===dev.id)document.querySelectorAll('[data-receiver-inspector-input]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.receiverInspectorInput===dev.state.receiverInput)));
                 dev.radioNoiseGain.gain.setTargetAtTime(on?.055*(1-q)**1.4:0,t,.025);
                 if(on&&!dev.radioNoiseSource){
                     if(!receiverRadioNoiseBuffer){receiverRadioNoiseBuffer=ctx.createBuffer(1,ctx.sampleRate*3,ctx.sampleRate);const data=receiverRadioNoiseBuffer.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=Math.random()*2-1;}
@@ -481,7 +481,7 @@
                 dev.el.classList.toggle('receiver-fm-active',!!dev.state.radioOn);
                 dev.el.classList.toggle('receiver-fm-tuned',!!dev.state.radioOn&&q>.9);
                 updateReceiverRadioDisplay(dev,performance.now());
-                if(state.selectedDeviceId===dev.id){
+                if(appState.interface.selectedDeviceId===dev.id){
                     const output=document.getElementById('radio-frequency-value'),slider=document.getElementById('radio-frequency'),status=document.getElementById('radio-reception'),toggle=document.getElementById('radio-input-toggle');
                     if(output)output.textContent=frequency.toFixed(1)+' MHz';if(slider)slider.value=frequency;
                     if(status)status.textContent=!dev.state.radioOn?'Selecione FM para ouvir o rádio':!dev.audioBuffer?'Carregue um MP3 para criar uma estação':q>.9?'ESTÉREO · SINTONIZADO':q>.1?'Sinal fraco · ajuste a sintonia':'Buscando estação…';
@@ -490,7 +490,7 @@
             };
             dev.tuneRadio=value=>{dev.state.radioFrequency=Math.round(Math.max(87.5,Math.min(108,Number(value)||87.5))*10)/10;dev.syncRadio();scheduleProjectSave();};
             const tuningKnob=dev.el.querySelector('[data-radio-knob]');
-            const activateTuner=()=>{if(!dev.state.radioOn)dev.selectReceiverInput('fm');ctx.resume().then(()=>{if(state.devices[dev.id]){dev.syncRadio();updateCableFlows();}}).catch(()=>{});};
+            const activateTuner=()=>{if(!dev.state.radioOn)dev.selectReceiverInput('fm');ctx.resume().then(()=>{if(appState.project.devices[dev.id]){dev.syncRadio();updateCableFlows();}}).catch(()=>{});};
             Hardware.bindKnob(tuningKnob,{get:()=>dev.state.radioFrequency,set:dev.tuneRadio,min:87.5,max:108,step:.1,activate:activateTuner,format:value=>value.toFixed(1)+' MHz'});
             const display=dev.el.querySelector('.receiver-radio,.poweramp-screen');
             if(display?.classList.contains('receiver-radio')){
@@ -532,7 +532,7 @@
         let lastReceiverRadioFrame=0;
         function updateReceiverRadioDisplays(now){
             if(now-lastReceiverRadioFrame<100)return;lastReceiverRadioFrame=now;
-            Object.values(state.devices).filter(dev=>dev.type==='powerAmp').forEach(dev=>updateReceiverRadioDisplay(dev,now));
+            Object.values(appState.project.devices).filter(dev=>dev.type==='powerAmp').forEach(dev=>updateReceiverRadioDisplay(dev,now));
         }
         function stopReceiverRadioVoices(dev){
             if(dev.radioVoice){dev.radioVoice.voice.stop();dev.radioVoice.voice.disconnect();dev.radioVoice.split.disconnect();dev.radioVoice=null;}
@@ -543,16 +543,16 @@
         }
         function bindRadioInspector(dev){
             const filename=document.getElementById('radio-file-name');filename.textContent=dev.fileMessage||dev.fileName||'Nenhuma estação carregada';
-            const activate=async()=>{try{await state.audioCtx.resume();if(state.devices[dev.id]){dev.syncRadio();updateCableFlows();}}catch{if(state.selectedDeviceId===dev.id)filename.textContent='Não foi possível ativar o áudio. Tente novamente.';}};
+            const activate=async()=>{try{await appState.audio.context.resume();if(appState.project.devices[dev.id]){dev.syncRadio();updateCableFlows();}}catch{if(appState.interface.selectedDeviceId===dev.id)filename.textContent='Não foi possível ativar o áudio. Tente novamente.';}};
             document.getElementById('radio-input-toggle').onclick=()=>{dev.selectReceiverInput(dev.state.radioOn?'line1':'fm');activate();scheduleProjectSave();updateCableFlows();};
             const fileInput=document.getElementById('radio-file');document.getElementById('radio-load').onclick=()=>fileInput.click();
             fileInput.onchange=async()=>{
                 const file=fileInput.files[0];if(!file)return;const token=dev.fileLoadToken=(dev.fileLoadToken||0)+1;filename.textContent='Carregando estação…';
                 try{
-                    await state.audioCtx.resume();const buffer=await state.audioCtx.decodeAudioData(await file.arrayBuffer());if(!state.devices[dev.id]||dev.fileLoadToken!==token)return;
+                    await appState.audio.context.resume();const buffer=await appState.audio.context.decodeAudioData(await file.arrayBuffer());if(!appState.project.devices[dev.id]||dev.fileLoadToken!==token)return;
                     stopReceiverRadioVoices(dev);dev.audioBuffer=buffer;dev.mediaBlob=file;dev.mediaKey='radio_'+Date.now()+'_'+Math.random().toString(36).slice(2);dev.fileName=file.name;dev.fileMessage='';dev.state.receiverInput='fm';dev.state.radioStation=randomFmStation();dev.state.radioOn=true;
-                    if(Math.abs(dev.state.radioFrequency-dev.state.radioStation)<1)dev.state.radioFrequency=87.5;dev.syncRadio();updateCableFlows();scheduleProjectSave();if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);
-                }catch{if(dev.fileLoadToken!==token||!state.devices[dev.id])return;dev.fileMessage='Não foi possível carregar o MP3.';if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);}
+                    if(Math.abs(dev.state.radioFrequency-dev.state.radioStation)<1)dev.state.radioFrequency=87.5;dev.syncRadio();updateCableFlows();scheduleProjectSave();if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);
+                }catch{if(dev.fileLoadToken!==token||!appState.project.devices[dev.id])return;dev.fileMessage='Não foi possível carregar o MP3.';if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);}
             };
             document.getElementById('radio-frequency').oninput=e=>{dev.tuneRadio(e.target.value);activate();};
             document.querySelectorAll('[data-radio-step]').forEach(button=>button.onclick=()=>{dev.tuneRadio(dev.state.radioFrequency+Number(button.dataset.radioStep)*.1);activate();});
@@ -563,7 +563,7 @@
         let audioMeterObserver=null;
         const audioMeterDevices=new WeakMap();
         function setupAudioMeters(dev) {
-            const context=state.audioCtx, nodes=[], taps=[], analyzers=[];
+            const context=appState.audio.context, nodes=[], taps=[], analyzers=[];
             const silent=context.createGain();silent.gain.value=0;silent.connect(context.destination);
             const channels=[[],[]];
             const analyze=(node,channel)=>{
@@ -610,7 +610,7 @@
         function updateRealtimePanels(now,force=false){
             if(!force&&now-lastAudioPanelUpdate<80)return;lastAudioPanelUpdate=now;
             drawSpectrum();
-            Object.values(state.devices).forEach(dev=>{
+            Object.values(appState.project.devices).forEach(dev=>{
                 refreshCdDisplay(dev);
                 Hardware.updateAccents(dev);
                 const meter=dev.meters;if(!meter||!meter.visible)return;
@@ -621,7 +621,7 @@
                         for(const sample of tap.data){localPeak=Math.max(localPeak,Math.abs(sample));energy+=sample*sample;}
                         peak=Math.max(peak,localPeak);rms=Math.max(rms,Math.sqrt(energy/tap.data.length));
                     });
-                    if(state.audioCtx.state!=='running'){peak=0;rms=0;}
+                    if(appState.audio.context.state!=='running'){peak=0;rms=0;}
                     meter.levels[channel]=rms;meter.peaks[channel]=peak;
                     const headphoneClip=dev.outputCircuits?.some(circuit=>circuit.paths.some(path=>path.clipping));
                     const electricalClip=POWER_OUTPUT_TYPES.has(dev.type)?dev.electricalStages?.some(stage=>stage.clipping)||headphoneClip:headphoneClip||peak>=.999;
@@ -646,9 +646,9 @@
             });
             readElectricalStages();
             updateReferenceHardware(now);
-            Object.values(state.devices).forEach(dev=>dev.refreshStreamDisplay?.());
-            Object.values(state.devices).filter(isPassiveLoad).forEach(applySpeakerLoadDynamics);
-            const selected=state.devices[state.selectedDeviceId];
+            Object.values(appState.project.devices).forEach(dev=>dev.refreshStreamDisplay?.());
+            Object.values(appState.project.devices).filter(isPassiveLoad).forEach(applySpeakerLoadDynamics);
+            const selected=appState.project.devices[appState.interface.selectedDeviceId];
             if(selected?.spotifyVinyl&&document.getElementById('source-track-title')){
                 const playback=SpotifyCoverflow.getPlaybackState(),active=playback.context===selected.spotifyVinyl.uri||spotifyPlayingTurntable===selected.id;
                 const ready=playback.connected&&active&&playback.duration>0,position=ready?playback.position:0,duration=ready?playback.duration:0;

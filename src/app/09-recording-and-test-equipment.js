@@ -19,7 +19,7 @@
             dev.vuEnvelope||=[0,0];
             [0,1].forEach(channel=>{
                 const samples=dev.meters?.channels[channel]?.[0]?.data;let rectified=0;
-                if(dev.powered&&state.audioCtx.state==='running'&&samples){for(const sample of samples)rectified+=Math.abs(sample);rectified=rectified/samples.length*Math.PI/2;}
+                if(dev.powered&&appState.audio.context.state==='running'&&samples){for(const sample of samples)rectified+=Math.abs(sample);rectified=rectified/samples.length*Math.PI/2;}
                 dev.vuEnvelope[channel]+=(rectified-dev.vuEnvelope[channel])*(1-Math.exp(-elapsed/.065));
             });
         }
@@ -68,7 +68,7 @@
             return tapeDeckMarkup();
         }
         function setupExtraRouting(dev){
-            const context=state.audioCtx;
+            const context=appState.audio.context;
             if(dev.type==='preamp'){
                 Object.assign(dev.state,{preSource:1,volume:.8,bass:0,treble:0});dev.preGates=[];dev.preFilters=[];
                 ['L','R'].forEach(ch=>{
@@ -103,7 +103,7 @@
             }
         }
         function setupTapeAudio(dev){
-            const context=state.audioCtx;Object.assign(dev.state,{tapeHiss:35,tapeWow:35,tapeVolume:.8});
+            const context=appState.audio.context;Object.assign(dev.state,{tapeHiss:35,tapeWow:35,tapeVolume:.8});
             dev.tapeNodes=[];dev.tapeDepths=[];dev.tapeLevels=[];
             const wow=context.createOscillator(),flutter=context.createOscillator();wow.frequency.value=.55;flutter.frequency.value=6.3;
             ['L','R'].forEach(ch=>{
@@ -125,10 +125,10 @@
         function syncTapeHiss(dev){
             if(dev.type!=='tapeDeck')return;
             if(!dev.state.playing||!dev.powered){
-                const voice=dev.tapeHiss;dev.tapeHiss=null;if(voice){const t=state.audioCtx.currentTime;voice.gain.gain.cancelAndHoldAtTime(t);voice.gain.gain.linearRampToValueAtTime(0,t+.012);voice.source.stop(t+.015);}return;
+                const voice=dev.tapeHiss;dev.tapeHiss=null;if(voice){const t=appState.audio.context.currentTime;voice.gain.gain.cancelAndHoldAtTime(t);voice.gain.gain.linearRampToValueAtTime(0,t+.012);voice.source.stop(t+.015);}return;
             }
             if(dev.tapeHiss)return;
-            const context=state.audioCtx;
+            const context=appState.audio.context;
             if(!tapeHissBuffer){tapeHissBuffer=context.createBuffer(2,context.sampleRate*7,context.sampleRate);for(let ch=0;ch<2;ch++){const data=tapeHissBuffer.getChannelData(ch);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*.35;for(let i=0;i<256;i++){data[i]*=i/256;data[data.length-1-i]*=i/256;}}}
             const source=context.createBufferSource(),gain=context.createGain(),filter=context.createBiquadFilter(),split=context.createChannelSplitter(2);
             source.buffer=tapeHissBuffer;source.loop=true;filter.type='highpass';filter.frequency.value=450;
@@ -158,17 +158,17 @@
         function bindExtraDevice(dev){
             const knobDrag=(knob,get,set,min,max)=>Hardware.bindKnob(knob,{get,set,min,max});
             if(dev.type==='preamp'){
-                dev.el.querySelectorAll('[data-pre-source]').forEach(button=>button.onclick=()=>{dev.state.preSource=Number(button.dataset.preSource);dev.applyPreamp();updateCableFlows();if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);});
-                dev.el.querySelectorAll('[data-pre-knob]').forEach(knob=>{const key=knob.dataset.preKnob;knobDrag(knob,()=>dev.state[key],value=>{dev.state[key]=value;dev.applyPreamp();const input=document.querySelector(`[data-preamp-setting="${key}"]`);if(input&&state.selectedDeviceId===dev.id){input.value=key==='volume'?Math.round(value*100):value.toFixed(1);document.getElementById('preamp-value-'+key).textContent=input.value;}},key==='volume'?0:-12,key==='volume'?1:12);});
+                dev.el.querySelectorAll('[data-pre-source]').forEach(button=>button.onclick=()=>{dev.state.preSource=Number(button.dataset.preSource);dev.applyPreamp();updateCableFlows();if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);});
+                dev.el.querySelectorAll('[data-pre-knob]').forEach(knob=>{const key=knob.dataset.preKnob;knobDrag(knob,()=>dev.state[key],value=>{dev.state[key]=value;dev.applyPreamp();const input=document.querySelector(`[data-preamp-setting="${key}"]`);if(input&&appState.interface.selectedDeviceId===dev.id){input.value=key==='volume'?Math.round(value*100):value.toFixed(1);document.getElementById('preamp-value-'+key).textContent=input.value;}},key==='volume'?0:-12,key==='volume'?1:12);});
             }
             if(dev.type==='tapeDeck'){
-                dev.el.querySelector('[data-tape-back]').onclick=()=>{const position=tapePosition(dev);if(dev.audioBuffer)seekSource(dev,position-10);else{dev.demoOffset=Math.max(0,position-10);dev.demoStartedAt=state.audioCtx.currentTime;}};
-                dev.el.querySelector('[data-tape-forward]').onclick=()=>{const position=tapePosition(dev);if(dev.audioBuffer)seekSource(dev,position+10);else{dev.demoOffset=Math.min(180,position+10);dev.demoStartedAt=state.audioCtx.currentTime;}};
+                dev.el.querySelector('[data-tape-back]').onclick=()=>{const position=tapePosition(dev);if(dev.audioBuffer)seekSource(dev,position-10);else{dev.demoOffset=Math.max(0,position-10);dev.demoStartedAt=appState.audio.context.currentTime;}};
+                dev.el.querySelector('[data-tape-forward]').onclick=()=>{const position=tapePosition(dev);if(dev.audioBuffer)seekSource(dev,position+10);else{dev.demoOffset=Math.min(180,position+10);dev.demoStartedAt=appState.audio.context.currentTime;}};
                 dev.el.querySelector('[data-tape-stop]').onclick=async()=>{await setSourcePlaying(dev,false);dev.fileOffset=0;dev.demoOffset=0;};
-                knobDrag(dev.el.querySelector('[data-tape-level]'),()=>dev.state.tapeVolume,value=>{dev.state.tapeVolume=value;dev.applyTapeSettings();const input=document.querySelector('[data-tape-setting="tapeVolume"]');if(input&&state.selectedDeviceId===dev.id){input.value=Math.round(value*100);document.getElementById('tape-value-tapeVolume').textContent=input.value+'%';}},0,1);
+                knobDrag(dev.el.querySelector('[data-tape-level]'),()=>dev.state.tapeVolume,value=>{dev.state.tapeVolume=value;dev.applyTapeSettings();const input=document.querySelector('[data-tape-setting="tapeVolume"]');if(input&&appState.interface.selectedDeviceId===dev.id){input.value=Math.round(value*100);document.getElementById('tape-value-tapeVolume').textContent=input.value+'%';}},0,1);
             }
         }
-        function tapePosition(dev){return dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?state.audioCtx.currentTime-dev.demoStartedAt:0);}
+        function tapePosition(dev){return dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?appState.audio.context.currentTime-dev.demoStartedAt:0);}
         const needleMotion=new WeakMap();
         function dampedNeedle(needle,target,now,rest){
             const previous=needleMotion.get(needle)||{angle:rest,time:now-16};
@@ -181,7 +181,7 @@
         function updateTransportMotion(now){
             const elapsed=lastTransportFrame==null?0:Math.max(0,Math.min(.1,(now-lastTransportFrame)/1000));lastTransportFrame=now;
             const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-            Object.values(state.devices).forEach(dev=>{
+            Object.values(appState.project.devices).forEach(dev=>{
                 if(dev.type==='tapeDeck'&&dev.meters?.visible!==false)updateTapeReels(dev,tapePosition(dev),elapsed,isSourceRunning(dev));
                 if(!TURNTABLE_TYPES.has(dev.type))return;
                 const running=dev.powered&&dev.state.tt?.running;
@@ -247,7 +247,7 @@
         function updateExtraDisplays(now){
             if(now-lastExtraDisplay<75)return;
             const elapsed=Math.min(.3,(now-lastExtraDisplay)/1000);lastExtraDisplay=now;
-            Object.values(state.devices).forEach(dev=>{
+            Object.values(appState.project.devices).forEach(dev=>{
                 if(SIGNAL_GENERATOR_TYPES.has(dev.type)){updateSignalGeneratorDisplay(dev);return;}
                 if(!EXTRA_AUDIO_TYPES.has(dev.type))return;
                 if(dev.meters&&!dev.meters.visible)return;
@@ -270,17 +270,17 @@
                 const l=dev.meters.channels[0][0],r=dev.meters.channels[1][0];if(!l||!r)return;
                 let lr=0,ll=0,rr=0;
                 for(let i=0;i<l.data.length;i++){lr+=l.data[i]*r.data[i];ll+=l.data[i]**2;rr+=r.data[i]**2;}
-                const correlation=dev.powered&&state.audioCtx.state==='running'&&ll>1e-7&&rr>1e-7?Math.max(-1,Math.min(1,lr/Math.sqrt(ll*rr))):null;
+                const correlation=dev.powered&&appState.audio.context.state==='running'&&ll>1e-7&&rr>1e-7?Math.max(-1,Math.min(1,lr/Math.sqrt(ll*rr))):null;
                 const label=correlation===null?'SEM SINAL':correlation.toFixed(2);
                 dev.el.querySelector('[data-correlation-value]').textContent='CORR · '+label;
                 const dot=dev.el.querySelector('[data-correlation-dot]');dot.style.left=`${((correlation??0)+1)*50}%`;dot.style.opacity=correlation===null?'.2':'1';dot.style.background=correlation!==null&&correlation<0?'#f87171':'#6ee7b7';
-                if(state.selectedDeviceId===dev.id){const output=document.getElementById('bench-inspector-correlation');if(output)output.textContent=label;}
+                if(appState.interface.selectedDeviceId===dev.id){const output=document.getElementById('bench-inspector-correlation');if(output)output.textContent=label;}
                 const canvas=dev.el.querySelector('[data-bench-spectrum]'),ctx=canvas.getContext('2d');ctx.fillStyle='#071316';ctx.fillRect(0,0,360,72);
                 ctx.strokeStyle='#213b42';ctx.lineWidth=1;for(let y=12;y<72;y+=20){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(360,y);ctx.stroke();}
                 [l,r].forEach((tap,index)=>{
                     const data=tap.frequencyData||=(new Float32Array(tap.analyzer.frequencyBinCount));tap.analyzer.getFloatFrequencyData(data);
                     ctx.beginPath();ctx.strokeStyle=index?'#f2bd65':'#65cbe1';
-                    for(let x=0;x<=360;x+=3){const hz=20*1000**(x/360),bin=Math.min(data.length-1,Math.floor(hz*2/state.audioCtx.sampleRate*data.length));const db=dev.powered&&state.audioCtx.state==='running'?data[bin]:-100,y=68-Math.max(0,Math.min(1,(db+90)/90))*64;if(x)ctx.lineTo(x,y);else ctx.moveTo(x,y);}ctx.stroke();
+                    for(let x=0;x<=360;x+=3){const hz=20*1000**(x/360),bin=Math.min(data.length-1,Math.floor(hz*2/appState.audio.context.sampleRate*data.length));const db=dev.powered&&appState.audio.context.state==='running'?data[bin]:-100,y=68-Math.max(0,Math.min(1,(db+90)/90))*64;if(x)ctx.lineTo(x,y);else ctx.moveTo(x,y);}ctx.stroke();
                 });
             });
         }
@@ -331,7 +331,7 @@
                 const frequencyControl=button.dataset.signalStep==='signalFrequency',index=frequencyControl?SIGNAL_FREQUENCIES.indexOf(s.signalFrequency):s.signalLevel,max=frequencyControl?SIGNAL_FREQUENCIES.length-1:10;
                 button.disabled=(frequencyControl&&s.signalMode!=='sine')||(Number(button.dataset.direction)<0?index<=0:index>=max);
             });
-            if(state.selectedDeviceId===dev.id){
+            if(appState.interface.selectedDeviceId===dev.id){
                 [['mode',s.signalMode],['frequency',s.signalFrequency],['sweep',s.sweepSeconds],['channel',s.signalChannel],['level',s.signalLevel]].forEach(([key,value])=>{const input=document.getElementById('signal-'+key);if(input){input.value=value;if(key==='frequency')input.disabled=s.signalMode!=='sine';if(key==='sweep')input.disabled=s.signalMode!=='sweep';}});
                 const label=document.getElementById('signal-level-value');if(label)label.textContent=s.signalLevel+'/10';
                 const slider=document.getElementById('signal-level');if(slider){slider.setAttribute('aria-valuetext',s.signalLevel+' de 10');slider.nextElementSibling?.querySelectorAll('span').forEach((tick,index)=>tick.classList.toggle('is-current',index===s.signalLevel));}
@@ -339,7 +339,7 @@
             updateSignalGeneratorDisplay(dev);
         }
         function updateSignalGeneratorDisplay(dev){
-            const s=dev.state,running=dev.powered&&s.playing&&state.audioCtx?.state==='running',elapsed=running&&s.signalMode==='sweep'?Math.max(0,state.audioCtx.currentTime-(dev.signalSweepStartedAt||0)):0,progress=Math.min(1,elapsed/s.sweepSeconds),frequency=s.signalMode==='sweep'?20*1000**progress:s.signalFrequency;
+            const s=dev.state,running=dev.powered&&s.playing&&appState.audio.context?.state==='running',elapsed=running&&s.signalMode==='sweep'?Math.max(0,appState.audio.context.currentTime-(dev.signalSweepStartedAt||0)):0,progress=Math.min(1,elapsed/s.sweepSeconds),frequency=s.signalMode==='sweep'?20*1000**progress:s.signalFrequency;
             const screen=dev.el.querySelector('.signal-screen');screen.classList.toggle('is-off',!dev.powered);screen.dataset.running=String(running);
             screen.querySelector('[data-signal-mode]').textContent=signalModeLabels[s.signalMode];
             screen.querySelector('[data-signal-status]').textContent=!dev.powered?'DESLIGADO':running?(s.signalLevel?'ATIVO':'NÍVEL ZERO'):s.playing?'ÁUDIO SUSPENSO':'PAUSADO';
@@ -347,7 +347,7 @@
             screen.querySelector('[data-signal-channel]').textContent=`${s.signalChannel==='both'?'L + R':s.signalChannel} · NÍVEL ${s.signalLevel}/10${s.signalMode==='sweep'?' · '+s.sweepSeconds+' s':''}`;
             screen.querySelector('.signal-sweep-track').hidden=s.signalMode!=='sweep'||!dev.powered;
             screen.querySelector('[data-signal-progress]').style.transform=`scaleX(${progress})`;
-            const phase=running&&!matchMedia('(prefers-reduced-motion: reduce)').matches?state.audioCtx.currentTime*2:0,cycles=1+Math.max(0,Math.min(1,Math.log10(frequency/20)/3))*7,amplitude=dev.powered?s.signalLevel/10*9:0;
+            const phase=running&&!matchMedia('(prefers-reduced-motion: reduce)').matches?appState.audio.context.currentTime*2:0,cycles=1+Math.max(0,Math.min(1,Math.log10(frequency/20)/3))*7,amplitude=dev.powered?s.signalLevel/10*9:0;
             const points=[];for(let x=0;x<=180;x+=3){const wave=s.signalMode==='pink'?(Math.sin(x*1.73+phase)*.4+Math.sin(x*.41+phase*.7)*.35+Math.sin(x*.097+phase*.2)*.25):Math.sin(x/180*Math.PI*2*cycles-phase);points.push(`${x===0?'M':'L'}${x} ${(11-wave*amplitude).toFixed(2)}`);}
             screen.querySelector('[data-signal-wave]').setAttribute('d',points.join(' '));
             if(dev.type==='signalGeneratorVintage')drawVintageSignalDisplay(dev,{frequency,running,progress,phase,cycles});
@@ -355,7 +355,7 @@
         function setSignalGeneratorSetting(dev,key,value){
             if(!['signalMode','signalFrequency','signalLevel','signalChannel','sweepSeconds'].includes(key))return;
             dev.state[key]=value;configureSignalGenerator(dev);
-            const s=dev.state,graph=dev.signalGraph,t=state.audioCtx.currentTime;
+            const s=dev.state,graph=dev.signalGraph,t=appState.audio.context.currentTime;
             if(graph&&(key==='signalLevel'||key==='signalChannel')){
                 graph.gain.gain.setTargetAtTime(s.signalLevel/10*.2,t,.015);
                 graph.left.gain.setTargetAtTime(s.signalChannel==='R'?0:1,t,.015);graph.right.gain.setTargetAtTime(s.signalChannel==='L'?0:1,t,.015);
@@ -386,7 +386,7 @@
         function stopSignalGenerator(dev){
             clearTimeout(dev.signalSweepTimer);dev.signalSweepTimer=null;
             const graph=dev.signalGraph;if(!graph)return;dev.signalGraph=null;
-            const now=state.audioCtx.currentTime;graph.gain.gain.cancelScheduledValues(now);graph.gain.gain.setTargetAtTime(0,now,.004);
+            const now=appState.audio.context.currentTime;graph.gain.gain.cancelScheduledValues(now);graph.gain.gain.setTargetAtTime(0,now,.004);
             try{graph.source.stop(now+.03);}catch{}
             graph.source.onended=()=>graph.nodes.forEach(node=>{try{node.disconnect();}catch{}});
         }
@@ -394,7 +394,7 @@
             if(!SIGNAL_GENERATOR_TYPES.has(dev.type))return;
             stopSignalGenerator(dev);configureSignalGenerator(dev);
             if(!dev.state.playing||!dev.powered)return;
-            const context=state.audioCtx,s=dev.state,gain=context.createGain();gain.gain.value=0;
+            const context=appState.audio.context,s=dev.state,gain=context.createGain();gain.gain.value=0;
             let source;
             if(s.signalMode==='pink'){
                 const buffer=context.createBuffer(1,context.sampleRate*8,context.sampleRate),data=buffer.getChannelData(0);
@@ -418,7 +418,7 @@
         function expandFurnitureGroup(devices){
             if(!devices.some(dev=>FURNITURE_TYPES[dev.type]))return devices;
             const group=new Map(devices.map(dev=>[dev.id,dev]));
-            const boxes=new Map(Object.values(state.devices).map(dev=>[dev.id,{
+            const boxes=new Map(Object.values(appState.project.devices).map(dev=>[dev.id,{
                 dev,x:parseFloat(dev.el.style.left)||0,y:parseFloat(dev.el.style.top)||0,w:dev.el.offsetWidth,h:dev.el.offsetHeight
             }]));
             const belongsTo=(box,support)=>{

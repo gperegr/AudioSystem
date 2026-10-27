@@ -25,9 +25,9 @@
         canvasThemeControl.innerHTML='<span>Fundo</span><select id="canvas-theme" aria-label="Cor do fundo do canvas">'+Object.entries(canvasThemes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
         document.querySelector('.canvas-tools').appendChild(canvasThemeControl);
         function setCanvasTheme(theme){
-            theme=Object.hasOwn(canvasThemes,theme)?theme:'scene';state.canvasTheme=theme;canvas.dataset.theme=theme;
+            theme=Object.hasOwn(canvasThemes,theme)?theme:'scene';appStateStore.actions.setCanvasTheme(theme);canvas.dataset.theme=theme;
             if(theme==='scene')startRoomMotes();else stopRoomMotes();
-            if(theme==='scene')Object.values(state.devices).forEach(dev=>{
+            if(theme==='scene')Object.values(appState.project.devices).forEach(dev=>{
                 dev.el.style.left=Math.max(ROOM_SIDE_INSET,Math.min(world.offsetWidth-dev.el.offsetWidth-ROOM_SIDE_INSET,dev.el.offsetLeft))+'px';
                 dev.el.style.top=Math.max(0,Math.min((dev.el.classList.contains('wall-lamp-node')?wallPlacementBottom():floorPlacementBottom())-dev.el.offsetHeight,dev.el.offsetTop))+'px';
             });
@@ -43,7 +43,7 @@
         const canvasGridControl=document.createElement('label');canvasGridControl.className='canvas-theme-control';
         canvasGridControl.innerHTML='<span>Grade</span><select id="canvas-grid" aria-label="Visual da grade">'+Object.entries(canvasGridModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
         function setCanvasGrid(mode){
-            mode=Object.hasOwn(canvasGridModes,mode)?mode:'dots';state.canvasGrid=mode;canvas.dataset.grid=mode;canvasGridControl.querySelector('select').value=mode;
+            mode=Object.hasOwn(canvasGridModes,mode)?mode:'dots';appStateStore.actions.setCanvasGrid(mode);canvas.dataset.grid=mode;canvasGridControl.querySelector('select').value=mode;
         }
         canvasGridControl.querySelector('select').addEventListener('change',event=>{setCanvasGrid(event.target.value);scheduleProjectSave();scheduleAppPreferencesSave();});
         setCanvasGrid(savedAppPreferences.grid||'dots');
@@ -72,7 +72,7 @@
             if(src===roomImageTarget){roomBackdrop.querySelectorAll('.room-scene-image').forEach(image=>positionRoomImage(image,horizon));return;}
             roomImageTarget=src;
             const request=++roomImageRequest,images=[...roomBackdrop.querySelectorAll('.room-scene-image')];
-            if(!images[0].getAttribute('src')||state.restoringProject||matchMedia('(prefers-reduced-motion: reduce)').matches){
+            if(!images[0].getAttribute('src')||appState.project.restoringProject||matchMedia('(prefers-reduced-motion: reduce)').matches){
                 images.slice(1).forEach(image=>image.remove());
                 positionRoomImage(images[0],horizon);
                 images[0].src=src;images[0].classList.add('is-visible');
@@ -102,7 +102,7 @@
             const daylight=time==='dawn';
             const dusk=time==='dusk';
             roomMoteBeams=RoomScenes.lights(mode,time).map((light,index)=>{
-                const count=Math.round((dusk?28:daylight?24:12)*roomParticleAmount/25);
+                const count=Math.round((dusk?28:daylight?24:12)*appState.preferences.roomParticleAmount/25);
                 const x=(240+light.cx*.8)/24,y=mode.startsWith('listening')?36:mode.startsWith('studio')?34:33;
                 const width=Math.min(32,Math.max(15,light.w*.8/24));
                 const color=light.rgb.join(' ');
@@ -152,15 +152,15 @@
                         ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();
                     });
                 });
-                const count=Math.round((state.canvasTime==='night'?5:10)*roomParticleAmount/25);
-                const color=state.canvasTime==='night'?'198,217,229':'255,224,177';
+                const count=Math.round((appState.canvas.time==='night'?5:10)*appState.preferences.roomParticleAmount/25);
+                const color=appState.canvas.time==='night'?'198,217,229':'255,224,177';
                 for(let i=0;i<count;i++){
                     const phase=reduced?.5:(now/(9500+i%6*1100)+i*.317)%1;
                     const fade=Math.sin(Math.PI*phase),size=9+i%4*3;
                     const x=((i*73+19)%101)/101*width+Math.sin(now/6200+i*2.7)*12;
                     const y=((i*47+13)%89)/89*height-phase*42;
                     if(x+size<0||x-size>width||y+size<0||y-size>height)continue;
-                    const strength=(state.canvasTime==='night'?.13:.28)*fade;
+                    const strength=(appState.canvas.time==='night'?.13:.28)*fade;
                     const glow=ctx.createRadialGradient(x,y,0,x,y,size);
                     glow.addColorStop(0,`rgba(${color},${strength})`);glow.addColorStop(.32,`rgba(${color},${strength*.5})`);glow.addColorStop(1,`rgba(${color},0)`);
                     ctx.globalAlpha=1;ctx.fillStyle=glow;ctx.beginPath();ctx.arc(x,y,size,0,Math.PI*2);ctx.fill();
@@ -173,25 +173,25 @@
         document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')startRoomMotes();else stopRoomMotes();});
         function setCanvasBackdrop(mode){
             mode=legacyBackdrops[mode]||mode;
-            mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studioIllustrated';state.canvasBackdrop=mode;canvas.dataset.backdrop=mode;canvasBackdropControl.querySelector('select').value=mode;
+            mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studioIllustrated';appStateStore.actions.setCanvasBackdrop(mode);canvas.dataset.backdrop=mode;canvasBackdropControl.querySelector('select').value=mode;
             const scene=RoomScenes.scenes[mode];
-            const imageName=RoomScenes.imageForTime(scene,state.canvasTime);
+            const imageName=RoomScenes.imageForTime(scene,appState.canvas.time);
             const src=`./assets/rooms/${imageName}.webp?v=aligned-floor`;
-            showRoomImage(src,scene.horizon?.[state.canvasTime]);
+            showRoomImage(src,scene.horizon?.[appState.canvas.time]);
             requestAnimationFrame(applyView);
-            state.canvasFloor=scene.floor;canvas.dataset.floor=state.canvasFloor;
-            updateRoomMotes(mode,state.canvasTime);
+            appStateStore.actions.setCanvasOption('floor',scene.floor);canvas.dataset.floor=appState.canvas.floor;
+            updateRoomMotes(mode,appState.canvas.time);
             Hardware.updateLightingDemo();
         }
         function setCanvasTime(time){
-            time=Object.hasOwn(canvasTimeModes,time)?time:'dusk';state.canvasTime=time;canvas.dataset.time=time;canvasTimeControl.querySelector('select').value=time;
-            setCanvasBackdrop(state.canvasBackdrop||'studio');
+            time=Object.hasOwn(canvasTimeModes,time)?time:'dusk';appStateStore.actions.setCanvasTime(time);canvas.dataset.time=time;canvasTimeControl.querySelector('select').value=time;
+            setCanvasBackdrop(appState.canvas.backdrop||'studio');
         }
         canvasBackdropControl.querySelector('select').addEventListener('change',event=>{setCanvasBackdrop(event.target.value);updateCables();scheduleProjectSave();scheduleAppPreferencesSave();});
         canvasTimeControl.querySelector('select').addEventListener('change',event=>{setCanvasTime(event.target.value);updateCables();scheduleProjectSave();scheduleAppPreferencesSave();});
-        state.canvasTime=Object.hasOwn(canvasTimeModes,savedAppPreferences.time)?savedAppPreferences.time:savedAppPreferences.backdrop==='night'?'night':'dusk';canvas.dataset.time=state.canvasTime;canvasTimeControl.querySelector('select').value=state.canvasTime;
+        appStateStore.actions.setCanvasTime(Object.hasOwn(canvasTimeModes,savedAppPreferences.time)?savedAppPreferences.time:savedAppPreferences.backdrop==='night'?'night':'dusk');canvas.dataset.time=appState.canvas.time;canvasTimeControl.querySelector('select').value=appState.canvas.time;
         setCanvasBackdrop(savedAppPreferences.backdrop||DEFAULT_BACKDROP);
-        setCanvasTheme(state.canvasTheme);
+        setCanvasTheme(appState.canvas.theme);
 
 
         const svgLayer = document.getElementById('cables-layer');
@@ -249,7 +249,7 @@
         clearCatalogFooter.innerHTML = '<button id="clear-system" type="button" class="w-full rounded border border-red-900 bg-red-950/30 px-3 py-2 text-sm font-semibold text-red-300 hover:bg-red-900/40">Apagar tudo</button>';
         equipmentCatalog.appendChild(clearCatalogFooter);
         document.getElementById('clear-system').addEventListener('click', () => {
-            Object.values(state.devices).forEach(dev => deleteDevice(dev));
+            Object.values(appState.project.devices).forEach(dev => deleteDevice(dev));
             selectDevice(null);
             updateCableFlows();
         });
@@ -261,10 +261,10 @@
         cableVisibilityButton.type='button';cableVisibilityButton.className='cable-visibility-toggle';cableVisibilityButton.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>';cableVisibilityButton.setAttribute('aria-label','Visibilidade dos cabos');cableVisibilityButton.dataset.tooltip='Mostrar ou ocultar os cabos';cableVisibilityButton.setAttribute('aria-pressed','false');
         document.querySelector('.canvas-tools').appendChild(cableVisibilityButton);
         cableVisibilityButton.addEventListener('click',()=>{
-            if(state.hideCables||state.connections.some(c=>c.hidden)){
-                state.hideCables=false;state.connections.forEach(c=>c.hidden=false);
-            }else state.hideCables=!state.hideCables;
-            cableVisibilityButton.setAttribute('aria-pressed',String(!!state.hideCables));
+            if(appState.canvas.hideCables||appState.project.connections.some(c=>c.hidden)){
+                appStateStore.actions.setCanvasOption('hideCables',false);appState.project.connections.forEach(c=>c.hidden=false);
+            }else appStateStore.actions.setCanvasOption('hideCables',!appState.canvas.hideCables);
+            cableVisibilityButton.setAttribute('aria-pressed',String(!!appState.canvas.hideCables));
             updateCables();renderCableProperties();
         });
         const selectionMarquee = document.getElementById('selection-marquee');

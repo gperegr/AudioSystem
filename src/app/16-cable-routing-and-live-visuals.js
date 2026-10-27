@@ -10,7 +10,7 @@
         function getCableBundleOffset(connection) {
             if(cachedCableBundleRevision!==cableBundleRevision){
                 const bundles=new Map();
-                state.connections.forEach(item=>{
+                appState.project.connections.forEach(item=>{
                     const [from,to]=connectionDevices(item);if(!from||!to)return;
                     const key=[from,to].sort().join('|'),bundle=bundles.get(key)||[];bundle.push(item);bundles.set(key,bundle);
                 });
@@ -25,7 +25,7 @@
         }
         function updateCables(affectedDeviceIds=null) {
             const partial=affectedDeviceIds instanceof Set;
-            state.connections.forEach(c => {
+            appState.project.connections.forEach(c => {
                 if(partial){const [from,to]=connectionDevices(c);if(!affectedDeviceIds.has(from)&&!affectedDeviceIds.has(to))return;}
                 const p1 = document.getElementById(c.outId); const p2 = document.getElementById(c.inId);
                 c.el.dataset.slack=String(c.slack??5);
@@ -49,8 +49,8 @@
             syncPlatterVinyls(partial?affectedDeviceIds:null);
             if(partial){
                 affectedDeviceIds.forEach(id=>{
-                    const lamp=state.devices[id]?.el;
-                    if(lamp?.classList.contains('device-type-pendantLamp')){const drop=Math.round((state.devices[id].dragVisualPosition?.y??lamp.offsetTop)+80)+'px';if(lamp.style.getPropertyValue('--pendant-drop')!==drop)lamp.style.setProperty('--pendant-drop',drop);}
+                    const lamp=appState.project.devices[id]?.el;
+                    if(lamp?.classList.contains('device-type-pendantLamp')){const drop=Math.round((appState.project.devices[id].dragVisualPosition?.y??lamp.offsetTop)+80)+'px';if(lamp.style.getPropertyValue('--pendant-drop')!==drop)lamp.style.setProperty('--pendant-drop',drop);}
                 });
                 updateStackFeetDuringMove(affectedDeviceIds);
             }else{
@@ -63,7 +63,7 @@
 
         // --- PROPAGAÇÃO REAL DE ENERGIA/SINAL PELA CADEIA DE ÁUDIO ---
         function isSourceRunning(dev) {
-            return state.audioCtx?.state === 'running' && !!dev.powered && (RADIO_RECEIVERS.has(dev.type)?!!dev.state.radioOn:SOURCE_TYPES.has(dev.type)&&dev.state.playing===true&&(!SIGNAL_GENERATOR_TYPES.has(dev.type)||dev.state.signalLevel>0));
+            return appState.audio.context?.state === 'running' && !!dev.powered && (RADIO_RECEIVERS.has(dev.type)?!!dev.state.radioOn:SOURCE_TYPES.has(dev.type)&&dev.state.playing===true&&(!SIGNAL_GENERATOR_TYPES.has(dev.type)||dev.state.signalLevel>0));
         }
 
         function updateStereoPowerMeters(dev) {
@@ -84,23 +84,23 @@
             updateStackFeet();
             syncSourceSequencer();
             // Atualiza compatibilidade após trocas de sinal, entrada ou estado dos aparelhos.
-            if (state.selectedConnection) updatePortGuidance(true);
+            if (appState.interface.selectedConnection) updatePortGuidance(true);
             // Uma caixa mono ocupa o lado definido pela saída à qual está conectada.
-            Object.values(state.devices).forEach(dev => {
+            Object.values(appState.project.devices).forEach(dev => {
                 if (!dev.outputPan) return;
-                if(dev.type==='spkActiveCompact'){dev.outputPan.pan.setTargetAtTime(0,state.audioCtx.currentTime,.015);return;}
-                const cable = state.connections.find(connection => document.getElementById(connection.inId)?.closest('.device-node')?.id === dev.id);
+                if(dev.type==='spkActiveCompact'){dev.outputPan.pan.setTargetAtTime(0,appState.audio.context.currentTime,.015);return;}
+                const cable = appState.project.connections.find(connection => document.getElementById(connection.inId)?.closest('.device-node')?.id === dev.id);
                 const output = cable && document.getElementById(cable.outId);
                 const channel = output?.dataset.channel || (/R$/.test(output?.dataset.node || '') ? 'R' : /L$/.test(output?.dataset.node || '') ? 'L' : '');
-                dev.outputPan.pan.setTargetAtTime(channel === 'L' ? -1 : channel === 'R' ? 1 : 0, state.audioCtx.currentTime, .015);
+                dev.outputPan.pan.setTargetAtTime(channel === 'L' ? -1 : channel === 'R' ? 1 : 0, appState.audio.context.currentTime, .015);
             });
             // Descobre quais aparelhos estão recebendo ou gerando sinal sonoro
             const activeDevices = new Set();
             const connectedDevices = new Set();
             
             // 1. Fontes de áudio geradoras (toca-discos, streamer, Bluetooth) que estão ligadas
-            if (state.isPlaying) {
-                Object.values(state.devices).forEach(dev => {
+            if (appState.audio.isPlaying) {
+                Object.values(appState.project.devices).forEach(dev => {
                     if (isSourceRunning(dev)) activeDevices.add(dev.id);
                 });
             }
@@ -108,10 +108,10 @@
             // 2. Propagação através das conexões da cadeia (ex: Fonte -> Receiver -> Caixas/Sub/Fones)
             let changed = true;
             let iterations = 0;
-            while (changed && iterations < Object.keys(state.devices).length) {
+            while (changed && iterations < Object.keys(appState.project.devices).length) {
                 changed = false;
                 iterations++;
-                state.connections.forEach(c => {
+                appState.project.connections.forEach(c => {
                     if(c.miswired)return;
                     const outPortEl = document.getElementById(c.outId);
                     const inPortEl = document.getElementById(c.inId);
@@ -121,8 +121,8 @@
                     const inDevEl = inPortEl.closest('.device-node');
                     if (!outDevEl || !inDevEl) return;
 
-                    const devOut = state.devices[outDevEl.id];
-                    const devIn = state.devices[inDevEl.id];
+                    const devOut = appState.project.devices[outDevEl.id];
+                    const devIn = appState.project.devices[inDevEl.id];
                     connectedDevices.add(devOut.id);
                     connectedDevices.add(devIn.id);
 
@@ -150,9 +150,9 @@
             }
 
             // 2b. Ligação sem fio Bluetooth (transmissor → fone)
-            Object.values(state.devices).forEach(dev => {
+            Object.values(appState.project.devices).forEach(dev => {
                 if (BT_TX_TYPES.has(dev.type) && dev.powered && activeDevices.has(dev.id) && dev.btPairedId) {
-                    const hp = state.devices[dev.btPairedId];
+                    const hp = appState.project.devices[dev.btPairedId];
                     if (hp&&!hp.state.damage&&!dev.state.damage) {
                         connectedDevices.add(dev.id);
                         connectedDevices.add(hp.id);
@@ -161,7 +161,7 @@
                 }
             });
 
-            Object.values(state.devices).forEach(dev => {
+            Object.values(appState.project.devices).forEach(dev => {
                 const hasSignal = activeDevices.has(dev.id);
                 const isConnected = connectedDevices.has(dev.id);
                 dev.el.classList.toggle('device-connected', isConnected);
@@ -178,10 +178,10 @@
             });
 
             // 3. Aplica a animação de pulso/fluxo APENAS nos cabos onde a corrente de áudio realmente está passando
-            state.connections.forEach(c => {
+            appState.project.connections.forEach(c => {
                 const outPortEl = document.getElementById(c.outId);
                 const outDevEl = outPortEl ? outPortEl.closest('.device-node') : null;
-                const devOut = outDevEl ? state.devices[outDevEl.id] : null;
+                const devOut = outDevEl ? appState.project.devices[outDevEl.id] : null;
 
                 // O cabo só tem fluxo se a fonte estiver ligada e com áudio ativo alcançando essa saída
                 const isCarryingSignal = !!(!c.miswired && devOut && devOut.powered && activeDevices.has(devOut.id) && portCarriesSignal(devOut, outPortEl));
@@ -204,7 +204,7 @@
             const targetPath = e.target.closest('path');
             if (targetPath) {
                 const group = targetPath.closest('.cable-group');
-                const conn = state.connections.find(c => c.el === group || c.el === targetPath);
+                const conn = appState.project.connections.find(c => c.el === group || c.el === targetPath);
                 if (conn) {
                     selectCable(conn);
                 }
@@ -229,14 +229,14 @@
             const band=document.getElementById('spectrum-band')?.value||'';
             const sourceNodes=[dev.nodes['in'+channel],dev.nodes['out'+band+channel]];
             if(sourceNodes.some(node=>!node))return;
-            const silent=state.audioCtx.createGain();silent.gain.value=0;silent.connect(state.audioCtx.destination);
-            const taps=sourceNodes.map(source=>{const analyzer=state.audioCtx.createAnalyser();analyzer.fftSize=4096;analyzer.smoothingTimeConstant=.65;analyzer.minDecibels=-100;analyzer.maxDecibels=0;source.connect(analyzer);analyzer.connect(silent);return{source,analyzer,data:new Float32Array(analyzer.frequencyBinCount)};});
+            const silent=appState.audio.context.createGain();silent.gain.value=0;silent.connect(appState.audio.context.destination);
+            const taps=sourceNodes.map(source=>{const analyzer=appState.audio.context.createAnalyser();analyzer.fftSize=4096;analyzer.smoothingTimeConstant=.65;analyzer.minDecibels=-100;analyzer.maxDecibels=0;source.connect(analyzer);analyzer.connect(silent);return{source,analyzer,data:new Float32Array(analyzer.frequencyBinCount)};});
             activeSpectrum={dev,canvas,silent,taps};
             drawSpectrum();
         }
         function drawSpectrum(){
             const spectrum=activeSpectrum;if(!spectrum)return;
-            if(!spectrum.canvas.isConnected||!state.devices[spectrum.dev.id]){disposeSpectrum();return;}
+            if(!spectrum.canvas.isConnected||!appState.project.devices[spectrum.dev.id]){disposeSpectrum();return;}
             const canvas=spectrum.canvas,width=Math.max(220,canvas.clientWidth),height=170,ratio=window.devicePixelRatio||1;
             if(canvas.width!==Math.round(width*ratio)||canvas.height!==Math.round(height*ratio)){canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);}
             const ctx=canvas.getContext('2d');ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,width,height);ctx.fillStyle='#10171c';ctx.fillRect(0,0,width,height);
@@ -251,7 +251,7 @@
                 ctx.strokeStyle=index?'#55c7ff':'#a3adb8';ctx.lineWidth=index?1.8:1.2;ctx.beginPath();
                 for(let step=0;step<=180;step++){
                     const f=20*Math.pow(1000,step/180),next=20*Math.pow(1000,(step+1)/180);
-                    const bin=f/(state.audioCtx.sampleRate/2)*tap.data.length,end=Math.min(tap.data.length-1,Math.ceil(next/(state.audioCtx.sampleRate/2)*tap.data.length));
+                    const bin=f/(appState.audio.context.sampleRate/2)*tap.data.length,end=Math.min(tap.data.length-1,Math.ceil(next/(appState.audio.context.sampleRate/2)*tap.data.length));
                     let db=-100;for(let k=Math.max(1,Math.floor(bin));k<=end;k++)db=Math.max(db,tap.data[k]);
                     if(!index)inputPeak=Math.max(inputPeak,db);
                     const px=left+step/180*w,py=y(db);if(step===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
@@ -268,7 +268,7 @@
             const el=document.createElementNS('http://www.w3.org/2000/svg','g');el.setAttribute('class','cable-group');svgLayer.appendChild(el);
             const type=output.dataset.type;drawCable(el,getPortCenter(output),getPortCenter(input),[],type);
             const miswired=output.dataset.io!=='out'||input.dataset.io!=='in';
-            state.connections.push({outId:output.id,inId:input.id,outDeviceId:from.id,inDeviceId:to.id,el,type,wps:[],miswired});invalidateCableBundles();if(miswired)el.dataset.miswired='true';else from.nodes[nodeOut].connect(to.nodes[nodeIn]);output.classList.add('connected');input.classList.add('connected');
+            appStateStore.actions.addConnection({outId:output.id,inId:input.id,outDeviceId:from.id,inDeviceId:to.id,el,type,wps:[],miswired});invalidateCableBundles();if(miswired)el.dataset.miswired='true';else from.nodes[nodeOut].connect(to.nodes[nodeIn]);output.classList.add('connected');input.classList.add('connected');
         }
 
         let pendantLightTick=0,pendantLightSignature='',visualFrame=0,visualTimer=0,visualRendering=false;
@@ -292,7 +292,7 @@
                     if(signature!==pendantLightSignature){pendantLightSignature=signature;Hardware.updateLightingDemo();}
                 }else pendantLightSignature='';
             }
-            if(state.connections.some(connection=>connection.seatStarted!=null))updateCables();
+            if(appState.project.connections.some(connection=>connection.seatStarted!=null))updateCables();
             updateRealtimePanels(performance.now());
             updateTransportMotion(performance.now());
             updateExtraDisplays(performance.now());
@@ -335,7 +335,7 @@
             // Animação de cones dos alto-falantes se a simulação de som estiver ativa
             {
                 const reduced=powerMotionPreference.matches;
-                Object.values(state.devices).forEach(dev => {
+                Object.values(appState.project.devices).forEach(dev => {
                     const woofers=dev.visualWoofers??=dev.el.querySelectorAll('.spk-woofer,.classic-box-woofer');
                     if (dev.analyzer && dev.dataArray && woofers.length) {
                         dev.analyzer.getByteFrequencyData(dev.dataArray);
@@ -347,9 +347,9 @@
                     }
                 });
             }
-            const devices=Object.values(state.devices);
+            const devices=Object.values(appState.project.devices);
             const activeAudio=devices.some(dev=>dev.state?.playing||dev.state?.radioOn||(dev.meters?.visible&&dev.powered===true&&dev.meters.peaks.some(peak=>peak>.001)));
-            const activeCable=isPatching||state.connections.some(connection=>connection.seatStarted!=null);
+            const activeCable=isPatching||appState.project.connections.some(connection=>connection.seatStarted!=null);
             Hardware.renderLightingDemo();
             visualRendering=false;
             scheduleVisuals(activeCable?0:activeAudio?33:pendantLightSignature?90:0);

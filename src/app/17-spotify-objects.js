@@ -43,12 +43,12 @@
             const marker=dev.el.querySelector(dev.type==='turntableLinear'?'.linear-disc-size':'[data-tt="record"]')||dev.el;
             const rect=marker.getBoundingClientRect();return screenToWorld(rect.left+rect.width/2,rect.top+rect.height/2);
         }
-        function syncPlatterVinyls(affectedDeviceIds=null){for(const item of spotifyVinyls.values()){if(affectedDeviceIds&&!affectedDeviceIds.has(item.turntableId))continue;const dev=state.devices[item.turntableId];if(!dev)continue;const at=vinylPlatterCenter(dev);moveSpotifyVinyl(item,at.x-SPOTIFY_VINYL_SIZE/2,at.y-6);}}
+        function syncPlatterVinyls(affectedDeviceIds=null){for(const item of spotifyVinyls.values()){if(affectedDeviceIds&&!affectedDeviceIds.has(item.turntableId))continue;const dev=appState.project.devices[item.turntableId];if(!dev)continue;const at=vinylPlatterCenter(dev);moveSpotifyVinyl(item,at.x-SPOTIFY_VINYL_SIZE/2,at.y-6);}}
         function moveSpotifyVinyl(item,x,y,settle=false){const snap=settle&&!item.turntableId;item.x=snap?spotifyGridCoordinate(x,world.offsetWidth-SPOTIFY_VINYL_SIZE):Math.max(0,Math.min(world.offsetWidth-SPOTIFY_VINYL_SIZE,x));item.y=snap?spotifyGridCoordinate(y,maxEquipmentBottom()-SPOTIFY_VINYL_SIZE):Math.max(0,Math.min(maxEquipmentBottom()-(item.turntableId?12:SPOTIFY_VINYL_SIZE),y));item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';}
         function placeSpotifyVinyl(item,dev,animate=true){
             if(dev.spotifyVinyl&&dev.spotifyVinyl!==item){spotifyVinylNotice('Este prato já tem um disco.');return false;}
             if(dev.state.playing)setSourcePlaying(dev,false);
-            if(item.turntableId&&state.devices[item.turntableId]){const previous=state.devices[item.turntableId];if(previous.state.playing)setSourcePlaying(previous,false);previous.spotifyVinyl=null;}
+            if(item.turntableId&&appState.project.devices[item.turntableId]){const previous=appState.project.devices[item.turntableId];if(previous.state.playing)setSourcePlaying(previous,false);previous.spotifyVinyl=null;}
             const fromX=item.x,fromY=item.y;
             item.turntableId=dev.id;item.dragStart=null;dev.spotifyVinyl=item;dev.spotifyNeedsRestart=true;if(dev.type==='turntableLinear'&&dev.state.tt?.disc==='none'){dev.state.tt.disc='lp';dev.refreshTurntable?.();}dev.setLidOpen?.(true);dev.el.classList.add('spotify-vinyl-placing');const center=vinylPlatterCenter(dev);moveSpotifyVinyl(item,center.x-SPOTIFY_VINYL_SIZE/2,center.y-6);
             item.el.classList.toggle('is-linear',dev.type==='turntableLinear');item.el.classList.add('is-on-platter');
@@ -67,20 +67,20 @@
             el.addEventListener('pointerdown',event=>{if(event.button!==0)return;event.preventDefault();event.stopPropagation();beginSpotifyVinylDrag(item,event);});
             return item;
         }
-        function removeSpotifyVinyl(item,recordHistory=true){if(recordHistory)recordDeletedSpotify('vinyl',item);if(item.turntableId){const dev=state.devices[item.turntableId];if(dev?.state.playing)setSourcePlaying(dev,false);if(dev){dev.spotifyVinyl=null;if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);}}spotifyVinyls.delete(item.uri);item.el.remove();refreshSpotifyVinyls();scheduleProjectSave();}
+        function removeSpotifyVinyl(item,recordHistory=true){if(recordHistory)recordDeletedSpotify('vinyl',item);if(item.turntableId){const dev=appState.project.devices[item.turntableId];if(dev?.state.playing)setSourcePlaying(dev,false);if(dev){dev.spotifyVinyl=null;if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);}}spotifyVinyls.delete(item.uri);item.el.remove();refreshSpotifyVinyls();scheduleProjectSave();}
         function beginSpotifyVinylDrag(item,event){
-            const prior=state.devices[item.turntableId];item.dragStart={x:item.x,y:item.y,turntableId:prior?.id||null};if(prior){if(prior.state.playing)setSourcePlaying(prior,false);prior.spotifyVinyl=null;item.turntableId=null;item.el.classList.remove('is-on-platter','is-linear','is-playing');if(state.selectedDeviceId===prior.id)selectDevice(prior.id,true);}
+            const prior=appState.project.devices[item.turntableId];item.dragStart={x:item.x,y:item.y,turntableId:prior?.id||null};if(prior){if(prior.state.playing)setSourcePlaying(prior,false);prior.spotifyVinyl=null;item.turntableId=null;item.el.classList.remove('is-on-platter','is-linear','is-playing');if(appState.interface.selectedDeviceId===prior.id)selectDevice(prior.id,true);}
             const point=screenToWorld(event.clientX,event.clientY),offsetX=prior?SPOTIFY_VINYL_SIZE/2:point.x-item.x,offsetY=prior?SPOTIFY_VINYL_SIZE/2:point.y-item.y;item.el.classList.add('is-dragging');const ghost=createSpotifyDragGhost(item.el,event);
             let autoLid=null;
-            const hitDevice=(x,y)=>{item.el.style.pointerEvents='none';const target=document.elementFromPoint(x,y)?.closest('.device-node');item.el.style.pointerEvents='';return state.devices[target?.id];};
-            const releaseAutoLid=keepOpen=>{if(autoLid&&!keepOpen&&state.devices[autoLid.id]===autoLid)autoLid.setLidOpen?.(false);autoLid=null;};
+            const hitDevice=(x,y)=>{item.el.style.pointerEvents='none';const target=document.elementFromPoint(x,y)?.closest('.device-node');item.el.style.pointerEvents='';return appState.project.devices[target?.id];};
+            const releaseAutoLid=keepOpen=>{if(autoLid&&!keepOpen&&appState.project.devices[autoLid.id]===autoLid)autoLid.setLidOpen?.(false);autoLid=null;};
             const move=ev=>{if(ev.pointerId!==event.pointerId)return;const at=screenToWorld(ev.clientX,ev.clientY);moveSpotifyVinyl(item,at.x-offsetX,at.y-offsetY);ghost.move(ev);updateSpotifyDiscardTarget(ev,'vinyl');const hovered=hitDevice(ev.clientX,ev.clientY);const next=hovered&&TURNTABLE_TYPES.has(hovered.type)?hovered:null;if(next!==autoLid){releaseAutoLid(false);if(next&&!next.state.lidOpen){next.setLidOpen?.(true);autoLid=next;}}};
             const end=ev=>{if(ev.pointerId!==event.pointerId)return;window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',end,true);window.removeEventListener('pointercancel',end,true);ghost.restore();item.el.classList.remove('is-dragging');clearSpotifyDiscardTarget();
                 const dev=ev.type==='pointercancel'?null:hitDevice(ev.clientX,ev.clientY);
                 const placed=dev&&TURNTABLE_TYPES.has(dev.type)&&placeSpotifyVinyl(item,dev);
                 releaseAutoLid(!!placed&&autoLid===dev);
-                if(!placed&&ev.type!=='pointercancel'&&(isOverCatalog(ev)||dev?.type==='furnitureCoverflow')){showDiscardCloud(ev.clientX,ev.clientY);removeSpotifyVinyl(item);if(prior&&state.selectedDeviceId===prior.id)selectDevice(prior.id,true);playUiSound('discard');spotifyVinylNotice('Disco guardado na capa do álbum.');}
-                else if(!placed){moveSpotifyVinyl(item,item.x,item.y,true);item.dragStart=null;if(prior&&state.selectedDeviceId===prior.id)selectDevice(prior.id,true);scheduleProjectSave();}
+                if(!placed&&ev.type!=='pointercancel'&&(isOverCatalog(ev)||dev?.type==='furnitureCoverflow')){showDiscardCloud(ev.clientX,ev.clientY);removeSpotifyVinyl(item);if(prior&&appState.interface.selectedDeviceId===prior.id)selectDevice(prior.id,true);playUiSound('discard');spotifyVinylNotice('Disco guardado na capa do álbum.');}
+                else if(!placed){moveSpotifyVinyl(item,item.x,item.y,true);item.dragStart=null;if(prior&&appState.interface.selectedDeviceId===prior.id)selectDevice(prior.id,true);scheduleProjectSave();}
             };
             updateSpotifyDiscardTarget(event,'vinyl');
             window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',end,true);window.addEventListener('pointercancel',end,true);
@@ -90,7 +90,7 @@
             const at=screenToWorld(data.clientX,data.clientY),item=createSpotifyVinyl({...data,origin:furniture.id,x:at.x-SPOTIFY_VINYL_SIZE/2,y:at.y-SPOTIFY_VINYL_SIZE/2});if(item)beginSpotifyVinylDrag(item,{...data,button:0});
         });
         function spotifyPathVolume(source){
-            const solo=Object.values(state.devices).some(dev=>isListeningDevice(dev)&&dev.state.solo),seen=new Set();let best=0;
+            const solo=Object.values(appState.project.devices).some(dev=>isListeningDevice(dev)&&dev.state.solo),seen=new Set();let best=0;
             function walk(dev,input,gain){
                 if(!dev||dev.state.damage||!dev.powered)return;
                 if(dev!==source){if(dev.state.muted||dev.state.streamMute||dev.state.preMuted)return;if(typeof dev.state.volume==='number')gain*=Math.max(0,Math.min(1,dev.state.volume));if(Array.isArray(dev.state.channelVolumes))gain*=Math.max(0,...dev.state.channelVolumes.map(value=>Math.max(0,Math.min(1,value))));}
@@ -98,7 +98,7 @@
                 for(const output of dev.el.querySelectorAll('.port[data-io="out"]')){
                     if(input&&!routedInputPorts(dev,output).includes(input))continue;
                     if(!portCarriesSignal(dev,output))continue;
-                    for(const cable of state.connections){if(cable.miswired||cable.outId!==output.id)continue;const nextInput=document.getElementById(cable.inId),next=state.devices[nextInput?.closest('.device-node')?.id];if(!next||seen.has(next.id+':'+nextInput.id))continue;
+                    for(const cable of appState.project.connections){if(cable.miswired||cable.outId!==output.id)continue;const nextInput=document.getElementById(cable.inId),next=appState.project.devices[nextInput?.closest('.device-node')?.id];if(!next||seen.has(next.id+':'+nextInput.id))continue;
                         if(RADIO_RECEIVERS.has(next.type)){const selected=next.state.receiverInput||'line1',prefix=selected==='line1'?'in':selected;if(selected==='fm'||!new RegExp('^'+prefix+'[LR]$').test(nextInput.dataset.node))continue;}
                         if(next.type==='streamIntegrated'&&next.state.streamInput!=='line')continue;
                         if(controlAmpConfig(next.type)&&!nextInput.dataset.node.startsWith(next.state.integratedSource===3&&controlAmpConfig(next.type).phono!==false?'phono':'line'+next.state.integratedSource))continue;
@@ -108,7 +108,7 @@
                     }
                 }
             }
-            walk(source,null,1);return Math.min(.65,best*.55*Math.min(1,state.listeningOutputLevel));
+            walk(source,null,1);return Math.min(.65,best*.55*Math.min(1,appState.preferences.listening.outputLevel));
         }
-        function scheduleSpotifyVolume(){if(spotifyVolumeTimer)return;spotifyVolumeTimer=setTimeout(()=>{spotifyVolumeTimer=0;const dev=state.devices[spotifyPlayingTurntable],target=dev&&dev.state.playing?spotifyPathVolume(dev):0;spotifyVolume+=Math.max(-.08,Math.min(.08,target-spotifyVolume));if(Math.abs(spotifyVolume-target)<.004)spotifyVolume=target;SpotifyCoverflow.setPlaybackVolume(spotifyVolume).catch(()=>{});if(spotifyPlayingTurntable&&Math.abs(spotifyVolume-target)>.004)scheduleSpotifyVolume();},100);}
+        function scheduleSpotifyVolume(){if(spotifyVolumeTimer)return;spotifyVolumeTimer=setTimeout(()=>{spotifyVolumeTimer=0;const dev=appState.project.devices[spotifyPlayingTurntable],target=dev&&dev.state.playing?spotifyPathVolume(dev):0;spotifyVolume+=Math.max(-.08,Math.min(.08,target-spotifyVolume));if(Math.abs(spotifyVolume-target)<.004)spotifyVolume=target;SpotifyCoverflow.setPlaybackVolume(spotifyVolume).catch(()=>{});if(spotifyPlayingTurntable&&Math.abs(spotifyVolume-target)>.004)scheduleSpotifyVolume();},100);}
         setInterval(()=>{if(spotifyPlayingTurntable)scheduleSpotifyVolume();},240);

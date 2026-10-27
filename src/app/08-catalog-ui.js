@@ -223,7 +223,7 @@
         appendCatalogGroup('Outros equipamentos',catalogItems.filter(item=>!catalogAssigned.has(item)));
         previousCatalogSections.forEach(section=>section.remove());
         const debugCatalogSection=[...catalogContainer.querySelectorAll('.catalog-category')].find(section=>section.querySelector('[data-template="hardwareDemo"]'));
-        debugCatalogSection.hidden=!developerModeEnabled;
+        debugCatalogSection.hidden=!appState.preferences.developerModeEnabled;
         document.querySelectorAll('.catalog-item[data-template]').forEach(item => {
             const oldIcon = item.firstElementChild;
             if (oldIcon) oldIcon.outerHTML = catalogIcon(item.dataset.template);
@@ -277,7 +277,7 @@
             contextHelp.style.left=`${valid.x}px`;contextHelp.style.top=`${valid.y}px`;return true;
         }
         function showContextHelp(target,delay=1000){
-            if(!connectionGuidanceEnabled||!target)return;
+            if(!appState.preferences.connectionGuidanceEnabled||!target)return;
             const port=target.closest('.port'),control=port?null:target.closest('button,input,select,[role="switch"],[role="slider"]');
             let heading='',message='';
             if(port){heading=port.dataset.baseTitle||port.getAttribute('aria-label')||'Conector';message=port.getAttribute('title')||`${port.dataset.io==='out'?'Saída':'Entrada'} ${port.dataset.format||port.dataset.type||'de áudio'} · sinal ${signalName(getPortSignal(port))}.`;}
@@ -287,15 +287,15 @@
             if(!message||contextHelpTarget===target)return;
             hideContextHelp();contextHelpTarget=target;contextHelpPreviousDescription=target.getAttribute('aria-describedby');target.setAttribute('aria-describedby',[contextHelpPreviousDescription,'context-help'].filter(Boolean).join(' '));
             contextHelp.querySelector('strong').textContent=heading;contextHelp.querySelector('span').textContent=message;
-            contextHelpTimer=setTimeout(()=>{if(!connectionGuidanceEnabled||!target.isConnected)return;if(positionContextHelp(target))contextHelp.classList.add('is-visible');},delay);
+            contextHelpTimer=setTimeout(()=>{if(!appState.preferences.connectionGuidanceEnabled||!target.isConnected)return;if(positionContextHelp(target))contextHelp.classList.add('is-visible');},delay);
         }
-        document.addEventListener('pointerover',event=>{if(event.pointerType==='touch'||!connectionGuidanceEnabled)return;const target=event.target instanceof Element?event.target:null;if(target?.closest('.device-node'))showContextHelp(target);});
+        document.addEventListener('pointerover',event=>{if(event.pointerType==='touch'||!appState.preferences.connectionGuidanceEnabled)return;const target=event.target instanceof Element?event.target:null;if(target?.closest('.device-node'))showContextHelp(target);});
         document.addEventListener('pointerout',event=>{const target=event.target instanceof Element?event.target:null,device=target?.closest('.device-node');if(!device||event.relatedTarget instanceof Node&&device.contains(event.relatedTarget))return;if(!contextHelpTarget||!device.contains(contextHelpTarget))return;if(!contextHelpTarget.matches(':focus')&&!contextHelpTarget.contains(document.activeElement))hideContextHelp();});
         document.addEventListener('focusin',event=>{const target=event.target instanceof Element?event.target:null;if(target?.closest('.device-node'))showContextHelp(target,0);});
         document.addEventListener('focusout',event=>{if(contextHelpTarget===event.target||contextHelpTarget?.contains(event.target))setTimeout(()=>{if(!contextHelpTarget?.matches(':hover')&&!contextHelpTarget?.contains(document.activeElement))hideContextHelp();},0);});
         let contextTouchTarget=null,contextTouchStart=null;
         document.addEventListener('pointerdown',event=>{
-            if(event.pointerType!=='touch'||!connectionGuidanceEnabled)return;
+            if(event.pointerType!=='touch'||!appState.preferences.connectionGuidanceEnabled)return;
             const candidate=event.target instanceof Element?event.target.closest('.device-node .port,.device-node button,.device-node input,.device-node select,.device-node [role="switch"],.device-node [role="slider"]'):null;
             if(!candidate)return;
             clearTimeout(contextHelpTimer);contextTouchTarget=candidate;contextTouchStart={x:event.clientX,y:event.clientY};
@@ -327,7 +327,7 @@
             const terms = normalizeSearch(equipmentSearch.value).split(/\s+/).filter(Boolean);
             let total = 0;
             catalogSections.forEach(section => {
-                if(section===debugCatalogSection&&!developerModeEnabled){section.hidden=true;return;}
+                if(section===debugCatalogSection&&!appState.preferences.developerModeEnabled){section.hidden=true;return;}
                 let visible = 0;
                 section.querySelectorAll('.catalog-item').forEach(item => {
                     const text = catalogSearchText(item);
@@ -353,7 +353,7 @@
                         cleanup();if(event.pointerId!==start.id||Math.hypot(event.clientX-start.x,event.clientY-start.y)>8)return;
                         const rect=canvas.getBoundingClientRect(),point=screenToWorld(rect.left+rect.width/2,rect.top+rect.height/2);
                         createDevice(item.dataset.template,point.x-150,point.y-70);playUiSound('drop');closeMobilePanels();
-                        const added=state.devices[state.selectedDeviceId];
+                        const added=appState.project.devices[appState.interface.selectedDeviceId];
                         if(compactLayout.matches&&added){
                             const width=added.el.offsetWidth,height=added.el.offsetHeight,tools=document.querySelector('.canvas-tools'),usableHeight=Math.max(120,rect.height-tools.offsetHeight-40);
                             const zoom=clampZoom(Math.min(view.zoom,(rect.width-32)/width,(usableHeight-32)/height));

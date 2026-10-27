@@ -8,19 +8,19 @@
         const projectStatus=(message,error=false)=>{const node=document.getElementById('project-save-status');node.textContent=message;node.classList.toggle('is-error',error);};
         const projectJSON=value=>JSON.parse(JSON.stringify(value),(key,item)=>['__proto__','constructor','prototype'].includes(key)?undefined:item);
         function projectCapture(){
-            const devices=Object.values(state.devices).map(dev=>{
+            const devices=Object.values(appState.project.devices).map(dev=>{
                 const settings=projectJSON(dev.state);settings.playing=false;if(settings.tt)settings.tt.running=false;
-                return {id:dev.id,type:dev.type,x:parseFloat(dev.el.style.left)||0,y:parseFloat(dev.el.style.top)||0,settings,powered:dev.powered,selectedSource:dev.selectedSource,grilleOff:dev.el.classList.contains('grille-off'),pairedId:dev.btPairedId||null,mediaKey:dev.audioBuffer?dev.mediaKey||null:null,fileName:dev.fileName||'',trackTitle:dev.trackTitle||'',position:dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?state.audioCtx.currentTime-dev.demoStartedAt:0)};
+                return {id:dev.id,type:dev.type,x:parseFloat(dev.el.style.left)||0,y:parseFloat(dev.el.style.top)||0,settings,powered:dev.powered,selectedSource:dev.selectedSource,grilleOff:dev.el.classList.contains('grille-off'),pairedId:dev.btPairedId||null,mediaKey:dev.audioBuffer?dev.mediaKey||null:null,fileName:dev.fileName||'',trackTitle:dev.trackTitle||'',position:dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?appState.audio.context.currentTime-dev.demoStartedAt:0)};
             });
-            const connections=state.connections.map(c=>{const out=document.getElementById(c.outId),input=document.getElementById(c.inId);return {from:out?.closest('.device-node')?.id,out:out?.dataset.node,to:input?.closest('.device-node')?.id,input:input?.dataset.node,label:c.label||'',color:c.color||null,hidden:!!c.hidden,slack:c.slack??5};});
+            const connections=appState.project.connections.map(c=>{const out=document.getElementById(c.outId),input=document.getElementById(c.inId);return {from:out?.closest('.device-node')?.id,out:out?.dataset.node,to:input?.closest('.device-node')?.id,input:input?.dataset.node,label:c.label||'',color:c.color||null,hidden:!!c.hidden,slack:c.slack??5};});
             const catalogScroll=equipmentCatalog.querySelector('.overflow-y-auto');
             const vinyls=[...spotifyVinyls.values()].map(item=>({id:item.id,uri:item.uri,name:item.name,image:item.image,origin:item.origin,x:item.x,y:item.y,turntableId:item.turntableId}));
             const albums=[...spotifyAlbums.values()].map(item=>({id:item.id,uri:item.uri,name:item.name,image:item.image,origin:item.origin,x:item.x,y:item.y,open:item.open}));
             return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,vinyls,albums,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{
-                environment:{...(state.environment||DEFAULT_ROOM_SETTINGS)},
-                canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'scene',canvasBackdrop:state.canvasBackdrop||DEFAULT_BACKDROP,canvasTime:state.canvasTime||'dusk',
-                soundVolume:state.uiSoundVolume??DEFAULT_UI_SOUND_VOLUME,hideCables:!!state.hideCables,
-                selected:[...state.selectedDeviceIds],selectedCable:state.connections.indexOf(state.selectedConnection),
+                environment:{...(appState.audio.environment||DEFAULT_ROOM_SETTINGS)},
+                canvasGrid:appState.canvas.grid||'dots',canvasTheme:appState.canvas.theme||'scene',canvasBackdrop:appState.canvas.backdrop||DEFAULT_BACKDROP,canvasTime:appState.canvas.time||'dusk',
+                soundVolume:appState.preferences.uiSoundVolume??DEFAULT_UI_SOUND_VOLUME,hideCables:!!appState.canvas.hideCables,
+                selected:[...appState.interface.selectedDeviceIds],selectedCable:appState.project.connections.indexOf(appState.interface.selectedConnection),
                 search:document.getElementById('equipment-search').value,catalogScroll:catalogScroll?.scrollTop||0,inspectorScroll:inspectorContent.scrollTop
             }};
         }
@@ -65,7 +65,7 @@
             try{
                 if(!projectDatabase)throw new Error('Banco local indisponível.');
                 const used=new Set(snapshot.devices.map(dev=>dev.mediaKey).filter(Boolean));
-                const media=new Map(Object.values(state.devices).filter(dev=>dev.mediaBlob&&dev.mediaKey).map(dev=>[dev.mediaKey,dev.mediaBlob]));
+                const media=new Map(Object.values(appState.project.devices).filter(dev=>dev.mediaBlob&&dev.mediaKey).map(dev=>[dev.mediaKey,dev.mediaBlob]));
                 await new Promise((resolve,reject)=>{
                     const transaction=projectDatabase.transaction(['projects','audio'],'readwrite'),audio=transaction.objectStore('audio');
                     transaction.objectStore('projects').put(snapshot,'current');
@@ -132,17 +132,17 @@
             Hardware.sync(dev);
         }
         async function restoreLocalProject(snapshot,mediaReader){
-            projectValidate(snapshot);projectRestoring=true;state.restoringProject=true;
+            projectValidate(snapshot);projectRestoring=true;appStateStore.actions.setProjectRestoring(true);
             const shield=document.createElement('div');shield.className='project-restore-shield';shield.textContent='Restaurando montagem local…';document.body.appendChild(shield);
             const ids=new Map(),restored=[],warnings=[];
             try{
-                stopViewMotion();cancelCableDrag();spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});spotifyVinyls.forEach(item=>item.el.remove());spotifyVinyls.clear();spotifyAlbums.forEach(item=>item.el.remove());spotifyAlbums.clear();refreshSpotifyVinyls();refreshSpotifyAlbums();Object.values(state.devices).forEach(deleteDevice);
+                stopViewMotion();cancelCableDrag();spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});spotifyVinyls.forEach(item=>item.el.remove());spotifyVinyls.clear();spotifyAlbums.forEach(item=>item.el.remove());spotifyAlbums.clear();refreshSpotifyVinyls();refreshSpotifyAlbums();Object.values(appState.project.devices).forEach(deleteDevice);
                 world.style.removeProperty('min-width');world.style.removeProperty('min-height');
                 const ui=snapshot.ui||{};setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setCanvasTime(ui.canvasTime||(ui.canvasBackdrop==='night'?'night':'dusk'));setCanvasBackdrop(ui.canvasBackdrop);
                 for(const saved of snapshot.devices){
                     if(!DEVICE_NAMES[saved.type]||['lightPoint','acousticHorizontal','acousticVertical'].includes(saved.type))continue; // Discard unknown or retired items from older projects.
-                    const before=new Set(Object.keys(state.devices));createDevice(saved.type,Math.min(saved.x,world.offsetWidth-150),Math.min(saved.y,maxEquipmentBottom()-150));
-                    const dev=Object.values(state.devices).find(item=>!before.has(item.id));if(!dev)throw new Error('Não foi possível restaurar um equipamento.');
+                    const before=new Set(Object.keys(appState.project.devices));createDevice(saved.type,Math.min(saved.x,world.offsetWidth-150),Math.min(saved.y,maxEquipmentBottom()-150));
+                    const dev=Object.values(appState.project.devices).find(item=>!before.has(item.id));if(!dev)throw new Error('Não foi possível restaurar um equipamento.');
                     if(AudioAdapterDesign.models[dev.type])AudioAdapterDesign.layout(dev.el,dev.type,saved.settings?.adapterRotation);
                     ids.set(saved.id,dev.id);restored.push([saved,dev]);
                     const inset=sceneSideInset(),bottom=WALL_LAMP_TYPES[dev.type]?wallPlacementBottom():maxEquipmentBottom();
@@ -157,26 +157,26 @@
                     applySavedDevice(dev,saved);
                     dev.fileName=typeof saved.fileName==='string'?saved.fileName:'';dev.trackTitle=typeof saved.trackTitle==='string'?saved.trackTitle:'';
                     if(saved.mediaKey){
-                        try{const blob=await mediaReader(saved.mediaKey);if(!(blob instanceof Blob))throw new Error('Arquivo de áudio ausente.');const bytes=await blob.arrayBuffer(),metadata=dev.type==='streamIntegrated'?readStreamMetadata(bytes):null;dev.audioBuffer=await state.audioCtx.decodeAudioData(bytes);dev.mediaBlob=blob;dev.mediaKey=saved.mediaKey;dev.fileOffset=Math.max(0,Math.min(Number(saved.position)||0,dev.audioBuffer.duration));if(metadata)dev.setStreamMetadata(metadata);}
+                        try{const blob=await mediaReader(saved.mediaKey);if(!(blob instanceof Blob))throw new Error('Arquivo de áudio ausente.');const bytes=await blob.arrayBuffer(),metadata=dev.type==='streamIntegrated'?readStreamMetadata(bytes):null;dev.audioBuffer=await appState.audio.context.decodeAudioData(bytes);dev.mediaBlob=blob;dev.mediaKey=saved.mediaKey;dev.fileOffset=Math.max(0,Math.min(Number(saved.position)||0,dev.audioBuffer.duration));if(metadata)dev.setStreamMetadata(metadata);}
                         catch(error){warnings.push(dev.fileName||DEVICE_NAMES[dev.type]);dev.fileMessage='Não foi possível restaurar a música. Carregue o arquivo novamente.';}
                     }else dev.demoOffset=Math.max(0,Number(saved.position)||0);
                     refreshCdDisplay(dev);
                 }
                 const links=[];
                 snapshot.connections.forEach(saved=>{
-                    const from=state.devices[ids.get(saved.from)],to=state.devices[ids.get(saved.to)];
+                    const from=appState.project.devices[ids.get(saved.from)],to=appState.project.devices[ids.get(saved.to)];
                     const output=from?.el.querySelector(`[data-node="${CSS.escape(saved.out)}"]`),input=to?.el.querySelector(`[data-node="${CSS.escape(saved.input)}"]`);
                     if(!output||!input||isPortOccupied(output)||isPortOccupied(input)||!getPortCompatibility(output,input).compatible){warnings.push('conexão incompatível');links.push(null);return;}
-                    connectProjectPorts(from,saved.out,to,saved.input);const connection=state.connections.at(-1);
+                    connectProjectPorts(from,saved.out,to,saved.input);const connection=appState.project.connections.at(-1);
                     connection.label=typeof saved.label==='string'?saved.label.slice(0,60):'';connection.color=/^#[0-9a-f]{6}$/i.test(saved.color||'')?saved.color:undefined;connection.hidden=!!saved.hidden;connection.slack=Number.isFinite(saved.slack)?Math.max(0,Math.min(10,Math.round(saved.slack))):5;links.push(connection);
                 });
-                restored.forEach(([saved,dev])=>{const other=state.devices[ids.get(saved.pairedId)];if(other&&BT_TX_TYPES.has(dev.type)&&canPair(dev,other))pairDevices(dev,other);});
-                for(const record of Array.isArray(snapshot.vinyls)?snapshot.vinyls.slice(0,200):[]){const item=createSpotifyVinyl({...record,origin:ids.get(record.origin)||null});const platter=state.devices[ids.get(record.turntableId)];if(item&&platter&&TURNTABLE_TYPES.has(platter.type))placeSpotifyVinyl(item,platter,false);}
+                restored.forEach(([saved,dev])=>{const other=appState.project.devices[ids.get(saved.pairedId)];if(other&&BT_TX_TYPES.has(dev.type)&&canPair(dev,other))pairDevices(dev,other);});
+                for(const record of Array.isArray(snapshot.vinyls)?snapshot.vinyls.slice(0,200):[]){const item=createSpotifyVinyl({...record,origin:ids.get(record.origin)||null});const platter=appState.project.devices[ids.get(record.turntableId)];if(item&&platter&&TURNTABLE_TYPES.has(platter.type))placeSpotifyVinyl(item,platter,false);}
                 for(const record of Array.isArray(snapshot.albums)?snapshot.albums.slice(0,200):[])createSpotifyAlbum({...record,origin:ids.get(record.origin)||null});
                 setRoomSettings(ui.environment);
                 cableVisibilityButton.setAttribute('aria-pressed',String(!!ui.hideCables));
-                state.uiSoundVolume=typeof ui.soundVolume==='number'?Math.max(0,Math.min(1,ui.soundVolume)):DEFAULT_UI_SOUND_VOLUME;state.hideCables=!!ui.hideCables;
-                const sound=document.getElementById('ui-sound-volume');sound.value=Math.round(state.uiSoundVolume*100);document.getElementById('ui-sound-value').textContent=state.uiSoundVolume?`${sound.value}%`:'desligados';uiEffectsGain?.gain.setValueAtTime(interactionGain(state.uiSoundVolume),state.audioCtx.currentTime);
+                appStateStore.actions.setPreference('uiSoundVolume',typeof ui.soundVolume==='number'?Math.max(0,Math.min(1,ui.soundVolume)):DEFAULT_UI_SOUND_VOLUME);appStateStore.actions.setCanvasOption('hideCables',!!ui.hideCables);
+                const sound=document.getElementById('ui-sound-volume');sound.value=Math.round(appState.preferences.uiSoundVolume*100);document.getElementById('ui-sound-value').textContent=appState.preferences.uiSoundVolume?`${sound.value}%`:'desligados';uiEffectsGain?.gain.setValueAtTime(interactionGain(appState.preferences.uiSoundVolume),appState.audio.context.currentTime);
                 const search=document.getElementById('equipment-search');search.value=typeof ui.search==='string'?ui.search:'';search.dispatchEvent(new Event('input'));
                 if(snapshot.view&&snapshot.devices.length){view.zoom=clampZoom(Number(snapshot.view.zoom)||1);view.x=Number(snapshot.view.x)||0;view.y=Number(snapshot.view.y)||0;}
                 else view.y=Math.min(0,canvas.clientHeight-world.offsetHeight*view.zoom);
@@ -185,21 +185,21 @@
                 const scroll=equipmentCatalog.querySelector('.overflow-y-auto');if(scroll)scroll.scrollTop=Number(ui.catalogScroll)||0;inspectorContent.scrollTop=Number(ui.inspectorScroll)||0;
                 updateCables();updateCableFlows();
                 return warnings;
-            }finally{shield.remove();state.restoringProject=false;projectRestoring=false;}
+            }finally{shield.remove();appStateStore.actions.setProjectRestoring(false);projectRestoring=false;}
         }
         const readBlobDataURL=blob=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(blob);});
         document.getElementById('export-project').onclick=async()=>{
             const button=document.getElementById('export-project');button.disabled=true;
             try{
                 await saveLocalProject(true);const snapshot=projectCapture(),embeddedAudio={};
-                for(const dev of Object.values(state.devices)){if(dev.mediaKey&&dev.mediaBlob)embeddedAudio[dev.mediaKey]=await readBlobDataURL(dev.mediaBlob);}
+                for(const dev of Object.values(appState.project.devices)){if(dev.mediaKey&&dev.mediaBlob)embeddedAudio[dev.mediaKey]=await readBlobDataURL(dev.mediaBlob);}
                 const url=URL.createObjectURL(new Blob([JSON.stringify({...snapshot,embeddedAudio})],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='audio-system-projeto.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),10000);projectStatus('Cópia exportada com os arquivos de áudio.');
             }catch(error){projectStatus('Não foi possível exportar: '+error.message,true);}finally{button.disabled=false;}
         };
         document.getElementById('import-project').onclick=()=>document.getElementById('project-file').click();
         document.getElementById('project-file').onchange=async event=>{
             const file=event.target.files[0];if(!file)return;
-            const previous=projectCapture(),previousAudio=new Map(Object.values(state.devices).filter(dev=>dev.mediaKey&&dev.mediaBlob).map(dev=>[dev.mediaKey,dev.mediaBlob]));let replacing=false;
+            const previous=projectCapture(),previousAudio=new Map(Object.values(appState.project.devices).filter(dev=>dev.mediaKey&&dev.mediaBlob).map(dev=>[dev.mediaKey,dev.mediaBlob]));let replacing=false;
             try{
                 if(file.size>400*1024*1024)throw new Error('Arquivo de projeto muito grande.');
                 const snapshot=projectValidate(JSON.parse(await file.text(),(key,value)=>['__proto__','constructor','prototype'].includes(key)?undefined:value));
@@ -227,5 +227,5 @@
                 else projectStatus(projectDatabase?'Salvamento automático local ativado.':'Armazenamento limitado; exporte uma cópia do projeto.',!projectDatabase);
                 lastProjectSignature=JSON.stringify(projectCapture());
             }catch(error){projectPersistenceBlocked=true;projectStatus('Falha ao restaurar o projeto local. Você pode abrir uma cópia exportada.',true);}
-            finally{initialShield.remove();projectRestoring=false;state.restoringProject=false;}
+            finally{initialShield.remove();projectRestoring=false;appStateStore.actions.setProjectRestoring(false);}
         }

@@ -3,42 +3,35 @@
         const DEFAULT_BACKDROP='loftIllustrated';
         const DEFAULT_ROOM_SETTINGS={preset:'small',intensity:5};
         const DEFAULT_UI_SOUND_VOLUME=.5;
-        const state = {
-            isPlaying: false,
-            devices: {},
-            connections: [],
-            selectedDeviceId: null,
-            selectedDeviceIds: new Set(),
-            selectedConnection: null,
-            audioCtx: null,
-            masterGain: null,
-            environment:{...DEFAULT_ROOM_SETTINGS},
-            uiSoundVolume:DEFAULT_UI_SOUND_VOLUME,
-            seqInterval: null,
-            pairingId: null
-        };
+        const appStateStore=AudioSystemApplicationState.createStore({
+            audio:{environment:{...DEFAULT_ROOM_SETTINGS}},
+            preferences:{uiSoundVolume:DEFAULT_UI_SOUND_VOLUME}
+        });
+        const appState=appStateStore.domains;
 
         const APP_PREFERENCES_KEY='audio-system-interface-preferences';
         function readAppPreferences(){try{const value=JSON.parse(localStorage.getItem(APP_PREFERENCES_KEY)||'{}');return value&&typeof value==='object'?value:{};}catch{return {};}}
         const savedAppPreferences=readAppPreferences();
-        let connectionGuidanceEnabled=savedAppPreferences.connectionGuidanceEnabled!==false;
-        let gravityEnabled=savedAppPreferences.gravityEnabled===true;
-        let roomParticleAmount=Number.isFinite(savedAppPreferences.roomParticleAmount)?Math.max(0,Math.min(100,savedAppPreferences.roomParticleAmount/(savedAppPreferences.particleScaleVersion===2?1:2))):25;
+        appStateStore.actions.setPreference('connectionGuidanceEnabled',savedAppPreferences.connectionGuidanceEnabled!==false);
+        appStateStore.actions.setPreference('gravityEnabled',savedAppPreferences.gravityEnabled===true);
+        appStateStore.actions.setPreference('roomParticleAmount',Number.isFinite(savedAppPreferences.roomParticleAmount)?Math.max(0,Math.min(100,savedAppPreferences.roomParticleAmount/(savedAppPreferences.particleScaleVersion===2?1:2))):25);
         if(Number.isFinite(savedAppPreferences.roomParticleAmount)&&savedAppPreferences.particleScaleVersion!==2){
-            try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({...savedAppPreferences,roomParticleAmount,particleScaleVersion:2}));}catch{}
+            try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({...savedAppPreferences,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2}));}catch{}
         }
-        let developerModeEnabled=savedAppPreferences.developerMode===true;
-        let headphonePromptSeen=savedAppPreferences.headphonePromptSeen===true;
-        state.listeningOutputLevel=Number.isFinite(savedAppPreferences.listeningOutputLevel)?Math.max(.5,Math.min(1.2,savedAppPreferences.listeningOutputLevel)):1;
-        state.listeningBass=Number.isFinite(savedAppPreferences.listeningBass)?Math.max(-6,Math.min(6,savedAppPreferences.listeningBass)):0;
-        state.listeningTreble=Number.isFinite(savedAppPreferences.listeningTreble)?Math.max(-6,Math.min(6,savedAppPreferences.listeningTreble)):0;
+        appStateStore.actions.setPreference('developerModeEnabled',savedAppPreferences.developerMode===true);
+        appStateStore.actions.setPreference('headphonePromptSeen',savedAppPreferences.headphonePromptSeen===true);
+        appStateStore.actions.setListeningPreferences({
+            outputLevel:Number.isFinite(savedAppPreferences.listeningOutputLevel)?Math.max(.5,Math.min(1.2,savedAppPreferences.listeningOutputLevel)):1,
+            bass:Number.isFinite(savedAppPreferences.listeningBass)?Math.max(-6,Math.min(6,savedAppPreferences.listeningBass)):0,
+            treble:Number.isFinite(savedAppPreferences.listeningTreble)?Math.max(-6,Math.min(6,savedAppPreferences.listeningTreble)):0
+        });
         let appPreferencesSaveTimer=0;
         function scheduleAppPreferencesSave(){
             clearTimeout(appPreferencesSaveTimer);
             appPreferencesSaveTimer=setTimeout(()=>{
                 if(!canvas.clientWidth||!canvas.clientHeight)return;
                 const focusX=(canvas.clientWidth/2-view.x)/view.zoom,focusY=(canvas.clientHeight/2-view.y)/view.zoom;
-                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,backdrop:state.canvasBackdrop,time:state.canvasTime,connectionGuidanceEnabled,gravityEnabled,roomParticleAmount,particleScaleVersion:2,developerMode:developerModeEnabled,headphonePromptSeen,catalogPinned:sidebarPinned.catalog,inspectorPinned:sidebarPinned.properties,listeningOutputLevel:state.listeningOutputLevel,listeningBass:state.listeningBass,listeningTreble:state.listeningTreble,zoom:view.zoom,focusX,focusY}));}catch{}
+                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:appState.canvas.theme,grid:appState.canvas.grid,backdrop:appState.canvas.backdrop,time:appState.canvas.time,connectionGuidanceEnabled:appState.preferences.connectionGuidanceEnabled,gravityEnabled:appState.preferences.gravityEnabled,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2,developerMode:appState.preferences.developerModeEnabled,headphonePromptSeen:appState.preferences.headphonePromptSeen,catalogPinned:sidebarPinned.catalog,inspectorPinned:sidebarPinned.properties,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble,zoom:view.zoom,focusX,focusY}));}catch{}
             },450);
         }
         const appDialog=document.getElementById('app-confirm-dialog');
@@ -86,13 +79,13 @@
             headphoneCalibrationTimers.splice(0).forEach(clearTimeout);
             clearTimeout(headphoneCalibrationPreviewTimer);headphoneCalibrationPreviewTimer=0;
             headphoneCalibrationLooping=false;setHeadphoneCalibrationPlayLabel(false);
-            if(!state.audioCtx)return;
-            const now=state.audioCtx.currentTime;
+            if(!appState.audio.context)return;
+            const now=appState.audio.context.currentTime;
             headphoneCalibrationVoices.splice(0).forEach(voice=>{try{voice.stop(now+.02);}catch{}});
         }
         function renderHeadphoneCalibration(){
             const step=headphoneCalibrationSteps[headphoneCalibrationStep],done=headphoneCalibrationStep===headphoneCalibrationSteps.length;
-            if(headphoneCalibrationStep<2&&step&&!headphoneCalibrationBases[headphoneCalibrationStep])headphoneCalibrationBases[headphoneCalibrationStep]={program:state.listeningOutputLevel};
+            if(headphoneCalibrationStep<2&&step&&!headphoneCalibrationBases[headphoneCalibrationStep])headphoneCalibrationBases[headphoneCalibrationStep]={program:appState.preferences.listening.outputLevel};
             document.getElementById('headphone-calibration-progress').textContent=step?`${headphoneCalibrationStep+1}/${headphoneCalibrationSteps.length}`:'';
             document.getElementById('headphone-calibration-icon').innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${headphoneCalibrationIcons[done?7:headphoneCalibrationStep<0?0:[1,2,3,5,6,4][headphoneCalibrationStep]]}</svg>`;
             document.getElementById('headphone-calibration-title').textContent=step?.title|| (done?'Pronto para ouvir':'Ajuste a escuta');
@@ -104,9 +97,9 @@
             document.getElementById('headphone-calibration-ui-volume').hidden=headphoneCalibrationStep!==5;
             const toneControl=document.getElementById('headphone-calibration-tone'),toneKind=headphoneCalibrationStep===3?'bass':headphoneCalibrationStep===4?'treble':null;
             toneControl.hidden=!toneKind;
-            if(toneKind){const value=state[toneKind==='bass'?'listeningBass':'listeningTreble'];document.getElementById('headphone-calibration-tone-label').textContent=toneKind==='bass'?'Graves':'Agudos';document.getElementById('headphone-calibration-tone-value').textContent=`${value>0?'+':''}${value} dB`;document.getElementById('headphone-calibration-tone-slider').value=value;document.getElementById('headphone-calibration-tone-slider').setAttribute('aria-label',toneKind==='bass'?'Graves da escuta':'Agudos da escuta');}
-            document.getElementById('headphone-calibration-ui-slider').value=Math.round(state.uiSoundVolume*100);
-            document.getElementById('headphone-calibration-ui-value').textContent=state.uiSoundVolume?`${Math.round(state.uiSoundVolume*100)}%`:'desligados';
+            if(toneKind){const value=appState.preferences.listening[toneKind];document.getElementById('headphone-calibration-tone-label').textContent=toneKind==='bass'?'Graves':'Agudos';document.getElementById('headphone-calibration-tone-value').textContent=`${value>0?'+':''}${value} dB`;document.getElementById('headphone-calibration-tone-slider').value=value;document.getElementById('headphone-calibration-tone-slider').setAttribute('aria-label',toneKind==='bass'?'Graves da escuta':'Agudos da escuta');}
+            document.getElementById('headphone-calibration-ui-slider').value=Math.round(appState.preferences.uiSoundVolume*100);
+            document.getElementById('headphone-calibration-ui-value').textContent=appState.preferences.uiSoundVolume?`${Math.round(appState.preferences.uiSoundVolume*100)}%`:'desligados';
             document.getElementById('headphone-calibration-back').hidden=headphoneCalibrationStep<0;
             document.getElementById('headphone-calibration-skip').hidden=done;
             const next=document.getElementById('headphone-calibration-next'),nextLabel=done?'Concluir':step?'Próxima etapa':'Iniciar ajuste';
@@ -144,12 +137,12 @@
             if(step<0||step>=headphoneCalibrationSteps.length)return;
             if([0,1,3,4].includes(step)&&headphoneCalibrationLooping&&!loopReplay){stopHeadphoneCalibrationSound();status.textContent='Reprodução parada.';return;}
             try{
-                initAudio();const context=state.audioCtx;
+                initAudio();const context=appState.audio.context;
                 if(context.state!=='running')await context.resume();
                 if(!headphoneCalibrationDialog.open||step!==headphoneCalibrationStep||context.state!=='running')return;
                 stopHeadphoneCalibrationSound();
                 if(step===5){
-                    if(!state.uiSoundVolume){status.textContent='Sons de interação desligados. Aumente o controle para ouvi-los.';return;}
+                    if(!appState.preferences.uiSoundVolume){status.textContent='Sons de interação desligados. Aumente o controle para ouvi-los.';return;}
                     playUiSound('receiverClick');
                     headphoneCalibrationTimers.push(setTimeout(()=>{if(headphoneCalibrationDialog.open&&headphoneCalibrationStep===5)playUiSound('connect');},400));
                     status.textContent='Tocando um clique e uma conexão da interface.';return;
@@ -159,7 +152,7 @@
                     const oscillator=context.createOscillator(),envelope=context.createGain(),stereo=context.createStereoPanner(),at=start+delay,duration=.55;
                     oscillator.type='sine';oscillator.frequency.value=frequency;stereo.pan.value=pan;
                     envelope.gain.setValueAtTime(0,at);envelope.gain.linearRampToValueAtTime(level,at+.06);envelope.gain.setValueAtTime(level,at+duration-.12);envelope.gain.linearRampToValueAtTime(0,at+duration);
-                    oscillator.connect(envelope);envelope.connect(stereo);stereo.connect(state.masterGain);
+                    oscillator.connect(envelope);envelope.connect(stereo);stereo.connect(appState.audio.masterGain);
                     oscillator.onended=()=>{oscillator.disconnect();envelope.disconnect();stereo.disconnect();headphoneCalibrationVoices=headphoneCalibrationVoices.filter(voice=>voice!==oscillator);};
                     headphoneCalibrationVoices.push(oscillator);oscillator.start(at);oscillator.stop(at+duration+.01);
                 };
@@ -190,11 +183,11 @@
         });
         document.getElementById('headphone-calibration-ui-slider').addEventListener('input',event=>{
             setInteractionVolume(Number(event.target.value));
-            if(!headphoneCalibrationDialog.open||headphoneCalibrationStep!==5||!state.uiSoundVolume||headphoneCalibrationPreviewTimer)return;
+            if(!headphoneCalibrationDialog.open||headphoneCalibrationStep!==5||!appState.preferences.uiSoundVolume||headphoneCalibrationPreviewTimer)return;
             const delay=Math.max(30,120-(performance.now()-lastHeadphoneCalibrationPreview));
             headphoneCalibrationPreviewTimer=setTimeout(()=>{
                 headphoneCalibrationPreviewTimer=0;lastHeadphoneCalibrationPreview=performance.now();
-                if(headphoneCalibrationDialog.open&&headphoneCalibrationStep===5&&state.uiSoundVolume)playUiSound('receiverClick');
+                if(headphoneCalibrationDialog.open&&headphoneCalibrationStep===5&&appState.preferences.uiSoundVolume)playUiSound('receiverClick');
             },delay);
         });
         document.querySelectorAll('[data-calibration-answer]').forEach(button=>button.addEventListener('click',()=>{
@@ -206,9 +199,9 @@
             if(step===0){
                 if(answer!=='okay')setListeningOutputLevel(base.program+(answer==='low'?.1:-.15));
                 else stopHeadphoneCalibrationSound();
-                status.textContent=answer==='okay'?'Nível escolhido mantido.':state.listeningOutputLevel===base.program?'Limite de ajuste atingido; priorize o volume físico confortável.':answer==='low'?'Saída do programa levemente ampliada.':'Saída do programa suavizada.';
+                status.textContent=answer==='okay'?'Nível escolhido mantido.':appState.preferences.listening.outputLevel===base.program?'Limite de ajuste atingido; priorize o volume físico confortável.':answer==='low'?'Saída do programa levemente ampliada.':'Saída do programa suavizada.';
             }
-            if(step===1){setListeningOutputLevel(base.program+(answer==='low'?.1:answer==='high'?-.1:0));status.textContent=answer==='okay'?'Nível de escuta mantido.':state.listeningOutputLevel===base.program?'Limite de ajuste atingido; priorize o conforto.':answer==='low'?'Detalhes ampliados; confira se o som forte continua confortável.':'Nível de escuta suavizado.';playHeadphoneCalibrationSound(headphoneCalibrationLooping,!headphoneCalibrationLooping);}
+            if(step===1){setListeningOutputLevel(base.program+(answer==='low'?.1:answer==='high'?-.1:0));status.textContent=answer==='okay'?'Nível de escuta mantido.':appState.preferences.listening.outputLevel===base.program?'Limite de ajuste atingido; priorize o conforto.':answer==='low'?'Detalhes ampliados; confira se o som forte continua confortável.':'Nível de escuta suavizado.';playHeadphoneCalibrationSound(headphoneCalibrationLooping,!headphoneCalibrationLooping);}
         }));
         document.getElementById('headphone-calibration-next').addEventListener('click',()=>{
             if(headphoneCalibrationTransitioning)return;
@@ -219,13 +212,13 @@
         document.getElementById('headphone-calibration-back').addEventListener('click',()=>{
             if(headphoneCalibrationTransitioning)return;
             stopHeadphoneCalibrationSound();
-            if(headphoneCalibrationStep===1){setListeningOutputLevel(headphoneCalibrationBases[1]?.program??state.listeningOutputLevel);delete headphoneCalibrationAnswers[1];delete headphoneCalibrationBases[1];}
-            if(headphoneCalibrationStep===0){setListeningOutputLevel(headphoneCalibrationBases[0]?.program??state.listeningOutputLevel);delete headphoneCalibrationAnswers[0];delete headphoneCalibrationBases[0];}
+            if(headphoneCalibrationStep===1){setListeningOutputLevel(headphoneCalibrationBases[1]?.program??appState.preferences.listening.outputLevel);delete headphoneCalibrationAnswers[1];delete headphoneCalibrationBases[1];}
+            if(headphoneCalibrationStep===0){setListeningOutputLevel(headphoneCalibrationBases[0]?.program??appState.preferences.listening.outputLevel);delete headphoneCalibrationAnswers[0];delete headphoneCalibrationBases[0];}
             transitionHeadphoneCalibration(-1,()=>{headphoneCalibrationStep=Math.max(-1,headphoneCalibrationStep-1);renderHeadphoneCalibration();});
         });
         function persistHeadphoneCalibration(){
-            headphonePromptSeen=true;
-            try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({...readAppPreferences(),headphonePromptSeen:true,listeningOutputLevel:state.listeningOutputLevel,listeningBass:state.listeningBass,listeningTreble:state.listeningTreble}));}catch{}
+            appStateStore.actions.setPreference('headphonePromptSeen',true);
+            try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({...readAppPreferences(),headphonePromptSeen:true,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble}));}catch{}
             scheduleAppPreferencesSave();
         }
         document.getElementById('headphone-calibration-skip').addEventListener('click',()=>{persistHeadphoneCalibration();headphoneCalibrationDialog.close();});

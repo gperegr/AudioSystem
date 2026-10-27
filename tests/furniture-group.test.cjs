@@ -4,13 +4,13 @@ const {readFileSync}=require('node:fs');
 const vm=require('node:vm');
 const source=readFileSync(require('node:path').join(__dirname,'../script.js'),'utf8');
 function scene(){
-    const state={devices:{}},context={Hardware:{sizes:{widths:{full:760}}},state,view:{zoom:.4},snapCoordinate:n=>Math.round(n/20)*20};vm.createContext(context);
+    const appState={project:{devices:{}}},context={Hardware:{sizes:{widths:{full:760}}},appState,view:{zoom:.4},snapCoordinate:n=>Math.round(n/20)*20};vm.createContext(context);
     const config=source.slice(source.indexOf('        const FURNITURE_TYPES ='),source.indexOf('        const FURNITURE_MATERIALS ='));
     assert.ok(config.length>0,'Furniture configuration must be included');
     const snap=source.slice(source.indexOf('        function snapOnEquipment('),source.indexOf('        function placementShapes('));
     const group=source.slice(source.indexOf('        function expandFurnitureGroup('),source.indexOf('        const ROOM_PRESETS='));
     vm.runInContext(config+'\nconst STACK_FEET={height:20};\n'+snap+'\n'+group,context);
-    function add(id,type,x,y,w,h,chassis=false){return state.devices[id]={id,type,el:{style:{left:String(x),top:String(y)},offsetWidth:w,offsetHeight:h,dataset:chassis?{chassis:'medium'}:{}}};}
+    function add(id,type,x,y,w,h,chassis=false){return appState.project.devices[id]={id,type,el:{style:{left:String(x),top:String(y)},offsetWidth:w,offsetHeight:h,dataset:chassis?{chassis:'medium'}:{}}};}
     return {context,add,group:devices=>new Set(context.expandFurnitureGroup(devices).map(d=>d.id))};
 }
 test('shelf and tabletop gaps are never magnetically changed at different zooms',()=>{

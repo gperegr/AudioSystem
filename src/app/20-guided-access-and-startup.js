@@ -3,14 +3,14 @@
         const tutorialFileSources=new Set(['cdPlayer','tapeDeck','streamer']);
         function tutorialDevice(topic){
             const matches=dev=>topic==='spotify'?TURNTABLE_TYPES.has(dev.type)&&!!dev.spotifyVinyl:topic==='capture'?CAPTURE_INTERFACE_TYPES.has(dev.type):tutorialFileSources.has(dev.type);
-            const selected=state.devices[state.selectedDeviceId];
-            let dev=state.devices[tutorialBindings[topic]];
+            const selected=appState.project.devices[appState.interface.selectedDeviceId];
+            let dev=appState.project.devices[tutorialBindings[topic]];
             if(selected&&matches(selected)){dev=selected;tutorialBindings[topic]=dev.id;}
-            if(!dev||!matches(dev)){dev=Object.values(state.devices).find(matches);tutorialBindings[topic]=dev?.id;}
+            if(!dev||!matches(dev)){dev=Object.values(appState.project.devices).find(matches);tutorialBindings[topic]=dev?.id;}
             return dev;
         }
-        function tutorialCollection(){return Object.values(state.devices).find(dev=>dev.type==='furnitureCoverflow');}
-        function tutorialEdges(dev){return state.connections.filter(c=>!c.miswired&&c.outDeviceId===dev?.id).filter(c=>{const out=document.getElementById(c.outId),input=document.getElementById(c.inId);return out&&input&&(!out.dataset.channel||!input.dataset.channel||out.dataset.channel===input.dataset.channel)&&getPortCompatibility(out,input).compatible;});}
+        function tutorialCollection(){return Object.values(appState.project.devices).find(dev=>dev.type==='furnitureCoverflow');}
+        function tutorialEdges(dev){return appState.project.connections.filter(c=>!c.miswired&&c.outDeviceId===dev?.id).filter(c=>{const out=document.getElementById(c.outId),input=document.getElementById(c.inId);return out&&input&&(!out.dataset.channel||!input.dataset.channel||out.dataset.channel===input.dataset.channel)&&getPortCompatibility(out,input).compatible;});}
         function tutorialStereoTo(dev,target){
             const edges=tutorialEdges(dev).filter(c=>c.inDeviceId===target.id);
             if(edges.some(c=>/Phone|Stereo/.test(document.getElementById(c.outId)?.dataset.node||'')))return true;
@@ -18,12 +18,12 @@
             if(outs.some(port=>port.dataset.node==='outL')&&outs.some(port=>port.dataset.node==='outR'))return ['L','R'].every(ch=>edges.some(c=>document.getElementById(c.outId)?.dataset.node==='out'+ch));
             return edges.length>0;
         }
-        function tutorialAmplifier(dev){return Object.values(state.devices).find(other=>(POWER_OUTPUT_TYPES.has(other.type)||['headphoneAmp','headphoneAmpModern','headphoneAmp4'].includes(other.type))&&tutorialStereoTo(dev,other));}
+        function tutorialAmplifier(dev){return Object.values(appState.project.devices).find(other=>(POWER_OUTPUT_TYPES.has(other.type)||['headphoneAmp','headphoneAmpModern','headphoneAmp4'].includes(other.type))&&tutorialStereoTo(dev,other));}
         function tutorialListeningPath(source){
             const seen=new Set();
             function visit(dev,input){
                 if(!dev||seen.has(dev.id))return false;if(isListeningDevice(dev))return true;seen.add(dev.id);
-                const found=tutorialEdges(dev).some(c=>{const output=document.getElementById(c.outId);if(input&&!routedInputPorts(dev,output).includes(input))return false;const next=state.devices[c.inDeviceId];if(dev===source&&!/Phone|Stereo/.test(output.dataset.node)&&next&&!tutorialStereoTo(dev,next))return false;return visit(next,document.getElementById(c.inId));});seen.delete(dev.id);return found;
+                const found=tutorialEdges(dev).some(c=>{const output=document.getElementById(c.outId);if(input&&!routedInputPorts(dev,output).includes(input))return false;const next=appState.project.devices[c.inDeviceId];if(dev===source&&!/Phone|Stereo/.test(output.dataset.node)&&next&&!tutorialStereoTo(dev,next))return false;return visit(next,document.getElementById(c.inId));});seen.delete(dev.id);return found;
             }
             return visit(source,null);
         }
@@ -43,7 +43,7 @@
             };
             if(topic==='basic'){
                 if(step==='source')done=!!dev;
-                if(step==='properties'){done=!!dev&&state.selectedDeviceId===dev.id&&inspectorOpen;target=document.getElementById('inspector-title');}
+                if(step==='properties'){done=!!dev&&appState.interface.selectedDeviceId===dev.id&&inspectorOpen;target=document.getElementById('inspector-title');}
                 if(step==='amplifier')done=!!dev&&!!tutorialAmplifier(dev);
                 if(step==='output')done=!!dev&&!!tutorialAmplifier(dev)&&tutorialListeningPath(dev);
                 if(step==='ready')done=!!dev&&!!tutorialAmplifier(dev)&&ready();
@@ -80,7 +80,7 @@
             const mobilePanel=key=>{if(compactLayout.matches){closeMobilePanels();document.body.classList.add(key==='catalog'?'mobile-catalog-open':'mobile-properties-open');syncMobilePanels();}else openSidebar(key,15000);};
             let requestedType=null;
             if(topic==='basic'&&step==='amplifier'&&dev&&!tutorialAmplifier(dev)){
-                const amp=Object.values(state.devices).find(item=>['headphoneAmp','headphoneAmpModern','headphoneAmp4'].includes(item.type)||POWER_OUTPUT_TYPES.has(item.type));
+                const amp=Object.values(appState.project.devices).find(item=>['headphoneAmp','headphoneAmpModern','headphoneAmp4'].includes(item.type)||POWER_OUTPUT_TYPES.has(item.type));
                 if(amp)dev=amp;else requestedType='headphoneAmp';
             }
             if(topic==='basic'&&step==='output'&&dev&&!tutorialListeningPath(tutorialDevice(topic)))requestedType='headphone';
@@ -111,9 +111,9 @@
         }
         function clearExampleHistory(){movementUndo.length=movementRedo.length=0;updateMovementHistoryButtons();}
         function buildExample(spec){
-            [...spotifyVinyls.values()].forEach(removeSpotifyVinyl);[...spotifyAlbums.values()].forEach(removeSpotifyAlbum);Object.values(state.devices).forEach(deleteDevice);selectDevice(null);
-            state.hideCables=false;cableVisibilityButton.setAttribute('aria-pressed','false');state.restoringProject=true;
-            const add=type=>{const ids=new Set(Object.keys(state.devices));createDevice(type,sceneSideInset(),0);const dev=Object.values(state.devices).find(item=>!ids.has(item.id));if(!dev)throw new Error('Não foi possível criar '+(DEVICE_NAMES[type]||type));return dev;};
+            [...spotifyVinyls.values()].forEach(removeSpotifyVinyl);[...spotifyAlbums.values()].forEach(removeSpotifyAlbum);Object.values(appState.project.devices).forEach(deleteDevice);selectDevice(null);
+            appStateStore.actions.setCanvasOption('hideCables',false);cableVisibilityButton.setAttribute('aria-pressed','false');appStateStore.actions.setProjectRestoring(true);
+            const add=type=>{const ids=new Set(Object.keys(appState.project.devices));createDevice(type,sceneSideInset(),0);const dev=Object.values(appState.project.devices).find(item=>!ids.has(item.id));if(!dev)throw new Error('Não foi possível criar '+(DEVICE_NAMES[type]||type));return dev;};
             const support=add(spec.furniture),gear=spec.types.map(add),supports=[support],floor=maxEquipmentBottom();
             const place=(dev,x,y)=>{dev.el.style.left=x+'px';dev.el.style.top=y+'px';};
             const leftFloor=spec.floor?.includes(2)?gear[2].el.offsetWidth+64:0;
@@ -152,7 +152,7 @@
             returnFocus:()=>{(phoneNavigationLayout.matches?mobileControls.querySelector('[data-mobile-action="settings"]'):settingsMenu.querySelector('summary'))?.focus({preventScroll:true});},
             enter:(topic,step)=>{const dev=tutorialDevice(topic);return {device:dev?.id,levels:tutorialLevels(dev)};},
             inspect:tutorialInspect,locate:tutorialLocate,clearContext:()=>{document.querySelectorAll('.tutorial-target').forEach(node=>node.classList.remove('tutorial-target'));},
-            hasContent:()=>Object.keys(state.devices).length>0||spotifyVinyls.size>0||spotifyAlbums.size>0,
+            hasContent:()=>Object.keys(appState.project.devices).length>0||spotifyVinyls.size>0||spotifyAlbums.size>0,
             examples:{
                 checkpoint:async()=>{
                     if(!projectDatabase||projectPersistenceBlocked)throw new Error('O armazenamento local não está disponível. Exporte seu projeto e habilite o armazenamento antes de substituir a montagem.');
@@ -161,15 +161,15 @@
                     try{
                         while(projectSaving)await new Promise(resolve=>setTimeout(resolve,20));
                         if(await saveLocalProject(true,true)!==true)throw new Error('Não foi possível guardar a montagem atual.');
-                        return {snapshot:projectCapture(),audio:new Map(Object.values(state.devices).filter(dev=>dev.mediaKey&&dev.mediaBlob).map(dev=>[dev.mediaKey,dev.mediaBlob]))};
+                        return {snapshot:projectCapture(),audio:new Map(Object.values(appState.project.devices).filter(dev=>dev.mediaKey&&dev.mediaBlob).map(dev=>[dev.mediaKey,dev.mediaBlob]))};
                     }catch(error){exampleLoading=false;throw error;}
                 },
-                begin:()=>{stopViewMotion();cancelCableDrag();projectRestoring=true;state.restoringProject=true;},
+                begin:()=>{stopViewMotion();cancelCableDrag();projectRestoring=true;appStateStore.actions.setProjectRestoring(true);},
                 build:spec=>{exampleAssembly=buildExample(spec);},
-                validate:spec=>{if(state.connections.length!==spec.links.length||exampleAssembly.gear.some(dev=>dev.state.playing||dev.micStream))throw new Error('A montagem não foi validada.');},
+                validate:spec=>{if(appState.project.connections.length!==spec.links.length||exampleAssembly.gear.some(dev=>dev.state.playing||dev.micStream))throw new Error('A montagem não foi validada.');},
                 restore:previous=>restoreLocalProject(previous.snapshot,key=>Promise.resolve(previous.audio.get(key))),
                 recoveryFailed:previous=>{projectPersistenceBlocked=true;try{localStorage.setItem('audio-system-project-fallback',JSON.stringify(previous.snapshot));}catch{}},
-                end:()=>{state.restoringProject=false;projectRestoring=false;exampleLoading=false;clearExampleHistory();},
+                end:()=>{appStateStore.actions.setProjectRestoring(false);projectRestoring=false;exampleLoading=false;clearExampleHistory();},
                 commit:async()=>{projectRestoring=false;await saveLocalProject(true,true);document.getElementById('fit-canvas').click();selectDevice(exampleAssembly.gear[0].id,true);}
             }
         });
@@ -181,6 +181,6 @@
         headphoneCalibrationDialog.addEventListener('close',()=>{requestAnimationFrame(guidedAccess.offer);});
 
         SpotifyCoverflow.initialize().catch(()=>{});
-        initializeProjectPersistence().finally(()=>{requestAnimationFrame(()=>{document.documentElement.classList.remove('app-starting');document.getElementById('app-startup')?.remove();if(!headphonePromptSeen)openHeadphoneCalibration();else{guidedAccess.restore();guidedAccess.offer();}});});
+        initializeProjectPersistence().finally(()=>{requestAnimationFrame(()=>{document.documentElement.classList.remove('app-starting');document.getElementById('app-startup')?.remove();if(!appState.preferences.headphonePromptSeen)openHeadphoneCalibration();else{guidedAccess.restore();guidedAccess.offer();}});});
 
         renderVisuals();

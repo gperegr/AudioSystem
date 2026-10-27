@@ -2,6 +2,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const {readFileSync}=require('node:fs');
 const vm=require('node:vm');
+const {createStore}=require('../src/modules/application-state.js');
 const script=readFileSync(require('node:path').join(__dirname,'../script.js'),'utf8');
 const moduleSource=script.slice(script.indexOf('        const isAppleTouchDevice='),script.indexOf('        const uiSoundTimes = {}'));
 const settle=()=>new Promise(resolve=>setImmediate(resolve));
@@ -23,7 +24,8 @@ function harness({apple=false,ipad=false,session=true,sessionThrows=false,reject
     window.AudioContext=AudioContext;
     const navigator={userAgent:apple?'Mozilla/5.0 (iPhone; CPU iPhone OS 16_7 like Mac OS X)':'Desktop',platform:ipad?'MacIntel':apple?'iPhone':'Linux',maxTouchPoints:ipad?5:apple?1:0};
     if(session){let type='auto';navigator.audioSession={get type(){return type;},set type(value){if(sessionThrows)throw Error('Unsupported session');type=value;}};}
-    const sandbox={window,document,navigator,state:{audioCtx:null,devices:{},listeningOutputLevel:1,listeningBass:0,listeningTreble:0},setupRoomAudio(){graphSetups++;},updateCableFlows(){},URL:{createObjectURL(blob){blobs.push(blob);return 'blob:local-silence';}},Blob,Uint8Array,DataView};
+    const appStateStore=createStore();appStateStore.domains.project.devices={};
+    const sandbox={window,document,navigator,appState:appStateStore.domains,appStateStore,setupRoomAudio(){graphSetups++;},updateCableFlows(){},URL:{createObjectURL(blob){blobs.push(blob);return 'blob:local-silence';}},Blob,Uint8Array,DataView};
     vm.createContext(sandbox);vm.runInContext('let audioPrimed=false,audioNeedsGestureRecovery=false,legacyPlaybackAudio=null;\n'+moduleSource,sandbox);
     function dispatch(name,{trusted=true,pointerType='touch',button=0,key='Enter',repeat=false}={}){
         gesture=name;try{handlers.get('doc:'+name).fn({type:name,isTrusted:trusted,pointerType,button,key,repeat});}finally{gesture=null;}

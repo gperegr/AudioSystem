@@ -128,7 +128,7 @@
             let touching=null;
             // All three chassis heights leave the same physical space for their feet.
             if(!best&&dev.el.dataset.chassis){
-                Object.values(state.devices).forEach(lower=>{
+                Object.values(appState.project.devices).forEach(lower=>{
                     if(lower===dev||!lower.el.dataset.chassis)return;
                     const lx=parseFloat(lower.el.style.left)||0,ly=parseFloat(lower.el.style.top)||0;
                     const overlap=Math.min(x+width,lx+lower.el.offsetWidth)-Math.max(x,lx);
@@ -154,7 +154,7 @@
             const inset=sceneSideInset();
             if (x < inset || y < 0 || x + dev.el.offsetWidth > world.offsetWidth-inset || y + dev.el.offsetHeight > maxEquipmentBottom()) return false;
             const shapes = placementShapes(dev,x,y);
-            return !Object.values(state.devices).some(other => {
+            return !Object.values(appState.project.devices).some(other => {
                 if (other.id === dev.id || ignored.has(other.id)) return false;
                 const obstacles = placementShapes(other,parseFloat(other.el.style.left)||0,parseFloat(other.el.style.top)||0);
                 return shapes.some(a => obstacles.some(b => a.x < b.x+b.width-.5 && a.x+a.width > b.x+.5 && a.y < b.y+b.height-.5 && a.y+a.height > b.y+.5));
@@ -175,7 +175,7 @@
         }
 
         function settleEquipmentDrop(targets,ignored,fallback) {
-            const obstacles=Object.values(state.devices).filter(dev=>!ignored.has(dev.id)).flatMap(dev=>placementShapes(dev,parseFloat(dev.el.style.left)||0,parseFloat(dev.el.style.top)||0));
+            const obstacles=Object.values(appState.project.devices).filter(dev=>!ignored.has(dev.id)).flatMap(dev=>placementShapes(dev,parseFloat(dev.el.style.left)||0,parseFloat(dev.el.style.top)||0));
             const shapes=targets.map(p=>({p,parts:placementShapes(p.dev,0,0)}));
             const fits=(dx,dy)=>shapes.every(({p,parts})=>{
                 const x=p.x+dx,y=p.y+dy;
@@ -203,8 +203,8 @@
             return best?targets.map(p=>({...p,x:p.x+best.dx,y:p.y+best.dy})):fallback;
         }
         function gravityDropTargets(targets,ignored){
-            if(!gravityEnabled||targets.some(p=>p.dev.type==='pendantLamp'||WALL_LAMP_TYPES[p.dev.type]))return targets;
-            const obstacles=Object.values(state.devices).filter(dev=>!ignored.has(dev.id)&&dev.type!=='pendantLamp'&&!WALL_LAMP_TYPES[dev.type]).flatMap(dev=>placementShapes(dev,parseFloat(dev.el.style.left)||0,parseFloat(dev.el.style.top)||0).map(shape=>({...shape,dev})));
+            if(!appState.preferences.gravityEnabled||targets.some(p=>p.dev.type==='pendantLamp'||WALL_LAMP_TYPES[p.dev.type]))return targets;
+            const obstacles=Object.values(appState.project.devices).filter(dev=>!ignored.has(dev.id)&&dev.type!=='pendantLamp'&&!WALL_LAMP_TYPES[dev.type]).flatMap(dev=>placementShapes(dev,parseFloat(dev.el.style.left)||0,parseFloat(dev.el.style.top)||0).map(shape=>({...shape,dev})));
             let distance=Math.min(...targets.map(p=>maxEquipmentBottom()-p.y-p.dev.el.offsetHeight));
             for(const p of targets){
                 for(const shape of placementShapes(p.dev,p.x,p.y)){
@@ -222,7 +222,7 @@
             return distance>.5?targets.map(p=>({...p,y:p.y+distance})):targets;
         }
         function settleNewDeviceWithGravity(dev){
-            if(state.restoringProject||!gravityEnabled||dev.type==='pendantLamp'||WALL_LAMP_TYPES[dev.type])return;
+            if(appState.project.restoringProject||!appState.preferences.gravityEnabled||dev.type==='pendantLamp'||WALL_LAMP_TYPES[dev.type])return;
             const startY=parseFloat(dev.el.style.top)||0;
             const target=gravityDropTargets([{dev,x:parseFloat(dev.el.style.left)||0,y:startY}],new Set([dev.id]))[0];
             if(target.y-startY<1)return;
@@ -230,7 +230,7 @@
             const started=performance.now(),duration=Math.min(1150,540+(target.y-startY)*.24);
             let frame=0;
             const step=now=>{
-                if(!state.devices[dev.id])return;
+                if(!appState.project.devices[dev.id])return;
                 const progress=Math.min(1,(now-started)/duration),ease=progress*progress;
                 dev.el.style.top=(startY+(target.y-startY)*ease)+'px';updateCables(new Set([dev.id]));
                 if(progress<1)frame=requestAnimationFrame(step);
@@ -253,7 +253,7 @@
             }
             // Above furniture backs (1–2), always below equipment chassis (10+).
             layer.style.zIndex = '3';
-            const boxes = Object.values(state.devices).map(dev => ({
+            const boxes = Object.values(appState.project.devices).map(dev => ({
                 dev, x:dev.dragVisualPosition?.x??(parseFloat(dev.el.style.left)||0), y:dev.dragVisualPosition?.y??(parseFloat(dev.el.style.top)||0),
                 width:dev.el.offsetWidth, height:dev.el.offsetHeight
             }));
@@ -309,7 +309,7 @@
                 });
             });
             [...layer.querySelectorAll('.auto-stack-foot')].forEach(foot=>{
-                const owner=state.devices[foot.dataset.footOwner];
+                const owner=appState.project.devices[foot.dataset.footOwner];
                 if(!owner){foot.remove();return;}
                 // Retracting feet keep following their owner, even while it is dragged away.
                 foot.style.left=((owner.dragVisualPosition?.x??(parseFloat(owner.el.style.left)||0))+Number(foot.dataset.offsetX))+'px';
@@ -321,7 +321,7 @@
                 const retract=foot.animate([{transform:'scaleY(1)'},{transform:'scaleY(.92)',offset:.25},{transform:'scaleY(0)'}],{duration:170,easing:'ease-in',fill:'forwards'});
                 retract.onfinish=()=>{if(foot.dataset.retracting==='true')foot.remove();};
             });
-            if([...deployedFootSupports.keys()].some(id=>state.devices[id]&&!nextSupports.has(id)))playUiSound('feetRetract');
+            if([...deployedFootSupports.keys()].some(id=>appState.project.devices[id]&&!nextSupports.has(id)))playUiSound('feetRetract');
             deployedFootSupports=nextSupports;
         }
 
@@ -411,7 +411,7 @@
 
         function createEqFilters(freqs) {
             return freqs.map((freq, i) => {
-                const filter = state.audioCtx.createBiquadFilter();
+                const filter = appState.audio.context.createBiquadFilter();
                 if (i === 0) filter.type = 'lowshelf';
                 else if (i === freqs.length - 1) filter.type = 'highshelf';
                 else {
@@ -453,7 +453,7 @@
             const knob = dev.el.querySelector(`[data-channel-knob="${channel + 1}"]`);
             if (knob) knob.setAttribute('aria-valuenow', String(Math.round(clamped * 100)));
             updateKnobAngle(dev, `.amp4-channel:nth-child(${channel + 1}) .amp4-knob`, clamped, 0, 1);
-            if (state.selectedDeviceId === dev.id) {
+            if (appState.interface.selectedDeviceId === dev.id) {
                 const inspectorSlider = document.getElementById(`sl-amp4-${channel + 1}`);
                 const inspectorLabel = document.getElementById(`lbl-amp4-${channel + 1}`);
                 if (inspectorSlider) inspectorSlider.value = clamped;

@@ -31,7 +31,7 @@
             if(title.textContent!==name){title.textContent=name;title.parentElement.title=name;}
             const distance=Math.max(0,title.scrollWidth-title.parentElement.clientWidth);
             title.style.setProperty('--cd-scroll-distance',`${-distance}px`);title.classList.toggle('is-scrolling',distance>2&&dev.powered);
-            const seconds=dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?state.audioCtx.currentTime-dev.demoStartedAt:0);
+            const seconds=dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?appState.audio.context.currentTime-dev.demoStartedAt:0);
             const time=formatAudioTime(seconds).padStart(5,'0');
             dev.el.querySelector('[data-cd-time]').textContent=time;
             dev.el.querySelector('[data-cd-duration]').textContent=dev.audioBuffer?'/ '+formatAudioTime(dev.audioBuffer.duration).padStart(5,'0'):'DEMO';
@@ -49,17 +49,17 @@
         }
         function startFilePlayback(dev) {
             if (!dev.audioBuffer || !dev.state.playing || !dev.powered) return;
-            const source = state.audioCtx.createBufferSource();
+            const source = appState.audio.context.createBufferSource();
             source.buffer = dev.audioBuffer;
             source.loop = !!dev.state.repeat;
             const rate = dev.ttRate ? dev.ttRate() : 1;
             source.playbackRate.value = rate;
-            const splitter = state.audioCtx.createChannelSplitter(2);
+            const splitter = appState.audio.context.createChannelSplitter(2);
             source.connect(splitter);
             splitter.connect(dev.nodes.genL, 0);
             splitter.connect(dev.nodes.genR, dev.audioBuffer.numberOfChannels > 1 ? 1 : 0);
             if ((dev.fileOffset || 0) >= dev.audioBuffer.duration) dev.fileOffset = 0;
-            dev.filePlayback = {source,splitter,startedAt:state.audioCtx.currentTime,rate};
+            dev.filePlayback = {source,splitter,startedAt:appState.audio.context.currentTime,rate};
             source.onended = () => {
                 if (dev.filePlayback?.source !== source) return;
                 source.disconnect(); splitter.disconnect(); dev.filePlayback = null; dev.fileOffset = 0;
@@ -71,13 +71,13 @@
             const token = dev.fileLoadToken = (dev.fileLoadToken || 0) + 1;
             await setSourcePlaying(dev, false);
             dev.fileMessage = 'Carregando áudio…';
-            if (state.selectedDeviceId === dev.id) selectDevice(dev.id, true);
+            if (appState.interface.selectedDeviceId === dev.id) selectDevice(dev.id, true);
             try {
                 const bytes = await file.arrayBuffer();
                 const streamMetadata=dev.type==='streamIntegrated'?readStreamMetadata(bytes):null;
                 const trackTitle = readAudioTrackTitle(bytes) || file.name.replace(/\.[^.]+$/, '');
-                const buffer = await state.audioCtx.decodeAudioData(bytes);
-                if (!state.devices[dev.id] || dev.fileLoadToken !== token) return;
+                const buffer = await appState.audio.context.decodeAudioData(bytes);
+                if (!appState.project.devices[dev.id] || dev.fileLoadToken !== token) return;
                 dev.audioBuffer = buffer; dev.fileOffset = 0;
                 dev.mediaBlob=file;dev.mediaKey='audio_'+Date.now()+'_'+Math.random().toString(36).slice(2);scheduleProjectSave();
                 dev.fileName = file.name; dev.trackTitle=trackTitle; dev.demoOffset=0; dev.fileMessage = '';
@@ -87,7 +87,7 @@
                 if (dev.fileLoadToken !== token) return;
                 dev.fileMessage = 'Não foi possível ler este áudio. Tente um arquivo MP3 ou WAV.';
             }
-            if (state.selectedDeviceId === dev.id && state.devices[dev.id]) selectDevice(dev.id, true);
+            if (appState.interface.selectedDeviceId === dev.id && appState.project.devices[dev.id]) selectDevice(dev.id, true);
         }
 
         const VINYL_NOISE_LEVELS={none:{label:'Sem ruído',gain:0},low:{label:'Ruído baixo',gain:.016},medium:{label:'Ruído médio',gain:.035},high:{label:'Ruído alto',gain:.07}};
@@ -111,7 +111,7 @@
             const voice=dev.vinylNoise;dev.vinylNoise=null;
             if(!voice)return;
             clearTimeout(voice.crackleTimer);
-            const time=state.audioCtx.currentTime;
+            const time=appState.audio.context.currentTime;
             voice.gain.gain.cancelAndHoldAtTime(time);voice.gain.gain.linearRampToValueAtTime(0,time+.012);
             voice.source.stop(time+.015);
         }
@@ -119,7 +119,7 @@
             if(!TURNTABLE_TYPES.has(dev.type))return;
             if(!dev.state.playing||!dev.powered){stopVinylNoise(dev);return;}
             if(dev.vinylNoise)return;
-            const context=state.audioCtx;
+            const context=appState.audio.context;
             if(!vinylNoiseBuffer){
                 const size=Math.ceil(context.sampleRate*11);
                 vinylNoiseBuffer=context.createBuffer(2,size,context.sampleRate);
@@ -173,17 +173,17 @@
             if(dev.state.damage&&playing)return;
             if(playing&&dev.type==='cdPlayer')dev.setTrayOpen?.(false);
             if (!SOURCE_TYPES.has(dev.type)) return;
-            if (playing && state.audioCtx.state !== 'running') {
+            if (playing && appState.audio.context.state !== 'running') {
                 try {
-                    await state.audioCtx.resume();
-                    if (state.audioCtx.state !== 'running') throw new Error('Áudio bloqueado pelo navegador.');
+                    await appState.audio.context.resume();
+                    if (appState.audio.context.state !== 'running') throw new Error('Áudio bloqueado pelo navegador.');
                 } catch (error) {
                     dev.state.playing = false;
                     if (dev.state.tt) dev.state.tt.running = false;
                     dev.refreshTurntable?.();
                     updateCableFlows();
                     dev.fileMessage = 'O navegador não ativou a saída de áudio. Clique em Reproduzir novamente; confira se a aba está silenciada.';
-                    const status = state.selectedDeviceId === dev.id ? document.getElementById('source-file-message') : null;
+                    const status = appState.interface.selectedDeviceId === dev.id ? document.getElementById('source-file-message') : null;
                     if (status) {
                         status.textContent = 'O navegador não ativou a saída de áudio. Clique em Reproduzir novamente; confira se a aba está silenciada.';
                         status.classList.add('text-red-400');
@@ -191,7 +191,7 @@
                     return;
                 }
             }
-            if(playing&&(dev.state.damage||!state.devices[dev.id]))return;
+            if(playing&&(dev.state.damage||!appState.project.devices[dev.id]))return;
             if(dev.spotifyVinyl){
                 if(playing){
                     if(spotifyPlayingTurntable&&spotifyPlayingTurntable!==dev.id){spotifyVinylNotice('Pare o outro toca-discos do Spotify antes de reproduzir este.');return;}
@@ -212,8 +212,8 @@
             }
             stopFilePlayback(dev);
             if(!dev.audioBuffer){
-                if(dev.state.playing && dev.demoStartedAt != null) dev.demoOffset=(dev.demoOffset||0)+state.audioCtx.currentTime-dev.demoStartedAt;
-                dev.demoStartedAt=playing?state.audioCtx.currentTime:null;
+                if(dev.state.playing && dev.demoStartedAt != null) dev.demoOffset=(dev.demoOffset||0)+appState.audio.context.currentTime-dev.demoStartedAt;
+                dev.demoStartedAt=playing?appState.audio.context.currentTime:null;
             }
             dev.state.playing = !!playing;
             syncMobileContextActions();
@@ -223,12 +223,12 @@
             syncSignalGenerator(dev);
             if (dev.state.playing && dev.audioBuffer) startFilePlayback(dev);
             if (dev.state.tt) dev.state.tt.running = dev.state.playing;
-            ['genR','genL'].forEach(key => dev.nodes[key]?.gain.setTargetAtTime(dev.state.playing ? 1 : 0, state.audioCtx.currentTime, .015));
+            ['genR','genL'].forEach(key => dev.nodes[key]?.gain.setTargetAtTime(dev.state.playing ? 1 : 0, appState.audio.context.currentTime, .015));
             dev.el.querySelectorAll('[data-source-play]').forEach(button => {
                 button.setAttribute('aria-label',dev.state.playing?'Pausar':'Reproduzir');
                 button.setAttribute('aria-pressed', String(dev.state.playing));
             });
-            if (state.selectedDeviceId === dev.id) {
+            if (appState.interface.selectedDeviceId === dev.id) {
                 const button = document.getElementById('source-inspector-play');
                 if (button) { button.classList.toggle('is-on', dev.state.playing); button.setAttribute('aria-pressed', String(dev.state.playing)); }
             }
@@ -238,13 +238,13 @@
             updateCableFlows();
         }
         function syncSourceSequencer() {
-            state.isPlaying = Object.values(state.devices).some(isSourceRunning);
-            if (!state.isPlaying) { clearInterval(state.seqInterval); state.seqInterval = null; return; }
-            if (state.seqInterval) return;
+            appStateStore.actions.setAudioRuntime('isPlaying',Object.values(appState.project.devices).some(isSourceRunning));
+            if (!appState.audio.isPlaying) { clearInterval(appState.audio.sequenceInterval); appStateStore.actions.setAudioRuntime('sequenceInterval',null); return; }
+            if (appState.audio.sequenceInterval) return;
                 let step = 0;
-                state.seqInterval = setInterval(() => {
-                    if (state.audioCtx.state !== 'running') return;
-                    Object.values(state.devices).forEach(dev => {
+                appStateStore.actions.setAudioRuntime('sequenceInterval',setInterval(() => {
+                    if (appState.audio.context.state !== 'running') return;
+                    Object.values(appState.project.devices).forEach(dev => {
                         // Só toca se o dispositivo estiver ligado (e, no toca-discos, com o prato girando)
                         if (!isSourceRunning(dev) || dev.audioBuffer || dev.spotifyVinyl || RADIO_RECEIVERS.has(dev.type) || SIGNAL_GENERATOR_TYPES.has(dev.type)) return;
 
@@ -271,7 +271,7 @@
                         }
                     });
                     step++;
-                }, 300);
+                }, 300));
         }
 
         // --- DRAG & DROP CORRIGIDO (SEM DELAY E SEM OFFSET) ---

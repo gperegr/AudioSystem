@@ -95,7 +95,7 @@
 
         function drawCable(container, p1, p2, waypoints = [], cableType = 'rca-r', swing = { x: 0, y: 0 }, routeOffset = 0) {
             const seating=container.dataset.seating==='true';
-            const showPlugs=seating||(isPatching&&container===tempCableEl&&!state.connections.some(connection=>connection.el===container));
+            const showPlugs=seating||(isPatching&&container===tempCableEl&&!appState.project.connections.some(connection=>connection.el===container));
             const geometry=cableGeometry(cableType);
             container.style.setProperty('--cable-outer',geometry.outer+'px');
             container.style.setProperty('--cable-inner',geometry.inner+'px');
@@ -168,9 +168,9 @@
                 window.getSelection()?.removeAllRanges();
                 
                 // Conectar ou reconectar
-                const existingIdx = state.connections.findIndex(c => c.outId === port.id || c.inId === port.id);
+                const existingIdx = appState.project.connections.findIndex(c => c.outId === port.id || c.inId === port.id);
                 if (existingIdx > -1) {
-                    const conn = state.connections[existingIdx];
+                    const conn = appState.project.connections[existingIdx];
                     const otherId = conn.outId === port.id ? conn.inId : conn.outId;
                     removeConnection(existingIdx);
                     startPort = document.getElementById(otherId);

@@ -8,6 +8,8 @@ Edit the numbered source files here, then rebuild the browser entry point:
 node tools/build-script.cjs
 ```
 
+Use the state domains initialized by `01-state-and-preferences.js`: `appState.project`, `appState.canvas`, `appState.audio`, `appState.preferences`, and `appState.interface`. Mutations that affect domain state should go through the named `appStateStore.actions` methods. Spotify authorization and playback state are owned by `SpotifyCoverflow` in `src/modules/spotify-coverflow.js`.
+
 Check that the committed browser entry point matches the sources:
 
 ```sh

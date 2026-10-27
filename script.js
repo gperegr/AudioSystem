@@ -868,7 +868,7 @@ const Hardware = (() => {
     const lightingGeometry=new WeakMap();
     let furnitureLightingGeometry={key:'',items:[]};
     let floorShadowKey='';
-    function elementWorldPosition(element){const position=state.devices[element.id]?.dragVisualPosition;return position||{x:element.offsetLeft,y:element.offsetTop};}
+    function elementWorldPosition(element){const position=appState.project.devices[element.id]?.dragVisualPosition;return position||{x:element.offsetLeft,y:element.offsetTop};}
     function positionedSceneLights(scene,time,world){
         const imageDrop=parseFloat(world.style.getPropertyValue('--room-image-drop'))||0;
         const horizonShift=parseFloat(world.style.getPropertyValue('--room-horizon-shift'))||0;
@@ -1337,42 +1337,35 @@ const Hardware = (() => {
         const DEFAULT_BACKDROP='loftIllustrated';
         const DEFAULT_ROOM_SETTINGS={preset:'small',intensity:5};
         const DEFAULT_UI_SOUND_VOLUME=.5;
-        const state = {
-            isPlaying: false,
-            devices: {},
-            connections: [],
-            selectedDeviceId: null,
-            selectedDeviceIds: new Set(),
-            selectedConnection: null,
-            audioCtx: null,
-            masterGain: null,
-            environment:{...DEFAULT_ROOM_SETTINGS},
-            uiSoundVolume:DEFAULT_UI_SOUND_VOLUME,
-            seqInterval: null,
-            pairingId: null
-        };
+        const appStateStore=AudioSystemApplicationState.createStore({
+            audio:{environment:{...DEFAULT_ROOM_SETTINGS}},
+            preferences:{uiSoundVolume:DEFAULT_UI_SOUND_VOLUME}
+        });
+        const appState=appStateStore.domains;
 
         const APP_PREFERENCES_KEY='audio-system-interface-preferences';
         function readAppPreferences(){try{const value=JSON.parse(localStorage.getItem(APP_PREFERENCES_KEY)||'{}');return value&&typeof value==='object'?value:{};}catch{return {};}}
         const savedAppPreferences=readAppPreferences();
-        let connectionGuidanceEnabled=savedAppPreferences.connectionGuidanceEnabled!==false;
-        let gravityEnabled=savedAppPreferences.gravityEnabled===true;
-        let roomParticleAmount=Number.isFinite(savedAppPreferences.roomParticleAmount)?Math.max(0,Math.min(100,savedAppPreferences.roomParticleAmount/(savedAppPreferences.particleScaleVersion===2?1:2))):25;
+        appStateStore.actions.setPreference('connectionGuidanceEnabled',savedAppPreferences.connectionGuidanceEnabled!==false);
+        appStateStore.actions.setPreference('gravityEnabled',savedAppPreferences.gravityEnabled===true);
+        appStateStore.actions.setPreference('roomParticleAmount',Number.isFinite(savedAppPreferences.roomParticleAmount)?Math.max(0,Math.min(100,savedAppPreferences.roomParticleAmount/(savedAppPreferences.particleScaleVersion===2?1:2))):25);
         if(Number.isFinite(savedAppPreferences.roomParticleAmount)&&savedAppPreferences.particleScaleVersion!==2){
-            try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({...savedAppPreferences,roomParticleAmount,particleScaleVersion:2}));}catch{}
+            try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({...savedAppPreferences,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2}));}catch{}
         }
-        let developerModeEnabled=savedAppPreferences.developerMode===true;
-        let headphonePromptSeen=savedAppPreferences.headphonePromptSeen===true;
-        state.listeningOutputLevel=Number.isFinite(savedAppPreferences.listeningOutputLevel)?Math.max(.5,Math.min(1.2,savedAppPreferences.listeningOutputLevel)):1;
-        state.listeningBass=Number.isFinite(savedAppPreferences.listeningBass)?Math.max(-6,Math.min(6,savedAppPreferences.listeningBass)):0;
-        state.listeningTreble=Number.isFinite(savedAppPreferences.listeningTreble)?Math.max(-6,Math.min(6,savedAppPreferences.listeningTreble)):0;
+        appStateStore.actions.setPreference('developerModeEnabled',savedAppPreferences.developerMode===true);
+        appStateStore.actions.setPreference('headphonePromptSeen',savedAppPreferences.headphonePromptSeen===true);
+        appStateStore.actions.setListeningPreferences({
+            outputLevel:Number.isFinite(savedAppPreferences.listeningOutputLevel)?Math.max(.5,Math.min(1.2,savedAppPreferences.listeningOutputLevel)):1,
+            bass:Number.isFinite(savedAppPreferences.listeningBass)?Math.max(-6,Math.min(6,savedAppPreferences.listeningBass)):0,
+            treble:Number.isFinite(savedAppPreferences.listeningTreble)?Math.max(-6,Math.min(6,savedAppPreferences.listeningTreble)):0
+        });
         let appPreferencesSaveTimer=0;
         function scheduleAppPreferencesSave(){
             clearTimeout(appPreferencesSaveTimer);
             appPreferencesSaveTimer=setTimeout(()=>{
                 if(!canvas.clientWidth||!canvas.clientHeight)return;
                 const focusX=(canvas.clientWidth/2-view.x)/view.zoom,focusY=(canvas.clientHeight/2-view.y)/view.zoom;
-                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:state.canvasTheme,grid:state.canvasGrid,backdrop:state.canvasBackdrop,time:state.canvasTime,connectionGuidanceEnabled,gravityEnabled,roomParticleAmount,particleScaleVersion:2,developerMode:developerModeEnabled,headphonePromptSeen,catalogPinned:sidebarPinned.catalog,inspectorPinned:sidebarPinned.properties,listeningOutputLevel:state.listeningOutputLevel,listeningBass:state.listeningBass,listeningTreble:state.listeningTreble,zoom:view.zoom,focusX,focusY}));}catch{}
+                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:appState.canvas.theme,grid:appState.canvas.grid,backdrop:appState.canvas.backdrop,time:appState.canvas.time,connectionGuidanceEnabled:appState.preferences.connectionGuidanceEnabled,gravityEnabled:appState.preferences.gravityEnabled,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2,developerMode:appState.preferences.developerModeEnabled,headphonePromptSeen:appState.preferences.headphonePromptSeen,catalogPinned:sidebarPinned.catalog,inspectorPinned:sidebarPinned.properties,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble,zoom:view.zoom,focusX,focusY}));}catch{}
             },450);
         }
         const appDialog=document.getElementById('app-confirm-dialog');
@@ -1420,13 +1413,13 @@ const Hardware = (() => {
             headphoneCalibrationTimers.splice(0).forEach(clearTimeout);
             clearTimeout(headphoneCalibrationPreviewTimer);headphoneCalibrationPreviewTimer=0;
             headphoneCalibrationLooping=false;setHeadphoneCalibrationPlayLabel(false);
-            if(!state.audioCtx)return;
-            const now=state.audioCtx.currentTime;
+            if(!appState.audio.context)return;
+            const now=appState.audio.context.currentTime;
             headphoneCalibrationVoices.splice(0).forEach(voice=>{try{voice.stop(now+.02);}catch{}});
         }
         function renderHeadphoneCalibration(){
             const step=headphoneCalibrationSteps[headphoneCalibrationStep],done=headphoneCalibrationStep===headphoneCalibrationSteps.length;
-            if(headphoneCalibrationStep<2&&step&&!headphoneCalibrationBases[headphoneCalibrationStep])headphoneCalibrationBases[headphoneCalibrationStep]={program:state.listeningOutputLevel};
+            if(headphoneCalibrationStep<2&&step&&!headphoneCalibrationBases[headphoneCalibrationStep])headphoneCalibrationBases[headphoneCalibrationStep]={program:appState.preferences.listening.outputLevel};
             document.getElementById('headphone-calibration-progress').textContent=step?`${headphoneCalibrationStep+1}/${headphoneCalibrationSteps.length}`:'';
             document.getElementById('headphone-calibration-icon').innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${headphoneCalibrationIcons[done?7:headphoneCalibrationStep<0?0:[1,2,3,5,6,4][headphoneCalibrationStep]]}</svg>`;
             document.getElementById('headphone-calibration-title').textContent=step?.title|| (done?'Pronto para ouvir':'Ajuste a escuta');
@@ -1438,9 +1431,9 @@ const Hardware = (() => {
             document.getElementById('headphone-calibration-ui-volume').hidden=headphoneCalibrationStep!==5;
             const toneControl=document.getElementById('headphone-calibration-tone'),toneKind=headphoneCalibrationStep===3?'bass':headphoneCalibrationStep===4?'treble':null;
             toneControl.hidden=!toneKind;
-            if(toneKind){const value=state[toneKind==='bass'?'listeningBass':'listeningTreble'];document.getElementById('headphone-calibration-tone-label').textContent=toneKind==='bass'?'Graves':'Agudos';document.getElementById('headphone-calibration-tone-value').textContent=`${value>0?'+':''}${value} dB`;document.getElementById('headphone-calibration-tone-slider').value=value;document.getElementById('headphone-calibration-tone-slider').setAttribute('aria-label',toneKind==='bass'?'Graves da escuta':'Agudos da escuta');}
-            document.getElementById('headphone-calibration-ui-slider').value=Math.round(state.uiSoundVolume*100);
-            document.getElementById('headphone-calibration-ui-value').textContent=state.uiSoundVolume?`${Math.round(state.uiSoundVolume*100)}%`:'desligados';
+            if(toneKind){const value=appState.preferences.listening[toneKind];document.getElementById('headphone-calibration-tone-label').textContent=toneKind==='bass'?'Graves':'Agudos';document.getElementById('headphone-calibration-tone-value').textContent=`${value>0?'+':''}${value} dB`;document.getElementById('headphone-calibration-tone-slider').value=value;document.getElementById('headphone-calibration-tone-slider').setAttribute('aria-label',toneKind==='bass'?'Graves da escuta':'Agudos da escuta');}
+            document.getElementById('headphone-calibration-ui-slider').value=Math.round(appState.preferences.uiSoundVolume*100);
+            document.getElementById('headphone-calibration-ui-value').textContent=appState.preferences.uiSoundVolume?`${Math.round(appState.preferences.uiSoundVolume*100)}%`:'desligados';
             document.getElementById('headphone-calibration-back').hidden=headphoneCalibrationStep<0;
             document.getElementById('headphone-calibration-skip').hidden=done;
             const next=document.getElementById('headphone-calibration-next'),nextLabel=done?'Concluir':step?'Próxima etapa':'Iniciar ajuste';
@@ -1478,12 +1471,12 @@ const Hardware = (() => {
             if(step<0||step>=headphoneCalibrationSteps.length)return;
             if([0,1,3,4].includes(step)&&headphoneCalibrationLooping&&!loopReplay){stopHeadphoneCalibrationSound();status.textContent='Reprodução parada.';return;}
             try{
-                initAudio();const context=state.audioCtx;
+                initAudio();const context=appState.audio.context;
                 if(context.state!=='running')await context.resume();
                 if(!headphoneCalibrationDialog.open||step!==headphoneCalibrationStep||context.state!=='running')return;
                 stopHeadphoneCalibrationSound();
                 if(step===5){
-                    if(!state.uiSoundVolume){status.textContent='Sons de interação desligados. Aumente o controle para ouvi-los.';return;}
+                    if(!appState.preferences.uiSoundVolume){status.textContent='Sons de interação desligados. Aumente o controle para ouvi-los.';return;}
                     playUiSound('receiverClick');
                     headphoneCalibrationTimers.push(setTimeout(()=>{if(headphoneCalibrationDialog.open&&headphoneCalibrationStep===5)playUiSound('connect');},400));
                     status.textContent='Tocando um clique e uma conexão da interface.';return;
@@ -1493,7 +1486,7 @@ const Hardware = (() => {
                     const oscillator=context.createOscillator(),envelope=context.createGain(),stereo=context.createStereoPanner(),at=start+delay,duration=.55;
                     oscillator.type='sine';oscillator.frequency.value=frequency;stereo.pan.value=pan;
                     envelope.gain.setValueAtTime(0,at);envelope.gain.linearRampToValueAtTime(level,at+.06);envelope.gain.setValueAtTime(level,at+duration-.12);envelope.gain.linearRampToValueAtTime(0,at+duration);
-                    oscillator.connect(envelope);envelope.connect(stereo);stereo.connect(state.masterGain);
+                    oscillator.connect(envelope);envelope.connect(stereo);stereo.connect(appState.audio.masterGain);
                     oscillator.onended=()=>{oscillator.disconnect();envelope.disconnect();stereo.disconnect();headphoneCalibrationVoices=headphoneCalibrationVoices.filter(voice=>voice!==oscillator);};
                     headphoneCalibrationVoices.push(oscillator);oscillator.start(at);oscillator.stop(at+duration+.01);
                 };
@@ -1524,11 +1517,11 @@ const Hardware = (() => {
         });
         document.getElementById('headphone-calibration-ui-slider').addEventListener('input',event=>{
             setInteractionVolume(Number(event.target.value));
-            if(!headphoneCalibrationDialog.open||headphoneCalibrationStep!==5||!state.uiSoundVolume||headphoneCalibrationPreviewTimer)return;
+            if(!headphoneCalibrationDialog.open||headphoneCalibrationStep!==5||!appState.preferences.uiSoundVolume||headphoneCalibrationPreviewTimer)return;
             const delay=Math.max(30,120-(performance.now()-lastHeadphoneCalibrationPreview));
             headphoneCalibrationPreviewTimer=setTimeout(()=>{
                 headphoneCalibrationPreviewTimer=0;lastHeadphoneCalibrationPreview=performance.now();
-                if(headphoneCalibrationDialog.open&&headphoneCalibrationStep===5&&state.uiSoundVolume)playUiSound('receiverClick');
+                if(headphoneCalibrationDialog.open&&headphoneCalibrationStep===5&&appState.preferences.uiSoundVolume)playUiSound('receiverClick');
             },delay);
         });
         document.querySelectorAll('[data-calibration-answer]').forEach(button=>button.addEventListener('click',()=>{
@@ -1540,9 +1533,9 @@ const Hardware = (() => {
             if(step===0){
                 if(answer!=='okay')setListeningOutputLevel(base.program+(answer==='low'?.1:-.15));
                 else stopHeadphoneCalibrationSound();
-                status.textContent=answer==='okay'?'Nível escolhido mantido.':state.listeningOutputLevel===base.program?'Limite de ajuste atingido; priorize o volume físico confortável.':answer==='low'?'Saída do programa levemente ampliada.':'Saída do programa suavizada.';
+                status.textContent=answer==='okay'?'Nível escolhido mantido.':appState.preferences.listening.outputLevel===base.program?'Limite de ajuste atingido; priorize o volume físico confortável.':answer==='low'?'Saída do programa levemente ampliada.':'Saída do programa suavizada.';
             }
-            if(step===1){setListeningOutputLevel(base.program+(answer==='low'?.1:answer==='high'?-.1:0));status.textContent=answer==='okay'?'Nível de escuta mantido.':state.listeningOutputLevel===base.program?'Limite de ajuste atingido; priorize o conforto.':answer==='low'?'Detalhes ampliados; confira se o som forte continua confortável.':'Nível de escuta suavizado.';playHeadphoneCalibrationSound(headphoneCalibrationLooping,!headphoneCalibrationLooping);}
+            if(step===1){setListeningOutputLevel(base.program+(answer==='low'?.1:answer==='high'?-.1:0));status.textContent=answer==='okay'?'Nível de escuta mantido.':appState.preferences.listening.outputLevel===base.program?'Limite de ajuste atingido; priorize o conforto.':answer==='low'?'Detalhes ampliados; confira se o som forte continua confortável.':'Nível de escuta suavizado.';playHeadphoneCalibrationSound(headphoneCalibrationLooping,!headphoneCalibrationLooping);}
         }));
         document.getElementById('headphone-calibration-next').addEventListener('click',()=>{
             if(headphoneCalibrationTransitioning)return;
@@ -1553,13 +1546,13 @@ const Hardware = (() => {
         document.getElementById('headphone-calibration-back').addEventListener('click',()=>{
             if(headphoneCalibrationTransitioning)return;
             stopHeadphoneCalibrationSound();
-            if(headphoneCalibrationStep===1){setListeningOutputLevel(headphoneCalibrationBases[1]?.program??state.listeningOutputLevel);delete headphoneCalibrationAnswers[1];delete headphoneCalibrationBases[1];}
-            if(headphoneCalibrationStep===0){setListeningOutputLevel(headphoneCalibrationBases[0]?.program??state.listeningOutputLevel);delete headphoneCalibrationAnswers[0];delete headphoneCalibrationBases[0];}
+            if(headphoneCalibrationStep===1){setListeningOutputLevel(headphoneCalibrationBases[1]?.program??appState.preferences.listening.outputLevel);delete headphoneCalibrationAnswers[1];delete headphoneCalibrationBases[1];}
+            if(headphoneCalibrationStep===0){setListeningOutputLevel(headphoneCalibrationBases[0]?.program??appState.preferences.listening.outputLevel);delete headphoneCalibrationAnswers[0];delete headphoneCalibrationBases[0];}
             transitionHeadphoneCalibration(-1,()=>{headphoneCalibrationStep=Math.max(-1,headphoneCalibrationStep-1);renderHeadphoneCalibration();});
         });
         function persistHeadphoneCalibration(){
-            headphonePromptSeen=true;
-            try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({...readAppPreferences(),headphonePromptSeen:true,listeningOutputLevel:state.listeningOutputLevel,listeningBass:state.listeningBass,listeningTreble:state.listeningTreble}));}catch{}
+            appStateStore.actions.setPreference('headphonePromptSeen',true);
+            try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({...readAppPreferences(),headphonePromptSeen:true,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble}));}catch{}
             scheduleAppPreferencesSave();
         }
         document.getElementById('headphone-calibration-skip').addEventListener('click',()=>{persistHeadphoneCalibration();headphoneCalibrationDialog.close();});
@@ -1598,9 +1591,9 @@ const Hardware = (() => {
         canvasThemeControl.innerHTML='<span>Fundo</span><select id="canvas-theme" aria-label="Cor do fundo do canvas">'+Object.entries(canvasThemes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
         document.querySelector('.canvas-tools').appendChild(canvasThemeControl);
         function setCanvasTheme(theme){
-            theme=Object.hasOwn(canvasThemes,theme)?theme:'scene';state.canvasTheme=theme;canvas.dataset.theme=theme;
+            theme=Object.hasOwn(canvasThemes,theme)?theme:'scene';appStateStore.actions.setCanvasTheme(theme);canvas.dataset.theme=theme;
             if(theme==='scene')startRoomMotes();else stopRoomMotes();
-            if(theme==='scene')Object.values(state.devices).forEach(dev=>{
+            if(theme==='scene')Object.values(appState.project.devices).forEach(dev=>{
                 dev.el.style.left=Math.max(ROOM_SIDE_INSET,Math.min(world.offsetWidth-dev.el.offsetWidth-ROOM_SIDE_INSET,dev.el.offsetLeft))+'px';
                 dev.el.style.top=Math.max(0,Math.min((dev.el.classList.contains('wall-lamp-node')?wallPlacementBottom():floorPlacementBottom())-dev.el.offsetHeight,dev.el.offsetTop))+'px';
             });
@@ -1616,7 +1609,7 @@ const Hardware = (() => {
         const canvasGridControl=document.createElement('label');canvasGridControl.className='canvas-theme-control';
         canvasGridControl.innerHTML='<span>Grade</span><select id="canvas-grid" aria-label="Visual da grade">'+Object.entries(canvasGridModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
         function setCanvasGrid(mode){
-            mode=Object.hasOwn(canvasGridModes,mode)?mode:'dots';state.canvasGrid=mode;canvas.dataset.grid=mode;canvasGridControl.querySelector('select').value=mode;
+            mode=Object.hasOwn(canvasGridModes,mode)?mode:'dots';appStateStore.actions.setCanvasGrid(mode);canvas.dataset.grid=mode;canvasGridControl.querySelector('select').value=mode;
         }
         canvasGridControl.querySelector('select').addEventListener('change',event=>{setCanvasGrid(event.target.value);scheduleProjectSave();scheduleAppPreferencesSave();});
         setCanvasGrid(savedAppPreferences.grid||'dots');
@@ -1645,7 +1638,7 @@ const Hardware = (() => {
             if(src===roomImageTarget){roomBackdrop.querySelectorAll('.room-scene-image').forEach(image=>positionRoomImage(image,horizon));return;}
             roomImageTarget=src;
             const request=++roomImageRequest,images=[...roomBackdrop.querySelectorAll('.room-scene-image')];
-            if(!images[0].getAttribute('src')||state.restoringProject||matchMedia('(prefers-reduced-motion: reduce)').matches){
+            if(!images[0].getAttribute('src')||appState.project.restoringProject||matchMedia('(prefers-reduced-motion: reduce)').matches){
                 images.slice(1).forEach(image=>image.remove());
                 positionRoomImage(images[0],horizon);
                 images[0].src=src;images[0].classList.add('is-visible');
@@ -1675,7 +1668,7 @@ const Hardware = (() => {
             const daylight=time==='dawn';
             const dusk=time==='dusk';
             roomMoteBeams=RoomScenes.lights(mode,time).map((light,index)=>{
-                const count=Math.round((dusk?28:daylight?24:12)*roomParticleAmount/25);
+                const count=Math.round((dusk?28:daylight?24:12)*appState.preferences.roomParticleAmount/25);
                 const x=(240+light.cx*.8)/24,y=mode.startsWith('listening')?36:mode.startsWith('studio')?34:33;
                 const width=Math.min(32,Math.max(15,light.w*.8/24));
                 const color=light.rgb.join(' ');
@@ -1725,15 +1718,15 @@ const Hardware = (() => {
                         ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();
                     });
                 });
-                const count=Math.round((state.canvasTime==='night'?5:10)*roomParticleAmount/25);
-                const color=state.canvasTime==='night'?'198,217,229':'255,224,177';
+                const count=Math.round((appState.canvas.time==='night'?5:10)*appState.preferences.roomParticleAmount/25);
+                const color=appState.canvas.time==='night'?'198,217,229':'255,224,177';
                 for(let i=0;i<count;i++){
                     const phase=reduced?.5:(now/(9500+i%6*1100)+i*.317)%1;
                     const fade=Math.sin(Math.PI*phase),size=9+i%4*3;
                     const x=((i*73+19)%101)/101*width+Math.sin(now/6200+i*2.7)*12;
                     const y=((i*47+13)%89)/89*height-phase*42;
                     if(x+size<0||x-size>width||y+size<0||y-size>height)continue;
-                    const strength=(state.canvasTime==='night'?.13:.28)*fade;
+                    const strength=(appState.canvas.time==='night'?.13:.28)*fade;
                     const glow=ctx.createRadialGradient(x,y,0,x,y,size);
                     glow.addColorStop(0,`rgba(${color},${strength})`);glow.addColorStop(.32,`rgba(${color},${strength*.5})`);glow.addColorStop(1,`rgba(${color},0)`);
                     ctx.globalAlpha=1;ctx.fillStyle=glow;ctx.beginPath();ctx.arc(x,y,size,0,Math.PI*2);ctx.fill();
@@ -1746,25 +1739,25 @@ const Hardware = (() => {
         document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')startRoomMotes();else stopRoomMotes();});
         function setCanvasBackdrop(mode){
             mode=legacyBackdrops[mode]||mode;
-            mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studioIllustrated';state.canvasBackdrop=mode;canvas.dataset.backdrop=mode;canvasBackdropControl.querySelector('select').value=mode;
+            mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studioIllustrated';appStateStore.actions.setCanvasBackdrop(mode);canvas.dataset.backdrop=mode;canvasBackdropControl.querySelector('select').value=mode;
             const scene=RoomScenes.scenes[mode];
-            const imageName=RoomScenes.imageForTime(scene,state.canvasTime);
+            const imageName=RoomScenes.imageForTime(scene,appState.canvas.time);
             const src=`./assets/rooms/${imageName}.webp?v=aligned-floor`;
-            showRoomImage(src,scene.horizon?.[state.canvasTime]);
+            showRoomImage(src,scene.horizon?.[appState.canvas.time]);
             requestAnimationFrame(applyView);
-            state.canvasFloor=scene.floor;canvas.dataset.floor=state.canvasFloor;
-            updateRoomMotes(mode,state.canvasTime);
+            appStateStore.actions.setCanvasOption('floor',scene.floor);canvas.dataset.floor=appState.canvas.floor;
+            updateRoomMotes(mode,appState.canvas.time);
             Hardware.updateLightingDemo();
         }
         function setCanvasTime(time){
-            time=Object.hasOwn(canvasTimeModes,time)?time:'dusk';state.canvasTime=time;canvas.dataset.time=time;canvasTimeControl.querySelector('select').value=time;
-            setCanvasBackdrop(state.canvasBackdrop||'studio');
+            time=Object.hasOwn(canvasTimeModes,time)?time:'dusk';appStateStore.actions.setCanvasTime(time);canvas.dataset.time=time;canvasTimeControl.querySelector('select').value=time;
+            setCanvasBackdrop(appState.canvas.backdrop||'studio');
         }
         canvasBackdropControl.querySelector('select').addEventListener('change',event=>{setCanvasBackdrop(event.target.value);updateCables();scheduleProjectSave();scheduleAppPreferencesSave();});
         canvasTimeControl.querySelector('select').addEventListener('change',event=>{setCanvasTime(event.target.value);updateCables();scheduleProjectSave();scheduleAppPreferencesSave();});
-        state.canvasTime=Object.hasOwn(canvasTimeModes,savedAppPreferences.time)?savedAppPreferences.time:savedAppPreferences.backdrop==='night'?'night':'dusk';canvas.dataset.time=state.canvasTime;canvasTimeControl.querySelector('select').value=state.canvasTime;
+        appStateStore.actions.setCanvasTime(Object.hasOwn(canvasTimeModes,savedAppPreferences.time)?savedAppPreferences.time:savedAppPreferences.backdrop==='night'?'night':'dusk');canvas.dataset.time=appState.canvas.time;canvasTimeControl.querySelector('select').value=appState.canvas.time;
         setCanvasBackdrop(savedAppPreferences.backdrop||DEFAULT_BACKDROP);
-        setCanvasTheme(state.canvasTheme);
+        setCanvasTheme(appState.canvas.theme);
 
 
         const svgLayer = document.getElementById('cables-layer');
@@ -1822,7 +1815,7 @@ const Hardware = (() => {
         clearCatalogFooter.innerHTML = '<button id="clear-system" type="button" class="w-full rounded border border-red-900 bg-red-950/30 px-3 py-2 text-sm font-semibold text-red-300 hover:bg-red-900/40">Apagar tudo</button>';
         equipmentCatalog.appendChild(clearCatalogFooter);
         document.getElementById('clear-system').addEventListener('click', () => {
-            Object.values(state.devices).forEach(dev => deleteDevice(dev));
+            Object.values(appState.project.devices).forEach(dev => deleteDevice(dev));
             selectDevice(null);
             updateCableFlows();
         });
@@ -1834,10 +1827,10 @@ const Hardware = (() => {
         cableVisibilityButton.type='button';cableVisibilityButton.className='cable-visibility-toggle';cableVisibilityButton.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.3-6 9.5-6 9.5 6 9.5 6-3.3 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>';cableVisibilityButton.setAttribute('aria-label','Visibilidade dos cabos');cableVisibilityButton.dataset.tooltip='Mostrar ou ocultar os cabos';cableVisibilityButton.setAttribute('aria-pressed','false');
         document.querySelector('.canvas-tools').appendChild(cableVisibilityButton);
         cableVisibilityButton.addEventListener('click',()=>{
-            if(state.hideCables||state.connections.some(c=>c.hidden)){
-                state.hideCables=false;state.connections.forEach(c=>c.hidden=false);
-            }else state.hideCables=!state.hideCables;
-            cableVisibilityButton.setAttribute('aria-pressed',String(!!state.hideCables));
+            if(appState.canvas.hideCables||appState.project.connections.some(c=>c.hidden)){
+                appStateStore.actions.setCanvasOption('hideCables',false);appState.project.connections.forEach(c=>c.hidden=false);
+            }else appStateStore.actions.setCanvasOption('hideCables',!appState.canvas.hideCables);
+            cableVisibilityButton.setAttribute('aria-pressed',String(!!appState.canvas.hideCables));
             updateCables();renderCableProperties();
         });
         const selectionMarquee = document.getElementById('selection-marquee');
@@ -1885,8 +1878,8 @@ const Hardware = (() => {
             const farX=Math.max(-90,Math.min(90,-view.x/view.zoom*.09)),farY=Math.max(-55,Math.min(55,-view.y/view.zoom*.06));
             const farScale=Math.max(.9,Math.min(1.08,1-(view.zoom-1)*.08));
             const floorScale=Math.max(.94,Math.min(1.04,1-(view.zoom-1)*.04));
-            const scene=RoomScenes.scenes[state.canvasBackdrop];
-            const horizonShift=(ROOM_HORIZON_IMAGE_Y-(scene?.horizon?.[state.canvasTime]??ROOM_HORIZON_IMAGE_Y))*world.offsetHeight*1.1/720*farScale;
+            const scene=RoomScenes.scenes[appState.canvas.backdrop];
+            const horizonShift=(ROOM_HORIZON_IMAGE_Y-(scene?.horizon?.[appState.canvas.time]??ROOM_HORIZON_IMAGE_Y))*world.offsetHeight*1.1/720*farScale;
             world.style.setProperty('--room-far-x',farX.toFixed(1)+'px');world.style.setProperty('--room-far-y',farY.toFixed(1)+'px');
             world.style.setProperty('--room-far-scale',farScale.toFixed(3));
             world.style.setProperty('--room-horizon-shift',horizonShift.toFixed(1)+'px');
@@ -1922,7 +1915,7 @@ const Hardware = (() => {
             setZoomAt(view.zoom*Math.exp(-Math.max(-160,Math.min(160,pixels))*.001),e.clientX,e.clientY);
         },{passive:false});
         document.getElementById('fit-canvas').addEventListener('click', () => {
-            const devices = Object.values(state.devices);
+            const devices = Object.values(appState.project.devices);
             if (!devices.length) { animateViewTo({zoom:1,x:0,y:0}); return; }
             const bounds = devices.reduce((b, dev) => {
                 const left = parseFloat(dev.el.style.left) || 0, top = parseFloat(dev.el.style.top) || 0;
@@ -1989,14 +1982,14 @@ const Hardware = (() => {
         mobileContextActions.innerHTML='<button type="button" data-context-action="power"><svg viewBox="0 0 24 24"><path d="M12 3v9"/><path d="M6.1 6.1a8 8 0 1 0 11.8 0"/></svg><span>Ligar</span></button><button type="button" data-context-action="play"><svg viewBox="0 0 24 24"><path d="m8 5 12 7-12 7z"/></svg><span>Reproduzir</span></button><button type="button" data-context-action="center"><svg viewBox="0 0 24 24"><path d="M12 2v6m0 8v6M2 12h6m8 0h6"/><circle cx="12" cy="12" r="4"/></svg><span>Centralizar</span></button><button type="button" data-context-action="remove"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5m4-5v5"/></svg><span>Remover</span></button>';
         document.body.appendChild(mobileContextActions);
         function syncMobileContextActions(){
-            const id=state.selectedDeviceId,dev=id&&state.devices[id];mobileContextActions.hidden=!compactTouchLayout.matches||!dev||document.body.classList.contains('mobile-catalog-open')||document.body.classList.contains('mobile-properties-open');
+            const id=appState.interface.selectedDeviceId,dev=id&&appState.project.devices[id];mobileContextActions.hidden=!compactTouchLayout.matches||!dev||document.body.classList.contains('mobile-catalog-open')||document.body.classList.contains('mobile-properties-open');
             if(!dev)return;
             const power=mobileContextActions.querySelector('[data-context-action="power"]'),play=mobileContextActions.querySelector('[data-context-action="play"]');
             power.hidden=!dev.el.querySelector('.power-btn');power.querySelector('span').textContent=dev.powered===false?'Ligar':'Desligar';power.setAttribute('aria-label',dev.powered===false?'Ligar equipamento':'Desligar equipamento');
             const playControl=dev.el.querySelector('[data-source-play],.at-startstop');play.hidden=!playControl||!SOURCE_TYPES.has(dev.type);play.querySelector('span').textContent=dev.state.playing?'Pausar':'Reproduzir';play.setAttribute('aria-label',dev.state.playing?'Pausar':'Reproduzir');play.dataset.target=dev.id;
         }
         mobileContextActions.addEventListener('click',event=>{
-            const button=event.target.closest('[data-context-action]');if(!button)return;const dev=state.devices[state.selectedDeviceId];if(!dev)return;
+            const button=event.target.closest('[data-context-action]');if(!button)return;const dev=appState.project.devices[appState.interface.selectedDeviceId];if(!dev)return;
             if(button.dataset.contextAction==='power'){dev.el.querySelector('.power-btn')?.click();setTimeout(syncMobileContextActions,0);}
             if(button.dataset.contextAction==='play')dev.el.querySelector('[data-source-play],.at-startstop')?.click();
             if(button.dataset.contextAction==='center')centerDeviceSet([dev]);
@@ -2107,33 +2100,33 @@ const Hardware = (() => {
         mobileCategoryNav.addEventListener('click',event=>{const button=event.target.closest('[data-category-target]');if(!button)return;const title=button.dataset.categoryTarget,sections=[...equipmentCatalog.querySelectorAll('.flex-1.overflow-y-auto>.mb-6')],section=sections.find(candidate=>AudioSystemLanguage.sourceText(candidate.querySelector('h3')?.textContent.trim()||'').startsWith(title));section?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});});
 
         function syncDeviceSelection() {
-            Object.values(state.devices).forEach(dev => {
-                dev.el.classList.toggle('selected', state.selectedDeviceIds.has(dev.id));
+            Object.values(appState.project.devices).forEach(dev => {
+                dev.el.classList.toggle('selected', appState.interface.selectedDeviceIds.has(dev.id));
             });
-            const count = state.selectedDeviceIds.size;
+            const count = appState.interface.selectedDeviceIds.size;
             selectionCount.textContent = count ? `${count} selecionado${count === 1 ? '' : 's'}` : '';
         }
 
         function setDeviceSelection(ids, focusId = null) {
-            state.selectedDeviceIds = new Set([...ids].filter(id => state.devices[id]));
-            const focus = focusId && state.selectedDeviceIds.has(focusId)
+            appStateStore.actions.setSelectedDevices(new Set([...ids].filter(id => appState.project.devices[id])));
+            const focus = focusId && appState.interface.selectedDeviceIds.has(focusId)
                 ? focusId
-                : [...state.selectedDeviceIds].at(-1) || null;
+                : [...appState.interface.selectedDeviceIds].at(-1) || null;
             selectDevice(focus, true);
         }
 
         function toggleDeviceSelection(id) {
-            const next = new Set(state.selectedDeviceIds);
+            const next = new Set(appState.interface.selectedDeviceIds);
             if (next.has(id)) next.delete(id);
             else next.add(id);
             setDeviceSelection(next, next.has(id) ? id : null);
         }
 
         function devicesForCanvasAction(useSelection = true) {
-            if (useSelection && state.selectedDeviceIds.size) {
-                return [...state.selectedDeviceIds].map(id => state.devices[id]).filter(Boolean);
+            if (useSelection && appState.interface.selectedDeviceIds.size) {
+                return [...appState.interface.selectedDeviceIds].map(id => appState.project.devices[id]).filter(Boolean);
             }
-            return Object.values(state.devices);
+            return Object.values(appState.project.devices);
         }
 
         function centerDeviceSet(devices) {
@@ -2159,7 +2152,7 @@ const Hardware = (() => {
         }
 
         function organizeDevices() {
-            const selected = state.selectedDeviceIds.size > 1;
+            const selected = appState.interface.selectedDeviceIds.size > 1;
             const devices = devicesForCanvasAction(selected);
             if (!devices.length) return;
             const order = ['turntable','turntableVintage','turntableLinear','cdPlayer','streamer','btReceiverA','btTransmitterPro','receiver','eqStudio','eqVintage','mixer','mixerVintage','crossover','crossoverVintage','rcaSwitch','speakerSwitch','speakerSwitchVintage','headphoneAmp','headphoneAmp4','powerAmp','spkPassiveWood','spkPassiveCarbon','spkPassiveGridBlack','spkPassiveGridOrange','spkActiveMonitor','spkActiveBookshelf','subwoofer','subwooferCube','subwooferPro','subwooferPassive','subwooferPassiveVintage','headphone','hpStudio','hpClassic'];
@@ -2194,7 +2187,7 @@ const Hardware = (() => {
             const key = e.key.toLowerCase();
             if ((e.metaKey || e.ctrlKey) && key === 'a') {
                 e.preventDefault();
-                setDeviceSelection(Object.keys(state.devices), Object.keys(state.devices)[0] || null);
+                setDeviceSelection(Object.keys(appState.project.devices), Object.keys(appState.project.devices)[0] || null);
             } else if (key === 'escape') {
                 selectCable(null);
                 selectDevice(null);
@@ -2228,8 +2221,8 @@ const Hardware = (() => {
                     const box = selectionMarquee.getBoundingClientRect();
                     selectionMarquee.style.display = 'none';
                     if (!moved) return;
-                    const next = new Set(state.selectedDeviceIds);
-                    Object.values(state.devices).forEach(dev => {
+                    const next = new Set(appState.interface.selectedDeviceIds);
+                    Object.values(appState.project.devices).forEach(dev => {
                         const deviceRect = dev.el.getBoundingClientRect();
                         const intersects = deviceRect.left <= box.right && deviceRect.right >= box.left && deviceRect.top <= box.bottom && deviceRect.bottom >= box.top;
                         if (intersects) next.add(dev.id);
@@ -2388,7 +2381,7 @@ const Hardware = (() => {
             let touching=null;
             // All three chassis heights leave the same physical space for their feet.
             if(!best&&dev.el.dataset.chassis){
-                Object.values(state.devices).forEach(lower=>{
+                Object.values(appState.project.devices).forEach(lower=>{
                     if(lower===dev||!lower.el.dataset.chassis)return;
                     const lx=parseFloat(lower.el.style.left)||0,ly=parseFloat(lower.el.style.top)||0;
                     const overlap=Math.min(x+width,lx+lower.el.offsetWidth)-Math.max(x,lx);
@@ -2414,7 +2407,7 @@ const Hardware = (() => {
             const inset=sceneSideInset();
             if (x < inset || y < 0 || x + dev.el.offsetWidth > world.offsetWidth-inset || y + dev.el.offsetHeight > maxEquipmentBottom()) return false;
             const shapes = placementShapes(dev,x,y);
-            return !Object.values(state.devices).some(other => {
+            return !Object.values(appState.project.devices).some(other => {
                 if (other.id === dev.id || ignored.has(other.id)) return false;
                 const obstacles = placementShapes(other,parseFloat(other.el.style.left)||0,parseFloat(other.el.style.top)||0);
                 return shapes.some(a => obstacles.some(b => a.x < b.x+b.width-.5 && a.x+a.width > b.x+.5 && a.y < b.y+b.height-.5 && a.y+a.height > b.y+.5));
@@ -2435,7 +2428,7 @@ const Hardware = (() => {
         }
 
         function settleEquipmentDrop(targets,ignored,fallback) {
-            const obstacles=Object.values(state.devices).filter(dev=>!ignored.has(dev.id)).flatMap(dev=>placementShapes(dev,parseFloat(dev.el.style.left)||0,parseFloat(dev.el.style.top)||0));
+            const obstacles=Object.values(appState.project.devices).filter(dev=>!ignored.has(dev.id)).flatMap(dev=>placementShapes(dev,parseFloat(dev.el.style.left)||0,parseFloat(dev.el.style.top)||0));
             const shapes=targets.map(p=>({p,parts:placementShapes(p.dev,0,0)}));
             const fits=(dx,dy)=>shapes.every(({p,parts})=>{
                 const x=p.x+dx,y=p.y+dy;
@@ -2463,8 +2456,8 @@ const Hardware = (() => {
             return best?targets.map(p=>({...p,x:p.x+best.dx,y:p.y+best.dy})):fallback;
         }
         function gravityDropTargets(targets,ignored){
-            if(!gravityEnabled||targets.some(p=>p.dev.type==='pendantLamp'||WALL_LAMP_TYPES[p.dev.type]))return targets;
-            const obstacles=Object.values(state.devices).filter(dev=>!ignored.has(dev.id)&&dev.type!=='pendantLamp'&&!WALL_LAMP_TYPES[dev.type]).flatMap(dev=>placementShapes(dev,parseFloat(dev.el.style.left)||0,parseFloat(dev.el.style.top)||0).map(shape=>({...shape,dev})));
+            if(!appState.preferences.gravityEnabled||targets.some(p=>p.dev.type==='pendantLamp'||WALL_LAMP_TYPES[p.dev.type]))return targets;
+            const obstacles=Object.values(appState.project.devices).filter(dev=>!ignored.has(dev.id)&&dev.type!=='pendantLamp'&&!WALL_LAMP_TYPES[dev.type]).flatMap(dev=>placementShapes(dev,parseFloat(dev.el.style.left)||0,parseFloat(dev.el.style.top)||0).map(shape=>({...shape,dev})));
             let distance=Math.min(...targets.map(p=>maxEquipmentBottom()-p.y-p.dev.el.offsetHeight));
             for(const p of targets){
                 for(const shape of placementShapes(p.dev,p.x,p.y)){
@@ -2482,7 +2475,7 @@ const Hardware = (() => {
             return distance>.5?targets.map(p=>({...p,y:p.y+distance})):targets;
         }
         function settleNewDeviceWithGravity(dev){
-            if(state.restoringProject||!gravityEnabled||dev.type==='pendantLamp'||WALL_LAMP_TYPES[dev.type])return;
+            if(appState.project.restoringProject||!appState.preferences.gravityEnabled||dev.type==='pendantLamp'||WALL_LAMP_TYPES[dev.type])return;
             const startY=parseFloat(dev.el.style.top)||0;
             const target=gravityDropTargets([{dev,x:parseFloat(dev.el.style.left)||0,y:startY}],new Set([dev.id]))[0];
             if(target.y-startY<1)return;
@@ -2490,7 +2483,7 @@ const Hardware = (() => {
             const started=performance.now(),duration=Math.min(1150,540+(target.y-startY)*.24);
             let frame=0;
             const step=now=>{
-                if(!state.devices[dev.id])return;
+                if(!appState.project.devices[dev.id])return;
                 const progress=Math.min(1,(now-started)/duration),ease=progress*progress;
                 dev.el.style.top=(startY+(target.y-startY)*ease)+'px';updateCables(new Set([dev.id]));
                 if(progress<1)frame=requestAnimationFrame(step);
@@ -2513,7 +2506,7 @@ const Hardware = (() => {
             }
             // Above furniture backs (1–2), always below equipment chassis (10+).
             layer.style.zIndex = '3';
-            const boxes = Object.values(state.devices).map(dev => ({
+            const boxes = Object.values(appState.project.devices).map(dev => ({
                 dev, x:dev.dragVisualPosition?.x??(parseFloat(dev.el.style.left)||0), y:dev.dragVisualPosition?.y??(parseFloat(dev.el.style.top)||0),
                 width:dev.el.offsetWidth, height:dev.el.offsetHeight
             }));
@@ -2569,7 +2562,7 @@ const Hardware = (() => {
                 });
             });
             [...layer.querySelectorAll('.auto-stack-foot')].forEach(foot=>{
-                const owner=state.devices[foot.dataset.footOwner];
+                const owner=appState.project.devices[foot.dataset.footOwner];
                 if(!owner){foot.remove();return;}
                 // Retracting feet keep following their owner, even while it is dragged away.
                 foot.style.left=((owner.dragVisualPosition?.x??(parseFloat(owner.el.style.left)||0))+Number(foot.dataset.offsetX))+'px';
@@ -2581,7 +2574,7 @@ const Hardware = (() => {
                 const retract=foot.animate([{transform:'scaleY(1)'},{transform:'scaleY(.92)',offset:.25},{transform:'scaleY(0)'}],{duration:170,easing:'ease-in',fill:'forwards'});
                 retract.onfinish=()=>{if(foot.dataset.retracting==='true')foot.remove();};
             });
-            if([...deployedFootSupports.keys()].some(id=>state.devices[id]&&!nextSupports.has(id)))playUiSound('feetRetract');
+            if([...deployedFootSupports.keys()].some(id=>appState.project.devices[id]&&!nextSupports.has(id)))playUiSound('feetRetract');
             deployedFootSupports=nextSupports;
         }
 
@@ -2671,7 +2664,7 @@ const Hardware = (() => {
 
         function createEqFilters(freqs) {
             return freqs.map((freq, i) => {
-                const filter = state.audioCtx.createBiquadFilter();
+                const filter = appState.audio.context.createBiquadFilter();
                 if (i === 0) filter.type = 'lowshelf';
                 else if (i === freqs.length - 1) filter.type = 'highshelf';
                 else {
@@ -2713,7 +2706,7 @@ const Hardware = (() => {
             const knob = dev.el.querySelector(`[data-channel-knob="${channel + 1}"]`);
             if (knob) knob.setAttribute('aria-valuenow', String(Math.round(clamped * 100)));
             updateKnobAngle(dev, `.amp4-channel:nth-child(${channel + 1}) .amp4-knob`, clamped, 0, 1);
-            if (state.selectedDeviceId === dev.id) {
+            if (appState.interface.selectedDeviceId === dev.id) {
                 const inspectorSlider = document.getElementById(`sl-amp4-${channel + 1}`);
                 const inspectorLabel = document.getElementById(`lbl-amp4-${channel + 1}`);
                 if (inspectorSlider) inspectorSlider.value = clamped;
@@ -2830,7 +2823,7 @@ const Hardware = (() => {
         }
         function listeningProfilePreviewHtml(type){
             const profile=LISTENING_PROFILES[type]||{label:'Resposta neutra',bands:[0,0,0]};
-            const sampleRate=state.audioCtx?.sampleRate||48000,frequencies=Float32Array.from({length:181},(_,i)=>20*1000**(i/180)),response=new Float64Array(frequencies.length);
+            const sampleRate=appState.audio.context?.sampleRate||48000,frequencies=Float32Array.from({length:181},(_,i)=>20*1000**(i/180)),response=new Float64Array(frequencies.length);
             let specs=profile.bassAlignment?floorListeningFilters(profile,sampleRate):profile.filterSpecs;
             if(!profile.bassAlignment&&!profile.filterSpecs){
                 specs=[...(profile.highpass?[{type:'highpass',frequency:profile.highpass,Q:Math.SQRT1_2}]:[]),{type:'lowshelf',frequency:120,Q:.7,gain:profile.bands?.[0]||0},{type:'peaking',frequency:1600,Q:.7,gain:profile.bands?.[1]||0},{type:'highshelf',frequency:5500,Q:.7,gain:profile.bands?.[2]||0}];
@@ -2922,7 +2915,7 @@ const Hardware = (() => {
         }
         function installAmplificationVoicing(dev){
             const profile=AMPLIFICATION_VOICINGS[dev.type];if(!profile)return;
-            const ctx=state.audioCtx,byNode=new Map(),curve=modelSaturationCurve(profile);dev.amplificationProfile=profile;dev.modelAudioNodes||=[];dev.valveWarmGains=[];
+            const ctx=appState.audio.context,byNode=new Map(),curve=modelSaturationCurve(profile);dev.amplificationProfile=profile;dev.modelAudioNodes||=[];dev.valveWarmGains=[];
             const outputPorts=[...dev.el.querySelectorAll('.port[data-io="out"]')];
             for(const port of outputPorts){
                 const key=port.dataset.node,input=dev.nodes[key];if(!input)continue;
@@ -2988,10 +2981,10 @@ const Hardware = (() => {
             const read=(dev,stage)=>{
                 stage.analyzer.getFloatTimeDomainData(stage.samples);let sum=0,peak=0;
                 for(const value of stage.samples){sum+=value*value;peak=Math.max(peak,Math.abs(value));}
-                stage.rms=dev.powered&&!dev.state.damage&&state.audioCtx.state==='running'?Math.sqrt(sum/stage.samples.length):0;
+                stage.rms=dev.powered&&!dev.state.damage&&appState.audio.context.state==='running'?Math.sqrt(sum/stage.samples.length):0;
                 stage.clipping=stage.rms>0&&peak>stage.peakLimit*.94;
             };
-            for(const dev of Object.values(state.devices)){
+            for(const dev of Object.values(appState.project.devices)){
                 for(const stage of dev.electricalStages||[])read(dev,stage);
                 for(const circuit of dev.outputCircuits||[])for(const path of circuit.paths)if(path.analyzer)read(dev,path);
             }
@@ -3018,7 +3011,7 @@ const Hardware = (() => {
         });
         const isRecommendedSpeakerPower=type=>!!(FLOOR_SPEAKERS[type]?.recommended||BOOKSHELF_SPEAKERS[type]?.recommended||FIXED_PASSIVE_SPECS[type]?.recommended);
         function connectPhonoPlayback(dev,gain,destination){
-            const ctx=state.audioCtx,before=ctx.createGain(),clip=ctx.createWaveShaper(),after=ctx.createGain();
+            const ctx=appState.audio.context,before=ctx.createGain(),clip=ctx.createWaveShaper(),after=ctx.createGain();
             before.gain.value=.25;after.gain.value=4;clip.curve=electricalLimitCurve(1.4);clip.oversample='2x';
             gain.connect(before);before.connect(clip);clip.connect(after);after.connect(destination);
             (dev.modelAudioNodes||=[]).push(before,clip,after);
@@ -3049,7 +3042,7 @@ const Hardware = (() => {
                 if(stage.load===ohms)return;stage.load=ohms;
                 const protectedLoad=ohms<spec.minOhms-.01;
                 const referenceLoad=Number.isFinite(ohms)?ohms:8,available=ampPowerAtLoad(dev.type,referenceLoad),limit=peakLimitForWatts(available,referenceLoad);
-                stage.peakLimit=limit;stage.shaper.curve=electricalLimitCurve(limit);stage.gate.gain.setTargetAtTime(protectedLoad?0:1,state.audioCtx.currentTime,.025);
+                stage.peakLimit=limit;stage.shaper.curve=electricalLimitCurve(limit);stage.gate.gain.setTargetAtTime(protectedLoad?0:1,appState.audio.context.currentTime,.025);
             });
         }
         function electricalStatusMarkup(dev){
@@ -3077,8 +3070,8 @@ const Hardware = (() => {
             if(dev.state.damage)gain=0;
             dev.simulatedInputWatts=power;
             dev.powerStatusVisual={...(dev.powerStatusVisual||{}),currentWatts:power,overloaded:dev.speakerOverloaded};
-            if(state.selectedDeviceId===dev.id){const status=document.getElementById('power-load-status');if(status)status.innerHTML=electricalStatusMarkup(dev);}
-            dev.listeningGain.gain.setTargetAtTime(gain,state.audioCtx.currentTime,.06);
+            if(appState.interface.selectedDeviceId===dev.id){const status=document.getElementById('power-load-status');if(status)status.innerHTML=electricalStatusMarkup(dev);}
+            dev.listeningGain.gain.setTargetAtTime(gain,appState.audio.context.currentTime,.06);
         }
         const isPassiveLoad=dev=>PASSIVE_SPK.has(dev.type)||PASSIVE_SUB_TYPES.has(dev.type);
         function installListeningControls(dev){
@@ -3086,14 +3079,14 @@ const Hardware = (() => {
             dev.state.muted=false;dev.state.solo=false;
             const output=dev.outputPan||dev.analyzer;
             if(!output)return;
-            dev.listeningGain=state.audioCtx.createGain();
-            output.disconnect(state.masterGain);output.connect(dev.listeningGain);dev.listeningGain.connect(state.masterGain);
+            dev.listeningGain=appState.audio.context.createGain();
+            output.disconnect(appState.audio.masterGain);output.connect(dev.listeningGain);dev.listeningGain.connect(appState.audio.masterGain);
         }
         const portChannel=port=>port?.dataset.channel||(/[LR]$/.exec(port?.dataset.node||'')?.[0])||'';
         const isSignalPassthrough=dev=>!!INTERFACE_DEVICES[dev.type]?.passive||RCA_SWITCH_TYPES.has(dev.type)||MATRIX_TYPES.has(dev.type)||SPEAKER_SWITCH_TYPES.has(dev.type);
         function prospectiveConnections(prospective){
-            if(!prospective)return state.connections;
-            return [...state.connections.filter(c=>!c.miswired&&c.inId!==prospective.input.id&&c.outId!==prospective.output.id),{outId:prospective.output.id,inId:prospective.input.id}];
+            if(!prospective)return appState.project.connections;
+            return [...appState.project.connections.filter(c=>!c.miswired&&c.inId!==prospective.input.id&&c.outId!==prospective.output.id),{outId:prospective.output.id,inId:prospective.input.id}];
         }
         function routedInputPorts(dev,output,channelHint=''){
             const channel=portChannel(output)||channelHint;
@@ -3112,7 +3105,7 @@ const Hardware = (() => {
             if(!output||seen.has(output.id))return [];
             const next=new Set(seen);next.add(output.id);const channel=sourceChannel||portChannel(output),localChannel=portChannel(output)||routingChannel;
             return prospectiveConnections(prospective).filter(c=>c.outId===output.id).flatMap(c=>{
-                const input=document.getElementById(c.inId),dev=state.devices[input?.closest('.device-node')?.id];
+                const input=document.getElementById(c.inId),dev=appState.project.devices[input?.closest('.device-node')?.id];
                 if(!dev)return [];
                 const nextChannel=portChannel(input)||localChannel;
                 if(!isSignalPassthrough(dev))return [{dev,input,channel:channel||portChannel(input),ohms:inputOhms(dev,input)}];
@@ -3127,7 +3120,7 @@ const Hardware = (() => {
             return [...new Map(ports.flatMap(port=>terminalLoads(port,prospective)).map(load=>[load.input.id+':'+load.channel,load])).values()];
         }
         function installOutputCircuits(dev){
-            const ctx=state.audioCtx,byNode=new Map();dev.outputCircuits=[];
+            const ctx=appState.audio.context,byNode=new Map();dev.outputCircuits=[];
             for(const port of dev.el.querySelectorAll('.port[data-io="out"]')){
                 const node=dev.nodes[port.dataset.node];if(!node)continue;
                 if(byNode.has(node)){const circuit=byNode.get(node);circuit.ports.push(port);dev.nodes[port.dataset.node]=circuit.output;continue;}
@@ -3156,8 +3149,8 @@ const Hardware = (() => {
             }
         }
         function updateOutputCircuitLoads(){
-            Object.values(state.devices).forEach(dev=>dev.refreshStreamRouting?.());
-            for(const dev of Object.values(state.devices))for(const circuit of dev.outputCircuits||[]){
+            Object.values(appState.project.devices).forEach(dev=>dev.refreshStreamRouting?.());
+            for(const dev of Object.values(appState.project.devices))for(const circuit of dev.outputCircuits||[]){
                 circuit.signal=getPortSignal(circuit.ports[0]);if(circuit.signal==='amplified')continue;
                 // RCA and stereo jacks of a source share their channel's output buffer.
                 const shared=SOURCE_TYPES.has(dev.type)?dev.outputCircuits.filter(other=>getPortSignal(other.ports[0])===circuit.signal):[circuit];
@@ -3168,7 +3161,7 @@ const Hardware = (() => {
                     if(path.loadSignature===signature)continue;path.loadSignature=signature;path.load=ohms;
                     const phones=!!path.shaper,spec=phones?headphoneOutputSpec(dev):{outputOhms:isSignalPassthrough(dev)?0:TURNTABLE_TYPES.has(dev.type)&&dev.state.tt?.output==='phono'?600:100};
                     const divider=Number.isFinite(ohms)?ohms/(ohms+spec.outputOhms):1;
-                    path.loadGain.gain.setTargetAtTime(divider,state.audioCtx.currentTime,.025);
+                    path.loadGain.gain.setTargetAtTime(divider,appState.audio.context.currentTime,.025);
                     if(phones){
                         const availableVrms=Math.min(spec.voltsRms,Number.isFinite(ohms)?spec.currentRms*ohms:spec.voltsRms);
                         path.peakLimit=Math.SQRT2*availableVrms/ELECTRICAL_MODEL.lineVoltsPerUnit;
@@ -3179,20 +3172,20 @@ const Hardware = (() => {
         }
         function amplifierOrigins(output,seen=new Set(),channelHint=''){
             if(!output||seen.has(output.id))return [];
-            const dev=state.devices[output.closest('.device-node')?.id];if(!dev||!isSelectedSwitchOutput(dev,output))return [];
+            const dev=appState.project.devices[output.closest('.device-node')?.id];if(!dev||!isSelectedSwitchOutput(dev,output))return [];
             const channel=portChannel(output)||channelHint;
             if(POWER_OUTPUT_TYPES.has(dev.type)&&getPortSignal(output)==='amplified')return [{amp:dev,channel,key:dev.id+':'+channel}];
             if(!isSignalPassthrough(dev))return [];
             const next=new Set(seen);next.add(output.id);const inputs=routedInputPorts(dev,output,channel);
-            return state.connections.filter(c=>!c.miswired&&inputs.some(port=>port.id===c.inId)).flatMap(c=>amplifierOrigins(document.getElementById(c.outId),next,portChannel(document.getElementById(c.inId))||channel));
+            return appState.project.connections.filter(c=>!c.miswired&&inputs.some(port=>port.id===c.inId)).flatMap(c=>amplifierOrigins(document.getElementById(c.outId),next,portChannel(document.getElementById(c.inId))||channel));
         }
         function amplifierRoutes(dev){
-            const routes=state.connections.filter(c=>!c.miswired&&document.getElementById(c.inId)?.closest('.device-node')?.id===dev.id).flatMap(c=>amplifierOrigins(document.getElementById(c.outId)));
+            const routes=appState.project.connections.filter(c=>!c.miswired&&document.getElementById(c.inId)?.closest('.device-node')?.id===dev.id).flatMap(c=>amplifierOrigins(document.getElementById(c.outId)));
             return [...new Map(routes.map(route=>[route.key,route])).values()];
         }
         function updateListeningControls(){
-            if(!state.audioCtx)return;
-            const devices=Object.values(state.devices),sinks=devices.filter(isListeningDevice);
+            if(!appState.audio.context)return;
+            const devices=Object.values(appState.project.devices),sinks=devices.filter(isListeningDevice);
             const solo=sinks.some(dev=>dev.state.solo),loads=new Map(),routes=new Map();
             sinks.filter(isPassiveLoad).forEach(dev=>{
                 const list=amplifierRoutes(dev);routes.set(dev.id,list);
@@ -3233,11 +3226,11 @@ const Hardware = (() => {
                 if(isPassiveLoad(dev))dev.powerStatusVisual={channels:statusChannels,notes:statusNotes};
                 const audible=!dev.state.damage&&!dev.state.muted&&(!solo||dev.state.solo);
                 dev.electricalBaseGain=audible?gain:0;
-                if(isPassiveLoad(dev))applySpeakerLoadDynamics(dev);else dev.listeningGain?.gain.setTargetAtTime(audible?gain:0,state.audioCtx.currentTime,.025);
+                if(isPassiveLoad(dev))applySpeakerLoadDynamics(dev);else dev.listeningGain?.gain.setTargetAtTime(audible?gain:0,appState.audio.context.currentTime,.025);
                 dev.el.classList.toggle('listening-muted',!audible||gain===0);
                 dev.el.classList.toggle('listening-solo',!!dev.state.solo);
             });
-            ampWarnings.forEach((notes,id)=>state.devices[id].powerStatus=notes.map(note=>note.detail).join(' '));
+            ampWarnings.forEach((notes,id)=>appState.project.devices[id].powerStatus=notes.map(note=>note.detail).join(' '));
             devices.filter(dev=>FIXED_AMP_SPECS[dev.type]).forEach(dev=>{
                 const channels=['L','R'].map(ch=>{const ohms=dev.channelLoads?.[ch]??Infinity,min=dev.state.minOhms||0,state=!Number.isFinite(ohms)?'empty':ohms<min-.01?'protection':'compatible',label=Number.isFinite(ohms)?(ohms>=1000?(ohms/1000).toFixed(1)+' kΩ':ohms.toFixed(1)+' Ω'):'Sem carga',watts=Number.isFinite(ohms)?Math.round(ampPowerAtLoad(dev.type,ohms)):null;return {channel:ch,label,watts,state,detail:`Canal ${ch}: ${label}${watts!==null?`, até ${watts} W`:''}${state==='protection'?`; abaixo da carga mínima de ${min} Ω`:''}.`};});
                 const valveWarning=dev.type==='powerValve'&&Object.values(dev.channelLoads||{}).some(load=>!Number.isFinite(load)||load>16)?{state:'attention',detail:'Valvulado: use uma carga de caixa adequada; circuito aberto não equivale a 8 Ω.'}:null;
@@ -3246,7 +3239,7 @@ const Hardware = (() => {
                 dev.powerStatusVisual={channels,notes};
             });
 
-            const selected=state.devices[state.selectedDeviceId];
+            const selected=appState.project.devices[appState.interface.selectedDeviceId];
             const status=document.getElementById('power-load-status');if(status&&selected)status.innerHTML=electricalStatusMarkup(selected);
         }
         function listeningInspectorHtml(dev){
@@ -3273,7 +3266,7 @@ const Hardware = (() => {
             updateListeningControls();
         }
         function applyCableAppearance(connection){
-            const hidden=!!state.hideCables||!!connection.hidden;
+            const hidden=!!appState.canvas.hideCables||!!connection.hidden;
             connection.el.style.display=hidden?'none':'';
             connection.el.querySelectorAll('.cable-path,.wire-braid-red').forEach(path=>{
                 if(connection.color)path.style.setProperty('stroke',connection.color,'important');else path.style.removeProperty('stroke');
@@ -3289,7 +3282,7 @@ const Hardware = (() => {
         function renderCableProperties(){
             let panel=document.getElementById('cable-properties');
             if(!panel){panel=document.createElement('section');panel.id='cable-properties';panel.className='p-5 border-t border-gray-700 flex flex-col gap-3';document.getElementById('inspector').appendChild(panel);}
-            const connection=state.selectedConnection;panel.hidden=!connection;
+            const connection=appState.interface.selectedConnection;panel.hidden=!connection;
             if(!connection)return;
             panel.innerHTML='<label for="cable-label" class="text-sm text-gray-300">Etiqueta</label><div class="cable-label-row"><input id="cable-label" type="text" maxlength="60" class="p-2 rounded bg-gray-800 border border-gray-600 text-gray-100" placeholder="Nome do cabo"><button id="cable-visibility" type="button" aria-description="Ocultar altera apenas o visual; o áudio continua passando." data-tooltip="Ocultar altera apenas o visual; o áudio continua passando."><svg viewBox="0 0 24 24" aria-hidden="true"><path class="cable-eye-open" d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle class="cable-eye-open" cx="12" cy="12" r="2.8"/><path class="cable-eye-closed" d="M2 13c3-3 6-4 10-4s7 1 10 4M6 16l-2 2m8-1v3m6-4 2 2"/></svg></button></div><div class="flex flex-col gap-3"><div class="flex items-center justify-between"><span class="text-sm text-gray-300">Cor</span><button id="cable-color-reset" type="button" class="text-xs text-blue-300">Padrão</button></div><div id="cable-color-palette" class="cable-color-palette" role="group" aria-label="Cor do cabo"></div></div>';
             const out=document.getElementById(connection.outId),input=document.getElementById(connection.inId);
@@ -3322,27 +3315,27 @@ const Hardware = (() => {
         }
 
         function wireSpeakerIn(dev, stereo = false) {
-            dev.analyzer = state.audioCtx.createAnalyser();
+            dev.analyzer = appState.audio.context.createAnalyser();
             dev.dataArray = new Uint8Array(dev.analyzer.frequencyBinCount);
             if (stereo) {
-                dev.nodes.inR = state.audioCtx.createGain();
-                dev.nodes.inL = state.audioCtx.createGain();
+                dev.nodes.inR = appState.audio.context.createGain();
+                dev.nodes.inL = appState.audio.context.createGain();
                 const compact=dev.type==='spkActiveCompact';
-                const summer = compact?state.audioCtx.createChannelMerger(2):state.audioCtx.createGain();
+                const summer = compact?appState.audio.context.createChannelMerger(2):appState.audio.context.createGain();
                 // A porta RCA mono das caixas ativas usa este mesmo ponto de entrada.
                 dev.nodes.in = summer;
                 if(compact){
                     dev.nodes.inR.connect(summer,0,1);dev.nodes.inL.connect(summer,0,0);
-                    dev.nodes.inStereo=state.audioCtx.createGain();
-                    dev.auxSplitter=state.audioCtx.createChannelSplitter(2);
+                    dev.nodes.inStereo=appState.audio.context.createGain();
+                    dev.auxSplitter=appState.audio.context.createChannelSplitter(2);
                     dev.nodes.inStereo.connect(dev.auxSplitter);
                     dev.auxSplitter.connect(dev.nodes.inL,0);dev.auxSplitter.connect(dev.nodes.inR,1);
                 }else{dev.nodes.inR.connect(summer);dev.nodes.inL.connect(summer);}
-                dev.volumeNode = state.audioCtx.createGain();
+                dev.volumeNode = appState.audio.context.createGain();
                 summer.connect(dev.volumeNode);
                 dev.volumeNode.connect(dev.powerGain);
             } else {
-                dev.nodes.in = state.audioCtx.createGain();
+                dev.nodes.in = appState.audio.context.createGain();
                 dev.nodes.in.connect(dev.powerGain);
             }
             dev.listeningProfile=LISTENING_PROFILES[dev.type];
@@ -3350,23 +3343,23 @@ const Hardware = (() => {
             dev.voicingNodes=[];
             if(dev.listeningProfile){
                 // Identical filters process both channels without mixing L and R.
-                const trim=state.audioCtx.createGain();
+                const trim=appState.audio.context.createGain();
                 trim.gain.value=10**((dev.listeningProfile.headroomDb??-4)/20);
                 output.connect(trim);output=trim;dev.voicingNodes.push(trim);
                 if(dev.listeningProfile.bassAlignment||dev.listeningProfile.filterSpecs){
-                    const specs=dev.listeningProfile.bassAlignment?floorListeningFilters(dev.listeningProfile,state.audioCtx.sampleRate):dev.listeningProfile.filterSpecs;
+                    const specs=dev.listeningProfile.bassAlignment?floorListeningFilters(dev.listeningProfile,appState.audio.context.sampleRate):dev.listeningProfile.filterSpecs;
                     specs.forEach(spec=>{
-                        const coefficients=speakerFilterCoefficients(spec,state.audioCtx.sampleRate);
-                        const filter=state.audioCtx.createIIRFilter(coefficients.feedforward,coefficients.feedback);
+                        const coefficients=speakerFilterCoefficients(spec,appState.audio.context.sampleRate);
+                        const filter=appState.audio.context.createIIRFilter(coefficients.feedforward,coefficients.feedback);
                         output.connect(filter);output=filter;dev.voicingNodes.push(filter);
                     });
                 }else{
                 if(dev.listeningProfile.highpass){
-                    const filter=state.audioCtx.createBiquadFilter();filter.type='highpass';filter.frequency.value=dev.listeningProfile.highpass;filter.Q.value=Math.SQRT1_2;
+                    const filter=appState.audio.context.createBiquadFilter();filter.type='highpass';filter.frequency.value=dev.listeningProfile.highpass;filter.Q.value=Math.SQRT1_2;
                     output.connect(filter);output=filter;dev.voicingNodes.push(filter);
                 }
                 ['lowshelf','peaking','highshelf'].forEach((type,index)=>{
-                    const filter=state.audioCtx.createBiquadFilter();
+                    const filter=appState.audio.context.createBiquadFilter();
                     filter.type=type;filter.frequency.value=[120,1600,5500][index];
                     filter.Q.value=.7;filter.gain.value=dev.listeningProfile.bands[index];
                     output.connect(filter);output=filter;dev.voicingNodes.push(filter);
@@ -3375,17 +3368,17 @@ const Hardware = (() => {
             }
             output.connect(dev.analyzer);
             if (PASSIVE_SPK.has(dev.type) || ACTIVE_SPK.has(dev.type)) {
-                dev.outputPan = state.audioCtx.createStereoPanner();
+                dev.outputPan = appState.audio.context.createStereoPanner();
                 dev.analyzer.connect(dev.outputPan);
-                dev.outputPan.connect(state.masterGain);
-            } else dev.analyzer.connect(state.masterGain);
+                dev.outputPan.connect(appState.audio.masterGain);
+            } else dev.analyzer.connect(appState.audio.masterGain);
         }
 
         function setMixerVolume(dev, channel, value) {
             const level = Math.max(0, Math.min(1, Number(value)));
             dev.state.channelVolumes ||= [0.8, 0.8, 0.8];
             dev.state.channelVolumes[channel] = level;
-            ['R', 'L'].forEach(side => { if (dev.channelGains?.[channel]?.[side]) dev.channelGains[channel][side].gain.setTargetAtTime(level, state.audioCtx.currentTime, 0.015); });
+            ['R', 'L'].forEach(side => { if (dev.channelGains?.[channel]?.[side]) dev.channelGains[channel][side].gain.setTargetAtTime(level, appState.audio.context.currentTime, 0.015); });
             const output = dev.el.querySelector(`[data-mixer-value="${channel}"]`);
             if (output) output.textContent = `${Math.round(level * 100)}%`;
             const onDevice = dev.el.querySelector(`[data-mixer-channel="${channel}"]`);
@@ -3400,7 +3393,7 @@ const Hardware = (() => {
         function configurePlaybackSession(){
             try{
                 if(navigator.audioSession){
-                    const capturing=Object.values(state.devices).some(dev=>dev.capturePending||dev.authorizingCapture||dev.micStream);
+                    const capturing=Object.values(appState.project.devices).some(dev=>dev.capturePending||dev.authorizingCapture||dev.micStream);
                     const sessionType=capturing?'play-and-record':'playback';
                     if(navigator.audioSession.type!==sessionType)navigator.audioSession.type=sessionType;
                     return navigator.audioSession.type===sessionType;
@@ -3423,38 +3416,38 @@ const Hardware = (() => {
             if(legacyPlaybackAudio.paused)legacyPlaybackAudio.play()?.catch(()=>{});
         }
         function initAudio() {
-            if (state.audioCtx) return;
+            if (appState.audio.context) return;
             configurePlaybackSession();
-            state.audioCtx = new (window.AudioContext || window.webkitAudioContext)({latencyHint:'interactive'});
-            state.masterGain = state.audioCtx.createGain();
+            appStateStore.actions.setAudioRuntime('context',new (window.AudioContext || window.webkitAudioContext)({latencyHint:'interactive'}));
+            appStateStore.actions.setAudioRuntime('masterGain',appState.audio.context.createGain());
             // Add a little more listening level while leaving headroom for summed sources.
-            state.masterGain.gain.value = 0.7*state.listeningOutputLevel;
-            const bass=state.audioCtx.createBiquadFilter(),treble=state.audioCtx.createBiquadFilter();
-            bass.type='lowshelf';bass.frequency.value=140;bass.gain.value=state.listeningBass;
-            treble.type='highshelf';treble.frequency.value=4500;treble.gain.value=state.listeningTreble;
-            const peakGuard=state.audioCtx.createDynamicsCompressor();
+            appState.audio.masterGain.gain.value = 0.7*appState.preferences.listening.outputLevel;
+            const bass=appState.audio.context.createBiquadFilter(),treble=appState.audio.context.createBiquadFilter();
+            bass.type='lowshelf';bass.frequency.value=140;bass.gain.value=appState.preferences.listening.bass;
+            treble.type='highshelf';treble.frequency.value=4500;treble.gain.value=appState.preferences.listening.treble;
+            const peakGuard=appState.audio.context.createDynamicsCompressor();
             peakGuard.threshold.value=-4;peakGuard.knee.value=0;peakGuard.ratio.value=12;peakGuard.attack.value=.003;peakGuard.release.value=.12;
-            bass.connect(treble);treble.connect(peakGuard);peakGuard.connect(state.audioCtx.destination);
-            state.listeningToneInput=bass;state.listeningToneFilters={bass,treble};
+            bass.connect(treble);treble.connect(peakGuard);peakGuard.connect(appState.audio.context.destination);
+            appStateStore.actions.setAudioRuntime('listeningToneInput',bass);appStateStore.actions.setAudioRuntime('listeningToneFilters',{bass,treble});
             setupRoomAudio();
-            state.audioCtx.addEventListener('statechange', () => {
-                if(state.audioCtx.state==='interrupted')audioNeedsGestureRecovery=true;
+            appState.audio.context.addEventListener('statechange', () => {
+                if(appState.audio.context.state==='interrupted')audioNeedsGestureRecovery=true;
                 updateCableFlows();
             });
         }
         function setListeningOutputLevel(value){
-            state.listeningOutputLevel=Math.round(Math.max(.5,Math.min(1.2,Number(value)||1))*100)/100;
-            if(state.masterGain)state.masterGain.gain.setTargetAtTime(.7*state.listeningOutputLevel,state.audioCtx.currentTime,.04);
+            appStateStore.actions.setListeningPreferences({outputLevel:Math.round(Math.max(.5,Math.min(1.2,Number(value)||1))*100)/100});
+            if(appState.audio.masterGain)appState.audio.masterGain.gain.setTargetAtTime(.7*appState.preferences.listening.outputLevel,appState.audio.context.currentTime,.04);
             const slider=document.getElementById('listening-output-level'),output=document.getElementById('listening-output-value');
-            if(slider)slider.value=Math.round(state.listeningOutputLevel*100);
-            if(output)output.textContent=Math.round(state.listeningOutputLevel*100)+'%';
+            if(slider)slider.value=Math.round(appState.preferences.listening.outputLevel*100);
+            if(output)output.textContent=Math.round(appState.preferences.listening.outputLevel*100)+'%';
             scheduleAppPreferencesSave();
         }
         function setListeningTone(kind,value){
             if(kind!=='bass'&&kind!=='treble')return;
             const amount=Math.max(-6,Math.min(6,Math.round(Number(value)||0)));
-            state[kind==='bass'?'listeningBass':'listeningTreble']=amount;
-            if(state.listeningToneFilters)state.listeningToneFilters[kind].gain.setTargetAtTime(amount,state.audioCtx.currentTime,.045);
+            appStateStore.actions.setListeningPreferences({[kind]:amount});
+            if(appState.audio.listeningToneFilters)appState.audio.listeningToneFilters[kind].gain.setTargetAtTime(amount,appState.audio.context.currentTime,.045);
             const slider=document.getElementById(`listening-${kind}-level`),output=document.getElementById(`listening-${kind}-value`);
             if(slider)slider.value=amount;
             if(output)output.textContent=`${amount>0?'+':''}${amount} dB`;
@@ -3465,7 +3458,7 @@ const Hardware = (() => {
             if(event.type==='pointerdown'&&(event.pointerType==='touch'||event.button!==0))return;
             if(event.type==='keydown'&&(event.repeat||event.ctrlKey||event.metaKey||event.altKey||['Shift','Control','Alt','Meta','Escape'].includes(event.key)))return;
             try{
-                initAudio();const context=state.audioCtx;
+                initAudio();const context=appState.audio.context;
                 prepareLegacyPlayback();
                 // Start inside the trusted gesture, before any await. Touch Safari may
                 // ignore pointerdown but accepts touchend/click and a started buffer.
@@ -3478,7 +3471,7 @@ const Hardware = (() => {
         }
         for(const name of ['pointerdown','pointerup','touchend','click','keydown'])document.addEventListener(name,activateAudioFromGesture,{capture:true,passive:true});
         function resumeAudioAfterReturn(){
-            const context=state.audioCtx;
+            const context=appState.audio.context;
             if(!context||!audioPrimed||document.visibilityState==='hidden'||context.state==='closed')return;
             prepareLegacyPlayback();
             if(context.state!=='running')context.resume().then(()=>{if(context.state!=='running')audioNeedsGestureRecovery=true;updateCableFlows();}).catch(()=>{audioNeedsGestureRecovery=true;});
@@ -3497,9 +3490,9 @@ const Hardware = (() => {
         const interactionGain=value=>Math.min(1.4,Math.max(0,value)*1.3);
         function ensureUiEffectsBus(context){
             if(uiEffectsGain)return;
-            uiEffectsGain=context.createGain();uiEffectsGain.gain.value=interactionGain(state.uiSoundVolume);
+            uiEffectsGain=context.createGain();uiEffectsGain.gain.value=interactionGain(appState.preferences.uiSoundVolume);
             uiEffectsLimiter=context.createDynamicsCompressor();uiEffectsLimiter.threshold.value=-14;uiEffectsLimiter.knee.value=12;uiEffectsLimiter.ratio.value=6;uiEffectsLimiter.attack.value=.003;uiEffectsLimiter.release.value=.12;
-            uiEffectsGain.connect(uiEffectsLimiter);uiEffectsLimiter.connect(state.listeningToneInput);
+            uiEffectsGain.connect(uiEffectsLimiter);uiEffectsLimiter.connect(appState.audio.listeningToneInput);
         }
         const uiSoundProfiles={
             click:{duration:.065,frequency:1100,noise:.09,tone:210,body:.014},
@@ -3517,7 +3510,7 @@ const Hardware = (() => {
             ...Hardware.movementSounds
         };
         function prepareUiAudio(){
-            initAudio();const context=state.audioCtx;
+            initAudio();const context=appState.audio.context;
             ensureUiEffectsBus(context);
             if(!uiNoiseBuffer){
                 uiNoiseBuffer=context.createBuffer(1,context.sampleRate,context.sampleRate);
@@ -3533,13 +3526,13 @@ const Hardware = (() => {
             if(!control&&event.target.closest('.device-node,.catalog-item'))playUiSound('pickup');
         },{capture:true});
         async function playUiSound(kind = 'click', options = {}) {
-            if(state.restoringProject)return;
+            if(appState.project.restoringProject)return;
             const now=performance.now(),profile=uiSoundProfiles[kind]||uiSoundProfiles.click;
             if(now-(uiSoundTimes[kind]??-Infinity)<(profile.cooldown??(kind==='drag'?140:kind==='adjust'?95:55)))return;
             uiSoundTimes[kind]=now;
-            if(state.uiSoundVolume===0)return;
+            if(appState.preferences.uiSoundVolume===0)return;
             try{
-                initAudio();const context=state.audioCtx;
+                initAudio();const context=appState.audio.context;
                 if(context.state!=='running')await context.resume();
                 if(context.state!=='running')return;
                 prepareUiAudio();
@@ -3589,7 +3582,7 @@ const Hardware = (() => {
             element.addEventListener('scroll',()=>{
                 const now=performance.now(),position=element.scrollTop,travel=Math.abs(position-lastPosition),elapsed=Math.max(8,now-lastTime);
                 lastPosition=position;lastTime=now;
-                if(!armed||(inputType==='wheel'&&!wheelScrollMotions.get(element)?.frame)||now-lastMovement>220||state.restoringProject||document.visibilityState!=='visible'||!element.clientHeight||getComputedStyle(element).visibility==='hidden'){
+                if(!armed||(inputType==='wheel'&&!wheelScrollMotions.get(element)?.frame)||now-lastMovement>220||appState.project.restoringProject||document.visibilityState!=='visible'||!element.clientHeight||getComputedStyle(element).visibility==='hidden'){
                     armed=false;distance=0;return;
                 }
                 lastMovement=now;
@@ -3599,7 +3592,7 @@ const Hardware = (() => {
                 // Discard excess travel instead of queuing sounds after the list has stopped.
                 if(distance<16)return;
                 distance%=16;
-                if(state.uiSoundVolume===0||state.audioCtx?.state!=='running')return;
+                if(appState.preferences.uiSoundVolume===0||appState.audio.context?.state!=='running')return;
                 const intensity=Math.min(1,speed/1400);
                 playUiSound('catalogGear',{level:.4+intensity*.55,pitch:.85+intensity*.35});
             },{passive:true});
@@ -3610,7 +3603,7 @@ const Hardware = (() => {
             cableHumRequest++;
             const voice=cableHumVoice;cableHumVoice=null;
             if(!voice)return;
-            const now=state.audioCtx.currentTime;
+            const now=appState.audio.context.currentTime;
             voice.gain.gain.cancelAndHoldAtTime(now);
             voice.gain.gain.linearRampToValueAtTime(0,now+.006);
             voice.oscillator.stop(now+.008);
@@ -3618,11 +3611,11 @@ const Hardware = (() => {
         async function startCableHum(){
             stopCableHum();const request=cableHumRequest;
             try{
-                initAudio();const context=state.audioCtx;
+                initAudio();const context=appState.audio.context;
                 if(context.state!=='running')await context.resume();
                 if(request!==cableHumRequest||!isPatching||context.state!=='running')return;
                 prepareUiAudio();
-                uiEffectsGain.gain.setTargetAtTime(interactionGain(state.uiSoundVolume),context.currentTime,.02);
+                uiEffectsGain.gain.setTargetAtTime(interactionGain(appState.preferences.uiSoundVolume),context.currentTime,.02);
                 const oscillator=context.createOscillator(),filter=context.createBiquadFilter(),gain=context.createGain();
                 const real=new Float32Array(7),imag=new Float32Array([0,1,.28,.16,.07,.03,.02]);
                 oscillator.setPeriodicWave(context.createPeriodicWave(real,imag));oscillator.frequency.value=60;
@@ -3649,12 +3642,12 @@ const Hardware = (() => {
         clearCatalogFooter.prepend(soundControls);
         function setInteractionVolume(percent){
             const value=Math.max(0,Math.min(100,Number(percent)||0));
-            state.uiSoundVolume=value/100;
+            appStateStore.actions.setPreference('uiSoundVolume',value/100);
             document.getElementById('ui-sound-volume').value=value;
             document.getElementById('ui-sound-value').textContent=value?`${value}%`:'desligados';
             document.getElementById('headphone-calibration-ui-slider').value=value;
             document.getElementById('headphone-calibration-ui-value').textContent=value?`${value}%`:'desligados';
-            uiEffectsGain?.gain.setTargetAtTime(interactionGain(state.uiSoundVolume),state.audioCtx.currentTime,.02);
+            uiEffectsGain?.gain.setTargetAtTime(interactionGain(appState.preferences.uiSoundVolume),appState.audio.context.currentTime,.02);
             scheduleProjectSave();
         }
         soundControls.querySelector('input').addEventListener('input',event=>setInteractionVolume(event.target.value));
@@ -3676,7 +3669,7 @@ const Hardware = (() => {
         function controlClickSound(control){
             if(control.matches('[role="slider"]'))return 'click';
             const device=control.closest('.device-type-receiver,.device-type-powerAmp');
-            const inspectorReceiver=control.closest('#inspector')&&RADIO_RECEIVERS.has(state.devices[state.selectedDeviceId]?.type)&&control.matches('[data-receiver-inspector-input],#radio-input-toggle,#inspector-power-toggle');
+            const inspectorReceiver=control.closest('#inspector')&&RADIO_RECEIVERS.has(appState.project.devices[appState.interface.selectedDeviceId]?.type)&&control.matches('[data-receiver-inspector-input],#radio-input-toggle,#inspector-power-toggle');
             return device||inspectorReceiver?'receiverClick':'click';
         }
         document.addEventListener('pointerdown',event=>{
@@ -3692,21 +3685,21 @@ const Hardware = (() => {
         });
 
         function playNote(freq, type, duration, vol, timeOffset, destNode) {
-            if (!state.audioCtx) return;
-            const osc = state.audioCtx.createOscillator();
-            const gain = state.audioCtx.createGain();
+            if (!appState.audio.context) return;
+            const osc = appState.audio.context.createOscillator();
+            const gain = appState.audio.context.createGain();
             osc.type = type; osc.frequency.value = freq;
-            gain.gain.setValueAtTime(vol, state.audioCtx.currentTime + timeOffset);
-            gain.gain.exponentialRampToValueAtTime(0.0001, state.audioCtx.currentTime + timeOffset + duration);
+            gain.gain.setValueAtTime(vol, appState.audio.context.currentTime + timeOffset);
+            gain.gain.exponentialRampToValueAtTime(0.0001, appState.audio.context.currentTime + timeOffset + duration);
             osc.connect(gain); gain.connect(destNode);
-            osc.start(state.audioCtx.currentTime + timeOffset);
-            osc.stop(state.audioCtx.currentTime + timeOffset + duration);
+            osc.start(appState.audio.context.currentTime + timeOffset);
+            osc.stop(appState.audio.context.currentTime + timeOffset + duration);
         }
 
         function sourcePosition(dev) {
             if (!dev.audioBuffer) return 0;
             const playback = dev.filePlayback;
-            let position = (dev.fileOffset || 0) + (playback ? (state.audioCtx.currentTime - playback.startedAt) * playback.rate : 0);
+            let position = (dev.fileOffset || 0) + (playback ? (appState.audio.context.currentTime - playback.startedAt) * playback.rate : 0);
             if (dev.state.repeat) position %= dev.audioBuffer.duration;
             return Math.max(0, Math.min(dev.audioBuffer.duration, position));
         }
@@ -3823,7 +3816,7 @@ const Hardware = (() => {
             return Math.exp(-((distance/.24)**2));
         }
         function setupReceiverRadio(dev){
-            const ctx=state.audioCtx;
+            const ctx=appState.audio.context;
             Object.assign(dev.state,{receiverInput:'line1',radioOn:false,radioFrequency:88,radioStation:randomFmStation()});
             dev.radioMusic={};dev.radioLine={};dev.receiverInputGates=[];dev.receiverInputNodes=[];
             ['L','R'].forEach(ch=>{
@@ -3851,7 +3844,7 @@ const Hardware = (() => {
                 if(!RECEIVER_INPUTS.some(([value])=>value===key))return;
                 dev.state.receiverInput=key;dev.state.radioOn=key==='fm';dev.syncRadio();updateCableFlows();scheduleProjectSave();
             };
-            dev.el.querySelectorAll('[data-receiver-input]').forEach(button=>{button.addEventListener('pointerdown',e=>e.stopPropagation());button.addEventListener('click',()=>{dev.selectReceiverInput(button.dataset.receiverInput);if(dev.state.radioOn)ctx.resume().then(()=>{if(state.devices[dev.id]){dev.syncRadio();updateCableFlows();}}).catch(()=>{});});});
+            dev.el.querySelectorAll('[data-receiver-input]').forEach(button=>{button.addEventListener('pointerdown',e=>e.stopPropagation());button.addEventListener('click',()=>{dev.selectReceiverInput(button.dataset.receiverInput);if(dev.state.radioOn)ctx.resume().then(()=>{if(appState.project.devices[dev.id]){dev.syncRadio();updateCableFlows();}}).catch(()=>{});});});
             dev.radioNoiseGain=ctx.createGain();dev.radioNoiseGain.gain.value=0;
             const filter=dev.radioNoiseFilter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=6500;
             filter.connect(dev.radioNoiseGain);['L','R'].forEach(ch=>dev.radioNoiseGain.connect(dev.receiverRadioTargets[ch]));
@@ -3860,7 +3853,7 @@ const Hardware = (() => {
                 ['L','R'].forEach(ch=>{dev.radioLine[ch].gain.setTargetAtTime(dev.state.radioOn?0:1,t,.025);dev.radioMusic[ch].gain.setTargetAtTime(on?q*.7:0,t,.03);});
                 dev.receiverInputGates.forEach(({gate,key})=>gate.gain.setTargetAtTime(key===dev.state.receiverInput?1:0,t,.025));
                 dev.el.querySelectorAll('[data-receiver-input]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.receiverInput===dev.state.receiverInput)));
-                if(state.selectedDeviceId===dev.id)document.querySelectorAll('[data-receiver-inspector-input]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.receiverInspectorInput===dev.state.receiverInput)));
+                if(appState.interface.selectedDeviceId===dev.id)document.querySelectorAll('[data-receiver-inspector-input]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.receiverInspectorInput===dev.state.receiverInput)));
                 dev.radioNoiseGain.gain.setTargetAtTime(on?.055*(1-q)**1.4:0,t,.025);
                 if(on&&!dev.radioNoiseSource){
                     if(!receiverRadioNoiseBuffer){receiverRadioNoiseBuffer=ctx.createBuffer(1,ctx.sampleRate*3,ctx.sampleRate);const data=receiverRadioNoiseBuffer.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=Math.random()*2-1;}
@@ -3878,7 +3871,7 @@ const Hardware = (() => {
                 dev.el.classList.toggle('receiver-fm-active',!!dev.state.radioOn);
                 dev.el.classList.toggle('receiver-fm-tuned',!!dev.state.radioOn&&q>.9);
                 updateReceiverRadioDisplay(dev,performance.now());
-                if(state.selectedDeviceId===dev.id){
+                if(appState.interface.selectedDeviceId===dev.id){
                     const output=document.getElementById('radio-frequency-value'),slider=document.getElementById('radio-frequency'),status=document.getElementById('radio-reception'),toggle=document.getElementById('radio-input-toggle');
                     if(output)output.textContent=frequency.toFixed(1)+' MHz';if(slider)slider.value=frequency;
                     if(status)status.textContent=!dev.state.radioOn?'Selecione FM para ouvir o rádio':!dev.audioBuffer?'Carregue um MP3 para criar uma estação':q>.9?'ESTÉREO · SINTONIZADO':q>.1?'Sinal fraco · ajuste a sintonia':'Buscando estação…';
@@ -3887,7 +3880,7 @@ const Hardware = (() => {
             };
             dev.tuneRadio=value=>{dev.state.radioFrequency=Math.round(Math.max(87.5,Math.min(108,Number(value)||87.5))*10)/10;dev.syncRadio();scheduleProjectSave();};
             const tuningKnob=dev.el.querySelector('[data-radio-knob]');
-            const activateTuner=()=>{if(!dev.state.radioOn)dev.selectReceiverInput('fm');ctx.resume().then(()=>{if(state.devices[dev.id]){dev.syncRadio();updateCableFlows();}}).catch(()=>{});};
+            const activateTuner=()=>{if(!dev.state.radioOn)dev.selectReceiverInput('fm');ctx.resume().then(()=>{if(appState.project.devices[dev.id]){dev.syncRadio();updateCableFlows();}}).catch(()=>{});};
             Hardware.bindKnob(tuningKnob,{get:()=>dev.state.radioFrequency,set:dev.tuneRadio,min:87.5,max:108,step:.1,activate:activateTuner,format:value=>value.toFixed(1)+' MHz'});
             const display=dev.el.querySelector('.receiver-radio,.poweramp-screen');
             if(display?.classList.contains('receiver-radio')){
@@ -3929,7 +3922,7 @@ const Hardware = (() => {
         let lastReceiverRadioFrame=0;
         function updateReceiverRadioDisplays(now){
             if(now-lastReceiverRadioFrame<100)return;lastReceiverRadioFrame=now;
-            Object.values(state.devices).filter(dev=>dev.type==='powerAmp').forEach(dev=>updateReceiverRadioDisplay(dev,now));
+            Object.values(appState.project.devices).filter(dev=>dev.type==='powerAmp').forEach(dev=>updateReceiverRadioDisplay(dev,now));
         }
         function stopReceiverRadioVoices(dev){
             if(dev.radioVoice){dev.radioVoice.voice.stop();dev.radioVoice.voice.disconnect();dev.radioVoice.split.disconnect();dev.radioVoice=null;}
@@ -3940,16 +3933,16 @@ const Hardware = (() => {
         }
         function bindRadioInspector(dev){
             const filename=document.getElementById('radio-file-name');filename.textContent=dev.fileMessage||dev.fileName||'Nenhuma estação carregada';
-            const activate=async()=>{try{await state.audioCtx.resume();if(state.devices[dev.id]){dev.syncRadio();updateCableFlows();}}catch{if(state.selectedDeviceId===dev.id)filename.textContent='Não foi possível ativar o áudio. Tente novamente.';}};
+            const activate=async()=>{try{await appState.audio.context.resume();if(appState.project.devices[dev.id]){dev.syncRadio();updateCableFlows();}}catch{if(appState.interface.selectedDeviceId===dev.id)filename.textContent='Não foi possível ativar o áudio. Tente novamente.';}};
             document.getElementById('radio-input-toggle').onclick=()=>{dev.selectReceiverInput(dev.state.radioOn?'line1':'fm');activate();scheduleProjectSave();updateCableFlows();};
             const fileInput=document.getElementById('radio-file');document.getElementById('radio-load').onclick=()=>fileInput.click();
             fileInput.onchange=async()=>{
                 const file=fileInput.files[0];if(!file)return;const token=dev.fileLoadToken=(dev.fileLoadToken||0)+1;filename.textContent='Carregando estação…';
                 try{
-                    await state.audioCtx.resume();const buffer=await state.audioCtx.decodeAudioData(await file.arrayBuffer());if(!state.devices[dev.id]||dev.fileLoadToken!==token)return;
+                    await appState.audio.context.resume();const buffer=await appState.audio.context.decodeAudioData(await file.arrayBuffer());if(!appState.project.devices[dev.id]||dev.fileLoadToken!==token)return;
                     stopReceiverRadioVoices(dev);dev.audioBuffer=buffer;dev.mediaBlob=file;dev.mediaKey='radio_'+Date.now()+'_'+Math.random().toString(36).slice(2);dev.fileName=file.name;dev.fileMessage='';dev.state.receiverInput='fm';dev.state.radioStation=randomFmStation();dev.state.radioOn=true;
-                    if(Math.abs(dev.state.radioFrequency-dev.state.radioStation)<1)dev.state.radioFrequency=87.5;dev.syncRadio();updateCableFlows();scheduleProjectSave();if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);
-                }catch{if(dev.fileLoadToken!==token||!state.devices[dev.id])return;dev.fileMessage='Não foi possível carregar o MP3.';if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);}
+                    if(Math.abs(dev.state.radioFrequency-dev.state.radioStation)<1)dev.state.radioFrequency=87.5;dev.syncRadio();updateCableFlows();scheduleProjectSave();if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);
+                }catch{if(dev.fileLoadToken!==token||!appState.project.devices[dev.id])return;dev.fileMessage='Não foi possível carregar o MP3.';if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);}
             };
             document.getElementById('radio-frequency').oninput=e=>{dev.tuneRadio(e.target.value);activate();};
             document.querySelectorAll('[data-radio-step]').forEach(button=>button.onclick=()=>{dev.tuneRadio(dev.state.radioFrequency+Number(button.dataset.radioStep)*.1);activate();});
@@ -3960,7 +3953,7 @@ const Hardware = (() => {
         let audioMeterObserver=null;
         const audioMeterDevices=new WeakMap();
         function setupAudioMeters(dev) {
-            const context=state.audioCtx, nodes=[], taps=[], analyzers=[];
+            const context=appState.audio.context, nodes=[], taps=[], analyzers=[];
             const silent=context.createGain();silent.gain.value=0;silent.connect(context.destination);
             const channels=[[],[]];
             const analyze=(node,channel)=>{
@@ -4007,7 +4000,7 @@ const Hardware = (() => {
         function updateRealtimePanels(now,force=false){
             if(!force&&now-lastAudioPanelUpdate<80)return;lastAudioPanelUpdate=now;
             drawSpectrum();
-            Object.values(state.devices).forEach(dev=>{
+            Object.values(appState.project.devices).forEach(dev=>{
                 refreshCdDisplay(dev);
                 Hardware.updateAccents(dev);
                 const meter=dev.meters;if(!meter||!meter.visible)return;
@@ -4018,7 +4011,7 @@ const Hardware = (() => {
                         for(const sample of tap.data){localPeak=Math.max(localPeak,Math.abs(sample));energy+=sample*sample;}
                         peak=Math.max(peak,localPeak);rms=Math.max(rms,Math.sqrt(energy/tap.data.length));
                     });
-                    if(state.audioCtx.state!=='running'){peak=0;rms=0;}
+                    if(appState.audio.context.state!=='running'){peak=0;rms=0;}
                     meter.levels[channel]=rms;meter.peaks[channel]=peak;
                     const headphoneClip=dev.outputCircuits?.some(circuit=>circuit.paths.some(path=>path.clipping));
                     const electricalClip=POWER_OUTPUT_TYPES.has(dev.type)?dev.electricalStages?.some(stage=>stage.clipping)||headphoneClip:headphoneClip||peak>=.999;
@@ -4043,9 +4036,9 @@ const Hardware = (() => {
             });
             readElectricalStages();
             updateReferenceHardware(now);
-            Object.values(state.devices).forEach(dev=>dev.refreshStreamDisplay?.());
-            Object.values(state.devices).filter(isPassiveLoad).forEach(applySpeakerLoadDynamics);
-            const selected=state.devices[state.selectedDeviceId];
+            Object.values(appState.project.devices).forEach(dev=>dev.refreshStreamDisplay?.());
+            Object.values(appState.project.devices).filter(isPassiveLoad).forEach(applySpeakerLoadDynamics);
+            const selected=appState.project.devices[appState.interface.selectedDeviceId];
             if(selected?.spotifyVinyl&&document.getElementById('source-track-title')){
                 const playback=SpotifyCoverflow.getPlaybackState(),active=playback.context===selected.spotifyVinyl.uri||spotifyPlayingTurntable===selected.id;
                 const ready=playback.connected&&active&&playback.duration>0,position=ready?playback.position:0,duration=ready?playback.duration:0;
@@ -4102,7 +4095,7 @@ const Hardware = (() => {
             if(title.textContent!==name){title.textContent=name;title.parentElement.title=name;}
             const distance=Math.max(0,title.scrollWidth-title.parentElement.clientWidth);
             title.style.setProperty('--cd-scroll-distance',`${-distance}px`);title.classList.toggle('is-scrolling',distance>2&&dev.powered);
-            const seconds=dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?state.audioCtx.currentTime-dev.demoStartedAt:0);
+            const seconds=dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?appState.audio.context.currentTime-dev.demoStartedAt:0);
             const time=formatAudioTime(seconds).padStart(5,'0');
             dev.el.querySelector('[data-cd-time]').textContent=time;
             dev.el.querySelector('[data-cd-duration]').textContent=dev.audioBuffer?'/ '+formatAudioTime(dev.audioBuffer.duration).padStart(5,'0'):'DEMO';
@@ -4120,17 +4113,17 @@ const Hardware = (() => {
         }
         function startFilePlayback(dev) {
             if (!dev.audioBuffer || !dev.state.playing || !dev.powered) return;
-            const source = state.audioCtx.createBufferSource();
+            const source = appState.audio.context.createBufferSource();
             source.buffer = dev.audioBuffer;
             source.loop = !!dev.state.repeat;
             const rate = dev.ttRate ? dev.ttRate() : 1;
             source.playbackRate.value = rate;
-            const splitter = state.audioCtx.createChannelSplitter(2);
+            const splitter = appState.audio.context.createChannelSplitter(2);
             source.connect(splitter);
             splitter.connect(dev.nodes.genL, 0);
             splitter.connect(dev.nodes.genR, dev.audioBuffer.numberOfChannels > 1 ? 1 : 0);
             if ((dev.fileOffset || 0) >= dev.audioBuffer.duration) dev.fileOffset = 0;
-            dev.filePlayback = {source,splitter,startedAt:state.audioCtx.currentTime,rate};
+            dev.filePlayback = {source,splitter,startedAt:appState.audio.context.currentTime,rate};
             source.onended = () => {
                 if (dev.filePlayback?.source !== source) return;
                 source.disconnect(); splitter.disconnect(); dev.filePlayback = null; dev.fileOffset = 0;
@@ -4142,13 +4135,13 @@ const Hardware = (() => {
             const token = dev.fileLoadToken = (dev.fileLoadToken || 0) + 1;
             await setSourcePlaying(dev, false);
             dev.fileMessage = 'Carregando áudio…';
-            if (state.selectedDeviceId === dev.id) selectDevice(dev.id, true);
+            if (appState.interface.selectedDeviceId === dev.id) selectDevice(dev.id, true);
             try {
                 const bytes = await file.arrayBuffer();
                 const streamMetadata=dev.type==='streamIntegrated'?readStreamMetadata(bytes):null;
                 const trackTitle = readAudioTrackTitle(bytes) || file.name.replace(/\.[^.]+$/, '');
-                const buffer = await state.audioCtx.decodeAudioData(bytes);
-                if (!state.devices[dev.id] || dev.fileLoadToken !== token) return;
+                const buffer = await appState.audio.context.decodeAudioData(bytes);
+                if (!appState.project.devices[dev.id] || dev.fileLoadToken !== token) return;
                 dev.audioBuffer = buffer; dev.fileOffset = 0;
                 dev.mediaBlob=file;dev.mediaKey='audio_'+Date.now()+'_'+Math.random().toString(36).slice(2);scheduleProjectSave();
                 dev.fileName = file.name; dev.trackTitle=trackTitle; dev.demoOffset=0; dev.fileMessage = '';
@@ -4158,7 +4151,7 @@ const Hardware = (() => {
                 if (dev.fileLoadToken !== token) return;
                 dev.fileMessage = 'Não foi possível ler este áudio. Tente um arquivo MP3 ou WAV.';
             }
-            if (state.selectedDeviceId === dev.id && state.devices[dev.id]) selectDevice(dev.id, true);
+            if (appState.interface.selectedDeviceId === dev.id && appState.project.devices[dev.id]) selectDevice(dev.id, true);
         }
 
         const VINYL_NOISE_LEVELS={none:{label:'Sem ruído',gain:0},low:{label:'Ruído baixo',gain:.016},medium:{label:'Ruído médio',gain:.035},high:{label:'Ruído alto',gain:.07}};
@@ -4182,7 +4175,7 @@ const Hardware = (() => {
             const voice=dev.vinylNoise;dev.vinylNoise=null;
             if(!voice)return;
             clearTimeout(voice.crackleTimer);
-            const time=state.audioCtx.currentTime;
+            const time=appState.audio.context.currentTime;
             voice.gain.gain.cancelAndHoldAtTime(time);voice.gain.gain.linearRampToValueAtTime(0,time+.012);
             voice.source.stop(time+.015);
         }
@@ -4190,7 +4183,7 @@ const Hardware = (() => {
             if(!TURNTABLE_TYPES.has(dev.type))return;
             if(!dev.state.playing||!dev.powered){stopVinylNoise(dev);return;}
             if(dev.vinylNoise)return;
-            const context=state.audioCtx;
+            const context=appState.audio.context;
             if(!vinylNoiseBuffer){
                 const size=Math.ceil(context.sampleRate*11);
                 vinylNoiseBuffer=context.createBuffer(2,size,context.sampleRate);
@@ -4244,17 +4237,17 @@ const Hardware = (() => {
             if(dev.state.damage&&playing)return;
             if(playing&&dev.type==='cdPlayer')dev.setTrayOpen?.(false);
             if (!SOURCE_TYPES.has(dev.type)) return;
-            if (playing && state.audioCtx.state !== 'running') {
+            if (playing && appState.audio.context.state !== 'running') {
                 try {
-                    await state.audioCtx.resume();
-                    if (state.audioCtx.state !== 'running') throw new Error('Áudio bloqueado pelo navegador.');
+                    await appState.audio.context.resume();
+                    if (appState.audio.context.state !== 'running') throw new Error('Áudio bloqueado pelo navegador.');
                 } catch (error) {
                     dev.state.playing = false;
                     if (dev.state.tt) dev.state.tt.running = false;
                     dev.refreshTurntable?.();
                     updateCableFlows();
                     dev.fileMessage = 'O navegador não ativou a saída de áudio. Clique em Reproduzir novamente; confira se a aba está silenciada.';
-                    const status = state.selectedDeviceId === dev.id ? document.getElementById('source-file-message') : null;
+                    const status = appState.interface.selectedDeviceId === dev.id ? document.getElementById('source-file-message') : null;
                     if (status) {
                         status.textContent = 'O navegador não ativou a saída de áudio. Clique em Reproduzir novamente; confira se a aba está silenciada.';
                         status.classList.add('text-red-400');
@@ -4262,7 +4255,7 @@ const Hardware = (() => {
                     return;
                 }
             }
-            if(playing&&(dev.state.damage||!state.devices[dev.id]))return;
+            if(playing&&(dev.state.damage||!appState.project.devices[dev.id]))return;
             if(dev.spotifyVinyl){
                 if(playing){
                     if(spotifyPlayingTurntable&&spotifyPlayingTurntable!==dev.id){spotifyVinylNotice('Pare o outro toca-discos do Spotify antes de reproduzir este.');return;}
@@ -4283,8 +4276,8 @@ const Hardware = (() => {
             }
             stopFilePlayback(dev);
             if(!dev.audioBuffer){
-                if(dev.state.playing && dev.demoStartedAt != null) dev.demoOffset=(dev.demoOffset||0)+state.audioCtx.currentTime-dev.demoStartedAt;
-                dev.demoStartedAt=playing?state.audioCtx.currentTime:null;
+                if(dev.state.playing && dev.demoStartedAt != null) dev.demoOffset=(dev.demoOffset||0)+appState.audio.context.currentTime-dev.demoStartedAt;
+                dev.demoStartedAt=playing?appState.audio.context.currentTime:null;
             }
             dev.state.playing = !!playing;
             syncMobileContextActions();
@@ -4294,12 +4287,12 @@ const Hardware = (() => {
             syncSignalGenerator(dev);
             if (dev.state.playing && dev.audioBuffer) startFilePlayback(dev);
             if (dev.state.tt) dev.state.tt.running = dev.state.playing;
-            ['genR','genL'].forEach(key => dev.nodes[key]?.gain.setTargetAtTime(dev.state.playing ? 1 : 0, state.audioCtx.currentTime, .015));
+            ['genR','genL'].forEach(key => dev.nodes[key]?.gain.setTargetAtTime(dev.state.playing ? 1 : 0, appState.audio.context.currentTime, .015));
             dev.el.querySelectorAll('[data-source-play]').forEach(button => {
                 button.setAttribute('aria-label',dev.state.playing?'Pausar':'Reproduzir');
                 button.setAttribute('aria-pressed', String(dev.state.playing));
             });
-            if (state.selectedDeviceId === dev.id) {
+            if (appState.interface.selectedDeviceId === dev.id) {
                 const button = document.getElementById('source-inspector-play');
                 if (button) { button.classList.toggle('is-on', dev.state.playing); button.setAttribute('aria-pressed', String(dev.state.playing)); }
             }
@@ -4309,13 +4302,13 @@ const Hardware = (() => {
             updateCableFlows();
         }
         function syncSourceSequencer() {
-            state.isPlaying = Object.values(state.devices).some(isSourceRunning);
-            if (!state.isPlaying) { clearInterval(state.seqInterval); state.seqInterval = null; return; }
-            if (state.seqInterval) return;
+            appStateStore.actions.setAudioRuntime('isPlaying',Object.values(appState.project.devices).some(isSourceRunning));
+            if (!appState.audio.isPlaying) { clearInterval(appState.audio.sequenceInterval); appStateStore.actions.setAudioRuntime('sequenceInterval',null); return; }
+            if (appState.audio.sequenceInterval) return;
                 let step = 0;
-                state.seqInterval = setInterval(() => {
-                    if (state.audioCtx.state !== 'running') return;
-                    Object.values(state.devices).forEach(dev => {
+                appStateStore.actions.setAudioRuntime('sequenceInterval',setInterval(() => {
+                    if (appState.audio.context.state !== 'running') return;
+                    Object.values(appState.project.devices).forEach(dev => {
                         // Só toca se o dispositivo estiver ligado (e, no toca-discos, com o prato girando)
                         if (!isSourceRunning(dev) || dev.audioBuffer || dev.spotifyVinyl || RADIO_RECEIVERS.has(dev.type) || SIGNAL_GENERATOR_TYPES.has(dev.type)) return;
 
@@ -4342,7 +4335,7 @@ const Hardware = (() => {
                         }
                     });
                     step++;
-                }, 300);
+                }, 300));
         }
 
         // --- DRAG & DROP CORRIGIDO (SEM DELAY E SEM OFFSET) ---
@@ -4632,7 +4625,7 @@ const Hardware = (() => {
         appendCatalogGroup('Outros equipamentos',catalogItems.filter(item=>!catalogAssigned.has(item)));
         previousCatalogSections.forEach(section=>section.remove());
         const debugCatalogSection=[...catalogContainer.querySelectorAll('.catalog-category')].find(section=>section.querySelector('[data-template="hardwareDemo"]'));
-        debugCatalogSection.hidden=!developerModeEnabled;
+        debugCatalogSection.hidden=!appState.preferences.developerModeEnabled;
         document.querySelectorAll('.catalog-item[data-template]').forEach(item => {
             const oldIcon = item.firstElementChild;
             if (oldIcon) oldIcon.outerHTML = catalogIcon(item.dataset.template);
@@ -4686,7 +4679,7 @@ const Hardware = (() => {
             contextHelp.style.left=`${valid.x}px`;contextHelp.style.top=`${valid.y}px`;return true;
         }
         function showContextHelp(target,delay=1000){
-            if(!connectionGuidanceEnabled||!target)return;
+            if(!appState.preferences.connectionGuidanceEnabled||!target)return;
             const port=target.closest('.port'),control=port?null:target.closest('button,input,select,[role="switch"],[role="slider"]');
             let heading='',message='';
             if(port){heading=port.dataset.baseTitle||port.getAttribute('aria-label')||'Conector';message=port.getAttribute('title')||`${port.dataset.io==='out'?'Saída':'Entrada'} ${port.dataset.format||port.dataset.type||'de áudio'} · sinal ${signalName(getPortSignal(port))}.`;}
@@ -4696,15 +4689,15 @@ const Hardware = (() => {
             if(!message||contextHelpTarget===target)return;
             hideContextHelp();contextHelpTarget=target;contextHelpPreviousDescription=target.getAttribute('aria-describedby');target.setAttribute('aria-describedby',[contextHelpPreviousDescription,'context-help'].filter(Boolean).join(' '));
             contextHelp.querySelector('strong').textContent=heading;contextHelp.querySelector('span').textContent=message;
-            contextHelpTimer=setTimeout(()=>{if(!connectionGuidanceEnabled||!target.isConnected)return;if(positionContextHelp(target))contextHelp.classList.add('is-visible');},delay);
+            contextHelpTimer=setTimeout(()=>{if(!appState.preferences.connectionGuidanceEnabled||!target.isConnected)return;if(positionContextHelp(target))contextHelp.classList.add('is-visible');},delay);
         }
-        document.addEventListener('pointerover',event=>{if(event.pointerType==='touch'||!connectionGuidanceEnabled)return;const target=event.target instanceof Element?event.target:null;if(target?.closest('.device-node'))showContextHelp(target);});
+        document.addEventListener('pointerover',event=>{if(event.pointerType==='touch'||!appState.preferences.connectionGuidanceEnabled)return;const target=event.target instanceof Element?event.target:null;if(target?.closest('.device-node'))showContextHelp(target);});
         document.addEventListener('pointerout',event=>{const target=event.target instanceof Element?event.target:null,device=target?.closest('.device-node');if(!device||event.relatedTarget instanceof Node&&device.contains(event.relatedTarget))return;if(!contextHelpTarget||!device.contains(contextHelpTarget))return;if(!contextHelpTarget.matches(':focus')&&!contextHelpTarget.contains(document.activeElement))hideContextHelp();});
         document.addEventListener('focusin',event=>{const target=event.target instanceof Element?event.target:null;if(target?.closest('.device-node'))showContextHelp(target,0);});
         document.addEventListener('focusout',event=>{if(contextHelpTarget===event.target||contextHelpTarget?.contains(event.target))setTimeout(()=>{if(!contextHelpTarget?.matches(':hover')&&!contextHelpTarget?.contains(document.activeElement))hideContextHelp();},0);});
         let contextTouchTarget=null,contextTouchStart=null;
         document.addEventListener('pointerdown',event=>{
-            if(event.pointerType!=='touch'||!connectionGuidanceEnabled)return;
+            if(event.pointerType!=='touch'||!appState.preferences.connectionGuidanceEnabled)return;
             const candidate=event.target instanceof Element?event.target.closest('.device-node .port,.device-node button,.device-node input,.device-node select,.device-node [role="switch"],.device-node [role="slider"]'):null;
             if(!candidate)return;
             clearTimeout(contextHelpTimer);contextTouchTarget=candidate;contextTouchStart={x:event.clientX,y:event.clientY};
@@ -4736,7 +4729,7 @@ const Hardware = (() => {
             const terms = normalizeSearch(equipmentSearch.value).split(/\s+/).filter(Boolean);
             let total = 0;
             catalogSections.forEach(section => {
-                if(section===debugCatalogSection&&!developerModeEnabled){section.hidden=true;return;}
+                if(section===debugCatalogSection&&!appState.preferences.developerModeEnabled){section.hidden=true;return;}
                 let visible = 0;
                 section.querySelectorAll('.catalog-item').forEach(item => {
                     const text = catalogSearchText(item);
@@ -4762,7 +4755,7 @@ const Hardware = (() => {
                         cleanup();if(event.pointerId!==start.id||Math.hypot(event.clientX-start.x,event.clientY-start.y)>8)return;
                         const rect=canvas.getBoundingClientRect(),point=screenToWorld(rect.left+rect.width/2,rect.top+rect.height/2);
                         createDevice(item.dataset.template,point.x-150,point.y-70);playUiSound('drop');closeMobilePanels();
-                        const added=state.devices[state.selectedDeviceId];
+                        const added=appState.project.devices[appState.interface.selectedDeviceId];
                         if(compactLayout.matches&&added){
                             const width=added.el.offsetWidth,height=added.el.offsetHeight,tools=document.querySelector('.canvas-tools'),usableHeight=Math.max(120,rect.height-tools.offsetHeight-40);
                             const zoom=clampZoom(Math.min(view.zoom,(rect.width-32)/width,(usableHeight-32)/height));
@@ -4857,7 +4850,7 @@ const Hardware = (() => {
             dev.vuEnvelope||=[0,0];
             [0,1].forEach(channel=>{
                 const samples=dev.meters?.channels[channel]?.[0]?.data;let rectified=0;
-                if(dev.powered&&state.audioCtx.state==='running'&&samples){for(const sample of samples)rectified+=Math.abs(sample);rectified=rectified/samples.length*Math.PI/2;}
+                if(dev.powered&&appState.audio.context.state==='running'&&samples){for(const sample of samples)rectified+=Math.abs(sample);rectified=rectified/samples.length*Math.PI/2;}
                 dev.vuEnvelope[channel]+=(rectified-dev.vuEnvelope[channel])*(1-Math.exp(-elapsed/.065));
             });
         }
@@ -4906,7 +4899,7 @@ const Hardware = (() => {
             return tapeDeckMarkup();
         }
         function setupExtraRouting(dev){
-            const context=state.audioCtx;
+            const context=appState.audio.context;
             if(dev.type==='preamp'){
                 Object.assign(dev.state,{preSource:1,volume:.8,bass:0,treble:0});dev.preGates=[];dev.preFilters=[];
                 ['L','R'].forEach(ch=>{
@@ -4941,7 +4934,7 @@ const Hardware = (() => {
             }
         }
         function setupTapeAudio(dev){
-            const context=state.audioCtx;Object.assign(dev.state,{tapeHiss:35,tapeWow:35,tapeVolume:.8});
+            const context=appState.audio.context;Object.assign(dev.state,{tapeHiss:35,tapeWow:35,tapeVolume:.8});
             dev.tapeNodes=[];dev.tapeDepths=[];dev.tapeLevels=[];
             const wow=context.createOscillator(),flutter=context.createOscillator();wow.frequency.value=.55;flutter.frequency.value=6.3;
             ['L','R'].forEach(ch=>{
@@ -4963,10 +4956,10 @@ const Hardware = (() => {
         function syncTapeHiss(dev){
             if(dev.type!=='tapeDeck')return;
             if(!dev.state.playing||!dev.powered){
-                const voice=dev.tapeHiss;dev.tapeHiss=null;if(voice){const t=state.audioCtx.currentTime;voice.gain.gain.cancelAndHoldAtTime(t);voice.gain.gain.linearRampToValueAtTime(0,t+.012);voice.source.stop(t+.015);}return;
+                const voice=dev.tapeHiss;dev.tapeHiss=null;if(voice){const t=appState.audio.context.currentTime;voice.gain.gain.cancelAndHoldAtTime(t);voice.gain.gain.linearRampToValueAtTime(0,t+.012);voice.source.stop(t+.015);}return;
             }
             if(dev.tapeHiss)return;
-            const context=state.audioCtx;
+            const context=appState.audio.context;
             if(!tapeHissBuffer){tapeHissBuffer=context.createBuffer(2,context.sampleRate*7,context.sampleRate);for(let ch=0;ch<2;ch++){const data=tapeHissBuffer.getChannelData(ch);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*.35;for(let i=0;i<256;i++){data[i]*=i/256;data[data.length-1-i]*=i/256;}}}
             const source=context.createBufferSource(),gain=context.createGain(),filter=context.createBiquadFilter(),split=context.createChannelSplitter(2);
             source.buffer=tapeHissBuffer;source.loop=true;filter.type='highpass';filter.frequency.value=450;
@@ -4996,17 +4989,17 @@ const Hardware = (() => {
         function bindExtraDevice(dev){
             const knobDrag=(knob,get,set,min,max)=>Hardware.bindKnob(knob,{get,set,min,max});
             if(dev.type==='preamp'){
-                dev.el.querySelectorAll('[data-pre-source]').forEach(button=>button.onclick=()=>{dev.state.preSource=Number(button.dataset.preSource);dev.applyPreamp();updateCableFlows();if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);});
-                dev.el.querySelectorAll('[data-pre-knob]').forEach(knob=>{const key=knob.dataset.preKnob;knobDrag(knob,()=>dev.state[key],value=>{dev.state[key]=value;dev.applyPreamp();const input=document.querySelector(`[data-preamp-setting="${key}"]`);if(input&&state.selectedDeviceId===dev.id){input.value=key==='volume'?Math.round(value*100):value.toFixed(1);document.getElementById('preamp-value-'+key).textContent=input.value;}},key==='volume'?0:-12,key==='volume'?1:12);});
+                dev.el.querySelectorAll('[data-pre-source]').forEach(button=>button.onclick=()=>{dev.state.preSource=Number(button.dataset.preSource);dev.applyPreamp();updateCableFlows();if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);});
+                dev.el.querySelectorAll('[data-pre-knob]').forEach(knob=>{const key=knob.dataset.preKnob;knobDrag(knob,()=>dev.state[key],value=>{dev.state[key]=value;dev.applyPreamp();const input=document.querySelector(`[data-preamp-setting="${key}"]`);if(input&&appState.interface.selectedDeviceId===dev.id){input.value=key==='volume'?Math.round(value*100):value.toFixed(1);document.getElementById('preamp-value-'+key).textContent=input.value;}},key==='volume'?0:-12,key==='volume'?1:12);});
             }
             if(dev.type==='tapeDeck'){
-                dev.el.querySelector('[data-tape-back]').onclick=()=>{const position=tapePosition(dev);if(dev.audioBuffer)seekSource(dev,position-10);else{dev.demoOffset=Math.max(0,position-10);dev.demoStartedAt=state.audioCtx.currentTime;}};
-                dev.el.querySelector('[data-tape-forward]').onclick=()=>{const position=tapePosition(dev);if(dev.audioBuffer)seekSource(dev,position+10);else{dev.demoOffset=Math.min(180,position+10);dev.demoStartedAt=state.audioCtx.currentTime;}};
+                dev.el.querySelector('[data-tape-back]').onclick=()=>{const position=tapePosition(dev);if(dev.audioBuffer)seekSource(dev,position-10);else{dev.demoOffset=Math.max(0,position-10);dev.demoStartedAt=appState.audio.context.currentTime;}};
+                dev.el.querySelector('[data-tape-forward]').onclick=()=>{const position=tapePosition(dev);if(dev.audioBuffer)seekSource(dev,position+10);else{dev.demoOffset=Math.min(180,position+10);dev.demoStartedAt=appState.audio.context.currentTime;}};
                 dev.el.querySelector('[data-tape-stop]').onclick=async()=>{await setSourcePlaying(dev,false);dev.fileOffset=0;dev.demoOffset=0;};
-                knobDrag(dev.el.querySelector('[data-tape-level]'),()=>dev.state.tapeVolume,value=>{dev.state.tapeVolume=value;dev.applyTapeSettings();const input=document.querySelector('[data-tape-setting="tapeVolume"]');if(input&&state.selectedDeviceId===dev.id){input.value=Math.round(value*100);document.getElementById('tape-value-tapeVolume').textContent=input.value+'%';}},0,1);
+                knobDrag(dev.el.querySelector('[data-tape-level]'),()=>dev.state.tapeVolume,value=>{dev.state.tapeVolume=value;dev.applyTapeSettings();const input=document.querySelector('[data-tape-setting="tapeVolume"]');if(input&&appState.interface.selectedDeviceId===dev.id){input.value=Math.round(value*100);document.getElementById('tape-value-tapeVolume').textContent=input.value+'%';}},0,1);
             }
         }
-        function tapePosition(dev){return dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?state.audioCtx.currentTime-dev.demoStartedAt:0);}
+        function tapePosition(dev){return dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?appState.audio.context.currentTime-dev.demoStartedAt:0);}
         const needleMotion=new WeakMap();
         function dampedNeedle(needle,target,now,rest){
             const previous=needleMotion.get(needle)||{angle:rest,time:now-16};
@@ -5019,7 +5012,7 @@ const Hardware = (() => {
         function updateTransportMotion(now){
             const elapsed=lastTransportFrame==null?0:Math.max(0,Math.min(.1,(now-lastTransportFrame)/1000));lastTransportFrame=now;
             const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-            Object.values(state.devices).forEach(dev=>{
+            Object.values(appState.project.devices).forEach(dev=>{
                 if(dev.type==='tapeDeck'&&dev.meters?.visible!==false)updateTapeReels(dev,tapePosition(dev),elapsed,isSourceRunning(dev));
                 if(!TURNTABLE_TYPES.has(dev.type))return;
                 const running=dev.powered&&dev.state.tt?.running;
@@ -5085,7 +5078,7 @@ const Hardware = (() => {
         function updateExtraDisplays(now){
             if(now-lastExtraDisplay<75)return;
             const elapsed=Math.min(.3,(now-lastExtraDisplay)/1000);lastExtraDisplay=now;
-            Object.values(state.devices).forEach(dev=>{
+            Object.values(appState.project.devices).forEach(dev=>{
                 if(SIGNAL_GENERATOR_TYPES.has(dev.type)){updateSignalGeneratorDisplay(dev);return;}
                 if(!EXTRA_AUDIO_TYPES.has(dev.type))return;
                 if(dev.meters&&!dev.meters.visible)return;
@@ -5108,17 +5101,17 @@ const Hardware = (() => {
                 const l=dev.meters.channels[0][0],r=dev.meters.channels[1][0];if(!l||!r)return;
                 let lr=0,ll=0,rr=0;
                 for(let i=0;i<l.data.length;i++){lr+=l.data[i]*r.data[i];ll+=l.data[i]**2;rr+=r.data[i]**2;}
-                const correlation=dev.powered&&state.audioCtx.state==='running'&&ll>1e-7&&rr>1e-7?Math.max(-1,Math.min(1,lr/Math.sqrt(ll*rr))):null;
+                const correlation=dev.powered&&appState.audio.context.state==='running'&&ll>1e-7&&rr>1e-7?Math.max(-1,Math.min(1,lr/Math.sqrt(ll*rr))):null;
                 const label=correlation===null?'SEM SINAL':correlation.toFixed(2);
                 dev.el.querySelector('[data-correlation-value]').textContent='CORR · '+label;
                 const dot=dev.el.querySelector('[data-correlation-dot]');dot.style.left=`${((correlation??0)+1)*50}%`;dot.style.opacity=correlation===null?'.2':'1';dot.style.background=correlation!==null&&correlation<0?'#f87171':'#6ee7b7';
-                if(state.selectedDeviceId===dev.id){const output=document.getElementById('bench-inspector-correlation');if(output)output.textContent=label;}
+                if(appState.interface.selectedDeviceId===dev.id){const output=document.getElementById('bench-inspector-correlation');if(output)output.textContent=label;}
                 const canvas=dev.el.querySelector('[data-bench-spectrum]'),ctx=canvas.getContext('2d');ctx.fillStyle='#071316';ctx.fillRect(0,0,360,72);
                 ctx.strokeStyle='#213b42';ctx.lineWidth=1;for(let y=12;y<72;y+=20){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(360,y);ctx.stroke();}
                 [l,r].forEach((tap,index)=>{
                     const data=tap.frequencyData||=(new Float32Array(tap.analyzer.frequencyBinCount));tap.analyzer.getFloatFrequencyData(data);
                     ctx.beginPath();ctx.strokeStyle=index?'#f2bd65':'#65cbe1';
-                    for(let x=0;x<=360;x+=3){const hz=20*1000**(x/360),bin=Math.min(data.length-1,Math.floor(hz*2/state.audioCtx.sampleRate*data.length));const db=dev.powered&&state.audioCtx.state==='running'?data[bin]:-100,y=68-Math.max(0,Math.min(1,(db+90)/90))*64;if(x)ctx.lineTo(x,y);else ctx.moveTo(x,y);}ctx.stroke();
+                    for(let x=0;x<=360;x+=3){const hz=20*1000**(x/360),bin=Math.min(data.length-1,Math.floor(hz*2/appState.audio.context.sampleRate*data.length));const db=dev.powered&&appState.audio.context.state==='running'?data[bin]:-100,y=68-Math.max(0,Math.min(1,(db+90)/90))*64;if(x)ctx.lineTo(x,y);else ctx.moveTo(x,y);}ctx.stroke();
                 });
             });
         }
@@ -5169,7 +5162,7 @@ const Hardware = (() => {
                 const frequencyControl=button.dataset.signalStep==='signalFrequency',index=frequencyControl?SIGNAL_FREQUENCIES.indexOf(s.signalFrequency):s.signalLevel,max=frequencyControl?SIGNAL_FREQUENCIES.length-1:10;
                 button.disabled=(frequencyControl&&s.signalMode!=='sine')||(Number(button.dataset.direction)<0?index<=0:index>=max);
             });
-            if(state.selectedDeviceId===dev.id){
+            if(appState.interface.selectedDeviceId===dev.id){
                 [['mode',s.signalMode],['frequency',s.signalFrequency],['sweep',s.sweepSeconds],['channel',s.signalChannel],['level',s.signalLevel]].forEach(([key,value])=>{const input=document.getElementById('signal-'+key);if(input){input.value=value;if(key==='frequency')input.disabled=s.signalMode!=='sine';if(key==='sweep')input.disabled=s.signalMode!=='sweep';}});
                 const label=document.getElementById('signal-level-value');if(label)label.textContent=s.signalLevel+'/10';
                 const slider=document.getElementById('signal-level');if(slider){slider.setAttribute('aria-valuetext',s.signalLevel+' de 10');slider.nextElementSibling?.querySelectorAll('span').forEach((tick,index)=>tick.classList.toggle('is-current',index===s.signalLevel));}
@@ -5177,7 +5170,7 @@ const Hardware = (() => {
             updateSignalGeneratorDisplay(dev);
         }
         function updateSignalGeneratorDisplay(dev){
-            const s=dev.state,running=dev.powered&&s.playing&&state.audioCtx?.state==='running',elapsed=running&&s.signalMode==='sweep'?Math.max(0,state.audioCtx.currentTime-(dev.signalSweepStartedAt||0)):0,progress=Math.min(1,elapsed/s.sweepSeconds),frequency=s.signalMode==='sweep'?20*1000**progress:s.signalFrequency;
+            const s=dev.state,running=dev.powered&&s.playing&&appState.audio.context?.state==='running',elapsed=running&&s.signalMode==='sweep'?Math.max(0,appState.audio.context.currentTime-(dev.signalSweepStartedAt||0)):0,progress=Math.min(1,elapsed/s.sweepSeconds),frequency=s.signalMode==='sweep'?20*1000**progress:s.signalFrequency;
             const screen=dev.el.querySelector('.signal-screen');screen.classList.toggle('is-off',!dev.powered);screen.dataset.running=String(running);
             screen.querySelector('[data-signal-mode]').textContent=signalModeLabels[s.signalMode];
             screen.querySelector('[data-signal-status]').textContent=!dev.powered?'DESLIGADO':running?(s.signalLevel?'ATIVO':'NÍVEL ZERO'):s.playing?'ÁUDIO SUSPENSO':'PAUSADO';
@@ -5185,7 +5178,7 @@ const Hardware = (() => {
             screen.querySelector('[data-signal-channel]').textContent=`${s.signalChannel==='both'?'L + R':s.signalChannel} · NÍVEL ${s.signalLevel}/10${s.signalMode==='sweep'?' · '+s.sweepSeconds+' s':''}`;
             screen.querySelector('.signal-sweep-track').hidden=s.signalMode!=='sweep'||!dev.powered;
             screen.querySelector('[data-signal-progress]').style.transform=`scaleX(${progress})`;
-            const phase=running&&!matchMedia('(prefers-reduced-motion: reduce)').matches?state.audioCtx.currentTime*2:0,cycles=1+Math.max(0,Math.min(1,Math.log10(frequency/20)/3))*7,amplitude=dev.powered?s.signalLevel/10*9:0;
+            const phase=running&&!matchMedia('(prefers-reduced-motion: reduce)').matches?appState.audio.context.currentTime*2:0,cycles=1+Math.max(0,Math.min(1,Math.log10(frequency/20)/3))*7,amplitude=dev.powered?s.signalLevel/10*9:0;
             const points=[];for(let x=0;x<=180;x+=3){const wave=s.signalMode==='pink'?(Math.sin(x*1.73+phase)*.4+Math.sin(x*.41+phase*.7)*.35+Math.sin(x*.097+phase*.2)*.25):Math.sin(x/180*Math.PI*2*cycles-phase);points.push(`${x===0?'M':'L'}${x} ${(11-wave*amplitude).toFixed(2)}`);}
             screen.querySelector('[data-signal-wave]').setAttribute('d',points.join(' '));
             if(dev.type==='signalGeneratorVintage')drawVintageSignalDisplay(dev,{frequency,running,progress,phase,cycles});
@@ -5193,7 +5186,7 @@ const Hardware = (() => {
         function setSignalGeneratorSetting(dev,key,value){
             if(!['signalMode','signalFrequency','signalLevel','signalChannel','sweepSeconds'].includes(key))return;
             dev.state[key]=value;configureSignalGenerator(dev);
-            const s=dev.state,graph=dev.signalGraph,t=state.audioCtx.currentTime;
+            const s=dev.state,graph=dev.signalGraph,t=appState.audio.context.currentTime;
             if(graph&&(key==='signalLevel'||key==='signalChannel')){
                 graph.gain.gain.setTargetAtTime(s.signalLevel/10*.2,t,.015);
                 graph.left.gain.setTargetAtTime(s.signalChannel==='R'?0:1,t,.015);graph.right.gain.setTargetAtTime(s.signalChannel==='L'?0:1,t,.015);
@@ -5224,7 +5217,7 @@ const Hardware = (() => {
         function stopSignalGenerator(dev){
             clearTimeout(dev.signalSweepTimer);dev.signalSweepTimer=null;
             const graph=dev.signalGraph;if(!graph)return;dev.signalGraph=null;
-            const now=state.audioCtx.currentTime;graph.gain.gain.cancelScheduledValues(now);graph.gain.gain.setTargetAtTime(0,now,.004);
+            const now=appState.audio.context.currentTime;graph.gain.gain.cancelScheduledValues(now);graph.gain.gain.setTargetAtTime(0,now,.004);
             try{graph.source.stop(now+.03);}catch{}
             graph.source.onended=()=>graph.nodes.forEach(node=>{try{node.disconnect();}catch{}});
         }
@@ -5232,7 +5225,7 @@ const Hardware = (() => {
             if(!SIGNAL_GENERATOR_TYPES.has(dev.type))return;
             stopSignalGenerator(dev);configureSignalGenerator(dev);
             if(!dev.state.playing||!dev.powered)return;
-            const context=state.audioCtx,s=dev.state,gain=context.createGain();gain.gain.value=0;
+            const context=appState.audio.context,s=dev.state,gain=context.createGain();gain.gain.value=0;
             let source;
             if(s.signalMode==='pink'){
                 const buffer=context.createBuffer(1,context.sampleRate*8,context.sampleRate),data=buffer.getChannelData(0);
@@ -5256,7 +5249,7 @@ const Hardware = (() => {
         function expandFurnitureGroup(devices){
             if(!devices.some(dev=>FURNITURE_TYPES[dev.type]))return devices;
             const group=new Map(devices.map(dev=>[dev.id,dev]));
-            const boxes=new Map(Object.values(state.devices).map(dev=>[dev.id,{
+            const boxes=new Map(Object.values(appState.project.devices).map(dev=>[dev.id,{
                 dev,x:parseFloat(dev.el.style.left)||0,y:parseFloat(dev.el.style.top)||0,w:dev.el.offsetWidth,h:dev.el.offsetHeight
             }]));
             const belongsTo=(box,support)=>{
@@ -5288,13 +5281,13 @@ const Hardware = (() => {
         }
         const ROOM_PRESETS={near:{name:'Audição próxima',decay:.12,predelay:.004,tone:12500},small:{name:'Sala pequena',decay:.42,predelay:.012,tone:8500},large:{name:'Sala ampla',decay:1.05,predelay:.025,tone:6500}};
         function setupRoomAudio(){
-            const context=state.audioCtx,input=state.masterGain,dry=context.createGain(),wet=context.createGain(),convolver=context.createConvolver(),delay=context.createDelay(.1),filter=context.createBiquadFilter();
-            filter.type='lowpass';input.connect(dry);dry.connect(state.listeningToneInput);input.connect(delay);delay.connect(convolver);convolver.connect(filter);filter.connect(wet);wet.connect(state.listeningToneInput);
-            state.roomAudio={dry,wet,convolver,delay,filter,preset:null,impulses:new Map()};applyRoomAudio();
+            const context=appState.audio.context,input=appState.audio.masterGain,dry=context.createGain(),wet=context.createGain(),convolver=context.createConvolver(),delay=context.createDelay(.1),filter=context.createBiquadFilter();
+            filter.type='lowpass';input.connect(dry);dry.connect(appState.audio.listeningToneInput);input.connect(delay);delay.connect(convolver);convolver.connect(filter);filter.connect(wet);wet.connect(appState.audio.listeningToneInput);
+            appStateStore.actions.setAudioRuntime('roomAudio',{dry,wet,convolver,delay,filter,preset:null,impulses:new Map()});applyRoomAudio();
         }
         function applyRoomAudio(){
-            const s=state.environment||(state.environment={...DEFAULT_ROOM_SETTINGS}),preset=ROOM_PRESETS[s.preset]||ROOM_PRESETS.small,graph=state.roomAudio;if(!graph)return;
-            const context=state.audioCtx,t=context.currentTime;
+            const s=appState.audio.environment||DEFAULT_ROOM_SETTINGS,preset=ROOM_PRESETS[s.preset]||ROOM_PRESETS.small,graph=appState.audio.roomAudio;if(!graph)return;
+            const context=appState.audio.context,t=context.currentTime;
             if(graph.preset!==s.preset){
                 if(!graph.impulses.has(s.preset)){
                     const length=Math.ceil(context.sampleRate*preset.decay),buffer=context.createBuffer(2,length,context.sampleRate);let seed=5371;
@@ -5373,7 +5366,7 @@ const Hardware = (() => {
             return result;
         }
         function configureStreamIntegrated(dev){
-            const ctx=state.audioCtx,el=dev.el,owned=dev.modelAudioNodes||=[];
+            const ctx=appState.audio.context,el=dev.el,owned=dev.modelAudioNodes||=[];
             const gain=(value=1)=>{const node=ctx.createGain();node.gain.value=value;owned.push(node);return node;};
             Object.assign(dev.state,{volume:.3,streamInput:'library',streamMute:false,streamPage:'playing'});
             dev.streamChannels=[];dev.powerNodes=[];dev.nodes.outPhone=ctx.createChannelMerger(2);owned.push(dev.nodes.outPhone);
@@ -5411,7 +5404,7 @@ const Hardware = (() => {
                 q('[data-stream-action="mute"]').setAttribute('aria-pressed',String(st.streamMute));q('[data-stream-action="play"]').setAttribute('aria-pressed',String(dev.powered&&st.playing));
                 el.querySelectorAll('[data-stream-input]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.streamInput===st.streamInput)));
                 if(!library&&page==='playing')drawStreamLineSpectra(dev);
-                if(state.selectedDeviceId===dev.id){const slider=document.getElementById('stream-volume');if(slider&&document.activeElement!==slider)slider.value=volume;const value=document.getElementById('stream-volume-label');if(value)value.textContent=volume+'%';document.getElementById('stream-mute')?.setAttribute('aria-pressed',String(st.streamMute));document.querySelectorAll('[data-stream-inspector-input]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.streamInspectorInput===st.streamInput)));}
+                if(appState.interface.selectedDeviceId===dev.id){const slider=document.getElementById('stream-volume');if(slider&&document.activeElement!==slider)slider.value=volume;const value=document.getElementById('stream-volume-label');if(value)value.textContent=volume+'%';document.getElementById('stream-mute')?.setAttribute('aria-pressed',String(st.streamMute));document.querySelectorAll('[data-stream-inspector-input]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.streamInspectorInput===st.streamInput)));}
             };
             dev.applyStream=()=>{
                 const st=dev.state;st.volume=Math.max(0,Math.min(1,Number(st.volume)||0));st.streamInput=st.streamInput==='line'?'line':'library';st.streamMute=!!st.streamMute;st.streamPage=['playing','home','info'].includes(st.streamPage)?st.streamPage:'playing';
@@ -5419,7 +5412,7 @@ const Hardware = (() => {
                 dev.refreshStreamDisplay();Hardware.sync(dev);
             };
             dev.refreshStreamRouting=()=>{
-                const connected=state.connections.some(c=>c.outId===q('[data-node="outPhone"]').id);if(connected===dev.streamPhonesConnected)return;dev.streamPhonesConnected=connected;
+                const connected=appState.project.connections.some(c=>c.outId===q('[data-node="outPhone"]').id);if(connected===dev.streamPhonesConnected)return;dev.streamPhonesConnected=connected;
                 dev.streamChannels.forEach(({speaker})=>speaker.gain.setTargetAtTime(connected?0:1,ctx.currentTime,.02));
             };
             dev.selectStreamInput=input=>{dev.state.streamInput=input==='line'?'line':'library';dev.state.streamPage='playing';if(dev.state.streamInput==='line')setSourcePlaying(dev,false);dev.applyStream();updateCableFlows();scheduleProjectSave();};
@@ -5440,7 +5433,7 @@ const Hardware = (() => {
         }
         function drawStreamLineSpectra(dev){
             if(!dev.meters?.visible)return;
-            const active=dev.powered&&state.audioCtx.state==='running',nyquist=state.audioCtx.sampleRate/2,maxHz=Math.min(20000,nyquist),points=96;
+            const active=dev.powered&&appState.audio.context.state==='running',nyquist=appState.audio.context.sampleRate/2,maxHz=Math.min(20000,nyquist),points=96;
             dev.streamSpectra.forEach(({analyzer,data,trace,fill})=>{
                 if(active)analyzer.getFloatFrequencyData(data);
                 const path=[];
@@ -5474,7 +5467,7 @@ const Hardware = (() => {
                 <div class="integrated-connections utility-connections">${[0,1,2].map((i)=>`<div><small>${['AUX','TUNER','TAPE'][i]}</small>${hardwarePair('in','line'+i)}</div>`).join('')}<div><small>PHONO</small>${hardwarePair('in','phono','phono')}</div><div><small>PRE OUT</small>${hardwarePair('out','pre')}</div><div><small>SPEAKERS L/R</small>${hardwarePair('out','speaker','amplified')}</div></div></section>`;
         }
         function configureUtilityAmp(dev){
-            const ctx=state.audioCtx,monoGates=[];Object.assign(dev.state,{utilityLoudness:false,utilityMono:false});
+            const ctx=appState.audio.context,monoGates=[];Object.assign(dev.state,{utilityLoudness:false,utilityMono:false});
             dev.integratedFilters.forEach(({bass},output)=>{
                 dev.nodes['in'+['L','R'][output]].disconnect(bass);
                 ['L','R'].forEach((ch,input)=>{const gain=ctx.createGain();dev.nodes['in'+ch].connect(gain);gain.connect(bass);monoGates.push({gain,input,output});(dev.modelAudioNodes||=[]).push(gain);});
@@ -5486,7 +5479,7 @@ const Hardware = (() => {
                 dev.integratedFilters.forEach(({bass,treble})=>{bass.gain.setTargetAtTime((st.direct?0:st.bass)+(st.utilityLoudness?6*(1-st.volume):0),ctx.currentTime,.025);treble.gain.setTargetAtTime((st.direct?0:st.treble)+(st.utilityLoudness?2*(1-st.volume):0),ctx.currentTime,.025);});
                 dev.el.querySelectorAll('[data-utility-toggle]').forEach(button=>button.setAttribute('aria-pressed',String(st[button.dataset.utilityToggle])));
             };
-            dev.el.querySelectorAll('[data-utility-toggle]').forEach(button=>button.onclick=()=>{dev.state[button.dataset.utilityToggle]=!dev.state[button.dataset.utilityToggle];dev.applyIntegrated();if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();});
+            dev.el.querySelectorAll('[data-utility-toggle]').forEach(button=>button.onclick=()=>{dev.state[button.dataset.utilityToggle]=!dev.state[button.dataset.utilityToggle];dev.applyIntegrated();if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();});
             dev.applyIntegrated();
         }
         const GLASS_PREAMP_SWITCHES=[['glassLowCut','LOW FILTER'],['glassHighCut','HIGH FILTER'],['glassLoudness','LOUDNESS']];
@@ -5508,7 +5501,7 @@ const Hardware = (() => {
             </section>`;
         }
         function configureGlassPreamp(dev){
-            const ctx=state.audioCtx,filters=[];
+            const ctx=appState.audio.context,filters=[];
             Object.assign(dev.state,{glassLowCut:false,glassHighCut:false,glassLoudness:false});
             dev.integratedFilters.forEach(({treble,volume})=>{
                 const highpass=ctx.createBiquadFilter(),lowpass=ctx.createBiquadFilter();highpass.type='highpass';lowpass.type='lowpass';highpass.Q.value=lowpass.Q.value=Math.SQRT1_2;
@@ -5522,7 +5515,7 @@ const Hardware = (() => {
                 dev.el.querySelectorAll('[data-glass-toggle]').forEach(button=>button.setAttribute('aria-pressed',String(st[button.dataset.glassToggle])));
                 dev.el.querySelectorAll('[data-pre-toggle],[data-glass-toggle],[data-integrated-direct]').forEach(button=>button.dataset.togglePosition=button.getAttribute('aria-pressed')==='true'?'2':'0');
             };
-            dev.el.querySelectorAll('[data-glass-toggle]').forEach(button=>button.addEventListener('click',()=>{const key=button.dataset.glassToggle;dev.state[key]=!dev.state[key];dev.applyIntegrated();updateCableFlows();if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();}));
+            dev.el.querySelectorAll('[data-glass-toggle]').forEach(button=>button.addEventListener('click',()=>{const key=button.dataset.glassToggle;dev.state[key]=!dev.state[key];dev.applyIntegrated();updateCableFlows();if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();}));
             dev.applyIntegrated();
         }
         function glassPreampInspector(dev){
@@ -5551,13 +5544,13 @@ const Hardware = (() => {
             dev.applyIntegrated=()=>{
                 const st=dev.state;st.precisionGain=[0,6,12].includes(st.precisionGain)?st.precisionGain:0;apply();
                 dev.el.querySelector('[data-precision-gain]').dataset.togglePosition=String(st.precisionGain/6);dev.el.querySelector('[data-precision-gain]').setAttribute('aria-label',`Ganho de saída: ${st.precisionGain} dB. Clique para alternar 0, 6 e 12 dB.`);dev.el.querySelector('[data-precision-gain-label]').textContent=(st.precisionGain?'+':'')+st.precisionGain+' dB';
-                if(state.selectedDeviceId===dev.id){const slider=inspectorContent.querySelector('[data-precision-inspector-gain]');if(slider){slider.value=String(st.precisionGain);syncInspectorGainVisual(slider);const value=inspectorContent.querySelector('[data-precision-gain-value]');if(value)value.textContent=(st.precisionGain?'+':'')+st.precisionGain+' dB';}}
+                if(appState.interface.selectedDeviceId===dev.id){const slider=inspectorContent.querySelector('[data-precision-inspector-gain]');if(slider){slider.value=String(st.precisionGain);syncInspectorGainVisual(slider);const value=inspectorContent.querySelector('[data-precision-gain-value]');if(value)value.textContent=(st.precisionGain?'+':'')+st.precisionGain+' dB';}}
                 dev.el.querySelectorAll('[data-pre-toggle]').forEach(button=>button.dataset.togglePosition=st[button.dataset.preToggle]?'2':'0');
             };
             dev.el.querySelector('[data-precision-gain]').onclick=()=>{dev.state.precisionGain=(dev.state.precisionGain+6)%18;dev.applyIntegrated();scheduleProjectSave();};dev.applyIntegrated();
         }
         function updateReferenceHardware(now){
-            Object.values(state.devices).forEach(dev=>{
+            Object.values(appState.project.devices).forEach(dev=>{
                 if(dev.type==='integratedUtility'){
                     const power=dev.powered?Math.max(...['L','R'].map(ch=>wattsAtLoad(amplifierChannelRms(dev,ch),dev.channelLoads?.[ch]??8))):0;
                     dev.el.querySelectorAll('[data-utility-led]').forEach((led,i)=>led.classList.toggle('is-on',power>=[.1,1,5,10,20][i]));
@@ -5584,7 +5577,7 @@ const Hardware = (() => {
             return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><section class="integrated-face finish-${config.finish}"><div class="integrated-main"><div class="integrated-power"><div data-power-slot><button class="power-btn" title="Ligar ou desligar"></button></div><i class="integrated-status-led" aria-hidden="true"></i><div class="port" data-type="p10" data-io="out" data-node="outPhone" data-signal="headphone" title="Saída de fones P10 estéreo"></div><small>PHONES</small></div>${type==='integratedMinimal'?knob('volume','VOLUME',true):sources}${config.meters?integratedGauge(config.watts):'<div class="integrated-green-window" aria-hidden="true"><i></i></div>'}${type==='integratedMinimal'?sources:knob('volume','VOLUME',true)}${config.tone?`<div class="integrated-tones">${knob('bass','BASS')}${knob('treble','TREBLE')}${knob('balance','BALANCE')}<button type="button" class="integrated-direct" data-integrated-direct aria-pressed="false">DIRECT</button></div>`:''}</div><div class="integrated-connections">${[0,1,2].map(i=>`<div><small>LINE ${i+1}</small>${ports('in','line'+i,'rca','line')}</div>`).join('')}<div><small>PHONO</small>${ports('in','phono','rca','phono')}</div><div><small>PRE OUT</small>${ports('out','pre','rca','line')}</div><div><small>SPEAKERS · L/R</small>${ports('out','speaker','wire','amplified')}</div></div></section>`;
         }
         function configureIntegratedAmp(dev){
-            const config=controlAmpConfig(dev.type),ctx=state.audioCtx;
+            const config=controlAmpConfig(dev.type),ctx=appState.audio.context;
             Object.assign(dev.state,{integratedSource:0,balance:0,direct:false});
             dev.integratedGates=[];dev.integratedFilters=[];dev.powerNodes=[];
             dev.nodes.outPhone=ctx.createChannelMerger(2);
@@ -5623,11 +5616,11 @@ const Hardware = (() => {
                 });
             };
             dev.applyIntegrated();
-            dev.el.querySelectorAll('[data-integrated-source]').forEach(button=>button.addEventListener('click',()=>{dev.state.integratedSource=Number(button.dataset.integratedSource);dev.applyIntegrated();updateCableFlows();if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();}));
-            dev.el.querySelector('[data-integrated-direct]')?.addEventListener('click',()=>{dev.state.direct=!dev.state.direct;dev.applyIntegrated();if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();});
+            dev.el.querySelectorAll('[data-integrated-source]').forEach(button=>button.addEventListener('click',()=>{dev.state.integratedSource=Number(button.dataset.integratedSource);dev.applyIntegrated();updateCableFlows();if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();}));
+            dev.el.querySelector('[data-integrated-direct]')?.addEventListener('click',()=>{dev.state.direct=!dev.state.direct;dev.applyIntegrated();if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();});
             dev.el.querySelectorAll('[data-integrated-knob]').forEach(knob=>{
                 const key=knob.dataset.integratedKnob,min=key==='volume'||key==='subLevel'?0:key==='balance'?-1:-10,max=['volume','subLevel','balance'].includes(key)?1:10;
-                const set=value=>{dev.state[key]=Number((min+Math.round(Math.max(0,Math.min(1,(value-min)/(max-min)))*10)/10*(max-min)).toFixed(3));dev.applyIntegrated();const input=document.querySelector(`[data-integrated-setting="${key}"],[data-custom-pre-setting="${key}"]`);if(input&&state.selectedDeviceId===dev.id){input.value=dev.state[key];input.previousElementSibling.querySelector('output').textContent=integratedSettingText(key,dev.state[key]);}scheduleProjectSave();};
+                const set=value=>{dev.state[key]=Number((min+Math.round(Math.max(0,Math.min(1,(value-min)/(max-min)))*10)/10*(max-min)).toFixed(3));dev.applyIntegrated();const input=document.querySelector(`[data-integrated-setting="${key}"],[data-custom-pre-setting="${key}"]`);if(input&&appState.interface.selectedDeviceId===dev.id){input.value=dev.state[key];input.previousElementSibling.querySelector('output').textContent=integratedSettingText(key,dev.state[key]);}scheduleProjectSave();};
                 Hardware.bindKnob(knob,{get:()=>dev.state[key],set,min,max});
             });
         }
@@ -5645,11 +5638,11 @@ const Hardware = (() => {
         let lastIntegratedDisplay=0;
         function updateIntegratedDisplays(now){
             if(now-lastIntegratedDisplay<80)return;const elapsed=Math.min(.3,(now-lastIntegratedDisplay)/1000);lastIntegratedDisplay=now;
-            Object.values(state.devices).filter(dev=>CUSTOM_PREAMPS[dev.type]).forEach(dev=>{
+            Object.values(appState.project.devices).filter(dev=>CUSTOM_PREAMPS[dev.type]).forEach(dev=>{
                 dev.el.querySelectorAll('[data-pre-level]').forEach(bar=>{const level=dev.powered?dev.meters?.levels[Number(bar.dataset.preLevel)]||0:0;bar.style.width=Math.max(0,Math.min(100,(audioDb(level)+60)/60*100))+'%';});
                 drawReferencePreampDisplay(dev);
             });
-            Object.values(state.devices).filter(dev=>INTEGRATED_AMPS[dev.type]?.meters).forEach(dev=>{
+            Object.values(appState.project.devices).filter(dev=>INTEGRATED_AMPS[dev.type]?.meters).forEach(dev=>{
                 dev.integratedEnvelope||=[0,0];
                 dev.el.querySelectorAll('[data-integrated-needle]').forEach(needle=>{
                     const i=Number(needle.dataset.integratedNeedle),value=dev.powered?amplifierChannelRms(dev,i?'R':'L'):0;
@@ -5689,7 +5682,7 @@ const Hardware = (() => {
             return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><section class="integrated-face custom-pre-face pre-finish-${config.finish}">${type==='preReference'?'<i class="pre-handle handle-left" aria-hidden="true"></i><i class="pre-handle handle-right" aria-hidden="true"></i>':''}<div class="custom-pre-main">${encoder}<div class="custom-pre-center">${screen}<div class="custom-pre-switches"><div data-power-slot><button class="power-btn" title="Ligar ou desligar"></button></div>${toggle('preMuted','MUTE')}${type==='preReference'?toggle('preMono','MONO')+toggle('preInvert','INVERT'):config.tone?'<button type="button" class="integrated-direct" data-integrated-direct aria-pressed="false">DIRECT</button>':''}</div></div>${knob('volume','VOLUME',true)}${config.tone?`<div class="custom-pre-tones">${knob('bass','BASS')}${knob('treble','TREBLE')}${knob('balance','BALANCE')}${config.crossover?knob('subLevel','SUB'):''}</div>`:knob('balance','BALANCE')}</div><div class="integrated-connections">${[0,1,2,3].map(index=>`<div><small>${index===3&&config.phono?'PHONO':'LINE '+(index+1)}</small>${port('in',index===3&&config.phono?'phono':'line'+index,index===3&&config.phono?'phono':'line')}</div>`).join('')}<div><small>LINE OUT</small>${port('out','pre','line')}</div>${config.sub?'<div><small>SUB · MONO</small><div class="port" data-type="rca" data-io="out" data-node="subOut" data-signal="line" data-role="lfe-out" title="Subwoofer · saída mono em nível de linha"></div></div>':''}${config.phones?`<div><small>PHONES</small><div class="port" data-type="${config.finish==='control'?'p2':'p10'}" data-io="out" data-node="outPhone" data-signal="headphone" title="Saída estéreo para fones"></div></div>`:''}</div><div hidden>${controlAmpSources(type).map((name,index)=>`<button data-integrated-source="${index}">${name}</button>`).join('')}</div></section>`;
         }
         function configureCustomPreamp(dev){
-            const config=CUSTOM_PREAMPS[dev.type],ctx=state.audioCtx;
+            const config=CUSTOM_PREAMPS[dev.type],ctx=appState.audio.context;
             Object.assign(dev.state,{preMuted:false,preMono:false,preInvert:false,subLevel:.8,subFrequency:80});
             // A matrix before the output gates provides real mono and polarity inversion.
             const matrix=[];
@@ -5720,7 +5713,7 @@ const Hardware = (() => {
             const rotor=dev.el.querySelector('[data-pre-rotary]');
             const setSource=index=>{dev.el.querySelector(`[data-integrated-source="${Math.max(0,Math.min(3,index))}"]`).click();};
             Hardware.bindKnob(rotor,{get:()=>dev.state.integratedSource,set:setSource,min:0,max:3,step:1,format:value=>controlAmpSources(dev.type)[value]});
-            dev.el.querySelectorAll('[data-pre-toggle]').forEach(button=>button.addEventListener('click',()=>{const key=button.dataset.preToggle;dev.state[key]=!dev.state[key];dev.applyIntegrated();updateCableFlows();if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();}));
+            dev.el.querySelectorAll('[data-pre-toggle]').forEach(button=>button.addEventListener('click',()=>{const key=button.dataset.preToggle;dev.state[key]=!dev.state[key];dev.applyIntegrated();updateCableFlows();if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);scheduleProjectSave();}));
             dev.applyIntegrated();
         }
         function customPreampInspectorHtml(dev){
@@ -5760,7 +5753,7 @@ const Hardware = (() => {
             return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><section class="custom-power-face power-finish-${config.finish}"><div class="custom-power-main">${type==='powerValve'?valveArt:type==='powerBias'?biasArt:dualArt}</div>${connectorRow}</section>`;
         }
         function configureCustomPower(dev){
-            const ctx=state.audioCtx,gains={};dev.powerNodes=[];dev.state.channelGain={L:DEFAULT_POWER_GAIN,R:DEFAULT_POWER_GAIN};
+            const ctx=appState.audio.context,gains={};dev.powerNodes=[];dev.state.channelGain={L:DEFAULT_POWER_GAIN,R:DEFAULT_POWER_GAIN};
             ['L','R'].forEach(ch=>{
                 const input=dev.nodes['in'+ch]=ctx.createGain(),gain=gains[ch]=ctx.createGain(),power=ctx.createGain(),stage=ctx.createGain(),output=dev.nodes['out'+ch]=ctx.createGain();
                 stage.gain.value=1.35;input.connect(gain);gain.connect(power);power.connect(stage);stage.connect(output);dev.powerNodes.push(power);
@@ -5768,7 +5761,7 @@ const Hardware = (() => {
             dev.setChannelGain=(ch,value)=>{
                 const bounded=Math.max(0,Math.min(1,Number(value)||0)),level=dev.type==='powerBias'?Math.round(bounded*10)/10:bounded;dev.state.channelGain[ch]=level;gains[ch].gain.setTargetAtTime(level,ctx.currentTime,.02);
                 const knob=dev.el.querySelector(`[data-bias-gain="${ch}"]`);if(knob){knob.style.setProperty('--gain-angle',(-135+level*270)+'deg');knob.setAttribute('aria-valuenow',String(Math.round(level*10)));knob.setAttribute('aria-valuetext',Math.round(level*10)+' de 10');}
-                const slider=state.selectedDeviceId===dev.id?document.getElementById('power-gain-'+ch):null;if(slider){slider.value=level;syncInspectorGainVisual(slider);}
+                const slider=appState.interface.selectedDeviceId===dev.id?document.getElementById('power-gain-'+ch):null;if(slider){slider.value=level;syncInspectorGainVisual(slider);}
             };
             ['L','R'].forEach(ch=>{
                 const knob=dev.el.querySelector(`[data-bias-gain="${ch}"]`);
@@ -5779,7 +5772,7 @@ const Hardware = (() => {
         let lastCustomPowerDisplay=0;
         function updateCustomPowerDisplays(now){
             if(now-lastCustomPowerDisplay<16)return;const elapsed=Math.min(.1,(now-lastCustomPowerDisplay)/1000);lastCustomPowerDisplay=now;
-            Object.values(state.devices).filter(dev=>CUSTOM_POWER_AMPS[dev.type]).forEach(dev=>{
+            Object.values(appState.project.devices).filter(dev=>CUSTOM_POWER_AMPS[dev.type]).forEach(dev=>{
                 dev.el.querySelectorAll('[data-dual-led]').forEach(led=>{
                     const peak=dev.meters?.peaks[Number(led.dataset.dualLed)]||0,active=dev.powered&&peak>.0001;Hardware.setLed(led,active,peak>=.99);
                 });
@@ -5830,7 +5823,7 @@ const Hardware = (() => {
             el.style.top=Math.max(0,Math.min(maxEquipmentBottom()-276,y))+'px';
             world.appendChild(el);
             const dev={id,type:'pendantLamp',el,nodes:{},state:{},powered:true};
-            state.devices[id]=dev;bindDeviceEvents(dev);selectDevice(id);updateCables();scheduleProjectSave();
+            appStateStore.actions.registerDevice(dev);bindDeviceEvents(dev);selectDevice(id);updateCables();scheduleProjectSave();
         }
         function createWallLamp(type,x,y,requestedId=null){
             const id=requestedId||'dev_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
@@ -5851,7 +5844,7 @@ const Hardware = (() => {
             el.style.left=Math.max(sceneSideInset(),Math.min(world.offsetWidth-el.offsetWidth-sceneSideInset(),snapCoordinate(localX)))+'px';
             el.style.top=Math.max(0,Math.min(wallPlacementBottom()-el.offsetHeight,snapCoordinate(localY)))+'px';
             const dev={id,type,el,nodes:{},state:{},powered:true};
-            state.devices[id]=dev;bindDeviceEvents(dev);selectDevice(id);updateCables();scheduleProjectSave();
+            appStateStore.actions.registerDevice(dev);bindDeviceEvents(dev);selectDevice(id);updateCables();scheduleProjectSave();
         }
         function createDevice(type, x, y, requestedId=null) {
             if(type==='pendantLamp')return createPendantLamp(x,y,requestedId);
@@ -6083,7 +6076,7 @@ const Hardware = (() => {
             world.appendChild(el);
 
             const dev = { id, type, el, nodes: {}, state: { volume: 0.8, bass: 0, treble: 0, eq: [0, 0, 0, 0, 0] }, powered: true };
-            const placement = state.restoringProject?{
+            const placement = appState.project.restoringProject?{
                 x:Math.max(sceneSideInset(),Math.min(world.offsetWidth-el.offsetWidth-sceneSideInset(),x)),
                 y:Math.max(0,Math.min(maxEquipmentBottom()-el.offsetHeight,y))
             }:findFreePlacement(dev,x,y);
@@ -6092,7 +6085,7 @@ const Hardware = (() => {
             el.style.top = `${placement.y}px`;
             
             // Cria nó master interno de energia para o aparelho
-            dev.powerGain = state.audioCtx.createGain();
+            dev.powerGain = appState.audio.context.createGain();
             dev.powerGain.gain.value = 1.0;
 
             if (FURNITURE_TYPES[type]) {
@@ -6102,45 +6095,45 @@ const Hardware = (() => {
             } else if (INTERFACE_DEVICES[type]) {
                 const config = INTERFACE_DEVICES[type];
                 if(AudioAdapterDesign.models[type])dev.state.adapterRotation=0;
-                dev.nodes.inL = state.audioCtx.createGain(); dev.nodes.inR = state.audioCtx.createGain();
-                dev.nodes.outL = state.audioCtx.createGain(); dev.nodes.outR = state.audioCtx.createGain();
+                dev.nodes.inL = appState.audio.context.createGain(); dev.nodes.inR = appState.audio.context.createGain();
+                dev.nodes.outL = appState.audio.context.createGain(); dev.nodes.outR = appState.audio.context.createGain();
                 ['L','R'].forEach(ch=>{
                     if (type === 'phonoConverter') {
                         // Inverse RIAA playback response, normalized at 1 kHz; gain converts the simulator's phono level to line.
-                        const low = state.audioCtx.createBiquadFilter(), high = state.audioCtx.createBiquadFilter();
+                        const low = appState.audio.context.createBiquadFilter(), high = appState.audio.context.createBiquadFilter();
                         low.type='lowshelf'; low.frequency.value=120; low.gain.value=9;
                         high.type='highshelf'; high.frequency.value=2122; high.gain.value=-9;
-                        const gain = state.audioCtx.createGain(); gain.gain.value=ELECTRICAL_MODEL.phonoGain;
+                        const gain = appState.audio.context.createGain(); gain.gain.value=ELECTRICAL_MODEL.phonoGain;
                         dev.nodes['in'+ch].connect(low); low.connect(high); high.connect(gain); connectPhonoPlayback(dev,gain,dev.nodes['out'+ch]);
                     } else {
-                        const gain=state.audioCtx.createGain(); gain.gain.value=type==='speakerConverter'?ELECTRICAL_MODEL.speakerVoltsPerUnit*ELECTRICAL_MODEL.converterRatio/ELECTRICAL_MODEL.lineVoltsPerUnit:1;
+                        const gain=appState.audio.context.createGain(); gain.gain.value=type==='speakerConverter'?ELECTRICAL_MODEL.speakerVoltsPerUnit*ELECTRICAL_MODEL.converterRatio/ELECTRICAL_MODEL.lineVoltsPerUnit:1;
                         dev.nodes['in'+ch].connect(gain);gain.connect(dev.nodes['out'+ch]);
                     }
                 });
-                if (['p10','p2'].includes(config.input)) {const split=dev.nodes.inStereo=state.audioCtx.createChannelSplitter(2);split.connect(dev.nodes.inL,0);split.connect(dev.nodes.inR,1);}
-                if (['p10','p2'].includes(config.output)) {const merge=dev.nodes.outStereo=state.audioCtx.createChannelMerger(2);dev.nodes.outL.connect(merge,0,0);dev.nodes.outR.connect(merge,0,1);}
+                if (['p10','p2'].includes(config.input)) {const split=dev.nodes.inStereo=appState.audio.context.createChannelSplitter(2);split.connect(dev.nodes.inL,0);split.connect(dev.nodes.inR,1);}
+                if (['p10','p2'].includes(config.output)) {const merge=dev.nodes.outStereo=appState.audio.context.createChannelMerger(2);dev.nodes.outL.connect(merge,0,0);dev.nodes.outR.connect(merge,0,1);}
             } else if(type==='preamp'||BENCH_METER_TYPES.has(type)){
                 setupExtraRouting(dev);
             } else if(type==='streamIntegrated'){
                 configureStreamIntegrated(dev);
             } else if (SOURCE_TYPES.has(type)) {
                 dev.state.playing = false;
-                dev.nodes.genR = state.audioCtx.createGain();
-                dev.nodes.genL = state.audioCtx.createGain();
+                dev.nodes.genR = appState.audio.context.createGain();
+                dev.nodes.genL = appState.audio.context.createGain();
                 dev.nodes.genR.gain.value = dev.nodes.genL.gain.value = 0;
-                dev.nodes.outR = state.audioCtx.createGain();
-                dev.nodes.outL = state.audioCtx.createGain();
-                const powerR = state.audioCtx.createGain();
-                const powerL = state.audioCtx.createGain();
+                dev.nodes.outR = appState.audio.context.createGain();
+                dev.nodes.outL = appState.audio.context.createGain();
+                const powerR = appState.audio.context.createGain();
+                const powerL = appState.audio.context.createGain();
                 dev.powerNodes = [powerR, powerL];
                 dev.nodes.genR.connect(powerR);
                 dev.nodes.genL.connect(powerL);
                 if (TURNTABLE_TYPES.has(type)) {
                     // PHONO: nível baixo e curva RIAA invertida (sem equalização no resto do sistema). LINE: pré interno, sinal plano.
                     const stages = [[powerR, dev.nodes.outR], [powerL, dev.nodes.outL]].map(([src, dst]) => {
-                        const low = state.audioCtx.createBiquadFilter();
-                        const high = state.audioCtx.createBiquadFilter();
-                        const level = state.audioCtx.createGain();
+                        const low = appState.audio.context.createBiquadFilter();
+                        const high = appState.audio.context.createBiquadFilter();
+                        const level = appState.audio.context.createGain();
                         low.type = 'lowshelf'; low.frequency.value = 120;
                         high.type = 'highshelf'; high.frequency.value = 2122;
                         src.connect(low); low.connect(high); high.connect(level); level.connect(dst);
@@ -6148,7 +6141,7 @@ const Hardware = (() => {
                     });
                     dev.setOutputMode = mode => {
                         const phono = mode === 'phono';
-                        const t = state.audioCtx.currentTime;
+                        const t = appState.audio.context.currentTime;
                         stages.forEach(({ low, high, level }) => {
                             low.gain.setTargetAtTime(phono ? -9 : 0, t, .015);
                             high.gain.setTargetAtTime(phono ? 9 : 0, t, .015);
@@ -6161,11 +6154,11 @@ const Hardware = (() => {
                     powerL.connect(dev.nodes.outL);
                 }
             } else if (BT_TX_TYPES.has(type)) {
-                dev.nodes.inR = state.audioCtx.createGain();
-                dev.nodes.inL = state.audioCtx.createGain();
-                dev.nodes.btOut = state.audioCtx.createChannelMerger(2);
-                const inputPowerR = state.audioCtx.createGain();
-                const inputPowerL = state.audioCtx.createGain();
+                dev.nodes.inR = appState.audio.context.createGain();
+                dev.nodes.inL = appState.audio.context.createGain();
+                dev.nodes.btOut = appState.audio.context.createChannelMerger(2);
+                const inputPowerR = appState.audio.context.createGain();
+                const inputPowerL = appState.audio.context.createGain();
                 dev.powerNodes = [inputPowerR, inputPowerL];
                 dev.nodes.inR.connect(inputPowerR);
                 dev.nodes.inL.connect(inputPowerL);
@@ -6180,25 +6173,25 @@ const Hardware = (() => {
                 if(type==='prePrecision')configurePrecisionPreamp(dev);
                 if(type==='preGlass')configureGlassPreamp(dev);
             } else if (type === 'receiver') {
-                dev.nodes.inR = state.audioCtx.createGain();
-                dev.nodes.inL = state.audioCtx.createGain();
-                dev.nodes.bassR = state.audioCtx.createBiquadFilter(); dev.nodes.bassR.type = 'lowshelf'; dev.nodes.bassR.frequency.value = 100;
-                dev.nodes.bassL = state.audioCtx.createBiquadFilter(); dev.nodes.bassL.type = 'lowshelf'; dev.nodes.bassL.frequency.value = 100;
-                dev.nodes.trebleR = state.audioCtx.createBiquadFilter(); dev.nodes.trebleR.type = 'highshelf'; dev.nodes.trebleR.frequency.value = 3000;
-                dev.nodes.trebleL = state.audioCtx.createBiquadFilter(); dev.nodes.trebleL.type = 'highshelf'; dev.nodes.trebleL.frequency.value = 3000;
+                dev.nodes.inR = appState.audio.context.createGain();
+                dev.nodes.inL = appState.audio.context.createGain();
+                dev.nodes.bassR = appState.audio.context.createBiquadFilter(); dev.nodes.bassR.type = 'lowshelf'; dev.nodes.bassR.frequency.value = 100;
+                dev.nodes.bassL = appState.audio.context.createBiquadFilter(); dev.nodes.bassL.type = 'lowshelf'; dev.nodes.bassL.frequency.value = 100;
+                dev.nodes.trebleR = appState.audio.context.createBiquadFilter(); dev.nodes.trebleR.type = 'highshelf'; dev.nodes.trebleR.frequency.value = 3000;
+                dev.nodes.trebleL = appState.audio.context.createBiquadFilter(); dev.nodes.trebleL.type = 'highshelf'; dev.nodes.trebleL.frequency.value = 3000;
                 dev.nodes.bass = dev.nodes.bassR;
                 dev.nodes.treble = dev.nodes.trebleR;
-                dev.nodes.volR = state.audioCtx.createGain(); dev.nodes.volR.gain.value = 0.8;
-                dev.nodes.volL = state.audioCtx.createGain(); dev.nodes.volL.gain.value = 0.8;
+                dev.nodes.volR = appState.audio.context.createGain(); dev.nodes.volR.gain.value = 0.8;
+                dev.nodes.volL = appState.audio.context.createGain(); dev.nodes.volL.gain.value = 0.8;
                 dev.nodes.vol = dev.nodes.volR;
-                dev.nodes.outR = state.audioCtx.createGain();
-                dev.nodes.outL = state.audioCtx.createGain();
+                dev.nodes.outR = appState.audio.context.createGain();
+                dev.nodes.outL = appState.audio.context.createGain();
                 dev.nodes.spkOutR = dev.nodes.outR;
                 dev.nodes.spkOutL = dev.nodes.outL;
                 dev.powerNodes = [dev.nodes.outR, dev.nodes.outL];
-                dev.nodes.outSub = state.audioCtx.createGain();
-                dev.nodes.outPhone = state.audioCtx.createChannelMerger(2);
-                dev.nodes.subFilter = state.audioCtx.createBiquadFilter();
+                dev.nodes.outSub = appState.audio.context.createGain();
+                dev.nodes.outPhone = appState.audio.context.createChannelMerger(2);
+                dev.nodes.subFilter = appState.audio.context.createBiquadFilter();
                 dev.nodes.subFilter.type = 'lowpass';
                 dev.nodes.subFilter.frequency.value = 120;
                 dev.receiverRadioTargets={R:dev.nodes.bassR,L:dev.nodes.bassL};
@@ -6217,39 +6210,39 @@ const Hardware = (() => {
                 dev.nodes.outR.connect(dev.nodes.outPhone, 0, 1);
                 dev.nodes.outL.connect(dev.nodes.outPhone, 0, 0);
             } else if (['headphoneAmp','headphoneAmpModern'].includes(type)) {
-                dev.nodes.inR = state.audioCtx.createGain();
-                dev.nodes.inL = state.audioCtx.createGain();
-                const summer = state.audioCtx.createChannelMerger(2);
+                dev.nodes.inR = appState.audio.context.createGain();
+                dev.nodes.inL = appState.audio.context.createGain();
+                const summer = appState.audio.context.createChannelMerger(2);
                 dev.nodes.inR.connect(summer,0,1);
                 dev.nodes.inL.connect(summer,0,0);
                 
-                dev.nodes.vol = state.audioCtx.createGain(); dev.nodes.vol.gain.value = 0.8;
-                dev.nodes.outPhone = state.audioCtx.createGain();
+                dev.nodes.vol = appState.audio.context.createGain(); dev.nodes.vol.gain.value = 0.8;
+                dev.nodes.outPhone = appState.audio.context.createGain();
                 summer.connect(dev.nodes.vol);
                 dev.nodes.vol.connect(dev.powerGain);
                 dev.powerGain.connect(dev.nodes.outPhone);
                 dev.nodes.outAux = dev.nodes.outPhone;
                 dev.setPhoneVolume = value => {
                     dev.state.volume = Math.max(0,Math.min(1,Number(value)));
-                    dev.nodes.vol.gain.setTargetAtTime(dev.state.volume,state.audioCtx.currentTime,.015);
+                    dev.nodes.vol.gain.setTargetAtTime(dev.state.volume,appState.audio.context.currentTime,.015);
                     updateKnobAngle(dev,'.phone-volume',dev.state.volume,0,1);
                     el.querySelector('.phone-volume').setAttribute('aria-valuenow',Math.round(dev.state.volume*100));
-                    if(state.selectedDeviceId===id){const slider=document.getElementById('sl-amp-vol');if(slider)slider.value=dev.state.volume;const label=document.getElementById('lbl-amp-vol');if(label)label.textContent=Math.round(dev.state.volume*100)+'%';}
+                    if(appState.interface.selectedDeviceId===id){const slider=document.getElementById('sl-amp-vol');if(slider)slider.value=dev.state.volume;const label=document.getElementById('lbl-amp-vol');if(label)label.textContent=Math.round(dev.state.volume*100)+'%';}
                 };
                 const knob=el.querySelector('.phone-volume');knob.setAttribute('role','slider');knob.setAttribute('aria-valuemin','0');knob.setAttribute('aria-valuemax','100');
                 Hardware.bindKnob(knob,{get:()=>dev.state.volume,set:dev.setPhoneVolume});
                 dev.setPhoneVolume(.8);
             } else if (type === 'headphoneAmp4') {
-                dev.nodes.inR = state.audioCtx.createGain();
-                dev.nodes.inL = state.audioCtx.createGain();
-                const summer = state.audioCtx.createChannelMerger(2);
+                dev.nodes.inR = appState.audio.context.createGain();
+                dev.nodes.inL = appState.audio.context.createGain();
+                const summer = appState.audio.context.createChannelMerger(2);
                 dev.nodes.inR.connect(summer, 0, 1);
                 dev.nodes.inL.connect(summer, 0, 0);
-                dev.channelVolumes = [1, 2, 3, 4].map(() => state.audioCtx.createGain());
-                dev.powerNodes = [1, 2, 3, 4].map(() => state.audioCtx.createGain());
+                dev.channelVolumes = [1, 2, 3, 4].map(() => appState.audio.context.createGain());
+                dev.powerNodes = [1, 2, 3, 4].map(() => appState.audio.context.createGain());
                 dev.channelVolumes.forEach((volume, index) => {
                     volume.gain.value = 0.8;
-                    dev.nodes[`outPhone${index + 1}`] = state.audioCtx.createGain();
+                    dev.nodes[`outPhone${index + 1}`] = appState.audio.context.createGain();
                     volume.connect(dev.powerNodes[index]);
                     dev.powerNodes[index].connect(dev.nodes[`outPhone${index + 1}`]);
                     summer.connect(volume);
@@ -6258,28 +6251,28 @@ const Hardware = (() => {
                 dev.state.matrixInput = 1; dev.state.matrixOutputs = [true,false,false,false];
                 const inputGates = {}, outputGates = {};
                 ['R','L'].forEach(ch=>{
-                    const bus=state.audioCtx.createGain();
-                    [1,2,3].forEach(n=>{const input=dev.nodes[`in${n}${ch}`]=state.audioCtx.createGain();const gate=inputGates[`${n}${ch}`]=state.audioCtx.createGain();gate.gain.value=n===1?1:0;input.connect(gate);gate.connect(bus);});
-                    [1,2,3,4].forEach(n=>{const gate=outputGates[`${n}${ch}`]=state.audioCtx.createGain();gate.gain.value=n===1?1:0;dev.nodes[`out${n}${ch}`]=gate;bus.connect(gate);});
+                    const bus=appState.audio.context.createGain();
+                    [1,2,3].forEach(n=>{const input=dev.nodes[`in${n}${ch}`]=appState.audio.context.createGain();const gate=inputGates[`${n}${ch}`]=appState.audio.context.createGain();gate.gain.value=n===1?1:0;input.connect(gate);gate.connect(bus);});
+                    [1,2,3,4].forEach(n=>{const gate=outputGates[`${n}${ch}`]=appState.audio.context.createGain();gate.gain.value=n===1?1:0;dev.nodes[`out${n}${ch}`]=gate;bus.connect(gate);});
                 });
                 dev.updateMatrix = () => {
-                    [1,2,3].forEach(n=>{const active=n===dev.state.matrixInput;['R','L'].forEach(ch=>inputGates[`${n}${ch}`].gain.setTargetAtTime(active?1:0,state.audioCtx.currentTime,.015));const button=el.querySelector(`[data-matrix-in="${n}"]`);button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
-                    [1,2,3,4].forEach(n=>{const active=dev.state.matrixOutputs[n-1];['R','L'].forEach(ch=>outputGates[`${n}${ch}`].gain.setTargetAtTime(active?1:0,state.audioCtx.currentTime,.015));const button=el.querySelector(`[data-matrix-out="${n}"]`);button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
+                    [1,2,3].forEach(n=>{const active=n===dev.state.matrixInput;['R','L'].forEach(ch=>inputGates[`${n}${ch}`].gain.setTargetAtTime(active?1:0,appState.audio.context.currentTime,.015));const button=el.querySelector(`[data-matrix-in="${n}"]`);button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
+                    [1,2,3,4].forEach(n=>{const active=dev.state.matrixOutputs[n-1];['R','L'].forEach(ch=>outputGates[`${n}${ch}`].gain.setTargetAtTime(active?1:0,appState.audio.context.currentTime,.015));const button=el.querySelector(`[data-matrix-out="${n}"]`);button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
                     revalidateSignalConnections();updateCableFlows();
                 };
                 el.querySelectorAll('[data-matrix-in],[data-matrix-out]').forEach(button=>{button.addEventListener('pointerdown',e=>e.stopPropagation());button.addEventListener('click',e=>{e.stopPropagation();if(button.dataset.matrixIn)dev.state.matrixInput=Number(button.dataset.matrixIn);else {const i=Number(button.dataset.matrixOut)-1;dev.state.matrixOutputs[i]=!dev.state.matrixOutputs[i];}dev.updateMatrix();});});
             } else if (RCA_SWITCH_TYPES.has(type)) {
                 dev.selectedSource = 'A';
-                dev.nodes.inR = state.audioCtx.createGain();
-                dev.nodes.inL = state.audioCtx.createGain();
-                dev.nodes.routeAR = state.audioCtx.createGain();
-                dev.nodes.routeAL = state.audioCtx.createGain();
-                dev.nodes.routeBR = state.audioCtx.createGain();
-                dev.nodes.routeBL = state.audioCtx.createGain();
-                dev.nodes.outAR = state.audioCtx.createGain();
-                dev.nodes.outAL = state.audioCtx.createGain();
-                dev.nodes.outBR = state.audioCtx.createGain();
-                dev.nodes.outBL = state.audioCtx.createGain();
+                dev.nodes.inR = appState.audio.context.createGain();
+                dev.nodes.inL = appState.audio.context.createGain();
+                dev.nodes.routeAR = appState.audio.context.createGain();
+                dev.nodes.routeAL = appState.audio.context.createGain();
+                dev.nodes.routeBR = appState.audio.context.createGain();
+                dev.nodes.routeBL = appState.audio.context.createGain();
+                dev.nodes.outAR = appState.audio.context.createGain();
+                dev.nodes.outAL = appState.audio.context.createGain();
+                dev.nodes.outBR = appState.audio.context.createGain();
+                dev.nodes.outBL = appState.audio.context.createGain();
                 dev.nodes.inR.connect(dev.nodes.routeAR); dev.nodes.routeAR.connect(dev.nodes.outAR);
                 dev.nodes.inR.connect(dev.nodes.routeBR); dev.nodes.routeBR.connect(dev.nodes.outBR);
                 dev.nodes.inL.connect(dev.nodes.routeAL); dev.nodes.routeAL.connect(dev.nodes.outAL);
@@ -6290,12 +6283,12 @@ const Hardware = (() => {
                 dev.nodes.routeBL.gain.value = 0;
             } else if (MIXER_TYPES.has(type)) {
                 dev.state.channelVolumes = [0.8, 0.8, 0.8];
-                dev.channelGains = [0, 1, 2].map(() => ({ R:state.audioCtx.createGain(), L:state.audioCtx.createGain() }));
-                dev.nodes.outR = state.audioCtx.createGain(); dev.nodes.outL = state.audioCtx.createGain();
-                const masterR = state.audioCtx.createGain(), masterL = state.audioCtx.createGain();
+                dev.channelGains = [0, 1, 2].map(() => ({ R:appState.audio.context.createGain(), L:appState.audio.context.createGain() }));
+                dev.nodes.outR = appState.audio.context.createGain(); dev.nodes.outL = appState.audio.context.createGain();
+                const masterR = appState.audio.context.createGain(), masterL = appState.audio.context.createGain();
                     dev.powerNodes = [masterR, masterL];
                 dev.channelGains.forEach((gains, index) => {
-                    dev.nodes[`in${index + 1}R`] = state.audioCtx.createGain(); dev.nodes[`in${index + 1}L`] = state.audioCtx.createGain();
+                    dev.nodes[`in${index + 1}R`] = appState.audio.context.createGain(); dev.nodes[`in${index + 1}L`] = appState.audio.context.createGain();
                     gains.R.gain.value = dev.state.channelVolumes[index]; gains.L.gain.value = dev.state.channelVolumes[index];
                     dev.nodes[`in${index + 1}R`].connect(gains.R); gains.R.connect(masterR);
                     dev.nodes[`in${index + 1}L`].connect(gains.L); gains.L.connect(masterL);
@@ -6303,29 +6296,29 @@ const Hardware = (() => {
                 masterR.connect(dev.nodes.outR); masterL.connect(dev.nodes.outL);
             } else if (SPEAKER_SWITCH_TYPES.has(type)) {
                 dev.selectedSource = 'A';
-                ['R', 'L'].forEach(channel => { dev.nodes[`in${channel}`] = state.audioCtx.createGain(); dev.nodes[`inAmp${channel}`] = state.audioCtx.createGain(); dev.nodes[`in${channel}`].connect(dev.nodes[`inAmp${channel}`]); });
+                ['R', 'L'].forEach(channel => { dev.nodes[`in${channel}`] = appState.audio.context.createGain(); dev.nodes[`inAmp${channel}`] = appState.audio.context.createGain(); dev.nodes[`in${channel}`].connect(dev.nodes[`inAmp${channel}`]); });
                 ['A', 'B'].forEach(source => ['R', 'L'].forEach(channel => {
-                    const route = dev.nodes[`route${source}${channel}`] = state.audioCtx.createGain();
-                    const out = dev.nodes[`out${source}${channel}`] = state.audioCtx.createGain();
+                    const route = dev.nodes[`route${source}${channel}`] = appState.audio.context.createGain();
+                    const out = dev.nodes[`out${source}${channel}`] = appState.audio.context.createGain();
                     dev.nodes[`inAmp${channel}`].connect(route); route.connect(out);
                     route.gain.value = source === 'A' ? 1 : 0;
                 }));
             } else if (PASSIVE_SUB_TYPES.has(type)) {
-                dev.nodes.inR = state.audioCtx.createGain(); dev.nodes.inL = state.audioCtx.createGain();
-                dev.filter = state.audioCtx.createBiquadFilter(); dev.filter.type = 'lowpass'; dev.filter.frequency.value = 120;
-                dev.analyzer = state.audioCtx.createAnalyser();
+                dev.nodes.inR = appState.audio.context.createGain(); dev.nodes.inL = appState.audio.context.createGain();
+                dev.filter = appState.audio.context.createBiquadFilter(); dev.filter.type = 'lowpass'; dev.filter.frequency.value = 120;
+                dev.analyzer = appState.audio.context.createAnalyser();
                 dev.nodes.inR.connect(dev.filter); dev.nodes.inL.connect(dev.filter);
-                dev.filter.connect(dev.analyzer); dev.analyzer.connect(state.masterGain);
+                dev.filter.connect(dev.analyzer); dev.analyzer.connect(appState.audio.masterGain);
                 dev.dataArray = new Uint8Array(dev.analyzer.frequencyBinCount);
             } else if (CROSSOVER_TYPES.has(type)) {
-                dev.nodes.inR = state.audioCtx.createGain(); dev.nodes.inL = state.audioCtx.createGain();
+                dev.nodes.inR = appState.audio.context.createGain(); dev.nodes.inL = appState.audio.context.createGain();
                 dev.powerNodes = [];
                 [['Low','lowpass',250,0],['Mid','bandpass',Math.sqrt(250*2500),1],['High','highpass',2500,2]].forEach(([band, filterType, frequency, q]) => {
                     ['R', 'L'].forEach(channel => {
-                        const filter = state.audioCtx.createBiquadFilter(); filter.type = filterType; filter.frequency.value = frequency;
+                        const filter = appState.audio.context.createBiquadFilter(); filter.type = filterType; filter.frequency.value = frequency;
                         if (filterType === 'bandpass') filter.Q.value = 0.65;
-                        const gate = state.audioCtx.createGain(); gate.gain.value = 1; dev.powerNodes.push(gate);
-                        const output = dev.nodes[`out${band}${channel}`] = state.audioCtx.createGain();
+                        const gate = appState.audio.context.createGain(); gate.gain.value = 1; dev.powerNodes.push(gate);
+                        const output = dev.nodes[`out${band}${channel}`] = appState.audio.context.createGain();
                         dev.nodes[`in${channel}`].connect(filter); filter.connect(gate); gate.connect(output);
                     });
                 });
@@ -6340,34 +6333,34 @@ const Hardware = (() => {
                 levelDial.setAttribute('aria-valuemax', '100');
                 dev.el.querySelector('.graphic-eq-level').replaceWith(levelDial);
                 const freqs = EQ_BANDS[type] || EQ_BANDS.eqStudio;
-                dev.nodes.inR = state.audioCtx.createGain();
-                dev.nodes.inL = state.audioCtx.createGain();
-                dev.nodes.outR = state.audioCtx.createGain();
-                dev.nodes.outL = state.audioCtx.createGain();
+                dev.nodes.inR = appState.audio.context.createGain();
+                dev.nodes.inL = appState.audio.context.createGain();
+                dev.nodes.outR = appState.audio.context.createGain();
+                dev.nodes.outL = appState.audio.context.createGain();
                 dev.eqFiltersR = createEqFilters(freqs);
                 dev.eqFiltersL = createEqFilters(freqs);
-                const powerR = state.audioCtx.createGain();
-                const powerL = state.audioCtx.createGain();
+                const powerR = appState.audio.context.createGain();
+                const powerL = appState.audio.context.createGain();
                 dev.powerNodes = [powerR, powerL];
                 wireFilterChain(dev.nodes.inR, dev.eqFiltersR, powerR);
                 wireFilterChain(dev.nodes.inL, dev.eqFiltersL, powerL);
                 powerR.connect(dev.nodes.outR);
                 powerL.connect(dev.nodes.outL);
-                dev.nodes.inStereo = state.audioCtx.createChannelSplitter(2);
+                dev.nodes.inStereo = appState.audio.context.createChannelSplitter(2);
                 dev.nodes.inStereo.connect(dev.nodes.inL, 0);
                 dev.nodes.inStereo.connect(dev.nodes.inR, 1);
-                dev.nodes.outStereo = state.audioCtx.createChannelMerger(2);
+                dev.nodes.outStereo = appState.audio.context.createChannelMerger(2);
                 dev.nodes.outL.connect(dev.nodes.outStereo, 0, 0);
                 dev.nodes.outR.connect(dev.nodes.outStereo, 0, 1);
                 const eqOutputGains=[dev.nodes.outR,dev.nodes.outL];
                 dev.setEqLevel = value => {
                     dev.state.eqLevel = Number(value);
-                    eqOutputGains.forEach(node => node.gain.setTargetAtTime(dev.state.eqLevel, state.audioCtx.currentTime, .015));
+                    eqOutputGains.forEach(node => node.gain.setTargetAtTime(dev.state.eqLevel, appState.audio.context.currentTime, .015));
                     dev.el.querySelector('.graphic-eq-level').value = value;
                     updateKnobAngle(dev, '.graphic-eq-level', Number(value), 0, 1);
                     levelDial.setAttribute('aria-valuenow', Math.round(value * 100));
                     dev.el.querySelector('.graphic-eq-level').title = `Nível de saída · ${Math.round(value * 100)}%`;
-                    if (state.selectedDeviceId === dev.id) { const slider = document.getElementById('sl-eq-level'); if (slider) slider.value = value; }
+                    if (appState.interface.selectedDeviceId === dev.id) { const slider = document.getElementById('sl-eq-level'); if (slider) slider.value = value; }
                 };
                 const level = dev.el.querySelector('.graphic-eq-level');
                 Hardware.bindKnob(level,{get:()=>dev.state.eqLevel,set:dev.setEqLevel});
@@ -6377,25 +6370,25 @@ const Hardware = (() => {
                 dev.powerNodes = [];
                 const gains = {};
                 ['L','R'].forEach(ch => {
-                    dev.nodes['in'+ch] = state.audioCtx.createGain();
-                    gains[ch] = state.audioCtx.createGain();
-                    const gate = state.audioCtx.createGain(); dev.powerNodes.push(gate);
-                    dev.nodes['out'+ch] = state.audioCtx.createGain();
-                    dev.nodes['line'+ch] = state.audioCtx.createGain();
+                    dev.nodes['in'+ch] = appState.audio.context.createGain();
+                    gains[ch] = appState.audio.context.createGain();
+                    const gate = appState.audio.context.createGain(); dev.powerNodes.push(gate);
+                    dev.nodes['out'+ch] = appState.audio.context.createGain();
+                    dev.nodes['line'+ch] = appState.audio.context.createGain();
                     dev.nodes['in'+ch].connect(gains[ch]); gains[ch].connect(gate);
                     gate.connect(dev.nodes['line'+ch]);
-                    const stage = state.audioCtx.createGain(); stage.gain.value = 1.35;
+                    const stage = appState.audio.context.createGain(); stage.gain.value = 1.35;
                     gate.connect(stage); stage.connect(dev.nodes['out'+ch]);
                 });
-                dev.nodes.inStereo = state.audioCtx.createChannelSplitter(2);
+                dev.nodes.inStereo = appState.audio.context.createChannelSplitter(2);
                 dev.nodes.inStereo.connect(dev.nodes.inL,0); dev.nodes.inStereo.connect(dev.nodes.inR,1);
                 dev.setChannelGain = (ch,value) => {
                     value = Math.max(0,Math.min(1,Number(value))); dev.state.channelGain[ch] = value;
-                    gains[ch].gain.setTargetAtTime(value,state.audioCtx.currentTime,.015);
+                    gains[ch].gain.setTargetAtTime(value,appState.audio.context.currentTime,.015);
                     const knob = el.querySelector(`[data-power-channel="${ch}"]`);
                     updateKnobAngle(dev,`[data-power-channel="${ch}"]`,value,0,1);
                     knob.setAttribute('aria-valuenow',Math.round(value*100)); knob.title = `Ganho ${ch} · ${Math.round(value*100)}%`;
-                    if (state.selectedDeviceId===id) { const slider=document.getElementById('power-gain-'+ch); if(slider){slider.value=value;syncInspectorGainVisual(slider);} }
+                    if (appState.interface.selectedDeviceId===id) { const slider=document.getElementById('power-gain-'+ch); if(slider){slider.value=value;syncInspectorGainVisual(slider);} }
                     updateStereoPowerMeters(dev);
                 };
                 el.querySelectorAll('[data-power-channel]').forEach(knob => {
@@ -6405,14 +6398,14 @@ const Hardware = (() => {
                     dev.setChannelGain(ch,DEFAULT_POWER_GAIN);
                 });
             } else if (type === 'powerAmp') {
-                dev.nodes.inR = state.audioCtx.createGain();
-                dev.nodes.inL = state.audioCtx.createGain();
-                dev.nodes.outR = state.audioCtx.createGain();
-                dev.nodes.outL = state.audioCtx.createGain();
-                const channelPowerR = state.audioCtx.createGain();
-                const channelPowerL = state.audioCtx.createGain();
-                const stageGainR = state.audioCtx.createGain();
-                const stageGainL = state.audioCtx.createGain();
+                dev.nodes.inR = appState.audio.context.createGain();
+                dev.nodes.inL = appState.audio.context.createGain();
+                dev.nodes.outR = appState.audio.context.createGain();
+                dev.nodes.outL = appState.audio.context.createGain();
+                const channelPowerR = appState.audio.context.createGain();
+                const channelPowerL = appState.audio.context.createGain();
+                const stageGainR = appState.audio.context.createGain();
+                const stageGainL = appState.audio.context.createGain();
                 stageGainR.gain.value = type === 'powerAmp' ? 1.35 : 1;
                 stageGainL.gain.value = type === 'powerAmp' ? 1.35 : 1;
                 dev.receiverRadioTargets={R:stageGainR,L:stageGainL};
@@ -6422,12 +6415,12 @@ const Hardware = (() => {
                     dev.state.volume = 1;
                     dev.setAmplifierVolume = value => {
                         dev.state.volume = Math.max(0, Math.min(1, value));
-                        stageGainR.gain.setTargetAtTime(1.35 * dev.state.volume, state.audioCtx.currentTime, .015);
-                        stageGainL.gain.setTargetAtTime(1.35 * dev.state.volume, state.audioCtx.currentTime, .015);
+                        stageGainR.gain.setTargetAtTime(1.35 * dev.state.volume, appState.audio.context.currentTime, .015);
+                        stageGainL.gain.setTargetAtTime(1.35 * dev.state.volume, appState.audio.context.currentTime, .015);
                         updateKnobAngle(dev, '.poweramp-level', dev.state.volume, 0, 1);
                         dev.el.querySelector('[data-amp-level]').textContent = Math.round(dev.state.volume * 100) + '%';
                         dev.el.querySelector('.poweramp-level').setAttribute('aria-valuenow', Math.round(dev.state.volume * 100));
-                        if (state.selectedDeviceId === dev.id) {
+                        if (appState.interface.selectedDeviceId === dev.id) {
                             const slider = document.getElementById('sl-poweramp-volume');
                             if (slider) slider.value = dev.state.volume;
                         }
@@ -6438,8 +6431,8 @@ const Hardware = (() => {
                     dial.setAttribute('aria-valuemax', '100');
                     Hardware.bindKnob(dial,{get:()=>dev.state.volume,set:dev.setAmplifierVolume});
                     dev.setAmplifierVolume(1);
-                    stageGainR.connect(channelPowerR); channelPowerR.connect(dev.nodes.speakerR = state.audioCtx.createGain());
-                    stageGainL.connect(channelPowerL); channelPowerL.connect(dev.nodes.speakerL = state.audioCtx.createGain());
+                    stageGainR.connect(channelPowerR); channelPowerR.connect(dev.nodes.speakerR = appState.audio.context.createGain());
+                    stageGainL.connect(channelPowerL); channelPowerL.connect(dev.nodes.speakerL = appState.audio.context.createGain());
                     dev.nodes.speakerR.connect(dev.nodes.outR); dev.nodes.speakerL.connect(dev.nodes.outL);
                 } else {
                     stageGainR.connect(channelPowerR); channelPowerR.connect(dev.nodes.outR);
@@ -6451,24 +6444,24 @@ const Hardware = (() => {
             } else if (ACTIVE_SPK.has(type)) {
                 wireSpeakerIn(dev, true);
             } else if (SUB_TYPES.has(type)) {
-                dev.nodes.in = state.audioCtx.createGain();
-                dev.filter = state.audioCtx.createBiquadFilter();
+                dev.nodes.in = appState.audio.context.createGain();
+                dev.filter = appState.audio.context.createBiquadFilter();
                 dev.filter.type = 'lowpass';
                 dev.filter.frequency.value = type === 'subwooferPro' ? 100 : 120;
-                dev.analyzer = state.audioCtx.createAnalyser();
-                dev.volumeNode = state.audioCtx.createGain();
+                dev.analyzer = appState.audio.context.createAnalyser();
+                dev.volumeNode = appState.audio.context.createGain();
                 dev.nodes.in.connect(dev.volumeNode);
                 dev.volumeNode.connect(dev.powerGain);
                 dev.powerGain.connect(dev.filter);
                 dev.filter.connect(dev.analyzer);
-                dev.analyzer.connect(state.masterGain);
+                dev.analyzer.connect(appState.audio.masterGain);
                 dev.dataArray = new Uint8Array(dev.analyzer.frequencyBinCount);
             } else if (PASSIVE_SUB_TYPES.has(type)) {
-                dev.nodes.inR = state.audioCtx.createGain(); dev.nodes.inL = state.audioCtx.createGain();
-                dev.filter = state.audioCtx.createBiquadFilter(); dev.filter.type = 'lowpass'; dev.filter.frequency.value = 120;
-                dev.analyzer = state.audioCtx.createAnalyser();
+                dev.nodes.inR = appState.audio.context.createGain(); dev.nodes.inL = appState.audio.context.createGain();
+                dev.filter = appState.audio.context.createBiquadFilter(); dev.filter.type = 'lowpass'; dev.filter.frequency.value = 120;
+                dev.analyzer = appState.audio.context.createAnalyser();
                 dev.nodes.inR.connect(dev.filter); dev.nodes.inL.connect(dev.filter);
-                dev.filter.connect(dev.analyzer); dev.analyzer.connect(state.masterGain);
+                dev.filter.connect(dev.analyzer); dev.analyzer.connect(appState.audio.masterGain);
                 dev.dataArray = new Uint8Array(dev.analyzer.frequencyBinCount);
             } else if (HP_TYPES.has(type)) {
                 wireSpeakerIn(dev, false);
@@ -6481,8 +6474,8 @@ const Hardware = (() => {
                 if(!Array.isArray(dev.state.aiPhoneLevels))dev.state.aiPhoneLevels=Array(phoneCount).fill(.75);
                 dev.state.aiPhoneLevels=Array.from({length:phoneCount},(_,i)=>Number.isFinite(dev.state.aiPhoneLevels[i])?dev.state.aiPhoneLevels[i]:.75);
                 const phoneStages=Array.from({length:phoneCount},(_,index)=>{
-                    const left=state.audioCtx.createGain(),right=state.audioCtx.createGain();
-                    const output=dev.nodes[index===0?'outPhone':'outPhone'+(index+1)]=state.audioCtx.createChannelMerger(2);
+                    const left=appState.audio.context.createGain(),right=appState.audio.context.createGain();
+                    const output=dev.nodes[index===0?'outPhone':'outPhone'+(index+1)]=appState.audio.context.createChannelMerger(2);
                     dev.powerNodes[1].connect(left);left.connect(output,0,0);dev.powerNodes[0].connect(right);right.connect(output,0,1);
                     return [left,right];
                 });
@@ -6493,29 +6486,29 @@ const Hardware = (() => {
                     // Preserve the old 0–80% range (0–unity gain), then provide up to
                     // +12 dB of gain for quiet external sources.
                     const linearGain=interfaceLevelGain(control);
-                    dev.nodes['gen'+channel].gain.setTargetAtTime(dev.state.playing?linearGain:0,state.audioCtx.currentTime,.02);
-                    const slider=document.getElementById(`ai-gain-${channel}`);if(slider&&state.selectedDeviceId===dev.id){slider.value=control;syncInspectorGainVisual(slider);}
+                    dev.nodes['gen'+channel].gain.setTargetAtTime(dev.state.playing?linearGain:0,appState.audio.context.currentTime,.02);
+                    const slider=document.getElementById(`ai-gain-${channel}`);if(slider&&appState.interface.selectedDeviceId===dev.id){slider.value=control;syncInspectorGainVisual(slider);}
                     const knob=el.querySelector(`[data-ai-gain="${channel}"]`);knob?.style.setProperty('--ai-turn',`${-135+control*270}deg`);knob?.style.setProperty('--knob-angle',`${-135+control*270}deg`);
                     const halo=knob?.querySelector('.ai-control-halo path');if(halo)halo.style.strokeDasharray=`${control*138} 138`;
                 };
                 dev.setAiLine=value=>{
                     const level=Math.max(0,Math.min(1,Number(value)||0));dev.state.aiLineLevel=level;
-                    const linearGain=interfaceLevelGain(level);for(const channel of ['L','R'])dev.nodes['out'+channel].gain.setTargetAtTime(linearGain,state.audioCtx.currentTime,.02);
-                    const slider=document.getElementById('ai-line');if(slider&&state.selectedDeviceId===dev.id)slider.value=level;
+                    const linearGain=interfaceLevelGain(level);for(const channel of ['L','R'])dev.nodes['out'+channel].gain.setTargetAtTime(linearGain,appState.audio.context.currentTime,.02);
+                    const slider=document.getElementById('ai-line');if(slider&&appState.interface.selectedDeviceId===dev.id)slider.value=level;
                     el.querySelector('[data-ai-line]')?.style.setProperty('--ai-turn',`${-135+level*270}deg`);
                 };
                 dev.setAiPhones=(index,value)=>{
                     if(value===undefined){value=index;index=0;}
                     index=Math.max(0,Math.min(phoneCount-1,Number(index)||0));const level=Math.max(0,Math.min(1,Number(value)||0));dev.state.aiPhoneLevels[index]=level;
-                    const linearGain=interfaceLevelGain(level);phoneStages[index].forEach(node=>node.gain.setTargetAtTime(linearGain,state.audioCtx.currentTime,.02));
-                    const slider=document.getElementById(`ai-phones-${index}`);if(slider&&state.selectedDeviceId===dev.id)slider.value=level;
+                    const linearGain=interfaceLevelGain(level);phoneStages[index].forEach(node=>node.gain.setTargetAtTime(linearGain,appState.audio.context.currentTime,.02));
+                    const slider=document.getElementById(`ai-phones-${index}`);if(slider&&appState.interface.selectedDeviceId===dev.id)slider.value=level;
                     el.querySelector(`[data-ai-phones="${index}"]`)?.style.setProperty('--ai-turn',`${-135+level*270}deg`);
                 };
                 if(type==='audioInterface2')dev.setAiLine=value=>{
                     const level=Math.max(0,Math.min(1,Number(value)||0));dev.state.aiLineLevel=level;
-                    const linearGain=interfaceLevelGain(level);for(const channel of ['L','R'])dev.nodes['out'+channel].gain.setTargetAtTime(linearGain,state.audioCtx.currentTime,.02);
-                    phoneStages[0].forEach(node=>node.gain.setTargetAtTime(linearGain,state.audioCtx.currentTime,.02));dev.state.aiPhoneLevels[0]=level;
-                    const slider=document.getElementById('ai-line');if(slider&&state.selectedDeviceId===dev.id)slider.value=level;
+                    const linearGain=interfaceLevelGain(level);for(const channel of ['L','R'])dev.nodes['out'+channel].gain.setTargetAtTime(linearGain,appState.audio.context.currentTime,.02);
+                    phoneStages[0].forEach(node=>node.gain.setTargetAtTime(linearGain,appState.audio.context.currentTime,.02));dev.state.aiPhoneLevels[0]=level;
+                    const slider=document.getElementById('ai-line');if(slider&&appState.interface.selectedDeviceId===dev.id)slider.value=level;
                     el.querySelector('[data-ai-line]')?.style.setProperty('--ai-turn',`${-135+level*270}deg`);
                 };
                 for(const channel of ['L','R']){const knob=el.querySelector(`[data-ai-gain="${channel}"]`);if(knob)Hardware.bindKnob(knob,{get:()=>dev.state['micGain'+channel],set:value=>dev.setMicGain(channel,value)});dev.setMicGain(channel,dev.state['micGain'+channel]);}
@@ -6525,13 +6518,13 @@ const Hardware = (() => {
                 dev.stopMicCapture=(refresh=true)=>{
                     ++dev.captureToken;dev.micStream?.getTracks().forEach(track=>track.stop());dev.micStream=null;clearInterval(dev.micMeterTimer);dev.micMeterTimer=0;
                     dev.micSource?.disconnect();dev.micSplitter?.disconnect();dev.micAnalyser?.disconnect();dev.micSource=dev.micSplitter=dev.micAnalyser=null;
-                    dev.state.playing=false;for(const ch of ['L','R'])dev.nodes['gen'+ch].gain.setTargetAtTime(0,state.audioCtx.currentTime,.015);
+                    dev.state.playing=false;for(const ch of ['L','R'])dev.nodes['gen'+ch].gain.setTargetAtTime(0,appState.audio.context.currentTime,.015);
                     dev.el.classList.remove('ai-live','ai-signal','ai-clip');const button=dev.el.querySelector('[data-source-play]');button?.setAttribute('aria-pressed','false');button?.setAttribute('aria-label','Iniciar captura do computador');
-                    configurePlaybackSession();dev.micMessage='Captura parada.';if(refresh&&state.selectedDeviceId===dev.id)selectDevice(dev.id,true);updateCableFlows();
+                    configurePlaybackSession();dev.micMessage='Captura parada.';if(refresh&&appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);updateCableFlows();
                 };
                 dev.startMicCapture=async()=>{
                     if(dev.capturePending||dev.state.playing)return;
-                    if(!dev.powered||!navigator.mediaDevices?.getUserMedia){dev.micMessage='Captura indisponível. Use HTTPS ou localhost e permita o acesso ao dispositivo de áudio.';if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);return;}
+                    if(!dev.powered||!navigator.mediaDevices?.getUserMedia){dev.micMessage='Captura indisponível. Use HTTPS ou localhost e permita o acesso ao dispositivo de áudio.';if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);return;}
                     const token=++dev.captureToken;dev.capturePending=true;
                     let captureStream=null;
                     try{
@@ -6540,7 +6533,7 @@ const Hardware = (() => {
                         // Start the permission request in the original click gesture. Safari can
                         // lose that gesture if AudioContext.resume() is awaited first.
                         const firstRequest=requestCaptureAudio(audio);
-                        state.audioCtx.resume().catch(()=>{});
+                        appState.audio.context.resume().catch(()=>{});
                         try{captureStream=await firstRequest;}catch(error){
                             // Safari versions vary in which processing constraints they expose.
                             // Retry the chosen device without those optional constraints; never
@@ -6548,18 +6541,18 @@ const Hardware = (() => {
                             if(['OverconstrainedError','TypeError'].includes(error.name)){
                                 const retryAudio=selectedDevice?{deviceId:{exact:selectedDevice}}:true;
                                 captureStream=await requestCaptureAudio(retryAudio);
-                                if(state.audioCtx.state!=='running')await state.audioCtx.resume();
+                                if(appState.audio.context.state!=='running')await appState.audio.context.resume();
                             }else throw error;
                         }
-                        if(token!==dev.captureToken||!state.devices[dev.id]||!dev.powered){captureStream.getTracks().forEach(track=>track.stop());return;}
+                        if(token!==dev.captureToken||!appState.project.devices[dev.id]||!dev.powered){captureStream.getTracks().forEach(track=>track.stop());return;}
                         const stream=captureStream;
-                        const channels=stream.getAudioTracks()[0]?.getSettings().channelCount||2;dev.micStream=stream;dev.micSource=state.audioCtx.createMediaStreamSource(stream);dev.micSplitter=state.audioCtx.createChannelSplitter(2);dev.micSource.connect(dev.micSplitter);
+                        const channels=stream.getAudioTracks()[0]?.getSettings().channelCount||2;dev.micStream=stream;dev.micSource=appState.audio.context.createMediaStreamSource(stream);dev.micSplitter=appState.audio.context.createChannelSplitter(2);dev.micSource.connect(dev.micSplitter);
                         dev.micSplitter.connect(dev.nodes.genL,0);dev.micSplitter.connect(dev.nodes.genR,channels===1?0:1);
-                        dev.micAnalyser=state.audioCtx.createAnalyser();dev.micAnalyser.fftSize=256;dev.micSource.connect(dev.micAnalyser);const samples=new Uint8Array(dev.micAnalyser.fftSize);
+                        dev.micAnalyser=appState.audio.context.createAnalyser();dev.micAnalyser.fftSize=256;dev.micSource.connect(dev.micAnalyser);const samples=new Uint8Array(dev.micAnalyser.fftSize);
                         dev.micMeterTimer=setInterval(()=>{if(!dev.micAnalyser)return;dev.micAnalyser.getByteTimeDomainData(samples);const peak=samples.reduce((max,value)=>Math.max(max,Math.abs(value-128)/128),0);dev.lastMicPeak=peak;dev.el.classList.toggle('ai-signal',peak>.035);dev.el.classList.toggle('ai-clip',peak>.9);},100);
                         dev.state.playing=true;for(const ch of ['L','R'])dev.setMicGain(ch,dev.state['micGain'+ch]);
                         stream.getAudioTracks()[0]?.addEventListener('ended',()=>{if(dev.micStream===stream)dev.stopMicCapture();},{once:true});dev.el.classList.add('ai-live');const button=dev.el.querySelector('[data-source-play]');button?.setAttribute('aria-pressed','true');button?.setAttribute('aria-label','Parar captura do computador');
-                        dev.micMessage=`Captura ativa · ${channels===1?'mono':'estéreo'}. O áudio segue às saídas conectadas.`;if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);updateCableFlows();
+                        dev.micMessage=`Captura ativa · ${channels===1?'mono':'estéreo'}. O áudio segue às saídas conectadas.`;if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);updateCableFlows();
                         refreshCaptureInputs(dev);
                     }catch(error){
                         captureStream?.getTracks().forEach(track=>track.stop());
@@ -6573,22 +6566,22 @@ const Hardware = (() => {
                             SecurityError:'A captura foi bloqueada pelo navegador. Abra o programa em HTTPS ou localhost e confira as permissões do site.'
                         };
                         dev.micMessage=messages[error.name]||`Não foi possível iniciar a captura (${error.name||'erro de áudio'}). Confira a entrada selecionada e as permissões do navegador.`;
-                        if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);
+                        if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);
                         refreshCaptureInputs(dev);
                     }
                     finally{dev.capturePending=false;configurePlaybackSession();}
                 };
-                dev.syncCaptureControls=()=>{if(state.selectedDeviceId===dev.id){for(const channel of ['L','R']){const input=document.getElementById(`ai-gain-${channel}`);if(input)input.value=dev.state['micGain'+channel];}const line=document.getElementById('ai-line');if(line)line.value=dev.state.aiLineLevel;dev.state.aiPhoneLevels.forEach((value,index)=>{const input=document.getElementById(`ai-phones-${index}`);if(input)input.value=value;});}Hardware.sync(dev);};
+                dev.syncCaptureControls=()=>{if(appState.interface.selectedDeviceId===dev.id){for(const channel of ['L','R']){const input=document.getElementById(`ai-gain-${channel}`);if(input)input.value=dev.state['micGain'+channel];}const line=document.getElementById('ai-line');if(line)line.value=dev.state.aiLineLevel;dev.state.aiPhoneLevels.forEach((value,index)=>{const input=document.getElementById(`ai-phones-${index}`);if(input)input.value=value;});}Hardware.sync(dev);};
                 for(const name of ['setMicGain','setAiLine','setAiPhones']){const setter=dev[name];dev[name]=(...args)=>{const result=setter(...args);dev.syncCaptureControls();scheduleProjectSave();return result;};}
                 el.addEventListener('interface-control-change',dev.syncCaptureControls);el.addEventListener('click',dev.syncCaptureControls);dev.captureToken=0;
             }
             if(type==='streamer'){
-                dev.nodes.outStereo=state.audioCtx.createChannelMerger(2);
+                dev.nodes.outStereo=appState.audio.context.createChannelMerger(2);
                 dev.nodes.outL.connect(dev.nodes.outStereo,0,0);dev.nodes.outR.connect(dev.nodes.outStereo,0,1);
             }
             if(type==='tapeDeck')setupTapeAudio(dev);
             if(dev.receiverRadioTargets)setupReceiverRadio(dev);
-            state.devices[id] = dev;
+            appStateStore.actions.registerDevice(dev);
             updateKubaAppearance(dev);
             fixDeviceElectricalSpecs(dev);
             installAmplificationVoicing(dev);
@@ -6629,7 +6622,7 @@ const Hardware = (() => {
             stopPowerOnRitual(dev);
             dev.gaugeCalibration=null;
             const reducedMotion=powerMotionPreference.matches;
-            if(!dev.powered||dev.state.damage||state.restoringProject||(reducedMotion&&dev.type!=='prePrecision'))return;
+            if(!dev.powered||dev.state.damage||appState.project.restoringProject||(reducedMotion&&dev.type!=='prePrecision'))return;
             dev.gaugeCalibration={startedAt:performance.now(),duration:reducedMotion?420:1250};
             const animations=[];
             const fade=(element,delay,duration)=>{
@@ -6640,17 +6633,17 @@ const Hardware = (() => {
             // Screens and gauge faces stay opaque; the meter loops animate their needles.
             powerOnAnimations.set(dev,animations);
         }
-        powerMotionPreference.addEventListener('change',event=>{if(event.matches)Object.values(state.devices).forEach(dev=>{stopPowerOnRitual(dev);});});
+        powerMotionPreference.addEventListener('change',event=>{if(event.matches)Object.values(appState.project.devices).forEach(dev=>{stopPowerOnRitual(dev);});});
 
         function toggleDevicePower(dev) {
             dev.powered = dev.state.damage ? false : !dev.powered;
-            (dev.outputCircuits||[]).forEach(circuit=>circuit.gate.gain.setValueAtTime(dev.powered&&!dev.state.damage?1:0,state.audioCtx.currentTime));
+            (dev.outputCircuits||[]).forEach(circuit=>circuit.gate.gain.setValueAtTime(dev.powered&&!dev.state.damage?1:0,appState.audio.context.currentTime));
             dev.el.classList.toggle('device-damaged',!!dev.state.damage);
             dev.syncRadio?.();
             dev.syncValvePower?.();
             dev.applyStream?.();
             if (!dev.powered && SOURCE_TYPES.has(dev.type)) setSourcePlaying(dev, false);
-            const powerTime = state.audioCtx ? state.audioCtx.currentTime : 0;
+            const powerTime = appState.audio.context ? appState.audio.context.currentTime : 0;
             if (dev.powerGain) {
                 dev.powerGain.gain.setValueAtTime(dev.powered ? 1.0 : 0.0, powerTime);
             }
@@ -6675,7 +6668,7 @@ const Hardware = (() => {
             }
 
             // Atualiza inspeção caso esteja selecionado
-            if (state.selectedDeviceId === dev.id) {
+            if (appState.interface.selectedDeviceId === dev.id) {
                 const statusLbl = document.getElementById('lbl-power-status');
                 if (statusLbl) {
                     statusLbl.innerText = dev.powered ? 'LIGADO' : 'DESLIGADO';
@@ -6701,10 +6694,10 @@ const Hardware = (() => {
                 const n = Math.max(0, Math.min(1, v));
                 const pct = Math.round(n * 100);
                 dev.state.volume = n;
-                dev.volumeNode?.gain.setTargetAtTime(n * 1.25, state.audioCtx.currentTime, 0.015);
+                dev.volumeNode?.gain.setTargetAtTime(n * 1.25, appState.audio.context.currentTime, 0.015);
                 knob.style.setProperty('--knob-angle', `${-135 + n * 270}deg`);
                 knob.setAttribute('aria-valuenow', pct);
-                if (state.selectedDeviceId === dev.id) {
+                if (appState.interface.selectedDeviceId === dev.id) {
                     const r = document.getElementById('sp-insp-vol');
                     if (r && Number(r.value) !== pct) r.value = pct;
                     const l = document.getElementById('sp-insp-vol-lbl');
@@ -6729,7 +6722,7 @@ const Hardware = (() => {
             const leadIn=()=>tt.disc==='single'?297:380;
             const leadOut=()=>tt.disc==='single'?255:270;
             const hasDisc=()=>tt.disc!=='none'||!!dev.spotifyVinyl;
-            const position=()=>dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?(state.audioCtx.currentTime-dev.demoStartedAt)*dev.ttRate():0);
+            const position=()=>dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?(appState.audio.context.currentTime-dev.demoStartedAt)*dev.ttRate():0);
             const pause=()=>{
                 const seconds=position();
                 setSourcePlaying(dev,false,true);
@@ -6751,7 +6744,7 @@ const Hardware = (() => {
                     const knob=el.querySelector(`[data-linear-trim="${speed}"]`),value=tt['trim'+speed];
                     knob.style.setProperty('--knob-angle',`${value*135}deg`);knob.setAttribute('aria-valuenow',String(Math.round(value*30)/10));
                 }
-                if(state.selectedDeviceId===dev.id){
+                if(appState.interface.selectedDeviceId===dev.id){
                     const q=id=>document.getElementById(id);
                     if(q('linear-status'))q('linear-status').textContent=status;
                     q('linear-disc-group')?.querySelectorAll('[data-linear-disc-choice]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.linearDiscChoice===tt.disc)));
@@ -6775,14 +6768,14 @@ const Hardware = (() => {
                 if(!dev.powered||dev.state.damage||mechanism.disposed||['scanning','lowering','playing'].includes(mechanism.phase))return;
                 const operation=++mechanism.operation;
                 const spotifyActivation=dev.spotifyVinyl?SpotifyCoverflow.activatePlayback():null;
-                try{await state.audioCtx.resume();}catch{}
+                try{await appState.audio.context.resume();}catch{}
                 if(spotifyActivation){
                     let activated=false;
                     try{activated=await spotifyActivation;}catch{mechanism.message='O navegador bloqueou a ativação do Spotify. Pressione INICIAR novamente.';refresh();return;}
                     if(!activated){mechanism.message='Player do Spotify ainda conectando. Tente novamente.';refresh();return;}
                 }
                 if(operation!==mechanism.operation||mechanism.disposed||!dev.powered)return;
-                if(state.audioCtx.state!=='running'){mechanism.message='Clique novamente para ativar o áudio';refresh();return;}
+                if(appState.audio.context.state!=='running'){mechanism.message='Clique novamente para ativar o áudio';refresh();return;}
                 mechanism.message='';mechanism.cue=0;
                 if(mechanism.phase==='raised'&&hasDisc()){
                     mechanism.phase='lowering';mechanism.target=Math.min(leadIn(),mechanism.arm);mechanism.deadline=performance.now()+430;
@@ -6817,7 +6810,7 @@ const Hardware = (() => {
                 const restart=!!dev.filePlayback,seconds=position();
                 if(restart)stopFilePlayback(dev);
                 callback();tt.pitch=tt['trim'+tt.speed];
-                if(!dev.audioBuffer){dev.demoOffset=seconds;dev.demoStartedAt=dev.state.playing?state.audioCtx.currentTime:null;}
+                if(!dev.audioBuffer){dev.demoOffset=seconds;dev.demoStartedAt=dev.state.playing?appState.audio.context.currentTime:null;}
                 if(restart)startFilePlayback(dev);
                 refresh();
             };
@@ -6935,7 +6928,7 @@ const Hardware = (() => {
                 pitchEl.setAttribute('aria-valuenow', pitchPct());
                 pitchEl.title = `Pitch ${pitchText()} · arraste (duplo clique para zerar)`;
                 // Painel de propriedades (se este aparelho estiver selecionado)
-                if (state.selectedDeviceId === dev.id) {
+                if (appState.interface.selectedDeviceId === dev.id) {
                     const q = id => document.getElementById(id);
                     const run = q('tt-insp-run');
                     if (run) { run.setAttribute('aria-pressed', String(tt.running)); run.classList.toggle('is-on', tt.running); }
@@ -7138,7 +7131,7 @@ const Hardware = (() => {
                     const range = control === 'volume' ? [0,1] : control === 'balance' ? [-1,1] : [-15,15];
                     updateKnobAngle(dev, `[data-receiver-control="${control}"]`, value, ...range);
                     const slider = document.getElementById(control === 'volume' ? 'sl-vol' : `sl-${control}`);
-                    if (state.selectedDeviceId === dev.id && slider) {
+                    if (appState.interface.selectedDeviceId === dev.id && slider) {
                         slider.value = value;
                         const label = document.getElementById(control === 'volume' ? 'lbl-vol' : `lbl-${control}`);
                         if (label) label.textContent = control === 'volume' ? `${Math.round(value*100)}%` : control === 'balance' ? (Math.abs(value)<.01 ? 'Centro' : `${value<0?'L':'R'} ${Math.round(Math.abs(value)*100)}%`) : `${value.toFixed(1)}dB`;
@@ -7219,12 +7212,12 @@ const Hardware = (() => {
                     if (!touchHold) e.preventDefault();
                     window.getSelection()?.removeAllRanges();
                     if (e.shiftKey || e.metaKey || e.ctrlKey) toggleDeviceSelection(dev.id);
-                    else if (state.selectedDeviceIds.has(dev.id)) selectDevice(dev.id, true);
+                    else if (appState.interface.selectedDeviceIds.has(dev.id)) selectDevice(dev.id, true);
                     else selectDevice(dev.id);
 
                     const startX = e.clientX;
                     const startY = e.clientY;
-                    const movingDevices = expandFurnitureGroup([...state.selectedDeviceIds].map(id => state.devices[id]).filter(Boolean));
+                    const movingDevices = expandFurnitureGroup([...appState.interface.selectedDeviceIds].map(id => appState.project.devices[id]).filter(Boolean));
                     const transformDrag=typeof CSS!=='undefined'&&CSS.supports?.('translate','1px 1px');
                     const initialPositions = movingDevices.map(item => ({
                         dev:item,
@@ -7275,7 +7268,7 @@ const Hardware = (() => {
                     }
                     function clearDiscardPreview(){
                         document.body.classList.remove('dragging-over-discard');
-                        discardPreviews.forEach((preview,id)=>{preview.clone.remove();const item=state.devices[id];if(item)item.el.style.visibility=preview.visibility;});discardPreviews.clear();
+                        discardPreviews.forEach((preview,id)=>{preview.clone.remove();const item=appState.project.devices[id];if(item)item.el.style.visibility=preview.visibility;});discardPreviews.clear();
                         discardPreviewLayer?.remove();discardPreviewLayer=null;
                     }
 
@@ -7286,7 +7279,7 @@ const Hardware = (() => {
                     let falling=new Map();
                     const animate = now => {
                         frame=0;
-                        if (!targets.every(p=>state.devices[p.dev.id])) return;
+                        if (!targets.every(p=>appState.project.devices[p.dev.id])) return;
                         const dt=Math.min(32,now-(lastTime||now-16));lastTime=now;
                         const blend=!released||reducedMotion?1:1-Math.exp(-dt/55);
                         const intermediate=targets.map(p=>{
@@ -7373,7 +7366,7 @@ const Hardware = (() => {
                         if(isDragging)movingDevices.forEach(item=>item.el.classList.add('history-settling'));
                         if(isDragging&&isOverCatalog(ev)){
                             playUiSound('discard');showDiscardCloud(ev.clientX,ev.clientY);
-                            cancel();recordDeletedDevices(initialPositions.map(p=>p.dev));initialPositions.forEach(p=>{if(state.devices[p.dev.id])deleteDevice(p.dev,false);});
+                            cancel();recordDeletedDevices(initialPositions.map(p=>p.dev));initialPositions.forEach(p=>{if(appState.project.devices[p.dev.id])deleteDevice(p.dev,false);});
                         }else if(isDragging){aim(ev,true);recordMovement(initialPositions,targets);playUiSound('drop');}else cancel();
                     };
 
@@ -7382,7 +7375,7 @@ const Hardware = (() => {
                         window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);
                         window.removeEventListener('blur',abortDrag);window.removeEventListener('keydown',cancelWithEscape);
                         cancel();
-                        initialPositions.forEach(p=>{if(state.devices[p.dev.id]){p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;}});
+                        initialPositions.forEach(p=>{if(appState.project.devices[p.dev.id]){p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;}});
                         equipmentCatalog.classList.remove('return-drag-over','discard-ready');discardZone.setAttribute('aria-hidden','true');
                         updateCables();
                     };
@@ -7405,7 +7398,7 @@ const Hardware = (() => {
                     const lbl = dev.el.querySelector(`.lbl-band-${band}`);
                     if (lbl) lbl.textContent = `${val > 0 ? '+' : ''}${val}dB`;
                     applyEqGains(dev);
-                    if (state.selectedDeviceId === dev.id) {
+                    if (appState.interface.selectedDeviceId === dev.id) {
                         const insp = document.getElementById(`lbl-eq-${band}`);
                         if (insp) insp.innerText = `${val > 0 ? '+' : ''}${val}dB`;
                         const slider = document.getElementById(`sl-eq-${band}`);
@@ -7419,7 +7412,7 @@ const Hardware = (() => {
                 slider.addEventListener('pointerdown', e => e.stopPropagation());
                 slider.addEventListener('input', () => {
                     setMixerVolume(dev, channel, Number(slider.value));
-                    if (state.selectedDeviceId === dev.id) {
+                    if (appState.interface.selectedDeviceId === dev.id) {
                         const inspectorSlider = document.getElementById(`sl-mixer-${channel}`);
                         if (inspectorSlider) inspectorSlider.value = slider.value;
                     }
@@ -7442,7 +7435,7 @@ const Hardware = (() => {
                         dev.el.querySelector(`[data-switch-source="${source}"]`)?.setAttribute('aria-pressed', String(active));
                         ['R', 'L'].forEach(channel => {
                             const route = dev.nodes[`route${source}${channel}`];
-                            if (route) route.gain.setTargetAtTime(active ? 1 : 0, state.audioCtx.currentTime, 0.015);
+                            if (route) route.gain.setTargetAtTime(active ? 1 : 0, appState.audio.context.currentTime, 0.015);
                         });
                     });
                     updateCableFlows();
@@ -7479,7 +7472,7 @@ const Hardware = (() => {
             setTimeout(()=>cloud.remove(),560);
         }
         function deleteDevice(dev,recordHistory=false) {
-            if (!dev || !state.devices[dev.id]) return;
+            if (!dev || !appState.project.devices[dev.id]) return;
             if(recordHistory)recordDeletedDevices([dev]);
             dev.stopMicCapture?.(false);
             if(dev.spotifyVinyl){if(spotifyPlayingTurntable===dev.id){spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});}dev.spotifyVinyl.turntableId=null;dev.spotifyVinyl.el.classList.remove('is-on-platter');}
@@ -7501,14 +7494,14 @@ const Hardware = (() => {
             dev.auxSplitter?.disconnect();
             dev.audioBuffer = null;dev.mediaBlob=null;dev.mediaKey=null;
 
-            if (state.pairingId === dev.id) clearPairing();
+            if (appState.interface.pairingId === dev.id) clearPairing();
             if (dev.btPairedId) unpairDevice(dev);
-            Object.values(state.devices).forEach(other => {
+            Object.values(appState.project.devices).forEach(other => {
                 if (other.btPairedId === dev.id) unpairDevice(other);
             });
 
-            for (let idx = state.connections.length - 1; idx >= 0; idx--) {
-                const connection = state.connections[idx];
+            for (let idx = appState.project.connections.length - 1; idx >= 0; idx--) {
+                const connection = appState.project.connections[idx];
                 const outPort = document.getElementById(connection.outId);
                 const inPort = document.getElementById(connection.inId);
                 if (outPort?.closest('.device-node')?.id === dev.id || inPort?.closest('.device-node')?.id === dev.id) {
@@ -7521,13 +7514,13 @@ const Hardware = (() => {
                 try { dev.powerGain.disconnect(); } catch (e) {}
             }
             dev.el.remove();
-            delete state.devices[dev.id];
+            appStateStore.actions.removeDevice(dev.id);
             updateMovementHistoryButtons();
-            if (state.selectedDeviceIds.has(dev.id)) {
-                const remaining = [...state.selectedDeviceIds].filter(id => id !== dev.id);
-                if (state.selectedDeviceId === dev.id) setDeviceSelection(remaining);
+            if (appState.interface.selectedDeviceIds.has(dev.id)) {
+                const remaining = [...appState.interface.selectedDeviceIds].filter(id => id !== dev.id);
+                if (appState.interface.selectedDeviceId === dev.id) setDeviceSelection(remaining);
                 else {
-                    state.selectedDeviceIds.delete(dev.id);
+                    appState.interface.selectedDeviceIds.delete(dev.id);
                     syncDeviceSelection();
                 }
             }
@@ -7572,12 +7565,12 @@ const Hardware = (() => {
                 unpairDevice(dev);
                 return;
             }
-            if (state.pairingId === dev.id) {
+            if (appState.interface.pairingId === dev.id) {
                 clearPairing();
                 return;
             }
-            if (state.pairingId) {
-                const other = state.devices[state.pairingId];
+            if (appState.interface.pairingId) {
+                const other = appState.project.devices[appState.interface.pairingId];
                 if (other && canPair(other, dev)) {
                     pairDevices(other, dev);
                     return;
@@ -7585,7 +7578,7 @@ const Hardware = (() => {
             }
             if (BT_TX_TYPES.has(dev.type) || BT_HP_TYPES.has(dev.type)) {
                 clearPairing();
-                state.pairingId = dev.id;
+                appStateStore.actions.setPairingId(dev.id);
                 setPairingUi(dev, 'search');
             }
         }
@@ -7597,10 +7590,10 @@ const Hardware = (() => {
         }
 
         function clearPairing() {
-            if (state.pairingId && state.devices[state.pairingId] && !state.devices[state.pairingId].btPairedId) {
-                setPairingUi(state.devices[state.pairingId], 'idle');
+            if (appState.interface.pairingId && appState.project.devices[appState.interface.pairingId] && !appState.project.devices[appState.interface.pairingId].btPairedId) {
+                setPairingUi(appState.project.devices[appState.interface.pairingId], 'idle');
             }
-            state.pairingId = null;
+            appStateStore.actions.setPairingId(null);
         }
 
         function pairDevices(a, b) {
@@ -7639,7 +7632,7 @@ const Hardware = (() => {
                 setPairingUi(dev, 'idle');
                 return;
             }
-            const other = state.devices[dev.btPairedId];
+            const other = appState.project.devices[dev.btPairedId];
             const src = BT_TX_TYPES.has(dev.type) ? dev : other;
             const dest = HP_TYPES.has(dev.type) ? dev : other;
             if (src && dest && src.nodes.btOut && dest.nodes.in) {
@@ -7658,10 +7651,10 @@ const Hardware = (() => {
         }
 
         function updateBluetoothLinks(affectedDeviceIds=null) {
-            Object.values(state.devices).forEach(dev => {
+            Object.values(appState.project.devices).forEach(dev => {
                 if(affectedDeviceIds&&!affectedDeviceIds.has(dev.id)&&!affectedDeviceIds.has(dev.btPairedId))return;
                 if (!dev.btLinkEl || !dev.btPairedId || !BT_TX_TYPES.has(dev.type)) return;
-                const dest = state.devices[dev.btPairedId];
+                const dest = appState.project.devices[dev.btPairedId];
                 if (!dest) return;
                 const r1 = dev.el.getBoundingClientRect();
                 const r2 = dest.el.getBoundingClientRect();
@@ -7682,8 +7675,8 @@ const Hardware = (() => {
                 ||['preamp','receiver','powerAmp','powerStereo','powerVintage','headphoneAmp','headphoneAmpModern','headphoneAmp4'].includes(dev.type);
         }
         async function restoreDeviceSettings(dev) {
-            if(!state.devices[dev.id]||!hasRestorableSettings(dev))return;
-            if(state.selectedDeviceId!==dev.id)selectDevice(dev.id,true);
+            if(!appState.project.devices[dev.id]||!hasRestorableSettings(dev))return;
+            if(appState.interface.selectedDeviceId!==dev.id)selectDevice(dev.id,true);
             const input=(id,value,eventType='input')=>{const element=document.getElementById(id);if(element){element.value=String(value);element.dispatchEvent(new Event(eventType,{bubbles:true}));}};
             let message='Configurações padrão restauradas.';
             if(dev.type==='integratedUtility')Object.assign(dev.state,{utilityLoudness:false,utilityMono:false});
@@ -7705,7 +7698,7 @@ const Hardware = (() => {
                     dev.ttSetPitch(0);
                     const previousMode=dev.state.tt.output;
                     dev.state.tt.output='line';
-                    const canResetOutput=state.connections.every(cable=>getPortCompatibility(document.getElementById(cable.outId),document.getElementById(cable.inId)).compatible);
+                    const canResetOutput=appState.project.connections.every(cable=>getPortCompatibility(document.getElementById(cable.outId),document.getElementById(cable.inId)).compatible);
                     dev.state.tt.output=previousMode;
                     if(canResetOutput)dev.ttSetOutput('line');
                     else message='Ajustes restaurados; saída PHONO mantida para preservar as conexões existentes.';
@@ -7730,7 +7723,7 @@ const Hardware = (() => {
             if(dev.type==='furnitureTable'){Object.assign(dev.state,{benchSurface:'wood',benchBackdrop:false,benchDecorations:[]});updateBenchAppearance(dev);}
             if(FURNITURE_TYPES[dev.type]){dev.state.material=furnitureMaterialFor(dev.type);dev.el.dataset.material=dev.state.material;if(FURNITURE_TYPES[dev.type].back){dev.state.hasBack=true;dev.el.dataset.back='true';}}
             if(dev.meters)dev.meters.clipUntil=0;
-            if(state.selectedDeviceId===dev.id){selectDevice(dev.id,true);document.getElementById('restore-settings-status').textContent=message;}
+            if(appState.interface.selectedDeviceId===dev.id){selectDevice(dev.id,true);document.getElementById('restore-settings-status').textContent=message;}
             updateCableFlows();
         }
 
@@ -7750,7 +7743,7 @@ const Hardware = (() => {
         document.addEventListener('focusin',event=>{const target=event.target instanceof Element?event.target.closest('#app-topbar [data-tooltip]'):null;if(target)scheduleToolbarTooltip(target);});
         document.addEventListener('focusout',event=>{if(event.target instanceof Element&&event.target.matches('#app-topbar [data-tooltip]')&&!event.target.matches(':hover'))hideToolbarTooltip();});
         function updateMovementHistoryButtons(){
-            const valid=entry=>entry.kind!=='move'||entry.before.every(p=>state.devices[p.id]);
+            const valid=entry=>entry.kind!=='move'||entry.before.every(p=>appState.project.devices[p.id]);
             for(const stack of [movementUndo,movementRedo])for(let i=stack.length-1;i>=0;i--)if(!valid(stack[i]))stack.splice(i,1);
             const undo=document.getElementById('undo-movement'),redo=document.getElementById('redo-movement'),label=entry=>!entry?'última ação':entry.kind==='move'?'movimento':entry.kind==='delete-device'?'remoção de equipamento':entry.kind==='delete-spotify'?'remoção de álbum ou disco':'ação';
             undo.disabled=!movementUndo.length;redo.disabled=!movementRedo.length;
@@ -7765,10 +7758,10 @@ const Hardware = (() => {
             movementRedo.length=0;updateMovementHistoryButtons();
         }
         function recordDeletedDevices(devices){
-            const existing=devices.filter(dev=>dev&&state.devices[dev.id]);if(!existing.length)return;
+            const existing=devices.filter(dev=>dev&&appState.project.devices[dev.id]);if(!existing.length)return;
             const snapshot=projectCapture(),ids=new Set(existing.map(dev=>dev.id)),records=existing.map(dev=>({saved:snapshot.devices.find(item=>item.id===dev.id),audio:dev.mediaBlob||null,vinylUri:dev.spotifyVinyl?.uri||null})).filter(item=>item.saved);
             const connections=snapshot.connections.filter(connection=>ids.has(connection.from)||ids.has(connection.to));
-            movementUndo.push({kind:'delete-device',records,connections,selected:[...state.selectedDeviceIds]});if(movementUndo.length>100)movementUndo.shift();
+            movementUndo.push({kind:'delete-device',records,connections,selected:[...appState.interface.selectedDeviceIds]});if(movementUndo.length>100)movementUndo.shift();
             movementRedo.length=0;updateMovementHistoryButtons();
         }
         function recordDeletedSpotify(kind,item){
@@ -7780,29 +7773,29 @@ const Hardware = (() => {
             movementRedo.length=0;updateMovementHistoryButtons();
         }
         async function restoreDeletedDevices(entry,restore){
-            if(!restore){entry.records.forEach(({saved})=>{const dev=state.devices[saved.id];if(dev)deleteDevice(dev,false);});return;}
-            projectRestoring=true;state.restoringProject=true;
+            if(!restore){entry.records.forEach(({saved})=>{const dev=appState.project.devices[saved.id];if(dev)deleteDevice(dev,false);});return;}
+            projectRestoring=true;appStateStore.actions.setProjectRestoring(true);
             try{
                 for(const {saved,audio} of entry.records){
-                    if(state.devices[saved.id])continue;
-                    createDevice(saved.type,saved.x,saved.y,saved.id);const dev=state.devices[saved.id];if(!dev)throw new Error('Não foi possível restaurar o equipamento removido.');
+                    if(appState.project.devices[saved.id])continue;
+                    createDevice(saved.type,saved.x,saved.y,saved.id);const dev=appState.project.devices[saved.id];if(!dev)throw new Error('Não foi possível restaurar o equipamento removido.');
                     applySavedDevice(dev,saved);dev.fileName=saved.fileName||'';dev.trackTitle=saved.trackTitle||'';dev.demoOffset=Math.max(0,Number(saved.position)||0);
-                    if(audio instanceof Blob){try{const bytes=await audio.arrayBuffer(),metadata=dev.type==='streamIntegrated'?readStreamMetadata(bytes):null;dev.audioBuffer=await state.audioCtx.decodeAudioData(bytes);dev.mediaBlob=audio;dev.mediaKey=saved.mediaKey;dev.fileOffset=Math.max(0,Math.min(Number(saved.position)||0,dev.audioBuffer.duration));if(metadata)dev.setStreamMetadata(metadata);}catch{dev.fileMessage='Recarregue o arquivo de áudio para continuar.';}}
+                    if(audio instanceof Blob){try{const bytes=await audio.arrayBuffer(),metadata=dev.type==='streamIntegrated'?readStreamMetadata(bytes):null;dev.audioBuffer=await appState.audio.context.decodeAudioData(bytes);dev.mediaBlob=audio;dev.mediaKey=saved.mediaKey;dev.fileOffset=Math.max(0,Math.min(Number(saved.position)||0,dev.audioBuffer.duration));if(metadata)dev.setStreamMetadata(metadata);}catch{dev.fileMessage='Recarregue o arquivo de áudio para continuar.';}}
                 }
-                for(const {saved} of entry.records){const dev=state.devices[saved.id],paired=state.devices[saved.pairedId];if(dev&&paired&&BT_TX_TYPES.has(dev.type)&&canPair(dev,paired))pairDevices(dev,paired);}
+                for(const {saved} of entry.records){const dev=appState.project.devices[saved.id],paired=appState.project.devices[saved.pairedId];if(dev&&paired&&BT_TX_TYPES.has(dev.type)&&canPair(dev,paired))pairDevices(dev,paired);}
                 for(const connection of entry.connections){
-                    const from=state.devices[connection.from],to=state.devices[connection.to];if(!from||!to)continue;
-                    const already=state.connections.some(c=>c.outDeviceId===from.id&&c.inDeviceId===to.id&&document.getElementById(c.outId)?.dataset.node===connection.out&&document.getElementById(c.inId)?.dataset.node===connection.input);if(already)continue;
-                    try{connectProjectPorts(from,connection.out,to,connection.input);const cable=state.connections.at(-1);Object.assign(cable,{label:connection.label||'',color:connection.color||null,hidden:!!connection.hidden,slack:connection.slack??5});applyCableAppearance(cable);}catch{}
+                    const from=appState.project.devices[connection.from],to=appState.project.devices[connection.to];if(!from||!to)continue;
+                    const already=appState.project.connections.some(c=>c.outDeviceId===from.id&&c.inDeviceId===to.id&&document.getElementById(c.outId)?.dataset.node===connection.out&&document.getElementById(c.inId)?.dataset.node===connection.input);if(already)continue;
+                    try{connectProjectPorts(from,connection.out,to,connection.input);const cable=appState.project.connections.at(-1);Object.assign(cable,{label:connection.label||'',color:connection.color||null,hidden:!!connection.hidden,slack:connection.slack??5});applyCableAppearance(cable);}catch{}
                 }
-                for(const {saved,vinylUri} of entry.records){const dev=state.devices[saved.id],vinyl=vinylUri&&spotifyVinyls.get(vinylUri);if(dev&&vinyl&&!dev.spotifyVinyl){vinyl.turntableId=dev.id;dev.spotifyVinyl=vinyl;vinyl.el.classList.add('is-on-platter');vinyl.el.classList.toggle('is-linear',dev.type==='turntableLinear');moveSpotifyVinyl(vinyl,vinyl.x,vinyl.y);}}
-                setDeviceSelection(entry.selected.filter(id=>state.devices[id]));if(!state.selectedDeviceIds.size&&entry.records[0])selectDevice(entry.records[0].saved.id,true);
-            }finally{projectRestoring=false;state.restoringProject=false;updateCables();updateBluetoothLinks();updateCableFlows();scheduleProjectSave();}
+                for(const {saved,vinylUri} of entry.records){const dev=appState.project.devices[saved.id],vinyl=vinylUri&&spotifyVinyls.get(vinylUri);if(dev&&vinyl&&!dev.spotifyVinyl){vinyl.turntableId=dev.id;dev.spotifyVinyl=vinyl;vinyl.el.classList.add('is-on-platter');vinyl.el.classList.toggle('is-linear',dev.type==='turntableLinear');moveSpotifyVinyl(vinyl,vinyl.x,vinyl.y);}}
+                setDeviceSelection(entry.selected.filter(id=>appState.project.devices[id]));if(!appState.interface.selectedDeviceIds.size&&entry.records[0])selectDevice(entry.records[0].saved.id,true);
+            }finally{projectRestoring=false;appStateStore.actions.setProjectRestoring(false);updateCables();updateBluetoothLinks();updateCableFlows();scheduleProjectSave();}
         }
         async function replayHistoryEntry(entry,redo){
             if(entry.kind==='move'){
                 const positions=redo?entry.after:entry.before;
-                positions.forEach(p=>{const dev=state.devices[p.id];if(dev){dev.cancelPlacementMotion?.();dev.el.style.left=`${p.x}px`;dev.el.style.top=`${p.y}px`;}});updateCables();
+                positions.forEach(p=>{const dev=appState.project.devices[p.id];if(dev){dev.cancelPlacementMotion?.();dev.el.style.left=`${p.x}px`;dev.el.style.top=`${p.y}px`;}});updateCables();
             }else if(entry.kind==='delete-device')await restoreDeletedDevices(entry,!redo);
             else if(entry.kind==='delete-spotify'){
                 if(entry.itemKind==='album'){
@@ -7811,7 +7804,7 @@ const Hardware = (() => {
                 }else{
                     const current=spotifyVinyls.get(entry.record.uri);
                     if(redo&&current)removeSpotifyVinyl(current,false);
-                    else if(!redo&&!current){const vinyl=createSpotifyVinyl({...entry.record,turntableId:null});const dev=state.devices[entry.record.turntableId];if(vinyl&&dev&&!dev.spotifyVinyl)placeSpotifyVinyl(vinyl,dev,false);}
+                    else if(!redo&&!current){const vinyl=createSpotifyVinyl({...entry.record,turntableId:null});const dev=appState.project.devices[entry.record.turntableId];if(vinyl&&dev&&!dev.spotifyVinyl)placeSpotifyVinyl(vinyl,dev,false);}
                 }
             }
             scheduleProjectSave();updateMovementHistoryButtons();
@@ -7899,11 +7892,11 @@ const Hardware = (() => {
 
         function selectDevice(id, preserveSelection = false) {
             GuidedAccess.notify();
-            if(id&&!state.restoringProject&&!compactLayout.matches)openSidebar('properties',4000);
-            if (id && state.selectedConnection) selectCable(null,false);
+            if(id&&!appState.project.restoringProject&&!compactLayout.matches)openSidebar('properties',4000);
+            if (id && appState.interface.selectedConnection) selectCable(null,false);
             disposeSpectrum();
-            if (!preserveSelection) state.selectedDeviceIds = new Set(id ? [id] : []);
-            state.selectedDeviceId = id;
+            if (!preserveSelection) appStateStore.actions.setSelectedDevices(new Set(id ? [id] : []));
+            appStateStore.actions.setSelectedDevice(id);
             syncDeviceSelection();
             syncMobileContextActions();
             if(!id) {
@@ -7912,9 +7905,9 @@ const Hardware = (() => {
                 return;
             }
             
-            const dev = state.devices[id];
+            const dev = appState.project.devices[id];
             if (!dev) {
-                state.selectedDeviceId = null;
+                appStateStore.actions.setSelectedDevice(null);
                 document.getElementById('inspector-title').textContent='Selecione um equipamento';
                 inspectorEmpty.classList.remove('hidden'); inspectorContent.classList.add('hidden');
                 return;
@@ -7999,12 +7992,12 @@ const Hardware = (() => {
                 });
                 html += `</div>`;
             } else if (BT_TX_TYPES.has(dev.type)) {
-                const paired = dev.btPairedId ? state.devices[dev.btPairedId] : null;
+                const paired = dev.btPairedId ? appState.project.devices[dev.btPairedId] : null;
                 html += `<div class="text-sm text-gray-400 mt-2">Transmissor Bluetooth: recebe áudio pela entrada RCA estéreo e envia sem fio para fones pareados. ${paired ? ('Conectado a ' + (DEVICE_NAMES[paired.type] || paired.type) + '.') : 'Clique em Parear aqui e no fone.'}</div>`;
             } else if (BT_RX_TYPES.has(dev.type)) {
                 html += `<div class="text-sm text-gray-400 mt-2">Receptor Bluetooth: recebe áudio sem fio de um celular ou computador e converte para saída analógica RCA estéreo. Não transmite para fones Bluetooth.</div>`;
             } else if (HP_TYPES.has(dev.type)) {
-                const paired = dev.btPairedId ? state.devices[dev.btPairedId] : null;
+                const paired = dev.btPairedId ? appState.project.devices[dev.btPairedId] : null;
                 if(REFERENCE_HEADPHONES[dev.type])html+=`<p class="text-xs text-gray-400">${REFERENCE_HEADPHONES[dev.type].enclosure||'Aberto'} · ${REFERENCE_HEADPHONES[dev.type].ohms} Ω nominais · conexão estéreo simplificada para P2 no simulador.</p>`;
                 if(dev.type==='hpKubaDisco2')html+=`<div class="kuba-finish-control"><label for="kuba-wood">Madeira do arco</label><select id="kuba-wood">${Object.entries(KUBA_WOOD_FINISHES).map(([key,name])=>`<option value="${key}" ${dev.state.kubaWood===key?'selected':''}>${name}</option>`).join('')}</select><p>Arco clássico laminado, regulagens laterais, conchas com anéis concêntricos e almofadas XL. O acabamento altera a aparência do arco.</p></div>`;
                 html += `<div class="text-sm text-gray-400 mt-2">${dev.type==='hpMax'?'Conexão somente por Bluetooth. ':dev.type==='hpKubaDisco2'?'Entrada P2 estéreo na ponta do cabo, abaixo do divisor em Y. ':'Entrada P2 estéreo na parte inferior da concha esquerda. '}${BT_HP_TYPES.has(dev.type)?`Bluetooth: ${paired ? ('pareado com ' + (DEVICE_NAMES[paired.type] || paired.type)) : 'sem conexão. Clique em Parear no transmissor e neste fone.'}`:'Conecte a uma saída de fones com cabo P2.'}</div>`;
@@ -8077,7 +8070,7 @@ const Hardware = (() => {
             inspectorContent.querySelectorAll('[data-adapter-rotate]').forEach(button=>button.addEventListener('click',()=>rotateAudioAdapter(dev,Number(button.dataset.adapterRotate))));
             inspectorContent.querySelectorAll('[data-vinyl-noise]').forEach(button=>button.addEventListener('click',()=>{
                 dev.state.vinylNoiseLevel=button.dataset.vinylNoise;
-                dev.vinylNoise?.gain.gain.setTargetAtTime(VINYL_NOISE_LEVELS[dev.state.vinylNoiseLevel].gain,state.audioCtx.currentTime,.04);
+                dev.vinylNoise?.gain.gain.setTargetAtTime(VINYL_NOISE_LEVELS[dev.state.vinylNoiseLevel].gain,appState.audio.context.currentTime,.04);
                 inspectorContent.querySelectorAll('[data-vinyl-noise]').forEach(item=>{const selected=item===button;item.classList.toggle('is-on',selected);item.setAttribute('aria-pressed',String(selected));});
             }));
             document.getElementById('restore-device-settings')?.addEventListener('click',async event=>{
@@ -8303,7 +8296,7 @@ const Hardware = (() => {
 
         function drawCable(container, p1, p2, waypoints = [], cableType = 'rca-r', swing = { x: 0, y: 0 }, routeOffset = 0) {
             const seating=container.dataset.seating==='true';
-            const showPlugs=seating||(isPatching&&container===tempCableEl&&!state.connections.some(connection=>connection.el===container));
+            const showPlugs=seating||(isPatching&&container===tempCableEl&&!appState.project.connections.some(connection=>connection.el===container));
             const geometry=cableGeometry(cableType);
             container.style.setProperty('--cable-outer',geometry.outer+'px');
             container.style.setProperty('--cable-inner',geometry.inner+'px');
@@ -8376,9 +8369,9 @@ const Hardware = (() => {
                 window.getSelection()?.removeAllRanges();
                 
                 // Conectar ou reconectar
-                const existingIdx = state.connections.findIndex(c => c.outId === port.id || c.inId === port.id);
+                const existingIdx = appState.project.connections.findIndex(c => c.outId === port.id || c.inId === port.id);
                 if (existingIdx > -1) {
-                    const conn = state.connections[existingIdx];
+                    const conn = appState.project.connections[existingIdx];
                     const otherId = conn.outId === port.id ? conn.inId : conn.outId;
                     removeConnection(existingIdx);
                     startPort = document.getElementById(otherId);
@@ -8453,12 +8446,12 @@ const Hardware = (() => {
             return `<section class="port-signal-panel"><h3>Sinais de entrada e saída</h3><div id="port-signal-rows">${portSignalsMarkup(dev)}</div></section>`;
         }
         function refreshPortSignalInspector(){
-            const dev=state.devices[state.selectedDeviceId],container=document.getElementById('port-signal-rows');
+            const dev=appState.project.devices[appState.interface.selectedDeviceId],container=document.getElementById('port-signal-rows');
             if(dev&&container){const markup=portSignalsMarkup(dev);if(container.innerHTML!==markup)container.innerHTML=markup;}
         }
 
         function getPortSignal(port, visited = new Set(), prospective = null,channelHint='') {
-            const dev = state.devices[port?.closest('.device-node')?.id];
+            const dev = appState.project.devices[port?.closest('.device-node')?.id];
             if (!dev) return 'unknown';
             const node = port.dataset.node || '', role = port.dataset.role || '';
             const config=INTERFACE_DEVICES[dev.type];
@@ -8469,7 +8462,7 @@ const Hardware = (() => {
                 if(visited.has(dev.id))return 'unknown';
                 const next=new Set(visited);next.add(dev.id);
                 const routed=routedInputPorts(dev,port,channelHint),accepts=input=>!!input&&routed.includes(input);
-                const sources=state.connections.filter(c=>!c.miswired&&c.inId!==prospective?.input?.id&&accepts(document.getElementById(c.inId))).map(c=>({output:document.getElementById(c.outId),input:document.getElementById(c.inId)})).filter(link=>link.output);
+                const sources=appState.project.connections.filter(c=>!c.miswired&&c.inId!==prospective?.input?.id&&accepts(document.getElementById(c.inId))).map(c=>({output:document.getElementById(c.outId),input:document.getElementById(c.inId)})).filter(link=>link.output);
                 if(accepts(prospective?.input))sources.push(prospective);
                 const signals=new Set(sources.map(link=>getPortSignal(link.output,next,prospective,portChannel(link.input)||portChannel(port)||channelHint)).filter(signal=>signal!=='unknown'));
                 return signals.size>1?'mixed':signals.values().next().value||'unknown';
@@ -8495,8 +8488,8 @@ const Hardware = (() => {
             return actual===expected||(['line','phono','headphone'].includes(actual)&&['line','phono','headphone'].includes(expected));
         }
         function revalidateSignalConnections() {
-            for (let index = state.connections.length - 1; index >= 0; index--) {
-                const cable = state.connections[index];
+            for (let index = appState.project.connections.length - 1; index >= 0; index--) {
+                const cable = appState.project.connections[index];
                 if (!getPortCompatibility(document.getElementById(cable.outId), document.getElementById(cable.inId), false).compatible) removeConnection(index);
             }
             updatePortGuidance();
@@ -8511,7 +8504,7 @@ const Hardware = (() => {
         }
         function connectionLoadWarnings(prospective){
             const warnings=[];
-            for(const amp of Object.values(state.devices).filter(dev=>FIXED_AMP_SPECS[dev.type]))for(const ch of ['L','R']){
+            for(const amp of Object.values(appState.project.devices).filter(dev=>FIXED_AMP_SPECS[dev.type]))for(const ch of ['L','R']){
                 const ports=[...amp.el.querySelectorAll('.port[data-io="out"]')].filter(port=>getPortSignal(port)==='amplified'&&portChannel(port)===ch);
                 const terminals=uniqueTerminalLoads(ports,prospective),ohms=parallelOhms(terminals.map(load=>load.ohms));
                 const previous=parallelOhms(uniqueTerminalLoads(ports).map(load=>load.ohms));
@@ -8538,9 +8531,9 @@ const Hardware = (() => {
             if(!dev||dev.state.damage)return;
             dev.state.damage={kind};toggleDevicePower(dev);unpairDevice(dev);
             if(SOURCE_TYPES.has(dev.type))setSourcePlaying(dev,false);
-            dev.listeningGain?.gain.setValueAtTime(0,state.audioCtx.currentTime);
-            for(let i=state.connections.length-1;i>=0;i--){const cable=state.connections[i];if([cable.outId,cable.inId].some(id=>document.getElementById(id)?.closest('.device-node')?.id===dev.id))removeConnection(i);}
-            if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);
+            dev.listeningGain?.gain.setValueAtTime(0,appState.audio.context.currentTime);
+            for(let i=appState.project.connections.length-1;i>=0;i--){const cable=appState.project.connections[i];if([cable.outId,cable.inId].some(id=>document.getElementById(id)?.closest('.device-node')?.id===dev.id))removeConnection(i);}
+            if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);
             scheduleProjectSave();
         }
         function connectionDamageRisk(output,input,supplied,expected){
@@ -8548,7 +8541,7 @@ const Hardware = (() => {
             return {deviceId:input.closest('.device-node').id,reason:'Uma saída SPEAKER fornece sinal de potência. Esta entrada recebe '+signalName(expected)+'. Aplicar essa potência pode danificar seu estágio de entrada. Adaptadores de conector não reduzem a tensão; use um conversor de nível alto para linha.'};
         }
         async function offerDamageSimulation(compatibility){
-            const risk=compatibility?.damageRisk,dev=state.devices[risk?.deviceId];
+            const risk=compatibility?.damageRisk,dev=appState.project.devices[risk?.deviceId];
             if(!dev)return;
             if(dev.state.damage){await showAppDialog({title:'Equipamento danificado',message:'Este equipamento já está danificado. Substitua-o por outro do catálogo.'});return;}
             const name=DEVICE_NAMES[dev.type]||'Equipamento';
@@ -8566,8 +8559,8 @@ const Hardware = (() => {
             const plugFits=typeA===typeB||genericRcaPair||(typeA?.startsWith('rca')&&typeB?.startsWith('rca'));
             const label=type=>({'rca-r':'RCA direito','rca-l':'RCA esquerdo',rca:'RCA',p10:'P10',p2:'P2',wire:'fio de caixa'}[type]||type||'conector');
             if(!plugFits)return{compatible:false,reason:`Barreira física: ${label(typeA)} não encaixa em ${label(typeB)}.`};
-            if (connectionGuidanceEnabled && pA.dataset.io === pB.dataset.io) return { compatible:false, reason:'É preciso ligar uma saída a uma entrada.' };
-            if([pA,pB].some(port=>state.devices[port.closest('.device-node')?.id]?.state.damage))return {compatible:false,reason:'Equipamento danificado: substitua-o por outro do catálogo antes de ligar novos cabos.'};
+            if (appState.preferences.connectionGuidanceEnabled && pA.dataset.io === pB.dataset.io) return { compatible:false, reason:'É preciso ligar uma saída a uma entrada.' };
+            if([pA,pB].some(port=>appState.project.devices[port.closest('.device-node')?.id]?.state.damage))return {compatible:false,reason:'Equipamento danificado: substitua-o por outro do catálogo antes de ligar novos cabos.'};
 
             const output = pA.dataset.io === 'out' ? pA : pB;
             const input = output === pA ? pB : pA;
@@ -8577,7 +8570,7 @@ const Hardware = (() => {
             while(pending.length){
                 const id=pending.pop();if(id===origin)return {compatible:false,reason:'Esta ligação fecha um ciclo de realimentação. Mantenha o percurso da fonte até a saída de escuta.'};
                 if(seen.has(id))continue;seen.add(id);
-                for(const cable of state.connections){
+                for(const cable of appState.project.connections){
                     if(cable.miswired)continue;
                     if(cable.inId===input.id||cable.outId===output.id)continue;
                     const from=document.getElementById(cable.outId)?.closest('.device-node')?.id;
@@ -8586,14 +8579,14 @@ const Hardware = (() => {
             }
             const prospective={output,input};
             const supplied = getPortSignal(output,new Set(),prospective), expected = getPortSignal(input);
-            const damageRisk=connectionGuidanceEnabled?findConnectionDamageRisk(output,input,prospective):null;
+            const damageRisk=appState.preferences.connectionGuidanceEnabled?findConnectionDamageRisk(output,input,prospective):null;
             if(damageRisk)return {compatible:false,damageRisk,reason:damageRisk.reason};
-            const warnings=connectionGuidanceEnabled?signalLevelWarnings(supplied,expected):[];
-            if (connectionGuidanceEnabled&&!signalMatches(supplied,expected)) {
+            const warnings=appState.preferences.connectionGuidanceEnabled?signalLevelWarnings(supplied,expected):[];
+            if (appState.preferences.connectionGuidanceEnabled&&!signalMatches(supplied,expected)) {
                 return { compatible:false, damageRisk:connectionDamageRisk(output,input,supplied,expected), reason:`Sinal incompatível: a saída fornece ${signalName(supplied)}, mas a entrada espera ${signalName(expected)}. O conector não converte o sinal.` };
             }
             // Simule a nova ligação também nos adaptadores já conectados a outros equipamentos.
-            if(checkNetwork&&connectionGuidanceEnabled)for(const cable of state.connections){
+            if(checkNetwork&&appState.preferences.connectionGuidanceEnabled)for(const cable of appState.project.connections){
                 if(cable.inId===input.id||cable.outId===output.id)continue;
                 const downstreamOut=document.getElementById(cable.outId),downstreamIn=document.getElementById(cable.inId);
                 if(!downstreamOut||!downstreamIn)continue;
@@ -8601,9 +8594,9 @@ const Hardware = (() => {
                 if(actual!==getPortSignal(downstreamOut))warnings.push(...signalLevelWarnings(actual,required));
                 if(!signalMatches(actual,required))return {compatible:false,damageRisk:connectionDamageRisk(downstreamOut,downstreamIn,actual,required),reason:`A cadeia passiva preserva ${signalName(actual)}, mas um equipamento conectado depois dele espera ${signalName(required)}. Use um conversor de sinal.`};
             }
-            if (connectionGuidanceEnabled&&pA.dataset.channel && pB.dataset.channel && pA.dataset.channel !== pB.dataset.channel)warnings.push('Canais cruzados: a saída '+output.dataset.channel+' alimentará a entrada '+input.dataset.channel+'. As cores RCA indicam canal, mas não impedem o encaixe.');
-            if(checkNetwork&&connectionGuidanceEnabled)warnings.push(...connectionLoadWarnings(prospective));
-            const unique=[...new Set(warnings)];return {compatible:true,warnings:unique,reason:unique.join(' ')||`Conector compatível${connectionGuidanceEnabled?` · ${signalName(supplied)}`:''}.`};
+            if (appState.preferences.connectionGuidanceEnabled&&pA.dataset.channel && pB.dataset.channel && pA.dataset.channel !== pB.dataset.channel)warnings.push('Canais cruzados: a saída '+output.dataset.channel+' alimentará a entrada '+input.dataset.channel+'. As cores RCA indicam canal, mas não impedem o encaixe.');
+            if(checkNetwork&&appState.preferences.connectionGuidanceEnabled)warnings.push(...connectionLoadWarnings(prospective));
+            const unique=[...new Set(warnings)];return {compatible:true,warnings:unique,reason:unique.join(' ')||`Conector compatível${appState.preferences.connectionGuidanceEnabled?` · ${signalName(supplied)}`:''}.`};
         }
 
         function arePortsCompatible(pA, pB) {
@@ -8634,7 +8627,7 @@ const Hardware = (() => {
         }
 
         function isPortOccupied(port) {
-            return state.connections.some(connection => connection.inId === port.id || connection.outId === port.id);
+            return appState.project.connections.some(connection => connection.inId === port.id || connection.outId === port.id);
         }
 
         function canonicalPortLabel(port){
@@ -8648,14 +8641,14 @@ const Hardware = (() => {
         let highlightedCompatibilityCable=null;
         function updatePortGuidance(forceCompatibilityRefresh=false) {
             const guidance = document.getElementById('connection-guidance');
-            const selectedCable=!isPatching?state.selectedConnection:null;
+            const selectedCable=!isPatching?appState.interface.selectedConnection:null;
             const cableOut=selectedCable&&document.getElementById(selectedCable.outId),cableIn=selectedCable&&document.getElementById(selectedCable.inId);
             const cableEndpoints=new Set([cableOut?.closest('.device-node')?.id,cableIn?.closest('.device-node')?.id].filter(Boolean));
             const samePlug=(a,b)=>{const x=a?.dataset.type,y=b?.dataset.type;return x===y||(x==='rca'&&y?.startsWith('rca'))||(y==='rca'&&x?.startsWith('rca'))||(x?.startsWith('rca')&&y?.startsWith('rca'));};
             if(forceCompatibilityRefresh||selectedCable!==highlightedCompatibilityCable){
                 highlightedCompatibilityCable=selectedCable;
                 document.querySelectorAll('.device-node').forEach(device=>{
-                    if(!connectionGuidanceEnabled||!selectedCable||!cableOut||!cableIn){device.classList.remove('no-cable-compatibility');return;}
+                    if(!appState.preferences.connectionGuidanceEnabled||!selectedCable||!cableOut||!cableIn){device.classList.remove('no-cable-compatibility');return;}
                     if(cableEndpoints.has(device.id)){device.classList.remove('no-cable-compatibility');return;}
                     const freePort=[...device.querySelectorAll('.port')].some(port=>{
                         if(isPortOccupied(port))return false;
@@ -8674,10 +8667,10 @@ const Hardware = (() => {
                 port.dataset.baseTitle = name;
                 let status = occupied ? 'ocupado' : 'livre';
                 let explanation = occupied ? 'Esta porta já está conectada. Arraste o cabo a partir dela para refazer a ligação.' : `${direction} livre.`;
-                port.classList.toggle('port-available', connectionGuidanceEnabled && !occupied && !isPatching);
-                port.classList.toggle('port-occupied', connectionGuidanceEnabled && occupied && isPatching);
+                port.classList.toggle('port-available', appState.preferences.connectionGuidanceEnabled && !occupied && !isPatching);
+                port.classList.toggle('port-occupied', appState.preferences.connectionGuidanceEnabled && occupied && isPatching);
                 port.classList.remove('port-incompatible', 'port-compatible', 'port-source');
-                if (connectionGuidanceEnabled && isPatching && startPort) {
+                if (appState.preferences.connectionGuidanceEnabled && isPatching && startPort) {
                     if (port === startPort) {
                         status = 'origem';
                         explanation = 'Origem selecionada. Solte em uma porta verde.';
@@ -8692,9 +8685,9 @@ const Hardware = (() => {
                         explanation = compatibility.reason;
                         port.classList.add(compatibility.compatible ? 'port-compatible' : 'port-incompatible');
                     }
-                } else if (connectionGuidanceEnabled && !isPatching && state.selectedConnection) {
-                    const outPort = document.getElementById(state.selectedConnection.outId);
-                    const inPort = document.getElementById(state.selectedConnection.inId);
+                } else if (appState.preferences.connectionGuidanceEnabled && !isPatching && appState.interface.selectedConnection) {
+                    const outPort = document.getElementById(appState.interface.selectedConnection.outId);
+                    const inPort = document.getElementById(appState.interface.selectedConnection.inId);
                     if (port === outPort || port === inPort) {
                         status = 'cabo selecionado';
                         explanation = 'Extremidade do cabo selecionado. Portas verdes mostram destinos alternativos compatíveis.';
@@ -8717,16 +8710,16 @@ const Hardware = (() => {
                 explanation = `${signalName(signal)}. ${explanation}`;
                 port.dataset.status = status;
                 port.setAttribute('aria-label', `${name} · ${status}`);
-                port.setAttribute('title', connectionGuidanceEnabled?`${name} · ${direction} · ${status}. ${explanation}`:'');
+                port.setAttribute('title', appState.preferences.connectionGuidanceEnabled?`${name} · ${direction} · ${status}. ${explanation}`:'');
             });
             refreshPortSignalInspector();
-            const summaryOut=state.selectedConnection&&document.getElementById(state.selectedConnection.outId),summaryIn=state.selectedConnection&&document.getElementById(state.selectedConnection.inId),cableSummary=document.querySelector('#cable-properties .cable-signal-summary');
-            if(cableSummary)cableSummary.textContent=connectionGuidanceEnabled&&summaryOut&&summaryIn?`Transporta ${portSignalLabel(summaryOut)} → entrada espera ${portSignalLabel(summaryIn)}. ${getPortCompatibility(summaryOut,summaryIn).reason}`:'';
+            const summaryOut=appState.interface.selectedConnection&&document.getElementById(appState.interface.selectedConnection.outId),summaryIn=appState.interface.selectedConnection&&document.getElementById(appState.interface.selectedConnection.inId),cableSummary=document.querySelector('#cable-properties .cable-signal-summary');
+            if(cableSummary)cableSummary.textContent=appState.preferences.connectionGuidanceEnabled&&summaryOut&&summaryIn?`Transporta ${portSignalLabel(summaryOut)} → entrada espera ${portSignalLabel(summaryIn)}. ${getPortCompatibility(summaryOut,summaryIn).reason}`:'';
             if (!guidance) return;
-            const selected = state.selectedConnection;
-            guidance.classList.toggle('is-active', connectionGuidanceEnabled&&(isPatching || !!selected));
-            guidance.classList.toggle('is-invalid', connectionGuidanceEnabled&&isPatching && !hoveredTargetPort);
-            if(!connectionGuidanceEnabled){guidance.textContent='';return;}
+            const selected = appState.interface.selectedConnection;
+            guidance.classList.toggle('is-active', appState.preferences.connectionGuidanceEnabled&&(isPatching || !!selected));
+            guidance.classList.toggle('is-invalid', appState.preferences.connectionGuidanceEnabled&&isPatching && !hoveredTargetPort);
+            if(!appState.preferences.connectionGuidanceEnabled){guidance.textContent='';return;}
             if (isPatching && startPort) {
                 const startName = startPort.dataset.baseTitle || startPort.dataset.type || 'porta';
                 const hovered = hoveredGuidancePort && hoveredGuidancePort !== startPort ? hoveredGuidancePort : null;
@@ -8773,12 +8766,12 @@ const Hardware = (() => {
             const port = document.elementFromPoint(e.clientX, e.clientY)?.closest('.port') || null;
             if (port !== hoveredGuidancePort) {
                 hoveredGuidancePort = port;
-                if (state.selectedConnection) updatePortGuidance();
+                if (appState.interface.selectedConnection) updatePortGuidance();
             }
         });
         canvas.addEventListener('mouseleave', () => {
             hoveredGuidancePort = null;
-            if (state.selectedConnection && !isPatching) updatePortGuidance();
+            if (appState.interface.selectedConnection && !isPatching) updatePortGuidance();
         });
 
         window.addEventListener('pointermove', e => {
@@ -8841,21 +8834,21 @@ const Hardware = (() => {
                 let tPort = directEl ? directEl.closest('.port') : null;
                 const attempted=tPort&&!isPortOccupied(tPort)?getPortCompatibility(startPort,tPort):null;
                 const hazardous=!!attempted?.damageRisk;
-                if(connectionGuidanceEnabled&&hazardous){cancelCableDrag();offerDamageSimulation(attempted);return;}
+                if(appState.preferences.connectionGuidanceEnabled&&hazardous){cancelCableDrag();offerDamageSimulation(attempted);return;}
                 if (!tPort || isPortOccupied(tPort) || !arePortsCompatible(startPort, tPort)) {
                     tPort = findTargetPortNear(e.clientX, e.clientY, 36);
                 }
                 
                 if (tPort && arePortsCompatible(startPort, tPort)) {
                     const review=getPortCompatibility(startPort,tPort);
-                    if(connectionGuidanceEnabled&&review.warnings?.length){
+                    if(appState.preferences.connectionGuidanceEnabled&&review.warnings?.length){
                         const accepted=await showAppDialog({title:'Revisar ligação',message:review.warnings.join('\n\n')+'\n\nDeseja conectar mesmo assim?',acceptLabel:'Conectar',requireChoice:true});
                         if(!accepted){cancelCableDrag();return;}
                     }
                     const outP = startPort.dataset.io === 'out' ? startPort : tPort;
                     const inP = startPort.dataset.io === 'out' ? tPort : startPort;
                     
-                    const exIdx = state.connections.findIndex(c => c.inId === inP.id || c.outId === outP.id);
+                    const exIdx = appState.project.connections.findIndex(c => c.inId === inP.id || c.outId === outP.id);
                     if (exIdx > -1) removeConnection(exIdx);
 
                     tempCableEl.classList.remove('active');
@@ -8863,13 +8856,13 @@ const Hardware = (() => {
                     const miswired=outP.dataset.io!=='out'||inP.dataset.io!=='in';
                     const connection={outId:outP.id,inId:inP.id,outDeviceId:outP.closest('.device-node')?.id,inDeviceId:inP.closest('.device-node')?.id,el:tempCableEl,type:connType,wps:[],miswired};
                     if(miswired)tempCableEl.dataset.miswired='true';
-                    state.connections.push(connection);invalidateCableBundles();animateCableSeat(connection,tPort);
+                    appStateStore.actions.addConnection(connection);invalidateCableBundles();animateCableSeat(connection,tPort);
                     playUiSound('connect');
                     outP.classList.add('connected'); inP.classList.add('connected');
                     updatePortGuidance(true);
                     
-                    const devOut = state.devices[outP.closest('.device-node').id];
-                    const devIn = state.devices[inP.closest('.device-node').id];
+                    const devOut = appState.project.devices[outP.closest('.device-node').id];
+                    const devIn = appState.project.devices[inP.closest('.device-node').id];
                     if (!miswired && devOut && devIn && devOut.nodes[outP.dataset.node] && devIn.nodes[inP.dataset.node]) {
                         try{devOut.nodes[outP.dataset.node].connect(devIn.nodes[inP.dataset.node]);}catch{}
                     }
@@ -8887,7 +8880,7 @@ const Hardware = (() => {
         });
 
         function animateCableSeat(connection,port){
-            if(state.restoringProject||powerMotionPreference.matches)return;
+            if(appState.project.restoringProject||powerMotionPreference.matches)return;
             connection.seatStarted=performance.now();connection.seatEnd=port.id===connection.inId?'end':'start';
             connection.seatAnimations=[port.animate([
                 {outline:'2px solid rgba(157,224,181,.8)',outlineOffset:'2px'},
@@ -8896,34 +8889,34 @@ const Hardware = (() => {
         }
 
         function removeConnection(idx) {
-            const c = state.connections[idx];
+            const c = appState.project.connections[idx];
             if (!c) return;
             c.seatAnimations?.forEach(animation=>animation.cancel());
             playUiSound('disconnect');
-            if (state.selectedConnection === c) selectCable(null);
+            if (appState.interface.selectedConnection === c) selectCable(null);
             c.el.remove();
             
             const o = document.getElementById(c.outId); const i = document.getElementById(c.inId);
             if(o) o.classList.remove('connected'); if(i) i.classList.remove('connected');
             
             if(o && i && !c.miswired) {
-                const dO = state.devices[o.closest('.device-node').id]; const dI = state.devices[i.closest('.device-node').id];
+                const dO = appState.project.devices[o.closest('.device-node').id]; const dI = appState.project.devices[i.closest('.device-node').id];
                 if(dO && dI && dO.nodes[o.dataset.node] && dI.nodes[i.dataset.node]) {
                     try { dO.nodes[o.dataset.node].disconnect(dI.nodes[i.dataset.node]); } catch(e){}
                 }
             }
-            state.connections.splice(idx, 1);
+            appStateStore.actions.removeConnection(idx);
             invalidateCableBundles();
             updateCableFlows();
             updatePortGuidance(true);
         }
 
         function selectCable(connection,restoreInspector=true) {
-            state.selectedConnection?.el?.classList.remove('selected');
-            state.selectedConnection = connection || null;
-            state.selectedConnection?.el?.classList.add('selected');
+            appState.interface.selectedConnection?.el?.classList.remove('selected');
+            appStateStore.actions.setSelectedConnection(connection || null);
+            appState.interface.selectedConnection?.el?.classList.add('selected');
             if(connection){inspectorEmpty.classList.add('hidden');inspectorContent.classList.add('hidden');document.getElementById('inspector-title').textContent=connection.label||'Cabo';}
-            else if(restoreInspector){if(state.selectedDeviceId)selectDevice(state.selectedDeviceId,true);else{inspectorContent.classList.add('hidden');inspectorEmpty.classList.remove('hidden');document.getElementById('inspector-title').textContent='Selecione um equipamento';}}
+            else if(restoreInspector){if(appState.interface.selectedDeviceId)selectDevice(appState.interface.selectedDeviceId,true);else{inspectorContent.classList.add('hidden');inspectorEmpty.classList.remove('hidden');document.getElementById('inspector-title').textContent='Selecione um equipamento';}}
             renderCableProperties();
             updatePortGuidance();
         }
@@ -8939,7 +8932,7 @@ const Hardware = (() => {
         function getCableBundleOffset(connection) {
             if(cachedCableBundleRevision!==cableBundleRevision){
                 const bundles=new Map();
-                state.connections.forEach(item=>{
+                appState.project.connections.forEach(item=>{
                     const [from,to]=connectionDevices(item);if(!from||!to)return;
                     const key=[from,to].sort().join('|'),bundle=bundles.get(key)||[];bundle.push(item);bundles.set(key,bundle);
                 });
@@ -8954,7 +8947,7 @@ const Hardware = (() => {
         }
         function updateCables(affectedDeviceIds=null) {
             const partial=affectedDeviceIds instanceof Set;
-            state.connections.forEach(c => {
+            appState.project.connections.forEach(c => {
                 if(partial){const [from,to]=connectionDevices(c);if(!affectedDeviceIds.has(from)&&!affectedDeviceIds.has(to))return;}
                 const p1 = document.getElementById(c.outId); const p2 = document.getElementById(c.inId);
                 c.el.dataset.slack=String(c.slack??5);
@@ -8978,8 +8971,8 @@ const Hardware = (() => {
             syncPlatterVinyls(partial?affectedDeviceIds:null);
             if(partial){
                 affectedDeviceIds.forEach(id=>{
-                    const lamp=state.devices[id]?.el;
-                    if(lamp?.classList.contains('device-type-pendantLamp')){const drop=Math.round((state.devices[id].dragVisualPosition?.y??lamp.offsetTop)+80)+'px';if(lamp.style.getPropertyValue('--pendant-drop')!==drop)lamp.style.setProperty('--pendant-drop',drop);}
+                    const lamp=appState.project.devices[id]?.el;
+                    if(lamp?.classList.contains('device-type-pendantLamp')){const drop=Math.round((appState.project.devices[id].dragVisualPosition?.y??lamp.offsetTop)+80)+'px';if(lamp.style.getPropertyValue('--pendant-drop')!==drop)lamp.style.setProperty('--pendant-drop',drop);}
                 });
                 updateStackFeetDuringMove(affectedDeviceIds);
             }else{
@@ -8992,7 +8985,7 @@ const Hardware = (() => {
 
         // --- PROPAGAÇÃO REAL DE ENERGIA/SINAL PELA CADEIA DE ÁUDIO ---
         function isSourceRunning(dev) {
-            return state.audioCtx?.state === 'running' && !!dev.powered && (RADIO_RECEIVERS.has(dev.type)?!!dev.state.radioOn:SOURCE_TYPES.has(dev.type)&&dev.state.playing===true&&(!SIGNAL_GENERATOR_TYPES.has(dev.type)||dev.state.signalLevel>0));
+            return appState.audio.context?.state === 'running' && !!dev.powered && (RADIO_RECEIVERS.has(dev.type)?!!dev.state.radioOn:SOURCE_TYPES.has(dev.type)&&dev.state.playing===true&&(!SIGNAL_GENERATOR_TYPES.has(dev.type)||dev.state.signalLevel>0));
         }
 
         function updateStereoPowerMeters(dev) {
@@ -9013,23 +9006,23 @@ const Hardware = (() => {
             updateStackFeet();
             syncSourceSequencer();
             // Atualiza compatibilidade após trocas de sinal, entrada ou estado dos aparelhos.
-            if (state.selectedConnection) updatePortGuidance(true);
+            if (appState.interface.selectedConnection) updatePortGuidance(true);
             // Uma caixa mono ocupa o lado definido pela saída à qual está conectada.
-            Object.values(state.devices).forEach(dev => {
+            Object.values(appState.project.devices).forEach(dev => {
                 if (!dev.outputPan) return;
-                if(dev.type==='spkActiveCompact'){dev.outputPan.pan.setTargetAtTime(0,state.audioCtx.currentTime,.015);return;}
-                const cable = state.connections.find(connection => document.getElementById(connection.inId)?.closest('.device-node')?.id === dev.id);
+                if(dev.type==='spkActiveCompact'){dev.outputPan.pan.setTargetAtTime(0,appState.audio.context.currentTime,.015);return;}
+                const cable = appState.project.connections.find(connection => document.getElementById(connection.inId)?.closest('.device-node')?.id === dev.id);
                 const output = cable && document.getElementById(cable.outId);
                 const channel = output?.dataset.channel || (/R$/.test(output?.dataset.node || '') ? 'R' : /L$/.test(output?.dataset.node || '') ? 'L' : '');
-                dev.outputPan.pan.setTargetAtTime(channel === 'L' ? -1 : channel === 'R' ? 1 : 0, state.audioCtx.currentTime, .015);
+                dev.outputPan.pan.setTargetAtTime(channel === 'L' ? -1 : channel === 'R' ? 1 : 0, appState.audio.context.currentTime, .015);
             });
             // Descobre quais aparelhos estão recebendo ou gerando sinal sonoro
             const activeDevices = new Set();
             const connectedDevices = new Set();
             
             // 1. Fontes de áudio geradoras (toca-discos, streamer, Bluetooth) que estão ligadas
-            if (state.isPlaying) {
-                Object.values(state.devices).forEach(dev => {
+            if (appState.audio.isPlaying) {
+                Object.values(appState.project.devices).forEach(dev => {
                     if (isSourceRunning(dev)) activeDevices.add(dev.id);
                 });
             }
@@ -9037,10 +9030,10 @@ const Hardware = (() => {
             // 2. Propagação através das conexões da cadeia (ex: Fonte -> Receiver -> Caixas/Sub/Fones)
             let changed = true;
             let iterations = 0;
-            while (changed && iterations < Object.keys(state.devices).length) {
+            while (changed && iterations < Object.keys(appState.project.devices).length) {
                 changed = false;
                 iterations++;
-                state.connections.forEach(c => {
+                appState.project.connections.forEach(c => {
                     if(c.miswired)return;
                     const outPortEl = document.getElementById(c.outId);
                     const inPortEl = document.getElementById(c.inId);
@@ -9050,8 +9043,8 @@ const Hardware = (() => {
                     const inDevEl = inPortEl.closest('.device-node');
                     if (!outDevEl || !inDevEl) return;
 
-                    const devOut = state.devices[outDevEl.id];
-                    const devIn = state.devices[inDevEl.id];
+                    const devOut = appState.project.devices[outDevEl.id];
+                    const devIn = appState.project.devices[inDevEl.id];
                     connectedDevices.add(devOut.id);
                     connectedDevices.add(devIn.id);
 
@@ -9079,9 +9072,9 @@ const Hardware = (() => {
             }
 
             // 2b. Ligação sem fio Bluetooth (transmissor → fone)
-            Object.values(state.devices).forEach(dev => {
+            Object.values(appState.project.devices).forEach(dev => {
                 if (BT_TX_TYPES.has(dev.type) && dev.powered && activeDevices.has(dev.id) && dev.btPairedId) {
-                    const hp = state.devices[dev.btPairedId];
+                    const hp = appState.project.devices[dev.btPairedId];
                     if (hp&&!hp.state.damage&&!dev.state.damage) {
                         connectedDevices.add(dev.id);
                         connectedDevices.add(hp.id);
@@ -9090,7 +9083,7 @@ const Hardware = (() => {
                 }
             });
 
-            Object.values(state.devices).forEach(dev => {
+            Object.values(appState.project.devices).forEach(dev => {
                 const hasSignal = activeDevices.has(dev.id);
                 const isConnected = connectedDevices.has(dev.id);
                 dev.el.classList.toggle('device-connected', isConnected);
@@ -9107,10 +9100,10 @@ const Hardware = (() => {
             });
 
             // 3. Aplica a animação de pulso/fluxo APENAS nos cabos onde a corrente de áudio realmente está passando
-            state.connections.forEach(c => {
+            appState.project.connections.forEach(c => {
                 const outPortEl = document.getElementById(c.outId);
                 const outDevEl = outPortEl ? outPortEl.closest('.device-node') : null;
-                const devOut = outDevEl ? state.devices[outDevEl.id] : null;
+                const devOut = outDevEl ? appState.project.devices[outDevEl.id] : null;
 
                 // O cabo só tem fluxo se a fonte estiver ligada e com áudio ativo alcançando essa saída
                 const isCarryingSignal = !!(!c.miswired && devOut && devOut.powered && activeDevices.has(devOut.id) && portCarriesSignal(devOut, outPortEl));
@@ -9133,7 +9126,7 @@ const Hardware = (() => {
             const targetPath = e.target.closest('path');
             if (targetPath) {
                 const group = targetPath.closest('.cable-group');
-                const conn = state.connections.find(c => c.el === group || c.el === targetPath);
+                const conn = appState.project.connections.find(c => c.el === group || c.el === targetPath);
                 if (conn) {
                     selectCable(conn);
                 }
@@ -9158,14 +9151,14 @@ const Hardware = (() => {
             const band=document.getElementById('spectrum-band')?.value||'';
             const sourceNodes=[dev.nodes['in'+channel],dev.nodes['out'+band+channel]];
             if(sourceNodes.some(node=>!node))return;
-            const silent=state.audioCtx.createGain();silent.gain.value=0;silent.connect(state.audioCtx.destination);
-            const taps=sourceNodes.map(source=>{const analyzer=state.audioCtx.createAnalyser();analyzer.fftSize=4096;analyzer.smoothingTimeConstant=.65;analyzer.minDecibels=-100;analyzer.maxDecibels=0;source.connect(analyzer);analyzer.connect(silent);return{source,analyzer,data:new Float32Array(analyzer.frequencyBinCount)};});
+            const silent=appState.audio.context.createGain();silent.gain.value=0;silent.connect(appState.audio.context.destination);
+            const taps=sourceNodes.map(source=>{const analyzer=appState.audio.context.createAnalyser();analyzer.fftSize=4096;analyzer.smoothingTimeConstant=.65;analyzer.minDecibels=-100;analyzer.maxDecibels=0;source.connect(analyzer);analyzer.connect(silent);return{source,analyzer,data:new Float32Array(analyzer.frequencyBinCount)};});
             activeSpectrum={dev,canvas,silent,taps};
             drawSpectrum();
         }
         function drawSpectrum(){
             const spectrum=activeSpectrum;if(!spectrum)return;
-            if(!spectrum.canvas.isConnected||!state.devices[spectrum.dev.id]){disposeSpectrum();return;}
+            if(!spectrum.canvas.isConnected||!appState.project.devices[spectrum.dev.id]){disposeSpectrum();return;}
             const canvas=spectrum.canvas,width=Math.max(220,canvas.clientWidth),height=170,ratio=window.devicePixelRatio||1;
             if(canvas.width!==Math.round(width*ratio)||canvas.height!==Math.round(height*ratio)){canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);}
             const ctx=canvas.getContext('2d');ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,width,height);ctx.fillStyle='#10171c';ctx.fillRect(0,0,width,height);
@@ -9180,7 +9173,7 @@ const Hardware = (() => {
                 ctx.strokeStyle=index?'#55c7ff':'#a3adb8';ctx.lineWidth=index?1.8:1.2;ctx.beginPath();
                 for(let step=0;step<=180;step++){
                     const f=20*Math.pow(1000,step/180),next=20*Math.pow(1000,(step+1)/180);
-                    const bin=f/(state.audioCtx.sampleRate/2)*tap.data.length,end=Math.min(tap.data.length-1,Math.ceil(next/(state.audioCtx.sampleRate/2)*tap.data.length));
+                    const bin=f/(appState.audio.context.sampleRate/2)*tap.data.length,end=Math.min(tap.data.length-1,Math.ceil(next/(appState.audio.context.sampleRate/2)*tap.data.length));
                     let db=-100;for(let k=Math.max(1,Math.floor(bin));k<=end;k++)db=Math.max(db,tap.data[k]);
                     if(!index)inputPeak=Math.max(inputPeak,db);
                     const px=left+step/180*w,py=y(db);if(step===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
@@ -9197,7 +9190,7 @@ const Hardware = (() => {
             const el=document.createElementNS('http://www.w3.org/2000/svg','g');el.setAttribute('class','cable-group');svgLayer.appendChild(el);
             const type=output.dataset.type;drawCable(el,getPortCenter(output),getPortCenter(input),[],type);
             const miswired=output.dataset.io!=='out'||input.dataset.io!=='in';
-            state.connections.push({outId:output.id,inId:input.id,outDeviceId:from.id,inDeviceId:to.id,el,type,wps:[],miswired});invalidateCableBundles();if(miswired)el.dataset.miswired='true';else from.nodes[nodeOut].connect(to.nodes[nodeIn]);output.classList.add('connected');input.classList.add('connected');
+            appStateStore.actions.addConnection({outId:output.id,inId:input.id,outDeviceId:from.id,inDeviceId:to.id,el,type,wps:[],miswired});invalidateCableBundles();if(miswired)el.dataset.miswired='true';else from.nodes[nodeOut].connect(to.nodes[nodeIn]);output.classList.add('connected');input.classList.add('connected');
         }
 
         let pendantLightTick=0,pendantLightSignature='',visualFrame=0,visualTimer=0,visualRendering=false;
@@ -9221,7 +9214,7 @@ const Hardware = (() => {
                     if(signature!==pendantLightSignature){pendantLightSignature=signature;Hardware.updateLightingDemo();}
                 }else pendantLightSignature='';
             }
-            if(state.connections.some(connection=>connection.seatStarted!=null))updateCables();
+            if(appState.project.connections.some(connection=>connection.seatStarted!=null))updateCables();
             updateRealtimePanels(performance.now());
             updateTransportMotion(performance.now());
             updateExtraDisplays(performance.now());
@@ -9264,7 +9257,7 @@ const Hardware = (() => {
             // Animação de cones dos alto-falantes se a simulação de som estiver ativa
             {
                 const reduced=powerMotionPreference.matches;
-                Object.values(state.devices).forEach(dev => {
+                Object.values(appState.project.devices).forEach(dev => {
                     const woofers=dev.visualWoofers??=dev.el.querySelectorAll('.spk-woofer,.classic-box-woofer');
                     if (dev.analyzer && dev.dataArray && woofers.length) {
                         dev.analyzer.getByteFrequencyData(dev.dataArray);
@@ -9276,9 +9269,9 @@ const Hardware = (() => {
                     }
                 });
             }
-            const devices=Object.values(state.devices);
+            const devices=Object.values(appState.project.devices);
             const activeAudio=devices.some(dev=>dev.state?.playing||dev.state?.radioOn||(dev.meters?.visible&&dev.powered===true&&dev.meters.peaks.some(peak=>peak>.001)));
-            const activeCable=isPatching||state.connections.some(connection=>connection.seatStarted!=null);
+            const activeCable=isPatching||appState.project.connections.some(connection=>connection.seatStarted!=null);
             Hardware.renderLightingDemo();
             visualRendering=false;
             scheduleVisuals(activeCable?0:activeAudio?33:pendantLightSignature?90:0);
@@ -9334,12 +9327,12 @@ const Hardware = (() => {
             const marker=dev.el.querySelector(dev.type==='turntableLinear'?'.linear-disc-size':'[data-tt="record"]')||dev.el;
             const rect=marker.getBoundingClientRect();return screenToWorld(rect.left+rect.width/2,rect.top+rect.height/2);
         }
-        function syncPlatterVinyls(affectedDeviceIds=null){for(const item of spotifyVinyls.values()){if(affectedDeviceIds&&!affectedDeviceIds.has(item.turntableId))continue;const dev=state.devices[item.turntableId];if(!dev)continue;const at=vinylPlatterCenter(dev);moveSpotifyVinyl(item,at.x-SPOTIFY_VINYL_SIZE/2,at.y-6);}}
+        function syncPlatterVinyls(affectedDeviceIds=null){for(const item of spotifyVinyls.values()){if(affectedDeviceIds&&!affectedDeviceIds.has(item.turntableId))continue;const dev=appState.project.devices[item.turntableId];if(!dev)continue;const at=vinylPlatterCenter(dev);moveSpotifyVinyl(item,at.x-SPOTIFY_VINYL_SIZE/2,at.y-6);}}
         function moveSpotifyVinyl(item,x,y,settle=false){const snap=settle&&!item.turntableId;item.x=snap?spotifyGridCoordinate(x,world.offsetWidth-SPOTIFY_VINYL_SIZE):Math.max(0,Math.min(world.offsetWidth-SPOTIFY_VINYL_SIZE,x));item.y=snap?spotifyGridCoordinate(y,maxEquipmentBottom()-SPOTIFY_VINYL_SIZE):Math.max(0,Math.min(maxEquipmentBottom()-(item.turntableId?12:SPOTIFY_VINYL_SIZE),y));item.el.style.left=item.x+'px';item.el.style.top=item.y+'px';}
         function placeSpotifyVinyl(item,dev,animate=true){
             if(dev.spotifyVinyl&&dev.spotifyVinyl!==item){spotifyVinylNotice('Este prato já tem um disco.');return false;}
             if(dev.state.playing)setSourcePlaying(dev,false);
-            if(item.turntableId&&state.devices[item.turntableId]){const previous=state.devices[item.turntableId];if(previous.state.playing)setSourcePlaying(previous,false);previous.spotifyVinyl=null;}
+            if(item.turntableId&&appState.project.devices[item.turntableId]){const previous=appState.project.devices[item.turntableId];if(previous.state.playing)setSourcePlaying(previous,false);previous.spotifyVinyl=null;}
             const fromX=item.x,fromY=item.y;
             item.turntableId=dev.id;item.dragStart=null;dev.spotifyVinyl=item;dev.spotifyNeedsRestart=true;if(dev.type==='turntableLinear'&&dev.state.tt?.disc==='none'){dev.state.tt.disc='lp';dev.refreshTurntable?.();}dev.setLidOpen?.(true);dev.el.classList.add('spotify-vinyl-placing');const center=vinylPlatterCenter(dev);moveSpotifyVinyl(item,center.x-SPOTIFY_VINYL_SIZE/2,center.y-6);
             item.el.classList.toggle('is-linear',dev.type==='turntableLinear');item.el.classList.add('is-on-platter');
@@ -9358,20 +9351,20 @@ const Hardware = (() => {
             el.addEventListener('pointerdown',event=>{if(event.button!==0)return;event.preventDefault();event.stopPropagation();beginSpotifyVinylDrag(item,event);});
             return item;
         }
-        function removeSpotifyVinyl(item,recordHistory=true){if(recordHistory)recordDeletedSpotify('vinyl',item);if(item.turntableId){const dev=state.devices[item.turntableId];if(dev?.state.playing)setSourcePlaying(dev,false);if(dev){dev.spotifyVinyl=null;if(state.selectedDeviceId===dev.id)selectDevice(dev.id,true);}}spotifyVinyls.delete(item.uri);item.el.remove();refreshSpotifyVinyls();scheduleProjectSave();}
+        function removeSpotifyVinyl(item,recordHistory=true){if(recordHistory)recordDeletedSpotify('vinyl',item);if(item.turntableId){const dev=appState.project.devices[item.turntableId];if(dev?.state.playing)setSourcePlaying(dev,false);if(dev){dev.spotifyVinyl=null;if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);}}spotifyVinyls.delete(item.uri);item.el.remove();refreshSpotifyVinyls();scheduleProjectSave();}
         function beginSpotifyVinylDrag(item,event){
-            const prior=state.devices[item.turntableId];item.dragStart={x:item.x,y:item.y,turntableId:prior?.id||null};if(prior){if(prior.state.playing)setSourcePlaying(prior,false);prior.spotifyVinyl=null;item.turntableId=null;item.el.classList.remove('is-on-platter','is-linear','is-playing');if(state.selectedDeviceId===prior.id)selectDevice(prior.id,true);}
+            const prior=appState.project.devices[item.turntableId];item.dragStart={x:item.x,y:item.y,turntableId:prior?.id||null};if(prior){if(prior.state.playing)setSourcePlaying(prior,false);prior.spotifyVinyl=null;item.turntableId=null;item.el.classList.remove('is-on-platter','is-linear','is-playing');if(appState.interface.selectedDeviceId===prior.id)selectDevice(prior.id,true);}
             const point=screenToWorld(event.clientX,event.clientY),offsetX=prior?SPOTIFY_VINYL_SIZE/2:point.x-item.x,offsetY=prior?SPOTIFY_VINYL_SIZE/2:point.y-item.y;item.el.classList.add('is-dragging');const ghost=createSpotifyDragGhost(item.el,event);
             let autoLid=null;
-            const hitDevice=(x,y)=>{item.el.style.pointerEvents='none';const target=document.elementFromPoint(x,y)?.closest('.device-node');item.el.style.pointerEvents='';return state.devices[target?.id];};
-            const releaseAutoLid=keepOpen=>{if(autoLid&&!keepOpen&&state.devices[autoLid.id]===autoLid)autoLid.setLidOpen?.(false);autoLid=null;};
+            const hitDevice=(x,y)=>{item.el.style.pointerEvents='none';const target=document.elementFromPoint(x,y)?.closest('.device-node');item.el.style.pointerEvents='';return appState.project.devices[target?.id];};
+            const releaseAutoLid=keepOpen=>{if(autoLid&&!keepOpen&&appState.project.devices[autoLid.id]===autoLid)autoLid.setLidOpen?.(false);autoLid=null;};
             const move=ev=>{if(ev.pointerId!==event.pointerId)return;const at=screenToWorld(ev.clientX,ev.clientY);moveSpotifyVinyl(item,at.x-offsetX,at.y-offsetY);ghost.move(ev);updateSpotifyDiscardTarget(ev,'vinyl');const hovered=hitDevice(ev.clientX,ev.clientY);const next=hovered&&TURNTABLE_TYPES.has(hovered.type)?hovered:null;if(next!==autoLid){releaseAutoLid(false);if(next&&!next.state.lidOpen){next.setLidOpen?.(true);autoLid=next;}}};
             const end=ev=>{if(ev.pointerId!==event.pointerId)return;window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',end,true);window.removeEventListener('pointercancel',end,true);ghost.restore();item.el.classList.remove('is-dragging');clearSpotifyDiscardTarget();
                 const dev=ev.type==='pointercancel'?null:hitDevice(ev.clientX,ev.clientY);
                 const placed=dev&&TURNTABLE_TYPES.has(dev.type)&&placeSpotifyVinyl(item,dev);
                 releaseAutoLid(!!placed&&autoLid===dev);
-                if(!placed&&ev.type!=='pointercancel'&&(isOverCatalog(ev)||dev?.type==='furnitureCoverflow')){showDiscardCloud(ev.clientX,ev.clientY);removeSpotifyVinyl(item);if(prior&&state.selectedDeviceId===prior.id)selectDevice(prior.id,true);playUiSound('discard');spotifyVinylNotice('Disco guardado na capa do álbum.');}
-                else if(!placed){moveSpotifyVinyl(item,item.x,item.y,true);item.dragStart=null;if(prior&&state.selectedDeviceId===prior.id)selectDevice(prior.id,true);scheduleProjectSave();}
+                if(!placed&&ev.type!=='pointercancel'&&(isOverCatalog(ev)||dev?.type==='furnitureCoverflow')){showDiscardCloud(ev.clientX,ev.clientY);removeSpotifyVinyl(item);if(prior&&appState.interface.selectedDeviceId===prior.id)selectDevice(prior.id,true);playUiSound('discard');spotifyVinylNotice('Disco guardado na capa do álbum.');}
+                else if(!placed){moveSpotifyVinyl(item,item.x,item.y,true);item.dragStart=null;if(prior&&appState.interface.selectedDeviceId===prior.id)selectDevice(prior.id,true);scheduleProjectSave();}
             };
             updateSpotifyDiscardTarget(event,'vinyl');
             window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',end,true);window.addEventListener('pointercancel',end,true);
@@ -9381,7 +9374,7 @@ const Hardware = (() => {
             const at=screenToWorld(data.clientX,data.clientY),item=createSpotifyVinyl({...data,origin:furniture.id,x:at.x-SPOTIFY_VINYL_SIZE/2,y:at.y-SPOTIFY_VINYL_SIZE/2});if(item)beginSpotifyVinylDrag(item,{...data,button:0});
         });
         function spotifyPathVolume(source){
-            const solo=Object.values(state.devices).some(dev=>isListeningDevice(dev)&&dev.state.solo),seen=new Set();let best=0;
+            const solo=Object.values(appState.project.devices).some(dev=>isListeningDevice(dev)&&dev.state.solo),seen=new Set();let best=0;
             function walk(dev,input,gain){
                 if(!dev||dev.state.damage||!dev.powered)return;
                 if(dev!==source){if(dev.state.muted||dev.state.streamMute||dev.state.preMuted)return;if(typeof dev.state.volume==='number')gain*=Math.max(0,Math.min(1,dev.state.volume));if(Array.isArray(dev.state.channelVolumes))gain*=Math.max(0,...dev.state.channelVolumes.map(value=>Math.max(0,Math.min(1,value))));}
@@ -9389,7 +9382,7 @@ const Hardware = (() => {
                 for(const output of dev.el.querySelectorAll('.port[data-io="out"]')){
                     if(input&&!routedInputPorts(dev,output).includes(input))continue;
                     if(!portCarriesSignal(dev,output))continue;
-                    for(const cable of state.connections){if(cable.miswired||cable.outId!==output.id)continue;const nextInput=document.getElementById(cable.inId),next=state.devices[nextInput?.closest('.device-node')?.id];if(!next||seen.has(next.id+':'+nextInput.id))continue;
+                    for(const cable of appState.project.connections){if(cable.miswired||cable.outId!==output.id)continue;const nextInput=document.getElementById(cable.inId),next=appState.project.devices[nextInput?.closest('.device-node')?.id];if(!next||seen.has(next.id+':'+nextInput.id))continue;
                         if(RADIO_RECEIVERS.has(next.type)){const selected=next.state.receiverInput||'line1',prefix=selected==='line1'?'in':selected;if(selected==='fm'||!new RegExp('^'+prefix+'[LR]$').test(nextInput.dataset.node))continue;}
                         if(next.type==='streamIntegrated'&&next.state.streamInput!=='line')continue;
                         if(controlAmpConfig(next.type)&&!nextInput.dataset.node.startsWith(next.state.integratedSource===3&&controlAmpConfig(next.type).phono!==false?'phono':'line'+next.state.integratedSource))continue;
@@ -9399,9 +9392,9 @@ const Hardware = (() => {
                     }
                 }
             }
-            walk(source,null,1);return Math.min(.65,best*.55*Math.min(1,state.listeningOutputLevel));
+            walk(source,null,1);return Math.min(.65,best*.55*Math.min(1,appState.preferences.listening.outputLevel));
         }
-        function scheduleSpotifyVolume(){if(spotifyVolumeTimer)return;spotifyVolumeTimer=setTimeout(()=>{spotifyVolumeTimer=0;const dev=state.devices[spotifyPlayingTurntable],target=dev&&dev.state.playing?spotifyPathVolume(dev):0;spotifyVolume+=Math.max(-.08,Math.min(.08,target-spotifyVolume));if(Math.abs(spotifyVolume-target)<.004)spotifyVolume=target;SpotifyCoverflow.setPlaybackVolume(spotifyVolume).catch(()=>{});if(spotifyPlayingTurntable&&Math.abs(spotifyVolume-target)>.004)scheduleSpotifyVolume();},100);}
+        function scheduleSpotifyVolume(){if(spotifyVolumeTimer)return;spotifyVolumeTimer=setTimeout(()=>{spotifyVolumeTimer=0;const dev=appState.project.devices[spotifyPlayingTurntable],target=dev&&dev.state.playing?spotifyPathVolume(dev):0;spotifyVolume+=Math.max(-.08,Math.min(.08,target-spotifyVolume));if(Math.abs(spotifyVolume-target)<.004)spotifyVolume=target;SpotifyCoverflow.setPlaybackVolume(spotifyVolume).catch(()=>{});if(spotifyPlayingTurntable&&Math.abs(spotifyVolume-target)>.004)scheduleSpotifyVolume();},100);}
         setInterval(()=>{if(spotifyPlayingTurntable)scheduleSpotifyVolume();},240);
         const PROJECT_FORMAT='audio-system-project',PROJECT_VERSION=1;
         let exampleLoading=false;
@@ -9412,19 +9405,19 @@ const Hardware = (() => {
         const projectStatus=(message,error=false)=>{const node=document.getElementById('project-save-status');node.textContent=message;node.classList.toggle('is-error',error);};
         const projectJSON=value=>JSON.parse(JSON.stringify(value),(key,item)=>['__proto__','constructor','prototype'].includes(key)?undefined:item);
         function projectCapture(){
-            const devices=Object.values(state.devices).map(dev=>{
+            const devices=Object.values(appState.project.devices).map(dev=>{
                 const settings=projectJSON(dev.state);settings.playing=false;if(settings.tt)settings.tt.running=false;
-                return {id:dev.id,type:dev.type,x:parseFloat(dev.el.style.left)||0,y:parseFloat(dev.el.style.top)||0,settings,powered:dev.powered,selectedSource:dev.selectedSource,grilleOff:dev.el.classList.contains('grille-off'),pairedId:dev.btPairedId||null,mediaKey:dev.audioBuffer?dev.mediaKey||null:null,fileName:dev.fileName||'',trackTitle:dev.trackTitle||'',position:dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?state.audioCtx.currentTime-dev.demoStartedAt:0)};
+                return {id:dev.id,type:dev.type,x:parseFloat(dev.el.style.left)||0,y:parseFloat(dev.el.style.top)||0,settings,powered:dev.powered,selectedSource:dev.selectedSource,grilleOff:dev.el.classList.contains('grille-off'),pairedId:dev.btPairedId||null,mediaKey:dev.audioBuffer?dev.mediaKey||null:null,fileName:dev.fileName||'',trackTitle:dev.trackTitle||'',position:dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?appState.audio.context.currentTime-dev.demoStartedAt:0)};
             });
-            const connections=state.connections.map(c=>{const out=document.getElementById(c.outId),input=document.getElementById(c.inId);return {from:out?.closest('.device-node')?.id,out:out?.dataset.node,to:input?.closest('.device-node')?.id,input:input?.dataset.node,label:c.label||'',color:c.color||null,hidden:!!c.hidden,slack:c.slack??5};});
+            const connections=appState.project.connections.map(c=>{const out=document.getElementById(c.outId),input=document.getElementById(c.inId);return {from:out?.closest('.device-node')?.id,out:out?.dataset.node,to:input?.closest('.device-node')?.id,input:input?.dataset.node,label:c.label||'',color:c.color||null,hidden:!!c.hidden,slack:c.slack??5};});
             const catalogScroll=equipmentCatalog.querySelector('.overflow-y-auto');
             const vinyls=[...spotifyVinyls.values()].map(item=>({id:item.id,uri:item.uri,name:item.name,image:item.image,origin:item.origin,x:item.x,y:item.y,turntableId:item.turntableId}));
             const albums=[...spotifyAlbums.values()].map(item=>({id:item.id,uri:item.uri,name:item.name,image:item.image,origin:item.origin,x:item.x,y:item.y,open:item.open}));
             return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,vinyls,albums,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{
-                environment:{...(state.environment||DEFAULT_ROOM_SETTINGS)},
-                canvasGrid:state.canvasGrid||'dots',canvasTheme:state.canvasTheme||'scene',canvasBackdrop:state.canvasBackdrop||DEFAULT_BACKDROP,canvasTime:state.canvasTime||'dusk',
-                soundVolume:state.uiSoundVolume??DEFAULT_UI_SOUND_VOLUME,hideCables:!!state.hideCables,
-                selected:[...state.selectedDeviceIds],selectedCable:state.connections.indexOf(state.selectedConnection),
+                environment:{...(appState.audio.environment||DEFAULT_ROOM_SETTINGS)},
+                canvasGrid:appState.canvas.grid||'dots',canvasTheme:appState.canvas.theme||'scene',canvasBackdrop:appState.canvas.backdrop||DEFAULT_BACKDROP,canvasTime:appState.canvas.time||'dusk',
+                soundVolume:appState.preferences.uiSoundVolume??DEFAULT_UI_SOUND_VOLUME,hideCables:!!appState.canvas.hideCables,
+                selected:[...appState.interface.selectedDeviceIds],selectedCable:appState.project.connections.indexOf(appState.interface.selectedConnection),
                 search:document.getElementById('equipment-search').value,catalogScroll:catalogScroll?.scrollTop||0,inspectorScroll:inspectorContent.scrollTop
             }};
         }
@@ -9469,7 +9462,7 @@ const Hardware = (() => {
             try{
                 if(!projectDatabase)throw new Error('Banco local indisponível.');
                 const used=new Set(snapshot.devices.map(dev=>dev.mediaKey).filter(Boolean));
-                const media=new Map(Object.values(state.devices).filter(dev=>dev.mediaBlob&&dev.mediaKey).map(dev=>[dev.mediaKey,dev.mediaBlob]));
+                const media=new Map(Object.values(appState.project.devices).filter(dev=>dev.mediaBlob&&dev.mediaKey).map(dev=>[dev.mediaKey,dev.mediaBlob]));
                 await new Promise((resolve,reject)=>{
                     const transaction=projectDatabase.transaction(['projects','audio'],'readwrite'),audio=transaction.objectStore('audio');
                     transaction.objectStore('projects').put(snapshot,'current');
@@ -9536,17 +9529,17 @@ const Hardware = (() => {
             Hardware.sync(dev);
         }
         async function restoreLocalProject(snapshot,mediaReader){
-            projectValidate(snapshot);projectRestoring=true;state.restoringProject=true;
+            projectValidate(snapshot);projectRestoring=true;appStateStore.actions.setProjectRestoring(true);
             const shield=document.createElement('div');shield.className='project-restore-shield';shield.textContent='Restaurando montagem local…';document.body.appendChild(shield);
             const ids=new Map(),restored=[],warnings=[];
             try{
-                stopViewMotion();cancelCableDrag();spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});spotifyVinyls.forEach(item=>item.el.remove());spotifyVinyls.clear();spotifyAlbums.forEach(item=>item.el.remove());spotifyAlbums.clear();refreshSpotifyVinyls();refreshSpotifyAlbums();Object.values(state.devices).forEach(deleteDevice);
+                stopViewMotion();cancelCableDrag();spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});spotifyVinyls.forEach(item=>item.el.remove());spotifyVinyls.clear();spotifyAlbums.forEach(item=>item.el.remove());spotifyAlbums.clear();refreshSpotifyVinyls();refreshSpotifyAlbums();Object.values(appState.project.devices).forEach(deleteDevice);
                 world.style.removeProperty('min-width');world.style.removeProperty('min-height');
                 const ui=snapshot.ui||{};setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setCanvasTime(ui.canvasTime||(ui.canvasBackdrop==='night'?'night':'dusk'));setCanvasBackdrop(ui.canvasBackdrop);
                 for(const saved of snapshot.devices){
                     if(!DEVICE_NAMES[saved.type]||['lightPoint','acousticHorizontal','acousticVertical'].includes(saved.type))continue; // Discard unknown or retired items from older projects.
-                    const before=new Set(Object.keys(state.devices));createDevice(saved.type,Math.min(saved.x,world.offsetWidth-150),Math.min(saved.y,maxEquipmentBottom()-150));
-                    const dev=Object.values(state.devices).find(item=>!before.has(item.id));if(!dev)throw new Error('Não foi possível restaurar um equipamento.');
+                    const before=new Set(Object.keys(appState.project.devices));createDevice(saved.type,Math.min(saved.x,world.offsetWidth-150),Math.min(saved.y,maxEquipmentBottom()-150));
+                    const dev=Object.values(appState.project.devices).find(item=>!before.has(item.id));if(!dev)throw new Error('Não foi possível restaurar um equipamento.');
                     if(AudioAdapterDesign.models[dev.type])AudioAdapterDesign.layout(dev.el,dev.type,saved.settings?.adapterRotation);
                     ids.set(saved.id,dev.id);restored.push([saved,dev]);
                     const inset=sceneSideInset(),bottom=WALL_LAMP_TYPES[dev.type]?wallPlacementBottom():maxEquipmentBottom();
@@ -9561,26 +9554,26 @@ const Hardware = (() => {
                     applySavedDevice(dev,saved);
                     dev.fileName=typeof saved.fileName==='string'?saved.fileName:'';dev.trackTitle=typeof saved.trackTitle==='string'?saved.trackTitle:'';
                     if(saved.mediaKey){
-                        try{const blob=await mediaReader(saved.mediaKey);if(!(blob instanceof Blob))throw new Error('Arquivo de áudio ausente.');const bytes=await blob.arrayBuffer(),metadata=dev.type==='streamIntegrated'?readStreamMetadata(bytes):null;dev.audioBuffer=await state.audioCtx.decodeAudioData(bytes);dev.mediaBlob=blob;dev.mediaKey=saved.mediaKey;dev.fileOffset=Math.max(0,Math.min(Number(saved.position)||0,dev.audioBuffer.duration));if(metadata)dev.setStreamMetadata(metadata);}
+                        try{const blob=await mediaReader(saved.mediaKey);if(!(blob instanceof Blob))throw new Error('Arquivo de áudio ausente.');const bytes=await blob.arrayBuffer(),metadata=dev.type==='streamIntegrated'?readStreamMetadata(bytes):null;dev.audioBuffer=await appState.audio.context.decodeAudioData(bytes);dev.mediaBlob=blob;dev.mediaKey=saved.mediaKey;dev.fileOffset=Math.max(0,Math.min(Number(saved.position)||0,dev.audioBuffer.duration));if(metadata)dev.setStreamMetadata(metadata);}
                         catch(error){warnings.push(dev.fileName||DEVICE_NAMES[dev.type]);dev.fileMessage='Não foi possível restaurar a música. Carregue o arquivo novamente.';}
                     }else dev.demoOffset=Math.max(0,Number(saved.position)||0);
                     refreshCdDisplay(dev);
                 }
                 const links=[];
                 snapshot.connections.forEach(saved=>{
-                    const from=state.devices[ids.get(saved.from)],to=state.devices[ids.get(saved.to)];
+                    const from=appState.project.devices[ids.get(saved.from)],to=appState.project.devices[ids.get(saved.to)];
                     const output=from?.el.querySelector(`[data-node="${CSS.escape(saved.out)}"]`),input=to?.el.querySelector(`[data-node="${CSS.escape(saved.input)}"]`);
                     if(!output||!input||isPortOccupied(output)||isPortOccupied(input)||!getPortCompatibility(output,input).compatible){warnings.push('conexão incompatível');links.push(null);return;}
-                    connectProjectPorts(from,saved.out,to,saved.input);const connection=state.connections.at(-1);
+                    connectProjectPorts(from,saved.out,to,saved.input);const connection=appState.project.connections.at(-1);
                     connection.label=typeof saved.label==='string'?saved.label.slice(0,60):'';connection.color=/^#[0-9a-f]{6}$/i.test(saved.color||'')?saved.color:undefined;connection.hidden=!!saved.hidden;connection.slack=Number.isFinite(saved.slack)?Math.max(0,Math.min(10,Math.round(saved.slack))):5;links.push(connection);
                 });
-                restored.forEach(([saved,dev])=>{const other=state.devices[ids.get(saved.pairedId)];if(other&&BT_TX_TYPES.has(dev.type)&&canPair(dev,other))pairDevices(dev,other);});
-                for(const record of Array.isArray(snapshot.vinyls)?snapshot.vinyls.slice(0,200):[]){const item=createSpotifyVinyl({...record,origin:ids.get(record.origin)||null});const platter=state.devices[ids.get(record.turntableId)];if(item&&platter&&TURNTABLE_TYPES.has(platter.type))placeSpotifyVinyl(item,platter,false);}
+                restored.forEach(([saved,dev])=>{const other=appState.project.devices[ids.get(saved.pairedId)];if(other&&BT_TX_TYPES.has(dev.type)&&canPair(dev,other))pairDevices(dev,other);});
+                for(const record of Array.isArray(snapshot.vinyls)?snapshot.vinyls.slice(0,200):[]){const item=createSpotifyVinyl({...record,origin:ids.get(record.origin)||null});const platter=appState.project.devices[ids.get(record.turntableId)];if(item&&platter&&TURNTABLE_TYPES.has(platter.type))placeSpotifyVinyl(item,platter,false);}
                 for(const record of Array.isArray(snapshot.albums)?snapshot.albums.slice(0,200):[])createSpotifyAlbum({...record,origin:ids.get(record.origin)||null});
                 setRoomSettings(ui.environment);
                 cableVisibilityButton.setAttribute('aria-pressed',String(!!ui.hideCables));
-                state.uiSoundVolume=typeof ui.soundVolume==='number'?Math.max(0,Math.min(1,ui.soundVolume)):DEFAULT_UI_SOUND_VOLUME;state.hideCables=!!ui.hideCables;
-                const sound=document.getElementById('ui-sound-volume');sound.value=Math.round(state.uiSoundVolume*100);document.getElementById('ui-sound-value').textContent=state.uiSoundVolume?`${sound.value}%`:'desligados';uiEffectsGain?.gain.setValueAtTime(interactionGain(state.uiSoundVolume),state.audioCtx.currentTime);
+                appStateStore.actions.setPreference('uiSoundVolume',typeof ui.soundVolume==='number'?Math.max(0,Math.min(1,ui.soundVolume)):DEFAULT_UI_SOUND_VOLUME);appStateStore.actions.setCanvasOption('hideCables',!!ui.hideCables);
+                const sound=document.getElementById('ui-sound-volume');sound.value=Math.round(appState.preferences.uiSoundVolume*100);document.getElementById('ui-sound-value').textContent=appState.preferences.uiSoundVolume?`${sound.value}%`:'desligados';uiEffectsGain?.gain.setValueAtTime(interactionGain(appState.preferences.uiSoundVolume),appState.audio.context.currentTime);
                 const search=document.getElementById('equipment-search');search.value=typeof ui.search==='string'?ui.search:'';search.dispatchEvent(new Event('input'));
                 if(snapshot.view&&snapshot.devices.length){view.zoom=clampZoom(Number(snapshot.view.zoom)||1);view.x=Number(snapshot.view.x)||0;view.y=Number(snapshot.view.y)||0;}
                 else view.y=Math.min(0,canvas.clientHeight-world.offsetHeight*view.zoom);
@@ -9589,21 +9582,21 @@ const Hardware = (() => {
                 const scroll=equipmentCatalog.querySelector('.overflow-y-auto');if(scroll)scroll.scrollTop=Number(ui.catalogScroll)||0;inspectorContent.scrollTop=Number(ui.inspectorScroll)||0;
                 updateCables();updateCableFlows();
                 return warnings;
-            }finally{shield.remove();state.restoringProject=false;projectRestoring=false;}
+            }finally{shield.remove();appStateStore.actions.setProjectRestoring(false);projectRestoring=false;}
         }
         const readBlobDataURL=blob=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(blob);});
         document.getElementById('export-project').onclick=async()=>{
             const button=document.getElementById('export-project');button.disabled=true;
             try{
                 await saveLocalProject(true);const snapshot=projectCapture(),embeddedAudio={};
-                for(const dev of Object.values(state.devices)){if(dev.mediaKey&&dev.mediaBlob)embeddedAudio[dev.mediaKey]=await readBlobDataURL(dev.mediaBlob);}
+                for(const dev of Object.values(appState.project.devices)){if(dev.mediaKey&&dev.mediaBlob)embeddedAudio[dev.mediaKey]=await readBlobDataURL(dev.mediaBlob);}
                 const url=URL.createObjectURL(new Blob([JSON.stringify({...snapshot,embeddedAudio})],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='audio-system-projeto.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),10000);projectStatus('Cópia exportada com os arquivos de áudio.');
             }catch(error){projectStatus('Não foi possível exportar: '+error.message,true);}finally{button.disabled=false;}
         };
         document.getElementById('import-project').onclick=()=>document.getElementById('project-file').click();
         document.getElementById('project-file').onchange=async event=>{
             const file=event.target.files[0];if(!file)return;
-            const previous=projectCapture(),previousAudio=new Map(Object.values(state.devices).filter(dev=>dev.mediaKey&&dev.mediaBlob).map(dev=>[dev.mediaKey,dev.mediaBlob]));let replacing=false;
+            const previous=projectCapture(),previousAudio=new Map(Object.values(appState.project.devices).filter(dev=>dev.mediaKey&&dev.mediaBlob).map(dev=>[dev.mediaKey,dev.mediaBlob]));let replacing=false;
             try{
                 if(file.size>400*1024*1024)throw new Error('Arquivo de projeto muito grande.');
                 const snapshot=projectValidate(JSON.parse(await file.text(),(key,value)=>['__proto__','constructor','prototype'].includes(key)?undefined:value));
@@ -9631,7 +9624,7 @@ const Hardware = (() => {
                 else projectStatus(projectDatabase?'Salvamento automático local ativado.':'Armazenamento limitado; exporte uma cópia do projeto.',!projectDatabase);
                 lastProjectSignature=JSON.stringify(projectCapture());
             }catch(error){projectPersistenceBlocked=true;projectStatus('Falha ao restaurar o projeto local. Você pode abrir uma cópia exportada.',true);}
-            finally{initialShield.remove();projectRestoring=false;state.restoringProject=false;}
+            finally{initialShield.remove();projectRestoring=false;appStateStore.actions.setProjectRestoring(false);}
         }
         const settingsMenu=document.createElement('details');settingsMenu.className='app-settings';
         settingsMenu.innerHTML='<summary aria-label="Abrir configurações"><svg class="settings-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7.1"/><circle cx="12" cy="12" r="2.7"/><path d="M12 1.8v3.1m0 14.2v3.1M1.8 12h3.1m14.2 0h3.1M4.3 4.3l2.2 2.2m11 11 2.2 2.2m0-15.4-2.2 2.2m-11 11-2.2 2.2"/></svg><span>Configurações</span></summary>';
@@ -9639,20 +9632,20 @@ const Hardware = (() => {
         const themeSection=document.createElement('section');themeSection.className='settings-theme-section';themeSection.appendChild(canvasThemeControl);themeSection.appendChild(canvasGridControl);themeSection.appendChild(canvasBackdropControl);themeSection.appendChild(canvasTimeControl);
         const connectionHelpSetting=document.createElement('label');connectionHelpSetting.className='connection-help-setting';connectionHelpSetting.innerHTML='<input id="connection-help-enabled" type="checkbox"><span><strong>Orientação de conexões</strong><small>Mostra dicas e impede ligações incompatíveis. Desative para permitir erros quando os plugues encaixarem.</small></span>';
         const interactionSection=document.createElement('section');interactionSection.className='settings-theme-section';
-        const connectionHelpCheckbox=connectionHelpSetting.querySelector('input');connectionHelpCheckbox.checked=connectionGuidanceEnabled;interactionSection.appendChild(connectionHelpSetting);
-        connectionHelpCheckbox.addEventListener('change',()=>{connectionGuidanceEnabled=connectionHelpCheckbox.checked;hideContextHelp();updatePortGuidance(true);scheduleAppPreferencesSave();});
+        const connectionHelpCheckbox=connectionHelpSetting.querySelector('input');connectionHelpCheckbox.checked=appState.preferences.connectionGuidanceEnabled;interactionSection.appendChild(connectionHelpSetting);
+        connectionHelpCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('connectionGuidanceEnabled',connectionHelpCheckbox.checked);hideContextHelp();updatePortGuidance(true);scheduleAppPreferencesSave();});
         const gravitySetting=document.createElement('label');gravitySetting.className='connection-help-setting';gravitySetting.innerHTML='<input id="gravity-enabled" type="checkbox"><span><strong>Gravidade</strong><small>Ao soltar, equipamentos e móveis descem até o piso ou o primeiro apoio. Não afeta luminárias nem vinis.</small></span>';
-        const gravityCheckbox=gravitySetting.querySelector('input');gravityCheckbox.checked=gravityEnabled;interactionSection.appendChild(gravitySetting);
-        gravityCheckbox.addEventListener('change',()=>{gravityEnabled=gravityCheckbox.checked;scheduleAppPreferencesSave();});
+        const gravityCheckbox=gravitySetting.querySelector('input');gravityCheckbox.checked=appState.preferences.gravityEnabled;interactionSection.appendChild(gravitySetting);
+        gravityCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('gravityEnabled',gravityCheckbox.checked);scheduleAppPreferencesSave();});
         const developerModeSetting=document.createElement('label');developerModeSetting.className='connection-help-setting';developerModeSetting.innerHTML='<input id="developer-mode-enabled" type="checkbox"><span><strong>Modo desenvolvedor</strong><small>Mostra a categoria DEBUG e os modelos de teste no catálogo.</small></span>';
-        const developerModeCheckbox=developerModeSetting.querySelector('input');developerModeCheckbox.checked=developerModeEnabled;
-        developerModeCheckbox.addEventListener('change',()=>{developerModeEnabled=developerModeCheckbox.checked;equipmentSearch.dispatchEvent(new Event('input'));scheduleAppPreferencesSave();});
+        const developerModeCheckbox=developerModeSetting.querySelector('input');developerModeCheckbox.checked=appState.preferences.developerModeEnabled;
+        developerModeCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('developerModeEnabled',developerModeCheckbox.checked);equipmentSearch.dispatchEvent(new Event('input'));scheduleAppPreferencesSave();});
         const particleSetting=document.createElement('div');particleSetting.className='settings-particle-control';
-        particleSetting.innerHTML=`<label for="room-particle-amount">Partículas <output id="room-particle-value">${roomParticleAmount}%</output></label><input id="room-particle-amount" type="range" min="0" max="100" step="5" value="${roomParticleAmount}" aria-label="Quantidade de partículas no cenário"><small>0 desliga as partículas; 25 mantém a densidade padrão.</small>`;
-        particleSetting.querySelector('input').addEventListener('input',event=>{roomParticleAmount=Number(event.target.value);particleSetting.querySelector('output').textContent=roomParticleAmount+'%';updateRoomMotes(state.canvasBackdrop,state.canvasTime);scheduleAppPreferencesSave();});
+        particleSetting.innerHTML=`<label for="room-particle-amount">Partículas <output id="room-particle-value">${appState.preferences.roomParticleAmount}%</output></label><input id="room-particle-amount" type="range" min="0" max="100" step="5" value="${appState.preferences.roomParticleAmount}" aria-label="Quantidade de partículas no cenário"><small>0 desliga as partículas; 25 mantém a densidade padrão.</small>`;
+        particleSetting.querySelector('input').addEventListener('input',event=>{appStateStore.actions.setPreference('roomParticleAmount',Number(event.target.value));particleSetting.querySelector('output').textContent=appState.preferences.roomParticleAmount+'%';updateRoomMotes(appState.canvas.backdrop,appState.canvas.time);scheduleAppPreferencesSave();});
         themeSection.appendChild(particleSetting);
         clearCatalogFooter.insertBefore(themeSection,soundControls);
-        setCanvasTheme(state.canvasTheme);
+        setCanvasTheme(appState.canvas.theme);
 
         const roomSection=document.createElement('section');roomSection.className='room-settings';
         roomSection.innerHTML='<label>Ambiente sonoro<select id="room-preset">'+Object.entries(ROOM_PRESETS).map(([key,value])=>`<option value="${key}">${value.name}</option>`).join('')+'</select></label><label for="room-intensity">Intensidade <output id="room-intensity-value">0/10</output></label><input id="room-intensity" type="range" min="0" max="10" step="1" value="0"><p>Reverberação estéreo na escuta final. Em zero, o áudio permanece seco.</p>';
@@ -9663,16 +9656,16 @@ const Hardware = (() => {
         clearCatalogFooter.insertBefore(headphoneCalibrationSetting,soundControls);
         headphoneCalibrationSetting.querySelector('button').addEventListener('click',()=>{settingsMenu.open=false;openHeadphoneCalibration();});
         const listeningLevels=document.createElement('section');listeningLevels.className='listening-level-settings';
-        listeningLevels.innerHTML=`<strong>Níveis de escuta</strong><label for="listening-output-level">Volume do programa <output id="listening-output-value">${Math.round(state.listeningOutputLevel*100)}%</output></label><input id="listening-output-level" type="range" min="50" max="120" step="5" value="${Math.round(state.listeningOutputLevel*100)}" aria-label="Volume de escuta do programa, relativo ao padrão"><label for="listening-bass-level">Graves <output id="listening-bass-value">${state.listeningBass} dB</output></label><input id="listening-bass-level" type="range" min="-6" max="6" step="1" value="${state.listeningBass}" aria-label="Graves da escuta"><label for="listening-treble-level">Agudos <output id="listening-treble-value">${state.listeningTreble} dB</output></label><input id="listening-treble-level" type="range" min="-6" max="6" step="1" value="${state.listeningTreble}" aria-label="Agudos da escuta"><p>Ajustes na saída de escuta; não alteram conexões nem potência simulada.</p>`;
+        listeningLevels.innerHTML=`<strong>Níveis de escuta</strong><label for="listening-output-level">Volume do programa <output id="listening-output-value">${Math.round(appState.preferences.listening.outputLevel*100)}%</output></label><input id="listening-output-level" type="range" min="50" max="120" step="5" value="${Math.round(appState.preferences.listening.outputLevel*100)}" aria-label="Volume de escuta do programa, relativo ao padrão"><label for="listening-bass-level">Graves <output id="listening-bass-value">${appState.preferences.listening.bass} dB</output></label><input id="listening-bass-level" type="range" min="-6" max="6" step="1" value="${appState.preferences.listening.bass}" aria-label="Graves da escuta"><label for="listening-treble-level">Agudos <output id="listening-treble-value">${appState.preferences.listening.treble} dB</output></label><input id="listening-treble-level" type="range" min="-6" max="6" step="1" value="${appState.preferences.listening.treble}" aria-label="Agudos da escuta"><p>Ajustes na saída de escuta; não alteram conexões nem potência simulada.</p>`;
         clearCatalogFooter.insertBefore(listeningLevels,soundControls);listeningLevels.appendChild(soundControls);
         listeningLevels.querySelector('#listening-output-level').addEventListener('input',event=>setListeningOutputLevel(Number(event.target.value)/100));
         for(const kind of ['bass','treble'])listeningLevels.querySelector(`#listening-${kind}-level`).addEventListener('input',event=>setListeningTone(kind,event.target.value));
         function setRoomSettings(settings){
-            state.environment={preset:Object.hasOwn(ROOM_PRESETS,settings?.preset)?settings.preset:DEFAULT_ROOM_SETTINGS.preset,intensity:Number.isFinite(settings?.intensity)?Math.max(0,Math.min(10,Math.round(settings.intensity))):DEFAULT_ROOM_SETTINGS.intensity};
-            roomSection.querySelector('#room-preset').value=state.environment.preset;roomSection.querySelector('#room-intensity').value=state.environment.intensity;roomSection.querySelector('#room-intensity-value').textContent=state.environment.intensity+'/10';applyRoomAudio();
+            appStateStore.actions.setAudioEnvironment({preset:Object.hasOwn(ROOM_PRESETS,settings?.preset)?settings.preset:DEFAULT_ROOM_SETTINGS.preset,intensity:Number.isFinite(settings?.intensity)?Math.max(0,Math.min(10,Math.round(settings.intensity))):DEFAULT_ROOM_SETTINGS.intensity});
+            roomSection.querySelector('#room-preset').value=appState.audio.environment.preset;roomSection.querySelector('#room-intensity').value=appState.audio.environment.intensity;roomSection.querySelector('#room-intensity-value').textContent=appState.audio.environment.intensity+'/10';applyRoomAudio();
         }
         roomSection.addEventListener('input',()=>{setRoomSettings({preset:document.getElementById('room-preset').value,intensity:Number(document.getElementById('room-intensity').value)});scheduleProjectSave();});
-        setRoomSettings(state.environment);
+        setRoomSettings(appState.audio.environment);
 
         const settingIcon=path=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
         const choiceIcons={
@@ -9834,14 +9827,14 @@ const Hardware = (() => {
         const tutorialFileSources=new Set(['cdPlayer','tapeDeck','streamer']);
         function tutorialDevice(topic){
             const matches=dev=>topic==='spotify'?TURNTABLE_TYPES.has(dev.type)&&!!dev.spotifyVinyl:topic==='capture'?CAPTURE_INTERFACE_TYPES.has(dev.type):tutorialFileSources.has(dev.type);
-            const selected=state.devices[state.selectedDeviceId];
-            let dev=state.devices[tutorialBindings[topic]];
+            const selected=appState.project.devices[appState.interface.selectedDeviceId];
+            let dev=appState.project.devices[tutorialBindings[topic]];
             if(selected&&matches(selected)){dev=selected;tutorialBindings[topic]=dev.id;}
-            if(!dev||!matches(dev)){dev=Object.values(state.devices).find(matches);tutorialBindings[topic]=dev?.id;}
+            if(!dev||!matches(dev)){dev=Object.values(appState.project.devices).find(matches);tutorialBindings[topic]=dev?.id;}
             return dev;
         }
-        function tutorialCollection(){return Object.values(state.devices).find(dev=>dev.type==='furnitureCoverflow');}
-        function tutorialEdges(dev){return state.connections.filter(c=>!c.miswired&&c.outDeviceId===dev?.id).filter(c=>{const out=document.getElementById(c.outId),input=document.getElementById(c.inId);return out&&input&&(!out.dataset.channel||!input.dataset.channel||out.dataset.channel===input.dataset.channel)&&getPortCompatibility(out,input).compatible;});}
+        function tutorialCollection(){return Object.values(appState.project.devices).find(dev=>dev.type==='furnitureCoverflow');}
+        function tutorialEdges(dev){return appState.project.connections.filter(c=>!c.miswired&&c.outDeviceId===dev?.id).filter(c=>{const out=document.getElementById(c.outId),input=document.getElementById(c.inId);return out&&input&&(!out.dataset.channel||!input.dataset.channel||out.dataset.channel===input.dataset.channel)&&getPortCompatibility(out,input).compatible;});}
         function tutorialStereoTo(dev,target){
             const edges=tutorialEdges(dev).filter(c=>c.inDeviceId===target.id);
             if(edges.some(c=>/Phone|Stereo/.test(document.getElementById(c.outId)?.dataset.node||'')))return true;
@@ -9849,12 +9842,12 @@ const Hardware = (() => {
             if(outs.some(port=>port.dataset.node==='outL')&&outs.some(port=>port.dataset.node==='outR'))return ['L','R'].every(ch=>edges.some(c=>document.getElementById(c.outId)?.dataset.node==='out'+ch));
             return edges.length>0;
         }
-        function tutorialAmplifier(dev){return Object.values(state.devices).find(other=>(POWER_OUTPUT_TYPES.has(other.type)||['headphoneAmp','headphoneAmpModern','headphoneAmp4'].includes(other.type))&&tutorialStereoTo(dev,other));}
+        function tutorialAmplifier(dev){return Object.values(appState.project.devices).find(other=>(POWER_OUTPUT_TYPES.has(other.type)||['headphoneAmp','headphoneAmpModern','headphoneAmp4'].includes(other.type))&&tutorialStereoTo(dev,other));}
         function tutorialListeningPath(source){
             const seen=new Set();
             function visit(dev,input){
                 if(!dev||seen.has(dev.id))return false;if(isListeningDevice(dev))return true;seen.add(dev.id);
-                const found=tutorialEdges(dev).some(c=>{const output=document.getElementById(c.outId);if(input&&!routedInputPorts(dev,output).includes(input))return false;const next=state.devices[c.inDeviceId];if(dev===source&&!/Phone|Stereo/.test(output.dataset.node)&&next&&!tutorialStereoTo(dev,next))return false;return visit(next,document.getElementById(c.inId));});seen.delete(dev.id);return found;
+                const found=tutorialEdges(dev).some(c=>{const output=document.getElementById(c.outId);if(input&&!routedInputPorts(dev,output).includes(input))return false;const next=appState.project.devices[c.inDeviceId];if(dev===source&&!/Phone|Stereo/.test(output.dataset.node)&&next&&!tutorialStereoTo(dev,next))return false;return visit(next,document.getElementById(c.inId));});seen.delete(dev.id);return found;
             }
             return visit(source,null);
         }
@@ -9874,7 +9867,7 @@ const Hardware = (() => {
             };
             if(topic==='basic'){
                 if(step==='source')done=!!dev;
-                if(step==='properties'){done=!!dev&&state.selectedDeviceId===dev.id&&inspectorOpen;target=document.getElementById('inspector-title');}
+                if(step==='properties'){done=!!dev&&appState.interface.selectedDeviceId===dev.id&&inspectorOpen;target=document.getElementById('inspector-title');}
                 if(step==='amplifier')done=!!dev&&!!tutorialAmplifier(dev);
                 if(step==='output')done=!!dev&&!!tutorialAmplifier(dev)&&tutorialListeningPath(dev);
                 if(step==='ready')done=!!dev&&!!tutorialAmplifier(dev)&&ready();
@@ -9911,7 +9904,7 @@ const Hardware = (() => {
             const mobilePanel=key=>{if(compactLayout.matches){closeMobilePanels();document.body.classList.add(key==='catalog'?'mobile-catalog-open':'mobile-properties-open');syncMobilePanels();}else openSidebar(key,15000);};
             let requestedType=null;
             if(topic==='basic'&&step==='amplifier'&&dev&&!tutorialAmplifier(dev)){
-                const amp=Object.values(state.devices).find(item=>['headphoneAmp','headphoneAmpModern','headphoneAmp4'].includes(item.type)||POWER_OUTPUT_TYPES.has(item.type));
+                const amp=Object.values(appState.project.devices).find(item=>['headphoneAmp','headphoneAmpModern','headphoneAmp4'].includes(item.type)||POWER_OUTPUT_TYPES.has(item.type));
                 if(amp)dev=amp;else requestedType='headphoneAmp';
             }
             if(topic==='basic'&&step==='output'&&dev&&!tutorialListeningPath(tutorialDevice(topic)))requestedType='headphone';
@@ -9942,9 +9935,9 @@ const Hardware = (() => {
         }
         function clearExampleHistory(){movementUndo.length=movementRedo.length=0;updateMovementHistoryButtons();}
         function buildExample(spec){
-            [...spotifyVinyls.values()].forEach(removeSpotifyVinyl);[...spotifyAlbums.values()].forEach(removeSpotifyAlbum);Object.values(state.devices).forEach(deleteDevice);selectDevice(null);
-            state.hideCables=false;cableVisibilityButton.setAttribute('aria-pressed','false');state.restoringProject=true;
-            const add=type=>{const ids=new Set(Object.keys(state.devices));createDevice(type,sceneSideInset(),0);const dev=Object.values(state.devices).find(item=>!ids.has(item.id));if(!dev)throw new Error('Não foi possível criar '+(DEVICE_NAMES[type]||type));return dev;};
+            [...spotifyVinyls.values()].forEach(removeSpotifyVinyl);[...spotifyAlbums.values()].forEach(removeSpotifyAlbum);Object.values(appState.project.devices).forEach(deleteDevice);selectDevice(null);
+            appStateStore.actions.setCanvasOption('hideCables',false);cableVisibilityButton.setAttribute('aria-pressed','false');appStateStore.actions.setProjectRestoring(true);
+            const add=type=>{const ids=new Set(Object.keys(appState.project.devices));createDevice(type,sceneSideInset(),0);const dev=Object.values(appState.project.devices).find(item=>!ids.has(item.id));if(!dev)throw new Error('Não foi possível criar '+(DEVICE_NAMES[type]||type));return dev;};
             const support=add(spec.furniture),gear=spec.types.map(add),supports=[support],floor=maxEquipmentBottom();
             const place=(dev,x,y)=>{dev.el.style.left=x+'px';dev.el.style.top=y+'px';};
             const leftFloor=spec.floor?.includes(2)?gear[2].el.offsetWidth+64:0;
@@ -9983,7 +9976,7 @@ const Hardware = (() => {
             returnFocus:()=>{(phoneNavigationLayout.matches?mobileControls.querySelector('[data-mobile-action="settings"]'):settingsMenu.querySelector('summary'))?.focus({preventScroll:true});},
             enter:(topic,step)=>{const dev=tutorialDevice(topic);return {device:dev?.id,levels:tutorialLevels(dev)};},
             inspect:tutorialInspect,locate:tutorialLocate,clearContext:()=>{document.querySelectorAll('.tutorial-target').forEach(node=>node.classList.remove('tutorial-target'));},
-            hasContent:()=>Object.keys(state.devices).length>0||spotifyVinyls.size>0||spotifyAlbums.size>0,
+            hasContent:()=>Object.keys(appState.project.devices).length>0||spotifyVinyls.size>0||spotifyAlbums.size>0,
             examples:{
                 checkpoint:async()=>{
                     if(!projectDatabase||projectPersistenceBlocked)throw new Error('O armazenamento local não está disponível. Exporte seu projeto e habilite o armazenamento antes de substituir a montagem.');
@@ -9992,15 +9985,15 @@ const Hardware = (() => {
                     try{
                         while(projectSaving)await new Promise(resolve=>setTimeout(resolve,20));
                         if(await saveLocalProject(true,true)!==true)throw new Error('Não foi possível guardar a montagem atual.');
-                        return {snapshot:projectCapture(),audio:new Map(Object.values(state.devices).filter(dev=>dev.mediaKey&&dev.mediaBlob).map(dev=>[dev.mediaKey,dev.mediaBlob]))};
+                        return {snapshot:projectCapture(),audio:new Map(Object.values(appState.project.devices).filter(dev=>dev.mediaKey&&dev.mediaBlob).map(dev=>[dev.mediaKey,dev.mediaBlob]))};
                     }catch(error){exampleLoading=false;throw error;}
                 },
-                begin:()=>{stopViewMotion();cancelCableDrag();projectRestoring=true;state.restoringProject=true;},
+                begin:()=>{stopViewMotion();cancelCableDrag();projectRestoring=true;appStateStore.actions.setProjectRestoring(true);},
                 build:spec=>{exampleAssembly=buildExample(spec);},
-                validate:spec=>{if(state.connections.length!==spec.links.length||exampleAssembly.gear.some(dev=>dev.state.playing||dev.micStream))throw new Error('A montagem não foi validada.');},
+                validate:spec=>{if(appState.project.connections.length!==spec.links.length||exampleAssembly.gear.some(dev=>dev.state.playing||dev.micStream))throw new Error('A montagem não foi validada.');},
                 restore:previous=>restoreLocalProject(previous.snapshot,key=>Promise.resolve(previous.audio.get(key))),
                 recoveryFailed:previous=>{projectPersistenceBlocked=true;try{localStorage.setItem('audio-system-project-fallback',JSON.stringify(previous.snapshot));}catch{}},
-                end:()=>{state.restoringProject=false;projectRestoring=false;exampleLoading=false;clearExampleHistory();},
+                end:()=>{appStateStore.actions.setProjectRestoring(false);projectRestoring=false;exampleLoading=false;clearExampleHistory();},
                 commit:async()=>{projectRestoring=false;await saveLocalProject(true,true);document.getElementById('fit-canvas').click();selectDevice(exampleAssembly.gear[0].id,true);}
             }
         });
@@ -10012,6 +10005,6 @@ const Hardware = (() => {
         headphoneCalibrationDialog.addEventListener('close',()=>{requestAnimationFrame(guidedAccess.offer);});
 
         SpotifyCoverflow.initialize().catch(()=>{});
-        initializeProjectPersistence().finally(()=>{requestAnimationFrame(()=>{document.documentElement.classList.remove('app-starting');document.getElementById('app-startup')?.remove();if(!headphonePromptSeen)openHeadphoneCalibration();else{guidedAccess.restore();guidedAccess.offer();}});});
+        initializeProjectPersistence().finally(()=>{requestAnimationFrame(()=>{document.documentElement.classList.remove('app-starting');document.getElementById('app-startup')?.remove();if(!appState.preferences.headphonePromptSeen)openHeadphoneCalibration();else{guidedAccess.restore();guidedAccess.offer();}});});
 
         renderVisuals();

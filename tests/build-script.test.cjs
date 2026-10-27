@@ -14,3 +14,8 @@ test('browser entry point is generated from the ordered application source secti
     assert.doesNotThrow(() => checkOutput(generated));
     assert.doesNotThrow(() => new vm.Script(generated, {filename:'script.js'}));
 });
+
+test('domain state loads before the application that consumes it',()=>{
+    const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+    assert.ok(html.indexOf('src="./src/modules/application-state.js')<html.indexOf('src="./script.js'));
+});

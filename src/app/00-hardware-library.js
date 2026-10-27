@@ -868,7 +868,7 @@ const Hardware = (() => {
     const lightingGeometry=new WeakMap();
     let furnitureLightingGeometry={key:'',items:[]};
     let floorShadowKey='';
-    function elementWorldPosition(element){const position=state.devices[element.id]?.dragVisualPosition;return position||{x:element.offsetLeft,y:element.offsetTop};}
+    function elementWorldPosition(element){const position=appState.project.devices[element.id]?.dragVisualPosition;return position||{x:element.offsetLeft,y:element.offsetTop};}
     function positionedSceneLights(scene,time,world){
         const imageDrop=parseFloat(world.style.getPropertyValue('--room-image-drop'))||0;
         const horizonShift=parseFloat(world.style.getPropertyValue('--room-horizon-shift'))||0;

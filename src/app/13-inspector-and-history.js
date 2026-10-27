@@ -15,7 +15,7 @@
         document.addEventListener('focusin',event=>{const target=event.target instanceof Element?event.target.closest('#app-topbar [data-tooltip]'):null;if(target)scheduleToolbarTooltip(target);});
         document.addEventListener('focusout',event=>{if(event.target instanceof Element&&event.target.matches('#app-topbar [data-tooltip]')&&!event.target.matches(':hover'))hideToolbarTooltip();});
         function updateMovementHistoryButtons(){
-            const valid=entry=>entry.kind!=='move'||entry.before.every(p=>state.devices[p.id]);
+            const valid=entry=>entry.kind!=='move'||entry.before.every(p=>appState.project.devices[p.id]);
             for(const stack of [movementUndo,movementRedo])for(let i=stack.length-1;i>=0;i--)if(!valid(stack[i]))stack.splice(i,1);
             const undo=document.getElementById('undo-movement'),redo=document.getElementById('redo-movement'),label=entry=>!entry?'última ação':entry.kind==='move'?'movimento':entry.kind==='delete-device'?'remoção de equipamento':entry.kind==='delete-spotify'?'remoção de álbum ou disco':'ação';
             undo.disabled=!movementUndo.length;redo.disabled=!movementRedo.length;
@@ -30,10 +30,10 @@
             movementRedo.length=0;updateMovementHistoryButtons();
         }
         function recordDeletedDevices(devices){
-            const existing=devices.filter(dev=>dev&&state.devices[dev.id]);if(!existing.length)return;
+            const existing=devices.filter(dev=>dev&&appState.project.devices[dev.id]);if(!existing.length)return;
             const snapshot=projectCapture(),ids=new Set(existing.map(dev=>dev.id)),records=existing.map(dev=>({saved:snapshot.devices.find(item=>item.id===dev.id),audio:dev.mediaBlob||null,vinylUri:dev.spotifyVinyl?.uri||null})).filter(item=>item.saved);
             const connections=snapshot.connections.filter(connection=>ids.has(connection.from)||ids.has(connection.to));
-            movementUndo.push({kind:'delete-device',records,connections,selected:[...state.selectedDeviceIds]});if(movementUndo.length>100)movementUndo.shift();
+            movementUndo.push({kind:'delete-device',records,connections,selected:[...appState.interface.selectedDeviceIds]});if(movementUndo.length>100)movementUndo.shift();
             movementRedo.length=0;updateMovementHistoryButtons();
         }
         function recordDeletedSpotify(kind,item){
@@ -45,29 +45,29 @@
             movementRedo.length=0;updateMovementHistoryButtons();
         }
         async function restoreDeletedDevices(entry,restore){
-            if(!restore){entry.records.forEach(({saved})=>{const dev=state.devices[saved.id];if(dev)deleteDevice(dev,false);});return;}
-            projectRestoring=true;state.restoringProject=true;
+            if(!restore){entry.records.forEach(({saved})=>{const dev=appState.project.devices[saved.id];if(dev)deleteDevice(dev,false);});return;}
+            projectRestoring=true;appStateStore.actions.setProjectRestoring(true);
             try{
                 for(const {saved,audio} of entry.records){
-                    if(state.devices[saved.id])continue;
-                    createDevice(saved.type,saved.x,saved.y,saved.id);const dev=state.devices[saved.id];if(!dev)throw new Error('Não foi possível restaurar o equipamento removido.');
+                    if(appState.project.devices[saved.id])continue;
+                    createDevice(saved.type,saved.x,saved.y,saved.id);const dev=appState.project.devices[saved.id];if(!dev)throw new Error('Não foi possível restaurar o equipamento removido.');
                     applySavedDevice(dev,saved);dev.fileName=saved.fileName||'';dev.trackTitle=saved.trackTitle||'';dev.demoOffset=Math.max(0,Number(saved.position)||0);
-                    if(audio instanceof Blob){try{const bytes=await audio.arrayBuffer(),metadata=dev.type==='streamIntegrated'?readStreamMetadata(bytes):null;dev.audioBuffer=await state.audioCtx.decodeAudioData(bytes);dev.mediaBlob=audio;dev.mediaKey=saved.mediaKey;dev.fileOffset=Math.max(0,Math.min(Number(saved.position)||0,dev.audioBuffer.duration));if(metadata)dev.setStreamMetadata(metadata);}catch{dev.fileMessage='Recarregue o arquivo de áudio para continuar.';}}
+                    if(audio instanceof Blob){try{const bytes=await audio.arrayBuffer(),metadata=dev.type==='streamIntegrated'?readStreamMetadata(bytes):null;dev.audioBuffer=await appState.audio.context.decodeAudioData(bytes);dev.mediaBlob=audio;dev.mediaKey=saved.mediaKey;dev.fileOffset=Math.max(0,Math.min(Number(saved.position)||0,dev.audioBuffer.duration));if(metadata)dev.setStreamMetadata(metadata);}catch{dev.fileMessage='Recarregue o arquivo de áudio para continuar.';}}
                 }
-                for(const {saved} of entry.records){const dev=state.devices[saved.id],paired=state.devices[saved.pairedId];if(dev&&paired&&BT_TX_TYPES.has(dev.type)&&canPair(dev,paired))pairDevices(dev,paired);}
+                for(const {saved} of entry.records){const dev=appState.project.devices[saved.id],paired=appState.project.devices[saved.pairedId];if(dev&&paired&&BT_TX_TYPES.has(dev.type)&&canPair(dev,paired))pairDevices(dev,paired);}
                 for(const connection of entry.connections){
-                    const from=state.devices[connection.from],to=state.devices[connection.to];if(!from||!to)continue;
-                    const already=state.connections.some(c=>c.outDeviceId===from.id&&c.inDeviceId===to.id&&document.getElementById(c.outId)?.dataset.node===connection.out&&document.getElementById(c.inId)?.dataset.node===connection.input);if(already)continue;
-                    try{connectProjectPorts(from,connection.out,to,connection.input);const cable=state.connections.at(-1);Object.assign(cable,{label:connection.label||'',color:connection.color||null,hidden:!!connection.hidden,slack:connection.slack??5});applyCableAppearance(cable);}catch{}
+                    const from=appState.project.devices[connection.from],to=appState.project.devices[connection.to];if(!from||!to)continue;
+                    const already=appState.project.connections.some(c=>c.outDeviceId===from.id&&c.inDeviceId===to.id&&document.getElementById(c.outId)?.dataset.node===connection.out&&document.getElementById(c.inId)?.dataset.node===connection.input);if(already)continue;
+                    try{connectProjectPorts(from,connection.out,to,connection.input);const cable=appState.project.connections.at(-1);Object.assign(cable,{label:connection.label||'',color:connection.color||null,hidden:!!connection.hidden,slack:connection.slack??5});applyCableAppearance(cable);}catch{}
                 }
-                for(const {saved,vinylUri} of entry.records){const dev=state.devices[saved.id],vinyl=vinylUri&&spotifyVinyls.get(vinylUri);if(dev&&vinyl&&!dev.spotifyVinyl){vinyl.turntableId=dev.id;dev.spotifyVinyl=vinyl;vinyl.el.classList.add('is-on-platter');vinyl.el.classList.toggle('is-linear',dev.type==='turntableLinear');moveSpotifyVinyl(vinyl,vinyl.x,vinyl.y);}}
-                setDeviceSelection(entry.selected.filter(id=>state.devices[id]));if(!state.selectedDeviceIds.size&&entry.records[0])selectDevice(entry.records[0].saved.id,true);
-            }finally{projectRestoring=false;state.restoringProject=false;updateCables();updateBluetoothLinks();updateCableFlows();scheduleProjectSave();}
+                for(const {saved,vinylUri} of entry.records){const dev=appState.project.devices[saved.id],vinyl=vinylUri&&spotifyVinyls.get(vinylUri);if(dev&&vinyl&&!dev.spotifyVinyl){vinyl.turntableId=dev.id;dev.spotifyVinyl=vinyl;vinyl.el.classList.add('is-on-platter');vinyl.el.classList.toggle('is-linear',dev.type==='turntableLinear');moveSpotifyVinyl(vinyl,vinyl.x,vinyl.y);}}
+                setDeviceSelection(entry.selected.filter(id=>appState.project.devices[id]));if(!appState.interface.selectedDeviceIds.size&&entry.records[0])selectDevice(entry.records[0].saved.id,true);
+            }finally{projectRestoring=false;appStateStore.actions.setProjectRestoring(false);updateCables();updateBluetoothLinks();updateCableFlows();scheduleProjectSave();}
         }
         async function replayHistoryEntry(entry,redo){
             if(entry.kind==='move'){
                 const positions=redo?entry.after:entry.before;
-                positions.forEach(p=>{const dev=state.devices[p.id];if(dev){dev.cancelPlacementMotion?.();dev.el.style.left=`${p.x}px`;dev.el.style.top=`${p.y}px`;}});updateCables();
+                positions.forEach(p=>{const dev=appState.project.devices[p.id];if(dev){dev.cancelPlacementMotion?.();dev.el.style.left=`${p.x}px`;dev.el.style.top=`${p.y}px`;}});updateCables();
             }else if(entry.kind==='delete-device')await restoreDeletedDevices(entry,!redo);
             else if(entry.kind==='delete-spotify'){
                 if(entry.itemKind==='album'){
@@ -76,7 +76,7 @@
                 }else{
                     const current=spotifyVinyls.get(entry.record.uri);
                     if(redo&&current)removeSpotifyVinyl(current,false);
-                    else if(!redo&&!current){const vinyl=createSpotifyVinyl({...entry.record,turntableId:null});const dev=state.devices[entry.record.turntableId];if(vinyl&&dev&&!dev.spotifyVinyl)placeSpotifyVinyl(vinyl,dev,false);}
+                    else if(!redo&&!current){const vinyl=createSpotifyVinyl({...entry.record,turntableId:null});const dev=appState.project.devices[entry.record.turntableId];if(vinyl&&dev&&!dev.spotifyVinyl)placeSpotifyVinyl(vinyl,dev,false);}
                 }
             }
             scheduleProjectSave();updateMovementHistoryButtons();
@@ -164,11 +164,11 @@
 
         function selectDevice(id, preserveSelection = false) {
             GuidedAccess.notify();
-            if(id&&!state.restoringProject&&!compactLayout.matches)openSidebar('properties',4000);
-            if (id && state.selectedConnection) selectCable(null,false);
+            if(id&&!appState.project.restoringProject&&!compactLayout.matches)openSidebar('properties',4000);
+            if (id && appState.interface.selectedConnection) selectCable(null,false);
             disposeSpectrum();
-            if (!preserveSelection) state.selectedDeviceIds = new Set(id ? [id] : []);
-            state.selectedDeviceId = id;
+            if (!preserveSelection) appStateStore.actions.setSelectedDevices(new Set(id ? [id] : []));
+            appStateStore.actions.setSelectedDevice(id);
             syncDeviceSelection();
             syncMobileContextActions();
             if(!id) {
@@ -177,9 +177,9 @@
                 return;
             }
             
-            const dev = state.devices[id];
+            const dev = appState.project.devices[id];
             if (!dev) {
-                state.selectedDeviceId = null;
+                appStateStore.actions.setSelectedDevice(null);
                 document.getElementById('inspector-title').textContent='Selecione um equipamento';
                 inspectorEmpty.classList.remove('hidden'); inspectorContent.classList.add('hidden');
                 return;
@@ -264,12 +264,12 @@
                 });
                 html += `</div>`;
             } else if (BT_TX_TYPES.has(dev.type)) {
-                const paired = dev.btPairedId ? state.devices[dev.btPairedId] : null;
+                const paired = dev.btPairedId ? appState.project.devices[dev.btPairedId] : null;
                 html += `<div class="text-sm text-gray-400 mt-2">Transmissor Bluetooth: recebe áudio pela entrada RCA estéreo e envia sem fio para fones pareados. ${paired ? ('Conectado a ' + (DEVICE_NAMES[paired.type] || paired.type) + '.') : 'Clique em Parear aqui e no fone.'}</div>`;
             } else if (BT_RX_TYPES.has(dev.type)) {
                 html += `<div class="text-sm text-gray-400 mt-2">Receptor Bluetooth: recebe áudio sem fio de um celular ou computador e converte para saída analógica RCA estéreo. Não transmite para fones Bluetooth.</div>`;
             } else if (HP_TYPES.has(dev.type)) {
-                const paired = dev.btPairedId ? state.devices[dev.btPairedId] : null;
+                const paired = dev.btPairedId ? appState.project.devices[dev.btPairedId] : null;
                 if(REFERENCE_HEADPHONES[dev.type])html+=`<p class="text-xs text-gray-400">${REFERENCE_HEADPHONES[dev.type].enclosure||'Aberto'} · ${REFERENCE_HEADPHONES[dev.type].ohms} Ω nominais · conexão estéreo simplificada para P2 no simulador.</p>`;
                 if(dev.type==='hpKubaDisco2')html+=`<div class="kuba-finish-control"><label for="kuba-wood">Madeira do arco</label><select id="kuba-wood">${Object.entries(KUBA_WOOD_FINISHES).map(([key,name])=>`<option value="${key}" ${dev.state.kubaWood===key?'selected':''}>${name}</option>`).join('')}</select><p>Arco clássico laminado, regulagens laterais, conchas com anéis concêntricos e almofadas XL. O acabamento altera a aparência do arco.</p></div>`;
                 html += `<div class="text-sm text-gray-400 mt-2">${dev.type==='hpMax'?'Conexão somente por Bluetooth. ':dev.type==='hpKubaDisco2'?'Entrada P2 estéreo na ponta do cabo, abaixo do divisor em Y. ':'Entrada P2 estéreo na parte inferior da concha esquerda. '}${BT_HP_TYPES.has(dev.type)?`Bluetooth: ${paired ? ('pareado com ' + (DEVICE_NAMES[paired.type] || paired.type)) : 'sem conexão. Clique em Parear no transmissor e neste fone.'}`:'Conecte a uma saída de fones com cabo P2.'}</div>`;
@@ -342,7 +342,7 @@
             inspectorContent.querySelectorAll('[data-adapter-rotate]').forEach(button=>button.addEventListener('click',()=>rotateAudioAdapter(dev,Number(button.dataset.adapterRotate))));
             inspectorContent.querySelectorAll('[data-vinyl-noise]').forEach(button=>button.addEventListener('click',()=>{
                 dev.state.vinylNoiseLevel=button.dataset.vinylNoise;
-                dev.vinylNoise?.gain.gain.setTargetAtTime(VINYL_NOISE_LEVELS[dev.state.vinylNoiseLevel].gain,state.audioCtx.currentTime,.04);
+                dev.vinylNoise?.gain.gain.setTargetAtTime(VINYL_NOISE_LEVELS[dev.state.vinylNoiseLevel].gain,appState.audio.context.currentTime,.04);
                 inspectorContent.querySelectorAll('[data-vinyl-noise]').forEach(item=>{const selected=item===button;item.classList.toggle('is-on',selected);item.setAttribute('aria-pressed',String(selected));});
             }));
             document.getElementById('restore-device-settings')?.addEventListener('click',async event=>{

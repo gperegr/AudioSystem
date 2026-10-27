@@ -18,7 +18,7 @@
             stopPowerOnRitual(dev);
             dev.gaugeCalibration=null;
             const reducedMotion=powerMotionPreference.matches;
-            if(!dev.powered||dev.state.damage||state.restoringProject||(reducedMotion&&dev.type!=='prePrecision'))return;
+            if(!dev.powered||dev.state.damage||appState.project.restoringProject||(reducedMotion&&dev.type!=='prePrecision'))return;
             dev.gaugeCalibration={startedAt:performance.now(),duration:reducedMotion?420:1250};
             const animations=[];
             const fade=(element,delay,duration)=>{
@@ -29,17 +29,17 @@
             // Screens and gauge faces stay opaque; the meter loops animate their needles.
             powerOnAnimations.set(dev,animations);
         }
-        powerMotionPreference.addEventListener('change',event=>{if(event.matches)Object.values(state.devices).forEach(dev=>{stopPowerOnRitual(dev);});});
+        powerMotionPreference.addEventListener('change',event=>{if(event.matches)Object.values(appState.project.devices).forEach(dev=>{stopPowerOnRitual(dev);});});
 
         function toggleDevicePower(dev) {
             dev.powered = dev.state.damage ? false : !dev.powered;
-            (dev.outputCircuits||[]).forEach(circuit=>circuit.gate.gain.setValueAtTime(dev.powered&&!dev.state.damage?1:0,state.audioCtx.currentTime));
+            (dev.outputCircuits||[]).forEach(circuit=>circuit.gate.gain.setValueAtTime(dev.powered&&!dev.state.damage?1:0,appState.audio.context.currentTime));
             dev.el.classList.toggle('device-damaged',!!dev.state.damage);
             dev.syncRadio?.();
             dev.syncValvePower?.();
             dev.applyStream?.();
             if (!dev.powered && SOURCE_TYPES.has(dev.type)) setSourcePlaying(dev, false);
-            const powerTime = state.audioCtx ? state.audioCtx.currentTime : 0;
+            const powerTime = appState.audio.context ? appState.audio.context.currentTime : 0;
             if (dev.powerGain) {
                 dev.powerGain.gain.setValueAtTime(dev.powered ? 1.0 : 0.0, powerTime);
             }
@@ -64,7 +64,7 @@
             }
 
             // Atualiza inspeção caso esteja selecionado
-            if (state.selectedDeviceId === dev.id) {
+            if (appState.interface.selectedDeviceId === dev.id) {
                 const statusLbl = document.getElementById('lbl-power-status');
                 if (statusLbl) {
                     statusLbl.innerText = dev.powered ? 'LIGADO' : 'DESLIGADO';
@@ -90,10 +90,10 @@
                 const n = Math.max(0, Math.min(1, v));
                 const pct = Math.round(n * 100);
                 dev.state.volume = n;
-                dev.volumeNode?.gain.setTargetAtTime(n * 1.25, state.audioCtx.currentTime, 0.015);
+                dev.volumeNode?.gain.setTargetAtTime(n * 1.25, appState.audio.context.currentTime, 0.015);
                 knob.style.setProperty('--knob-angle', `${-135 + n * 270}deg`);
                 knob.setAttribute('aria-valuenow', pct);
-                if (state.selectedDeviceId === dev.id) {
+                if (appState.interface.selectedDeviceId === dev.id) {
                     const r = document.getElementById('sp-insp-vol');
                     if (r && Number(r.value) !== pct) r.value = pct;
                     const l = document.getElementById('sp-insp-vol-lbl');
@@ -118,7 +118,7 @@
             const leadIn=()=>tt.disc==='single'?297:380;
             const leadOut=()=>tt.disc==='single'?255:270;
             const hasDisc=()=>tt.disc!=='none'||!!dev.spotifyVinyl;
-            const position=()=>dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?(state.audioCtx.currentTime-dev.demoStartedAt)*dev.ttRate():0);
+            const position=()=>dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?(appState.audio.context.currentTime-dev.demoStartedAt)*dev.ttRate():0);
             const pause=()=>{
                 const seconds=position();
                 setSourcePlaying(dev,false,true);
@@ -140,7 +140,7 @@
                     const knob=el.querySelector(`[data-linear-trim="${speed}"]`),value=tt['trim'+speed];
                     knob.style.setProperty('--knob-angle',`${value*135}deg`);knob.setAttribute('aria-valuenow',String(Math.round(value*30)/10));
                 }
-                if(state.selectedDeviceId===dev.id){
+                if(appState.interface.selectedDeviceId===dev.id){
                     const q=id=>document.getElementById(id);
                     if(q('linear-status'))q('linear-status').textContent=status;
                     q('linear-disc-group')?.querySelectorAll('[data-linear-disc-choice]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.linearDiscChoice===tt.disc)));
@@ -164,14 +164,14 @@
                 if(!dev.powered||dev.state.damage||mechanism.disposed||['scanning','lowering','playing'].includes(mechanism.phase))return;
                 const operation=++mechanism.operation;
                 const spotifyActivation=dev.spotifyVinyl?SpotifyCoverflow.activatePlayback():null;
-                try{await state.audioCtx.resume();}catch{}
+                try{await appState.audio.context.resume();}catch{}
                 if(spotifyActivation){
                     let activated=false;
                     try{activated=await spotifyActivation;}catch{mechanism.message='O navegador bloqueou a ativação do Spotify. Pressione INICIAR novamente.';refresh();return;}
                     if(!activated){mechanism.message='Player do Spotify ainda conectando. Tente novamente.';refresh();return;}
                 }
                 if(operation!==mechanism.operation||mechanism.disposed||!dev.powered)return;
-                if(state.audioCtx.state!=='running'){mechanism.message='Clique novamente para ativar o áudio';refresh();return;}
+                if(appState.audio.context.state!=='running'){mechanism.message='Clique novamente para ativar o áudio';refresh();return;}
                 mechanism.message='';mechanism.cue=0;
                 if(mechanism.phase==='raised'&&hasDisc()){
                     mechanism.phase='lowering';mechanism.target=Math.min(leadIn(),mechanism.arm);mechanism.deadline=performance.now()+430;
@@ -206,7 +206,7 @@
                 const restart=!!dev.filePlayback,seconds=position();
                 if(restart)stopFilePlayback(dev);
                 callback();tt.pitch=tt['trim'+tt.speed];
-                if(!dev.audioBuffer){dev.demoOffset=seconds;dev.demoStartedAt=dev.state.playing?state.audioCtx.currentTime:null;}
+                if(!dev.audioBuffer){dev.demoOffset=seconds;dev.demoStartedAt=dev.state.playing?appState.audio.context.currentTime:null;}
                 if(restart)startFilePlayback(dev);
                 refresh();
             };
@@ -324,7 +324,7 @@
                 pitchEl.setAttribute('aria-valuenow', pitchPct());
                 pitchEl.title = `Pitch ${pitchText()} · arraste (duplo clique para zerar)`;
                 // Painel de propriedades (se este aparelho estiver selecionado)
-                if (state.selectedDeviceId === dev.id) {
+                if (appState.interface.selectedDeviceId === dev.id) {
                     const q = id => document.getElementById(id);
                     const run = q('tt-insp-run');
                     if (run) { run.setAttribute('aria-pressed', String(tt.running)); run.classList.toggle('is-on', tt.running); }
@@ -527,7 +527,7 @@
                     const range = control === 'volume' ? [0,1] : control === 'balance' ? [-1,1] : [-15,15];
                     updateKnobAngle(dev, `[data-receiver-control="${control}"]`, value, ...range);
                     const slider = document.getElementById(control === 'volume' ? 'sl-vol' : `sl-${control}`);
-                    if (state.selectedDeviceId === dev.id && slider) {
+                    if (appState.interface.selectedDeviceId === dev.id && slider) {
                         slider.value = value;
                         const label = document.getElementById(control === 'volume' ? 'lbl-vol' : `lbl-${control}`);
                         if (label) label.textContent = control === 'volume' ? `${Math.round(value*100)}%` : control === 'balance' ? (Math.abs(value)<.01 ? 'Centro' : `${value<0?'L':'R'} ${Math.round(Math.abs(value)*100)}%`) : `${value.toFixed(1)}dB`;
@@ -608,12 +608,12 @@
                     if (!touchHold) e.preventDefault();
                     window.getSelection()?.removeAllRanges();
                     if (e.shiftKey || e.metaKey || e.ctrlKey) toggleDeviceSelection(dev.id);
-                    else if (state.selectedDeviceIds.has(dev.id)) selectDevice(dev.id, true);
+                    else if (appState.interface.selectedDeviceIds.has(dev.id)) selectDevice(dev.id, true);
                     else selectDevice(dev.id);
 
                     const startX = e.clientX;
                     const startY = e.clientY;
-                    const movingDevices = expandFurnitureGroup([...state.selectedDeviceIds].map(id => state.devices[id]).filter(Boolean));
+                    const movingDevices = expandFurnitureGroup([...appState.interface.selectedDeviceIds].map(id => appState.project.devices[id]).filter(Boolean));
                     const transformDrag=typeof CSS!=='undefined'&&CSS.supports?.('translate','1px 1px');
                     const initialPositions = movingDevices.map(item => ({
                         dev:item,
@@ -664,7 +664,7 @@
                     }
                     function clearDiscardPreview(){
                         document.body.classList.remove('dragging-over-discard');
-                        discardPreviews.forEach((preview,id)=>{preview.clone.remove();const item=state.devices[id];if(item)item.el.style.visibility=preview.visibility;});discardPreviews.clear();
+                        discardPreviews.forEach((preview,id)=>{preview.clone.remove();const item=appState.project.devices[id];if(item)item.el.style.visibility=preview.visibility;});discardPreviews.clear();
                         discardPreviewLayer?.remove();discardPreviewLayer=null;
                     }
 
@@ -675,7 +675,7 @@
                     let falling=new Map();
                     const animate = now => {
                         frame=0;
-                        if (!targets.every(p=>state.devices[p.dev.id])) return;
+                        if (!targets.every(p=>appState.project.devices[p.dev.id])) return;
                         const dt=Math.min(32,now-(lastTime||now-16));lastTime=now;
                         const blend=!released||reducedMotion?1:1-Math.exp(-dt/55);
                         const intermediate=targets.map(p=>{
@@ -762,7 +762,7 @@
                         if(isDragging)movingDevices.forEach(item=>item.el.classList.add('history-settling'));
                         if(isDragging&&isOverCatalog(ev)){
                             playUiSound('discard');showDiscardCloud(ev.clientX,ev.clientY);
-                            cancel();recordDeletedDevices(initialPositions.map(p=>p.dev));initialPositions.forEach(p=>{if(state.devices[p.dev.id])deleteDevice(p.dev,false);});
+                            cancel();recordDeletedDevices(initialPositions.map(p=>p.dev));initialPositions.forEach(p=>{if(appState.project.devices[p.dev.id])deleteDevice(p.dev,false);});
                         }else if(isDragging){aim(ev,true);recordMovement(initialPositions,targets);playUiSound('drop');}else cancel();
                     };
 
@@ -771,7 +771,7 @@
                         window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);
                         window.removeEventListener('blur',abortDrag);window.removeEventListener('keydown',cancelWithEscape);
                         cancel();
-                        initialPositions.forEach(p=>{if(state.devices[p.dev.id]){p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;}});
+                        initialPositions.forEach(p=>{if(appState.project.devices[p.dev.id]){p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;}});
                         equipmentCatalog.classList.remove('return-drag-over','discard-ready');discardZone.setAttribute('aria-hidden','true');
                         updateCables();
                     };
@@ -794,7 +794,7 @@
                     const lbl = dev.el.querySelector(`.lbl-band-${band}`);
                     if (lbl) lbl.textContent = `${val > 0 ? '+' : ''}${val}dB`;
                     applyEqGains(dev);
-                    if (state.selectedDeviceId === dev.id) {
+                    if (appState.interface.selectedDeviceId === dev.id) {
                         const insp = document.getElementById(`lbl-eq-${band}`);
                         if (insp) insp.innerText = `${val > 0 ? '+' : ''}${val}dB`;
                         const slider = document.getElementById(`sl-eq-${band}`);
@@ -808,7 +808,7 @@
                 slider.addEventListener('pointerdown', e => e.stopPropagation());
                 slider.addEventListener('input', () => {
                     setMixerVolume(dev, channel, Number(slider.value));
-                    if (state.selectedDeviceId === dev.id) {
+                    if (appState.interface.selectedDeviceId === dev.id) {
                         const inspectorSlider = document.getElementById(`sl-mixer-${channel}`);
                         if (inspectorSlider) inspectorSlider.value = slider.value;
                     }
@@ -831,7 +831,7 @@
                         dev.el.querySelector(`[data-switch-source="${source}"]`)?.setAttribute('aria-pressed', String(active));
                         ['R', 'L'].forEach(channel => {
                             const route = dev.nodes[`route${source}${channel}`];
-                            if (route) route.gain.setTargetAtTime(active ? 1 : 0, state.audioCtx.currentTime, 0.015);
+                            if (route) route.gain.setTargetAtTime(active ? 1 : 0, appState.audio.context.currentTime, 0.015);
                         });
                     });
                     updateCableFlows();
@@ -868,7 +868,7 @@
             setTimeout(()=>cloud.remove(),560);
         }
         function deleteDevice(dev,recordHistory=false) {
-            if (!dev || !state.devices[dev.id]) return;
+            if (!dev || !appState.project.devices[dev.id]) return;
             if(recordHistory)recordDeletedDevices([dev]);
             dev.stopMicCapture?.(false);
             if(dev.spotifyVinyl){if(spotifyPlayingTurntable===dev.id){spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});}dev.spotifyVinyl.turntableId=null;dev.spotifyVinyl.el.classList.remove('is-on-platter');}
@@ -890,14 +890,14 @@
             dev.auxSplitter?.disconnect();
             dev.audioBuffer = null;dev.mediaBlob=null;dev.mediaKey=null;
 
-            if (state.pairingId === dev.id) clearPairing();
+            if (appState.interface.pairingId === dev.id) clearPairing();
             if (dev.btPairedId) unpairDevice(dev);
-            Object.values(state.devices).forEach(other => {
+            Object.values(appState.project.devices).forEach(other => {
                 if (other.btPairedId === dev.id) unpairDevice(other);
             });
 
-            for (let idx = state.connections.length - 1; idx >= 0; idx--) {
-                const connection = state.connections[idx];
+            for (let idx = appState.project.connections.length - 1; idx >= 0; idx--) {
+                const connection = appState.project.connections[idx];
                 const outPort = document.getElementById(connection.outId);
                 const inPort = document.getElementById(connection.inId);
                 if (outPort?.closest('.device-node')?.id === dev.id || inPort?.closest('.device-node')?.id === dev.id) {
@@ -910,13 +910,13 @@
                 try { dev.powerGain.disconnect(); } catch (e) {}
             }
             dev.el.remove();
-            delete state.devices[dev.id];
+            appStateStore.actions.removeDevice(dev.id);
             updateMovementHistoryButtons();
-            if (state.selectedDeviceIds.has(dev.id)) {
-                const remaining = [...state.selectedDeviceIds].filter(id => id !== dev.id);
-                if (state.selectedDeviceId === dev.id) setDeviceSelection(remaining);
+            if (appState.interface.selectedDeviceIds.has(dev.id)) {
+                const remaining = [...appState.interface.selectedDeviceIds].filter(id => id !== dev.id);
+                if (appState.interface.selectedDeviceId === dev.id) setDeviceSelection(remaining);
                 else {
-                    state.selectedDeviceIds.delete(dev.id);
+                    appState.interface.selectedDeviceIds.delete(dev.id);
                     syncDeviceSelection();
                 }
             }
@@ -961,12 +961,12 @@
                 unpairDevice(dev);
                 return;
             }
-            if (state.pairingId === dev.id) {
+            if (appState.interface.pairingId === dev.id) {
                 clearPairing();
                 return;
             }
-            if (state.pairingId) {
-                const other = state.devices[state.pairingId];
+            if (appState.interface.pairingId) {
+                const other = appState.project.devices[appState.interface.pairingId];
                 if (other && canPair(other, dev)) {
                     pairDevices(other, dev);
                     return;
@@ -974,7 +974,7 @@
             }
             if (BT_TX_TYPES.has(dev.type) || BT_HP_TYPES.has(dev.type)) {
                 clearPairing();
-                state.pairingId = dev.id;
+                appStateStore.actions.setPairingId(dev.id);
                 setPairingUi(dev, 'search');
             }
         }
@@ -986,10 +986,10 @@
         }
 
         function clearPairing() {
-            if (state.pairingId && state.devices[state.pairingId] && !state.devices[state.pairingId].btPairedId) {
-                setPairingUi(state.devices[state.pairingId], 'idle');
+            if (appState.interface.pairingId && appState.project.devices[appState.interface.pairingId] && !appState.project.devices[appState.interface.pairingId].btPairedId) {
+                setPairingUi(appState.project.devices[appState.interface.pairingId], 'idle');
             }
-            state.pairingId = null;
+            appStateStore.actions.setPairingId(null);
         }
 
         function pairDevices(a, b) {
@@ -1028,7 +1028,7 @@
                 setPairingUi(dev, 'idle');
                 return;
             }
-            const other = state.devices[dev.btPairedId];
+            const other = appState.project.devices[dev.btPairedId];
             const src = BT_TX_TYPES.has(dev.type) ? dev : other;
             const dest = HP_TYPES.has(dev.type) ? dev : other;
             if (src && dest && src.nodes.btOut && dest.nodes.in) {
@@ -1047,10 +1047,10 @@
         }
 
         function updateBluetoothLinks(affectedDeviceIds=null) {
-            Object.values(state.devices).forEach(dev => {
+            Object.values(appState.project.devices).forEach(dev => {
                 if(affectedDeviceIds&&!affectedDeviceIds.has(dev.id)&&!affectedDeviceIds.has(dev.btPairedId))return;
                 if (!dev.btLinkEl || !dev.btPairedId || !BT_TX_TYPES.has(dev.type)) return;
-                const dest = state.devices[dev.btPairedId];
+                const dest = appState.project.devices[dev.btPairedId];
                 if (!dest) return;
                 const r1 = dev.el.getBoundingClientRect();
                 const r2 = dest.el.getBoundingClientRect();
@@ -1071,8 +1071,8 @@
                 ||['preamp','receiver','powerAmp','powerStereo','powerVintage','headphoneAmp','headphoneAmpModern','headphoneAmp4'].includes(dev.type);
         }
         async function restoreDeviceSettings(dev) {
-            if(!state.devices[dev.id]||!hasRestorableSettings(dev))return;
-            if(state.selectedDeviceId!==dev.id)selectDevice(dev.id,true);
+            if(!appState.project.devices[dev.id]||!hasRestorableSettings(dev))return;
+            if(appState.interface.selectedDeviceId!==dev.id)selectDevice(dev.id,true);
             const input=(id,value,eventType='input')=>{const element=document.getElementById(id);if(element){element.value=String(value);element.dispatchEvent(new Event(eventType,{bubbles:true}));}};
             let message='Configurações padrão restauradas.';
             if(dev.type==='integratedUtility')Object.assign(dev.state,{utilityLoudness:false,utilityMono:false});
@@ -1094,7 +1094,7 @@
                     dev.ttSetPitch(0);
                     const previousMode=dev.state.tt.output;
                     dev.state.tt.output='line';
-                    const canResetOutput=state.connections.every(cable=>getPortCompatibility(document.getElementById(cable.outId),document.getElementById(cable.inId)).compatible);
+                    const canResetOutput=appState.project.connections.every(cable=>getPortCompatibility(document.getElementById(cable.outId),document.getElementById(cable.inId)).compatible);
                     dev.state.tt.output=previousMode;
                     if(canResetOutput)dev.ttSetOutput('line');
                     else message='Ajustes restaurados; saída PHONO mantida para preservar as conexões existentes.';
@@ -1119,7 +1119,7 @@
             if(dev.type==='furnitureTable'){Object.assign(dev.state,{benchSurface:'wood',benchBackdrop:false,benchDecorations:[]});updateBenchAppearance(dev);}
             if(FURNITURE_TYPES[dev.type]){dev.state.material=furnitureMaterialFor(dev.type);dev.el.dataset.material=dev.state.material;if(FURNITURE_TYPES[dev.type].back){dev.state.hasBack=true;dev.el.dataset.back='true';}}
             if(dev.meters)dev.meters.clipUntil=0;
-            if(state.selectedDeviceId===dev.id){selectDevice(dev.id,true);document.getElementById('restore-settings-status').textContent=message;}
+            if(appState.interface.selectedDeviceId===dev.id){selectDevice(dev.id,true);document.getElementById('restore-settings-status').textContent=message;}
             updateCableFlows();
         }
 
