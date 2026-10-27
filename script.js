@@ -1626,7 +1626,13 @@ const Hardware = (() => {
         canvasBackdropControl.innerHTML='<span>Cenário</span><select id="canvas-backdrop" aria-label="Cenário de fundo">'+Object.entries(canvasBackdropModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
         const canvasTimeControl=document.createElement('label');canvasTimeControl.className='canvas-theme-control';
         canvasTimeControl.innerHTML='<span>Hora do dia</span><select id="canvas-time" aria-label="Hora do dia">'+Object.entries(canvasTimeModes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
-        let roomImageRequest=0,roomImageTarget='';
+        let roomImageRequest=0,roomImageTarget='',roomBackdropTransitionTimer=0;
+        function beginRoomBackdropTransition(){
+            if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+            roomBackdrop.classList.add('is-changing');
+            clearTimeout(roomBackdropTransitionTimer);
+            roomBackdropTransitionTimer=setTimeout(()=>{roomBackdropTransitionTimer=0;roomBackdrop.classList.remove('is-changing');},760);
+        }
         function positionRoomImage(image,horizon){
             const imageHorizon=Number.isFinite(horizon)?horizon:Number(image.dataset.roomHorizon);
             if(!Number.isFinite(imageHorizon))return;
@@ -1735,9 +1741,10 @@ const Hardware = (() => {
         document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')startRoomMotes();else stopRoomMotes();});
         function setCanvasBackdrop(mode){
             mode=legacyBackdrops[mode]||mode;
+            beginRoomBackdropTransition();
             mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studioIllustrated';state.canvasBackdrop=mode;canvas.dataset.backdrop=mode;canvasBackdropControl.querySelector('select').value=mode;
             const scene=RoomScenes.scenes[mode];
-            const imageName=scene.image+(scene.timeImages===false||state.canvasTime==='dusk'?'':'-'+state.canvasTime);
+            const imageName=RoomScenes.imageForTime(scene,state.canvasTime);
             const src=`./assets/rooms/${imageName}.webp?v=aligned-floor`;
             showRoomImage(src,scene.horizon?.[state.canvasTime]);
             requestAnimationFrame(applyView);

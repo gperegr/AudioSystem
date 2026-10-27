@@ -10,15 +10,20 @@
     };
     const scenes=Object.freeze({
         ...originalScenes,
-        studioIllustrated:{...originalScenes.studio,image:'studio-illustrated',timeImages:false},
-        listeningIllustrated:{...originalScenes.listening,image:'listening-illustrated',timeImages:false},
-        loftIllustrated:{...originalScenes.loft,image:'loft-illustrated',timeImages:false}
+        studioIllustrated:{...originalScenes.studio,image:'studio-illustrated',timeImageBase:'studio'},
+        listeningIllustrated:{...originalScenes.listening,image:'listening-illustrated',timeImageBase:'listening'},
+        loftIllustrated:{...originalScenes.loft,image:'loft-illustrated',timeImageBase:'loft'}
     });
     const times=Object.freeze({
         dawn:{rgb:[255,222,177],strength:1.1},
         dusk:{rgb:[255,185,124],strength:.78},
         night:{rgb:[125,164,222],strength:.23}
     });
+    function imageForTime(scene,time='dusk'){
+        if(!scene)return '';
+        const base=time==='dusk'?scene.image:(scene.timeImageBase||scene.image);
+        return base+(time==='dusk'?'':`-${time}`);
+    }
     function lights(name,time='dusk'){
         const scene=scenes[name],daylight=times[time]||times.dusk;
         return (scene?.windows||[]).map((window,index)=>({
@@ -28,5 +33,5 @@
             elevation:260,layer:'far'
         }));
     }
-    window.RoomScenes={scenes,times,lights};
+    window.RoomScenes={scenes,times,lights,imageForTime};
 })();
