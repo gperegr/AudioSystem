@@ -40,6 +40,13 @@ test('catalog equipment matches the reviewed contract inventory exactly',()=>{
     }
 });
 
+test('uncategorized equipment is rejected instead of entering the catalog by fallback',()=>{
+    const catalogSource=readFileSync(path.join(root,'src/app/08-catalog-ui.js'),'utf8');
+    assert.match(catalogSource,/catalogUnassigned=catalogItems\.filter\(item=>!catalogAssigned\.has\(item\)\)/);
+    assert.match(catalogSource,/if\(catalogUnassigned\.length\)throw new Error\(`Equipment contract missing catalog category:/);
+    assert.doesNotMatch(catalogSource,/appendCatalogGroup\('Outros equipamentos'/);
+});
+
 test('dimension-bearing catalog models declare positive, supported dimensions',()=>{
     const furniture=extract('const FURNITURE_TYPES =','const WALL_LAMP_TYPES');
     const shelves=extract('const BOOKSHELF_SPEAKERS=','const FLOOR_SPEAKERS');

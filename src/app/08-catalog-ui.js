@@ -219,8 +219,8 @@
             section.append(heading,grid);catalogContainer.appendChild(section);
         };
         catalogGroups.forEach(([title,matches])=>appendCatalogGroup(title,catalogItems.filter(item=>!catalogAssigned.has(item)&&matches(item.dataset.template))));
-        // Keep future, uncategorized equipment visible until it receives a dedicated group.
-        appendCatalogGroup('Outros equipamentos',catalogItems.filter(item=>!catalogAssigned.has(item)));
+        const catalogUnassigned=catalogItems.filter(item=>!catalogAssigned.has(item));
+        if(catalogUnassigned.length)throw new Error(`Equipment contract missing catalog category: ${catalogUnassigned.map(item=>item.dataset.template).join(', ')}`);
         previousCatalogSections.forEach(section=>section.remove());
         const debugCatalogSection=[...catalogContainer.querySelectorAll('.catalog-category')].find(section=>section.querySelector('[data-template="hardwareDemo"]'));
         debugCatalogSection.hidden=!appState.preferences.developerModeEnabled;

@@ -23,6 +23,9 @@ const root=path.join(__dirname,'..');
         const types=await page.evaluate(()=>Object.keys(__equipmentContract.names));
         assert.deepEqual(types.slice().sort(),require('./fixtures/equipment-contract-types.json').types,'inventory must be reviewed when a model is added or removed');
         assert(types.length>=90,`expected broad catalog coverage, got ${types.length}`);
+        const catalog=await page.locator('.catalog-item[data-template]').evaluateAll(items=>items.map(item=>({type:item.dataset.template,category:item.dataset.catalogCategory||''})));
+        assert.deepEqual(catalog.map(item=>item.type).sort(),types.slice().sort(),'every registered model must appear exactly once in the visible catalog');
+        assert(catalog.every(item=>item.category&&item.category!=='Outros equipamentos'),'every model must be assigned an explicit catalog category');
         await page.evaluate(()=>AudioSystemLanguage.set('en'));
 
         const untranslated=new Set();
@@ -59,12 +62,14 @@ const root=path.join(__dirname,'..');
                     const dev=api.devices[id];
                     if(!dev)return {error:'factory did not register device'};
                     const box=dev.el.getBoundingClientRect();
+                    const noCableRequired=new Set([...Object.keys(api.furniture),'pendantLamp','wallLampCage','wallLampDome','hardwareDemo','hpMax']);
                     const ports=[...dev.el.querySelectorAll('.port')].map(port=>({
                         type:port.dataset.type,io:port.dataset.io,node:port.dataset.node,
                         nodeExists:Object.hasOwn(dev.nodes,port.dataset.node),
                         rect:(()=>{const r=port.getBoundingClientRect(),d=dev.el.getBoundingClientRect();return {left:r.left-d.left,top:r.top-d.top,right:r.right-d.left,bottom:r.bottom-d.top};})()
                     }));
-                    const malformed=ports.filter(port=>!port.type||!['in','out'].includes(port.io)||!port.node||!port.nodeExists);
+                    const malformed=ports.filter(port=>!['rca','rca-r','rca-l','p2','p10','wire'].includes(port.type)||!['in','out'].includes(port.io)||!port.node||!port.nodeExists);
+                    const missingPorts=!noCableRequired.has(type)&&ports.length===0;
                     const outside=ports.filter(port=>port.rect.left < -2||port.rect.top < -2||port.rect.right > box.width+2||port.rect.bottom > box.height+2);
                     const button=dev.el.querySelector('.power-btn');
                     let power=null;
@@ -73,13 +78,14 @@ const root=path.join(__dirname,'..');
                     const expectedElectrical=!!(api.amps[type]||api.passive[type]||api.active[type]||api.activeSubs[type]||api.bookshelf[type]||api.floor[type]||api.headphones[type]);
                     const dimensions={width:box.width,height:box.height};
                     const badDimensions=!Number.isFinite(box.width)||!Number.isFinite(box.height)||box.width<=0||box.height<=0;
-                    const result={type,name,english,ports,malformed,outside,power,specs,electricalSpec:dev.electricalSpec,expectedElectrical,dimensions,badDimensions};
+                    const result={type,name,english,ports,malformed,missingPorts,outside,power,specs,electricalSpec:dev.electricalSpec,expectedElectrical,dimensions,badDimensions};
                     api.deleteDevice(dev,false);
                     return result;
                 },type);
                 await scanVisibleLanguage();
                 if(result.error)throw new Error(result.error);
                 assert(!result.badDimensions,`zero or invalid dimensions ${JSON.stringify(result.dimensions)}`);
+                assert(!result.missingPorts,'audio equipment must expose at least one routable port');
                 assert.equal(result.malformed.length,0,`invalid port contract ${JSON.stringify(result.malformed)}`);
                 assert.equal(result.outside.length,0,`ports outside chassis ${JSON.stringify(result.outside)}`);
                 if(result.power)assert.deepEqual(result.power,{before:true,off:false,on:true},'power button must switch off and on');
