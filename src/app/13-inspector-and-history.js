@@ -195,7 +195,7 @@
             const hasPowerControl = !!dev.el.querySelector('.power-btn');
             let html='';
             if (hasPowerControl) {
-                html += `<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Power</span><button id="inspector-power-toggle" type="button" aria-label="Ligar ou desligar equipamento" aria-pressed="${dev.powered}" class="tt-insp-btn w-full ${dev.powered ? 'is-on' : ''}">LIGAR / DESLIGAR</button></div>`;
+                html += `<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Energia</span><button id="inspector-power-toggle" type="button" aria-label="Ligar ou desligar equipamento" aria-pressed="${dev.powered}" class="tt-insp-btn w-full ${dev.powered ? 'is-on' : ''}">LIGAR / DESLIGAR</button></div>`;
             }
             if(dev.state.damage)html+='<div class="equipment-damage-notice" role="status">DANIFICADO · Sobrecarga elétrica simulada. Substitua o equipamento por outro do catálogo.</div>';
             html+=amplificationInspectorHtml(dev);

@@ -7930,7 +7930,7 @@ const Hardware = (() => {
             const hasPowerControl = !!dev.el.querySelector('.power-btn');
             let html='';
             if (hasPowerControl) {
-                html += `<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Power</span><button id="inspector-power-toggle" type="button" aria-label="Ligar ou desligar equipamento" aria-pressed="${dev.powered}" class="tt-insp-btn w-full ${dev.powered ? 'is-on' : ''}">LIGAR / DESLIGAR</button></div>`;
+                html += `<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Energia</span><button id="inspector-power-toggle" type="button" aria-label="Ligar ou desligar equipamento" aria-pressed="${dev.powered}" class="tt-insp-btn w-full ${dev.powered ? 'is-on' : ''}">LIGAR / DESLIGAR</button></div>`;
             }
             if(dev.state.damage)html+='<div class="equipment-damage-notice" role="status">DANIFICADO · Sobrecarga elétrica simulada. Substitua o equipamento por outro do catálogo.</div>';
             html+=amplificationInspectorHtml(dev);
@@ -8440,7 +8440,7 @@ const Hardware = (() => {
             const rows=[...groups.values()].map(group=>{
                 const {port,io,node,signal,format}=group,info=SIGNAL_INFO[signal]||SIGNAL_INFO.unknown;
                 const numberedLine=/^line(\d+)$/.exec(node);
-                const groupName=port.dataset.role?.startsWith('lfe-')?'SUB/LFE mono':node.startsWith('outPhone')?'Fones '+node.replace('outPhone',''):numberedLine?'Linha '+(Number(numberedLine[1])+1):node==='line'?'LINE OUT':node==='pre'?'Saída do pré':node.startsWith('spkOut')||node==='speaker'?'SPEAKER':node==='inStereo'||node==='outStereo'?'Estéreo':node.replace(/^in/,'Entrada ').replace(/^out/,'Saída ').replace('Low','Graves').replace('Mid','Médios').replace('High','Agudos');
+                const groupName=port.dataset.role?.startsWith('lfe-')?'SUB/LFE mono':node.startsWith('outPhone')?'Fones '+node.replace('outPhone',''):numberedLine?'Linha '+(Number(numberedLine[1])+1):node==='line'?'LINE OUT':node==='output'?'Saída':node==='pre'?'Saída do pré':node.startsWith('spkOut')||node==='speaker'?'SPEAKER':node==='inStereo'||node==='outStereo'?'Estéreo':node.replace(/^in/,'Entrada ').replace(/^out/,'Saída ').replace('Low','Graves').replace('Mid','Médios').replace('High','Agudos');
                 const channels=new Set(group.channels),channelText=channels.size===2?' · L/R':channels.size===1?' · '+[...channels][0]:'';
                 const direction=io==='in'?'Entrada':'Saída';
                 const detail=port.dataset.role?.startsWith('lfe-')?'Nível de linha para subwoofer; SUB/LFE descreve o conteúdo de graves, não um nível de potência.':info.description;
