@@ -4018,7 +4018,8 @@ const Hardware = (() => {
                 updateStereoPowerMeters(dev);
                 dev.el.querySelectorAll('.receiver-vu i').forEach((needle,index)=>{
                     const level=Math.max(0,Math.min(1,(audioDb(meter.levels[index]||0)+48)/48));
-                    needle.style.transform=`rotate(${dampedNeedle(needle,-45+level*75,now,-45)}deg)`;
+                    const calibration=deviceGaugeCalibrationAngle(dev,now,-45,30);
+                    needle.style.transform=`rotate(${calibration??dampedNeedle(needle,-45+level*75,now,-45)}deg)`;
                 });
             });
             readElectricalStages();
@@ -5074,9 +5075,10 @@ const Hardware = (() => {
                     const channel=Number(needle.dataset.liveVu),level=dev.powered?(dev.meters?.levels[channel]||0):0;
                     if(dev.type==='tapeDeck'||BENCH_METER_TYPES.has(dev.type)){
                         const vu=audioDb(dev.vuEnvelope[channel])+18;
-                        needle.setAttribute('transform',`rotate(${dampedNeedle(needle,tapeVuAngle(vu),now,-48)} 50 62)`);
+                        const calibration=deviceGaugeCalibrationAngle(dev,now,-48,46);
+                        needle.setAttribute('transform',`rotate(${calibration??dampedNeedle(needle,tapeVuAngle(vu),now,-48)} 50 62)`);
                         needle.parentElement.setAttribute('aria-label',`VU ${channel?'R':'L'}: ${Number.isFinite(vu)?vu.toFixed(1):'menos infinito'} VU; referência 0 VU = −18 dBFS`);
-                    }else needle.style.transform=`rotate(${dampedNeedle(needle,-48+Math.max(0,Math.min(1,(audioDb(level)+48)/48))*94,now,-48)}deg)`;
+                    }else {const calibration=deviceGaugeCalibrationAngle(dev,now,-48,46);needle.style.transform=`rotate(${calibration??dampedNeedle(needle,-48+Math.max(0,Math.min(1,(audioDb(level)+48)/48))*94,now,-48)}deg)`;}
                 });
                 if(dev.type==='tapeDeck'){
                     const running=isSourceRunning(dev);dev.el.classList.toggle('tape-running',running);
@@ -5633,7 +5635,8 @@ const Hardware = (() => {
                     dev.integratedEnvelope[i]+=(value-dev.integratedEnvelope[i])*(1-Math.exp(-elapsed/.13));
                     const load=dev.channelLoads?.[i?'R':'L']??Infinity,watts=wattsAtLoad(dev.integratedEnvelope[i],load);
                     const fraction=Math.max(.0001,Math.min(1,watts/dev.state.ratedWatts));
-                    needle.setAttribute('transform',`rotate(${dampedNeedle(needle,-48+(Math.log10(fraction)+4)*24,now,-48)} 50 62)`);
+                    const calibration=deviceGaugeCalibrationAngle(dev,now,-48,48);
+                    needle.setAttribute('transform',`rotate(${calibration??dampedNeedle(needle,-48+(Math.log10(fraction)+4)*24,now,-48)} 50 62)`);
                     needle.parentElement.setAttribute('aria-label',`Potência simulada ${i?'R':'L'}: ${watts.toFixed(2)} W`);
                 });
             });
@@ -5765,7 +5768,8 @@ const Hardware = (() => {
                 const target=fraction>.0001?-100+(Math.log10(fraction)+4)*46:-100;
                 dev.biasVisual??=-100;
                 const response=target>dev.biasVisual?.22:.65;
-                dev.biasVisual=matchMedia('(prefers-reduced-motion: reduce)').matches?target:dev.biasVisual+(target-dev.biasVisual)*(1-Math.exp(-elapsed/response));
+                const calibration=deviceGaugeCalibrationAngle(dev,now,-100,84);
+                dev.biasVisual=calibration??(matchMedia('(prefers-reduced-motion: reduce)').matches?target:dev.biasVisual+(target-dev.biasVisual)*(1-Math.exp(-elapsed/response)));
                 needle.setAttribute('transform',`rotate(${dev.biasVisual} 60 62)`);
                 needle.closest('svg').setAttribute('aria-label',`Potência de saída simulada: ${watts.toFixed(2)} W, maior nível entre os canais A e B`);
                 needle.closest('.bias-meter').title=`${watts.toFixed(2)} W · maior nível entre A e B`;
@@ -6587,22 +6591,31 @@ const Hardware = (() => {
 
         const powerOnAnimations=new WeakMap();
         const powerMotionPreference=matchMedia('(prefers-reduced-motion: reduce)');
+        function deviceGaugeCalibrationAngle(dev,now,rest,maximum){
+            const calibration=dev.gaugeCalibration;if(!calibration)return null;
+            const elapsed=now-calibration.startedAt,duration=calibration.duration;
+            if(elapsed>=duration){dev.gaugeCalibration=null;return null;}
+            const ease=value=>value<.5?4*value*value*value:1-Math.pow(-2*value+2,3)/2;
+            const rise=duration*.36,hold=duration*.08;
+            if(elapsed<rise)return rest+(maximum-rest)*ease(elapsed/rise);
+            if(elapsed<rise+hold)return maximum;
+            return rest+(maximum-rest)*(1-ease((elapsed-rise-hold)/(duration-rise-hold)));
+        }
         function stopPowerOnRitual(dev){
             powerOnAnimations.get(dev)?.forEach(animation=>animation.cancel());powerOnAnimations.delete(dev);
         }
         function animateDevicePower(dev){
             stopPowerOnRitual(dev);
+            dev.gaugeCalibration=null;
             if(!dev.powered||dev.state.damage||state.restoringProject||powerMotionPreference.matches)return;
+            dev.gaugeCalibration={startedAt:performance.now(),duration:1250};
             const animations=[];
             const fade=(element,delay,duration)=>{
                 const opacity=getComputedStyle(element).opacity;
                 animations.push(element.animate([{opacity:0},{opacity}],{delay,duration,easing:'ease-in-out',fill:'backwards'}));
             };
             dev.el.querySelectorAll('.hw-led,.device-led,.hw-bar-lens').forEach(element=>fade(element,0,760));
-            // Screens and gauge faces stay opaque; CSS transitions only their emitted light.
-            dev.el.querySelectorAll('[data-integrated-needle],[data-bias-needle],[data-live-vu],.receiver-vu i').forEach(element=>{
-                animations.push(element.animate([{translate:'-1px 1.5px'},{translate:'.3px -.4px',offset:.7},{translate:'0px 0px'}],{delay:130,duration:420,easing:'ease-out',fill:'backwards'}));
-            });
+            // Screens and gauge faces stay opaque; the meter loops animate their needles.
             powerOnAnimations.set(dev,animations);
         }
         powerMotionPreference.addEventListener('change',event=>{if(event.matches)Object.values(state.devices).forEach(dev=>{stopPowerOnRitual(dev);});});
