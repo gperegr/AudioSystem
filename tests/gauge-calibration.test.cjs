@@ -20,3 +20,13 @@ test('power-on gauge calibration sweeps to full scale and returns to its rest an
     assert.equal(angle(2250),null);
     assert.equal(device.gaugeCalibration,null);
 });
+
+test('precision preamp output needles follow stereo output meters and power-on calibration',()=>{
+    const start=source.indexOf('        function updateReferenceHardware(now){'),end=source.indexOf('        function integratedGauge(',start);
+    const update=source.slice(start,end);
+    assert.match(update,/dev\.meters\?\.levels\[i\]/);
+    assert.match(update,/deviceGaugeCalibrationAngle\(dev,now,-55,55\)/);
+    const styles=readFileSync(path.join(__dirname,'../style.css'),'utf8');
+    assert.match(styles,/device-type-prePrecision\.power-off \.precision-meter \{filter:brightness\(\.4\)/);
+    assert.match(styles,/device-type-prePrecision:not\(\.power-off\) \.precision-meter \{box-shadow:0 0 8px/);
+});

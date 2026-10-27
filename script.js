@@ -5550,7 +5550,8 @@ const Hardware = (() => {
                 }
                 if(dev.type==='prePrecision')dev.el.querySelectorAll('[data-precision-needle]').forEach((needle,i)=>{
                     const db=audioDb(dev.powered?dev.meters?.levels[i]||0:0),angle=-55+Math.max(0,Math.min(1,(db+40)/43))*110;
-                    needle.setAttribute('transform',`rotate(${dampedNeedle(needle,angle,now,-55).toFixed(3)} 64 77)`);
+                    const calibration=deviceGaugeCalibrationAngle(dev,now,-55,55);
+                    needle.setAttribute('transform',`rotate(${calibration??dampedNeedle(needle,angle,now,-55).toFixed(3)} 64 77)`);
                 });
             });
         }
