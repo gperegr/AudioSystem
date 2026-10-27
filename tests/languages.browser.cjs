@@ -12,8 +12,7 @@ const assert = require('node:assert/strict');
         await page.locator('#headphone-calibration-skip').click();
         await page.getByRole('button',{name:'Agora não',exact:true}).click();
         await page.locator('.app-settings').evaluate(element=>{element.open=true;});
-        await page.locator('.language-setting .app-select-trigger').click({force:true});
-        await page.locator('.app-select-option').filter({hasText:'English'}).click({force:true});
+        await page.locator('.language-choice[data-language="en"]').click();
         await page.waitForFunction(()=>document.documentElement.lang==='en');
         assert.equal(await page.locator('#equipment-search').getAttribute('placeholder'),'Name, function, connector, or signal…');
         assert.equal(await page.locator('.mobile-category-nav [data-category-target="Fontes de áudio"]').textContent(),'Sources');
@@ -21,7 +20,8 @@ const assert = require('node:assert/strict');
         assert.equal(await page.locator('#canvas-backdrop option[value="listeningIllustrated"]').textContent(),'Listening room');
         assert.equal(await page.locator('#room-preset option[value="small"]').textContent(),'Small room');
         assert.equal(await page.evaluate(()=>AudioSystemLanguage.sourceText('Sources & Connections')),'Fontes & Conexões');
-        assert.equal(await page.locator('#app-language').inputValue(),'en');
+        assert.equal(await page.locator('.language-choice[data-language="en"]').getAttribute('aria-pressed'),'true');
+        assert.equal(await page.locator('.language-choice[data-language="pt"]').getAttribute('aria-pressed'),'false');
         assert.deepEqual(await page.evaluate(()=>[
             AudioSystemLanguage.translate('Pré · Precisão'),
             AudioSystemLanguage.translate('Caixa de Piso · Cones Naturais'),
@@ -81,8 +81,10 @@ const assert = require('node:assert/strict');
         await page.reload();
         await page.waitForFunction(()=>document.documentElement.lang==='en');
         assert.equal(await page.locator('#equipment-search').getAttribute('placeholder'),'Name, function, connector, or signal…');
+        assert.equal(await page.locator('.language-choice[data-language="en"]').getAttribute('aria-pressed'),'true');
         await page.evaluate(()=>AudioSystemLanguage.set('pt'));
-        assert.equal(await page.locator('#app-language').inputValue(),'pt');
+        assert.equal(await page.locator('.language-choice[data-language="pt"]').getAttribute('aria-pressed'),'true');
+        assert.equal(await page.locator('.language-choice[data-language="en"]').getAttribute('aria-pressed'),'false');
         assert.equal(await page.evaluate(()=>document.documentElement.lang),'pt-BR');
         assert.deepEqual(errors,[]);
         console.log('Browser: language selector, PT/EN toggle, translated labels, dynamic content, attributes, and category lookup passed.');

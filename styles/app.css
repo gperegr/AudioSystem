@@ -2088,9 +2088,12 @@
 .settings-group>summary:focus-visible {outline:2px solid #93c5fd;outline-offset:-3px;}
 .settings-group-content {display:flex;flex-direction:column;gap:14px;padding:3px 13px 14px;border-top:1px solid #374754;}
 .settings-group-content>.settings-theme-section {gap:14px;}
-.app-settings-content .language-setting {display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0 13px;border:1px solid #374754;border-radius:9px;background:#1e2832;color:#dbe5ed;font:600 13px/1.3 var(--font-ui,"Inter",sans-serif);}
-.app-settings-content .language-setting>.app-select {flex:0 1 170px;width:170px;max-width:62%;}
-.app-settings-content .language-setting .app-select-trigger {width:100%;}
+.app-settings-content .language-setting {display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:7px 9px 7px 13px;border:1px solid #374754;border-radius:9px;background:#1e2832;color:#dbe5ed;font:600 13px/1.3 var(--font-ui,"Inter",sans-serif);}
+.language-options {display:flex;align-items:center;gap:4px;padding:3px;border:1px solid #3b4b5a;border-radius:8px;background:#18212a;}
+.app-settings-content .language-options .language-choice {min-width:44px;min-height:36px;padding:6px 10px;border:1px solid transparent;border-radius:6px;background:transparent;color:#aab8c5;font:700 12px/1 var(--font-ui,"Inter",sans-serif);cursor:pointer;}
+.app-settings-content .language-options .language-choice:hover {background:#2a3946;color:#e0eaf2;}
+.app-settings-content .language-options .language-choice[aria-pressed="true"] {border-color:#83b8cd;background:#304c5a;color:#e7f7fd;box-shadow:inset 0 0 0 1px #83b8cd33;}
+.app-settings-content .language-options .language-choice:focus-visible {outline:2px solid #93c5fd;outline-offset:2px;}
 .app-settings-content .settings-icon-control {display:flex;flex-direction:column;align-items:stretch;gap:7px;font:600 12px/1.3 var(--font-ui,"Inter",sans-serif);}
 .settings-icon-control>select[hidden] {display:none!important;}
 .settings-icon-options {display:flex;flex-wrap:wrap;gap:7px;}

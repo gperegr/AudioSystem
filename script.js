@@ -9712,10 +9712,11 @@ const Hardware = (() => {
             const content=document.createElement('div');content.className='settings-group-content';content.append(...nodes);group.append(summary,content);return group;
         };
         const clearButton=document.getElementById('clear-system');
-        const languageSetting=document.createElement('label');languageSetting.className='language-setting';languageSetting.innerHTML='<span>Idioma</span><select id="app-language" aria-label="Idioma"><option value="pt">Português</option><option value="en">English</option></select>';
-        const languageSelect=languageSetting.querySelector('select');languageSelect.value=AudioSystemLanguage.language;
-        languageSelect.addEventListener('change',()=>AudioSystemLanguage.set(languageSelect.value));
-        AudioSystemLanguage.subscribe(language=>{if(languageSelect.value!==language){languageSelect.value=language;languageSelect.dispatchEvent(new Event('change',{bubbles:true}));}});
+        const languageSetting=document.createElement('div');languageSetting.className='language-setting';languageSetting.innerHTML='<span>Idioma</span><div class="language-options" role="group" aria-label="Idioma"><button type="button" class="language-choice" data-language="en" aria-label="English">EN</button><button type="button" class="language-choice" data-language="pt" aria-label="Português">PT</button></div>';
+        const languageButtons=[...languageSetting.querySelectorAll('[data-language]')];
+        languageButtons.forEach(button=>button.addEventListener('click',()=>AudioSystemLanguage.set(button.dataset.language)));
+        const syncLanguageButtons=language=>languageButtons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.language===language)));
+        syncLanguageButtons(AudioSystemLanguage.language);AudioSystemLanguage.subscribe(syncLanguageButtons);
         clearCatalogFooter.replaceChildren(
             languageSetting,
             settingsGroup('Visual','<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="1.5"/><path d="m4 17 5-5 3 3 3-4 5 6"/>',[themeSection],true),
