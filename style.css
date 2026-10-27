@@ -4458,6 +4458,14 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
 
 #catalog-amp-tooltip {position:fixed;z-index:150;width:min(320px,calc(100vw - 24px));max-height:calc(100vh - 16px);overflow:auto;box-sizing:border-box;padding:17px 19px 19px;border:1px solid #70818d;background:linear-gradient(145deg,#26313c,#17212b 65%);color:#dce7ed;border-radius:20px;box-shadow:0 22px 54px #0009,0 2px 14px #0008;pointer-events:none;opacity:0;visibility:hidden;transform:scale(.72);transform-origin:left center;}
 #catalog-amp-tooltip.catalog-signature-only {width:min(300px,calc(100vw - 24px));padding:9px;border-radius:14px;}
+#catalog-amp-tooltip.catalog-signature-only .catalog-listening-preview {display:grid;gap:7px;}
+#catalog-amp-tooltip.catalog-signature-only .catalog-rating-visuals {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;}
+#catalog-amp-tooltip.catalog-signature-only .catalog-rating {position:relative;display:grid;grid-template-columns:13px auto auto;align-items:center;justify-content:center;gap:3px;padding:5px 6px 8px;border:1px solid #364451;border-radius:7px;background:linear-gradient(145deg,#1e2a34,#131c24);color:#e2ebf1;font:700 12px/1 "Inter",sans-serif;}
+#catalog-amp-tooltip.catalog-signature-only .catalog-rating>svg {width:11px;height:14px;fill:#f2c46f;}
+#catalog-amp-tooltip.catalog-signature-only .catalog-rating small {color:#aab9c5;font:600 8px/1 "Inter",sans-serif;}
+#catalog-amp-tooltip.catalog-signature-only .catalog-rating-ohm {color:#a8d3e5;font:700 12px/1 "Inter",sans-serif;}
+#catalog-amp-tooltip.catalog-signature-only .catalog-rating-track {position:absolute;right:6px;bottom:4px;left:6px;height:2px;overflow:hidden;border-radius:2px;background:#34424e;}
+#catalog-amp-tooltip.catalog-signature-only .catalog-rating-track>i {display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#62a9cb,#a6d7ca);}
 #catalog-amp-tooltip.catalog-signature-only .sonic-signature-visuals {gap:4px;}
 #catalog-amp-tooltip.catalog-signature-only .sonic-band {gap:4px;padding:6px 2px;}
 #catalog-amp-tooltip.catalog-signature-only .sonic-band-name {font-size:9px;}

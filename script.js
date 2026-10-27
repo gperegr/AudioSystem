@@ -2647,11 +2647,13 @@ const Hardware = (() => {
         };
         const PASSIVE_SPK = new Set(['speaker', 'spkPassiveWood', 'spkPassiveCarbon', 'spkPassiveGridBlack', 'spkPassiveGridOrange',...Object.keys(FLOOR_SPEAKERS),...Object.keys(BOOKSHELF_SPEAKERS)]);
         const ACTIVE_SPK = new Set(['spkActiveRounded','spkActiveMonitor', 'spkActiveBookshelf','spkActiveCompact']);
+        const ACTIVE_SPEAKER_RATINGS=Object.freeze({spkActiveRounded:{watts:100,inputOhms:10000},spkActiveMonitor:{watts:60,inputOhms:10000},spkActiveBookshelf:{watts:80,inputOhms:10000},spkActiveCompact:{watts:36,inputOhms:10000}});
+        const ACTIVE_SUB_RATINGS=Object.freeze({subwoofer:{watts:150,inputOhms:10000},subwooferCube:{watts:80,inputOhms:10000},subwooferPro:{watts:300,inputOhms:10000}});
         const REFERENCE_HEADPHONES={
-            hpKubaDisco2:{ohms:32,enclosure:'Fechado',description:'Kuba Disco 2 com arco clássico de madeira laminada, almofadas XL costuradas e conchas com relevos concêntricos. Acabamentos Tauari, Nogueira e Ébano; conexão P2 no cabo.'},
-            hpOpenRing:{ohms:300,description:'Fone aberto com conchas ovais, aros metálicos, grade vazada e arco com almofadas segmentadas. Suporte padrão e entrada P2 estéreo na ponta do cabo.'},
-            hpOpenDome:{ohms:80,description:'Fone aberto com conchas arredondadas, grade em colmeia, hastes de carbono e faixa de suspensão. Suporte padrão e entrada P2 estéreo na ponta do cabo.'},
-            hpPlanar:{ohms:20,description:'Fone planar aberto com conchas amplas, grades horizontais, hastes metálicas e arco acolchoado. Suporte padrão e entrada P2 estéreo na ponta do cabo.'}
+            hpKubaDisco2:{ohms:32,powerMw:300,enclosure:'Fechado',description:'Kuba Disco 2 com arco clássico de madeira laminada, almofadas XL costuradas e conchas com relevos concêntricos. Acabamentos Tauari, Nogueira e Ébano; conexão P2 no cabo.'},
+            hpOpenRing:{ohms:300,powerMw:500,description:'Fone aberto com conchas ovais, aros metálicos, grade vazada e arco com almofadas segmentadas. Suporte padrão e entrada P2 estéreo na ponta do cabo.'},
+            hpOpenDome:{ohms:80,powerMw:500,description:'Fone aberto com conchas arredondadas, grade em colmeia, hastes de carbono e faixa de suspensão. Suporte padrão e entrada P2 estéreo na ponta do cabo.'},
+            hpPlanar:{ohms:20,powerMw:1000,description:'Fone planar aberto com conchas amplas, grades horizontais, hastes metálicas e arco acolchoado. Suporte padrão e entrada P2 estéreo na ponta do cabo.'}
         };
         const HP_TYPES = new Set(['headphone', 'hpStudio', 'hpClassic','hpMonitor','hpMax',...Object.keys(REFERENCE_HEADPHONES)]);
         const BT_HP_TYPES = new Set(['headphone','hpStudio','hpMax']);
@@ -2823,7 +2825,7 @@ const Hardware = (() => {
             return `<div class="sonic-signature-visuals">${bands}</div>${sonicCurveFigureHtml(dev.listeningProfile,frequencies,response)}`;
         }
         function listeningProfilePreviewHtml(type){
-            const profile=LISTENING_PROFILES[type];if(!profile)return '';
+            const profile=LISTENING_PROFILES[type]||{label:'Resposta neutra',bands:[0,0,0]};
             const sampleRate=state.audioCtx?.sampleRate||48000,frequencies=Float32Array.from({length:181},(_,i)=>20*1000**(i/180)),response=new Float64Array(frequencies.length);
             let specs=profile.bassAlignment?floorListeningFilters(profile,sampleRate):profile.filterSpecs;
             if(!profile.bassAlignment&&!profile.filterSpecs){
@@ -2838,6 +2840,17 @@ const Hardware = (() => {
                 });
             }
             return `<div class="sonic-signature-visuals">${sonicSignatureBandsHtml(response,frequencies)}</div>${sonicCurveFigureHtml(profile,frequencies,response)}`;
+        }
+        function catalogRatingVisualHtml(type){
+            const headphone=HEADPHONE_SPECS[type],speaker=FLOOR_SPEAKERS[type]||BOOKSHELF_SPEAKERS[type]||FIXED_PASSIVE_SPECS[type],active=ACTIVE_SPEAKER_RATINGS[type]||ACTIVE_SUB_RATINGS[type];
+            const power=headphone?.powerMw??speaker?.watts??active?.watts??0,powerUnit=headphone?'mW':'W',ohms=headphone?.ohms??speaker?.ohms??active?.inputOhms??0;
+            const powerMax=powerUnit==='mW'?1000:500,impedanceMax=10000;
+            const fill=(value,min,max)=>Math.max(8,Math.min(100,Math.round((Math.log(Math.max(min,value)/min)/Math.log(max/min))*100)));
+            const ohmsValue=ohms>=1000?`${(ohms/1000).toFixed(0)}k`:`${ohms}`;
+            const approximate=headphone||active;
+            const powerTitle=`Potência de referência simulada: ${power} ${powerUnit}.`;
+            const impedanceTitle=`${active?'Impedância de entrada':'Impedância nominal'} de referência: ${ohms} Ω.`;
+            return `<div class="catalog-rating-visuals" aria-label="Parâmetros elétricos de referência"><div class="catalog-rating" role="img" aria-label="${powerTitle}" title="${powerTitle}"><svg viewBox="0 0 16 20" aria-hidden="true"><path d="M9.6 1 3 11h4l-.7 8L13 8.5H9.1Z"/></svg><span>${approximate?'≈':''}${power}</span><small>${powerUnit}</small><i class="catalog-rating-track"><i style="width:${fill(power,powerUnit==='mW'?20:5,powerMax)}%"></i></i></div><div class="catalog-rating" role="img" aria-label="${impedanceTitle}" title="${impedanceTitle}"><b class="catalog-rating-ohm" aria-hidden="true">Ω</b><span>${ohmsValue}</span><small>Ω</small><i class="catalog-rating-track"><i style="width:${fill(ohms,8,impedanceMax)}%"></i></i></div></div>`;
         }
 
         const INTEGRATED_AMPS={
@@ -2946,7 +2959,7 @@ const Hardware = (() => {
 
         // Digital samples represent instantaneous voltage; RMS is computed from samples.
         const ELECTRICAL_MODEL=Object.freeze({lineVoltsPerUnit:Math.SQRT2*2,speakerVoltsPerUnit:100,phonoGain:100,converterRatio:.1,lineInputOhms:47000,converterInputOhms:20000});
-        const HEADPHONE_SPECS=Object.freeze({headphone:{ohms:32},hpStudio:{ohms:64},hpClassic:{ohms:80},hpMonitor:{ohms:32},hpMax:{ohms:32},...REFERENCE_HEADPHONES});
+        const HEADPHONE_SPECS=Object.freeze({headphone:{ohms:32,powerMw:300},hpStudio:{ohms:64,powerMw:500},hpClassic:{ohms:80,powerMw:300},hpMonitor:{ohms:32,powerMw:200},hpMax:{ohms:32,powerMw:150},...REFERENCE_HEADPHONES});
         const HEADPHONE_OUTPUT_SPECS=Object.freeze({
             streamIntegrated:{voltsRms:2,currentRms:.07,outputOhms:2},
             headphoneAmp:{voltsRms:3,currentRms:.065,outputOhms:12},headphoneAmpModern:{voltsRms:4,currentRms:.18,outputOhms:1},headphoneAmp4:{voltsRms:2.5,currentRms:.08,outputOhms:4},
@@ -4610,6 +4623,7 @@ const Hardware = (() => {
             if (oldIcon) oldIcon.outerHTML = catalogIcon(item.dataset.template);
         });
         const catalogAmpTip=document.createElement('aside');catalogAmpTip.id='catalog-amp-tooltip';catalogAmpTip.setAttribute('role','tooltip');document.body.appendChild(catalogAmpTip);
+        const isCatalogListeningType=type=>PASSIVE_SPK.has(type)||ACTIVE_SPK.has(type)||HP_TYPES.has(type)||SUB_TYPES.has(type)||PASSIVE_SUB_TYPES.has(type);
         let catalogAmpTimer=0,catalogAmpTarget=null;
         const hideCatalogAmpTip=()=>{clearTimeout(catalogAmpTimer);catalogAmpTarget=null;catalogAmpTip.classList.remove('is-visible');};
         const showCatalogAmpTip=(item,delay)=>{
@@ -4621,15 +4635,15 @@ const Hardware = (() => {
                 const type=item.dataset.template,spec=FIXED_AMP_SPECS[type];
                 const title=DEVICE_NAMES[type]||item.textContent.trim();
                 const speaker=FLOOR_SPEAKERS[type]||BOOKSHELF_SPEAKERS[type],headphone=REFERENCE_HEADPHONES[type];
-                const signatureOnly=!!LISTENING_PROFILES[type]&&(PASSIVE_SPK.has(type)||ACTIVE_SPK.has(type)||HP_TYPES.has(type)||type==='hpKubaDisco2');
+                const signatureOnly=isCatalogListeningType(type);
                 if(signatureOnly){
                     catalogAmpTip.classList.add('catalog-signature-only');
-                    catalogAmpTip.innerHTML=`<div aria-label="Assinatura sonora de ${title}">${listeningProfilePreviewHtml(type)}</div>`;
+                    catalogAmpTip.innerHTML=`<div class="catalog-listening-preview" aria-label="Assinatura sonora de ${title}">${listeningProfilePreviewHtml(type)}${catalogRatingVisualHtml(type)}</div>`;
                 }else{
-                catalogAmpTip.classList.remove('catalog-signature-only');
-                const description=speaker?.description||headphone?.description||catalogDescriptions[type];
-                const specs=speaker?`${speaker.watts} W · ${speaker.ohms} Ω · passiva`:headphone?`${headphone.ohms} Ω · ${headphone.enclosure||'aberto'} · fone`:spec?`${spec.watts} W por canal · 8 Ω`:/^pre/i.test(type)?'Pré-amplificador · sem potência para caixas':'Amplificação para fones';
-                catalogAmpTip.innerHTML=`<h2>${title}</h2><p class="catalog-amp-power">${specs}</p>${description?`<p class="catalog-amp-description">${description}</p>`:''}${AMPLIFICATION_VOICINGS[type]?amplificationInspectorHtml({amplificationProfile:AMPLIFICATION_VOICINGS[type]}):''}`;
+                    catalogAmpTip.classList.remove('catalog-signature-only');
+                    const description=speaker?.description||headphone?.description||catalogDescriptions[type];
+                    const specs=speaker?`${speaker.watts} W · ${speaker.ohms} Ω · passiva`:headphone?`${headphone.ohms} Ω · ${headphone.enclosure||'aberto'} · fone`:spec?`${spec.watts} W por canal · 8 Ω`:/^pre/i.test(type)?'Pré-amplificador · sem potência para caixas':'Amplificação para fones';
+                    catalogAmpTip.innerHTML=`<h2>${title}</h2><p class="catalog-amp-power">${specs}</p>${description?`<p class="catalog-amp-description">${description}</p>`:''}${AMPLIFICATION_VOICINGS[type]?amplificationInspectorHtml({amplificationProfile:AMPLIFICATION_VOICINGS[type]}):''}`;
                 }
                 const rect=item.getBoundingClientRect(),w=catalogAmpTip.offsetWidth,h=catalogAmpTip.offsetHeight;
                 catalogAmpTip.style.left=Math.min(innerWidth-w-10,rect.right+14)+'px';
@@ -4637,7 +4651,7 @@ const Hardware = (() => {
                 catalogAmpTip.classList.remove('is-visible');void catalogAmpTip.offsetWidth;catalogAmpTip.classList.add('is-visible');
             },delay);
         };
-        catalogItems.filter(item=>AMPLIFICATION_VOICINGS[item.dataset.template]||FLOOR_SPEAKERS[item.dataset.template]||BOOKSHELF_SPEAKERS[item.dataset.template]||REFERENCE_HEADPHONES[item.dataset.template]||HP_TYPES.has(item.dataset.template)||ACTIVE_SPK.has(item.dataset.template)).forEach(item=>{
+        catalogItems.filter(item=>AMPLIFICATION_VOICINGS[item.dataset.template]||isCatalogListeningType(item.dataset.template)).forEach(item=>{
             item.addEventListener('pointerenter',event=>{if(event.pointerType!=='touch')showCatalogAmpTip(item,500);});
             item.addEventListener('pointerleave',hideCatalogAmpTip);
             item.addEventListener('focusin',()=>showCatalogAmpTip(item,0));
