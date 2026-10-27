@@ -57,6 +57,24 @@ test('speaker signature and model specification labels translate',()=>{
     for(const [portuguese,english]of Object.entries(expected))assert.equal(context.translate(portuguese),english,portuguese);
 });
 
+test('reported tape deck, amplifier and audio interface labels translate',()=>{
+    const expected={
+        'Ruído de fita':'Tape hiss','Oscilação da fita':'Tape wow and flutter',
+        'Oscilação baixa':'Low wow and flutter','Oscilação média':'Medium wow and flutter','Oscilação alta':'High wow and flutter',
+        'INICIAR / PARAR':'START / STOP','Potência por canal':'Power per channel',
+        'Carga mínima simulada':'Simulated minimum load','Potência por carga':'Power by load',
+        'Entrada do computador':'Computer input','AUTORIZAR / BUSCAR ENTRADAS':'ALLOW / FIND INPUTS',
+        'Dispositivo de captura':'Capture device','Entrada padrão do sistema':'System default input',
+        'INICIAR CAPTURA':'START CAPTURE','PARAR CAPTURA':'STOP CAPTURE','Ganho L':'Gain L','Ganho R':'Gain R',
+        'Volume de fones':'Headphone volume','Volume de fones 1':'Headphone volume 1','Volume de fones 2':'Headphone volume 2',
+        'BT AUDIO IN · SEM FIO':'BT AUDIO IN · WIRELESS','SEM FIO · HEADPHONES':'WIRELESS · HEADPHONES'
+    };
+    for(const [portuguese,english]of Object.entries(expected))assert.equal(context.translate(portuguese),english,portuguese);
+    assert.equal(context.translate('Escolha um dispositivo de áudio e permita o acesso no navegador.'),'Choose an audio device and allow browser access.');
+    assert.equal(context.translate('A captura é encaminhada sem efeitos para as saídas conectadas. Esta interface não tem ganho de entrada; o volume compartilhado oferece até +12 dB.'),'Capture is routed without effects to connected outputs. This interface has no input gain; shared volume provides up to +12 dB.');
+    assert.equal(context.translate('A captura é encaminhada sem efeitos para as saídas conectadas. Os ganhos L/R e volumes de saída oferecem até +12 dB para compensar entradas baixas.'),'Capture is routed without effects to connected outputs. L/R gain and output volume provide up to +12 dB to compensate for low input levels.');
+});
+
 test('the linear turntable inspector and its changing states are translated',()=>{
     const expected={
         'Energia':'Power','LIGAR / DESLIGAR':'Power on / off','Disco sobre o prato':'Record on the platter',
