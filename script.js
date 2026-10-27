@@ -1661,6 +1661,7 @@ const Hardware = (() => {
                 void next.offsetWidth;
                 requestAnimationFrame(()=>{
                     if(request!==roomImageRequest){next.remove();return;}
+                    previous.forEach(image=>image.classList.remove('is-visible'));
                     next.classList.add('is-visible');
                     setTimeout(()=>previous.forEach(image=>image.remove()),1050);
                 });
