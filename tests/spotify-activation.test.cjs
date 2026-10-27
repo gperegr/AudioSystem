@@ -4,7 +4,7 @@ const {readFileSync}=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 
-const filename=path.join(__dirname,'../spotify-coverflow.js');
+const filename=path.join(__dirname,'../src/modules/spotify-coverflow.js');
 let source=readFileSync(filename,'utf8');
 const apiMarker='    return {mount,inspectorHtml,bindInspector,initialize,login,logout,playAlbum,resumeAlbum,activatePlayback,loadTracks,selectTrack,pauseAlbum,setPlaybackVolume,getPlaybackState,seekTo,setTrackRepeat,setShuffle,markExtracted,markRemoved,setBeforeRedirect(callback){beforeRedirect=callback;}};';
 assert.ok(source.includes(apiMarker),'Spotify API export must be present');

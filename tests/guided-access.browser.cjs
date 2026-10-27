@@ -8,7 +8,7 @@ function wav(){const b=Buffer.alloc(44+16000);b.write('RIFF');b.writeUInt32LE(b.
     const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
     try{
         const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
-        await page.route('**/guided-access.js?*',route=>{const body=fs.readFileSync(path.join(root,'guided-access.js'),'utf8')+'\nconst originalMount=GuidedAccess.mount;GuidedAccess.mount=a=>{window.__adapter=a;return originalMount(a)};';return route.fulfill({contentType:'application/javascript',body});});
+        await page.route('**/guided-access.js?*',route=>{const body=fs.readFileSync(path.join(root,'src/modules/guided-access.js'),'utf8')+'\nconst originalMount=GuidedAccess.mount;GuidedAccess.mount=a=>{window.__adapter=a;return originalMount(a)};';return route.fulfill({contentType:'application/javascript',body});});
         await page.route('**/script.js?*',route=>{let body=fs.readFileSync(path.join(root,'script.js'),'utf8');const i=body.lastIndexOf('        renderVisuals();');body=body.slice(0,i)+'window.__test={state,world,createDevice,deleteDevice,selectDevice,updateCableFlows,guidedAccess,maxEquipmentBottom,tutorialInspect,projectCapture,saveLocalProject};\n'+body.slice(i);return route.fulfill({contentType:'application/javascript',body});});
         const url=process.env.TEST_BASE_URL||'http://127.0.0.1:8000/';await page.goto(url);
         await page.locator('#headphone-calibration-skip').click();await page.getByRole('button',{name:'Começar tutorial',exact:true}).click();
@@ -22,7 +22,7 @@ function wav(){const b=Buffer.alloc(44+16000);b.write('RIFF');b.writeUInt32LE(b.
             await page.evaluate(async index=>{await GuidedAccess.replaceExample(__adapter.examples,GuidedAccess.examples[index]);},index);
             await page.waitForTimeout(160);
             const result=await page.evaluate(()=>({floor:__test.maxEquipmentBottom(),links:__test.state.connections.length,items:Object.values(__test.state.devices).map(d=>({type:d.type,x:d.el.offsetLeft,y:d.el.offsetTop,w:d.el.offsetWidth,h:d.el.offsetHeight,z:Number(getComputedStyle(d.el).zIndex),playing:!!d.state.playing,capture:!!d.micStream}))}));
-            const spec=require('../guided-access.js').examples[index];assert.equal(result.links,spec.links.length);
+            const spec=require('../src/modules/guided-access.js').examples[index];assert.equal(result.links,spec.links.length);
             for(const d of result.items){assert(!d.playing&&!d.capture);assert(d.y>=0&&d.y+d.h<=result.floor+1);if(d.type.startsWith('furniture')){assert.equal(d.y+d.h,result.floor);assert.equal(d.z,2);}}
             if(index===1)for(const d of result.items.filter(d=>d.type==='spkPassiveWood'))assert.equal(d.y+d.h,result.floor);
         }

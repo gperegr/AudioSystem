@@ -24,6 +24,6 @@ test('Conjunto de CDs mostra capas guardadas sem controles ou conectores funcion
     assert.match(html,/Conjunto de CDs/);
     assert.doesNotMatch(html,/class="port|<button|<input/);
     assert.doesNotMatch(html,/cd-collection-base/);
-    const styles=readFileSync(require('node:path').join(__dirname,'../style.css'),'utf8');
+    const styles=readFileSync(require('node:path').join(__dirname,'../styles/app.css'),'utf8');
     assert.match(styles,/device-type-cdCollection \.cd-collection-body \{overflow:visible;border:0;border-radius:0;background:transparent;box-shadow:none;\}/);
 });

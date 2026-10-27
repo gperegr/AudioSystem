@@ -26,7 +26,7 @@ test('precision preamp output needles follow stereo output meters and power-on c
     const update=source.slice(start,end);
     assert.match(update,/dev\.meters\?\.levels\[i\]/);
     assert.match(update,/deviceGaugeCalibrationAngle\(dev,now,-55,55\)/);
-    const styles=readFileSync(path.join(__dirname,'../style.css'),'utf8');
+    const styles=readFileSync(path.join(__dirname,'../styles/app.css'),'utf8');
     assert.match(styles,/device-type-prePrecision\.power-off \.precision-meter svg>path:first-child \{fill:#596054/);
     assert.match(styles,/device-type-prePrecision:not\(\.power-off\) \.precision-meter \{box-shadow:0 0 8px/);
     assert.match(source,/reducedMotion\?420:1250/);

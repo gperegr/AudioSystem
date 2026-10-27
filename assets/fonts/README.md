@@ -9,4 +9,4 @@ Estas fontes são gratuitas e permitem uso, incorporação e redistribuição, i
 | Equipamentos modernos | Manrope, variável | https://github.com/google/fonts/tree/main/ofl/manrope |
 | Visores digitais e leituras numéricas | IBM Plex Mono Medium | https://github.com/google/fonts/tree/main/ofl/ibmplexmono |
 
-Arquivos originais, sem modificações, obtidos do repositório Google Fonts. O carregamento é local via `@font-face` em `style.css`; estas quatro famílias não exigem conexão a um serviço de fontes externo. A tipografia da interface geral permanece independente.
+Arquivos originais, sem modificações, obtidos do repositório Google Fonts. O carregamento é local via `@font-face` em [`styles/app.css`](../../styles/app.css); estas quatro famílias não exigem conexão a um serviço de fontes externo. A tipografia da interface geral permanece independente.

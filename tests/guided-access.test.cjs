@@ -1,6 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const {topics,examples,readProgress,replaceExample}=require('../guided-access.js');
+const {topics,examples,readProgress,replaceExample}=require('../src/modules/guided-access.js');
 const storage=value=>({getItem:()=>value});
 test('guide progress tolerates blocked storage, corrupt JSON and invalid positions',()=>{
     assert.equal(readProgress({getItem(){throw Error('blocked');}}).step,0);

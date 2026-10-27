@@ -39,7 +39,7 @@ O modelo pode ser declarado explicitamente ou escolhido pela função central `k
 - `Hardware.plugs` e `Hardware.plugMarkup`: desenho dos plugues e espessuras de P2, P10, RCA e fio de caixa em um único registro.
 - `Hardware.inspector`: superfície, botões, sliders e medidas de controles dos menus, mantendo os parâmetros particulares de cada equipamento.
 
-Os estilos compartilhados ficam na seção final de `style.css`. A duração de movimento é definida por `Hardware.physics`. A preferência de movimento reduzido desativa as transições dos controles.
+Os estilos compartilhados ficam na seção final de `styles/app.css`. A duração de movimento é definida por `Hardware.physics`. A preferência de movimento reduzido desativa as transições dos controles.
 
 ## Chassis
 

@@ -1,25 +1,25 @@
 /* Four catalogue subwoofers. Static materials share the speaker texture assets. */
-.detailed-subwoofer .sp-sub {background:url('./assets/textures/speaker-coating.svg') center/64px 64px,linear-gradient(120deg,#505958,#242c2c 16%,#111919 80%,#35403f);box-shadow:inset 1px 1px #cfdbd333,inset -2px -2px 4px #020a0999,0 6px 10px #0006;}
-.detailed-subwoofer .sp-sub .sp-face {background:url('./assets/textures/speaker-coating.svg') center/64px 64px,linear-gradient(145deg,#252e2a,#0c1411 76%);box-shadow:inset 0 0 0 1px #919f872b,inset 0 2px 4px #0009;}
+.detailed-subwoofer .sp-sub {background:url('../../assets/textures/speaker-coating.svg') center/64px 64px,linear-gradient(120deg,#505958,#242c2c 16%,#111919 80%,#35403f);box-shadow:inset 1px 1px #cfdbd333,inset -2px -2px 4px #020a0999,0 6px 10px #0006;}
+.detailed-subwoofer .sp-sub .sp-face {background:url('../../assets/textures/speaker-coating.svg') center/64px 64px,linear-gradient(145deg,#252e2a,#0c1411 76%);box-shadow:inset 0 0 0 1px #919f872b,inset 0 2px 4px #0009;}
 .detailed-subwoofer .sp-sub .sp-woofer {box-shadow:0 0 0 2px #6a766c,inset 0 1px #c3d0bd33,inset 0 -2px 3px #0009,0 3px 6px #0009;}
 .detailed-subwoofer .sp-sub .sp-woofer::before {background:repeating-radial-gradient(circle,#121d17 0 2px,#3c4a40 2.5px 3.5px,#101c14 4px 6px);box-shadow:inset 0 1px 2px #b4c7a92b,inset 0 -3px 4px #000a;}
-.detailed-subwoofer .sp-sub .sp-cone {background:url('./assets/textures/driver-weave.svg') center/5px 5px,radial-gradient(circle at 38% 28%,#444e45,#1c2b20 62%,#0a160e);box-shadow:inset 0 0 6px #0009,0 0 0 1px #71866a55;}
+.detailed-subwoofer .sp-sub .sp-cone {background:url('../../assets/textures/driver-weave.svg') center/5px 5px,radial-gradient(circle at 38% 28%,#444e45,#1c2b20 62%,#0a160e);box-shadow:inset 0 0 6px #0009,0 0 0 1px #71866a55;}
 .detailed-subwoofer .sp-cone b {background:radial-gradient(circle at 38% 28%,#4b594b,#1a2b1c 48%,#08160b);box-shadow:inset 0 1px #d3dfc229,0 1px 3px #000b;}
 .detailed-subwoofer .sp-panel {position:relative;isolation:isolate;}
 .detailed-subwoofer .sp-panel::before {content:'';position:absolute;inset:2px 0;z-index:-1;pointer-events:none;border:1px solid #889c7633;border-radius:3px;background:var(--material-brushed-steel) center/256px 64px,linear-gradient(#28382a88,#0e1e11aa);box-shadow:inset 0 1px #d8e3c71a;}
 .detailed-subwoofer .sp-terminal {background:linear-gradient(#263a29,#08140b);box-shadow:inset 0 1px #c2d3b52b,inset 0 0 3px #000a,0 1px 2px #0007;}
 .detailed-subwoofer .sp-slot {box-shadow:inset 0 2px 3px #000b,0 1px #afc49b33;}
 /* The Pro keeps its dark red shell and larger oblong port. */
-.detailed-subwoofer .sp-sub.sp-sub-pro {background:url('./assets/textures/speaker-coating.svg') center/64px 64px,linear-gradient(145deg,#57383d,#25191c 20%,#160f11 74%,#42292e);}
-.detailed-subwoofer .sp-sub.sp-sub-pro .sp-face {background:url('./assets/textures/speaker-coating.svg') center/64px 64px,linear-gradient(145deg,#301e22,#120a0e 75%);}
+.detailed-subwoofer .sp-sub.sp-sub-pro {background:url('../../assets/textures/speaker-coating.svg') center/64px 64px,linear-gradient(145deg,#57383d,#25191c 20%,#160f11 74%,#42292e);}
+.detailed-subwoofer .sp-sub.sp-sub-pro .sp-face {background:url('../../assets/textures/speaker-coating.svg') center/64px 64px,linear-gradient(145deg,#301e22,#120a0e 75%);}
 .detailed-subwoofer .sp-sub.sp-sub-pro .sp-woofer {box-shadow:0 0 0 2px #9b484d,inset 0 1px #e4b5b333,0 3px 7px #000a;}
-.detailed-subwoofer .sp-sub-pro .sp-cone {background:url('./assets/textures/driver-weave.svg') center/4px 4px,radial-gradient(circle at 38% 28%,#514646,#2b1e20 62%,#160b0f);}
+.detailed-subwoofer .sp-sub-pro .sp-cone {background:url('../../assets/textures/driver-weave.svg') center/4px 4px,radial-gradient(circle at 38% 28%,#514646,#2b1e20 62%,#160b0f);}
 .detailed-subwoofer .sp-sub-pro .sp-panel::before {border-color:#a86c6c44;background:var(--material-brushed-steel) center/256px 64px,linear-gradient(#3c292d99,#1c1014aa);}
 .detailed-subwoofer .sub-oblong-duct {box-shadow:inset 0 4px 6px #000e,inset 0 -1px #c78c8a44,0 1px #d39a8b55;}
 /* The vintage passive cabinet keeps walnut edges and a warm dark paper diaphragm. */
 .detailed-subwoofer .sp-sub.sp-vintage {background:linear-gradient(90deg,#29140966,transparent 6% 94%,#21120788),var(--material-wood-grain) center/384px 192px,linear-gradient(108deg,#a27547,#704927 60%,#96633b);box-shadow:inset 1px 1px #f4ce8e66,inset -2px -2px 3px #28170899,0 6px 10px #0005;}
-.detailed-subwoofer .sp-sub.sp-vintage .sp-face {background:url('./assets/textures/speaker-coating.svg') center/64px 64px,linear-gradient(145deg,#463322,#20170f 72%);}
-.detailed-subwoofer .sp-sub.sp-vintage .sp-cone {background:url('./assets/textures/speaker-paper.svg') center/80px 80px,repeating-radial-gradient(circle,transparent 0 10px,#110c0766 10.5px 11px,transparent 11.5px 15px),radial-gradient(circle at 38% 28%,#625544,#332819 65%,#1b150c);}
+.detailed-subwoofer .sp-sub.sp-vintage .sp-face {background:url('../../assets/textures/speaker-coating.svg') center/64px 64px,linear-gradient(145deg,#463322,#20170f 72%);}
+.detailed-subwoofer .sp-sub.sp-vintage .sp-cone {background:url('../../assets/textures/speaker-paper.svg') center/80px 80px,repeating-radial-gradient(circle,transparent 0 10px,#110c0766 10.5px 11px,transparent 11.5px 15px),radial-gradient(circle at 38% 28%,#625544,#332819 65%,#1b150c);}
 .detailed-subwoofer .sp-sub.sp-vintage .sp-woofer {box-shadow:0 0 0 2px #b48a54,inset 0 1px #e7c78e44,0 3px 6px #000a;}
 .detailed-subwoofer .sp-sub.sp-vintage .sp-panel::before {border-color:#b48b5655;background:var(--material-brushed-steel) center/256px 64px,linear-gradient(#49322099,#1f140aaa);}
 .detailed-subwoofer .sub-air-ducts>i {box-shadow:inset 0 3px 4px #000d,inset 0 -1px #d8ad7155,0 1px #e3bc7a44;}

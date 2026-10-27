@@ -153,11 +153,11 @@ node --check script.js
 node --test tests/*.test.cjs
 ```
 
-O código da aplicação fica dividido por responsabilidade em [`src/app/`](src/app/README.md). Depois de editar uma dessas partes, regenere `script.js` com `node tools/build-script.cjs`; o app e a hospedagem continuam carregando esse ponto de entrada clássico.
+O código da aplicação fica dividido por responsabilidade em [`src/app/`](src/app/README.md); módulos auxiliares ficam em [`src/modules/`](src/modules/README.md), traduções em [`src/i18n/`](src/i18n/README.md) e estilos em [`styles/`](styles/README.md). Depois de editar uma seção de `src/app/`, regenere `script.js` com `node tools/build-script.cjs`; o app e a hospedagem continuam carregando esse ponto de entrada clássico, mantido na raiz junto de `index.html`.
 
-A interface oferece Português e English no seletor **Idioma**, na raiz das configurações. As traduções e o acompanhamento dos elementos dinâmicos ficam em [languages.js](languages.js); a preferência é salva neste navegador.
+A interface oferece Português e English no seletor **Idioma**, na raiz das configurações. As traduções e o acompanhamento dos elementos dinâmicos ficam em [languages.js](src/i18n/languages.js); a preferência é salva neste navegador.
 
-A suíte cobre ativação/retomada do áudio, movimento de grupos em móveis e coerência dos indicadores de assinatura sonora. Consulte [modelo de sinais e limites elétricos](REVISAO-SINAIS.md), [biblioteca de controles](COMPONENTES.md) e [fontes dos equipamentos](assets/fonts/README.md).
+A suíte cobre ativação/retomada do áudio, movimento de grupos em móveis e coerência dos indicadores de assinatura sonora. Consulte [modelo de sinais e limites elétricos](docs/reference/REVISAO-SINAIS.md), [biblioteca de controles](docs/reference/COMPONENTES.md) e [fontes dos equipamentos](assets/fonts/README.md).
 
 As [imagens da documentação](docs/images/README.md) são capturas do simulador; os diagramas mostram percursos de sinal. Os modelos são aproximações virtuais: W, Ω, dB e os gráficos não são medições de equipamentos físicos nem previsão do volume acústico na sala. Para um sistema real, consulte as especificações dos fabricantes.
 

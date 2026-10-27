@@ -263,7 +263,7 @@
         .sp-term-ch { display:flex; flex-direction:column; align-items:center; gap:3px; }
         .sp-term-ch em { font:700 7px/1 "Inter",sans-serif; font-style:normal; color:#d1d5db; }
         .sp-term-ch em.is-r { color:#f87171; }
-        /* Shared removable-grille controls. Classic cabinet styles live in classic-speakers.css. */
+        /* Shared removable-grille controls. Classic cabinet refinements live in styles/equipment/speakers-classic.css. */
         .grille-restore { position:absolute; z-index:5; right:13px; top:13px; display:none; padding:6px 8px; border:1px solid #69737a; border-radius:3px; color:#edf1f2; background:#171b1e; font:700 8px/1 "Inter",sans-serif; letter-spacing:.08em; cursor:pointer; }
         .device-node.grille-off .speaker-grille.classic-box-grille { display:none; }
         .device-node.grille-off .grille-restore { display:grid; place-items:center; opacity:0; visibility:hidden; pointer-events:none; }
@@ -3756,10 +3756,10 @@
 :is(#audio-world,.equipment-preview-world) .device-type-eqVintage .graphic-eq-handle {border-color:#7b7565;border-radius:7px;background:linear-gradient(90deg,#777366,#f0e9ce 38%,#b8b2a0 66%,#686659);box-shadow:3px 2px 4px #352c2255,inset 1px 0 #fff8;}
 
 /* Equipment lettering. Bundled fonts are distributed under SIL OFL 1.1. */
-@font-face {font-family:"Equipment Vintage";src:url("./assets/fonts/barlowcondensed/BarlowCondensed-SemiBold.ttf") format("truetype");font-style:normal;font-weight:600;font-display:swap;}
-@font-face {font-family:"Equipment Studio";src:url("./assets/fonts/barlow/Barlow-Medium.ttf") format("truetype");font-style:normal;font-weight:500;font-display:swap;}
-@font-face {font-family:"Equipment Modern";src:url("./assets/fonts/manrope/Manrope[wght].ttf") format("truetype");font-style:normal;font-weight:200 800;font-display:swap;}
-@font-face {font-family:"Equipment Digital";src:url("./assets/fonts/ibmplexmono/IBMPlexMono-Medium.ttf") format("truetype");font-style:normal;font-weight:500;font-display:swap;}
+@font-face {font-family:"Equipment Vintage";src:url("../assets/fonts/barlowcondensed/BarlowCondensed-SemiBold.ttf") format("truetype");font-style:normal;font-weight:600;font-display:swap;}
+@font-face {font-family:"Equipment Studio";src:url("../assets/fonts/barlow/Barlow-Medium.ttf") format("truetype");font-style:normal;font-weight:500;font-display:swap;}
+@font-face {font-family:"Equipment Modern";src:url("../assets/fonts/manrope/Manrope[wght].ttf") format("truetype");font-style:normal;font-weight:200 800;font-display:swap;}
+@font-face {font-family:"Equipment Digital";src:url("../assets/fonts/ibmplexmono/IBMPlexMono-Medium.ttf") format("truetype");font-style:normal;font-weight:500;font-display:swap;}
 :is(#audio-world,.equipment-preview-world) .device-node {--equipment-font:"Equipment Modern",sans-serif;}
 :is(#audio-world,.equipment-preview-world) .device-node.device-family-vintage {--equipment-font:"Equipment Vintage",sans-serif;}
 :is(#audio-world,.equipment-preview-world) .device-node.device-family-studio {--equipment-font:"Equipment Studio",sans-serif;}
@@ -3795,12 +3795,12 @@
 /* Vintage generator casing: recessed panel seam and four slotted screws. */
 :is(#audio-world,.equipment-preview-world) .device-type-signalGeneratorVintage .signal-face {position:relative;}
 :is(#audio-world,.equipment-preview-world) .device-type-signalGeneratorVintage .signal-face::before {content:"";position:absolute;inset:4px;box-sizing:border-box;border:1px solid #6b6a5b44;border-radius:2px;box-shadow:inset 0 1px #fff7,0 1px #4a493d22;pointer-events:none;}
-:is(#audio-world,.equipment-preview-world) .device-type-signalGeneratorVintage .signal-face::after {content:"";position:absolute;inset:0;pointer-events:none;background-image:url("./assets/textures/vintage-panel-screw.svg"),url("./assets/textures/vintage-panel-screw.svg"),url("./assets/textures/vintage-panel-screw.svg"),url("./assets/textures/vintage-panel-screw.svg");background-position:left 12px top 12px,right 12px top 12px,left 12px bottom 12px,right 12px bottom 12px;background-size:8px 8px;background-repeat:no-repeat;}
+:is(#audio-world,.equipment-preview-world) .device-type-signalGeneratorVintage .signal-face::after {content:"";position:absolute;inset:0;pointer-events:none;background-image:url("../assets/textures/vintage-panel-screw.svg"),url("../assets/textures/vintage-panel-screw.svg"),url("../assets/textures/vintage-panel-screw.svg"),url("../assets/textures/vintage-panel-screw.svg");background-position:left 12px top 12px,right 12px top 12px,left 12px bottom 12px,right 12px bottom 12px;background-size:8px 8px;background-repeat:no-repeat;}
 
 /* Walnut veneer and woven cloth, shared only by the two vintage speaker boxes. */
-:is(#audio-world,.equipment-preview-world) :is(.device-type-spkPassiveWood,.device-type-spkActiveMonitor) .sp-cab.sp-vintage {background:linear-gradient(100deg,#ffffff0d,transparent 18% 82%,#160c0866),url("./assets/textures/vintage-walnut.svg") center/100% 100%;box-shadow:inset 1px 1px #d4ab6c66,inset -3px -2px 5px #20110799,0 9px 17px #0005;}
-:is(#audio-world,.equipment-preview-world) :is(.device-type-spkPassiveWood,.device-type-spkActiveMonitor) .sp-vintage .sp-face {background:linear-gradient(90deg,#1c100b33,transparent 12% 88%,#1c100b44),url("./assets/textures/vintage-walnut.svg") center/100% 100%;box-shadow:inset 0 0 0 1px #2b180d88,inset 0 2px 5px #25140c44;}
-:is(#audio-world,.equipment-preview-world) :is(.device-type-spkPassiveWood,.device-type-spkActiveMonitor) .fabric-grille {border-color:#493b28;border-radius:4px;background:radial-gradient(ellipse at 30% 15%,#f1d9a118,transparent 65%),url("./assets/textures/vintage-weave.svg") 0 0/6px 6px,#5e5542;box-shadow:inset 0 0 0 1px #c2ab7355,inset 0 0 14px #16130dcc,0 2px 5px #0007;}
+:is(#audio-world,.equipment-preview-world) :is(.device-type-spkPassiveWood,.device-type-spkActiveMonitor) .sp-cab.sp-vintage {background:linear-gradient(100deg,#ffffff0d,transparent 18% 82%,#160c0866),url("../assets/textures/vintage-walnut.svg") center/100% 100%;box-shadow:inset 1px 1px #d4ab6c66,inset -3px -2px 5px #20110799,0 9px 17px #0005;}
+:is(#audio-world,.equipment-preview-world) :is(.device-type-spkPassiveWood,.device-type-spkActiveMonitor) .sp-vintage .sp-face {background:linear-gradient(90deg,#1c100b33,transparent 12% 88%,#1c100b44),url("../assets/textures/vintage-walnut.svg") center/100% 100%;box-shadow:inset 0 0 0 1px #2b180d88,inset 0 2px 5px #25140c44;}
+:is(#audio-world,.equipment-preview-world) :is(.device-type-spkPassiveWood,.device-type-spkActiveMonitor) .fabric-grille {border-color:#493b28;border-radius:4px;background:radial-gradient(ellipse at 30% 15%,#f1d9a118,transparent 65%),url("../assets/textures/vintage-weave.svg") 0 0/6px 6px,#5e5542;box-shadow:inset 0 0 0 1px #c2ab7355,inset 0 0 14px #16130dcc,0 2px 5px #0007;}
 
 /* Screen-space lighting stays anchored while the equipment canvas moves. */
 #canvas {isolation:isolate;}

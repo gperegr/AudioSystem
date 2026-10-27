@@ -1,6 +1,6 @@
 # Sinais de áudio e modelo elétrico
 
-Atualizado em **21 de outubro de 2026**, conforme a implementação em [script.js](script.js).
+Atualizado em **21 de outubro de 2026**, conforme a implementação em [script.js](../../script.js).
 
 Este documento descreve o funcionamento atual e suas aproximações. As constantes e funções do código são a fonte dos parâmetros; este arquivo não é um histórico de testes nem uma certificação de equipamentos físicos. A biblioteca visual de controles está em [COMPONENTES.md](COMPONENTES.md).
 

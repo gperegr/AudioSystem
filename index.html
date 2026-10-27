@@ -15,17 +15,17 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=catalog-amp-hover-dots-v2">
-    <link rel="stylesheet" href="./adapter-design.css?v=physical-adapters-v1">
-    <link rel="stylesheet" href="./tape-deck.css?v=materials-v1">
-    <link rel="stylesheet" href="./audio-interfaces.css?v=interfaces-standard-io-20261025">
-    <link rel="stylesheet" href="./equipment-materials.css?v=wood-steel-only-v1">
-    <link rel="stylesheet" href="./classic-speakers.css?v=shared-driver-details-v1">
-    <link rel="stylesheet" href="./active-speakers.css?v=active-speaker-details-v1">
-    <link rel="stylesheet" href="./floor-speakers.css?v=floor-speaker-details-v1">
-    <link rel="stylesheet" href="./bookshelf-speakers.css?v=bookshelf-details-v1">
-    <link rel="stylesheet" href="./subwoofers.css?v=subwoofer-details-v1">
-    <link rel="stylesheet" href="./visual-refinements.css?v=visual-refinements-v5">
+    <link rel="stylesheet" href="./styles/app.css?v=catalog-amp-hover-dots-v2">
+    <link rel="stylesheet" href="./styles/equipment/adapters.css?v=physical-adapters-v1">
+    <link rel="stylesheet" href="./styles/equipment/tape-deck.css?v=materials-v1">
+    <link rel="stylesheet" href="./styles/equipment/audio-interfaces.css?v=interfaces-standard-io-20261025">
+    <link rel="stylesheet" href="./styles/equipment/materials.css?v=wood-steel-only-v1">
+    <link rel="stylesheet" href="./styles/equipment/speakers-classic.css?v=shared-driver-details-v1">
+    <link rel="stylesheet" href="./styles/equipment/speakers-active.css?v=active-speaker-details-v1">
+    <link rel="stylesheet" href="./styles/equipment/speakers-floor.css?v=floor-speaker-details-v1">
+    <link rel="stylesheet" href="./styles/equipment/speakers-bookshelf.css?v=bookshelf-details-v1">
+    <link rel="stylesheet" href="./styles/equipment/subwoofers.css?v=subwoofer-details-v1">
+    <link rel="stylesheet" href="./styles/equipment/visual-refinements.css?v=visual-refinements-v5">
 </head>
 <body class="flex flex-col h-screen bg-black text-white">
     <div id="app-startup" role="status">Preparando seu sistema…<noscript>Ative o JavaScript para abrir o programa.</noscript></div>
@@ -1367,11 +1367,11 @@
     </template>
 
     <script src="./assets/rooms/scenes.js?v=room-time-variants-v1"></script>
-    <script src="./spotify-coverflow.js?v=spotify-linear-activation-v1"></script>
-    <script src="./audio-interfaces.js?v=interfaces-standard-io-20261025"></script>
-    <script src="./guided-access.js?v=grid-startup-v3"></script>
-    <script src="./adapter-design.js?v=physical-adapters-v3"></script>
-    <script src="./languages.js?v=pt-en-v1"></script>
+    <script src="./src/modules/spotify-coverflow.js?v=spotify-linear-activation-v1"></script>
+    <script src="./src/modules/audio-interfaces.js?v=interfaces-standard-io-20261025"></script>
+    <script src="./src/modules/guided-access.js?v=grid-startup-v3"></script>
+    <script src="./src/modules/adapter-design.js?v=physical-adapters-v3"></script>
+    <script src="./src/i18n/languages.js?v=pt-en-v1"></script>
     <script src="./script.js?v=split-app-source-v1"></script>
 </body>
 </html>
