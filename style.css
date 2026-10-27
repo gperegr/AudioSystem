@@ -2752,16 +2752,16 @@
         :is(#audio-world,.equipment-preview-world) .device-type-streamIntegrated .port[data-node^="speaker"] {box-shadow:none!important;filter:none!important;}
         :is(#audio-world,.equipment-preview-world) .device-type-streamIntegrated .port[data-node^="speaker"]::before {box-shadow:none!important;filter:none!important;}
         :is(#audio-world,.equipment-preview-world) .device-type-streamIntegrated button[data-stream-action="play"][aria-pressed="true"] {--hw-cap-finish:radial-gradient(ellipse at 35% 25%,#477e83,#20484f 75%)!important;--hw-legend-ink:#c0f6f0;box-shadow:inset 0 0 0 1px #94e1d755,0 0 3px #63bcb84d!important;color:#bcefe5;}
-        .stream-service-rail {position:absolute;left:23px;right:23px;bottom:12px;z-index:2;box-sizing:border-box;height:40px;display:flex;align-items:center;justify-content:space-around;background:linear-gradient(#17252c,#0c161d);border:1px solid #34454d;border-top-color:#060e12;border-radius:0 0 3px 3px;box-shadow:inset 0 -1px #697b8633;}
+        .stream-service-rail {position:absolute;left:23px;right:23px;bottom:0;z-index:2;box-sizing:border-box;height:40px;display:flex;align-items:center;justify-content:space-around;background:linear-gradient(#17252c,#0c161d);border:1px solid #34454d;border-top-color:#060e12;border-radius:0 0 3px 3px;box-shadow:inset 0 -1px #697b8633;}
         .stream-service-rail>label {display:flex;align-items:center;gap:8px;}.stream-service-rail small {font-size:5px;color:#91a6ae;letter-spacing:.5px;}.stream-port-pair {display:flex;gap:13px;}.stream-port-pair .port {margin:0;}
         .power-off .stream-screen {visibility:hidden;}.power-off .stream-dial-value {opacity:.15;}.stream-muted .hw-knob-halo {opacity:.3;}
         .stream-inspector {display:flex;flex-direction:column;gap:12px;color:#d1d5db;font-size:13px;}.stream-inspector>div {display:flex;gap:7px;}.stream-inspector p {font-size:12px;line-height:1.6;color:#9ca3af;}.stream-inspector output {float:right;}.stream-inspector [aria-pressed="true"] {background:#254053;border-color:#6b9bb3;}
 
         /* Automatic linear tracking deck, orthographic frontal elevation. */
         .device-node.device-type-turntableLinear {width:660px!important;isolation:isolate;padding:0!important;background:transparent!important;box-shadow:none!important;}
-        .linear-body {position:relative;width:660px;height:252px;}
+        .linear-body {position:relative;width:660px;height:238px;}
         .linear-plinth {position:absolute;left:0;top:0;width:660px;height:238px;overflow:visible;}
-        .linear-art {position:absolute;left:0;top:0;z-index:1;width:660px;height:252px;display:block;overflow:visible;pointer-events:none;}
+        .linear-art {position:absolute;left:0;top:0;z-index:1;width:660px;height:238px;display:block;overflow:visible;pointer-events:none;}
         .linear-readout,.linear-operation,.linear-keys,.linear-front-trims,.linear-power,.linear-io {z-index:2;}
         .linear-deck {position:absolute;inset:0;width:660px;height:124px;background:none;border:0;overflow:visible;pointer-events:none;}
         .linear-deck .tt-lid-button {pointer-events:auto;z-index:4;top:8px;right:16px;width:22px;height:18px;background:#29372c;color:#e0e6d0;}
