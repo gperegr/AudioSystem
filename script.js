@@ -2780,25 +2780,9 @@ const Hardware = (() => {
             }
             return [...filters,...profile.filterSpecs];
         }
-        function listeningCurveHtml(dev) {
-            const width=360,height=190,left=35,right=345,top=16,bottom=152;
-            const frequencies=Float32Array.from({length:181},(_,i)=>20*1000**(i/180));
-            const response=new Float64Array(frequencies.length);
-            const magnitude=new Float32Array(frequencies.length),phase=new Float32Array(frequencies.length);
-            dev.voicingNodes.filter(node=>typeof node.getFrequencyResponse==='function').forEach(filter=>{
-                filter.getFrequencyResponse(frequencies,magnitude,phase);
-                magnitude.forEach((gain,i)=>{response[i]+=20*Math.log10(Math.max(1e-8,gain));});
-            });
-            const minDb=dev.listeningProfile.curveMinDb??(dev.listeningProfile.highpass?-24:-6),maxDb=dev.listeningProfile.curveMaxDb||6;
-            const x=f=>left+Math.log10(f/20)/3*(right-left);
-            const y=db=>top+(maxDb-db)/(maxDb-minDb)*(bottom-top);
-            const path=Array.from(response,(db,i)=>`${i?'L':'M'}${x(frequencies[i]).toFixed(2)},${y(db).toFixed(2)}`).join(' ');
-            const horizontal=(minDb<=-12?Array.from({length:(maxDb-minDb)/6+1},(_,i)=>minDb+i*6):[-6,-3,0,3,6]).map(db=>`<line x1="${left}" x2="${right}" y1="${y(db)}" y2="${y(db)}" stroke="${db===0?'#718096':'#303c49'}" ${db===0?'':'stroke-dasharray="3 4"'}/><text x="${left-7}" y="${y(db)+3}" text-anchor="end" fill="#aab6c5" font-size="10">${db>0?'+':''}${db}</text>`).join('');
-            const vertical=[[20,'20'],[100,'100'],[1000,'1k'],[10000,'10k'],[20000,'20k']].map(([hz,label])=>`<line x1="${x(hz)}" x2="${x(hz)}" y1="${top}" y2="${bottom}" stroke="#303c49"/><text x="${x(hz)}" y="${bottom+18}" text-anchor="middle" fill="#aab6c5" font-size="10">${label}</text>`).join('');
-            const bands=[['Graves',60,200],['Médios',300,2500],['Agudos',5000,12000]].map(([label,low,high])=>{
+        function sonicSignatureBandsHtml(response,frequencies){
+            return [['Graves',60,200],['Médios',300,2500],['Agudos',5000,12000]].map(([label,low,high])=>{
                 const samples=Array.from(response,(db,index)=>({db,frequency:frequencies[index]})).filter(sample=>sample.frequency>=low&&sample.frequency<=high);
-                // The response above includes only filters: the global gain trim is
-                // already excluded, so indicators share the graph's 0 dB reference.
                 const meanDb=samples.length?samples.reduce((sum,sample)=>sum+sample.db,0)/samples.length:0;
                 const state=meanDb<=-4?'recuo-forte':meanDb< -1?'recuo-leve':meanDb<=1?'neutro':meanDb<4?'realce-leve':'realce-forte';
                 const position={'recuo-forte':0,'recuo-leve':1,neutro:2,'realce-leve':3,'realce-forte':4}[state];
@@ -2806,7 +2790,44 @@ const Hardware = (() => {
                 const dots=Array.from({length:5},(_,index)=>`<i class="${index===2?'is-neutral ':''}${index===position?'is-active':''}"></i>`).join('');
                 return `<div class="sonic-band" data-tone="${state}" role="img" aria-label="${label}: ${stateLabel.toLowerCase()}. Média da curva entre ${low} e ${high} Hz."><span class="sonic-band-name">${label}</span><span class="sonic-band-dots" title="Média entre ${low} e ${high} Hz · escala de recuo a realce, centro neutro" aria-hidden="true">${dots}</span><span class="sonic-band-state">${stateLabel}</span></div>`;
             }).join('');
-            return `<div class="sonic-signature-visuals">${bands}</div><figure class="sonic-curve-figure"><svg viewBox="0 0 ${width} ${height}" class="sonic-curve-graph" role="img" aria-label="Curva da assinatura sonora: ${dev.listeningProfile.label}. Frequência de 20 Hz a 20 kHz; ganho relativo entre ${minDb} e mais ${maxDb} decibéis." style="font-family:Inter,sans-serif"><text x="${left}" y="10" fill="#aab6c5" font-size="9">dB</text>${horizontal}${vertical}<path d="${path}" fill="none" stroke="#60a5fa" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><text x="${right}" y="${height-2}" text-anchor="end" fill="#aab6c5" font-size="9">Hz</text></svg></figure>`;
+        }
+        function sonicCurveFigureHtml(profile,frequencies,response){
+            const width=360,height=190,left=35,right=345,top=16,bottom=152;
+            const minDb=profile.curveMinDb??(profile.highpass||profile.bassAlignment?-24:-6),maxDb=profile.curveMaxDb||6;
+            const x=f=>left+Math.log10(f/20)/3*(right-left);
+            const y=db=>top+(maxDb-db)/(maxDb-minDb)*(bottom-top);
+            const path=Array.from(response,(db,i)=>`${i?'L':'M'}${x(frequencies[i]).toFixed(2)},${y(db).toFixed(2)}`).join(' ');
+            const horizontal=(minDb<=-12?Array.from({length:(maxDb-minDb)/6+1},(_,i)=>minDb+i*6):[-6,-3,0,3,6]).map(db=>`<line x1="${left}" x2="${right}" y1="${y(db)}" y2="${y(db)}" stroke="${db===0?'#718096':'#303c49'}" ${db===0?'':'stroke-dasharray="3 4"'}/><text x="${left-7}" y="${y(db)+3}" text-anchor="end" fill="#aab6c5" font-size="10">${db>0?'+':''}${db}</text>`).join('');
+            const vertical=[[20,'20'],[100,'100'],[1000,'1k'],[10000,'10k'],[20000,'20k']].map(([hz,label])=>`<line x1="${x(hz)}" x2="${x(hz)}" y1="${top}" y2="${bottom}" stroke="#303c49"/><text x="${x(hz)}" y="${bottom+18}" text-anchor="middle" fill="#aab6c5" font-size="10">${label}</text>`).join('');
+            return `<figure class="sonic-curve-figure"><svg viewBox="0 0 ${width} ${height}" class="sonic-curve-graph" role="img" aria-label="Curva da assinatura sonora: ${profile.label}. Frequência de 20 Hz a 20 kHz; ganho relativo entre ${minDb} e mais ${maxDb} decibéis." style="font-family:Inter,sans-serif"><text x="${left}" y="10" fill="#aab6c5" font-size="9">dB</text>${horizontal}${vertical}<path d="${path}" fill="none" stroke="#60a5fa" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><text x="${right}" y="${height-2}" text-anchor="end" fill="#aab6c5" font-size="9">Hz</text></svg></figure>`;
+        }
+        function listeningCurveHtml(dev) {
+            const frequencies=Float32Array.from({length:181},(_,i)=>20*1000**(i/180)),response=new Float64Array(frequencies.length);
+            const magnitude=new Float32Array(frequencies.length),phase=new Float32Array(frequencies.length);
+            dev.voicingNodes.filter(node=>typeof node.getFrequencyResponse==='function').forEach(filter=>{
+                filter.getFrequencyResponse(frequencies,magnitude,phase);
+                magnitude.forEach((gain,i)=>{response[i]+=20*Math.log10(Math.max(1e-8,gain));});
+            });
+            const bands=sonicSignatureBandsHtml(response,frequencies);
+            // The response contains the filter curve; global trim is excluded from indicators.
+            return `<div class="sonic-signature-visuals">${bands}</div>${sonicCurveFigureHtml(dev.listeningProfile,frequencies,response)}`;
+        }
+        function listeningProfilePreviewHtml(type){
+            const profile=LISTENING_PROFILES[type];if(!profile)return '';
+            const sampleRate=state.audioCtx?.sampleRate||48000,frequencies=Float32Array.from({length:181},(_,i)=>20*1000**(i/180)),response=new Float64Array(frequencies.length);
+            let specs=profile.bassAlignment?floorListeningFilters(profile,sampleRate):profile.filterSpecs;
+            if(!profile.bassAlignment&&!profile.filterSpecs){
+                specs=[...(profile.highpass?[{type:'highpass',frequency:profile.highpass,Q:Math.SQRT1_2}]:[]),{type:'lowshelf',frequency:120,Q:.7,gain:profile.bands?.[0]||0},{type:'peaking',frequency:1600,Q:.7,gain:profile.bands?.[1]||0},{type:'highshelf',frequency:5500,Q:.7,gain:profile.bands?.[2]||0}];
+            }
+            for(const spec of specs||[]){
+                const {feedforward:b,feedback:a}=speakerFilterCoefficients(spec,sampleRate);
+                frequencies.forEach((frequency,index)=>{
+                    const angle=2*Math.PI*frequency/sampleRate,c=Math.cos(angle),s=Math.sin(angle),c2=Math.cos(2*angle),s2=Math.sin(2*angle);
+                    const numerator=Math.hypot(b[0]+b[1]*c+b[2]*c2,b[1]*s+b[2]*s2),denominator=Math.hypot(1+a[1]*c+a[2]*c2,a[1]*s+a[2]*s2);
+                    response[index]+=20*Math.log10(Math.max(1e-8,numerator/denominator));
+                });
+            }
+            return `<div class="sonic-signature-visuals">${sonicSignatureBandsHtml(response,frequencies)}</div>${sonicCurveFigureHtml(profile,frequencies,response)}`;
         }
 
         const INTEGRATED_AMPS={
@@ -4590,9 +4611,16 @@ const Hardware = (() => {
                 const type=item.dataset.template,spec=FIXED_AMP_SPECS[type];
                 const title=DEVICE_NAMES[type]||item.textContent.trim();
                 const speaker=FLOOR_SPEAKERS[type]||BOOKSHELF_SPEAKERS[type],headphone=REFERENCE_HEADPHONES[type];
+                const signatureOnly=!!LISTENING_PROFILES[type]&&(PASSIVE_SPK.has(type)||ACTIVE_SPK.has(type)||HP_TYPES.has(type)||type==='hpKubaDisco2');
+                if(signatureOnly){
+                    catalogAmpTip.classList.add('catalog-signature-only');
+                    catalogAmpTip.innerHTML=`<div aria-label="Assinatura sonora de ${title}">${listeningProfilePreviewHtml(type)}</div>`;
+                }else{
+                catalogAmpTip.classList.remove('catalog-signature-only');
                 const description=speaker?.description||headphone?.description||catalogDescriptions[type];
                 const specs=speaker?`${speaker.watts} W · ${speaker.ohms} Ω · passiva`:headphone?`${headphone.ohms} Ω · ${headphone.enclosure||'aberto'} · fone`:spec?`${spec.watts} W por canal · 8 Ω`:/^pre/i.test(type)?'Pré-amplificador · sem potência para caixas':'Amplificação para fones';
                 catalogAmpTip.innerHTML=`<h2>${title}</h2><p class="catalog-amp-power">${specs}</p>${description?`<p class="catalog-amp-description">${description}</p>`:''}${AMPLIFICATION_VOICINGS[type]?amplificationInspectorHtml({amplificationProfile:AMPLIFICATION_VOICINGS[type]}):''}`;
+                }
                 const rect=item.getBoundingClientRect(),w=catalogAmpTip.offsetWidth,h=catalogAmpTip.offsetHeight;
                 catalogAmpTip.style.left=Math.min(innerWidth-w-10,rect.right+14)+'px';
                 catalogAmpTip.style.top=Math.max(8,Math.min(innerHeight-h-8,rect.top+(rect.height-h)/2))+'px';

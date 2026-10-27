@@ -4,7 +4,7 @@ const {readFileSync}=require('node:fs');
 const vm=require('node:vm');
 const source=readFileSync(require('node:path').join(__dirname,'../script.js'),'utf8');
 const context=vm.createContext({});
-vm.runInContext(source.slice(source.indexOf('        function listeningCurveHtml('),source.indexOf('        const INTEGRATED_AMPS=')),context);
+vm.runInContext(source.slice(source.indexOf('        function sonicSignatureBandsHtml('),source.indexOf('        function listeningProfilePreviewHtml(')),context);
 
 function filter(responseDb){
     return {getFrequencyResponse(frequencies,magnitude,phase){

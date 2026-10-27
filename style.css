@@ -4456,6 +4456,15 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
 }
 
 #catalog-amp-tooltip {position:fixed;z-index:150;width:min(320px,calc(100vw - 24px));max-height:calc(100vh - 16px);overflow:auto;box-sizing:border-box;padding:17px 19px 19px;border:1px solid #70818d;background:linear-gradient(145deg,#26313c,#17212b 65%);color:#dce7ed;border-radius:20px;box-shadow:0 22px 54px #0009,0 2px 14px #0008;pointer-events:none;opacity:0;visibility:hidden;transform:scale(.72);transform-origin:left center;}
+#catalog-amp-tooltip.catalog-signature-only {width:min(300px,calc(100vw - 24px));padding:9px;border-radius:14px;}
+#catalog-amp-tooltip.catalog-signature-only .sonic-signature-visuals {gap:4px;}
+#catalog-amp-tooltip.catalog-signature-only .sonic-band {gap:4px;padding:6px 2px;}
+#catalog-amp-tooltip.catalog-signature-only .sonic-band-name {font-size:9px;}
+#catalog-amp-tooltip.catalog-signature-only .sonic-band-state {font-size:8px;}
+#catalog-amp-tooltip.catalog-signature-only .sonic-band-dots {gap:2px;}
+#catalog-amp-tooltip.catalog-signature-only .sonic-band-dots i {width:5px;height:5px;}
+#catalog-amp-tooltip.catalog-signature-only .sonic-curve-figure {padding:4px;}
+#catalog-amp-tooltip.catalog-signature-only .sonic-curve-graph {width:100%;}
 #catalog-amp-tooltip.is-visible {visibility:visible;opacity:1;animation:catalog-amp-pop 480ms cubic-bezier(.24,.9,.28,1) both;}
 #catalog-amp-tooltip h2 {margin:0 0 4px;font:700 15px/1.35 "Inter",sans-serif;}
 #catalog-amp-tooltip .catalog-amp-power {margin:0 0 15px;color:#b8d5ca;font:600 12px/1.4 "Inter",sans-serif;}
