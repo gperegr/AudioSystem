@@ -1631,7 +1631,7 @@ const Hardware = (() => {
             if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
             roomBackdrop.classList.add('is-changing');
             clearTimeout(roomBackdropTransitionTimer);
-            roomBackdropTransitionTimer=setTimeout(()=>{roomBackdropTransitionTimer=0;roomBackdrop.classList.remove('is-changing');},760);
+            roomBackdropTransitionTimer=setTimeout(()=>{roomBackdropTransitionTimer=0;roomBackdrop.classList.remove('is-changing');},900);
         }
         function positionRoomImage(image,horizon){
             const imageHorizon=Number.isFinite(horizon)?horizon:Number(image.dataset.roomHorizon);
@@ -1659,6 +1659,9 @@ const Hardware = (() => {
                 const previous=[...roomBackdrop.querySelectorAll('.room-scene-image')];
                 roomBackdrop.insertBefore(next,roomBackdrop.querySelector('.room-grid-overlay'));
                 void next.offsetWidth;
+                // Start the transition clock only after decode; slow decoding must not
+                // shorten the fade or remove the previous image before the new one settles.
+                beginRoomBackdropTransition();
                 requestAnimationFrame(()=>{
                     if(request!==roomImageRequest){next.remove();return;}
                     previous.forEach(image=>image.classList.remove('is-visible'));
@@ -1742,7 +1745,6 @@ const Hardware = (() => {
         document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')startRoomMotes();else stopRoomMotes();});
         function setCanvasBackdrop(mode){
             mode=legacyBackdrops[mode]||mode;
-            beginRoomBackdropTransition();
             mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studioIllustrated';state.canvasBackdrop=mode;canvas.dataset.backdrop=mode;canvasBackdropControl.querySelector('select').value=mode;
             const scene=RoomScenes.scenes[mode];
             const imageName=RoomScenes.imageForTime(scene,state.canvasTime);
