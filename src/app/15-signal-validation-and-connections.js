@@ -21,7 +21,8 @@
             if(!groups.size)return '';
             const rows=[...groups.values()].map(group=>{
                 const {port,io,node,signal,format}=group,info=SIGNAL_INFO[signal]||SIGNAL_INFO.unknown;
-                const groupName=port.dataset.role?.startsWith('lfe-')?'SUB/LFE mono':node.startsWith('outPhone')?'Fones '+node.replace('outPhone',''):node==='line'?'LINE OUT':node.startsWith('spkOut')||node==='speaker'?'SPEAKER':node==='inStereo'||node==='outStereo'?'Estéreo':node.replace(/^in/,'Entrada ').replace(/^out/,'Saída ').replace('Low','Graves').replace('Mid','Médios').replace('High','Agudos');
+                const numberedLine=/^line(\d+)$/.exec(node);
+                const groupName=port.dataset.role?.startsWith('lfe-')?'SUB/LFE mono':node.startsWith('outPhone')?'Fones '+node.replace('outPhone',''):numberedLine?'Linha '+(Number(numberedLine[1])+1):node==='line'?'LINE OUT':node==='pre'?'Saída do pré':node.startsWith('spkOut')||node==='speaker'?'SPEAKER':node==='inStereo'||node==='outStereo'?'Estéreo':node.replace(/^in/,'Entrada ').replace(/^out/,'Saída ').replace('Low','Graves').replace('Mid','Médios').replace('High','Agudos');
                 const channels=new Set(group.channels),channelText=channels.size===2?' · L/R':channels.size===1?' · '+[...channels][0]:'';
                 const direction=io==='in'?'Entrada':'Saída';
                 const detail=port.dataset.role?.startsWith('lfe-')?'Nível de linha para subwoofer; SUB/LFE descreve o conteúdo de graves, não um nível de potência.':info.description;

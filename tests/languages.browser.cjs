@@ -60,6 +60,21 @@ const assert = require('node:assert/strict');
             'Practice in your project: connections, Spotify, external input, and MP3.'
         ]);
 
+        await page.locator('.app-settings').evaluate(element=>{element.open=false;});
+        await page.locator('#equipment-search').fill('Precision preamp');
+        const precisionCard=page.locator('.catalog-item[data-template="prePrecision"]');
+        await precisionCard.dragTo('#canvas');
+        await page.waitForFunction(()=>document.querySelector('.sonic-profile-title')?.textContent==='Sound profile');
+        assert.deepEqual(await page.locator('.sonic-trait-label').allTextContents(),['Bass','Treble','Saturation','Even harmonics']);
+        assert.deepEqual(await page.locator('.sonic-trait-extremes').allTextContents(),['LeanNeutralFull-bodied','SmoothNeutralBright','SubtlePronounced','SubtleProminent']);
+        assert.equal(await page.locator('.sonic-profile-note').textContent(),'Base profile · relative simulation scale');
+        assert.equal(await page.locator('.precision-inspector-options button').nth(0).textContent(),'Mute');
+        assert.equal(await page.locator('.precision-inspector-options button').nth(2).textContent(),'Invert polarity');
+        assert.equal(await page.locator('.precision-inspector-options label').first().innerText().then(text=>text.trim().startsWith('Output gain')),true);
+        assert.equal(await page.locator('.port-signal-panel h3').textContent(),'Input and output signals');
+        const portRows=(await page.locator('.port-signal-row').allTextContents()).join(' ');
+        assert.match(portRows,/Line 1/);assert.match(portRows,/Preamp output/);assert.doesNotMatch(portRows,/line0|line1|Saída do pré|Linha 1/);
+
         await page.evaluate(()=>{const node=document.createElement('button');node.title='Ligar / Desligar';node.textContent='Ligar / Desligar';node.id='locale-dynamic-probe';document.body.append(node);});
         await page.waitForFunction(()=>document.getElementById('locale-dynamic-probe')?.textContent==='Power on / off');
         assert.equal(await page.locator('#locale-dynamic-probe').getAttribute('title'),'Power on / off');
