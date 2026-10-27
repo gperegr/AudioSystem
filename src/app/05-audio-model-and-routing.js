@@ -10,6 +10,11 @@
             hpMonitor:{label:'Monitor · corpo e presença',bands:[2.5,1.2,-.5]},
             hpMax:{label:'Max · graves e suavidade',bands:[3,.2,-.7]},
             hpClassic:{label:'Vintage · vozes e guitarras',bands:[.5,2.5,-1.5]},
+            subwoofer:{label:'Subwoofer · corte em 120 Hz',curveMinDb:-36,filterSpecs:[{type:'lowpass',frequency:120,Q:Math.SQRT1_2}]},
+            subwooferCube:{label:'Subwoofer compacto · corte em 120 Hz',curveMinDb:-36,filterSpecs:[{type:'lowpass',frequency:120,Q:Math.SQRT1_2}]},
+            subwooferPro:{label:'Subwoofer Pro · corte em 100 Hz',curveMinDb:-36,filterSpecs:[{type:'lowpass',frequency:100,Q:Math.SQRT1_2}]},
+            subwooferPassive:{label:'Subwoofer passivo · corte em 120 Hz',curveMinDb:-36,filterSpecs:[{type:'lowpass',frequency:120,Q:Math.SQRT1_2}]},
+            subwooferPassiveVintage:{label:'Subwoofer passivo vintage · corte em 120 Hz',curveMinDb:-36,filterSpecs:[{type:'lowpass',frequency:120,Q:Math.SQRT1_2}]},
             // Broad tonal approximations, not digitized measurements or complete acoustic models.
             shelfCoax:{label:'Bookshelf · resposta uniforme',highpass:79,headroomDb:-12,bassAlignment:{minus3:79,minus6:47,subsonic:20},filterSpecs:[]},
             shelfWood:{label:'Bookshelf · agudos suaves',highpass:41,headroomDb:-12,bassAlignment:{frequency:41,order:4},filterSpecs:[{type:'peaking',frequency:1100,Q:2.5,gain:1},{type:'peaking',frequency:1450,Q:4,gain:-1.5},{type:'highshelf',frequency:11000,gain:-2}]},
@@ -34,6 +39,8 @@
             let b,a;
             if(spec.type==='highpass'){
                 const alpha=sn/(2*q);b=[(1+c)/2,-1-c,(1+c)/2];a=[1+alpha,-2*c,1-alpha];
+            }else if(spec.type==='lowpass'){
+                const alpha=sn/(2*q);b=[(1-c)/2,1-c,(1-c)/2];a=[1+alpha,-2*c,1-alpha];
             }else if(spec.type==='peaking'){
                 const A=10**((spec.gain||0)/40),alpha=sn/(2*q);b=[1+alpha*A,-2*c,1-alpha*A];a=[1+alpha/A,-2*c,1-alpha/A];
             }else if(spec.type==='lowshelf'){
@@ -119,7 +126,8 @@
         function catalogRatingVisualHtml(type){
             const headphone=HEADPHONE_SPECS[type],speaker=FLOOR_SPEAKERS[type]||BOOKSHELF_SPEAKERS[type]||FIXED_PASSIVE_SPECS[type],active=ACTIVE_SPEAKER_RATINGS[type]||ACTIVE_SUB_RATINGS[type];
             const amplifier=FIXED_AMP_SPECS[type],headphoneOutput=HEADPHONE_OUTPUT_SPECS[type];
-            const headphonePowerMw=headphoneOutput?Math.round(Math.min(headphoneOutput.voltsRms**2/32,headphoneOutput.currentRms**2*32)*1000):undefined;
+            const headphoneLoad=32,headphoneLoadVrms=headphoneOutput?Math.min(headphoneOutput.voltsRms*headphoneLoad/(headphoneLoad+headphoneOutput.outputOhms),headphoneOutput.currentRms*headphoneLoad):0;
+            const headphonePowerMw=headphoneOutput?Math.round(headphoneLoadVrms**2/headphoneLoad*1000):undefined;
             const power=amplifier?(amplifier.powerByOhms[8]??amplifier.watts):headphonePowerMw??headphone?.powerMw??speaker?.watts??active?.watts??0;
             const powerUnit=amplifier?'W':headphoneOutput||headphone?'mW':'W';
             const ohms=amplifier?8:headphoneOutput?.outputOhms??headphone?.ohms??speaker?.ohms??active?.inputOhms??0;
@@ -128,8 +136,12 @@
             const fill=(value,min,max)=>Math.max(8,Math.min(100,Math.round((Math.log(Math.max(min,value)/min)/Math.log(max/min))*100)));
             const ohmsValue=ohms>=1000?`${(ohms/1000).toFixed(0)}k`:`${ohms}`;
             const approximate=!amplifier;
-            const powerTitle=`${amplifier?'Potência nominal':'Potência máxima de saída'}: ${power} ${powerUnit}`;
-            const impedanceTitle=`${amplifier?'Carga nominal':'Impedância de saída'}: ${ohms} Ω`;
+            const recommendedSpeakerPower=isRecommendedSpeakerPower(type);
+            const passiveSub=PASSIVE_SUB_TYPES.has(type);
+            const powerDescription=amplifier?'Potência nominal de saída':headphoneOutput?'Potência estimada entregue em 32 Ω':headphone?'Potência máxima de entrada do fone':passiveSub?'Potência nominal total do subwoofer':speaker?(recommendedSpeakerPower?'Amplificação recomendada':'Potência de entrada suportada'):'Potência nominal do amplificador interno';
+            const impedanceDescription=amplifier?'Carga nominal':headphoneOutput?'Resistência de saída':headphone?'Impedância nominal do fone':passiveSub?'Impedância por bobina':speaker?'Impedância nominal':'Impedância de entrada';
+            const powerTitle=`${powerDescription}: ${power} ${powerUnit}`;
+            const impedanceTitle=`${impedanceDescription}: ${ohms} Ω`;
             return `<div class="catalog-rating-visuals" aria-label="Parâmetros elétricos"><div class="catalog-rating" role="img" aria-label="${powerTitle}"><svg viewBox="0 0 16 20" aria-hidden="true"><path d="M9.6 1 3 11h4l-.7 8L13 8.5H9.1Z"/></svg><span>${approximate?'≈':''}${power}</span><small>${powerUnit}</small><i class="catalog-rating-track"><i style="width:${fill(power,powerUnit==='mW'?20:5,powerMax)}%"></i></i></div><div class="catalog-rating" role="img" aria-label="${impedanceTitle}"><b class="catalog-rating-ohm" aria-hidden="true">Ω</b><span>${ohmsValue}</span><small>Ω</small><i class="catalog-rating-track"><i style="width:${fill(ohms,8,impedanceMax)}%"></i></i></div></div>`;
         }
 
@@ -282,6 +294,7 @@
             speaker:{ohms:8,watts:80},spkPassiveWood:{ohms:8,watts:60},spkPassiveCarbon:{ohms:6,watts:100},spkPassiveGridBlack:{ohms:4,watts:200,recommended:true},spkPassiveGridOrange:{ohms:4,watts:200,recommended:true},
             subwooferPassive:{ohms:4,watts:250},subwooferPassiveVintage:{ohms:8,watts:120}
         });
+        const isRecommendedSpeakerPower=type=>!!(FLOOR_SPEAKERS[type]?.recommended||BOOKSHELF_SPEAKERS[type]?.recommended||FIXED_PASSIVE_SPECS[type]?.recommended);
         function connectPhonoPlayback(dev,gain,destination){
             const ctx=state.audioCtx,before=ctx.createGain(),clip=ctx.createWaveShaper(),after=ctx.createGain();
             before.gain.value=.25;after.gain.value=4;clip.curve=electricalLimitCurve(1.4);clip.oversample='2x';
@@ -337,7 +350,7 @@
                 const delivered=wattsAtLoad(rms,dev.state.speakerOhms);power=PASSIVE_SUB_TYPES.has(dev.type)?power+delivered:Math.max(power,delivered);
             }
             // A maximum recommended amplifier rating is not a measured thermal limit.
-            const recommended=['spkPassiveGridBlack','spkPassiveGridOrange'].includes(dev.type)||!!(FLOOR_SPEAKERS[dev.type]||BOOKSHELF_SPEAKERS[dev.type])&&dev.type!=='shelfWood';
+            const recommended=isRecommendedSpeakerPower(dev.type);
             dev.speakerOverloaded=!recommended&&power>dev.state.speakerWatts;
             if(dev.state.damage)gain=0;
             dev.simulatedInputWatts=power;
@@ -521,7 +534,7 @@
             if(HP_TYPES.has(dev.type)&&dev.type!=='hpMax')html+=`<p class="text-sm text-gray-300">Impedância fixa: ${dev.state.headphoneOhms} Ω. A impedância, a resistência de saída e os limites de tensão/corrente do amplificador afetam o sinal.</p>`;
             const amp=POWER_OUTPUT_TYPES.has(dev.type),passive=isPassiveLoad(dev);
             if(amp||passive){
-                const spec=FIXED_AMP_SPECS[dev.type],recommended=['spkPassiveGridBlack','spkPassiveGridOrange'].includes(dev.type)||!!(FLOOR_SPEAKERS[dev.type]||BOOKSHELF_SPEAKERS[dev.type])&&dev.type!=='shelfWood';
+                const spec=FIXED_AMP_SPECS[dev.type],recommended=isRecommendedSpeakerPower(dev.type);
                 const fields=amp?[["power",'Potência por canal',`${dev.state.ratedWatts} W / 8 Ω`],["impedance",'Carga mínima simulada',`${dev.state.minOhms} Ω`],["load",'Potência por carga',Object.entries(spec.powerByOhms).map(([r,p])=>`${p} W / ${r} Ω`).join(' · ')]]:[["impedance",PASSIVE_SUB_TYPES.has(dev.type)?'Impedância por bobina isolada':'Impedância nominal',`${dev.state.speakerOhms} Ω`],["power",recommended?'Amplificação recomendada':'Potência nominal suportada',`${dev.state.speakerWatts} W`]];
                 const icons={power:'W',impedance:'Ω',load:'W'};
                 html+=`<section class="model-specs"><div class="model-specs-heading"><span>Características do modelo</span></div><dl class="model-specs-grid">${fields.map(([kind,label,value])=>`<div class="model-spec" data-kind="${kind}"><dt><span class="model-spec-icon" aria-hidden="true">${icons[kind]}</span>${label}</dt><dd>${value}</dd></div>`).join('')}</dl><div id="power-load-status" class="model-specs-status"></div></section>`;

@@ -1,6 +1,6 @@
 # Sinais de áudio e modelo elétrico
 
-Atualizado em **21 de outubro de 2026**, conforme a implementação em [script.js](../../script.js).
+Atualizado em **27 de outubro de 2026**, conforme a implementação em [script.js](../../script.js).
 
 Este documento descreve o funcionamento atual e suas aproximações. As constantes e funções do código são a fonte dos parâmetros; este arquivo não é um histórico de testes nem uma certificação de equipamentos físicos. A biblioteca visual de controles está em [COMPONENTES.md](COMPONENTES.md).
 
@@ -93,6 +93,8 @@ Potência, impedância e limites de saída são características fixas dos model
 - Cargas combinadas quando P2/P10 compartilham o mesmo estágio.
 - Cargas por canal compartilhadas entre RCA e saída estéreo das fontes que usam a mesma origem.
 
+O indicador da saída de fones estima a potência entregue a uma carga de 32 Ω usando a mesma queda pela resistência de saída e o mesmo limite de corrente do circuito simulado. Não é a potência máxima abstrata do chip nem uma medição acústica.
+
 O valor em ohms influencia o áudio. Ele não permite deduzir sozinho volume acústico, qualidade ou facilidade de acionamento sem conhecer a sensibilidade do transdutor.
 
 ## 5. Dano e sobrecarga
@@ -116,7 +118,7 @@ Caixas passivas não recebem um limitador de DSP automático. O programa mostra 
 
 ## 6. Assinaturas sonoras e medição
 
-Os perfis de caixas e fones ficam em `LISTENING_PROFILES`; os estágios de amplificação ficam em `AMPLIFICATION_VOICINGS`. Eles definem as diferenças tonais e de saturação dos modelos. Os limites elétricos são aplicados além dessas características.
+Os perfis de caixas, subwoofers e fones ficam em `LISTENING_PROFILES`; os estágios de amplificação ficam em `AMPLIFICATION_VOICINGS`. Eles definem as diferenças tonais e de saturação dos modelos. Os subwoofers exibem no catálogo o corte passa-baixas do caminho de áudio (100 ou 120 Hz); caixas e fones exibem curvas aproximadas específicas. Os limites elétricos são aplicados além dessas características.
 
 As curvas de caixas/fones são aproximações com filtros, compensação de nível e resposta própria por modelo. O gráfico tonal não representa sensibilidade acústica absoluta nem a resposta do ambiente.
 
@@ -126,6 +128,6 @@ O valvulado tem aquecimento visual, entrada progressiva do áudio e perfil de sa
 
 ## 7. Limites e estado da revisão
 
-O modelo usa impedâncias resistivas nominais e proteções simplificadas. Não reproduz circuitos completos, impedância complexa por frequência, capacitância de cápsula/cabo, taps físicos do transformador, diretividade, sala, sensibilidade acústica, temperatura de bobina ou tempo real até falhar. A RIAA é aproximada por filtros; cápsulas MC e cerâmicas não têm modelos separados.
+O modelo usa impedâncias resistivas nominais e proteções simplificadas. Os nomes e os números de potência são modelos didáticos, não especificações certificadas de produtos físicos. Não reproduz circuitos completos, impedância complexa por frequência, capacitância de cápsula/cabo, taps físicos do transformador, diretividade, sala, sensibilidade acústica, temperatura de bobina ou tempo real até falhar. A RIAA é aproximada por filtros; cápsulas MC e cerâmicas não têm modelos separados.
 
-A revisão de 21 de outubro foi feita por leitura do código e conferência de sintaxe de `script.js`. Não houve nova execução dos antigos ensaios numéricos, testes no navegador ou comparação auditiva. Contagens e resultados históricos foram removidos para não apresentá-los como validação da implementação atual.
+A revisão de 27 de outubro conferiu as especificações dos amplificadores contra suas curvas de potência por carga, a presença de perfis para todos os tipos de caixas e fones, as curvas dos subwoofers e as grandezas elétricas exibidas no catálogo. Os testes de unidade (`node --test tests/*.test.cjs`), a montagem do bundle e a sintaxe de `script.js` passaram. Os testes de integração de navegador e a comparação auditiva não foram executados nesta revisão.

@@ -373,14 +373,14 @@
         const RCA_SWITCH_TYPES = new Set(['rcaSwitch', 'rcaSwitchVintage']);
         const SELECTOR_TYPES = new Set([...RCA_SWITCH_TYPES, ...SPEAKER_SWITCH_TYPES]);
         const BOOKSHELF_SPEAKERS={
-            shelfCoax:{height:424,width:280,watts:100,ohms:8,finish:'coax',description:'Bookshelf passiva com frente curva e conjunto coaxial cobre. Médios e agudos equilibrados.'},
+            shelfCoax:{height:424,width:280,watts:100,ohms:8,recommended:true,finish:'coax',description:'Bookshelf passiva com frente curva e conjunto coaxial cobre. Médios e agudos equilibrados.'},
             shelfWood:{height:504,width:278,watts:200,ohms:6,finish:'wood',description:'Bookshelf passiva de duas vias com madeira envernizada, tweeter de domo macio e woofer escuro.'},
-            shelfTop:{height:578,width:269,watts:120,ohms:8,finish:'top',description:'Bookshelf passiva com tweeter separado no topo e cone prateado. Agudos destacados.'}
+            shelfTop:{height:578,width:269,watts:120,ohms:8,recommended:true,finish:'top',description:'Bookshelf passiva com tweeter separado no topo e cone prateado. Agudos destacados.'}
         };
         const FLOOR_SPEAKERS={
-            floorDiamond:{height:1040,cabinet:244,watts:200,ohms:8,finish:'diamond',description:'Caixa de piso passiva com gabinete curvo, tweeter separado, um médio e dois woofers. Impedância nominal de 8 Ω e amplificação recomendada até 200 W.'},
-            floorCoax:{height:1240,cabinet:200,watts:300,ohms:4,finish:'coax',description:'Caixa de piso passiva com conjunto coaxial e quatro woofers em gabinete estreito. Impedância nominal de 4 Ω e amplificação recomendada até 300 W.'},
-            floorFlax:{height:1120,cabinet:248,watts:300,ohms:8,finish:'flax',description:'Caixa de piso passiva com médio e três woofers em tom de linho, tweeter de domo invertido e base de vidro. Impedância nominal de 8 Ω e amplificação recomendada até 300 W.'}
+            floorDiamond:{height:1040,cabinet:244,watts:200,ohms:8,recommended:true,finish:'diamond',description:'Caixa de piso passiva com gabinete curvo, tweeter separado, um médio e dois woofers. Impedância nominal de 8 Ω e amplificação recomendada até 200 W.'},
+            floorCoax:{height:1240,cabinet:200,watts:300,ohms:4,recommended:true,finish:'coax',description:'Caixa de piso passiva com conjunto coaxial e quatro woofers em gabinete estreito. Impedância nominal de 4 Ω e amplificação recomendada até 300 W.'},
+            floorFlax:{height:1120,cabinet:248,watts:300,ohms:8,recommended:true,finish:'flax',description:'Caixa de piso passiva com médio e três woofers em tom de linho, tweeter de domo invertido e base de vidro. Impedância nominal de 8 Ω e amplificação recomendada até 300 W.'}
         };
         const PASSIVE_SPK = new Set(['speaker', 'spkPassiveWood', 'spkPassiveCarbon', 'spkPassiveGridBlack', 'spkPassiveGridOrange',...Object.keys(FLOOR_SPEAKERS),...Object.keys(BOOKSHELF_SPEAKERS)]);
         const ACTIVE_SPK = new Set(['spkActiveRounded','spkActiveMonitor', 'spkActiveBookshelf','spkActiveCompact']);

@@ -82,7 +82,7 @@
         for(const name of ['pointerdown','pointerup','touchend','click','keydown'])document.addEventListener(name,activateAudioFromGesture,{capture:true,passive:true});
         function resumeAudioAfterReturn(){
             const context=state.audioCtx;
-            if(!context||document.visibilityState==='hidden'||context.state==='closed')return;
+            if(!context||!audioPrimed||document.visibilityState==='hidden'||context.state==='closed')return;
             prepareLegacyPlayback();
             if(context.state!=='running')context.resume().then(()=>{if(context.state!=='running')audioNeedsGestureRecovery=true;updateCableFlows();}).catch(()=>{audioNeedsGestureRecovery=true;});
         }
