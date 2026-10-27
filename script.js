@@ -2104,7 +2104,7 @@ const Hardware = (() => {
         const mobileCategoryNav=document.createElement('nav');mobileCategoryNav.className='mobile-category-nav';mobileCategoryNav.setAttribute('aria-label','Categorias de equipamentos');
         mobileCategoryNav.innerHTML='<button type="button" data-category-target="Fontes de áudio">Fontes</button><button type="button" data-category-target="Amplificadores">Amplificadores</button><button type="button" data-category-target="Caixas">Caixas</button><button type="button" data-category-target="Móveis">Móveis</button><button type="button" data-category-target="Iluminação">Iluminação</button>';
         equipmentCatalog.querySelector('.catalog-panel-header')?.appendChild(mobileCategoryNav);
-        mobileCategoryNav.addEventListener('click',event=>{const button=event.target.closest('[data-category-target]');if(!button)return;const title=button.dataset.categoryTarget,sections=[...equipmentCatalog.querySelectorAll('.flex-1.overflow-y-auto>.mb-6')],section=sections.find(candidate=>candidate.querySelector('h3')?.textContent.trim().startsWith(title));section?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});});
+        mobileCategoryNav.addEventListener('click',event=>{const button=event.target.closest('[data-category-target]');if(!button)return;const title=button.dataset.categoryTarget,sections=[...equipmentCatalog.querySelectorAll('.flex-1.overflow-y-auto>.mb-6')],section=sections.find(candidate=>AudioSystemLanguage.sourceText(candidate.querySelector('h3')?.textContent.trim()||'').startsWith(title));section?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});});
 
         function syncDeviceSelection() {
             Object.values(state.devices).forEach(dev => {
@@ -9698,7 +9698,12 @@ const Hardware = (() => {
             const content=document.createElement('div');content.className='settings-group-content';content.append(...nodes);group.append(summary,content);return group;
         };
         const clearButton=document.getElementById('clear-system');
+        const languageSetting=document.createElement('label');languageSetting.className='language-setting';languageSetting.innerHTML='<span>Idioma</span><select id="app-language" aria-label="Idioma"><option value="pt">Português</option><option value="en">English</option></select>';
+        const languageSelect=languageSetting.querySelector('select');languageSelect.value=AudioSystemLanguage.language;
+        languageSelect.addEventListener('change',()=>AudioSystemLanguage.set(languageSelect.value));
+        AudioSystemLanguage.subscribe(language=>{if(languageSelect.value!==language){languageSelect.value=language;languageSelect.dispatchEvent(new Event('change',{bubbles:true}));}});
         clearCatalogFooter.replaceChildren(
+            languageSetting,
             settingsGroup('Visual','<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="1.5"/><path d="m4 17 5-5 3 3 3-4 5 6"/>',[themeSection],true),
             settingsGroup('Interação','<path d="M8 12V5a2 2 0 0 1 4 0v5m0-3a2 2 0 0 1 4 0v4m0-2a2 2 0 0 1 4 0v6c0 4-3 6-7 6h-2c-3 0-5-2-6-5l-2-4a2 2 0 0 1 3-2l2 2"/>',[interactionSection]),
             settingsGroup('Escuta','<path d="M4 13v-2a8 8 0 0 1 16 0v2M4 13h3v7H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 1-2Zm16 0h-3v7h2a2 2 0 0 0 2-2v-3a2 2 0 0 0-1-2Z"/>',[roomSection,headphoneCalibrationSetting,listeningLevels]),
