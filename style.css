@@ -3850,6 +3850,8 @@
 /* The unlit vintage LCD is reflective, so it does not cast light. */
 :is(#audio-world,.equipment-preview-world) .device-type-signalGeneratorVintage .signal-screen {box-shadow:inset 0 2px 5px #000b,0 1px 0 #fff6!important;}
 :is(#audio-world,.equipment-preview-world) .device-node:is(.power-off,.device-damaged) :is(.integrated-gauge,.bias-meter,.cd-lcd,.poweramp-screen,.custom-pre-screen,.receiver-radio,.bench-lcd,.extra-vu,.signal-screen) {box-shadow:inset 0 1px 4px #0008;}
+/* The receiver's FM ruler is a printed analog dial, not a display: keep it visible when powered off. */
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-receiver.power-off .receiver-radio {opacity:1!important;filter:none!important;}
 
 /* Optional bench scenery stays behind equipment and never captures gestures. */
 .bench-scene,.bench-scene * {position:absolute;box-sizing:border-box;pointer-events:none;}
