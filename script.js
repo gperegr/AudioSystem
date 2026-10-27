@@ -2843,14 +2843,19 @@ const Hardware = (() => {
         }
         function catalogRatingVisualHtml(type){
             const headphone=HEADPHONE_SPECS[type],speaker=FLOOR_SPEAKERS[type]||BOOKSHELF_SPEAKERS[type]||FIXED_PASSIVE_SPECS[type],active=ACTIVE_SPEAKER_RATINGS[type]||ACTIVE_SUB_RATINGS[type];
-            const power=headphone?.powerMw??speaker?.watts??active?.watts??0,powerUnit=headphone?'mW':'W',ohms=headphone?.ohms??speaker?.ohms??active?.inputOhms??0;
+            const amplifier=FIXED_AMP_SPECS[type],headphoneOutput=HEADPHONE_OUTPUT_SPECS[type];
+            const headphonePowerMw=headphoneOutput?Math.round(Math.min(headphoneOutput.voltsRms**2/32,headphoneOutput.currentRms**2*32)*1000):undefined;
+            const power=amplifier?(amplifier.powerByOhms[8]??amplifier.watts):headphonePowerMw??headphone?.powerMw??speaker?.watts??active?.watts??0;
+            const powerUnit=amplifier?'W':headphoneOutput||headphone?'mW':'W';
+            const ohms=amplifier?8:headphoneOutput?.outputOhms??headphone?.ohms??speaker?.ohms??active?.inputOhms??0;
+            if(!power||!ohms)return '';
             const powerMax=powerUnit==='mW'?1000:500,impedanceMax=10000;
             const fill=(value,min,max)=>Math.max(8,Math.min(100,Math.round((Math.log(Math.max(min,value)/min)/Math.log(max/min))*100)));
             const ohmsValue=ohms>=1000?`${(ohms/1000).toFixed(0)}k`:`${ohms}`;
-            const approximate=headphone||active;
-            const powerTitle=`Potência de referência simulada: ${power} ${powerUnit}.`;
-            const impedanceTitle=`${active?'Impedância de entrada':'Impedância nominal'} de referência: ${ohms} Ω.`;
-            return `<div class="catalog-rating-visuals" aria-label="Parâmetros elétricos de referência"><div class="catalog-rating" role="img" aria-label="${powerTitle}" title="${powerTitle}"><svg viewBox="0 0 16 20" aria-hidden="true"><path d="M9.6 1 3 11h4l-.7 8L13 8.5H9.1Z"/></svg><span>${approximate?'≈':''}${power}</span><small>${powerUnit}</small><i class="catalog-rating-track"><i style="width:${fill(power,powerUnit==='mW'?20:5,powerMax)}%"></i></i></div><div class="catalog-rating" role="img" aria-label="${impedanceTitle}" title="${impedanceTitle}"><b class="catalog-rating-ohm" aria-hidden="true">Ω</b><span>${ohmsValue}</span><small>Ω</small><i class="catalog-rating-track"><i style="width:${fill(ohms,8,impedanceMax)}%"></i></i></div></div>`;
+            const approximate=!amplifier;
+            const powerTitle=`${amplifier?'Potência nominal':'Potência máxima de saída'}: ${power} ${powerUnit}`;
+            const impedanceTitle=`${amplifier?'Carga nominal':'Impedância de saída'}: ${ohms} Ω`;
+            return `<div class="catalog-rating-visuals" aria-label="Parâmetros elétricos"><div class="catalog-rating" role="img" aria-label="${powerTitle}"><svg viewBox="0 0 16 20" aria-hidden="true"><path d="M9.6 1 3 11h4l-.7 8L13 8.5H9.1Z"/></svg><span>${approximate?'≈':''}${power}</span><small>${powerUnit}</small><i class="catalog-rating-track"><i style="width:${fill(power,powerUnit==='mW'?20:5,powerMax)}%"></i></i></div><div class="catalog-rating" role="img" aria-label="${impedanceTitle}"><b class="catalog-rating-ohm" aria-hidden="true">Ω</b><span>${ohmsValue}</span><small>Ω</small><i class="catalog-rating-track"><i style="width:${fill(ohms,8,impedanceMax)}%"></i></i></div></div>`;
         }
 
         const INTEGRATED_AMPS={
@@ -4632,18 +4637,18 @@ const Hardware = (() => {
             hideCatalogAmpTip();catalogAmpTarget=item;
             catalogAmpTimer=setTimeout(()=>{
                 if(!item.isConnected||item.getClientRects().length===0)return;
-                const type=item.dataset.template,spec=FIXED_AMP_SPECS[type];
+                const type=item.dataset.template;
                 const title=DEVICE_NAMES[type]||item.textContent.trim();
-                const speaker=FLOOR_SPEAKERS[type]||BOOKSHELF_SPEAKERS[type],headphone=REFERENCE_HEADPHONES[type];
                 const signatureOnly=isCatalogListeningType(type);
-                if(signatureOnly){
+                const amplifier=!!AMPLIFICATION_VOICINGS[type];
+                if(signatureOnly||amplifier){
                     catalogAmpTip.classList.add('catalog-signature-only');
-                    catalogAmpTip.innerHTML=`<div class="catalog-listening-preview" aria-label="Assinatura sonora de ${title}">${listeningProfilePreviewHtml(type)}${catalogRatingVisualHtml(type)}</div>`;
+                    catalogAmpTip.innerHTML=signatureOnly
+                        ?`<div class="catalog-listening-preview" aria-label="Assinatura sonora de ${title}">${listeningProfilePreviewHtml(type)}${catalogRatingVisualHtml(type)}</div>`
+                        :`<div class="catalog-listening-preview" aria-label="Características do amplificador ${title}">${catalogRatingVisualHtml(type)||amplificationInspectorHtml({amplificationProfile:AMPLIFICATION_VOICINGS[type]})}</div>`;
                 }else{
                     catalogAmpTip.classList.remove('catalog-signature-only');
-                    const description=speaker?.description||headphone?.description||catalogDescriptions[type];
-                    const specs=speaker?`${speaker.watts} W · ${speaker.ohms} Ω · passiva`:headphone?`${headphone.ohms} Ω · ${headphone.enclosure||'aberto'} · fone`:spec?`${spec.watts} W por canal · 8 Ω`:/^pre/i.test(type)?'Pré-amplificador · sem potência para caixas':'Amplificação para fones';
-                    catalogAmpTip.innerHTML=`<h2>${title}</h2><p class="catalog-amp-power">${specs}</p>${description?`<p class="catalog-amp-description">${description}</p>`:''}${AMPLIFICATION_VOICINGS[type]?amplificationInspectorHtml({amplificationProfile:AMPLIFICATION_VOICINGS[type]}):''}`;
+                    catalogAmpTip.innerHTML='';
                 }
                 const rect=item.getBoundingClientRect(),w=catalogAmpTip.offsetWidth,h=catalogAmpTip.offsetHeight;
                 catalogAmpTip.style.left=Math.min(innerWidth-w-10,rect.right+14)+'px';
