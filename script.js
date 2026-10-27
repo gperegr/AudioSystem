@@ -1572,7 +1572,7 @@ const Hardware = (() => {
         const canvas = document.getElementById('canvas');
         const world = document.getElementById('audio-world');
         const ROOM_SIDE_INSET=202;
-        const ROOM_FLOOR_OVERLAP=180;
+        const ROOM_FLOOR_OVERLAP=220;
         const ROOM_HORIZON_IMAGE_Y=550;
         const wallPlacementBottom=()=>world.offsetHeight-450;
         const floorPlacementBottom=()=>Math.floor((world.offsetHeight-ROOM_FLOOR_OVERLAP)/Hardware.sizes.grid)*Hardware.sizes.grid;
