@@ -148,9 +148,12 @@ No Safari de iPhone/iPad, toque em Reproduzir. Ao voltar de outra aba, a sessão
 A aplicação é composta de HTML, CSS e JavaScript; os testes abaixo exigem Node.js, sem dependências adicionais:
 
 ```sh
+node tools/build-script.cjs --check
 node --check script.js
 node --test tests/*.test.cjs
 ```
+
+O código da aplicação fica dividido por responsabilidade em [`src/app/`](src/app/README.md). Depois de editar uma dessas partes, regenere `script.js` com `node tools/build-script.cjs`; o app e a hospedagem continuam carregando esse ponto de entrada clássico.
 
 A suíte cobre ativação/retomada do áudio, movimento de grupos em móveis e coerência dos indicadores de assinatura sonora. Consulte [modelo de sinais e limites elétricos](REVISAO-SINAIS.md), [biblioteca de controles](COMPONENTES.md) e [fontes dos equipamentos](assets/fonts/README.md).
 
