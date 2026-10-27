@@ -2259,7 +2259,7 @@ const Hardware = (() => {
         });
 
         const DEVICE_NAMES = {
-            furnitureRack:'Rack de Áudio', furnitureCoverflow:'Coleção de Discos · Spotify', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureRackSixTall:'Rack com Vãos Altos · 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio', pendantLamp:'Luminária pendente', wallLampCage:'Arandela industrial', wallLampDome:'Arandela de prato',
+            furnitureRack:'Rack de Áudio', furnitureCoverflow:'Coleção de Discos · Spotify', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureRackSixTall:'Rack com Vãos Altos · 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio', cdCollection:'Conjunto de CDs', pendantLamp:'Luminária pendente', wallLampCage:'Arandela industrial', wallLampDome:'Arandela de prato',
             adapterRcaP2:'Adaptador RCA → P2', adapterP2Rca:'Adaptador P2 → RCA', adapterP10P2:'Adaptador P10 → P2', adapterP2P10:'Adaptador P2 → P10', adapterRcaP10:'Adaptador RCA → P10', adapterP10Rca:'Adaptador P10 → RCA', phonoConverter:'Conversor Phono → Linha', speakerConverter:'Conversor Amplificado → Linha',
             turntable: 'Toca-discos', turntableVintage: 'Toca-discos Vintage', turntableLinear:'Toca-discos Tangencial',
             hardwareDemo:'Modelo · Controles',signalGeneratorVintage:'Gerador de Sinais Vintage', signalGenerator:'Gerador de Sinais', cdPlayer: 'CD Player', tapeDeck:'Tape Deck de Rolo', preamp:'Pré · Slim',preReference:'Pré · Visor Verde',preControl:'Pré · Controle 2.1',preDisplay:'Pré · Tela Central', benchMeter:'Medidor de Bancada', benchMeterVintage:'Medidor de Bancada Vintage',
@@ -2324,6 +2324,7 @@ const Hardware = (() => {
             furnitureRackSix:{width:840,height:1120,surfaces:[0,210,420,630,840,1050],inset:20,rack:true,back:true,description:'Seis vãos de 194 px para equipamentos baixos e médios.'},
             furnitureRackSixTall:{width:840,height:1370,surfaces:[0,260,520,780,1040,1300],inset:20,rack:true,back:true,description:'Seis vãos de 244 px para acomodar equipamentos médios e altos.'},
             furnitureCoverflow:{width:2440,height:514,surfaces:[0],inset:26,rack:true,back:true,materials:['lightWood','darkWood'],defaultMaterial:'darkWood',description:'Coleção de álbuns e playlists do Spotify. Retire um vinil da capa aberta e coloque-o em um toca-discos; cabos e volumes controlam a escuta.'},
+            cdCollection:{width:760,height:240,surfaces:[],inset:0,description:'Conjunto decorativo de CDs guardados lado a lado, com a lombada à vista.'},
             furnitureTable:{width:1680,height:760,surfaces:[0],inset:20,description:'Apoie os equipamentos sobre o tampo. Arraste a mesa pelo tampo ou pelos pés.'},
             furnitureNiche:{width:840,height:280,surfaces:[0,260],inset:20,back:true,description:'Acomode um equipamento dentro do nicho ou sobre ele.'}
         };
@@ -2346,6 +2347,10 @@ const Hardware = (() => {
                     part('furniture-top',0,0,config.width,28)+part('furniture-side',0,28,26,416)+part('furniture-side',config.width-26,28,26,416)+part('furniture-shelf',0,444,config.width,30)+part('furniture-caster',42,474,42,40,'<span class="caster-stem"></span><span class="caster-wheel"></span>')+part('furniture-caster',config.width-84,474,42,40,'<span class="caster-stem"></span><span class="caster-wheel"></span>');
             }else if(type==='furnitureTable'){
                 parts=part('furniture-top',0,0,config.width,28)+part('furniture-leg',60,28,40,config.height-28)+part('furniture-leg',config.width-100,28,40,config.height-28)+part('furniture-brace',100,80,config.width-200,20);
+            }else if(type==='cdCollection'){
+                const colors=['#7d2529','#294d55','#a06d38','#343c65','#697341','#663b58','#9a4930','#355f52'];
+                const cases=Array.from({length:47},(_,index)=>`<span class="cd-collection-case" style="--case-x:${26+index*15}px;--case-height:${212+(index%4)*3}px;--case-color:${colors[index%colors.length]}" aria-hidden="true"><i></i><b>${String(index+1).padStart(2,'0')}</b></span>`).join('');
+                parts=part('cd-collection-body',0,0,config.width,config.height,`<span class="cd-collection-cases">${cases}</span><span class="cd-collection-base"></span>`);
             }else if(config.rack){
                 const bodyHeight=config.surfaces.at(-1)+16;
                 parts=config.surfaces.map(y=>part('furniture-shelf',20,y,config.width-40,16)).join('')+part('furniture-leg',28,bodyHeight,20,44)+part('furniture-leg',config.width-48,bodyHeight,20,44)+part('furniture-side',0,0,20,bodyHeight)+part('furniture-side',config.width-20,0,20,bodyHeight);
@@ -4500,6 +4505,7 @@ const Hardware = (() => {
             if(['spkPassiveGridBlack','spkPassiveGridOrange'].includes(type))drawing='<rect x="14" y="2" width="28" height="36" rx="1"/><path d="M18 6v28m7-28v28m6-28v28m7-28v28M17 11h22M17 18h22M17 25h22M17 32h22M18 39v4h20v-4"/>';
             if(FURNITURE_TYPES[type]?.rack){const count=type==='furnitureRackSix'||type==='furnitureRackSixTall'?6:4;drawing='<path d="M8 3h40v38H8zM12 41v3m32-3v3"/>'+Array.from({length:count},(_,i)=>`<path d="M10 ${5+i*34/(count-1)}h36"/>`).join('');}
             if(type==='furnitureCoverflow')drawing='<path d="M3 6h50v34H3zM6 9h44v25H6zM6 36h44M9 40v3m38-3v3"/><path d="M9 13v19m4-19v19m4-19v19m4-19v19"/><rect x="25" y="12" width="13" height="19" rx="1"/><circle cx="40" cy="22" r="8"/><circle cx="40" cy="22" r="2"/><path d="M40 14v2m7 6h-2m-5 8v-2m-6-6h2"/><path d="M49 13v19"/>';
+            if(type==='cdCollection')drawing='<path d="M5 7h46v32H5zM8 37h40M10 10v26m4-26v26m4-26v26m4-26v26m4-26v26m4-26v26m4-26v26m4-26v26m4-26v26m4-26v26"/>';
             if(type==='turntableVintage')drawing='<path d="M5 7h46v32H5zM8 10v26m40-26v26"/><circle cx="24" cy="22" r="12"/><circle cx="24" cy="22" r="3"/><path d="M43 12v12l-6 6M12 35h6"/>';
             if(type==='eqVintage')drawing=rack+'<path d="M8 12v20m40-20v20M14 15v14m7-14v14m7-14v14m7-14v14m7-14v14M12 22h4m3-4h4m3 7h4m3-5h4m3 4h4"/>';
             if(type==='mixerVintage')drawing=rack+'<path d="M8 12v20m40-20v20M15 22v8m9-8v8m9-8v8m9-8v8M13 26h4m5-2h4m5 3h4m5-2h4"/>'+[15,24,33,42].map(x=>`<circle cx="${x}" cy="17" r="2"/>`).join('');
@@ -4516,7 +4522,7 @@ const Hardware = (() => {
                 headphoneAmp:'#c6ab87',headphoneAmpModern:'#91b7c7',headphoneAmp4:'#a1b7c0',eqStudio:'#9eb7c5',eqVintage:'#c5ad86',mixer:'#a4b6c6',mixerVintage:'#bfa385',
                 crossover:'#93b8bf',crossoverVintage:'#c3ae8b',btReceiverA:'#8abac8',btTransmitterPro:'#99b7cc',
                 rcaSwitch:'#a4b5c1',rcaSwitchVintage:'#bda98a',speakerSwitch:'#9eb8bc',speakerSwitchVintage:'#c1a785',rcaMatrix:'#9bacc3',rcaMatrixVintage:'#b9a88b',
-                furnitureRack:'#a5b3ad',furnitureCoverflow:'#c19a71',furnitureRackTall:'#a0b1ab',furnitureRackSix:'#9baaa6',furnitureRackSixTall:'#92a5a0',furnitureTable:'#baa48a',furnitureNiche:'#b7a58d',pendantLamp:'#e6b674',wallLampCage:'#d8b879',wallLampDome:'#d9ae75'
+                furnitureRack:'#a5b3ad',furnitureCoverflow:'#c19a71',furnitureRackTall:'#a0b1ab',furnitureRackSix:'#9baaa6',furnitureRackSixTall:'#92a5a0',furnitureTable:'#baa48a',furnitureNiche:'#b7a58d',cdCollection:'#b88a62',pendantLamp:'#e6b674',wallLampCage:'#d8b879',wallLampDome:'#d9ae75'
             };
             const color=colors[type]||(INTERFACE_DEVICES[type]?.passive?'#b6b5aa':DEVICE_FAMILIES[type]==='vintage'?'#c0ab8a':'#a0b8c4');
             drawing=drawing.replace(/ opacity="[^"]*"/g,'');
@@ -7996,7 +8002,8 @@ const Hardware = (() => {
             } else if(FURNITURE_TYPES[dev.type]) {
                 const config=FURNITURE_TYPES[dev.type];
                 if(dev.type==='furnitureCoverflow')html+=SpotifyCoverflow.inspectorHtml();
-                html += `<div class="flex flex-col gap-3"><label class="text-sm text-gray-300" for="furniture-material">Material</label><select id="furniture-material" class="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700">${Object.entries(furnitureMaterialsFor(dev.type)).map(([key,name])=>`<option value="${key}" ${dev.state.material===key?'selected':''}>${name}</option>`).join('')}</select><p class="text-xs text-gray-400">${config.description}</p><p class="text-xs text-gray-400">Aproxime a base do equipamento de uma prateleira para apoiá-lo. Arraste o móvel pelas partes sólidas.${config.rack?' Os equipamentos apoiados nas prateleiras e empilhados acompanham o rack.':''}</p></div>`;
+                if(dev.type==='cdCollection')html+=`<p class="text-xs text-gray-400">${config.description}</p>`;
+                else html += `<div class="flex flex-col gap-3"><label class="text-sm text-gray-300" for="furniture-material">Material</label><select id="furniture-material" class="w-full p-2 rounded bg-gray-800 text-gray-200 border border-gray-700">${Object.entries(furnitureMaterialsFor(dev.type)).map(([key,name])=>`<option value="${key}" ${dev.state.material===key?'selected':''}>${name}</option>`).join('')}</select><p class="text-xs text-gray-400">${config.description}</p><p class="text-xs text-gray-400">Aproxime a base do equipamento de uma prateleira para apoiá-lo. Arraste o móvel pelas partes sólidas.${config.rack?' Os equipamentos apoiados nas prateleiras e empilhados acompanham o rack.':''}</p></div>`;
                 if(dev.type==='furnitureTable')html+=`<fieldset class="bench-options"><legend>Ambiente da bancada</legend><label for="bench-surface">Superfície</label><select id="bench-surface">${Object.entries(BENCH_SURFACES).map(([key,label])=>`<option value="${key}" ${dev.state.benchSurface===key?'selected':''}>${label}</option>`).join('')}</select><label><input type="checkbox" id="bench-backdrop" ${dev.state.benchBackdrop===true?'checked':''}> Painel acústico</label><span>Objetos decorativos</span>${Object.entries(BENCH_DECORATIONS).map(([key,label])=>`<label><input type="checkbox" data-bench-decoration="${key}" ${dev.state.benchDecorations?.includes(key)?'checked':''}> ${label}</label>`).join('')}</fieldset>`;
             } else if (INTERFACE_DEVICES[dev.type]) {
                 html += `<p class="text-sm text-gray-400">${INTERFACE_DEVICES[dev.type].description}</p>`;
