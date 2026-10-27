@@ -4634,7 +4634,7 @@ const Hardware = (() => {
                     catalogAmpTip.classList.add('catalog-signature-only');
                     catalogAmpTip.innerHTML=signatureOnly
                         ?`<div class="catalog-listening-preview" aria-label="Assinatura sonora de ${title}">${listeningProfilePreviewHtml(type)}${catalogRatingVisualHtml(type)}</div>`
-                        :`<div class="catalog-listening-preview" aria-label="Características do amplificador ${title}">${catalogRatingVisualHtml(type)||amplificationInspectorHtml({amplificationProfile:AMPLIFICATION_VOICINGS[type]})}</div>`;
+                        :`<div class="catalog-listening-preview" aria-label="Características do amplificador ${title}">${amplificationInspectorHtml({amplificationProfile:AMPLIFICATION_VOICINGS[type]})}${catalogRatingVisualHtml(type)}</div>`;
                 }else{
                     catalogAmpTip.classList.remove('catalog-signature-only');
                     catalogAmpTip.innerHTML='';

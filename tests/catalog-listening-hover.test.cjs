@@ -41,3 +41,9 @@ test('visual electrical indicators show both power and impedance without prose b
     const headphoneAmp=context.catalogRatingVisualHtml('headphoneAmpModern');
     assert.ok(headphoneAmp.includes('500')&&headphoneAmp.includes('mW')&&headphoneAmp.includes('1')&&headphoneAmp.includes('Ω'));
 });
+
+test('amplifier hovers preserve the visual trait dots alongside electrical ratings',()=>{
+    const hover=source.slice(source.indexOf('const showCatalogAmpTip='),source.indexOf('catalogItems.filter(item=>AMPLIFICATION_VOICINGS'));
+    assert.match(hover,/amplificationInspectorHtml\(\{amplificationProfile:AMPLIFICATION_VOICINGS\[type\]\}\)\}\$\{catalogRatingVisualHtml\(type\)\}/);
+    assert.doesNotMatch(hover,/<p class="catalog-amp-description"/);
+});
