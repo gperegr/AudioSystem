@@ -9,4 +9,4 @@ python3 -m http.server 8765 --bind 127.0.0.1
 node tests/equipment-contracts.browser.cjs
 ```
 
-The browser suite creates every inventory type using `createDevice`, checks its rendered dimensions and ports, confirms node and direction metadata, toggles available power controls off and on, checks electrical specifications where the model publishes them, tests the connector-compatibility result contract, and verifies English labels. It deletes each created instance to exercise normal runtime cleanup.
+The browser suite creates every inventory type using `createDevice`, checks its rendered dimensions and ports, confirms node and direction metadata, toggles available power controls off and on, checks electrical specifications where the model publishes them, tests the connector-compatibility result contract, and verifies English labels. It also scans rendered text, `aria-label`, `title`, placeholders, alt text, tooltips, and all select options for Portuguese strings still visible in English mode, both in settings and while each device inspector is open. It deletes each created instance to exercise normal runtime cleanup.

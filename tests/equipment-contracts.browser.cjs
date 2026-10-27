@@ -25,16 +25,37 @@ const root=path.join(__dirname,'..');
         assert(types.length>=90,`expected broad catalog coverage, got ${types.length}`);
         await page.evaluate(()=>AudioSystemLanguage.set('en'));
 
+        const untranslated=new Set();
+        async function scanVisibleLanguage(){
+            const issues=await page.evaluate(()=>{
+                const candidates=[],portuguese=/\b(?:entrada|sa[ií]da|ligar|desligar|desligado|ligado|volume|ganho|pot[eê]ncia|imped[aâ]ncia|sinal|canal|m[uú]sica|configura[cç][aã]o|propriedades|fone|caixa|equipamento|conectar|conecte|desconectar|disco|faixa|carregando|nenhum|nenhuma|buscar|autorizar|captura|material|madeira|preto|prata|cinza|agudo|graves|m[eé]dios|prefer[eê]ncias|restaurar|salvar|iniciar|parar|pausar|reproduzir|ligue|desativado|ativo|passivo|esquerdo|direito|clique|arraste|selecione|painel|menu|ajuste|reprodu[cç][aã]o|bot[aã]o|m[oó]vel|prateleira|cen[aá]rio|hor[aá]rio|noite|claro|escuro|conversor|amplificado|fones|caixas)\b|[áàãâéêíóôõúüç]/i;
+                const visible=element=>{if(!element?.isConnected)return false;const style=getComputedStyle(element);return style.display!=='none'&&style.visibility!=='hidden'&&!!element.getClientRects().length;};
+                const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+                while(walker.nextNode()){const node=walker.currentNode,text=node.data.trim();if(text&&visible(node.parentElement)&&!node.parentElement.closest('script,style,code,pre'))candidates.push(text);}
+                document.querySelectorAll('[aria-label],[title],[placeholder],[alt],[data-tooltip]').forEach(element=>{
+                    if(!visible(element))return;
+                    for(const key of ['aria-label','title','placeholder','alt','data-tooltip']){const value=element.getAttribute(key)?.trim();if(value)candidates.push(value);}
+                });
+                document.querySelectorAll('option').forEach(option=>{const value=option.textContent.trim();if(value)candidates.push(value);});
+                return [...new Set(candidates.filter(value=>portuguese.test(value)&&AudioSystemLanguage.sourceText(value)===value&&AudioSystemLanguage.translate(value)===value))];
+            });
+            for(const value of issues)untranslated.add(value);
+        }
+        await page.locator('.app-settings').evaluate(element=>{element.open=true;});
+        await scanVisibleLanguage();
+        await page.locator('.app-settings').evaluate(element=>{element.open=false;});
+
         const contractFailures=[];
         for(const type of types){
             try{
+                await page.evaluate(type=>__equipmentContract.createDevice(type,120,120,`contract-${type}`),type);
+                await scanVisibleLanguage();
                 const result=await page.evaluate(type=>{
                     const api=__equipmentContract,name=api.names[type];
                     if(!name)return {error:'missing Portuguese name'};
                     const english=AudioSystemLanguage.translate(name);
                     if(!english.trim())return {error:'missing English label'};
                     const id=`contract-${type}`;
-                    api.createDevice(type,120,120,id);
                     const dev=api.devices[id];
                     if(!dev)return {error:'factory did not register device'};
                     const box=dev.el.getBoundingClientRect();
@@ -56,6 +77,7 @@ const root=path.join(__dirname,'..');
                     api.deleteDevice(dev,false);
                     return result;
                 },type);
+                await scanVisibleLanguage();
                 if(result.error)throw new Error(result.error);
                 assert(!result.badDimensions,`zero or invalid dimensions ${JSON.stringify(result.dimensions)}`);
                 assert.equal(result.malformed.length,0,`invalid port contract ${JSON.stringify(result.malformed)}`);
@@ -63,7 +85,7 @@ const root=path.join(__dirname,'..');
                 if(result.power)assert.deepEqual(result.power,{before:true,off:false,on:true},'power button must switch off and on');
                 if(result.expectedElectrical)assert(Object.keys(result.electricalSpec||{}).length>0,`missing electrical specification for ${type}`);
                 for(const [key,value]of Object.entries(result.electricalSpec||{}))assert(Number.isFinite(value)&&value>0,`${type} has invalid ${key}`);
-            }catch(error){contractFailures.push(`${type}: ${error.message}`);}
+            }catch(error){await page.evaluate(type=>{const dev=__equipmentContract.devices[`contract-${type}`];if(dev)__equipmentContract.deleteDevice(dev,false);},type).catch(()=>{});contractFailures.push(`${type}: ${error.message}`);}
         }
 
         // Verify the compatibility engine responds with a stable contract for every
@@ -86,6 +108,7 @@ const root=path.join(__dirname,'..');
         assert(compatibility,'port compatibility must return a reasoned result for all connector and direction combinations');
         assert.deepEqual(errors,[],'uncaught application errors');
         assert.deepEqual(contractFailures,[],contractFailures.join('\n'));
+        assert.deepEqual([...untranslated],[],'visible Portuguese text/ARIA/title/options have no English translation: '+[...untranslated].join(' | '));
         console.log(`Equipment contracts passed for ${types.length} catalog types: dimensions, ports, ratings, power behavior, translations, and compatibility.`);
     }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
