@@ -42,6 +42,11 @@ test('multi-paragraph connection confirmations translate every paragraph and pre
     assert.equal(context.translate(source),expected);
 });
 
+test('furniture material labels and select options translate',()=>{
+    const expected={'Material':'Material','Metal':'Metal','Preto':'Black','Madeira clara':'Light wood','Madeira escura':'Dark wood'};
+    for(const [portuguese,english]of Object.entries(expected))assert.equal(context.translate(portuguese),english,portuguese);
+});
+
 test('the linear turntable inspector and its changing states are translated',()=>{
     const expected={
         'Energia':'Power','LIGAR / DESLIGAR':'Power on / off','Disco sobre o prato':'Record on the platter',
