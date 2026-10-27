@@ -77,7 +77,7 @@ A direção visual combina interiores mid-century modernos com materiais fotogr�
 
 Ao deslocar ou ampliar o canvas, a imagem do cenário se move em velocidade diferente dos equipamentos, criando paralaxe. Mover somente o cursor não altera esse efeito. O enquadramento permite zoom-out de 50% em telas amplas, sem redimensionar móveis ou equipamentos. Os aparelhos podem avançar um pouco sobre o piso da imagem para parecerem apoiados nele.
 
-A categoria **Móveis** inclui a **Luminária pendente**, que acompanha a altura do teto com o cabo e balança discretamente, e duas arandelas de parede: **Industrial** e **de prato**. Todas iluminam os equipamentos; as cúpulas bloqueiam a luz fora da sua abertura. As arandelas podem ser arrastadas livremente pelas paredes e são salvas com o projeto. A categoria **DEBUG** fica oculta por padrão; ative **Configurações → Modo desenvolvedor** para mostrar **Modelo · Controles** no catálogo. Em caixas com grade removível, um pequeno botão quadrado com ícone permite recolocá-la.
+O catálogo separa **Móveis** de **Iluminação**. Em Iluminação, a **Luminária pendente** acompanha a altura do teto com o cabo e balança discretamente; as arandelas **Industrial** e **de prato** podem ser arrastadas pelas paredes. Todas iluminam os equipamentos, e as cúpulas bloqueiam a luz fora da sua abertura. A categoria **DEBUG** fica oculta por padrão; ative **Configurações → Modo desenvolvedor** para mostrar **Modelo · Controles** no catálogo. Em caixas com grade removível, um pequeno botão quadrado com ícone permite recolocá-la.
 
 ### Coleção de discos do Spotify
 

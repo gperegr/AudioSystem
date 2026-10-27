@@ -2101,7 +2101,7 @@ const Hardware = (() => {
         const touchHint=document.createElement('p');touchHint.className='touch-catalog-hint';touchHint.textContent='Toque no nome para adicionar. No canvas, toque em Mover para arrastar equipamentos sem interferir nos cabos; dois dedos movem a bancada e ajustam o zoom.';
         equipmentCatalog.querySelector(':scope > .p-4').appendChild(touchHint);
         const mobileCategoryNav=document.createElement('nav');mobileCategoryNav.className='mobile-category-nav';mobileCategoryNav.setAttribute('aria-label','Categorias de equipamentos');
-        mobileCategoryNav.innerHTML='<button type="button" data-category-target="Fontes de áudio">Fontes</button><button type="button" data-category-target="Amplificadores">Amplificadores</button><button type="button" data-category-target="Caixas">Caixas</button><button type="button" data-category-target="Móveis">Móveis</button>';
+        mobileCategoryNav.innerHTML='<button type="button" data-category-target="Fontes de áudio">Fontes</button><button type="button" data-category-target="Amplificadores">Amplificadores</button><button type="button" data-category-target="Caixas">Caixas</button><button type="button" data-category-target="Móveis">Móveis</button><button type="button" data-category-target="Iluminação">Iluminação</button>';
         equipmentCatalog.querySelector('.catalog-panel-header')?.appendChild(mobileCategoryNav);
         mobileCategoryNav.addEventListener('click',event=>{const button=event.target.closest('[data-category-target]');if(!button)return;const title=button.dataset.categoryTarget,sections=[...equipmentCatalog.querySelectorAll('.flex-1.overflow-y-auto>.mb-6')],section=sections.find(candidate=>candidate.querySelector('h3')?.textContent.trim().startsWith(title));section?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});});
 
@@ -4591,7 +4591,8 @@ const Hardware = (() => {
             ['Caixas Passivas',type=>PASSIVE_SPK.has(type)],
             ['Subwoofers',type=>SUB_TYPES.has(type)||PASSIVE_SUB_TYPES.has(type)],
             ['Fones de ouvido',type=>HP_TYPES.has(type)],
-            ['Móveis',type=>!!FURNITURE_TYPES[type]||type==='pendantLamp'||!!WALL_LAMP_TYPES[type]],
+            ['Móveis',type=>!!FURNITURE_TYPES[type]],
+            ['Iluminação',type=>type==='pendantLamp'||!!WALL_LAMP_TYPES[type]],
             ['DEBUG',type=>type==='hardwareDemo']
         ];
         const catalogAssigned=new Set();
