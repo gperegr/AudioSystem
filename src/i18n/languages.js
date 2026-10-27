@@ -719,6 +719,7 @@
         'incompatível':'incompatible',
         'Extremidade do cabo selecionado. Portas verdes mostram destinos alternativos compatíveis.':'Selected cable end. Green ports indicate other compatible destinations.',
         'Revisar ligação':'Review connection',
+        'Deseja conectar mesmo assim?':'Connect anyway?',
         'energia não aplicável':'power not applicable',
         'Comparação ao vivo · frequência em Hz e nível em dBFS. Cinza: entrada. Azul: saída.':'Live comparison · frequency in Hz and level in dBFS. Gray: input. Blue: output.',
         'Ligação do projeto incompatível.':'Project contains an incompatible connection.',
@@ -907,6 +908,8 @@
         const core = value.slice(leading.length, value.length - trailing.length || undefined);
         let result = language === 'en' ? english.get(normalized(core)) : undefined;
         if (language === 'en' && result === undefined) {
+            const paragraphs=core.split(/(\n{2,})/);
+            if(paragraphs.length>1)result=paragraphs.map(part=>/^\n+$/.test(part)?part:translate(part)).join('');
             const dynamic = [
                 [/^(Graves|Agudos|Saturação|Harmônicos pares): posição (\d+) de 7, de (.+?) a (.+?)\.( Centro neutro\.)?$/,(_,label,position,low,high,neutral='')=>`${translate(label)}: position ${position} of 7, from ${translate(low)} to ${translate(high)}.${neutral?' Neutral center.':''}`],
                 [/^(Entrada|Saída): ([^,]+), (.+?)( · L\/R| · [LR])?\. (.*)$/,(_,direction,name,format,channels='',detail='')=>`${translate(direction)}: ${translate(name)}, ${translate(format)}${channels||''}. ${translate(detail)}`],
@@ -931,7 +934,7 @@
                 [/^Todo o conteúdo do canvas será removido para carregar “(.+)”\. Exporte seu projeto antes se quiser guardá-lo\.$/,(_,name)=>`Everything on the canvas will be removed to load “${name}”. Export your project first if you want to keep it.`],
                 [/^Falha de autenticação \((\d+)\)\.$/,(_,code)=>`Authentication failed (status ${code}).`]
             ];
-            for (const [pattern,format] of dynamic) { const match=core.match(pattern);if(match){result=format(...match);break;} }
+            if(result===undefined)for (const [pattern,format] of dynamic) { const match=core.match(pattern);if(match){result=format(...match);break;} }
         }
         return result === undefined ? value : leading + result + trailing;
     }

@@ -36,6 +36,12 @@ test('dynamic port descriptions and amplifier accessibility labels translate the
     assert.equal(context.translate('Graves: posição 4 de 7, de Enxutos a Encorpados. Centro neutro.'),'Bass: position 4 of 7, from Lean to Full-bodied. Neutral center.');
 });
 
+test('multi-paragraph connection confirmations translate every paragraph and preserve spacing',()=>{
+    const source='Canais cruzados: a saída L alimentará a entrada R. As cores RCA indicam canal, mas não impedem o encaixe.\n\nDeseja conectar mesmo assim?';
+    const expected='Channels are crossed: output L will feed input R. RCA colors identify channels but do not prevent mismatched connections.\n\nConnect anyway?';
+    assert.equal(context.translate(source),expected);
+});
+
 test('the linear turntable inspector and its changing states are translated',()=>{
     const expected={
         'Energia':'Power','LIGAR / DESLIGAR':'Power on / off','Disco sobre o prato':'Record on the platter',
