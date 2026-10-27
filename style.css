@@ -2708,9 +2708,9 @@
         .device-type-streamIntegrated [data-stream-volume] .hw-knob-indicator {left:calc(50% + var(--stream-index-offset,0px))!important;top:2px!important;height:13px!important;opacity:var(--stream-index-visible,1);box-shadow:none!important;transition:left 140ms ease-out,opacity 140ms ease-out;}
         .device-type-streamIntegrated [data-stream-volume] .hw-knob-halo {inset:1px 3px auto;height:2px;border:0;border-radius:1px;mask:none;background:#d1eefa;filter:drop-shadow(0 0 1px #c5ebfa66);}
         @media(prefers-reduced-motion:reduce){.device-type-streamIntegrated [data-stream-volume] :is(.hw-knob-face,.hw-knob-indicator){transition:none!important;}}
-        .stream-heat-sink {position:absolute;top:27px;z-index:1;width:24px;height:calc(100% - 74px);border:1px solid #1d2b32;background:repeating-linear-gradient(90deg,#050b0e 0 3px,#3a4a53 3px 4px,#142129 4px 6px);box-shadow:inset 0 2px 3px #667d8344;}
+        .stream-heat-sink {position:absolute;top:27px;z-index:1;width:24px;height:calc(100% - 67px);border:1px solid #1d2b32;background:repeating-linear-gradient(90deg,#050b0e 0 3px,#3a4a53 3px 4px,#142129 4px 6px);box-shadow:inset 0 2px 3px #667d8344;}
         .stream-heat-left {left:0;border-radius:3px 0 0 3px;}.stream-heat-right {right:0;border-radius:0 3px 3px 0;}
-        .stream-glass {position:absolute;top:34px;left:23px;right:23px;z-index:2;box-sizing:border-box;height:calc(100% - 86px);border:1px solid #4a5a62;border-radius:2px;background:linear-gradient(117deg,#202a30 0,#080e12 15%,#02070a 61%,#18232b 100%);box-shadow:inset 0 1px #9eafb344,inset 0 -1px 3px #24353e,0 3px 5px #0008;}
+        .stream-glass {position:absolute;top:34px;left:23px;right:23px;z-index:2;box-sizing:border-box;height:calc(100% - 74px);border:1px solid #4a5a62;border-radius:2px;background:linear-gradient(117deg,#202a30 0,#080e12 15%,#02070a 61%,#18232b 100%);box-shadow:inset 0 1px #9eafb344,inset 0 -1px 3px #24353e,0 3px 5px #0008;}
         .stream-glass-reflection {position:absolute;inset:0;pointer-events:none;background:linear-gradient(124deg,#f4faff08 0 15%,transparent 15.2% 78%,#f4faff05 78.2% 82%,transparent 82.2%);}
         .stream-power {position:absolute;left:19px;top:16px;}
         .stream-power .power-control-panel {position:relative!important;inset:auto!important;margin:0!important;transform:none!important;padding:0!important;}
