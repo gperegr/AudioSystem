@@ -6614,8 +6614,9 @@ const Hardware = (() => {
         function animateDevicePower(dev){
             stopPowerOnRitual(dev);
             dev.gaugeCalibration=null;
-            if(!dev.powered||dev.state.damage||state.restoringProject||powerMotionPreference.matches)return;
-            dev.gaugeCalibration={startedAt:performance.now(),duration:1250};
+            const reducedMotion=powerMotionPreference.matches;
+            if(!dev.powered||dev.state.damage||state.restoringProject||(reducedMotion&&dev.type!=='prePrecision'))return;
+            dev.gaugeCalibration={startedAt:performance.now(),duration:reducedMotion?420:1250};
             const animations=[];
             const fade=(element,delay,duration)=>{
                 const opacity=getComputedStyle(element).opacity;
