@@ -4366,11 +4366,6 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
 .context-help.is-visible {opacity:1;visibility:visible;transform:translateY(0);}
 .context-help strong {color:#f0f5f7;font-size:11px;line-height:1.3;font-weight:700;}
 .context-help span {color:#bdc9d1;font-size:11px;line-height:1.45;}
-.audio-path-diagnosis {display:flex;flex-direction:column;gap:6px;margin:12px 0;padding:10px 11px;border:1px solid #475565;border-radius:7px;background:#202a34;color:#dce5eb;}
-.audio-path-diagnosis h3 {margin:0;font:700 11px/1.3 "Inter",sans-serif;letter-spacing:.03em;}
-.audio-path-diagnosis p {margin:0;color:#b9c6d0;font:400 11px/1.45 "Inter",sans-serif;}
-.audio-path-diagnosis[data-signal="active"] {border-color:#477664;background:#1b2d29;}
-.audio-path-diagnosis[data-signal="active"] p {color:#c1ded2;}
 @media(prefers-reduced-motion:reduce){.context-help{transition:none;}}
 :root.lighting-demo-enabled :is(#audio-world,.equipment-preview-world) .lighting-demo-target .integrated-face.finish-blue {
     position:relative;

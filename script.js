@@ -8025,12 +8025,10 @@ const Hardware = (() => {
             if (EQ_TYPES.has(dev.type) || CROSSOVER_TYPES.has(dev.type) || BENCH_METER_TYPES.has(dev.type)) html += spectrumInspectorHtml(dev);
             if(hasRestorableSettings(dev))html += '<div class="flex flex-col gap-2 border-t border-gray-700 pt-4"><button id="restore-device-settings" type="button" class="tt-insp-btn w-full">RESTAURAR CONFIGURAÇÕES</button><p id="restore-settings-status" role="status" class="text-xs text-gray-400"></p></div>';
             html+=portSignalsInspectorHtml(dev);
-            if(dev.el.querySelector('.port'))html+=`<section id="audio-path-diagnosis" class="audio-path-diagnosis" aria-live="polite"><h3>Diagnóstico do caminho</h3><p data-audio-path-message></p></section>`;
             html+=listeningInspectorHtml(dev);
             if(dev.el.querySelector('.speaker-grille'))html+=`<button type="button" class="tt-insp-btn" id="inspector-grille" aria-pressed="${dev.el.classList.contains('grille-off')}">GRADE</button>`;
             Hardware.sync(dev);
             inspectorContent.innerHTML = conciseEquipmentInspector(html);
-            refreshAudioPathDiagnosis();
             Hardware.inspector(inspectorContent);
             MenuSlider.mount(inspectorContent);
             if(dev.type==='furnitureCoverflow')SpotifyCoverflow.bindInspector(inspectorContent,dev.el.querySelector('.spotify-coverflow-host'));
@@ -8416,51 +8414,6 @@ const Hardware = (() => {
         function portSignalsInspectorHtml(dev){
             if(!dev.el.querySelector('.port'))return '';
             return `<section class="port-signal-panel"><h3>Sinais de entrada e saída</h3><div id="port-signal-rows">${portSignalsMarkup(dev)}</div></section>`;
-        }
-        function audioPathDiagnosis(dev,visited=new Set()){
-            if(!dev)return 'Selecione um equipamento para verificar o caminho do áudio.';
-            if(visited.has(dev.id))return 'Há um ciclo de conexões. Revise a cadeia para encontrar uma rota de saída.';
-            const seen=new Set(visited);seen.add(dev.id);
-            const source=SOURCE_TYPES.has(dev.type)||SIGNAL_GENERATOR_TYPES.has(dev.type);
-            if(dev.state.damage||dev.el.classList.contains('device-damaged'))return `${DEVICE_NAMES[dev.type]||'O equipamento'} está em proteção. Reduza o nível de entrada e restaure o aparelho.`;
-            if(dev.powered===false)return `${DEVICE_NAMES[dev.type]||'O equipamento'} está desligado. Ligue-o para deixar o sinal passar.`;
-            if(isListeningDevice(dev)&&(dev.state.muted||dev.state.streamMute))return 'A saída está silenciada. Desative o mute no equipamento.';
-            if(isListeningDevice(dev)&&((typeof dev.state.volume==='number'&&dev.state.volume<=.001)||(Array.isArray(dev.state.channelVolumes)&&Math.max(...dev.state.channelVolumes)<=.001)))return 'O volume desta saída está zerado. Aumente o volume no aparelho ou no painel lateral.';
-            if(source&&!dev.state.playing)return dev.audioBuffer||dev.spotifyVinyl?'A fonte está pausada. Pressione Play para iniciar o áudio.':'Inicie a fonte com Play ou carregue uma faixa neste equipamento.';
-            const incoming=state.connections.filter(c=>c.inDeviceId===dev.id),outputs=state.connections.filter(c=>c.outDeviceId===dev.id);
-            if(source&&dev.state.playing&&!outputs.length)return 'A fonte está tocando, mas nenhuma saída está conectada. Ligue uma saída a um próximo equipamento.';
-            if(!incoming.length&&!source)return 'Nenhuma entrada está conectada. Ligue uma fonte à entrada compatível deste equipamento.';
-            for(const cable of incoming){
-                const input=document.getElementById(cable.inId),output=document.getElementById(cable.outId),upstream=state.devices[cable.outDeviceId];
-                if(cable.miswired)return 'Um cabo está ligado entre duas entradas ou duas saídas e não transporta áudio. Corrija a direção da ligação.';
-                if(!input||!output||!upstream)return 'Uma ponta do cabo não está ligada a um equipamento. Reconecte esse trecho.';
-                const compatibility=getPortCompatibility(output,input);
-                if(!compatibility.compatible)return `O cabo chega a uma entrada incompatível: ${compatibility.reason}`;
-                if(RADIO_RECEIVERS.has(dev.type)){
-                    const selected=dev.state.receiverInput||'line1',prefix=selected==='line1'?'in':selected;
-                    if(selected==='fm'||!new RegExp('^'+prefix+'[LR]$').test(input.dataset.node))return 'O cabo entra numa fonte diferente da selecionada no receiver. Selecione a entrada ligada ao cabo.';
-                }
-                if(dev.type==='streamIntegrated'&&dev.state.streamInput!=='line')return 'O streamer está selecionado noutra entrada. Mude a entrada para LINE.';
-                if(controlAmpConfig(dev.type)&&!input.dataset.node.startsWith(dev.state.integratedSource===3&&controlAmpConfig(dev.type).phono!==false?'phono':'line'+dev.state.integratedSource))return 'A entrada selecionada no amplificador não corresponde ao cabo. Selecione a entrada ligada.';
-                if(dev.type==='preamp'&&!input.dataset.node.startsWith('in'+dev.state.preSource))return 'A fonte selecionada no pré-amplificador não corresponde ao cabo. Selecione a entrada ligada.';
-                if(MATRIX_TYPES.has(dev.type)&&!input.dataset.node.startsWith(`in${dev.state.matrixInput}`))return 'A matriz está selecionada para outra entrada. Selecione a entrada ligada.';
-                if(!upstream.el.classList.contains('device-has-signal'))return audioPathDiagnosis(upstream,seen);
-            }
-            if(dev.el.classList.contains('device-has-signal')){
-                if(isListeningDevice(dev))return 'O sinal chega à saída. Se ainda não ouvir, confira o volume do sistema, do navegador ou dos fones.';
-                if(!outputs.length)return 'O sinal chega a este equipamento, mas nenhuma saída está conectada ao próximo estágio. Ligue a saída correta a uma entrada compatível.';
-                return 'O sinal chega a este equipamento.';
-            }
-            if(controlAmpConfig(dev.type)&&(dev.state.preMuted||dev.state.volume<=.001))return 'O amplificador está no mute ou com volume zerado.';
-            if(dev.state.muted||dev.state.volume<=.001)return 'O sinal chega, mas este equipamento está silenciado ou com volume zerado.';
-            return 'O sinal não está chegando. Confira a energia, a entrada selecionada e os cabos deste trecho.';
-        }
-        function refreshAudioPathDiagnosis(){
-            const panel=document.getElementById('audio-path-diagnosis');if(!panel)return;
-            const dev=state.devices[state.selectedDeviceId],message=panel.querySelector('[data-audio-path-message]');
-            if(!dev||!message)return;
-            const next=audioPathDiagnosis(dev);if(message.textContent!==next)message.textContent=next;
-            panel.dataset.signal=dev.el.classList.contains('device-has-signal')?'active':'idle';
         }
         function refreshPortSignalInspector(){
             const dev=state.devices[state.selectedDeviceId],container=document.getElementById('port-signal-rows');
@@ -9136,7 +9089,6 @@ const Hardware = (() => {
                     }
                 });
             });
-            refreshAudioPathDiagnosis();
             scheduleVisuals();
         }
 
