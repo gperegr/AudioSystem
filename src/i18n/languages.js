@@ -895,7 +895,20 @@
         'Carregando playlists…':'Loading playlists…',
         'Arraste ou role as capas para escolher um álbum':'Drag or scroll through the covers to choose an album',
         'Arraste ou role as capas para escolher uma playlist':'Drag or scroll through the covers to choose a playlist',
-        'Toque no nome para adicionar. No canvas, toque em Mover para arrastar equipamentos sem interferir nos cabos; dois dedos movem a bancada e ajustam o zoom.':'Tap a name to add it. On the canvas, tap Move to drag equipment without disturbing cables. Use two fingers to pan and zoom.'
+        'Toque no nome para adicionar. No canvas, toque em Mover para arrastar equipamentos sem interferir nos cabos; dois dedos movem a bancada e ajustam o zoom.':'Tap a name to add it. On the canvas, tap Move to drag equipment without disturbing cables. Use two fingers to pan and zoom.',
+        'Streamer Hi-Fi':'Hi-Fi streamer',
+        'Amplificador de Fone Vintage':'Vintage headphone amplifier',
+        'Amplificador de Fone Normal':'Headphone amplifier',
+        'Amplificador de Fones 4 Canais':'4-channel headphone amplifier',
+        'Mixer 3 Canais':'3-channel mixer',
+        'Subwoofer Passivo':'Passive subwoofer',
+        'Seletor de Caixas A/B Vintage':'Vintage A/B speaker selector',
+        'Crossover 3 Vias':'3-way crossover',
+        'Caixa Passiva':'Passive speaker',
+        'Subwoofer Ativo':'Active subwoofer',
+        'Fone Vinyl Classic':'Vinyl Classic headphones',
+        'Receptor Bluetooth Slim (Bluetooth → RCA)':'Slim Bluetooth receiver (Bluetooth → RCA)',
+        'Transmissor Bluetooth Pro (RCA → fones)':'Pro Bluetooth transmitter (RCA → headphones)'
     });
 
     const allTranslations = {...translations,...viewTranslations};
