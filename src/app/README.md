@@ -10,6 +10,8 @@ node tools/build-script.cjs
 
 Use the state domains initialized by `01-state-and-preferences.js`: `appState.project`, `appState.canvas`, `appState.audio`, `appState.preferences`, and `appState.interface`. Mutations that affect domain state should go through the named `appStateStore.actions` methods. Spotify authorization and playback state are owned by `SpotifyCoverflow` in `src/modules/spotify-coverflow.js`.
 
+Device side effects are ended through `disposeDeviceRuntime` in `12-device-interactions.js` before the device leaves the project. It invalidates pending capture requests, stops microphone tracks and meters, and disposes device audio, animation, and controller resources. Spotify coverflow mount disposal also cancels its pending animation frame and ignores later refreshes.
+
 Check that the committed browser entry point matches the sources:
 
 ```sh

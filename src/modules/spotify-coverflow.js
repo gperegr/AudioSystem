@@ -218,7 +218,7 @@ const SpotifyCoverflow=(()=>{
         const hitLayer=document.createElement('div');hitLayer.className='spotify-flow-hits';stage.append(hitLayer);
         const title=host.querySelector('.spotify-flow-title'),subtitle=host.querySelector('.spotify-flow-subtitle'),count=host.querySelector('.spotify-flow-count');
         const position=host.querySelector('.spotify-flow-position'),sort=host.querySelector('.spotify-flow-sort'),play=host.querySelector('.spotify-flow-play');
-        const nodes=new Map(),hits=new Map();let ordered=[],allOrdered=[],orderedSource=null,orderedSort=null,drag=null,dragged=false,suppressClickUntil=0;
+        const nodes=new Map(),hits=new Map();let ordered=[],allOrdered=[],orderedSource=null,orderedSort=null,drag=null,dragged=false,suppressClickUntil=0,disposed=false;
         state.coverflowMode=state.coverflowMode==='playlists'?'playlists':'albums';
         const saved=state.coverflowCollections||{};
         state.coverflowCollections=Object.fromEntries(['albums','playlists'].map(mode=>{
@@ -328,7 +328,7 @@ const SpotifyCoverflow=(()=>{
             event.stopPropagation();if(event.button!==0)return;drag={x:event.clientX,index:current()>=0?current():active().position};dragged=false;if(event.target===stage)stage.setPointerCapture(event.pointerId);
         });
         let dragFrame=0,pendingPosition=null;
-        stage.addEventListener('pointermove',event=>{if(!drag)return;const scale=stage.getBoundingClientRect().width/stage.clientWidth;const delta=(drag.x-event.clientX)/(COVER_SPACING*scale);if(Math.abs(delta)<.1)return;if(!stage.hasPointerCapture(event.pointerId))stage.setPointerCapture(event.pointerId);dragged=true;host.classList.add('is-dragging');active().selected=null;pendingPosition=clamp(drag.index+delta);if(!dragFrame)dragFrame=requestAnimationFrame(()=>{dragFrame=0;if(pendingPosition==null)return;active().position=pendingPosition;refresh();});},{passive:true});
+        stage.addEventListener('pointermove',event=>{if(disposed||!drag)return;const scale=stage.getBoundingClientRect().width/stage.clientWidth;const delta=(drag.x-event.clientX)/(COVER_SPACING*scale);if(Math.abs(delta)<.1)return;if(!stage.hasPointerCapture(event.pointerId))stage.setPointerCapture(event.pointerId);dragged=true;host.classList.add('is-dragging');active().selected=null;pendingPosition=clamp(drag.index+delta);if(!dragFrame)dragFrame=requestAnimationFrame(()=>{dragFrame=0;if(disposed||pendingPosition==null)return;active().position=pendingPosition;refresh();});},{passive:true});
         const release=()=>{if(!drag)return;drag=null;if(dragFrame){cancelAnimationFrame(dragFrame);dragFrame=0;}if(pendingPosition!=null){active().position=pendingPosition;pendingPosition=null;}host.classList.remove('is-dragging');if(dragged){suppressClickUntil=performance.now()+300;active().position=clamp(Math.round(active().position));refresh();onChange();dragged=false;}};
         stage.addEventListener('pointerup',release);stage.addEventListener('pointercancel',release);
         stage.addEventListener('keydown',event=>{
@@ -337,7 +337,7 @@ const SpotifyCoverflow=(()=>{
             if(!['ArrowLeft','ArrowRight','Home','End','Enter',' '].includes(event.key))return;if(event.target!==stage&&['Enter',' '].includes(event.key))return;event.preventDefault();event.stopPropagation();if(event.key==='ArrowLeft')shift(-1);else if(event.key==='ArrowRight')shift(1);else if(event.key==='Home')select(0);else if(event.key==='End')select(ordered.length-1);else activate(current()>=0?current():Math.round(active().position));
         });
         const view={refresh};views.add(view);if(tokenData())status='';refresh();if(tokenData()){loadCollection(state.coverflowMode);ensurePlayer().catch(error=>setStatus(error.message));}
-        return {refresh(){refresh();if(tokenData())loadCollection(state.coverflowMode);},dispose(){views.delete(view);nodes.clear();hitLayer.remove();hits.clear();}};
+        return {refresh(){if(disposed)return;refresh();if(tokenData())loadCollection(state.coverflowMode);},dispose(){if(disposed)return;disposed=true;views.delete(view);if(dragFrame){cancelAnimationFrame(dragFrame);dragFrame=0;}drag=null;pendingPosition=null;host.classList.remove('is-dragging');nodes.forEach(node=>node.remove());nodes.clear();hitLayer.remove();hits.forEach(hit=>hit.remove());hits.clear();}};
     }
     async function initialize(){
         const url=new URL(location.href),code=url.searchParams.get('code'),error=url.searchParams.get('error');

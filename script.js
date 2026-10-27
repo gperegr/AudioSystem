@@ -7471,11 +7471,13 @@ const Hardware = (() => {
             }
             setTimeout(()=>cloud.remove(),560);
         }
-        function deleteDevice(dev,recordHistory=false) {
-            if (!dev || !appState.project.devices[dev.id]) return;
-            if(recordHistory)recordDeletedDevices([dev]);
+        function disposeDeviceRuntime(dev) {
+            if(!dev||dev.runtimeDisposed)return;
+            dev.runtimeDisposed=true;
+
+            // Stop asynchronous capture first. A pending getUserMedia request is
+            // invalidated by stopMicCapture and its eventual stream is discarded.
             dev.stopMicCapture?.(false);
-            if(dev.spotifyVinyl){if(spotifyPlayingTurntable===dev.id){spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});}dev.spotifyVinyl.turntableId=null;dev.spotifyVinyl.el.classList.remove('is-on-platter');}
             dev.disposeCoverflow?.();
             dev.disposeLinear?.();
             dev.disposeStream?.();
@@ -7483,16 +7485,33 @@ const Hardware = (() => {
             stopPowerOnRitual(dev);
             dev.cancelPlacementMotion?.();
             stopVinylNoise(dev);
-            if(dev.syncRadio){stopReceiverRadioVoices(dev);dev.radioNoiseGain.disconnect();dev.radioNoiseFilter.disconnect();Object.values(dev.radioMusic).forEach(node=>node.disconnect());Object.values(dev.radioLine).forEach(node=>node.disconnect());dev.receiverInputNodes.forEach(node=>node.disconnect());}
+            if(dev.syncRadio){
+                stopReceiverRadioVoices(dev);
+                dev.radioNoiseGain.disconnect();dev.radioNoiseFilter.disconnect();
+                Object.values(dev.radioMusic).forEach(node=>node.disconnect());
+                Object.values(dev.radioLine).forEach(node=>node.disconnect());
+                dev.receiverInputNodes.forEach(node=>node.disconnect());
+            }
             if(SIGNAL_GENERATOR_TYPES.has(dev.type))stopSignalGenerator(dev);
-            if(dev.type==='tapeDeck'){dev.state.playing=false;syncTapeHiss(dev);dev.tapeOscillators?.forEach(node=>{node.stop();node.disconnect();});dev.tapeNodes?.forEach(node=>node.disconnect());}
+            if(dev.type==='tapeDeck'){
+                dev.state.playing=false;syncTapeHiss(dev);
+                dev.tapeOscillators?.forEach(node=>{node.stop();node.disconnect();});
+                dev.tapeNodes?.forEach(node=>node.disconnect());
+            }
             stopFilePlayback(dev);
             dev.disposeMeters?.();
             dev.modelAudioNodes?.forEach(node=>node.disconnect());
             dev.voicingNodes?.forEach(node=>node.disconnect());
             dev.listeningGain?.disconnect();
             dev.auxSplitter?.disconnect();
-            dev.audioBuffer = null;dev.mediaBlob=null;dev.mediaKey=null;
+            dev.audioBuffer=null;dev.mediaBlob=null;dev.mediaKey=null;
+        }
+
+        function deleteDevice(dev,recordHistory=false) {
+            if (!dev || !appState.project.devices[dev.id]) return;
+            if(recordHistory)recordDeletedDevices([dev]);
+            if(dev.spotifyVinyl){if(spotifyPlayingTurntable===dev.id){spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});}dev.spotifyVinyl.turntableId=null;dev.spotifyVinyl.el.classList.remove('is-on-platter');}
+            disposeDeviceRuntime(dev);
 
             if (appState.interface.pairingId === dev.id) clearPairing();
             if (dev.btPairedId) unpairDevice(dev);
