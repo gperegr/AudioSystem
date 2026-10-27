@@ -4240,7 +4240,7 @@ const Hardware = (() => {
                         const chosenTrack=Number.isInteger(trackIndex)?trackIndex:dev.pendingSpotifyTrack;
                         const resumed=!dev.spotifyNeedsRestart&&!Number.isInteger(chosenTrack)&&await SpotifyCoverflow.resumeAlbum(dev.spotifyVinyl.uri);
                         if(!resumed)await SpotifyCoverflow.playAlbum(dev.spotifyVinyl,chosenTrack);
-                    }catch{return;}
+                    }catch(error){spotifyVinylNotice(error.message||'Não foi possível iniciar o Spotify.');return;}
                     dev.spotifyNeedsRestart=false;
                     dev.pendingSpotifyTrack=null;
                     spotifyPlayingTurntable=dev.id;
@@ -6728,7 +6728,13 @@ const Hardware = (() => {
             dev.linearStart=async()=>{
                 if(!dev.powered||dev.state.damage||mechanism.disposed||['scanning','lowering','playing'].includes(mechanism.phase))return;
                 const operation=++mechanism.operation;
+                const spotifyActivation=dev.spotifyVinyl?SpotifyCoverflow.activatePlayback():null;
                 try{await state.audioCtx.resume();}catch{}
+                if(spotifyActivation){
+                    let activated=false;
+                    try{activated=await spotifyActivation;}catch{mechanism.message='O navegador bloqueou a ativação do Spotify. Pressione INICIAR novamente.';refresh();return;}
+                    if(!activated){mechanism.message='Player do Spotify ainda conectando. Tente novamente.';refresh();return;}
+                }
                 if(operation!==mechanism.operation||mechanism.disposed||!dev.powered)return;
                 if(state.audioCtx.state!=='running'){mechanism.message='Clique novamente para ativar o áudio';refresh();return;}
                 mechanism.message='';mechanism.cue=0;

@@ -16,7 +16,7 @@ const SpotifyCoverflow=(()=>{
     const collections={albums:[],playlists:[]},loadedCollections={albums:false,playlists:false},loadPromises={albums:null,playlists:null},collectionStatus={albums:'',playlists:''};
     let status='Conecte sua conta Spotify para ver sua coleção.';
     const clientId=DEFAULT_CLIENT_ID;
-    let sdkPromise=null,player=null,deviceId=null,playback=null,playbackUpdatedAt=0,trackRepeat=false,shuffleEnabled=false,beforeRedirect=()=>{},refreshPromise=null,inspector=null;
+    let sdkPromise=null,player=null,deviceId=null,playback=null,playbackUpdatedAt=0,trackRepeat=false,shuffleEnabled=false,playbackElementActivated=false,beforeRedirect=()=>{},refreshPromise=null,inspector=null;
     const extracted=new Set(),removed=new Set();
     const trackLists=new Map();
     const tokenData=()=>{try{return JSON.parse(sessionStorage.getItem(TOKEN_KEY)||'null');}catch{return null;}};
@@ -95,7 +95,7 @@ const SpotifyCoverflow=(()=>{
         await sdk();if(player)return;
         player=new Spotify.Player({name:'AudioSystem · Discos',volume:.5,getOAuthToken:async callback=>callback(await getToken()||'')});
         player.addListener('ready',event=>{deviceId=event.device_id;broadcast();});
-        player.addListener('not_ready',()=>{deviceId=null;broadcast();});
+        player.addListener('not_ready',()=>{deviceId=null;playbackElementActivated=false;broadcast();});
         player.addListener('player_state_changed',state=>{playback=state;playbackUpdatedAt=Date.now();trackRepeat=state?.repeat_mode===2;shuffleEnabled=!!state?.shuffle;broadcast();});
         player.addListener('account_error',()=>setStatus('Reprodução exige Spotify Premium.'));
         player.addListener('authentication_error',()=>setStatus('Sessão expirada. Conecte novamente.'));
@@ -104,7 +104,7 @@ const SpotifyCoverflow=(()=>{
         try{if(!await player.connect())setStatus('O player do Spotify não conseguiu iniciar neste navegador.');}
         catch(error){setStatus(error.message||'Não foi possível iniciar o player.');}
     }
-    function disconnect(){if(player){player.pause().catch(()=>{});player.disconnect();}player=null;deviceId=null;playback=null;shuffleEnabled=false;broadcast();}
+    function disconnect(){if(player){player.pause().catch(()=>{});player.disconnect();}player=null;deviceId=null;playback=null;shuffleEnabled=false;playbackElementActivated=false;broadcast();}
     async function loadTracks(uri){
         if(!/^spotify:(album|playlist):[A-Za-z0-9]+$/.test(uri))throw new Error('Disco inválido.');
         if(trackLists.has(uri))return trackLists.get(uri);
@@ -126,7 +126,7 @@ const SpotifyCoverflow=(()=>{
     async function playAlbum(album,trackIndex=null){
         try{
             if(!player||!deviceId){await ensurePlayer();for(let attempt=0;attempt<40&&!deviceId;attempt++)await new Promise(resolve=>setTimeout(resolve,100));if(!deviceId)throw new Error('O player ainda está conectando. Tente novamente.');}
-            await player.activateElement();
+            await activatePlayback();
             await player.setVolume(0);
             const response=await spotifyFetch(`https://api.spotify.com/v1/me/player/play?device_id=${encodeURIComponent(deviceId)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({context_uri:album.uri,...(Number.isInteger(trackIndex)?{offset:{position:trackIndex}}:{})})});
             if(response.status===403)throw new Error('Reprodução exige Spotify Premium.');
@@ -135,7 +135,7 @@ const SpotifyCoverflow=(()=>{
     }
     async function resumeAlbum(uri){
         if(!player||!deviceId||playback?.context?.uri!==uri||!playback.paused)return false;
-        await player.activateElement();
+        await activatePlayback();
         await player.resume();
         playback.paused=false;playbackUpdatedAt=Date.now();broadcast();
         return true;
@@ -147,6 +147,11 @@ const SpotifyCoverflow=(()=>{
     }
     async function pauseAlbum(){if(player){await player.pause();if(playback){playback.position=Math.min(playback.track_window?.current_track?.duration_ms||0,(playback.position||0)+(playback.paused?0:Date.now()-playbackUpdatedAt));playback.paused=true;playbackUpdatedAt=Date.now();broadcast();}}}
     async function setPlaybackVolume(value){if(player)await player.setVolume(Math.max(0,Math.min(1,value)));}
+    async function activatePlayback(){
+        if(!player||!deviceId)return false;
+        if(playbackElementActivated)return true;
+        await player.activateElement();playbackElementActivated=true;return true;
+    }
     function getPlaybackState(){
         const track=playback?.track_window?.current_track,duration=track?.duration_ms||0;
         const position=Math.min(duration,(playback?.position||0)+(playback&&!playback.paused?Date.now()-playbackUpdatedAt:0));
@@ -348,5 +353,5 @@ const SpotifyCoverflow=(()=>{
         }
         if(tokenData()){status='';await loadCollection('albums');}
     }
-    return {mount,inspectorHtml,bindInspector,initialize,login,logout,playAlbum,resumeAlbum,loadTracks,selectTrack,pauseAlbum,setPlaybackVolume,getPlaybackState,seekTo,setTrackRepeat,setShuffle,markExtracted,markRemoved,setBeforeRedirect(callback){beforeRedirect=callback;}};
+    return {mount,inspectorHtml,bindInspector,initialize,login,logout,playAlbum,resumeAlbum,activatePlayback,loadTracks,selectTrack,pauseAlbum,setPlaybackVolume,getPlaybackState,seekTo,setTrackRepeat,setShuffle,markExtracted,markRemoved,setBeforeRedirect(callback){beforeRedirect=callback;}};
 })();
