@@ -149,3 +149,8 @@
 #equipment-catalog .catalog-favorite:not([aria-pressed="true"]){color:var(--ui-panel)!important;opacity:.46;}
 #equipment-catalog .catalog-favorite:not([aria-pressed="true"]):hover{opacity:.72;}
 #equipment-catalog .catalog-favorite[aria-pressed="true"]{color:var(--ui-accent)!important;opacity:1;text-shadow:0 1px 5px color-mix(in srgb,var(--ui-accent) 38%,transparent)!important;}
+/* Equipment parameter buttons communicate state with surface color, not outlines. */
+#inspector-content button:not(.signal-history-name){border:0!important;outline-offset:3px;box-shadow:none!important;}
+#inspector-content button:not(.signal-history-name):is(.is-on,.active,[aria-pressed="true"],[aria-selected="true"],[data-active="true"]){background:var(--ui-active)!important;color:var(--ui-text)!important;}
+#inspector-content button:not(.signal-history-name):not(:is(.is-on,.active,[aria-pressed="true"],[aria-selected="true"],[data-active="true"])){background:var(--ui-control)!important;}
+#inspector-content button:not(.signal-history-name):focus-visible{outline:2px solid var(--ui-accent)!important;}
