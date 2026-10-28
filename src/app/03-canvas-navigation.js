@@ -172,7 +172,7 @@
         function syncMobilePanels(){
             const catalogOpen=compactLayout.matches&&document.body.classList.contains('mobile-catalog-open'),propertiesOpen=compactLayout.matches&&document.body.classList.contains('mobile-properties-open');
             const inspector=document.getElementById('inspector');if(propertiesOpen&&!inspector.dataset.sheetLevel)inspector.dataset.sheetLevel='mid';
-            equipmentCatalog.inert=compactLayout.matches?!catalogOpen:document.body.classList.contains('catalog-collapsed');document.getElementById('inspector').inert=compactLayout.matches?!propertiesOpen:document.body.classList.contains('inspector-collapsed');
+            equipmentCatalog.inert=compactLayout.matches?!catalogOpen:document.body.classList.contains('catalog-collapsed');const floatingInspector=document.body.classList.contains('inspector-floating');document.getElementById('inspector').inert=floatingInspector?false:compactLayout.matches?!propertiesOpen:document.body.classList.contains('inspector-collapsed');
             mobileBackdrop.hidden=!(catalogOpen||propertiesOpen);
             mobileControls.querySelector('[data-mobile-panel="catalog"]').setAttribute('aria-expanded',String(catalogOpen));mobileControls.querySelector('[data-mobile-panel="properties"]').setAttribute('aria-expanded',String(propertiesOpen));
             syncMobileContextActions();
@@ -213,7 +213,7 @@
             document.body.classList.toggle(`${key}-pinned`,sidebarPinned[key]&&!closed&&!compactLayout.matches);
             config.button.setAttribute('aria-expanded',String(!closed));config.button.setAttribute('aria-label',label);config.button.title=label;config.button.textContent=key==='catalog'?(closed?'›':'‹'):(closed?'‹':'›');
             config.pin.setAttribute('aria-pressed',String(sidebarPinned[key]));config.pin.setAttribute('aria-label',`${sidebarPinned[key]?'Soltar':'Fixar'} painel de ${config.name}`);config.pin.title=sidebarPinned[key]?'Soltar painel':'Fixar painel aberto';
-            if(!compactLayout.matches)config.panel.inert=closed;
+            if(!compactLayout.matches)config.panel.inert=key==='properties'&&document.body.classList.contains('inspector-floating')?false:closed;
         }
         function cancelSidebarTimer(key){clearTimeout(sidebarTimers[key]);sidebarTimers[key]=0;clearTimeout(sidebarHoverTimers[key]);sidebarHoverTimers[key]=0;}
         function closeSidebar(key){if(compactLayout.matches||sidebarPinned[key]||document.body.classList.contains(sidebarConfig[key].collapsed))return;cancelSidebarTimer(key);document.body.classList.add(sidebarConfig[key].collapsed);syncSidebar(key);}

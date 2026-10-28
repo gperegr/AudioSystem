@@ -162,8 +162,32 @@
             return template.innerHTML;
         }
 
+        const inspectorWindow=document.getElementById('inspector');
+        let inspectorAnchorDevice=null,inspectorPositionFrame=0;
+        function positionInspectorWindow(){
+            inspectorPositionFrame=0;
+            if(!inspectorAnchorDevice?.isConnected||inspectorWindow.dataset.floating!=='true')return;
+            const anchor=inspectorAnchorDevice.getBoundingClientRect(),panel=inspectorWindow.getBoundingClientRect(),gap=16,margin=12;
+            const width=Math.min(380,innerWidth-margin*2),height=Math.min(panel.height,innerHeight-margin*2);
+            const rightSpace=innerWidth-anchor.right,leftSpace=anchor.left;
+            const left=rightSpace>=width+gap?anchor.right+gap:leftSpace>=width+gap?anchor.left-width-gap:Math.max(margin,Math.min(innerWidth-width-margin,anchor.left+(anchor.width-width)/2));
+            const top=Math.max(margin,Math.min(innerHeight-height-margin,anchor.top+(anchor.height-height)/2));
+            inspectorWindow.style.left=`${Math.round(left)}px`;inspectorWindow.style.top=`${Math.round(top)}px`;
+        }
+        function scheduleInspectorPosition(){if(!inspectorPositionFrame)inspectorPositionFrame=requestAnimationFrame(positionInspectorWindow);}
+        window.addEventListener('resize',scheduleInspectorPosition,{passive:true});
+        window.addEventListener('pointermove',scheduleInspectorPosition,{passive:true});
+        window.addEventListener('wheel',scheduleInspectorPosition,{passive:true});
+        const inspectorCloseButton=document.getElementById('inspector-sidebar-pin');
+        inspectorCloseButton.addEventListener('click',event=>{if(inspectorWindow.dataset.floating!=='true')return;event.preventDefault();event.stopImmediatePropagation();selectDevice(null);},{capture:true});
+
         function selectDevice(id, preserveSelection = false) {
             GuidedAccess.notify();
+            const floating=id&&matchMedia('(min-width:701px)').matches;
+            inspectorWindow.dataset.floating=String(!!floating);
+            document.body.classList.toggle('inspector-floating',!!floating);
+            inspectorAnchorDevice=id?appState.project.devices[id]?.el||null:null;
+            inspectorWindow.style.removeProperty('left');inspectorWindow.style.removeProperty('top');
             if(id&&!appState.project.restoringProject&&!compactLayout.matches)openSidebar('properties',4000);
             if (id && appState.interface.selectedConnection) selectCable(null,false);
             disposeSpectrum();
@@ -331,6 +355,16 @@
             html+=signalHistoryInspectorHtml(dev);
             Hardware.sync(dev);
             inspectorContent.innerHTML = conciseEquipmentInspector(html);
+            if(floating){
+                inspectorWindow.setAttribute('role','region');
+                inspectorCloseButton.setAttribute('aria-label',document.documentElement.lang==='en'?'Close parameters':'Fechar parâmetros');
+                inspectorCloseButton.title=inspectorCloseButton.getAttribute('aria-label');
+                inspectorCloseButton.classList.add('inspector-window-close');
+                inspectorCloseButton.setAttribute('aria-pressed','false');
+                inspectorCloseButton.setAttribute('aria-label',document.documentElement.lang==='en'?'Close parameters':'Fechar parâmetros');
+                inspectorCloseButton.title=inspectorCloseButton.getAttribute('aria-label');
+                scheduleInspectorPosition();
+            }else inspectorCloseButton.classList.remove('inspector-window-close');
             Hardware.inspector(inspectorContent);
             MenuSlider.mount(inspectorContent);
             if(dev.type==='furnitureCoverflow')SpotifyCoverflow.bindInspector(inspectorContent,dev.el.querySelector('.spotify-coverflow-host'));
