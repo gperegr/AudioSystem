@@ -66,6 +66,28 @@ const root=path.resolve(__dirname,'..');
                 assert.equal(controls.header,controls.side,`${sample.key}: catalog header follows palette`);
                 assert(controls.favorite>=3,`${sample.key}: favorite visibility ${controls.favorite}`);
                 for(const label of controls.labels)assert(label.contrast>=4.5,`${sample.key}: ${label.text} contrast ${label.contrast}`);
+                const favoriteStates=await page.evaluate(()=>{
+                    const button=document.querySelector('.catalog-favorite[aria-pressed="false"]');
+                    const path=button.querySelector('path'),card=button.closest('.catalog-item');
+                    const pixel=document.createElement('canvas');pixel.width=pixel.height=1;
+                    const context=pixel.getContext('2d');
+                    const luminance=color=>{
+                        context.clearRect(0,0,1,1);context.fillStyle=color;context.fillRect(0,0,1,1);
+                        return [...context.getImageData(0,0,1,1).data].slice(0,3).map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
+                    };
+                    const contrast=(a,b)=>(Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+                    const read=()=>{
+                        button.getAnimations({subtree:true}).forEach(animation=>animation.finish());
+                        const style=getComputedStyle(path),background=luminance(getComputedStyle(card).backgroundColor);
+                        return {fill:style.fill,stroke:style.stroke,contrast:contrast(luminance(style.fill),background),outlineContrast:contrast(luminance(style.stroke),background)};
+                    };
+                    const off=read();button.click();const on=read();button.click();read();
+                    return {off,on};
+                });
+                assert(favoriteStates.off.outlineContrast>=3,`${sample.key}: OFF outline must remain visible`);
+                assert(favoriteStates.on.contrast>=3,`${sample.key}: ON must stand out against the card`);
+                assert(favoriteStates.on.contrast>favoriteStates.off.contrast*2,`${sample.key}: ON must stand out more than OFF ${JSON.stringify(favoriteStates)}`);
+
                 await page.evaluate(()=>document.querySelector('.app-settings').open=false);
                 samples.push(sample);
                 await page.evaluate(()=>__signal.selectDevice('palette-meter'));

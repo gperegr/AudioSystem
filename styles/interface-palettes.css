@@ -141,11 +141,11 @@
 #inspector-content[data-hardware-panel] section{border-color:transparent!important;border-width:0!important;box-shadow:none!important;}
 #inspector-content :is(.tt-insp-btn,button:not(.signal-history-name)):not([data-state=protection]){border-color:transparent!important;}
 #inspector-content :is(.tt-insp-btn,button):is(.is-on,[aria-pressed=true]){border-color:transparent!important;}
-/* A pale fill marks an available favorite; selection uses the outline color. */
+/* OFF stays close to the card surface; ON uses the active palette accent. */
 #equipment-catalog .catalog-favorite{display:grid;place-items:center;color:var(--ui-muted);opacity:1;text-shadow:none;}
 #equipment-catalog .catalog-favorite svg{width:16px;height:16px;overflow:visible;}
-#equipment-catalog .catalog-favorite path{stroke:var(--ui-muted);stroke-width:1.7;stroke-linejoin:round;fill:color-mix(in srgb,var(--ui-muted) 20%,white);transition:fill .18s ease;}
-#equipment-catalog .catalog-favorite[aria-pressed="true"] path{fill:var(--ui-muted);}
+#equipment-catalog .catalog-favorite path{stroke:var(--ui-muted);stroke-width:1.7;stroke-linejoin:round;fill:color-mix(in srgb,var(--ui-panel) 88%,var(--ui-muted));transition:fill .18s ease,stroke .18s ease;}
+#equipment-catalog .catalog-favorite[aria-pressed="true"] path{fill:var(--ui-accent);stroke:var(--ui-accent);}
 #equipment-catalog .catalog-favorite:hover{transform:scale(1.12);}
 @media(prefers-reduced-motion:reduce){#equipment-catalog .catalog-favorite path{transition:none;}}
 /* Equipment parameter buttons communicate state with surface color, not outlines. */
@@ -155,6 +155,10 @@
 #inspector-content button:not(.signal-history-name):focus-visible{outline:2px solid var(--ui-accent)!important;}
 #inspector-content button:is(.is-on,.active,[aria-pressed="true"],[aria-selected="true"],[data-active="true"]){border:0!important;outline:0!important;box-shadow:none!important;}
 .app-settings-content .settings-color-dot{border:0!important;box-shadow:none!important;}
+/* Linked equipment names in signal history read as text, without button surfaces. */
+#inspector-content .signal-history-panel button.signal-history-name,
+#inspector-content .signal-history-panel button.signal-history-name:hover{background:transparent!important;border:0!important;box-shadow:none!important;color:var(--ui-text)!important;}
+#inspector-content .signal-history-panel button.signal-history-name:hover{color:var(--ui-accent)!important;}
 /* Refined settings controls: language is a quiet segmented choice, toggles use a custom fill state. */
 .app-settings-content .language-options{gap:5px;padding:0;border:0!important;background:transparent;}
 .app-settings-content .language-options .language-choice{min-width:52px;min-height:42px;padding:0 14px;border:0!important;border-radius:11px;background:var(--ui-control);color:var(--ui-secondary);font-size:13px;letter-spacing:.035em;box-shadow:none!important;transition:background-color .18s ease,color .18s ease,transform .18s ease;}
