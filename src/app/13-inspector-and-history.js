@@ -199,6 +199,7 @@
             }
             if(dev.state.damage)html+='<div class="equipment-damage-notice" role="status">DANIFICADO · Sobrecarga elétrica simulada. Substitua o equipamento por outro do catálogo.</div>';
             html+=amplificationInspectorHtml(dev);
+            html+=signalHistoryInspectorHtml(dev);
 
             if(dev.type==='streamIntegrated'){html+=streamIntegratedInspector(dev);
             }else if(SIGNAL_GENERATOR_TYPES.has(dev.type)){html+=signalInspectorHtml(dev);

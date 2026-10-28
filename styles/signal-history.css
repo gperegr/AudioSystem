@@ -1,0 +1,26 @@
+.signal-history-panel{border:1px solid #3b4c5b;border-radius:12px;padding:14px;background:#1b2833;color:#dce5eb;min-width:0}
+.signal-history-panel summary{font-weight:700;cursor:pointer;font-size:1rem}
+.signal-history-panel>small{display:block;color:#a7b8c4;font-size:.72rem;line-height:1.5;margin:8px 0}
+.signal-history-legend{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:12px 0 4px;font-size:.75rem}
+.signal-history-legend span:before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:#86bfe2;margin-right:5px}
+.signal-history-legend span:nth-child(2):before{background:#9ddbc6}
+.signal-history-legend small{margin-left:auto;color:#a7b8c4}
+.signal-history-device{padding:10px 0;border-top:1px solid #344351;min-width:0}
+.signal-history-name{display:block;max-width:100%;background:none;border:0;text-align:left;font:inherit;font-weight:600;font-size:.8rem;color:inherit;padding:4px 0;margin-bottom:5px;cursor:pointer;overflow-wrap:anywhere}
+.signal-history-name:hover{color:#9ddbc6}
+.signal-history-name:focus-visible{outline:2px solid #86bfe2;outline-offset:3px}
+.signal-history-reading{--signal-color:#86bfe2;display:grid;grid-template-columns:48px minmax(35px,1fr) 40px;gap:3px 8px;align-items:center;margin:6px 0;font-size:.7rem}
+.signal-history-reading[data-direction=out]{--signal-color:#9ddbc6}
+.signal-history-reading output{font-variant-numeric:tabular-nums;text-align:right;color:#dce5eb}
+.signal-history-reading small{grid-column:2/4;min-height:1em;color:#a7b8c4;font-size:.65rem}
+.signal-history-trace{position:relative;height:28px;overflow:hidden;border-bottom:2px solid #394957;background:repeating-linear-gradient(to top,transparent 0,transparent 8px,#34435166 8px,#34435166 9px)}
+.signal-history-trace svg{display:block;width:100%;height:27px}
+.signal-history-trace path{fill:none;stroke:var(--signal-color);stroke-width:1.4;vector-effect:non-scaling-stroke}
+.signal-history-trace .signal-history-peak{opacity:.45;stroke-width:.8;stroke-dasharray:2 2}
+.signal-history-trace .signal-history-clips{stroke:#f38d91;stroke-width:1;opacity:.7}
+.signal-history-trace i{position:absolute;bottom:0;left:0;height:2px;background:var(--signal-color)}
+.signal-history-reading[data-state=clip],.signal-history-reading[data-state=high]{--signal-color:#f38d91}
+.signal-history-reading[data-state=low]{--signal-color:#dfbb76}
+.signal-history-reading[data-state=clip] small,.signal-history-reading[data-state=high] small{color:#f3a3a5}
+.signal-history-reading[data-state=low] small{color:#dfbb76}
+.signal-history-reading[data-state=unavailable] .signal-history-trace{opacity:.3}

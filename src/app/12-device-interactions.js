@@ -870,6 +870,7 @@
         function disposeDeviceRuntime(dev) {
             if(!dev||dev.runtimeDisposed)return;
             dev.runtimeDisposed=true;
+            disposeSignalHistory();
 
             // Stop asynchronous capture first. A pending getUserMedia request is
             // invalidated by stopMicCapture and its eventual stream is discarded.

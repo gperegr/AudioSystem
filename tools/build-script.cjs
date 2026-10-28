@@ -15,6 +15,7 @@ const sections = [
     '04-device-catalog-model.js',
     '05-audio-model-and-routing.js',
     '06-audio-runtime-and-meters.js',
+    '06-signal-history-ui.js',
     '07-audio-sources.js',
     '08-catalog-ui.js',
     '09-recording-and-test-equipment.js',

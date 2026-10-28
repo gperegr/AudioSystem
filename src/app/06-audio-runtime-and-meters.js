@@ -645,6 +645,7 @@
                 });
             });
             readElectricalStages();
+            updateSignalHistory(now);
             updateReferenceHardware(now);
             Object.values(appState.project.devices).forEach(dev=>dev.refreshStreamDisplay?.());
             Object.values(appState.project.devices).filter(isPassiveLoad).forEach(applySpeakerLoadDynamics);

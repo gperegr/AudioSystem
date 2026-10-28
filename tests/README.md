@@ -1,5 +1,11 @@
 # Equipment contracts
 
+## Signal history
+
+`signal-history.test.cjs` covers RMS/peak measurements, level states, the bounded 12-second window, gaps and retained overload events. `node tests/signal-history.browser.cjs` exercises actual Web Audio readings, a connected chain, power changes, English labels, narrow layout, panel closure and device deletion. It also mounts and disposes the shared meter adapter across all catalog types. This browser test serves local assets through Playwright, without requiring an HTTP server. It needs the app's Tailwind CDN; optionally set `TAILWIND_SCRIPT_FILE` to a local copy of that script. Set `SIGNAL_HISTORY_SCREENSHOT` to save a preview.
+
+## Catalog
+
 `equipment-contracts.test.cjs` runs with the normal Node suite. Its explicit inventory at `fixtures/equipment-contract-types.json` is the reviewed list of catalog equipment. Adding or removing a type requires updating this inventory and satisfying the numeric, translation, and model-table checks.
 
 Run the full browser contract suite against the real app after starting a local server:
