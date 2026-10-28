@@ -85,8 +85,9 @@ const root=path.resolve(__dirname,'..');
         assert(levels.monitor.every(n=>n<.00001),'tape monitor selects unconnected tape input');assert(levels.off.every(n=>n<.00001),'power off silences output');
         await page.evaluate(()=>{AudioSystemLanguage.set('en');__signal.selectDevice('classic-pre');});
         assert.equal(await page.locator('[data-classic-setting=classicMode] option:checked').textContent(),'Stereo');
+        assert.deepEqual(await device.evaluate(el=>({width:el.offsetWidth,height:el.offsetHeight,chassis:el.dataset.chassis})),{width:760,height:240,chassis:'high'});
         const geometry=await device.evaluate(el=>{const base=el.getBoundingClientRect();return [...el.querySelectorAll('.classic-preamp-panel button,.classic-preamp-connections .port')].filter(n=>n.getClientRects().length).map(n=>{const r=n.getBoundingClientRect();return {label:n.getAttribute('aria-label')||n.title,x:r.x-base.x,y:r.y-base.y,right:r.right-base.x,bottom:r.bottom-base.y};});});
-        for(const r of geometry)assert(r.x>=0&&r.y>=0&&r.right<=760&&r.bottom<=286,'control stays inside chassis: '+r.label);
+        for(const r of geometry)assert(r.x>=0&&r.y>=0&&r.right<=760&&r.bottom<=240,'control stays inside chassis: '+r.label);
         for(let i=0;i<geometry.length;i++)for(let j=i+1;j<geometry.length;j++){const a=geometry[i],b=geometry[j];assert(!(Math.min(a.right,b.right)-Math.max(a.x,b.x)>1&&Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y)>1),'controls overlap: '+a.label+' / '+b.label);}
         await page.evaluate(()=>__signal.deleteDevice(__signal.appState.project.devices['classic-pre'],false));
         assert.deepEqual(errors,[]);console.log('Classic preamp: real stereo audio, five channel modes, independent tones, filters, monitor, power, controls, saved settings, translation and geometry passed.',levels);
