@@ -163,12 +163,23 @@
         }
 
         const inspectorWindow=document.getElementById('inspector');
+        const inspectorLayer=document.getElementById('inspector-layer');
         let inspectorAnchorDevice=null,inspectorPositionFrame=0;
         function positionInspectorWindow(){
             inspectorPositionFrame=0;
-            if(!inspectorAnchorDevice?.isConnected||inspectorWindow.dataset.floating!=='true')return;
+            if(!inspectorAnchorDevice?.isConnected)return;
+            const floating=matchMedia('(min-width:701px)').matches;
+            if((inspectorWindow.dataset.floating==='true')!==floating){
+                inspectorWindow.dataset.floating=String(floating);
+                document.body.classList.toggle('inspector-floating',floating);
+                document.body.classList.toggle('mobile-properties-open',!floating);
+                inspectorCloseButton.classList.toggle('inspector-window-close',floating);
+                inspectorWindow.classList.remove('inspector-window-enter');
+                syncMobilePanels();
+            }
+            if(!floating)return;
             const anchor=inspectorAnchorDevice.getBoundingClientRect(),gap=16,margin=12;
-            const area=canvas.getBoundingClientRect(),catalog=equipmentCatalog.getBoundingClientRect();
+            const area=inspectorLayer.getBoundingClientRect(),catalog=equipmentCatalog.getBoundingClientRect();
             const toolbar=document.getElementById('app-topbar').getBoundingClientRect();
             const minLeft=Math.max(0,area.left,catalog.right)+margin;
             const minTop=Math.max(0,area.top,toolbar.bottom)+margin;
@@ -183,10 +194,12 @@
             const preferredLeft=rightSpace>=width+gap?anchor.right+gap:leftSpace>=width+gap?anchor.left-width-gap:anchor.left+(anchor.width-width)/2;
             const left=Math.max(minLeft,Math.min(maxRight-width,preferredLeft));
             const top=Math.max(minTop,Math.min(maxBottom-height,anchor.top+(anchor.height-height)/2));
-            inspectorWindow.style.left=`${Math.round(left)}px`;inspectorWindow.style.top=`${Math.round(top)}px`;
+            inspectorWindow.style.left=`${Math.ceil(left-area.left)}px`;inspectorWindow.style.top=`${Math.ceil(top-area.top)}px`;
         }
         function scheduleInspectorPosition(){if(!inspectorPositionFrame)inspectorPositionFrame=requestAnimationFrame(positionInspectorWindow);}
         window.addEventListener('resize',scheduleInspectorPosition,{passive:true});
+        const inspectorLayoutObserver=new ResizeObserver(scheduleInspectorPosition);
+        for(const element of [inspectorLayer,inspectorWindow,equipmentCatalog,document.getElementById('app-topbar')])inspectorLayoutObserver.observe(element);
         window.addEventListener('pointermove',scheduleInspectorPosition,{passive:true});
         window.addEventListener('wheel',scheduleInspectorPosition,{passive:true});
         const inspectorCloseButton=document.getElementById('inspector-sidebar-pin');
@@ -397,7 +410,7 @@
                 inspectorCloseButton.setAttribute('aria-pressed','false');
                 inspectorCloseButton.setAttribute('aria-label',document.documentElement.lang==='en'?'Close parameters':'Fechar parâmetros');
                 inspectorCloseButton.title=inspectorCloseButton.getAttribute('aria-label');
-                scheduleInspectorPosition();
+                positionInspectorWindow();
                 inspectorWindow.classList.remove('inspector-window-enter');
                 void inspectorWindow.offsetWidth;
                 inspectorWindow.classList.add('inspector-window-enter');

@@ -24,6 +24,18 @@ Este guia é a referência para menus, catálogo, configurações, painéis, di�
 
 Cores de estado de sinal, alerta e perigo têm significado próprio; preserve esse significado e garanta contraste em fundos claros e escuros. Para gráficos desenhados em canvas da interface, obtenha os tokens por `getComputedStyle(document.documentElement)` ao desenhar, como no analisador de espectro. Não aplique esses tokens ao desenho de equipamentos.
 
+## Paletas dos cenários
+
+As nove paletas acompanham os materiais e a iluminação das imagens de `assets/rooms`, conforme o mapeamento de `assets/rooms/scenes.js`:
+
+| Cenário | Nascer do dia | Fim de tarde | Noite |
+| --- | --- | --- | --- |
+| Estúdio | Carvão com madeira suave | Nogueira e âmbar | Grafite azulado e luz fria |
+| Sala de audição | Calcário, madeira e oliva discreto | Areia dourada e mel | Ardósia suave e azul do luar |
+| Loft industrial | Concreto claro e terracota | Tijolo queimado e cobre | Aço azulado e reflexos quentes da cidade |
+
+A claridade da interface acompanha o interior da imagem: o estúdio permanece escuro mesmo ao amanhecer; a sala de audição conserva a luminosidade da parede ao pôr do sol. Estados ativos e favoritos usam o destaque de cada paleta, mantendo contraste com o fundo.
+
 ## Tipografia e composição
 
 Use `var(--font-ui, "Inter", sans-serif)`. O padrão existente usa títulos de seção em torno de 16 px e peso 700, rótulos de 12–13 px e peso 600, e texto auxiliar de 11–12 px com entrelinha de aproximadamente 1,4. Mantenha a hierarquia legível, sem depender apenas de caixa alta ou cor. Use alinhamento consistente, espaçamento de 8–14 px entre elementos e cartões com borda de 1 px e raio de 7–10 px, acompanhando os componentes próximos. Os tamanhos são referências do estilo existente, não classes ou tokens CSS já implementados.
@@ -59,6 +71,6 @@ Inclua estados normal, hover, foco visível, selecionado, desabilitado e erro qu
 
 ## Catálogo permanente
 
-O catálogo à esquerda permanece visível, sem seta, alfinete, recolhimento automático ou preferência de fixação. O canvas reserva a largura do catálogo; em telas de até 700 px, o catálogo usa 136 px e uma coluna de equipamentos. A busca, os favoritos e o descarte por arraste continuam disponíveis.
+O catálogo à esquerda permanece visível, sem seta, alfinete, recolhimento automático ou preferência de fixação. O canvas reserva a largura do catálogo; em telas de até 700 px, o catálogo usa 136 px e uma coluna de equipamentos. A busca, os favoritos e o descarte por arraste continuam disponíveis. O cabeçalho da busca desfoca gradualmente os itens que rolam atrás dele; a busca permanece aberta enquanto houver texto, até que ele seja apagado.
 
-Os painéis flutuantes de propriedades ficam dentro dos limites do canvas, abaixo da barra superior e à direita do catálogo. Quando falta espaço, reduzem largura e altura com rolagem interna.
+Os painéis de propriedades ficam em uma camada com os limites do canvas, abaixo da barra superior e à direita do catálogo. Posição, tamanho, animação e sombra respeitam esses limites; quando falta espaço, reduzem largura e altura com rolagem interna. O posicionamento se atualiza quando o painel, o catálogo ou a barra superior mudam de tamanho.

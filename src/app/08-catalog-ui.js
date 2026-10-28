@@ -315,6 +315,7 @@
         const catalogSearchShell=equipmentSearch.closest('.catalog-search');
         const catalogSearchToggle=document.getElementById('catalog-search-toggle');
         function setCatalogSearchExpanded(expanded,focus=false){
+            if(!expanded&&equipmentSearch.value.trim())expanded=true;
             catalogSearchShell.dataset.expanded=String(expanded);
             catalogSearchToggle.setAttribute('aria-expanded',String(expanded));
             catalogSearchToggle.setAttribute('aria-label',AudioSystemLanguage.translate(expanded?'Fechar busca do catálogo':'Abrir busca do catálogo'));
@@ -323,7 +324,7 @@
             });
         }
         catalogSearchToggle.addEventListener('click',()=>{
-            const expanded=catalogSearchShell.dataset.expanded!=='true';
+            const expanded=catalogSearchShell.dataset.expanded!=='true'||!!equipmentSearch.value.trim();
             setCatalogSearchExpanded(expanded,expanded);
             if(!expanded)equipmentSearch.blur();
         });
@@ -332,7 +333,7 @@
             if(!catalogSearchShell.contains(event.relatedTarget))setCatalogSearchExpanded(false);
         });
         document.addEventListener('pointerdown',event=>{
-            if(!catalogSearchShell.contains(event.target))setCatalogSearchExpanded(false);
+            if(!catalogSearchShell.contains(event.target)&&!equipmentSearch.value.trim())setCatalogSearchExpanded(false);
         });
         const catalogSections = [...equipmentCatalog.querySelectorAll('.mb-6')].filter(section => section.querySelector('.catalog-item'));
         const catalogSearchSynonyms={optica:['optical','toslink','digital'],optical:['optica','toslink','digital'],digital:['optica','optical','toslink'],entrada:['input'],input:['entrada'],saida:['output'],output:['saida'],linha:['line'],line:['linha'],phono:['vinil','toca discos','riaa'],rca:['analogo','audio'],p2:['minijack','fone','headphone'],p10:['jack','fone','headphone','6 35 mm'],wire:['fio','borne','caixa passiva'],fio:['wire','borne','caixa passiva'],passiva:['passive','amplificado','speaker'],passivo:['passive','amplificado','speaker'],caixa:['speaker','alto falante'],fone:['headphone','p2','p10'],bluetooth:['sem fio','wireless'],potencia:['amplificado','speaker']};

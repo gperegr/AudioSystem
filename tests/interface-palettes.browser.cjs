@@ -33,13 +33,16 @@ const root=path.resolve(__dirname,'..');
                 await page.evaluate(({theme,scene,time})=>{__signal.setCanvasTheme(theme);__signal.setCanvasBackdrop(scene);__signal.setCanvasTime(time);},{theme,scene,time});
                 await page.mouse.move(1570,1060);await page.waitForTimeout(500);
                 const sample=await page.evaluate(()=>{
-                    const rgb=s=>s.match(/\d+(?:\.\d+)?/g).slice(0,3).map(Number),lum=c=>{const values=rgb(c).map(x=>{x/=255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4;});return .2126*values[0]+.7152*values[1]+.0722*values[2];};
+                    const rgb=s=>s.startsWith('#')?s.slice(1).match(/../g).map(value=>parseInt(value,16)):s.match(/\d+(?:\.\d+)?/g).slice(0,3).map(Number),lum=c=>{const values=rgb(c).map(x=>{x/=255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4;});return .2126*values[0]+.7152*values[1]+.0722*values[2];};
                     const contrast=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
                     const calc=(a,b=a)=>contrast(getComputedStyle(document.querySelector(a)).color,getComputedStyle(document.querySelector(b)).backgroundColor);
                     const button=document.querySelector('#inspector-content .tt-insp-btn');
-                    return {key:document.documentElement.dataset.uiPalette,side:getComputedStyle(document.querySelector('#inspector')).backgroundColor,top:calc('#app-topbar'),card:calc('.catalog-item>span','.catalog-item'),body:calc('#inspector-content','#inspector'),section:calc('.sonic-signature-panel h3','.sonic-signature-panel'),band:calc('.sonic-band-name','.sonic-band'),bandState:calc('.sonic-band-state','.sonic-band'),button:calc('#inspector-content .tt-insp-btn'),buttonColors:[getComputedStyle(button).color,getComputedStyle(button).backgroundColor],settings:calc('.app-settings>summary'),device:getComputedStyle(document.querySelector('#palette-speaker .electrostatic-frame')).backgroundImage};
+                    const token=name=>getComputedStyle(document.documentElement).getPropertyValue('--ui-'+name).trim();
+                    const stateContrasts=Object.fromEntries([['text','hover'],['text','active'],['secondary','control'],['accent','control'],['muted','panel']].map(([foreground,background])=>[foreground+' on '+background,contrast(token(foreground),token(background))]));
+                    return {key:document.documentElement.dataset.uiPalette,stateContrasts,side:getComputedStyle(document.querySelector('#inspector')).backgroundColor,top:calc('#app-topbar'),card:calc('.catalog-item>span','.catalog-item'),body:calc('#inspector-content','#inspector'),section:calc('.sonic-signature-panel h3','.sonic-signature-panel'),band:calc('.sonic-band-name','.sonic-band'),bandState:calc('.sonic-band-state','.sonic-band'),button:calc('#inspector-content .tt-insp-btn'),buttonColors:[getComputedStyle(button).color,getComputedStyle(button).backgroundColor],settings:calc('.app-settings>summary'),device:getComputedStyle(document.querySelector('#palette-speaker .electrostatic-frame')).backgroundImage};
                 });
                 for(const key of ['top','card','body','section','band','bandState','button','settings'])assert(sample[key]>=4.5,`${sample.key}: ${key} contrast ${sample[key]} (${sample.buttonColors})`);
+                if(sample.key.startsWith('scene-'))for(const [state,value] of Object.entries(sample.stateContrasts))assert(value>=4.5,`${sample.key}: ${state} contrast ${value}`);
                 await page.evaluate(()=>{
                     document.querySelector('.app-settings').open=true;
                     document.querySelectorAll('.app-settings-content .settings-group').forEach(group=>group.open=true);
@@ -104,12 +107,29 @@ const root=path.resolve(__dirname,'..');
             await page.waitForTimeout(650);
             const bounds=await page.evaluate(()=>{
                 const rect=id=>{const r=document.getElementById(id).getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};};
-                return {panel:rect('inspector'),canvas:rect('canvas'),catalog:rect('equipment-catalog'),toolbar:rect('app-topbar')};
+                return {panel:rect('inspector'),layer:rect('inspector-layer'),canvas:rect('canvas'),catalog:rect('equipment-catalog'),toolbar:rect('app-topbar')};
             });
+            assert(bounds.layer.left>=bounds.catalog.right-1,JSON.stringify(bounds));
+            assert(bounds.layer.top>=bounds.toolbar.bottom-1,JSON.stringify(bounds));
+            assert(bounds.layer.right<=bounds.canvas.right+1,JSON.stringify(bounds));
+            assert(bounds.layer.bottom<=bounds.canvas.bottom+1,JSON.stringify(bounds));
             assert(bounds.panel.left>=Math.max(bounds.canvas.left,bounds.catalog.right)-1,JSON.stringify(bounds));
             assert(bounds.panel.top>=Math.max(bounds.canvas.top,bounds.toolbar.bottom)-1,JSON.stringify(bounds));
             assert(bounds.panel.right<=bounds.canvas.right+1,JSON.stringify(bounds));
             assert(bounds.panel.bottom<=bounds.canvas.bottom+1,JSON.stringify(bounds));
+        }
+        async function assertOpeningBounds(){
+            const violations=await page.evaluate(async()=>{
+                const failures=[],start=performance.now();
+                do{
+                    await new Promise(requestAnimationFrame);
+                    const panel=document.getElementById('inspector').getBoundingClientRect();
+                    const area=document.getElementById('inspector-layer').getBoundingClientRect();
+                    if(panel.left<area.left-1||panel.top<area.top-1||panel.right>area.right+1||panel.bottom>area.bottom+1)failures.push({left:panel.left-area.left,top:panel.top-area.top,right:area.right-panel.right,bottom:area.bottom-panel.bottom});
+                }while(performance.now()-start<600);
+                return failures;
+            });
+            assert.deepEqual(violations,[],'the opening animation stays inside the canvas on every frame');
         }
         const savedSpeakerStyle=await page.$eval('#palette-speaker',el=>el.style.cssText);
         for(const width of [1600,800]){
@@ -117,17 +137,33 @@ const root=path.resolve(__dirname,'..');
             for(const offset of [-2000,10000]){
                 await page.$eval('#palette-speaker',(el,offset)=>{el.style.left=offset+'px';el.style.top=offset+'px';},offset);
                 await page.evaluate(()=>__signal.selectDevice('palette-speaker'));
+                await assertOpeningBounds();
                 await page.mouse.move(width-20,400);
                 await assertInspectorWithinCanvas();
             }
         }
+        // Keep the same panel open while crossing desktop/mobile breakpoints.
+        for(const viewport of [{width:701,height:280},{width:700,height:280},{width:390,height:844},{width:1600,height:1100}]){
+            await page.setViewportSize(viewport);
+            await assertInspectorWithinCanvas();
+        }
+        // Resize the toolbar and catalog without moving the pointer or reselecting a device.
+        await page.locator('#app-topbar').evaluate(el=>el.style.height='110px');
+        await page.locator('#workspace-shell').evaluate(el=>el.style.setProperty('--catalog-width','320px'));
+        await assertInspectorWithinCanvas();
+        await page.locator('#app-topbar').evaluate(el=>el.style.removeProperty('height'));
+        await page.locator('#workspace-shell').evaluate(el=>el.style.removeProperty('--catalog-width'));
+        await page.locator('#inspector-content').evaluate(el=>{const extra=document.createElement('div');extra.id='inspector-test-content';extra.style.cssText='height:1200px;flex-shrink:0';el.appendChild(extra);});
+        await assertInspectorWithinCanvas();
+        assert(await page.locator('#inspector-content').evaluate(el=>{el.scrollTop=el.scrollHeight;return el.scrollTop>0;}),'long properties content scrolls within the panel');
+        await page.locator('#inspector-test-content').evaluate(el=>el.remove());
         await page.$eval('#palette-speaker',(el,style)=>el.style.cssText=style,savedSpeakerStyle);
         await page.setViewportSize({width:1600,height:1100});
         await page.evaluate(()=>{__signal.setCanvasTheme('light');__signal.selectDevice('palette-speaker');});
         await page.waitForTimeout(300);await page.screenshot({path:'/tmp/interface-light.png'});
         await page.evaluate(()=>{__signal.setCanvasTheme('scene');__signal.setCanvasBackdrop('listeningIllustrated');__signal.setCanvasTime('dusk');});
         await page.waitForTimeout(300);await page.screenshot({path:'/tmp/interface-scene.png'});
-        await page.setViewportSize({width:390,height:844});await page.locator('[data-mobile-panel=properties]').click();await assertInspectorWithinCanvas();await page.screenshot({path:'/tmp/interface-mobile.png'});
+        await page.setViewportSize({width:390,height:844});if(await page.locator('[data-mobile-panel=properties]').getAttribute('aria-expanded')!=='true')await page.locator('[data-mobile-panel=properties]').click();await assertInspectorWithinCanvas();await page.screenshot({path:'/tmp/interface-mobile.png'});
         await page.evaluate(()=>{__signal.deleteDevice(__signal.appState.project.devices['palette-meter'],false);__signal.deleteDevice(__signal.appState.project.devices['palette-speaker'],false);});
         assert.deepEqual(errors,[]);console.log('Interface palettes: 13 combinations, contrast, equipment artwork and mobile layout passed.');
     }finally{await browser.close();}

@@ -1664,7 +1664,7 @@
         #inspector-empty {flex:1;min-height:100px;height:auto;overflow-y:auto;}
         #inspector-content {flex:1;min-height:0;overflow-y:auto;}
         /* Selected equipment parameters float beside the canvas device on desktop. */
-        #inspector[data-floating="true"]{position:fixed!important;z-index:95!important;left:12px;top:72px;width:min(380px,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;height:auto!important;max-height:min(78vh,900px,var(--inspector-available-height,100vh))!important;min-height:0!important;display:flex!important;flex-direction:column;border:1px solid var(--ui-border);border-radius:14px;box-shadow:0 24px 64px 8px var(--ui-shadow),0 8px 24px 2px var(--ui-shadow),0 2px 8px var(--ui-shadow);transform:none!important;visibility:visible!important;overflow:hidden!important;transition:left .12s ease-out,top .12s ease-out,background-color .25s,border-color .25s,box-shadow .25s;}
+        #inspector[data-floating="true"]{position:absolute!important;z-index:95!important;left:12px;top:12px;right:auto!important;bottom:auto!important;width:min(380px,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;height:auto!important;max-height:min(78vh,900px,var(--inspector-available-height,100vh))!important;min-height:0!important;display:flex!important;flex-direction:column;border:1px solid var(--ui-border);border-radius:14px;box-shadow:0 24px 64px 8px var(--ui-shadow),0 8px 24px 2px var(--ui-shadow),0 2px 8px var(--ui-shadow);transform:none!important;visibility:visible!important;overflow:hidden!important;transition:background-color .25s,border-color .25s,box-shadow .25s;}
         #inspector[data-floating="true"]>.inspector-panel-header{position:sticky;top:0;z-index:5;flex:none;min-height:48px;padding:8px 12px;backdrop-filter:blur(12px);}
         #inspector[data-floating="true"] #inspector-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
         #inspector[data-floating="true"] #inspector-content{width:100%;height:auto;min-height:0;max-height:calc(min(78vh,900px,var(--inspector-available-height,100vh)) - 48px);flex:0 1 auto;overflow:auto;overscroll-behavior:contain;padding:14px!important;gap:14px!important;}
@@ -4253,6 +4253,8 @@ body.mobile-properties-open #inspector {visibility:visible;pointer-events:auto;}
    influence the sidebar width, and collapsing should slide it off-canvas. */
 #inspector {box-sizing:border-box;width:18rem;min-width:18rem;flex:0 0 18rem;}
 .catalog-panel-header {display:flex;align-items:center;gap:8px;}
+.catalog-panel-header{position:relative;z-index:2;isolation:isolate;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);}
+.catalog-panel-header::after{content:"";position:absolute;z-index:-1;left:0;right:0;bottom:-18px;height:18px;pointer-events:none;background:linear-gradient(to bottom,var(--ui-side),color-mix(in srgb,var(--ui-side) 76%,transparent),transparent);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);}
 .catalog-search {display:flex;align-items:center;gap:0;flex:0 0 44px;width:44px;min-width:44px;height:44px;box-sizing:border-box;padding:0 4px;overflow:hidden;border:0;border-radius:10px;background:transparent;transition:flex-grow 320ms cubic-bezier(.2,.75,.25,1),background-color 180ms ease;}
 .catalog-search[data-expanded="true"] {flex-grow:1;gap:8px;background:var(--ui-control);}
 .catalog-search>button {display:grid;place-items:center;flex:none;width:36px;height:40px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--ui-muted);cursor:pointer;transition:color 180ms ease,transform 320ms cubic-bezier(.2,.75,.25,1);}
@@ -4740,7 +4742,7 @@ body.tutorial-open .app-settings-content {max-height:calc(100dvh - 90px - var(--
 #audio-world .catalog-placement-preview::after{content:attr(data-preview-label);position:absolute;left:50%;top:0;transform:translate(-50%,-115%);padding:5px 9px;white-space:nowrap;border-radius:4px;background:#193b31;color:#e5fff1;font:600 12px/1.3 sans-serif;z-index:1001}
 #audio-world .catalog-placement-preview.is-invalid::after{background:#6a242a;color:#fff1f1}
 /* Keep the contextual inspector independent from legacy collapsed-sidebar rules. */
-body.inspector-floating #inspector[data-floating="true"]{width:min(380px,var(--inspector-available-width,calc(100vw - 24px)))!important;min-width:0!important;flex:none!important;margin:0!important;padding:0!important;pointer-events:auto!important;}
+body.inspector-floating #inspector[data-floating="true"]{width:min(380px,calc(100% - 24px),var(--inspector-available-width,100vw))!important;min-width:0!important;flex:none!important;margin:0!important;padding:0!important;pointer-events:auto!important;}
 body.inspector-floating #inspector[data-floating="true"]>.inspector-panel-header,
 body.inspector-floating #inspector[data-floating="true"]>#inspector-content:not(.hidden){display:flex!important;}
 body.inspector-floating #inspector[data-floating="true"]>#inspector-empty{display:none!important;}
@@ -4779,8 +4781,10 @@ body.inspector-floating #inspector-sidebar-toggle{display:none!important;}
     #equipment-catalog :is(.mobile-category-nav,.touch-catalog-hint){display:none;}
 }
 
-/* Properties stay inside the workspace, below the toolbar and beside the catalog. */
-#workspace-shell{z-index:0;}
+/* A canvas-sized layer contains properties and their shadows, regardless of z-index. */
+#inspector-layer{position:absolute;inset:0 0 0 var(--catalog-width);z-index:95;overflow:hidden;pointer-events:none;}
+#inspector-layer #inspector[data-floating="true"]{max-height:min(78vh,900px,calc(100% - 24px))!important;}
 @media(max-width:700px){
-    #workspace-shell #inspector{left:var(--catalog-width)!important;width:calc(100% - var(--catalog-width))!important;max-height:calc(100% - var(--phone-nav-height))!important;}
+    #inspector-layer{bottom:var(--phone-nav-height);}
+    #inspector-layer #inspector{position:absolute!important;left:0!important;bottom:0!important;width:100%!important;max-height:100%!important;}
 }

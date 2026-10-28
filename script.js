@@ -4905,6 +4905,7 @@ const Hardware = (() => {
         const catalogSearchShell=equipmentSearch.closest('.catalog-search');
         const catalogSearchToggle=document.getElementById('catalog-search-toggle');
         function setCatalogSearchExpanded(expanded,focus=false){
+            if(!expanded&&equipmentSearch.value.trim())expanded=true;
             catalogSearchShell.dataset.expanded=String(expanded);
             catalogSearchToggle.setAttribute('aria-expanded',String(expanded));
             catalogSearchToggle.setAttribute('aria-label',AudioSystemLanguage.translate(expanded?'Fechar busca do catálogo':'Abrir busca do catálogo'));
@@ -4913,7 +4914,7 @@ const Hardware = (() => {
             });
         }
         catalogSearchToggle.addEventListener('click',()=>{
-            const expanded=catalogSearchShell.dataset.expanded!=='true';
+            const expanded=catalogSearchShell.dataset.expanded!=='true'||!!equipmentSearch.value.trim();
             setCatalogSearchExpanded(expanded,expanded);
             if(!expanded)equipmentSearch.blur();
         });
@@ -4922,7 +4923,7 @@ const Hardware = (() => {
             if(!catalogSearchShell.contains(event.relatedTarget))setCatalogSearchExpanded(false);
         });
         document.addEventListener('pointerdown',event=>{
-            if(!catalogSearchShell.contains(event.target))setCatalogSearchExpanded(false);
+            if(!catalogSearchShell.contains(event.target)&&!equipmentSearch.value.trim())setCatalogSearchExpanded(false);
         });
         const catalogSections = [...equipmentCatalog.querySelectorAll('.mb-6')].filter(section => section.querySelector('.catalog-item'));
         const catalogSearchSynonyms={optica:['optical','toslink','digital'],optical:['optica','toslink','digital'],digital:['optica','optical','toslink'],entrada:['input'],input:['entrada'],saida:['output'],output:['saida'],linha:['line'],line:['linha'],phono:['vinil','toca discos','riaa'],rca:['analogo','audio'],p2:['minijack','fone','headphone'],p10:['jack','fone','headphone','6 35 mm'],wire:['fio','borne','caixa passiva'],fio:['wire','borne','caixa passiva'],passiva:['passive','amplificado','speaker'],passivo:['passive','amplificado','speaker'],caixa:['speaker','alto falante'],fone:['headphone','p2','p10'],bluetooth:['sem fio','wireless'],potencia:['amplificado','speaker']};
@@ -8338,12 +8339,23 @@ const Hardware = (() => {
         }
 
         const inspectorWindow=document.getElementById('inspector');
+        const inspectorLayer=document.getElementById('inspector-layer');
         let inspectorAnchorDevice=null,inspectorPositionFrame=0;
         function positionInspectorWindow(){
             inspectorPositionFrame=0;
-            if(!inspectorAnchorDevice?.isConnected||inspectorWindow.dataset.floating!=='true')return;
+            if(!inspectorAnchorDevice?.isConnected)return;
+            const floating=matchMedia('(min-width:701px)').matches;
+            if((inspectorWindow.dataset.floating==='true')!==floating){
+                inspectorWindow.dataset.floating=String(floating);
+                document.body.classList.toggle('inspector-floating',floating);
+                document.body.classList.toggle('mobile-properties-open',!floating);
+                inspectorCloseButton.classList.toggle('inspector-window-close',floating);
+                inspectorWindow.classList.remove('inspector-window-enter');
+                syncMobilePanels();
+            }
+            if(!floating)return;
             const anchor=inspectorAnchorDevice.getBoundingClientRect(),gap=16,margin=12;
-            const area=canvas.getBoundingClientRect(),catalog=equipmentCatalog.getBoundingClientRect();
+            const area=inspectorLayer.getBoundingClientRect(),catalog=equipmentCatalog.getBoundingClientRect();
             const toolbar=document.getElementById('app-topbar').getBoundingClientRect();
             const minLeft=Math.max(0,area.left,catalog.right)+margin;
             const minTop=Math.max(0,area.top,toolbar.bottom)+margin;
@@ -8358,10 +8370,12 @@ const Hardware = (() => {
             const preferredLeft=rightSpace>=width+gap?anchor.right+gap:leftSpace>=width+gap?anchor.left-width-gap:anchor.left+(anchor.width-width)/2;
             const left=Math.max(minLeft,Math.min(maxRight-width,preferredLeft));
             const top=Math.max(minTop,Math.min(maxBottom-height,anchor.top+(anchor.height-height)/2));
-            inspectorWindow.style.left=`${Math.round(left)}px`;inspectorWindow.style.top=`${Math.round(top)}px`;
+            inspectorWindow.style.left=`${Math.ceil(left-area.left)}px`;inspectorWindow.style.top=`${Math.ceil(top-area.top)}px`;
         }
         function scheduleInspectorPosition(){if(!inspectorPositionFrame)inspectorPositionFrame=requestAnimationFrame(positionInspectorWindow);}
         window.addEventListener('resize',scheduleInspectorPosition,{passive:true});
+        const inspectorLayoutObserver=new ResizeObserver(scheduleInspectorPosition);
+        for(const element of [inspectorLayer,inspectorWindow,equipmentCatalog,document.getElementById('app-topbar')])inspectorLayoutObserver.observe(element);
         window.addEventListener('pointermove',scheduleInspectorPosition,{passive:true});
         window.addEventListener('wheel',scheduleInspectorPosition,{passive:true});
         const inspectorCloseButton=document.getElementById('inspector-sidebar-pin');
@@ -8572,7 +8586,7 @@ const Hardware = (() => {
                 inspectorCloseButton.setAttribute('aria-pressed','false');
                 inspectorCloseButton.setAttribute('aria-label',document.documentElement.lang==='en'?'Close parameters':'Fechar parâmetros');
                 inspectorCloseButton.title=inspectorCloseButton.getAttribute('aria-label');
-                scheduleInspectorPosition();
+                positionInspectorWindow();
                 inspectorWindow.classList.remove('inspector-window-enter');
                 void inspectorWindow.offsetWidth;
                 inspectorWindow.classList.add('inspector-window-enter');

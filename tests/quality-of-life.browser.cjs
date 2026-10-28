@@ -54,7 +54,7 @@ const root=path.resolve(__dirname,'..');
         assert.equal(await page.locator('.catalog-item[data-template="preClassic"] .catalog-favorite').getAttribute('aria-pressed'),'true');
         await page.locator('.catalog-item[data-template="preClassic"] .catalog-favorite').click();
         assert.equal(await page.locator('.catalog-quick-access .catalog-item[data-template="preClassic"]').count(),0);
-        await page.setViewportSize({width:390,height:844});await assertCatalogVisible();await page.locator('#canvas').click({position:{x:200,y:100}});await page.screenshot({path:'/tmp/permanent-catalog-mobile.png'});
+        await page.setViewportSize({width:390,height:844});await assertCatalogVisible();if(await page.locator('[data-mobile-panel=properties]').getAttribute('aria-expanded')==='true')await page.locator('[data-mobile-panel=properties]').click();await page.screenshot({path:'/tmp/permanent-catalog-mobile.png'});
         const mobileCard=page.locator('.catalog-item[data-template="preClassic"]').filter({has:page.locator('.catalog-favorite')});await mobileCard.scrollIntoViewIfNeeded();
         await mobileCard.locator('span').last().tap();assert.equal(await page.locator('.catalog-preview-actions').count(),1);assert.equal(await page.locator('.catalog-placement-preview').count(),1);
         await page.locator('[data-preview-cancel]').click();assert.equal(await page.locator('.catalog-placement-preview').count(),0);
