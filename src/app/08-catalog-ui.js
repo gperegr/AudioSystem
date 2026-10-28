@@ -376,7 +376,7 @@
                         const cleanupPreview=()=>{preview.el.remove();actions.remove();document.removeEventListener('keydown',escapePreview);if(activeCatalogPreviewCleanup===cleanupPreview)activeCatalogPreviewCleanup=null;};activeCatalogPreviewCleanup=cleanupPreview;
                         const escapePreview=event=>{if(event.key==='Escape'){event.preventDefault();cleanupPreview();}};document.addEventListener('keydown',escapePreview);
                         actions.querySelector('[data-preview-cancel]').onclick=cleanupPreview;
-                        actions.querySelector('[data-preview-confirm]').onclick=()=>{cleanupPreview();createDevice(type,target.x,target.y);rememberCatalogItem(type);playUiSound('drop');
+                        actions.querySelector('[data-preview-confirm]').onclick=()=>{cleanupPreview();createDevice(type,target.x,target.y);playUiSound('drop');
                             const added=appState.project.devices[appState.interface.selectedDeviceId];
                             if(compactLayout.matches&&added){
                                 const width=added.el.offsetWidth,height=added.el.offsetHeight,tools=document.querySelector('.canvas-tools'),usableHeight=Math.max(120,rect.height-tools.offsetHeight-40);
@@ -429,7 +429,7 @@
                     if (ev.type!=='pointercancel' && !ev.cancelled && ev.clientX > cRect.left && ev.clientX < cRect.right && ev.clientY > cRect.top && ev.clientY < cRect.bottom) {
                         const pos = screenToWorld(ev.clientX - offsetX + rect.width / 2, ev.clientY - offsetY + rect.height / 2);
                         createDevice(type, pos.x - rect.width / 2, pos.y - rect.height / 2);
-                        rememberCatalogItem(type);
+
                         playUiSound('drop');
                     }
                 };
@@ -446,12 +446,12 @@
         let quickData;try{quickData=JSON.parse(localStorage.getItem(quickKey))||{};}catch{quickData={};}
         const validTypes=new Set(catalogItems.map(item=>item.dataset.template));
         const clean=list=>Array.isArray(list)?[...new Set(list.filter(type=>validTypes.has(type)))].slice(0,12):[];
-        quickData={favorites:clean(quickData.favorites),recent:clean(quickData.recent)};
+        quickData={favorites:clean(quickData.favorites)};
         function saveQuick(){try{localStorage.setItem(quickKey,JSON.stringify(quickData));}catch{}}
         function updateStars(){catalogItems.forEach(item=>{const button=item.querySelector('.catalog-favorite');button?.setAttribute('aria-pressed',String(quickData.favorites.includes(item.dataset.template)));});}
         function renderQuick(){
             quickCatalog.replaceChildren();
-            for(const [title,types] of [['Favoritos',quickData.favorites],['Recentes',quickData.recent]]){
+            for(const [title,types] of [['Favoritos',quickData.favorites]]){
                 if(!types.length)continue;const section=document.createElement('div');section.className='mb-6';const heading=document.createElement('h3');heading.className='text-[10px] font-bold text-gray-500 mb-3 tracking-wider uppercase';heading.textContent=title;const grid=document.createElement('div');grid.className='grid grid-cols-2 gap-3';section.append(heading,grid);
                 types.forEach(type=>{const original=catalogItems.find(item=>item.dataset.template===type);if(!original)return;const copy=original.cloneNode(true);copy.querySelector('.catalog-favorite')?.remove();bindCatalogItem(copy);grid.appendChild(copy);});quickCatalog.appendChild(section);
             }
@@ -459,7 +459,6 @@
         }
         catalogItems.forEach(item=>{const button=document.createElement('button');button.type='button';button.className='catalog-favorite';button.title='Favoritar equipamento';button.setAttribute('aria-label','Favoritar equipamento');button.textContent='★';button.addEventListener('pointerdown',event=>event.stopPropagation());button.addEventListener('click',event=>{event.stopPropagation();const type=item.dataset.template;quickData.favorites=quickData.favorites.includes(type)?quickData.favorites.filter(t=>t!==type):[type,...quickData.favorites].slice(0,12);saveQuick();renderQuick();});item.appendChild(button);});
         equipmentSearch.addEventListener('input',()=>{quickCatalog.hidden=!!equipmentSearch.value.trim();});
-        function rememberCatalogItem(type){quickData.recent=[type,...quickData.recent.filter(t=>t!==type)].slice(0,8);saveQuick();renderQuick();}
         renderQuick();
 
         function standardizeStereoPorts(root) {
