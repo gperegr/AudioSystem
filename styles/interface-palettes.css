@@ -142,3 +142,5 @@
 #equipment-catalog .catalog-favorite:not([aria-pressed="true"]){color:var(--ui-panel)!important;opacity:1;-webkit-text-stroke:1px var(--ui-muted);text-shadow:none;}
 #equipment-catalog .catalog-favorite[aria-pressed="true"]{color:var(--ui-accent)!important;opacity:1;-webkit-text-stroke:0;text-shadow:0 1px 5px color-mix(in srgb,var(--ui-accent) 45%,transparent);}
 #equipment-catalog .catalog-favorite:hover{transform:scale(1.12);}
+#equipment-catalog .catalog-favorite:not([aria-pressed="true"]){opacity:.48;-webkit-text-stroke:1px color-mix(in srgb,var(--ui-muted) 45%,var(--ui-panel));}
+#equipment-catalog .catalog-favorite:not([aria-pressed="true"]):hover{opacity:.78;-webkit-text-stroke-color:var(--ui-muted);}
