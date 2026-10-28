@@ -206,7 +206,7 @@
         mobileControls.querySelector('[data-mobile-panel="catalog"]').setAttribute('aria-controls','equipment-catalog');
         mobileControls.querySelector('[data-mobile-panel="properties"]').setAttribute('aria-controls','inspector');
         const sidebarConfig={catalog:{panel:equipmentCatalog,button:document.getElementById('catalog-sidebar-toggle'),pin:document.getElementById('catalog-sidebar-pin'),collapsed:'catalog-collapsed',name:'equipamentos'},properties:{panel:document.getElementById('inspector'),button:document.getElementById('inspector-sidebar-toggle'),pin:document.getElementById('inspector-sidebar-pin'),collapsed:'inspector-collapsed',name:'propriedades'}};
-        const sidebarPinned={catalog:savedAppPreferences.catalogPinned===true,properties:savedAppPreferences.inspectorPinned===true};
+        const sidebarPinned={catalog:savedAppPreferences.catalogPinned===true,properties:false};
         const sidebarTimers={catalog:0,properties:0},sidebarHoverTimers={catalog:0,properties:0},sidebarHoverOpenedAt={catalog:0,properties:0};
         function syncSidebar(key){
             const config=sidebarConfig[key],closed=document.body.classList.contains(config.collapsed),label=`${closed?'Expandir':'Recolher'} ${config.name}`;
