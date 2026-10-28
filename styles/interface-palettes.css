@@ -144,3 +144,8 @@
 #equipment-catalog .catalog-favorite:hover{transform:scale(1.12);}
 #equipment-catalog .catalog-favorite:not([aria-pressed="true"]){opacity:.48;-webkit-text-stroke:1px color-mix(in srgb,var(--ui-muted) 45%,var(--ui-panel));}
 #equipment-catalog .catalog-favorite:not([aria-pressed="true"]):hover{opacity:.78;-webkit-text-stroke-color:var(--ui-muted);}
+/* Favorite state uses fill and opacity only; never draw a star outline. */
+#equipment-catalog .catalog-favorite{-webkit-text-stroke:0!important;text-shadow:none!important;}
+#equipment-catalog .catalog-favorite:not([aria-pressed="true"]){color:var(--ui-panel)!important;opacity:.46;}
+#equipment-catalog .catalog-favorite:not([aria-pressed="true"]):hover{opacity:.72;}
+#equipment-catalog .catalog-favorite[aria-pressed="true"]{color:var(--ui-accent)!important;opacity:1;text-shadow:0 1px 5px color-mix(in srgb,var(--ui-accent) 38%,transparent)!important;}
