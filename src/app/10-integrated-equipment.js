@@ -346,7 +346,7 @@
         }
         function integratedSettingText(key,value){return key==='volume'||key==='subLevel'?Math.round(value*10)+'/10':key==='balance'?value===0?'Centro':(value<0?'L ':'R ')+Math.round(Math.abs(value)*5):(value>0?'+':'')+value+' dB';}
         function integratedInspectorHtml(dev){
-            const config=controlAmpConfig(dev.type),keys=config.tone?[['volume','Volume',0,1],['bass','Graves',-10,10],['treble','Agudos',-10,10],['balance','Balanço L/R',-1,1]]:[['volume','Volume',0,1],...(config.balance?[['balance','Balanço L/R',-1,1]]:[])];
+            const config=controlAmpConfig(dev.type),keys=config.tone&&dev.type!=='preClassic'?[['volume','Volume',0,1],['bass','Graves',-10,10],['treble','Agudos',-10,10],['balance','Balanço L/R',-1,1]]:[['volume','Volume',0,1],...(config.balance?[['balance','Balanço L/R',-1,1]]:[])];
             return `<section class="flex flex-col gap-4"><span class="text-sm text-gray-300">Fonte selecionada</span><div class="grid grid-cols-2 gap-2">${controlAmpSources(dev.type).map((name,index)=>`<button class="tt-insp-btn ${dev.state.integratedSource===index?'is-on':''}" data-integrated-inspector-source="${index}" aria-pressed="${dev.state.integratedSource===index}">${name}</button>`).join('')}</div>${keys.map(([key,name,min,max])=>`<label class="flex flex-col gap-2 text-sm text-gray-300"><span>${name} <output>${integratedSettingText(key,dev.state[key])}</output></span><input type="range" data-integrated-setting="${key}" min="${min}" max="${max}" step="${(max-min)/10}" value="${dev.state[key]}"></label>`).join('')}${config.tone?`<button class="tt-insp-btn ${dev.state.direct?'is-on':''}" data-integrated-inspector-direct title="Ignora os ajustes de graves e agudos, deixando a tonalidade neutra. Volume, balanço e subwoofer continuam ativos. Ao desativar, os ajustes anteriores voltam a ser aplicados." aria-pressed="${!!dev.state.direct}">DIRECT</button>`:''}</section>`;
         }
         function bindIntegratedInspector(dev){
@@ -391,6 +391,7 @@
             canvas.setAttribute('aria-label',`${source}, volume ${st.preMuted?'mudo':Math.round(st.volume*10)+' de 10'}, ${st.preMono?'mono':'estéreo'}`);
         }
         function customPreampMarkup(type){
+            if(type==='preClassic')return classicPreampMarkup();
             if(type==='preGlass')return glassPreampMarkup();
             if(type==='prePrecision')return precisionPreampMarkup();
             const config=CUSTOM_PREAMPS[type];
@@ -408,7 +409,7 @@
             const matrix=[];
             dev.integratedFilters.forEach(({volume},input)=>{
                 volume.disconnect(dev.powerNodes[input]);
-                [0,1].forEach(output=>{const gain=ctx.createGain();volume.connect(gain);gain.connect(dev.powerNodes[output]);matrix.push({gain,input,output});});
+                [0,1].forEach(output=>{const gain=ctx.createGain();volume.connect(gain);gain.connect(dev.powerNodes[output]);matrix.push({gain,input,output});(dev.modelAudioNodes||=[]).push(gain);});
             });
             let subLevel,subFilter;
             if(config.sub){
@@ -421,7 +422,7 @@
             const baseApply=dev.applyIntegrated;
             dev.applyIntegrated=()=>{
                 baseApply();const st=dev.state,t=ctx.currentTime;
-                matrix.forEach(({gain,input,output})=>gain.gain.setTargetAtTime((st.preMono ? .5 : input===output ? 1 : 0)*(st.preInvert?-1:1)*(dev.type==='prePrecision'?10**((st.precisionGain||0)/20):1),t,.02));
+                matrix.forEach(({gain,input,output})=>gain.gain.setTargetAtTime((dev.preMatrixCoefficient?dev.preMatrixCoefficient(input,output):(st.preMono ? .5 : input===output ? 1 : 0))*(st.preInvert?-1:1)*(dev.type==='prePrecision'?10**((st.precisionGain||0)/20):1),t,.02));
                 subLevel?.gain.setTargetAtTime(st.subLevel,t,.02);subFilter?.frequency.setTargetAtTime(st.subFrequency,t,.03);
                 const rotor=dev.el.querySelector('[data-pre-rotary]');rotor.style.setProperty('--integrated-angle',(-120+st.integratedSource*80)+'deg');rotor.setAttribute('aria-valuenow',st.integratedSource);rotor.setAttribute('aria-valuetext',controlAmpSources(dev.type)[st.integratedSource]);
                 dev.el.querySelector('.pre-source-text').textContent=controlAmpSources(dev.type)[st.integratedSource].toUpperCase();
@@ -437,6 +438,7 @@
             dev.applyIntegrated();
         }
         function customPreampInspectorHtml(dev){
+            if(dev.type==='preClassic')return classicPreampInspector(dev);
             if(dev.type==='preGlass')return glassPreampInspector(dev);
             if(dev.type==='prePrecision')return `<div class="precision-inspector-options">${[['preMuted','Silenciar'],['preMono','Mono'],['preInvert','Inverter polaridade']].map(([key,name])=>`<button class="tt-insp-btn" data-pre-inspector-toggle="${key}" aria-pressed="${!!dev.state[key]}">${name}</button>`).join('')}<label class="flex flex-col gap-2 text-sm text-gray-300"><span>Ganho de saída <output data-precision-gain-value>${dev.state.precisionGain?'+':''}${dev.state.precisionGain} dB</output></span><input class="gain-spark-slider" data-precision-inspector-gain data-gain-steps="3" type="range" min="0" max="12" step="6" value="${dev.state.precisionGain}" aria-label="Ganho de saída" aria-valuetext="${dev.state.precisionGain?'+':''}${dev.state.precisionGain} dB"></label><p>O modulômetro acompanha as saídas L/R reais em dBFS. A agulha preta representa L e a vermelha representa R; o ganho selecionado atua antes das saídas.</p></div>`;
             const config=CUSTOM_PREAMPS[dev.type];
@@ -444,6 +446,7 @@
         }
         function bindCustomPreampInspector(dev){
             if(!CUSTOM_PREAMPS[dev.type])return;
+            if(dev.type==='preClassic')bindClassicPreampInspector(dev);
             inspectorContent.querySelectorAll('[data-glass-inspector-toggle]').forEach(button=>button.addEventListener('click',()=>dev.el.querySelector(`[data-glass-toggle="${button.dataset.glassInspectorToggle}"]`).click()));
             inspectorContent.querySelector('[data-precision-inspector-gain]')?.addEventListener('input',event=>{dev.state.precisionGain=Number(event.target.value);dev.applyIntegrated();inspectorContent.querySelector('[data-precision-gain-value]').textContent=(dev.state.precisionGain?'+':'')+dev.state.precisionGain+' dB';scheduleProjectSave();});
             inspectorContent.querySelectorAll('[data-pre-inspector-toggle]').forEach(button=>button.addEventListener('click',()=>dev.el.querySelector(`[data-pre-toggle="${button.dataset.preInspectorToggle}"]`).click()));

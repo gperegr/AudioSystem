@@ -185,7 +185,7 @@
             }
             if(type==='preamp'||CUSTOM_PREAMPS[type]){
                 const slot=el.querySelector('[data-power-slot]');slot.classList.add('preamp-output-power');
-                if(CUSTOM_PREAMPS[type]&&!['prePrecision','preGlass'].includes(type))el.querySelector('.integrated-connections').appendChild(slot);
+                if(CUSTOM_PREAMPS[type]&&!['prePrecision','preGlass','preClassic'].includes(type))el.querySelector('.integrated-connections').appendChild(slot);
             }
             if(['btReceiverA','btTransmitterPro'].includes(type)){
                 const ports=el.querySelector('.bt-ports');
@@ -326,6 +326,7 @@
                 if(type==='integratedUtility')configureUtilityAmp(dev);
                 if(type==='prePrecision')configurePrecisionPreamp(dev);
                 if(type==='preGlass')configureGlassPreamp(dev);
+                if(type==='preClassic')configureClassicPreamp(dev);
             } else if (type === 'receiver') {
                 dev.nodes.inR = appState.audio.context.createGain();
                 dev.nodes.inL = appState.audio.context.createGain();

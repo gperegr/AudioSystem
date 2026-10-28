@@ -58,6 +58,7 @@ const Hardware = (() => {
     // Equipment proportions, in canvas pixels. More specific selectors come last.
     // Change a size here without changing the component model or its behavior.
     const controlSizes = {
+        preClassic:{'[data-pre-rotary],[data-integrated-knob], [data-classic-knob]':{width:49,height:49},'.power-btn':{width:18,height:26},'[data-classic-toggle],[data-integrated-direct]':{width:25,height:36}},
         preGlass:{'.power-btn':{width:18,height:27},'[data-pre-toggle],[data-glass-toggle],[data-integrated-direct]':{width:18,height:27},'[data-pre-rotary]':{width:58,height:58},'[data-integrated-knob="volume"]':{width:64,height:64},'[data-integrated-knob="bass"],[data-integrated-knob="treble"],[data-integrated-knob="balance"]':{width:40,height:40}},
         streamIntegrated:{'.power-btn':{width:14,height:20},'[data-stream-action]':{width:24,height:24},'[data-stream-input]':{width:131,height:74},'[data-stream-cover]':{width:73,height:73}},
         integratedUtility:{'.power-btn':{width:18,height:27},'[data-integrated-source]':{width:28,height:17},'[data-utility-toggle],.integrated-direct':{width:33,height:17},'[data-integrated-knob="volume"]':{width:61,height:61}},
@@ -520,6 +521,7 @@ const Hardware = (() => {
     }
     function knobModel(dev,el){
         if(el.dataset.interfaceKnob)return el.dataset.interfaceKnob;
+        if(dev.type==='preClassic')return 'machined';
         if(dev.type==='preGlass')return 'silverFluted';
         if(dev.type==='integratedUtility')return 'plainPlastic';
         const vintage=dev.el.classList.contains('device-family-vintage');
@@ -630,6 +632,7 @@ const Hardware = (() => {
         if(el.dataset.buttonModel&&Object.hasOwn(buttons,el.dataset.buttonModel))return el.dataset.buttonModel;
         if(['btReceiverA','btTransmitterPro'].includes(dev.type))return 'illuminatedBar';
         if(el.classList.contains('power-btn')){
+            if(dev.type==='preClassic')return 'powerSmall';
             if(dev.type==='headphoneAmpModern')return 'powerHorizontal';
             if(['preControl','turntableVintage'].includes(dev.type))return 'slidePower';
             if(RADIO_RECEIVERS.has(dev.type))return 'powerLarge';
@@ -766,7 +769,7 @@ const Hardware = (() => {
             for(const key of ['height','min-height','max-height'])el.style.setProperty(key,sizes.heights.high+'px','important');
             return;
         }
-        if(['prePrecision','preGlass'].includes(type))return;
+        if(['prePrecision','preGlass','preClassic'].includes(type))return;
         if(type==='hardwareDemo'||FURNITURE_TYPES[type]||isListeningDevice({type})||(SOURCE_TYPES.has(type)&&!SIGNAL_GENERATOR_TYPES.has(type)&&!['btReceiverA','cdPlayer','streamer',...CAPTURE_INTERFACE_TYPES].includes(type)))return;
         const compact=!!INTERFACE_DEVICES[type]||['headphoneAmp','headphoneAmpModern','btTransmitterPro','btReceiverA',...CAPTURE_INTERFACE_TYPES].includes(type)&&type!=='audioInterface4';
         const height=type==='powerValve'?'high':type==='audioInterface4'||INTEGRATED_AMPS[type]||CUSTOM_PREAMPS[type]||CUSTOM_POWER_AMPS[type]||RADIO_RECEIVERS.has(type)||MIXER_TYPES.has(type)||EQ_TYPES.has(type)||BENCH_METER_TYPES.has(type)||SIGNAL_GENERATOR_TYPES.has(type)?'medium':'low';
@@ -2280,7 +2283,7 @@ const Hardware = (() => {
             receiver: 'Receiver Vintage',powerValve:'Potência · Valvulado',powerDual:'Potência · Duplo Canal',powerBias:'Potência · Visor Circular',
             integratedBlue:'Integrado · Visores Azuis',integratedMinimal:'Integrado · Minimalista',integratedSilver:'Integrado · Prateado',
             integratedUtility:'Integrado · Essencial',prePrecision:'Pré · Precisão',
-            preGlass:'Pré · Vidro Clássico',
+            preGlass:'Pré · Vidro Clássico',preClassic:'Pré · Console de Madeira',
             headphoneAmp: 'Amplificador de Fone Vintage', headphoneAmpModern: 'Amplificador de Fone Normal',
             headphoneAmp4: 'Amplificador de Fones 4 Canais',
             rcaSwitch: 'Seletor RCA Estéreo', rcaSwitchVintage: 'Seletor RCA Vintage',
@@ -2314,7 +2317,7 @@ const Hardware = (() => {
         const DEVICE_FAMILIES = {
             streamIntegrated:'modern',
             integratedUtility:'vintage',prePrecision:'studio',
-            preGlass:'vintage',
+            preGlass:'vintage',preClassic:'vintage',
             turntableLinear:'vintage',
             hpMonitor:'modern',hpMax:'modern',
             signalGeneratorVintage:'vintage',benchMeterVintage:'vintage',benchMeter:'modern',
@@ -2886,6 +2889,7 @@ const Hardware = (() => {
             integratedSilver:{watts:90,tone:true,meters:true,finish:'silver',description:'Integrado prateado com laterais em madeira, medidores âmbar e controles de tonalidade e balanço. Três entradas de linha, phono, saídas para caixas e fones. '}
         };
         const CUSTOM_PREAMPS={
+            preClassic:{finish:'classic',tone:true,balance:true,phono:true,phones:false,sub:false,sources:['Auxiliar','Sintonizador','Tape','Phono'],description:'Pré em madeira com painel metálico, tonalidade independente L/R, modos de canais, monitor de fita e filtros de graves e agudos.'},
             preGlass:{finish:'glass',tone:true,balance:true,phono:true,phones:false,sub:false,sources:['Auxiliar','Sintonizador','Tape','Phono'],description:'Pré de vidro preto com laterais de alumínio, knobs prateados e alavancas metálicas. Três entradas de linha, phono, tonalidade, filtros de graves/agudos, loudness, mono, mute e inversão de polaridade.'},
             prePrecision:{finish:'precision',tone:false,balance:true,phono:false,phones:false,sub:false,description:'Pré compacto de alumínio escovado com modulômetro estéreo, seleção rotativa de quatro entradas, ganho 0/6/12 dB, mute, mono e inversão de polaridade.'},
             preReference:{finish:'reference',tone:false,balance:true,phono:false,phones:false,sub:false,description:'Pré de linha com frente prateada, alças e visor verde. Quatro entradas LINE, saída RCA estéreo, volume, balanço, mute, mono e inversão de polaridade. '},
@@ -2902,6 +2906,7 @@ const Hardware = (() => {
         const DEFAULT_POWER_GAIN=.5;
         // Individual simulation voicings.
         const AMPLIFICATION_VOICINGS={
+            preClassic:{bass:.3,treble:-.4,drive:.4,asymmetry:.035},
             preGlass:{bass:.2,treble:-.35,drive:.38,asymmetry:.035},
             integratedUtility:{bass:.15,treble:-.2,drive:.2,asymmetry:0},
             prePrecision:{bass:0,treble:0,drive:.06,asymmetry:0},
@@ -4560,6 +4565,7 @@ const Hardware = (() => {
                 drawing='<path d="M3 8h50v29H3zM3 24h50M7 15h35M8 21h26m-23-2h20m8-7v9m4-9v9M7 29h8m-8 4h8m6-4h2m4 0h2m6 0h12m-12 4h12"/>';
             } else if (TURNTABLE_TYPES.has(type)) {
                 drawing = '<rect x="5" y="6" width="46" height="33" rx="3"/><circle cx="23" cy="22" r="12"/><circle cx="23" cy="22" r="3"/><path d="M43 12v13l-6 5M11 35h7"/>';
+            } else if(type==='preClassic'){drawing='<rect x="3" y="8" width="50" height="30" rx="1"/><path d="M6 10h44v26H6z"/>'+[13,24,38,46].flatMap(x=>[17,28].map(y=>`<circle cx="${x}" cy="${y}" r="3"/>`)).join('')+'<path d="M29 24v7m4-7v7"/>';
             } else if(type==='preGlass'){drawing=rack+'<path d="M8 13v18m40-18v18M11 28h34"/><circle cx="16" cy="20" r="4"/><circle cx="28" cy="20" r="2"/><circle cx="40" cy="20" r="4"/><path d="M16 30v3m6-3v3m6-3v3m6-3v3m6-3v3"/>';
             } else if(type==='prePrecision'){drawing=rack+'<rect x="9" y="15" width="15" height="13" rx="2"/><path d="m16 25-4-6m5 6 4-7M29 17v9m4-7v7"/><circle cx="42" cy="22" r="6"/><path d="m42 22 3-3"/>';
             } else if(type==='integratedUtility'){drawing=rack+'<circle cx="16" cy="23" r="3"/><circle cx="25" cy="23" r="3"/><circle cx="44" cy="23" r="6"/><path d="M31 17h3m-3 4h3m-3 4h3M10 31h36"/>';
@@ -5764,7 +5770,7 @@ const Hardware = (() => {
         }
         function integratedSettingText(key,value){return key==='volume'||key==='subLevel'?Math.round(value*10)+'/10':key==='balance'?value===0?'Centro':(value<0?'L ':'R ')+Math.round(Math.abs(value)*5):(value>0?'+':'')+value+' dB';}
         function integratedInspectorHtml(dev){
-            const config=controlAmpConfig(dev.type),keys=config.tone?[['volume','Volume',0,1],['bass','Graves',-10,10],['treble','Agudos',-10,10],['balance','Balanço L/R',-1,1]]:[['volume','Volume',0,1],...(config.balance?[['balance','Balanço L/R',-1,1]]:[])];
+            const config=controlAmpConfig(dev.type),keys=config.tone&&dev.type!=='preClassic'?[['volume','Volume',0,1],['bass','Graves',-10,10],['treble','Agudos',-10,10],['balance','Balanço L/R',-1,1]]:[['volume','Volume',0,1],...(config.balance?[['balance','Balanço L/R',-1,1]]:[])];
             return `<section class="flex flex-col gap-4"><span class="text-sm text-gray-300">Fonte selecionada</span><div class="grid grid-cols-2 gap-2">${controlAmpSources(dev.type).map((name,index)=>`<button class="tt-insp-btn ${dev.state.integratedSource===index?'is-on':''}" data-integrated-inspector-source="${index}" aria-pressed="${dev.state.integratedSource===index}">${name}</button>`).join('')}</div>${keys.map(([key,name,min,max])=>`<label class="flex flex-col gap-2 text-sm text-gray-300"><span>${name} <output>${integratedSettingText(key,dev.state[key])}</output></span><input type="range" data-integrated-setting="${key}" min="${min}" max="${max}" step="${(max-min)/10}" value="${dev.state[key]}"></label>`).join('')}${config.tone?`<button class="tt-insp-btn ${dev.state.direct?'is-on':''}" data-integrated-inspector-direct title="Ignora os ajustes de graves e agudos, deixando a tonalidade neutra. Volume, balanço e subwoofer continuam ativos. Ao desativar, os ajustes anteriores voltam a ser aplicados." aria-pressed="${!!dev.state.direct}">DIRECT</button>`:''}</section>`;
         }
         function bindIntegratedInspector(dev){
@@ -5809,6 +5815,7 @@ const Hardware = (() => {
             canvas.setAttribute('aria-label',`${source}, volume ${st.preMuted?'mudo':Math.round(st.volume*10)+' de 10'}, ${st.preMono?'mono':'estéreo'}`);
         }
         function customPreampMarkup(type){
+            if(type==='preClassic')return classicPreampMarkup();
             if(type==='preGlass')return glassPreampMarkup();
             if(type==='prePrecision')return precisionPreampMarkup();
             const config=CUSTOM_PREAMPS[type];
@@ -5826,7 +5833,7 @@ const Hardware = (() => {
             const matrix=[];
             dev.integratedFilters.forEach(({volume},input)=>{
                 volume.disconnect(dev.powerNodes[input]);
-                [0,1].forEach(output=>{const gain=ctx.createGain();volume.connect(gain);gain.connect(dev.powerNodes[output]);matrix.push({gain,input,output});});
+                [0,1].forEach(output=>{const gain=ctx.createGain();volume.connect(gain);gain.connect(dev.powerNodes[output]);matrix.push({gain,input,output});(dev.modelAudioNodes||=[]).push(gain);});
             });
             let subLevel,subFilter;
             if(config.sub){
@@ -5839,7 +5846,7 @@ const Hardware = (() => {
             const baseApply=dev.applyIntegrated;
             dev.applyIntegrated=()=>{
                 baseApply();const st=dev.state,t=ctx.currentTime;
-                matrix.forEach(({gain,input,output})=>gain.gain.setTargetAtTime((st.preMono ? .5 : input===output ? 1 : 0)*(st.preInvert?-1:1)*(dev.type==='prePrecision'?10**((st.precisionGain||0)/20):1),t,.02));
+                matrix.forEach(({gain,input,output})=>gain.gain.setTargetAtTime((dev.preMatrixCoefficient?dev.preMatrixCoefficient(input,output):(st.preMono ? .5 : input===output ? 1 : 0))*(st.preInvert?-1:1)*(dev.type==='prePrecision'?10**((st.precisionGain||0)/20):1),t,.02));
                 subLevel?.gain.setTargetAtTime(st.subLevel,t,.02);subFilter?.frequency.setTargetAtTime(st.subFrequency,t,.03);
                 const rotor=dev.el.querySelector('[data-pre-rotary]');rotor.style.setProperty('--integrated-angle',(-120+st.integratedSource*80)+'deg');rotor.setAttribute('aria-valuenow',st.integratedSource);rotor.setAttribute('aria-valuetext',controlAmpSources(dev.type)[st.integratedSource]);
                 dev.el.querySelector('.pre-source-text').textContent=controlAmpSources(dev.type)[st.integratedSource].toUpperCase();
@@ -5855,6 +5862,7 @@ const Hardware = (() => {
             dev.applyIntegrated();
         }
         function customPreampInspectorHtml(dev){
+            if(dev.type==='preClassic')return classicPreampInspector(dev);
             if(dev.type==='preGlass')return glassPreampInspector(dev);
             if(dev.type==='prePrecision')return `<div class="precision-inspector-options">${[['preMuted','Silenciar'],['preMono','Mono'],['preInvert','Inverter polaridade']].map(([key,name])=>`<button class="tt-insp-btn" data-pre-inspector-toggle="${key}" aria-pressed="${!!dev.state[key]}">${name}</button>`).join('')}<label class="flex flex-col gap-2 text-sm text-gray-300"><span>Ganho de saída <output data-precision-gain-value>${dev.state.precisionGain?'+':''}${dev.state.precisionGain} dB</output></span><input class="gain-spark-slider" data-precision-inspector-gain data-gain-steps="3" type="range" min="0" max="12" step="6" value="${dev.state.precisionGain}" aria-label="Ganho de saída" aria-valuetext="${dev.state.precisionGain?'+':''}${dev.state.precisionGain} dB"></label><p>O modulômetro acompanha as saídas L/R reais em dBFS. A agulha preta representa L e a vermelha representa R; o ganho selecionado atua antes das saídas.</p></div>`;
             const config=CUSTOM_PREAMPS[dev.type];
@@ -5862,6 +5870,7 @@ const Hardware = (() => {
         }
         function bindCustomPreampInspector(dev){
             if(!CUSTOM_PREAMPS[dev.type])return;
+            if(dev.type==='preClassic')bindClassicPreampInspector(dev);
             inspectorContent.querySelectorAll('[data-glass-inspector-toggle]').forEach(button=>button.addEventListener('click',()=>dev.el.querySelector(`[data-glass-toggle="${button.dataset.glassInspectorToggle}"]`).click()));
             inspectorContent.querySelector('[data-precision-inspector-gain]')?.addEventListener('input',event=>{dev.state.precisionGain=Number(event.target.value);dev.applyIntegrated();inspectorContent.querySelector('[data-precision-gain-value]').textContent=(dev.state.precisionGain?'+':'')+dev.state.precisionGain+' dB';scheduleProjectSave();});
             inspectorContent.querySelectorAll('[data-pre-inspector-toggle]').forEach(button=>button.addEventListener('click',()=>dev.el.querySelector(`[data-pre-toggle="${button.dataset.preInspectorToggle}"]`).click()));
@@ -5983,6 +5992,73 @@ const Hardware = (() => {
             el.style.top=Math.max(0,Math.min(wallPlacementBottom()-el.offsetHeight,snapCoordinate(localY)))+'px';
             const dev={id,type,el,nodes:{},state:{},powered:true};
             appStateStore.actions.registerDevice(dev);bindDeviceEvents(dev);selectDevice(id);updateCables();scheduleProjectSave();
+        }
+        const CLASSIC_PREAMP_DEFAULTS={classicMode:2,classicBassL:0,classicBassR:0,classicTrebleL:0,classicTrebleR:0,classicMonitor:false,classicLowCut:false,classicHighCut:false};
+        const CLASSIC_PREAMP_MODES=['Canal esquerdo','Mono','Estéreo','Canais invertidos','Canal direito'];
+        const CLASSIC_PREAMP_SWITCHES=[['classicMonitor','Monitor de fita'],['classicLowCut','Filtro de graves'],['classicHighCut','Filtro de agudos']];
+        function classicPreampMarkup(){
+            const dial=(key,label,legend,kind='classic')=>`<label class="classic-dial classic-dial-${key}"><span class="classic-dial-scale" aria-hidden="true">${legend}</span><button type="button" ${kind==='source'?'data-pre-rotary':kind==='integrated'?`data-integrated-knob="${key}"`:`data-classic-knob="${key}"`} role="slider" aria-label="${label}" title="${label}"></button><span class="classic-dial-label">${label}</span></label>`;
+            const lever=(key,label,legend)=>`<label class="classic-lever classic-lever-${key}"><span>${label}</span><small>${legend}</small><button type="button" ${key==='direct'?'data-integrated-direct':`data-classic-toggle="${key}"`} data-button-model="chromeLever" aria-label="${label}" title="${label}" aria-pressed="false"></button></label>`;
+            return `<div class="device-header"><span>Pré · Console de Madeira</span></div><section class="classic-preamp-case"><div class="classic-preamp-panel">
+                <i class="classic-screw screw-tl" aria-hidden="true"></i><i class="classic-screw screw-tr" aria-hidden="true"></i><i class="classic-screw screw-bl" aria-hidden="true"></i><i class="classic-screw screw-br" aria-hidden="true"></i>
+                <div class="classic-preamp-heading">Stereo <span>control console</span><i class="device-led" aria-hidden="true"></i></div>
+                ${dial('source','Fonte','AUX · TUNER · TAPE · PHONO','source')}${dial('volume','Volume','0 · · · · 10','integrated')}
+                ${dial('classicMode','Modo de canais','L · MONO · STEREO · REV · R')}${dial('balance','Balanço L/R','L · · 0 · · R','integrated')}
+                <span class="classic-tone-caption classic-treble-caption">TREBLE</span><span class="classic-tone-caption classic-bass-caption">BASS</span>
+                ${dial('classicTrebleL','Agudos L','− · 0 · +')}${dial('classicTrebleR','Agudos R','− · 0 · +')}${dial('classicBassL','Graves L','− · 0 · +')}${dial('classicBassR','Graves R','− · 0 · +')}
+                <div class="classic-switches">${lever('classicMonitor','Monitor de fita','SOURCE / TAPE')}${lever('direct','Bypass de tonalidade','TONE / BYPASS')}${lever('classicLowCut','Filtro de graves','FLAT / 35 Hz')}${lever('classicHighCut','Filtro de agudos','FLAT / 7 kHz')}</div>
+                <label class="classic-power"><span>POWER</span><small>OFF / ON</small><div data-power-slot><button type="button" class="power-btn" title="Ligar ou desligar"></button></div></label>
+                <div hidden><span class="pre-source-text"></span><span class="pre-volume-text"></span><span class="pre-status-text"></span>${controlAmpSources('preClassic').map((label,i)=>`<button type="button" data-integrated-source="${i}">${label}</button>`).join('')}<button data-pre-toggle="preMuted"></button><button data-pre-toggle="preInvert"></button></div>
+            </div><div class="integrated-connections classic-preamp-connections">${['AUX','TUNER','TAPE','PHONO','PRE OUT'].map((label,i)=>`<div><small>${label}</small>${hardwarePair(i===4?'out':'in',i===4?'pre':i===3?'phono':'line'+i,i===3?'phono':'line')}</div>`).join('')}</div></section>`;
+        }
+        function configureClassicPreamp(dev){
+            const ctx=appState.audio.context,filters=[];Object.assign(dev.state,CLASSIC_PREAMP_DEFAULTS);
+            // This hook uses the existing preamp matrix, including mute/polarity/output power gates.
+            dev.preMatrixCoefficient=(input,output)=>{
+                const mode=dev.state.classicMode;
+                const route=mode===0?(input===0?1:0):mode===1?.5:mode===3?(input!==output?1:0):mode===4?(input===1?1:0):input===output?1:0;
+                const balance=dev.state.balance;return route*(output===0?1-Math.max(0,balance):1+Math.min(0,balance));
+            };
+            dev.integratedFilters.forEach(({treble,volume})=>{
+                const highpass=ctx.createBiquadFilter(),lowpass=ctx.createBiquadFilter();highpass.type='highpass';lowpass.type='lowpass';highpass.Q.value=lowpass.Q.value=Math.SQRT1_2;
+                treble.disconnect(volume);treble.connect(highpass);highpass.connect(lowpass);lowpass.connect(volume);filters.push({highpass,lowpass});(dev.modelAudioNodes||=[]).push(highpass,lowpass);
+            });
+            dev.classicFilters=filters;
+            const apply=dev.applyIntegrated;
+            dev.applyIntegrated=()=>{
+                const st=dev.state,finite=(value,fallback=0)=>Number.isFinite(value)?value:fallback;
+                st.classicMode=Math.max(0,Math.min(4,Math.round(finite(st.classicMode,2))));
+                for(const key of ['classicBassL','classicBassR','classicTrebleL','classicTrebleR'])st[key]=Math.max(-10,Math.min(10,finite(st[key])));
+                CLASSIC_PREAMP_SWITCHES.forEach(([key])=>st[key]=!!st[key]);apply();
+                const t=ctx.currentTime;
+                if(st.classicMonitor)dev.integratedGates.forEach(({gate,index})=>gate.gain.setTargetAtTime(index===2?1:0,t,.02));
+                dev.integratedFilters.forEach(({bass,treble,volume,ch})=>{volume.gain.setTargetAtTime(st.preMuted?0:st.volume,t,.02);bass.gain.setTargetAtTime(st.direct?0:st['classicBass'+ch],t,.025);treble.gain.setTargetAtTime(st.direct?0:st['classicTreble'+ch],t,.025);});
+                filters.forEach(({highpass,lowpass})=>{highpass.frequency.setTargetAtTime(st.classicLowCut?35:.01,t,.03);lowpass.frequency.setTargetAtTime(st.classicHighCut?7000:ctx.sampleRate/2,t,.03);});
+                dev.el.querySelectorAll('[data-classic-knob]').forEach(knob=>{const key=knob.dataset.classicKnob,value=st[key],min=key==='classicMode'?0:-10,max=key==='classicMode'?4:10;knob.style.setProperty('--integrated-angle',(-120+(value-min)/(max-min)*240)+'deg');knob.setAttribute('aria-valuenow',value);knob.setAttribute('aria-valuetext',key==='classicMode'?CLASSIC_PREAMP_MODES[value]:integratedSettingText('bass',value));});
+                dev.el.querySelectorAll('[data-classic-toggle]').forEach(button=>button.setAttribute('aria-pressed',String(st[button.dataset.classicToggle])));
+                if(appState.interface.selectedDeviceId===dev.id)inspectorContent.querySelectorAll('[data-classic-setting]').forEach(input=>{
+                    const key=input.dataset.classicSetting;input.value=st[key];const output=input.parentElement.querySelector('output');if(output)output.textContent=integratedSettingText('bass',st[key]);
+                });
+            };
+            dev.setClassicPreamp=(key,value)=>{
+                if(!Object.hasOwn(CLASSIC_PREAMP_DEFAULTS,key))return;
+                dev.state[key]=value;dev.applyIntegrated();updateCableFlows();scheduleProjectSave();
+            };
+            dev.el.querySelectorAll('[data-classic-knob]').forEach(knob=>{const key=knob.dataset.classicKnob,mode=key==='classicMode';Hardware.bindKnob(knob,{get:()=>dev.state[key],set:value=>dev.setClassicPreamp(key,value),min:mode?0:-10,max:mode?4:10,step:mode?1:.5,format:value=>mode?CLASSIC_PREAMP_MODES[value]:integratedSettingText('bass',value)});});
+            dev.el.querySelectorAll('[data-classic-toggle]').forEach(button=>button.addEventListener('click',()=>{const key=button.dataset.classicToggle;dev.setClassicPreamp(key,!dev.state[key]);if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);}));
+            dev.applyIntegrated();
+        }
+        function classicPreampInspector(dev){
+            const st=dev.state;
+            return `<section class="classic-preamp-inspector"><label>Modo de canais<select data-classic-setting="classicMode">${CLASSIC_PREAMP_MODES.map((label,i)=>`<option value="${i}" ${st.classicMode===i?'selected':''}>${label}</option>`).join('')}</select></label>
+                ${['L','R'].map(ch=>`<fieldset><legend>${ch==='L'?'Canal esquerdo':'Canal direito'}</legend>${[['classicBass','Graves'],['classicTreble','Agudos']].map(([key,label])=>`<label>${label} <output>${integratedSettingText('bass',st[key+ch])}</output><input type="range" data-classic-setting="${key+ch}" min="-10" max="10" step=".5" value="${st[key+ch]}" aria-label="${label} ${ch}"></label>`).join('')}</fieldset>`).join('')}
+                ${CLASSIC_PREAMP_SWITCHES.map(([key,label])=>`<button type="button" class="tt-insp-btn" data-classic-inspector-toggle="${key}" aria-pressed="${st[key]}">${label}</button>`).join('')}
+                <p>O monitor de fita seleciona TAPE sem alterar a posição do seletor. Os filtros atuam abaixo de 35 Hz e acima de 7 kHz. O bypass preserva os filtros e ignora a tonalidade dos dois canais.</p>
+                ${[['preMuted','Mute'],['preInvert','Inverter polaridade']].map(([key,label])=>`<button type="button" class="tt-insp-btn" data-pre-inspector-toggle="${key}" aria-pressed="${st[key]}">${label}</button>`).join('')}</section>`;
+        }
+        function bindClassicPreampInspector(dev){
+            inspectorContent.querySelectorAll('[data-classic-setting]').forEach(input=>input.addEventListener('input',()=>{dev.setClassicPreamp(input.dataset.classicSetting,Number(input.value));const output=input.parentElement.querySelector('output');if(output)output.textContent=integratedSettingText('bass',Number(input.value));}));
+            inspectorContent.querySelectorAll('[data-classic-inspector-toggle]').forEach(button=>button.addEventListener('click',()=>dev.el.querySelector(`[data-classic-toggle="${button.dataset.classicInspectorToggle}"]`).click()));
         }
         function createDevice(type, x, y, requestedId=null) {
             if(type==='pendantLamp')return createPendantLamp(x,y,requestedId);
@@ -6170,7 +6246,7 @@ const Hardware = (() => {
             }
             if(type==='preamp'||CUSTOM_PREAMPS[type]){
                 const slot=el.querySelector('[data-power-slot]');slot.classList.add('preamp-output-power');
-                if(CUSTOM_PREAMPS[type]&&!['prePrecision','preGlass'].includes(type))el.querySelector('.integrated-connections').appendChild(slot);
+                if(CUSTOM_PREAMPS[type]&&!['prePrecision','preGlass','preClassic'].includes(type))el.querySelector('.integrated-connections').appendChild(slot);
             }
             if(['btReceiverA','btTransmitterPro'].includes(type)){
                 const ports=el.querySelector('.bt-ports');
@@ -6311,6 +6387,7 @@ const Hardware = (() => {
                 if(type==='integratedUtility')configureUtilityAmp(dev);
                 if(type==='prePrecision')configurePrecisionPreamp(dev);
                 if(type==='preGlass')configureGlassPreamp(dev);
+                if(type==='preClassic')configureClassicPreamp(dev);
             } else if (type === 'receiver') {
                 dev.nodes.inR = appState.audio.context.createGain();
                 dev.nodes.inL = appState.audio.context.createGain();
@@ -7880,6 +7957,7 @@ const Hardware = (() => {
             let message='Configurações padrão restauradas.';
             if(dev.type==='integratedUtility')Object.assign(dev.state,{utilityLoudness:false,utilityMono:false});
             if(dev.type==='prePrecision')dev.state.precisionGain=0;
+            if(dev.type==='preClassic')Object.assign(dev.state,CLASSIC_PREAMP_DEFAULTS);
             if(dev.type==='preGlass')Object.assign(dev.state,{glassLowCut:false,glassHighCut:false,glassLoudness:false});
             if(dev.type==='hpKubaDisco2'){dev.state.kubaWood='tauari';updateKubaAppearance(dev);}
             if(dev.syncRadio){dev.state.radioOn=false;dev.state.receiverInput='line1';dev.state.radioFrequency=88;dev.syncRadio();}

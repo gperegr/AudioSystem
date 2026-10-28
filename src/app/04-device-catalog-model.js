@@ -8,7 +8,7 @@
             receiver: 'Receiver Vintage',powerValve:'Potência · Valvulado',powerDual:'Potência · Duplo Canal',powerBias:'Potência · Visor Circular',
             integratedBlue:'Integrado · Visores Azuis',integratedMinimal:'Integrado · Minimalista',integratedSilver:'Integrado · Prateado',
             integratedUtility:'Integrado · Essencial',prePrecision:'Pré · Precisão',
-            preGlass:'Pré · Vidro Clássico',
+            preGlass:'Pré · Vidro Clássico',preClassic:'Pré · Console de Madeira',
             headphoneAmp: 'Amplificador de Fone Vintage', headphoneAmpModern: 'Amplificador de Fone Normal',
             headphoneAmp4: 'Amplificador de Fones 4 Canais',
             rcaSwitch: 'Seletor RCA Estéreo', rcaSwitchVintage: 'Seletor RCA Vintage',
@@ -42,7 +42,7 @@
         const DEVICE_FAMILIES = {
             streamIntegrated:'modern',
             integratedUtility:'vintage',prePrecision:'studio',
-            preGlass:'vintage',
+            preGlass:'vintage',preClassic:'vintage',
             turntableLinear:'vintage',
             hpMonitor:'modern',hpMax:'modern',
             signalGeneratorVintage:'vintage',benchMeterVintage:'vintage',benchMeter:'modern',

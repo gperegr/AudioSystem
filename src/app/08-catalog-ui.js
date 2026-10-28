@@ -24,6 +24,7 @@
                 drawing='<path d="M3 8h50v29H3zM3 24h50M7 15h35M8 21h26m-23-2h20m8-7v9m4-9v9M7 29h8m-8 4h8m6-4h2m4 0h2m6 0h12m-12 4h12"/>';
             } else if (TURNTABLE_TYPES.has(type)) {
                 drawing = '<rect x="5" y="6" width="46" height="33" rx="3"/><circle cx="23" cy="22" r="12"/><circle cx="23" cy="22" r="3"/><path d="M43 12v13l-6 5M11 35h7"/>';
+            } else if(type==='preClassic'){drawing='<rect x="3" y="8" width="50" height="30" rx="1"/><path d="M6 10h44v26H6z"/>'+[13,24,38,46].flatMap(x=>[17,28].map(y=>`<circle cx="${x}" cy="${y}" r="3"/>`)).join('')+'<path d="M29 24v7m4-7v7"/>';
             } else if(type==='preGlass'){drawing=rack+'<path d="M8 13v18m40-18v18M11 28h34"/><circle cx="16" cy="20" r="4"/><circle cx="28" cy="20" r="2"/><circle cx="40" cy="20" r="4"/><path d="M16 30v3m6-3v3m6-3v3m6-3v3m6-3v3"/>';
             } else if(type==='prePrecision'){drawing=rack+'<rect x="9" y="15" width="15" height="13" rx="2"/><path d="m16 25-4-6m5 6 4-7M29 17v9m4-7v7"/><circle cx="42" cy="22" r="6"/><path d="m42 22 3-3"/>';
             } else if(type==='integratedUtility'){drawing=rack+'<circle cx="16" cy="23" r="3"/><circle cx="25" cy="23" r="3"/><circle cx="44" cy="23" r="6"/><path d="M31 17h3m-3 4h3m-3 4h3M10 31h36"/>';

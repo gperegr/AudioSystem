@@ -9,7 +9,7 @@ const root = path.resolve(__dirname, '..');
 
 test('browser entry point is generated from the ordered application source sections', () => {
     const generated = buildOutput();
-    assert.equal(sections.length, 22);
+    assert.equal(sections.length, 23);
     assert.equal(fs.readFileSync(path.join(root, 'script.js'), 'utf8'), generated);
     assert.doesNotThrow(() => checkOutput(generated));
     assert.doesNotThrow(() => new vm.Script(generated, {filename:'script.js'}));

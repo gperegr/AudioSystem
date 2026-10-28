@@ -58,6 +58,7 @@ const Hardware = (() => {
     // Equipment proportions, in canvas pixels. More specific selectors come last.
     // Change a size here without changing the component model or its behavior.
     const controlSizes = {
+        preClassic:{'[data-pre-rotary],[data-integrated-knob], [data-classic-knob]':{width:49,height:49},'.power-btn':{width:18,height:26},'[data-classic-toggle],[data-integrated-direct]':{width:25,height:36}},
         preGlass:{'.power-btn':{width:18,height:27},'[data-pre-toggle],[data-glass-toggle],[data-integrated-direct]':{width:18,height:27},'[data-pre-rotary]':{width:58,height:58},'[data-integrated-knob="volume"]':{width:64,height:64},'[data-integrated-knob="bass"],[data-integrated-knob="treble"],[data-integrated-knob="balance"]':{width:40,height:40}},
         streamIntegrated:{'.power-btn':{width:14,height:20},'[data-stream-action]':{width:24,height:24},'[data-stream-input]':{width:131,height:74},'[data-stream-cover]':{width:73,height:73}},
         integratedUtility:{'.power-btn':{width:18,height:27},'[data-integrated-source]':{width:28,height:17},'[data-utility-toggle],.integrated-direct':{width:33,height:17},'[data-integrated-knob="volume"]':{width:61,height:61}},
@@ -520,6 +521,7 @@ const Hardware = (() => {
     }
     function knobModel(dev,el){
         if(el.dataset.interfaceKnob)return el.dataset.interfaceKnob;
+        if(dev.type==='preClassic')return 'machined';
         if(dev.type==='preGlass')return 'silverFluted';
         if(dev.type==='integratedUtility')return 'plainPlastic';
         const vintage=dev.el.classList.contains('device-family-vintage');
@@ -630,6 +632,7 @@ const Hardware = (() => {
         if(el.dataset.buttonModel&&Object.hasOwn(buttons,el.dataset.buttonModel))return el.dataset.buttonModel;
         if(['btReceiverA','btTransmitterPro'].includes(dev.type))return 'illuminatedBar';
         if(el.classList.contains('power-btn')){
+            if(dev.type==='preClassic')return 'powerSmall';
             if(dev.type==='headphoneAmpModern')return 'powerHorizontal';
             if(['preControl','turntableVintage'].includes(dev.type))return 'slidePower';
             if(RADIO_RECEIVERS.has(dev.type))return 'powerLarge';
@@ -766,7 +769,7 @@ const Hardware = (() => {
             for(const key of ['height','min-height','max-height'])el.style.setProperty(key,sizes.heights.high+'px','important');
             return;
         }
-        if(['prePrecision','preGlass'].includes(type))return;
+        if(['prePrecision','preGlass','preClassic'].includes(type))return;
         if(type==='hardwareDemo'||FURNITURE_TYPES[type]||isListeningDevice({type})||(SOURCE_TYPES.has(type)&&!SIGNAL_GENERATOR_TYPES.has(type)&&!['btReceiverA','cdPlayer','streamer',...CAPTURE_INTERFACE_TYPES].includes(type)))return;
         const compact=!!INTERFACE_DEVICES[type]||['headphoneAmp','headphoneAmpModern','btTransmitterPro','btReceiverA',...CAPTURE_INTERFACE_TYPES].includes(type)&&type!=='audioInterface4';
         const height=type==='powerValve'?'high':type==='audioInterface4'||INTEGRATED_AMPS[type]||CUSTOM_PREAMPS[type]||CUSTOM_POWER_AMPS[type]||RADIO_RECEIVERS.has(type)||MIXER_TYPES.has(type)||EQ_TYPES.has(type)||BENCH_METER_TYPES.has(type)||SIGNAL_GENERATOR_TYPES.has(type)?'medium':'low';

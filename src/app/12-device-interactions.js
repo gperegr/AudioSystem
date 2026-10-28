@@ -1137,6 +1137,7 @@
             let message='Configurações padrão restauradas.';
             if(dev.type==='integratedUtility')Object.assign(dev.state,{utilityLoudness:false,utilityMono:false});
             if(dev.type==='prePrecision')dev.state.precisionGain=0;
+            if(dev.type==='preClassic')Object.assign(dev.state,CLASSIC_PREAMP_DEFAULTS);
             if(dev.type==='preGlass')Object.assign(dev.state,{glassLowCut:false,glassHighCut:false,glassLoudness:false});
             if(dev.type==='hpKubaDisco2'){dev.state.kubaWood='tauari';updateKubaAppearance(dev);}
             if(dev.syncRadio){dev.state.radioOn=false;dev.state.receiverInput='line1';dev.state.radioFrequency=88;dev.syncRadio();}

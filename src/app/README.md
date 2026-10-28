@@ -19,3 +19,5 @@ node tools/build-script.cjs --check
 ```
 
 Keep the order in `tools/build-script.cjs` unchanged unless the shared-scope dependencies have been reviewed. The sections are not loaded independently; the generated output deliberately remains one classic script so existing references, event callbacks, and hoisted declarations continue to work as before.
+
+`10-classic-preamp.js` contains the frontal wood-console preamp presentation and per-channel tone/channel-mode controls. It reuses the integrated preamp graph, hardware bindings, output circuits and project storage.

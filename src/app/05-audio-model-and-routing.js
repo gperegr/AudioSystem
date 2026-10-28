@@ -152,6 +152,7 @@
             integratedSilver:{watts:90,tone:true,meters:true,finish:'silver',description:'Integrado prateado com laterais em madeira, medidores âmbar e controles de tonalidade e balanço. Três entradas de linha, phono, saídas para caixas e fones. '}
         };
         const CUSTOM_PREAMPS={
+            preClassic:{finish:'classic',tone:true,balance:true,phono:true,phones:false,sub:false,sources:['Auxiliar','Sintonizador','Tape','Phono'],description:'Pré em madeira com painel metálico, tonalidade independente L/R, modos de canais, monitor de fita e filtros de graves e agudos.'},
             preGlass:{finish:'glass',tone:true,balance:true,phono:true,phones:false,sub:false,sources:['Auxiliar','Sintonizador','Tape','Phono'],description:'Pré de vidro preto com laterais de alumínio, knobs prateados e alavancas metálicas. Três entradas de linha, phono, tonalidade, filtros de graves/agudos, loudness, mono, mute e inversão de polaridade.'},
             prePrecision:{finish:'precision',tone:false,balance:true,phono:false,phones:false,sub:false,description:'Pré compacto de alumínio escovado com modulômetro estéreo, seleção rotativa de quatro entradas, ganho 0/6/12 dB, mute, mono e inversão de polaridade.'},
             preReference:{finish:'reference',tone:false,balance:true,phono:false,phones:false,sub:false,description:'Pré de linha com frente prateada, alças e visor verde. Quatro entradas LINE, saída RCA estéreo, volume, balanço, mute, mono e inversão de polaridade. '},
@@ -168,6 +169,7 @@
         const DEFAULT_POWER_GAIN=.5;
         // Individual simulation voicings.
         const AMPLIFICATION_VOICINGS={
+            preClassic:{bass:.3,treble:-.4,drive:.4,asymmetry:.035},
             preGlass:{bass:.2,treble:-.35,drive:.38,asymmetry:.035},
             integratedUtility:{bass:.15,treble:-.2,drive:.2,asymmetry:0},
             prePrecision:{bass:0,treble:0,drive:.06,asymmetry:0},

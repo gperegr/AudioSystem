@@ -1,0 +1,35 @@
+/* Straight-on walnut surround and champagne aluminium; shared hardware controls. */
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-preClassic{
+    width:760px!important;min-width:760px!important;max-width:760px!important;height:286px!important;min-height:286px!important;max-height:286px!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;
+}
+.classic-preamp-case{position:relative;width:100%;height:100%;box-sizing:border-box;border:1px solid #563b22;border-radius:3px;background:repeating-linear-gradient(0deg,transparent 0 3px,#3c23151a 4px,transparent 5px 10px),repeating-linear-gradient(178deg,transparent 0 19px,#d4a46a1f 20px,#4d2d121c 21px,transparent 25px 32px),linear-gradient(90deg,#77502e,#a47448 12%,#835535 38%,#ad7b4d 74%,#714827);box-shadow:inset 0 2px #d2ac7b9c,inset 2px 0 #a7815266,inset -2px -3px #3c291e99,0 3px 4px #0005;}
+.classic-preamp-case::before,.classic-preamp-case::after{content:'';position:absolute;top:3px;bottom:3px;width:15px;pointer-events:none;background:repeating-linear-gradient(89deg,transparent 0 2px,#31201526 3px,transparent 4px 7px);border:1px solid #67452988;}
+.classic-preamp-case::before{left:2px;border-right-color:#d5a46a55;}.classic-preamp-case::after{right:2px;border-left-color:#d5a46a55;}
+.classic-preamp-panel{position:absolute;inset:13px 20px 59px;box-sizing:border-box;border:1px solid #857d67;border-radius:1px;color:#35382f;background:var(--material-brushed-steel),linear-gradient(102deg,#c8c5af,#e4dfc8 27%,#cbc8b2 62%,#e5dfc7 85%,#b9b7a3);box-shadow:inset 0 1px #fff8,inset 1px 0 #fffa,0 1px 4px #211c1499;}
+.classic-preamp-heading{position:absolute;top:12px;left:265px;width:200px;text-align:center;font:italic 20px Georgia,serif;letter-spacing:.01em;color:#373b32;}
+.classic-preamp-heading>span{font:600 8px Georgia,serif;letter-spacing:.11em;}.classic-preamp-heading .device-led{display:block;margin:8px auto 0;}
+.classic-screw{position:absolute;width:6px;height:6px;border:1px solid #575c52;border-radius:50%;background:linear-gradient(130deg,#e6e5d7,#686e62 60%,#bac1b0);box-shadow:inset 0 1px #f5f5dc,0 1px 1px #0005;}
+.classic-screw::after{content:'';position:absolute;left:1px;right:1px;top:2px;height:1px;background:#252b21;transform:rotate(-25deg);}
+.screw-tl{top:6px;left:6px;}.screw-tr{top:6px;right:6px;}.screw-bl{bottom:6px;left:6px;}.screw-br{bottom:6px;right:6px;}
+.classic-dial{position:absolute;display:flex;flex-direction:column;align-items:center;gap:7px;width:84px;box-sizing:border-box;color:#383d32;}
+.classic-dial-scale{position:absolute;bottom:calc(100% + 6px);width:126px;text-align:center;white-space:nowrap;font:500 5.8px/1 Arial,sans-serif;letter-spacing:.04em;}
+.classic-dial-label{font:600 7px/1 Georgia,serif;letter-spacing:.04em;white-space:nowrap;}
+.classic-dial-source{left:27px;top:48px;}.classic-dial-volume{left:139px;top:48px;}
+.classic-dial-classicMode{left:27px;top:139px;}.classic-dial-balance{left:139px;top:139px;}
+.classic-dial-classicTrebleL{left:492px;top:48px;}.classic-dial-classicTrebleR{left:594px;top:48px;}
+.classic-dial-classicBassL{left:492px;top:139px;}.classic-dial-classicBassR{left:594px;top:139px;}
+.classic-tone-caption{position:absolute;left:541px;width:96px;text-align:center;font:600 7px Georgia,serif;letter-spacing:.12em;}
+.classic-treble-caption{top:18px;}.classic-bass-caption{top:112px;}
+.classic-switches{position:absolute;left:250px;top:111px;display:flex;gap:4px;}
+.classic-lever{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;width:54px;height:82px;gap:5px;color:#30382e;}
+.classic-lever>span{position:absolute;top:0;left:-1px;right:-1px;height:17px;font:600 5.6px/1.3 Arial,sans-serif;text-align:center;}
+.classic-lever>small{position:absolute;top:23px;left:0;right:0;font:500 4.6px/1 Arial,sans-serif;text-align:center;}
+.classic-lever .hw-chrome-lever{margin-bottom:5px;}
+.classic-lever .hw-chrome-lever::before{content:'';position:absolute;width:5px;height:40px;left:10px;bottom:7px;border:1px solid #818675;border-radius:5px;background:linear-gradient(90deg,#30362d,#0e160e,#777c68);box-shadow:1px 0 #f3efd5;}
+.classic-lever .hw-chrome-collar{top:16px;width:14px;height:9px;}
+.classic-lever .hw-chrome-stem{width:12px;height:21px;left:-1px;top:-3px;border-color:#1e2922;border-radius:2px;background:linear-gradient(90deg,#101c18,#4f5b4f 35%,#29362e 65%,#101b15);box-shadow:2px 2px 2px #0006;}
+.classic-lever .hw-chrome-stem b{width:13px;height:6px;left:-1px;top:-2px;border-color:#26342b;border-radius:2px;background:linear-gradient(#607063,#17241b 65%);}
+.classic-power{position:absolute;right:8px;top:96px;width:34px;display:flex;align-items:center;flex-direction:column;gap:4px;color:#323b2f;font:600 5.5px Arial,sans-serif;}.classic-power small{font-size:4.8px;}.classic-power .preamp-output-power{position:static!important;margin:0!important;}
+.classic-preamp-case .classic-preamp-connections{position:absolute;left:20px;right:20px;bottom:12px;height:43px!important;box-sizing:border-box;display:flex;align-items:center;justify-content:space-around;gap:0;margin:0!important;padding:3px 12px!important;border:1px solid #86816c!important;border-radius:1px;background:var(--material-brushed-steel),linear-gradient(#b9b8a2,#d0cbb4)!important;box-shadow:inset 0 1px #eeebce77;}
+.classic-preamp-connections>div{display:flex;align-items:center;gap:10px;}.classic-preamp-connections small{font:600 6px Arial,sans-serif;letter-spacing:.07em;color:#343d31;}.classic-preamp-connections .integrated-port-pair{gap:10px;}.classic-preamp-connections .port{margin:0;}
+.classic-preamp-inspector{display:flex;flex-direction:column;gap:14px;}.classic-preamp-inspector label{display:block;font-size:13px;color:#c7d3dc;}.classic-preamp-inspector fieldset{border:1px solid #455564;border-radius:6px;padding:12px;display:grid;gap:14px;}.classic-preamp-inspector legend{padding:0 4px;font-size:13px;}.classic-preamp-inspector input,.classic-preamp-inspector select{width:100%;margin-top:8px;}.classic-preamp-inspector output{float:right;color:#a8c6d8;}.classic-preamp-inspector p{font-size:12px;color:#a9bac7;line-height:1.5;}
