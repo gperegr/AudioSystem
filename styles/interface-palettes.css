@@ -154,3 +154,4 @@
 #inspector-content button:not(.signal-history-name):is(.is-on,.active,[aria-pressed="true"],[aria-selected="true"],[data-active="true"]){background:var(--ui-active)!important;color:var(--ui-text)!important;}
 #inspector-content button:not(.signal-history-name):not(:is(.is-on,.active,[aria-pressed="true"],[aria-selected="true"],[data-active="true"])){background:var(--ui-control)!important;}
 #inspector-content button:not(.signal-history-name):focus-visible{outline:2px solid var(--ui-accent)!important;}
+#inspector-content button:is(.is-on,.active,[aria-pressed="true"],[aria-selected="true"],[data-active="true"]){border:0!important;outline:0!important;box-shadow:none!important;}
