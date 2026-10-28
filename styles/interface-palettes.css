@@ -178,3 +178,13 @@
 #inspector-content .electrical-status-badge,
 #inspector-content .electrical-current{border:0!important;}
 #inspector-content .signal-badge i{box-shadow:none!important;}
+
+/* Normalize remaining utility-colored values and native sliders to the active UI palette. */
+#inspector-content :is(.text-blue-300,.text-blue-400,.text-sky-300,.text-sky-400),
+#inspector-content output{color:var(--ui-accent)!important;}
+#inspector-content [data-receiver-inspector-input][aria-pressed="true"]{background:var(--ui-active)!important;color:var(--ui-text)!important;}
+#inspector-content input[type="range"]:not(.gain-spark-slider):not(.eq-slider):not(.hw-slider){accent-color:var(--ui-accent);}
+#inspector-content input[type="range"]:not(.gain-spark-slider):not(.eq-slider):not(.hw-slider)::-webkit-slider-runnable-track{background:var(--ui-border)!important;}
+#inspector-content input[type="range"]:not(.gain-spark-slider):not(.eq-slider):not(.hw-slider)::-webkit-slider-thumb{background:var(--ui-accent)!important;}
+#inspector-content input[type="range"]:not(.gain-spark-slider):not(.eq-slider):not(.hw-slider)::-moz-range-track{background:var(--ui-border)!important;}
+#inspector-content input[type="range"]:not(.gain-spark-slider):not(.eq-slider):not(.hw-slider)::-moz-range-thumb{background:var(--ui-accent)!important;}
