@@ -8343,12 +8343,21 @@ const Hardware = (() => {
             inspectorPositionFrame=0;
             if(!inspectorAnchorDevice?.isConnected||inspectorWindow.dataset.floating!=='true')return;
             const anchor=inspectorAnchorDevice.getBoundingClientRect(),gap=16,margin=12;
-            // offsetHeight is independent of the elastic scale animation; using
-            // getBoundingClientRect().height here made the window drift as it inflated.
-            const width=Math.min(380,innerWidth-margin*2),height=Math.min(inspectorWindow.offsetHeight,innerHeight-margin*2);
-            const rightSpace=innerWidth-anchor.right,leftSpace=anchor.left;
-            const left=rightSpace>=width+gap?anchor.right+gap:leftSpace>=width+gap?anchor.left-width-gap:Math.max(margin,Math.min(innerWidth-width-margin,anchor.left+(anchor.width-width)/2));
-            const top=Math.max(margin,Math.min(innerHeight-height-margin,anchor.top+(anchor.height-height)/2));
+            const area=canvas.getBoundingClientRect(),catalog=equipmentCatalog.getBoundingClientRect();
+            const toolbar=document.getElementById('app-topbar').getBoundingClientRect();
+            const minLeft=Math.max(0,area.left,catalog.right)+margin;
+            const minTop=Math.max(0,area.top,toolbar.bottom)+margin;
+            const maxRight=Math.min(innerWidth,area.right)-margin;
+            const maxBottom=Math.min(innerHeight,area.bottom)-margin;
+            const availableWidth=Math.max(0,maxRight-minLeft),availableHeight=Math.max(0,maxBottom-minTop);
+            inspectorWindow.style.setProperty('--inspector-available-width',`${availableWidth}px`);
+            inspectorWindow.style.setProperty('--inspector-available-height',`${availableHeight}px`);
+            // Layout dimensions stay stable during the opening scale animation.
+            const width=Math.min(380,availableWidth),height=Math.min(inspectorWindow.offsetHeight,availableHeight);
+            const rightSpace=maxRight-anchor.right,leftSpace=anchor.left-minLeft;
+            const preferredLeft=rightSpace>=width+gap?anchor.right+gap:leftSpace>=width+gap?anchor.left-width-gap:anchor.left+(anchor.width-width)/2;
+            const left=Math.max(minLeft,Math.min(maxRight-width,preferredLeft));
+            const top=Math.max(minTop,Math.min(maxBottom-height,anchor.top+(anchor.height-height)/2));
             inspectorWindow.style.left=`${Math.round(left)}px`;inspectorWindow.style.top=`${Math.round(top)}px`;
         }
         function scheduleInspectorPosition(){if(!inspectorPositionFrame)inspectorPositionFrame=requestAnimationFrame(positionInspectorWindow);}

@@ -78,11 +78,34 @@ const root=path.resolve(__dirname,'..');
         assert.equal(new Set(samples.map(s=>s.side)).size,13,'each palette has its own sidebar color');
         assert.equal(new Set(samples.map(s=>s.spectrum)).size,13,'spectrum inspector matches every palette');
         assert.equal(new Set(samples.map(s=>s.device)).size,1,'equipment artwork stays unchanged');
+        async function assertInspectorWithinCanvas(){
+            await page.waitForTimeout(650);
+            const bounds=await page.evaluate(()=>{
+                const rect=id=>{const r=document.getElementById(id).getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};};
+                return {panel:rect('inspector'),canvas:rect('canvas'),catalog:rect('equipment-catalog'),toolbar:rect('app-topbar')};
+            });
+            assert(bounds.panel.left>=Math.max(bounds.canvas.left,bounds.catalog.right)-1,JSON.stringify(bounds));
+            assert(bounds.panel.top>=Math.max(bounds.canvas.top,bounds.toolbar.bottom)-1,JSON.stringify(bounds));
+            assert(bounds.panel.right<=bounds.canvas.right+1,JSON.stringify(bounds));
+            assert(bounds.panel.bottom<=bounds.canvas.bottom+1,JSON.stringify(bounds));
+        }
+        const savedSpeakerStyle=await page.$eval('#palette-speaker',el=>el.style.cssText);
+        for(const width of [1600,800]){
+            await page.setViewportSize({width,height:500});
+            for(const offset of [-2000,10000]){
+                await page.$eval('#palette-speaker',(el,offset)=>{el.style.left=offset+'px';el.style.top=offset+'px';},offset);
+                await page.evaluate(()=>__signal.selectDevice('palette-speaker'));
+                await page.mouse.move(width-20,400);
+                await assertInspectorWithinCanvas();
+            }
+        }
+        await page.$eval('#palette-speaker',(el,style)=>el.style.cssText=style,savedSpeakerStyle);
+        await page.setViewportSize({width:1600,height:1100});
         await page.evaluate(()=>{__signal.setCanvasTheme('light');__signal.selectDevice('palette-speaker');});
         await page.waitForTimeout(300);await page.screenshot({path:'/tmp/interface-light.png'});
         await page.evaluate(()=>{__signal.setCanvasTheme('scene');__signal.setCanvasBackdrop('listeningIllustrated');__signal.setCanvasTime('dusk');});
         await page.waitForTimeout(300);await page.screenshot({path:'/tmp/interface-scene.png'});
-        await page.setViewportSize({width:390,height:844});await page.locator('[data-mobile-panel=properties]').click();await page.screenshot({path:'/tmp/interface-mobile.png'});
+        await page.setViewportSize({width:390,height:844});await page.locator('[data-mobile-panel=properties]').click();await assertInspectorWithinCanvas();await page.screenshot({path:'/tmp/interface-mobile.png'});
         await page.evaluate(()=>{__signal.deleteDevice(__signal.appState.project.devices['palette-meter'],false);__signal.deleteDevice(__signal.appState.project.devices['palette-speaker'],false);});
         assert.deepEqual(errors,[]);console.log('Interface palettes: 13 combinations, contrast, equipment artwork and mobile layout passed.');
     }finally{await browser.close();}

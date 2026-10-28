@@ -60,3 +60,5 @@ Inclua estados normal, hover, foco visível, selecionado, desabilitado e erro qu
 ## Catálogo permanente
 
 O catálogo à esquerda permanece visível, sem seta, alfinete, recolhimento automático ou preferência de fixação. O canvas reserva a largura do catálogo; em telas de até 700 px, o catálogo usa 136 px e uma coluna de equipamentos. A busca, os favoritos e o descarte por arraste continuam disponíveis.
+
+Os painéis flutuantes de propriedades ficam dentro dos limites do canvas, abaixo da barra superior e à direita do catálogo. Quando falta espaço, reduzem largura e altura com rolagem interna.

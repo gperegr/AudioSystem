@@ -1664,10 +1664,10 @@
         #inspector-empty {flex:1;min-height:100px;height:auto;overflow-y:auto;}
         #inspector-content {flex:1;min-height:0;overflow-y:auto;}
         /* Selected equipment parameters float beside the canvas device on desktop. */
-        #inspector[data-floating="true"]{position:fixed!important;z-index:95!important;left:12px;top:72px;width:min(380px,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;height:auto!important;max-height:min(78vh,900px)!important;min-height:0!important;display:flex!important;flex-direction:column;border:1px solid var(--ui-border);border-radius:14px;box-shadow:0 24px 64px 8px var(--ui-shadow),0 8px 24px 2px var(--ui-shadow),0 2px 8px var(--ui-shadow);transform:none!important;visibility:visible!important;overflow:hidden!important;transition:left .12s ease-out,top .12s ease-out,background-color .25s,border-color .25s,box-shadow .25s;}
+        #inspector[data-floating="true"]{position:fixed!important;z-index:95!important;left:12px;top:72px;width:min(380px,calc(100vw - 24px))!important;max-width:calc(100vw - 24px)!important;height:auto!important;max-height:min(78vh,900px,var(--inspector-available-height,100vh))!important;min-height:0!important;display:flex!important;flex-direction:column;border:1px solid var(--ui-border);border-radius:14px;box-shadow:0 24px 64px 8px var(--ui-shadow),0 8px 24px 2px var(--ui-shadow),0 2px 8px var(--ui-shadow);transform:none!important;visibility:visible!important;overflow:hidden!important;transition:left .12s ease-out,top .12s ease-out,background-color .25s,border-color .25s,box-shadow .25s;}
         #inspector[data-floating="true"]>.inspector-panel-header{position:sticky;top:0;z-index:5;flex:none;min-height:48px;padding:8px 12px;backdrop-filter:blur(12px);}
         #inspector[data-floating="true"] #inspector-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-        #inspector[data-floating="true"] #inspector-content{width:100%;height:auto;min-height:0;max-height:calc(min(78vh,900px) - 48px);flex:0 1 auto;overflow:auto;overscroll-behavior:contain;padding:14px!important;gap:14px!important;}
+        #inspector[data-floating="true"] #inspector-content{width:100%;height:auto;min-height:0;max-height:calc(min(78vh,900px,var(--inspector-available-height,100vh)) - 48px);flex:0 1 auto;overflow:auto;overscroll-behavior:contain;padding:14px!important;gap:14px!important;}
         #inspector[data-floating="true"] .inspector-window-close{display:grid;place-items:center;flex:none;width:34px;height:34px;min-height:34px!important;padding:0;border-radius:9px;font-size:0;}
         #inspector[data-floating="true"] .inspector-window-close svg{display:none;}
         #inspector[data-floating="true"] .inspector-window-close::before{content:'×';font:400 25px/1 var(--font-ui,"Inter",sans-serif);}
@@ -4740,7 +4740,7 @@ body.tutorial-open .app-settings-content {max-height:calc(100dvh - 90px - var(--
 #audio-world .catalog-placement-preview::after{content:attr(data-preview-label);position:absolute;left:50%;top:0;transform:translate(-50%,-115%);padding:5px 9px;white-space:nowrap;border-radius:4px;background:#193b31;color:#e5fff1;font:600 12px/1.3 sans-serif;z-index:1001}
 #audio-world .catalog-placement-preview.is-invalid::after{background:#6a242a;color:#fff1f1}
 /* Keep the contextual inspector independent from legacy collapsed-sidebar rules. */
-body.inspector-floating #inspector[data-floating="true"]{width:min(380px,calc(100vw - 24px))!important;min-width:0!important;flex:none!important;margin:0!important;padding:0!important;pointer-events:auto!important;}
+body.inspector-floating #inspector[data-floating="true"]{width:min(380px,var(--inspector-available-width,calc(100vw - 24px)))!important;min-width:0!important;flex:none!important;margin:0!important;padding:0!important;pointer-events:auto!important;}
 body.inspector-floating #inspector[data-floating="true"]>.inspector-panel-header,
 body.inspector-floating #inspector[data-floating="true"]>#inspector-content:not(.hidden){display:flex!important;}
 body.inspector-floating #inspector[data-floating="true"]>#inspector-empty{display:none!important;}
@@ -4777,4 +4777,10 @@ body.inspector-floating #inspector-sidebar-toggle{display:none!important;}
     #equipment-catalog .catalog-panel-header{padding:8px!important;}
     #equipment-catalog .grid{grid-template-columns:minmax(0,1fr);}
     #equipment-catalog :is(.mobile-category-nav,.touch-catalog-hint){display:none;}
+}
+
+/* Properties stay inside the workspace, below the toolbar and beside the catalog. */
+#workspace-shell{z-index:0;}
+@media(max-width:700px){
+    #workspace-shell #inspector{left:var(--catalog-width)!important;width:calc(100% - var(--catalog-width))!important;max-height:calc(100% - var(--phone-nav-height))!important;}
 }
