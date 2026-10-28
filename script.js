@@ -1399,7 +1399,7 @@ const Hardware = (() => {
             appPreferencesSaveTimer=setTimeout(()=>{
                 if(!canvas.clientWidth||!canvas.clientHeight)return;
                 const focusX=(canvas.clientWidth/2-view.x)/view.zoom,focusY=(canvas.clientHeight/2-view.y)/view.zoom;
-                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:appState.canvas.theme,grid:appState.canvas.grid,backdrop:appState.canvas.backdrop,time:appState.canvas.time,connectionGuidanceEnabled:appState.preferences.connectionGuidanceEnabled,gravityEnabled:appState.preferences.gravityEnabled,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2,developerMode:appState.preferences.developerModeEnabled,headphonePromptSeen:appState.preferences.headphonePromptSeen,catalogPinned:sidebarPinned.catalog,inspectorPinned:sidebarPinned.properties,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble,zoom:view.zoom,focusX,focusY}));}catch{}
+                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:appState.canvas.theme,grid:appState.canvas.grid,backdrop:appState.canvas.backdrop,time:appState.canvas.time,connectionGuidanceEnabled:appState.preferences.connectionGuidanceEnabled,gravityEnabled:appState.preferences.gravityEnabled,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2,developerMode:appState.preferences.developerModeEnabled,headphonePromptSeen:appState.preferences.headphonePromptSeen,catalogPinned:sidebarPinned.catalog,inspectorPinned:sidebarPinned.properties,signalHistoryExpanded,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble,zoom:view.zoom,focusX,focusY}));}catch{}
             },450);
         }
         const appDialog=document.getElementById('app-confirm-dialog');
@@ -4137,10 +4137,15 @@ const Hardware = (() => {
 
         const signalHistoryRecords=new Map();
         let signalHistoryPanel=null,signalHistorySignature='',signalHistoryLastGraph=0;
+        let signalHistoryExpanded=savedAppPreferences.signalHistoryExpanded===true;
         const signalHistoryText=text=>window.AudioSystemLanguage?.translate(text)||text;
         function signalHistoryInspectorHtml(dev){
             if(!dev.el.querySelector('.port')&&!dev.btPairedId)return '';
-            return '<details id="signal-history-panel" class="signal-history-panel"><summary>Histórico do sinal</summary><div class="signal-history-legend"><span>Entrada</span><span>Saída</span><small>12 s · −60 → 0 dBFS</small></div><small>Maior nível entre portas e canais. Escala digital, não volume real.</small><small>Spotify não passa por estes medidores.</small><div id="signal-history-rows" data-signal-history-rows></div></details>';
+            return `<details id="signal-history-panel" class="signal-history-panel" ${signalHistoryExpanded?'open':''}><summary>Histórico do sinal</summary><div class="signal-history-legend"><span>Entrada</span><span>Saída</span><small>12 s · −60 → 0 dBFS</small></div><small>Maior nível entre portas e canais. Escala digital, não volume real.</small><small>Spotify não passa por estes medidores.</small><div id="signal-history-rows" data-signal-history-rows></div></details>`;
+        }
+        function bindSignalHistoryPreference(){
+            const panel=document.getElementById('signal-history-panel');if(!panel)return;
+            panel.addEventListener('toggle',()=>{signalHistoryExpanded=panel.open;scheduleAppPreferencesSave();});
         }
         function disposeSignalHistoryRecord(record){
             for(const [source,target,output]of record.links){try{source.disconnect(target,output);}catch{}}
@@ -8505,6 +8510,7 @@ const Hardware = (() => {
             html+=signalHistoryInspectorHtml(dev);
             Hardware.sync(dev);
             inspectorContent.innerHTML = conciseEquipmentInspector(html);
+            bindSignalHistoryPreference();
             if(floating){
                 inspectorWindow.setAttribute('role','region');
                 inspectorCloseButton.setAttribute('aria-label',document.documentElement.lang==='en'?'Close parameters':'Fechar parâmetros');

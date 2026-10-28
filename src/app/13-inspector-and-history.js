@@ -359,6 +359,7 @@
             html+=signalHistoryInspectorHtml(dev);
             Hardware.sync(dev);
             inspectorContent.innerHTML = conciseEquipmentInspector(html);
+            bindSignalHistoryPreference();
             if(floating){
                 inspectorWindow.setAttribute('role','region');
                 inspectorCloseButton.setAttribute('aria-label',document.documentElement.lang==='en'?'Close parameters':'Fechar parâmetros');
