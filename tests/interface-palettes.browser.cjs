@@ -31,7 +31,7 @@ const root=path.resolve(__dirname,'..');
             const times=theme==='scene'?['dawn','dusk','night']:['dusk'];
             for(const scene of scenes)for(const time of times){
                 await page.evaluate(({theme,scene,time})=>{__signal.setCanvasTheme(theme);__signal.setCanvasBackdrop(scene);__signal.setCanvasTime(time);},{theme,scene,time});
-                await page.mouse.move(1570,1060);await page.waitForTimeout(400);
+                await page.mouse.move(1570,1060);await page.waitForTimeout(500);
                 const sample=await page.evaluate(()=>{
                     const rgb=s=>s.match(/\d+(?:\.\d+)?/g).slice(0,3).map(Number),lum=c=>{const values=rgb(c).map(x=>{x/=255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4;});return .2126*values[0]+.7152*values[1]+.0722*values[2];};
                     const contrast=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
@@ -40,6 +40,33 @@ const root=path.resolve(__dirname,'..');
                     return {key:document.documentElement.dataset.uiPalette,side:getComputedStyle(document.querySelector('#inspector')).backgroundColor,top:calc('#app-topbar'),card:calc('.catalog-item>span','.catalog-item'),body:calc('#inspector-content','#inspector'),section:calc('.sonic-signature-panel h3','.sonic-signature-panel'),band:calc('.sonic-band-name','.sonic-band'),bandState:calc('.sonic-band-state','.sonic-band'),button:calc('#inspector-content .tt-insp-btn'),buttonColors:[getComputedStyle(button).color,getComputedStyle(button).backgroundColor],settings:calc('.app-settings>summary'),device:getComputedStyle(document.querySelector('#palette-speaker .electrostatic-frame')).backgroundImage};
                 });
                 for(const key of ['top','card','body','section','band','bandState','button','settings'])assert(sample[key]>=4.5,`${sample.key}: ${key} contrast ${sample[key]} (${sample.buttonColors})`);
+                await page.evaluate(()=>{
+                    document.querySelector('.app-settings').open=true;
+                    document.querySelectorAll('.app-settings-content .settings-group').forEach(group=>group.open=true);
+                });
+                await page.waitForTimeout(500);
+                const controls=await page.evaluate(()=>{
+                    const color=el=>getComputedStyle(el);
+                    const visible=el=>!!el.getClientRects().length;
+                    const buttons=[...document.querySelectorAll('.app-settings-content button,.app-settings>summary,.sidebar-pin,#inspector .inspector-window-close')].filter(visible);
+                    const favorite=document.querySelector('.catalog-favorite:not([aria-pressed="true"])');
+                    const header=document.querySelector('.catalog-panel-header');
+                    const rgb=s=>s.match(/[\d.]+/g).slice(0,3).map(Number);
+                    const lum=s=>rgb(s).map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
+                    const contrast=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
+                    const settingsBackground=color(document.querySelector('.settings-group')).backgroundColor;
+                    return {
+                        borders:buttons.filter(el=>{const s=color(el);return s.borderTopWidth!=='0px'&&s.borderTopColor!=='rgba(0, 0, 0, 0)';}).map(el=>el.outerHTML.slice(0,160)),
+                        header:color(header).backgroundColor,side:color(document.querySelector('#equipment-catalog')).backgroundColor,
+                        favorite:contrast(color(favorite).color,color(favorite.closest('.catalog-item')).backgroundColor),
+                        labels:[...document.querySelectorAll('.headphone-calibration-setting strong,.listening-level-settings strong,.listening-level-settings label,.settings-particle-control output,.listening-level-settings output')].filter(visible).map(el=>({text:el.textContent,contrast:contrast(color(el).color,settingsBackground)}))
+                    };
+                });
+                assert.deepEqual(controls.borders,[],`${sample.key}: decorative button borders`);
+                assert.equal(controls.header,controls.side,`${sample.key}: catalog header follows palette`);
+                assert(controls.favorite>=3,`${sample.key}: favorite visibility ${controls.favorite}`);
+                for(const label of controls.labels)assert(label.contrast>=4.5,`${sample.key}: ${label.text} contrast ${label.contrast}`);
+                await page.evaluate(()=>document.querySelector('.app-settings').open=false);
                 samples.push(sample);
                 await page.evaluate(()=>__signal.selectDevice('palette-meter'));
                 const spectrumColor=await page.$eval('#audio-spectrum',element=>getComputedStyle(element).backgroundColor);

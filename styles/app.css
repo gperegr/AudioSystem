@@ -4255,11 +4255,11 @@
    influence the sidebar width, and collapsing should slide it off-canvas. */
 #inspector {box-sizing:border-box;width:18rem;min-width:18rem;flex:0 0 18rem;}
 .catalog-panel-header {display:flex;align-items:center;gap:8px;}
-.catalog-search {display:flex;align-items:center;gap:0;flex:0 0 44px;width:44px;min-width:44px;height:44px;box-sizing:border-box;padding:0 4px;overflow:hidden;border:0;border-radius:10px;background:transparent;transition:flex-basis 320ms cubic-bezier(.2,.75,.25,1),width 320ms cubic-bezier(.2,.75,.25,1),background-color 180ms ease;}
-.catalog-search[data-expanded="true"] {flex:1 1 auto;width:100%;min-width:42px;gap:8px;padding-inline:11px;background:var(--ui-control);}
+.catalog-search {display:flex;align-items:center;gap:0;flex:0 0 44px;width:44px;min-width:44px;height:44px;box-sizing:border-box;padding:0 4px;overflow:hidden;border:0;border-radius:10px;background:transparent;transition:flex-grow 320ms cubic-bezier(.2,.75,.25,1),background-color 180ms ease;}
+.catalog-search[data-expanded="true"] {flex-grow:1;gap:8px;background:var(--ui-control);}
 .catalog-search>button {display:grid;place-items:center;flex:none;width:36px;height:40px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--ui-muted);cursor:pointer;transition:color 180ms ease,transform 320ms cubic-bezier(.2,.75,.25,1);}
 .catalog-search>button:hover {color:var(--ui-text);}
-.catalog-search>button:focus-visible {outline:0;}
+.catalog-search>button:focus-visible {outline:2px solid var(--ui-accent);outline-offset:-2px;}
 .catalog-search>button svg {display:block;width:20px;height:20px;}
 .catalog-search>input[type="search"] {flex:1;min-width:0;width:0;margin:0;padding:0;border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;color:var(--ui-text)!important;opacity:0;visibility:hidden;transition:opacity 160ms ease 40ms;}
 .catalog-search[data-expanded="true"]>input[type="search"] {width:auto;opacity:1;visibility:visible;}
