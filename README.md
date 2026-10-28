@@ -153,6 +153,8 @@ On iPhone or iPad Safari, tap **Play**. When returning from another tab, an alre
 
 ## Development and references
 
+The [architecture decision record](docs/adr/0001-application-architecture.md) describes the runtime, state, storage, configuration, and maintenance workflow.
+
 The app uses HTML, CSS, and JavaScript. These checks require Node.js but no additional dependencies:
 
 ```sh
