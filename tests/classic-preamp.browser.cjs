@@ -42,7 +42,15 @@ const root=path.resolve(__dirname,'..');
             assert(Number(await knob.getAttribute('aria-valuenow'))>previous,selector+' responds to keyboard');
         }
         for(const selector of ['[data-classic-toggle=classicMonitor]','[data-classic-toggle=classicLowCut]','[data-classic-toggle=classicHighCut]','[data-integrated-direct]']){
-            const button=device.locator(selector);await button.click();assert.equal(await button.getAttribute('aria-pressed'),'true');await button.click();
+            const button=device.locator(selector);
+            await page.emulateMedia({reducedMotion:'reduce'});
+            const before=await button.locator('.hw-chrome-collar').evaluate(el=>el.getBoundingClientRect().y);
+            await button.click();assert.equal(await button.getAttribute('aria-pressed'),'true');
+            const after=await button.locator('.hw-chrome-collar').evaluate(el=>el.getBoundingClientRect().y);
+            assert(Math.abs(before-after-28)<1,'active handle reaches top of rail');
+            await button.click();
+            const restored=await button.locator('.hw-chrome-collar').evaluate(el=>el.getBoundingClientRect().y);
+            assert(Math.abs(restored-before)<1,'inactive handle returns to bottom');
         }
         await device.locator('.power-btn').click();assert.equal(await device.locator('.power-btn').getAttribute('aria-checked'),'false');
         await device.locator('.power-btn').click();assert.equal(await device.locator('.power-btn').getAttribute('aria-checked'),'true');
