@@ -4748,7 +4748,7 @@ body.inspector-floating #inspector-sidebar-toggle{display:none!important;}
 /* The right sidebar is retired: properties live in the contextual floating window. */
 #inspector-sidebar-toggle{display:none!important;}
 @media(min-width:701px){#inspector:not([data-floating="true"]){display:none!important;}}
-@keyframes inspector-elastic-fill{0%{scale:.92;opacity:0;clip-path:inset(8% 5% round 18px)}62%{scale:1.025;opacity:1;clip-path:inset(0 round 14px)}80%{scale:.992}100%{scale:1;opacity:1;clip-path:inset(0 round 14px)}}
+@keyframes inspector-elastic-fill{0%{scale:.92;opacity:0}62%{scale:1.025;opacity:1}80%{scale:.992}100%{scale:1;opacity:1}}
 #inspector[data-floating="true"].inspector-window-enter{transform:none!important;animation:inspector-elastic-fill 520ms cubic-bezier(.2,.8,.25,1) both;transform-origin:center;}
 #inspector[data-floating="true"]:not(.inspector-window-enter){scale:1;}
 @media(prefers-reduced-motion:reduce){#inspector[data-floating="true"].inspector-window-enter{animation:none;scale:1;opacity:1;clip-path:none;}}
