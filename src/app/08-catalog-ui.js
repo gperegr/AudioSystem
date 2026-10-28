@@ -348,29 +348,49 @@
         equipmentSearch.addEventListener('keydown', event => {
             if (event.key === 'Escape') { equipmentSearch.value = ''; equipmentSearch.dispatchEvent(new Event('input')); }
         });
-        document.querySelectorAll('.catalog-item').forEach(item => {
+        function updateCatalogPlacementPreview(preview,target){
+            const el=preview.el,w=el.offsetWidth,h=el.offsetHeight,bottom=target.y+h,wall=!!WALL_LAMP_TYPES[preview.type],pendant=preview.type==='pendantLamp',valid=wall||pendant?target.x>=sceneSideInset()&&target.x+w<=world.offsetWidth-sceneSideInset()&&target.y>=0&&bottom<=(wall?wallPlacementBottom():maxEquipmentBottom()):canPlaceEquipment(preview,target.x,target.y);
+            const supported=Math.abs(bottom-maxEquipmentBottom())<=2||Object.values(appState.project.devices).some(other=>placementShapes(other,parseFloat(other.el.style.left)||0,parseFloat(other.el.style.top)||0).some(shape=>Math.abs(bottom-shape.y)<=2&&Math.min(target.x+w,shape.x+shape.width)-Math.max(target.x,shape.x)>0));
+            el.style.left=target.x+'px';el.style.top=target.y+'px';el.classList.toggle('is-invalid',!valid);el.classList.toggle('is-supported',valid&&supported);
+            const label=!valid?'Espaço indisponível':wall?'Fixado à parede':pendant?'Suspenso':supported?'Apoiado':'Espaço livre';el.dataset.previewLabel=`${AudioSystemLanguage.translate(label)} · ${w} × ${h}`;
+        }
+        let activeCatalogPreviewCleanup=null;
+        function bindCatalogItem(item) {
             item.addEventListener('dragstart', e => e.preventDefault());
             item.addEventListener('pointerdown', e => {
                 if (e.button !== 0) return;
+                activeCatalogPreviewCleanup?.();
                 if(e.pointerType==='touch'&&!item.firstElementChild.contains(e.target)){
                     const start={x:e.clientX,y:e.clientY,id:e.pointerId};
                     const cleanup=()=>{item.removeEventListener('pointerup',tap);item.removeEventListener('pointercancel',cleanup);};
                     const tap=event=>{
                         cleanup();if(event.pointerId!==start.id||Math.hypot(event.clientX-start.x,event.clientY-start.y)>8)return;
-                        const rect=canvas.getBoundingClientRect(),point=screenToWorld(rect.left+rect.width/2,rect.top+rect.height/2);
-                        createDevice(item.dataset.template,point.x-150,point.y-70);playUiSound('drop');closeMobilePanels();
-                        const added=appState.project.devices[appState.interface.selectedDeviceId];
-                        if(compactLayout.matches&&added){
-                            const width=added.el.offsetWidth,height=added.el.offsetHeight,tools=document.querySelector('.canvas-tools'),usableHeight=Math.max(120,rect.height-tools.offsetHeight-40);
-                            const zoom=clampZoom(Math.min(view.zoom,(rect.width-32)/width,(usableHeight-32)/height));
-                            animateViewTo({zoom,x:(rect.width-width*zoom)/2-(parseFloat(added.el.style.left)||0)*zoom,y:(usableHeight-height*zoom)/2-(parseFloat(added.el.style.top)||0)*zoom});
-                        }
+                        const rect=canvas.getBoundingClientRect(),point=screenToWorld(rect.left+rect.width/2,rect.top+rect.height/2),type=item.dataset.template;
+                        const preview=createDevice(type,0,0,null,true);if(!preview)return;
+                        preview.el.hidden=false;
+                        const x=Math.max(sceneSideInset(),Math.min(world.offsetWidth-preview.el.offsetWidth-sceneSideInset(),snapCoordinate(point.x-preview.el.offsetWidth/2)));
+                        const y=Math.max(0,Math.min(maxEquipmentBottom()-preview.el.offsetHeight,snapCoordinate(point.y-preview.el.offsetHeight/2+preview.el.offsetHeight)-preview.el.offsetHeight));
+                        const target=snapOnEquipment(preview,x,y);updateCatalogPlacementPreview(preview,target);
+                        closeMobilePanels();
+                        const actions=document.createElement('div');actions.className='catalog-preview-actions';actions.innerHTML='<button type="button" data-preview-cancel>Cancelar</button><button type="button" data-preview-confirm>Adicionar</button>';document.body.appendChild(actions);
+                        const cleanupPreview=()=>{preview.el.remove();actions.remove();document.removeEventListener('keydown',escapePreview);if(activeCatalogPreviewCleanup===cleanupPreview)activeCatalogPreviewCleanup=null;};activeCatalogPreviewCleanup=cleanupPreview;
+                        const escapePreview=event=>{if(event.key==='Escape'){event.preventDefault();cleanupPreview();}};document.addEventListener('keydown',escapePreview);
+                        actions.querySelector('[data-preview-cancel]').onclick=cleanupPreview;
+                        actions.querySelector('[data-preview-confirm]').onclick=()=>{cleanupPreview();createDevice(type,target.x,target.y);rememberCatalogItem(type);playUiSound('drop');
+                            const added=appState.project.devices[appState.interface.selectedDeviceId];
+                            if(compactLayout.matches&&added){
+                                const width=added.el.offsetWidth,height=added.el.offsetHeight,tools=document.querySelector('.canvas-tools'),usableHeight=Math.max(120,rect.height-tools.offsetHeight-40);
+                                const zoom=clampZoom(Math.min(view.zoom,(rect.width-32)/width,(usableHeight-32)/height));
+                                animateViewTo({zoom,x:(rect.width-width*zoom)/2-(parseFloat(added.el.style.left)||0)*zoom,y:(usableHeight-height*zoom)/2-(parseFloat(added.el.style.top)||0)*zoom});
+                            }
+                        };actions.querySelector('[data-preview-confirm]').focus({preventScroll:true});
                     };
                     item.addEventListener('pointerup',tap);item.addEventListener('pointercancel',cleanup);return;
                 }
                 e.preventDefault();
                 window.getSelection()?.removeAllRanges();
                 const type = item.dataset.template;
+                const placementPreview=createDevice(type,0,0,null,true);
                 const rect = item.getBoundingClientRect();
                 const cRect = canvas.getBoundingClientRect();
                 
@@ -393,24 +413,54 @@
                     if(e.pointerType==='touch'&&Math.hypot(ev.clientX-e.clientX,ev.clientY-e.clientY)>8)closeMobilePanels();
                     ghost.style.left = `${ev.clientX - offsetX}px`;
                     ghost.style.top = `${ev.clientY - offsetY}px`;
+                    if(placementPreview){
+                        const inside=ev.clientX>cRect.left&&ev.clientX<cRect.right&&ev.clientY>cRect.top&&ev.clientY<cRect.bottom;
+                        placementPreview.el.hidden=!inside;
+                        if(inside){const pos=screenToWorld(ev.clientX-offsetX+rect.width/2,ev.clientY-offsetY+rect.height/2),x=Math.max(0,snapCoordinate(pos.x-rect.width/2)),y=Math.max(0,snapCoordinate(pos.y-rect.height/2+placementPreview.el.offsetHeight)-placementPreview.el.offsetHeight),target=snapOnEquipment(placementPreview,x,y);updateCatalogPlacementPreview(placementPreview,target);}
+                    }
                 };
                 
                 const up = ev => {
                     window.removeEventListener('pointermove', move);
                     window.removeEventListener('pointerup', up);
-                    ghost.remove();
+                    window.removeEventListener('pointercancel', up);
+                    ghost.remove();placementPreview?.el.remove();
                     
-                    if (!ev.cancelled && ev.clientX > cRect.left && ev.clientX < cRect.right && ev.clientY > cRect.top && ev.clientY < cRect.bottom) {
+                    if (ev.type!=='pointercancel' && !ev.cancelled && ev.clientX > cRect.left && ev.clientX < cRect.right && ev.clientY > cRect.top && ev.clientY < cRect.bottom) {
                         const pos = screenToWorld(ev.clientX - offsetX + rect.width / 2, ev.clientY - offsetY + rect.height / 2);
                         createDevice(type, pos.x - rect.width / 2, pos.y - rect.height / 2);
+                        rememberCatalogItem(type);
                         playUiSound('drop');
                     }
                 };
                 
                 window.addEventListener('pointermove', move);
                 window.addEventListener('pointerup', up);
+                window.addEventListener('pointercancel', up);
             });
-        });
+        }
+        document.querySelectorAll('.catalog-item').forEach(bindCatalogItem);
+        const quickCatalog=document.createElement('section');quickCatalog.className='catalog-quick-access';
+        catalogContainer.prepend(quickCatalog);
+        const quickKey='audio-system-catalog-quick-v1';
+        let quickData;try{quickData=JSON.parse(localStorage.getItem(quickKey))||{};}catch{quickData={};}
+        const validTypes=new Set(catalogItems.map(item=>item.dataset.template));
+        const clean=list=>Array.isArray(list)?[...new Set(list.filter(type=>validTypes.has(type)))].slice(0,12):[];
+        quickData={favorites:clean(quickData.favorites),recent:clean(quickData.recent)};
+        function saveQuick(){try{localStorage.setItem(quickKey,JSON.stringify(quickData));}catch{}}
+        function updateStars(){catalogItems.forEach(item=>{const button=item.querySelector('.catalog-favorite');button?.setAttribute('aria-pressed',String(quickData.favorites.includes(item.dataset.template)));});}
+        function renderQuick(){
+            quickCatalog.replaceChildren();
+            for(const [title,types] of [['Favoritos',quickData.favorites],['Recentes',quickData.recent]]){
+                if(!types.length)continue;const section=document.createElement('div');section.className='mb-6';const heading=document.createElement('h3');heading.className='text-[10px] font-bold text-gray-500 mb-3 tracking-wider uppercase';heading.textContent=title;const grid=document.createElement('div');grid.className='grid grid-cols-2 gap-3';section.append(heading,grid);
+                types.forEach(type=>{const original=catalogItems.find(item=>item.dataset.template===type);if(!original)return;const copy=original.cloneNode(true);copy.querySelector('.catalog-favorite')?.remove();bindCatalogItem(copy);grid.appendChild(copy);});quickCatalog.appendChild(section);
+            }
+            updateStars();AudioSystemLanguage.translateTree?.(quickCatalog);
+        }
+        catalogItems.forEach(item=>{const button=document.createElement('button');button.type='button';button.className='catalog-favorite';button.title='Favoritar equipamento';button.setAttribute('aria-label','Favoritar equipamento');button.textContent='☆';button.addEventListener('pointerdown',event=>event.stopPropagation());button.addEventListener('click',event=>{event.stopPropagation();const type=item.dataset.template;quickData.favorites=quickData.favorites.includes(type)?quickData.favorites.filter(t=>t!==type):[type,...quickData.favorites].slice(0,12);saveQuick();renderQuick();});item.appendChild(button);});
+        equipmentSearch.addEventListener('input',()=>{quickCatalog.hidden=!!equipmentSearch.value.trim();});
+        function rememberCatalogItem(type){quickData.recent=[type,...quickData.recent.filter(t=>t!==type)].slice(0,8);saveQuick();renderQuick();}
+        renderQuick();
 
         function standardizeStereoPorts(root) {
             const channelOf = port => port?.dataset.channel || (/L$/.test(port?.dataset.node || '') ? 'L' : /R$/.test(port?.dataset.node || '') ? 'R' : '');

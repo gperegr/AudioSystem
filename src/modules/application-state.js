@@ -10,7 +10,7 @@
         devices:['project','devices'],connections:['project','connections'],restoringProject:['project','restoringProject'],adapterRotation:['project','adapterRotation'],
         canvasTheme:['canvas','theme'],canvasGrid:['canvas','grid'],canvasBackdrop:['canvas','backdrop'],canvasTime:['canvas','time'],canvasFloor:['canvas','floor'],hideCables:['canvas','hideCables'],
         audioCtx:['audio','context'],masterGain:['audio','masterGain'],isPlaying:['audio','isPlaying'],playing:['audio','playing'],environment:['audio','environment'],seqInterval:['audio','sequenceInterval'],roomAudio:['audio','roomAudio'],listeningToneInput:['audio','listeningToneInput'],listeningToneFilters:['audio','listeningToneFilters'],
-        listeningOutputLevel:['preferences','listening.outputLevel'],listeningBass:['preferences','listening.bass'],listeningTreble:['preferences','listening.treble'],uiSoundVolume:['preferences','uiSoundVolume'],
+        listeningOutputLevel:['preferences','listening.outputLevel'],listeningBass:['preferences','listening.bass'],listeningTreble:['preferences','listening.treble'],uiSoundVolume:['preferences','uiSoundVolume'],equipmentSoundVolume:['preferences','equipmentSoundVolume'],
         selectedDeviceId:['interface','selectedDeviceId'],selectedDeviceIds:['interface','selectedDeviceIds'],selectedConnection:['interface','selectedConnection'],pairingId:['interface','pairingId'],hardwareDemo:['interface','hardwareDemo']
     });
 
@@ -19,7 +19,7 @@
             project:{devices:{},connections:[],restoringProject:false,adapterRotation:0},
             canvas:{theme:'scene',grid:'dots',backdrop:'loftIllustrated',time:'dusk',floor:null,hideCables:false},
             audio:{isPlaying:false,playing:false,context:null,masterGain:null,environment:{preset:'small',intensity:5},sequenceInterval:null,roomAudio:null,listeningToneInput:null,listeningToneFilters:null},
-            preferences:{connectionGuidanceEnabled:true,gravityEnabled:false,roomParticleAmount:25,developerModeEnabled:false,headphonePromptSeen:false,listening:{outputLevel:1,bass:0,treble:0},uiSoundVolume:.5},
+            preferences:{connectionGuidanceEnabled:true,gravityEnabled:false,roomParticleAmount:25,developerModeEnabled:false,headphonePromptSeen:false,listening:{outputLevel:1,bass:0,treble:0},uiSoundVolume:.5,equipmentSoundVolume:.5},
             interface:{selectedDeviceId:null,selectedDeviceIds:new Set(),selectedConnection:null,pairingId:null,hardwareDemo:null},
             legacy:{}
         };

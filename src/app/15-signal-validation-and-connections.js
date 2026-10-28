@@ -334,7 +334,7 @@
             let closest = null;
             let minDist = maxDist;
             document.querySelectorAll('.port').forEach(p => {
-                if (p === startPort) return;
+                if (p === startPort || p.closest('.catalog-placement-preview')) return;
                 const rect = p.getBoundingClientRect();
                 const anchor=getPortScreenAnchor(p);
                 const cx=anchor.x,cy=anchor.y;
@@ -392,7 +392,7 @@
                 dragPhysics.lastTime = now;
                 
                 // Busca porta compatível próxima com efeito magnético
-                const candidate = findTargetPortNear(e.clientX, e.clientY, 32);
+                const candidate = findTargetPortNear(e.clientX, e.clientY, e.pointerType==='touch'?54:36);
                 if (candidate !== hoveredTargetPort) {
                     if (hoveredTargetPort) hoveredTargetPort.classList.remove('port-highlight');
                     hoveredTargetPort = candidate;
@@ -425,7 +425,7 @@
                 const hazardous=!!attempted?.damageRisk;
                 if(appState.preferences.connectionGuidanceEnabled&&hazardous){cancelCableDrag();offerDamageSimulation(attempted);return;}
                 if (!tPort || isPortOccupied(tPort) || !arePortsCompatible(startPort, tPort)) {
-                    tPort = findTargetPortNear(e.clientX, e.clientY, 36);
+                    tPort = findTargetPortNear(e.clientX, e.clientY, e.pointerType==='touch'?54:36);
                 }
                 
                 if (tPort && arePortsCompatible(startPort, tPort)) {

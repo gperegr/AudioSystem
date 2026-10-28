@@ -101,8 +101,8 @@
             if(!force&&now-lastEquipmentAcoustics<250)return;lastEquipmentAcoustics=now;
             const context=appState.audio.context;
             const enabled=!!context&&audioPrimed&&context.state==='running'&&!document.hidden&&!appState.project.restoringProject;
-            if(!equipmentAcoustics&&enabled&&appState.preferences.uiSoundVolume>0)equipmentAcoustics=EquipmentAcoustics.create(context,appState.audio.listeningToneInput);
-            equipmentAcoustics?.sync(Object.values(appState.project.devices),{enabled,volume:appState.preferences.uiSoundVolume});
+            if(!equipmentAcoustics&&enabled&&appState.preferences.equipmentSoundVolume>0)equipmentAcoustics=EquipmentAcoustics.create(context,appState.audio.listeningToneInput);
+            equipmentAcoustics?.sync(Object.values(appState.project.devices),{enabled,volume:appState.preferences.equipmentSoundVolume});
         }
         document.addEventListener('visibilitychange',()=>syncEquipmentAcoustics(performance.now(),true));
         window.addEventListener('pagehide',()=>{equipmentAcoustics?.dispose();equipmentAcoustics=null;});
@@ -271,6 +271,10 @@
         soundControls.className='flex flex-col gap-2 mb-4';
         soundControls.innerHTML='<label for="ui-sound-volume" class="text-xs text-gray-400">Sons de interação <span id="ui-sound-value">50%</span></label><input id="ui-sound-volume" aria-label="Volume dos sons de interação; zero silencia" type="range" min="0" max="100" step="5" value="50">';
         clearCatalogFooter.prepend(soundControls);
+        const equipmentSoundControls=document.createElement('div');equipmentSoundControls.className='flex flex-col gap-2 mb-4';
+        equipmentSoundControls.innerHTML='<label for="equipment-sound-volume" class="text-xs text-gray-400">Sons de funcionamento <span id="equipment-sound-value">50%</span></label><input id="equipment-sound-volume" aria-label="Volume dos sons de funcionamento" type="range" min="0" max="100" step="5" value="50">';
+        soundControls.appendChild(equipmentSoundControls);
+        equipmentSoundControls.querySelector('input').addEventListener('input',event=>{const value=Math.max(0,Math.min(100,Number(event.target.value)||0));appStateStore.actions.setPreference('equipmentSoundVolume',value/100);document.getElementById('equipment-sound-value').textContent=value?`${value}%`:'desligados';syncEquipmentAcoustics(performance.now(),true);scheduleProjectSave();});
         function setInteractionVolume(percent){
             const value=Math.max(0,Math.min(100,Number(percent)||0));
             appStateStore.actions.setPreference('uiSoundVolume',value/100);

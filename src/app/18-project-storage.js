@@ -19,7 +19,7 @@
             return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,vinyls,albums,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{
                 environment:{...(appState.audio.environment||DEFAULT_ROOM_SETTINGS)},
                 canvasGrid:appState.canvas.grid||'dots',canvasTheme:appState.canvas.theme||'scene',canvasBackdrop:appState.canvas.backdrop||DEFAULT_BACKDROP,canvasTime:appState.canvas.time||'dusk',
-                soundVolume:appState.preferences.uiSoundVolume??DEFAULT_UI_SOUND_VOLUME,hideCables:!!appState.canvas.hideCables,
+                soundVolume:appState.preferences.uiSoundVolume??DEFAULT_UI_SOUND_VOLUME,equipmentSoundVolume:appState.preferences.equipmentSoundVolume??.5,hideCables:!!appState.canvas.hideCables,
                 selected:[...appState.interface.selectedDeviceIds],selectedCable:appState.project.connections.indexOf(appState.interface.selectedConnection),
                 search:document.getElementById('equipment-search').value,catalogScroll:catalogScroll?.scrollTop||0,inspectorScroll:inspectorContent.scrollTop
             }};
@@ -176,6 +176,7 @@
                 setRoomSettings(ui.environment);
                 cableVisibilityButton.setAttribute('aria-pressed',String(!!ui.hideCables));
                 appStateStore.actions.setPreference('uiSoundVolume',typeof ui.soundVolume==='number'?Math.max(0,Math.min(1,ui.soundVolume)):DEFAULT_UI_SOUND_VOLUME);appStateStore.actions.setCanvasOption('hideCables',!!ui.hideCables);
+                appStateStore.actions.setPreference('equipmentSoundVolume',typeof ui.equipmentSoundVolume==='number'?Math.max(0,Math.min(1,ui.equipmentSoundVolume)):.5);const equipmentSound=document.getElementById('equipment-sound-volume');equipmentSound.value=Math.round(appState.preferences.equipmentSoundVolume*100);document.getElementById('equipment-sound-value').textContent=appState.preferences.equipmentSoundVolume?`${equipmentSound.value}%`:'desligados';syncEquipmentAcoustics(performance.now(),true);
                 const sound=document.getElementById('ui-sound-volume');sound.value=Math.round(appState.preferences.uiSoundVolume*100);document.getElementById('ui-sound-value').textContent=appState.preferences.uiSoundVolume?`${sound.value}%`:'desligados';uiEffectsGain?.gain.setValueAtTime(interactionGain(appState.preferences.uiSoundVolume),appState.audio.context.currentTime);
                 const search=document.getElementById('equipment-search');search.value=typeof ui.search==='string'?ui.search:'';search.dispatchEvent(new Event('input'));
                 if(snapshot.view&&snapshot.devices.length){view.zoom=clampZoom(Number(snapshot.view.zoom)||1);view.x=Number(snapshot.view.x)||0;view.y=Number(snapshot.view.y)||0;}

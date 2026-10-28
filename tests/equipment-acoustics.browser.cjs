@@ -33,7 +33,8 @@ const root=path.resolve(__dirname,'..');
             api.toggleDevicePower(fan);api.syncEquipmentAcoustics(performance.now(),true);
             Object.defineProperty(document,'hidden',{value:true,configurable:true});document.dispatchEvent(new Event('visibilitychange'));if(api.getAmbience().voiceCount!==0)throw Error('Hidden page left active sound');
             delete document.hidden;document.dispatchEvent(new Event('visibilitychange'));api.syncEquipmentAcoustics(performance.now(),true);
-            api.appState.preferences.uiSoundVolume=0;api.syncEquipmentAcoustics(performance.now(),true);if(api.getAmbience().voiceCount!==0)throw Error('Interaction mute ignored');
+            api.appState.preferences.uiSoundVolume=0;api.syncEquipmentAcoustics(performance.now(),true);if(api.getAmbience().voiceCount!==1)throw Error('Interaction mute must not mute equipment');
+            api.appState.preferences.equipmentSoundVolume=0;api.syncEquipmentAcoustics(performance.now(),true);if(api.getAmbience().voiceCount!==0)throw Error('Interaction mute ignored');
             api.deleteDevice(fan,false);
             // Render the actual sound engine offline to check aggregate loudness and finite samples.
             const offline=new OfflineAudioContext(1,48000*3,48000),context=new Proxy(offline,{get(target,key){if(key==='state')return 'running';const value=Reflect.get(target,key,target);return typeof value==='function'?value.bind(target):value;}});

@@ -1,8 +1,8 @@
 /* Create and initialize equipment instances and their audio graphs. */
-        function createDevice(type, x, y, requestedId=null) {
-            if(type==='pendantLamp')return createPendantLamp(x,y,requestedId);
-            if(WALL_LAMP_TYPES[type])return createWallLamp(type,x,y,requestedId);
-            initAudio();
+        function createDevice(type, x, y, requestedId=null, previewOnly=false) {
+            if(type==='pendantLamp')return createPendantLamp(x,y,requestedId,previewOnly);
+            if(WALL_LAMP_TYPES[type])return createWallLamp(type,x,y,requestedId,previewOnly);
+            if(!previewOnly)initAudio();
             const id = requestedId||'dev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
             const el = document.createElement('div');
             el.className = 'device-node';el.dataset.equipmentType=type;
@@ -228,6 +228,7 @@
             });
             Hardware.layout({type,el});
             world.appendChild(el);
+            if(previewOnly){el.classList.add('catalog-placement-preview');el.hidden=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type,el};}
 
             const dev = { id, type, el, nodes: {}, state: { volume: 0.8, bass: 0, treble: 0, eq: [0, 0, 0, 0, 0] }, powered: true };
             const placement = appState.project.restoringProject?{

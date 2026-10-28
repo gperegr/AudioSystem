@@ -492,6 +492,7 @@ const Hardware = (() => {
     function bindKnob(el,{get,set,min=0,max=1,step=null,activate,format,model,kind='knob',pointerToValue,width,height}){
         if(!el||bindings.has(el))return;
         if(kind==='knob')setControlSize(el,{width,height});
+        const defaultValue=get();
         const continuous=step==null&&kind==='linear',precision=step??(max-min)/(kind==='knob'?physics.detents:1000);
         const keyboardStep=step??(kind==='knob'?precision:min<0&&max>0 ? .1 : (max-min)/100);
         const detents=continuous?(min<0&&max>0?[0]:min===0&&max===1?[0,.5,1]:[min,max]):[];
@@ -506,13 +507,14 @@ const Hardware = (() => {
         const commit=()=>{if(el.isConnected){updateCableFlows();scheduleProjectSave();}};
         el.addEventListener('pointerdown',event=>{
             if(event.button!==0||el.disabled)return;event.preventDefault();event.stopPropagation();activate?.();el.classList.add('hw-pointer-focus');el.focus({preventScroll:true});
-            const pointer=event.pointerId,start=get(),x=event.clientX,y=event.clientY,zoom=Math.max(.1,view.zoom);let holdOpened=false;el.setPointerCapture(pointer);el.classList.add('hw-turning');showKnobReadout(el);
+            const pointer=event.pointerId,start=get(),x=event.clientX,y=event.clientY,zoom=Math.max(.1,view.zoom);let holdOpened=false,anchorX=x,anchorY=y,anchorValue=start,fine=event.shiftKey;el.setPointerCapture(pointer);el.classList.add('hw-turning');showKnobReadout(el);
             clearTimeout(knobHoldTimer);knobHoldTimer=setTimeout(()=>{if(el.hasPointerCapture(pointer)){holdOpened=true;showFineControl(el);}},480);
             if(pointerToValue)change(pointerToValue(event),true);
-            const move=e=>{if(e.pointerId===pointer){if(Math.hypot(e.clientX-x,e.clientY-y)>8&&!holdOpened)clearTimeout(knobHoldTimer);e.preventDefault();change(pointerToValue?pointerToValue(e):start+((y-e.clientY)+(e.clientX-x)*.35)*(max-min)/(physics.travel*zoom),true);}};
+            const move=e=>{if(e.pointerId===pointer){if(Math.hypot(e.clientX-x,e.clientY-y)>8&&!holdOpened)clearTimeout(knobHoldTimer);e.preventDefault();if(!pointerToValue&&fine!==e.shiftKey){fine=e.shiftKey;anchorX=e.clientX;anchorY=e.clientY;anchorValue=get();}change(pointerToValue?(e.shiftKey?start+(pointerToValue(e)-start)*.2:pointerToValue(e)):anchorValue+((anchorY-e.clientY)+(e.clientX-anchorX)*.35)*(max-min)/(physics.travel*zoom)*(fine?.2:1),!e.shiftKey);}};
             const finish=e=>{if(e?.pointerId!=null&&e.pointerId!==pointer)return;clearTimeout(knobHoldTimer);el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',finish);el.removeEventListener('pointercancel',finish);el.removeEventListener('lostpointercapture',finish);window.removeEventListener('blur',finish);releases.delete(el);el.classList.remove('hw-turning');if(el.hasPointerCapture(pointer))el.releasePointerCapture(pointer);hideKnobReadout();if(holdOpened&&fineControlPanel){fineControlPanel.querySelector('input').focus({preventScroll:true});}commit();};
             releases.set(el,finish);el.addEventListener('pointermove',move);el.addEventListener('pointerup',finish);el.addEventListener('pointercancel',finish);el.addEventListener('lostpointercapture',finish);window.addEventListener('blur',finish);
         });
+        if(kind==='knob')el.addEventListener('dblclick',event=>{event.preventDefault();event.stopPropagation();activate?.();change(min<0&&max>0?0:defaultValue);commit();});
         el.addEventListener('blur',()=>{el.classList.remove('hw-pointer-focus');if(readoutOwner===el)hideKnobReadout(0);});
         el.addEventListener('keydown',event=>{
             el.classList.remove('hw-pointer-focus');
@@ -1946,6 +1948,16 @@ const Hardware = (() => {
             const pixels=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?canvas.clientHeight:1);
             setZoomAt(view.zoom*Math.exp(-Math.max(-160,Math.min(160,pixels))*.001),e.clientX,e.clientY);
         },{passive:false});
+        function frameSelectedDevices(){
+            const devices=[...appState.interface.selectedDeviceIds].map(id=>appState.project.devices[id]).filter(Boolean);if(!devices.length)return;
+            const bounds=devices.reduce((b,d)=>{const x=parseFloat(d.el.style.left)||0,y=parseFloat(d.el.style.top)||0;return {left:Math.min(b.left,x),top:Math.min(b.top,y),right:Math.max(b.right,x+d.el.offsetWidth),bottom:Math.max(b.bottom,y+d.el.offsetHeight)};},{left:Infinity,top:Infinity,right:-Infinity,bottom:-Infinity});
+            const rect=canvas.getBoundingClientRect(),pad=48,w=bounds.right-bounds.left,h=bounds.bottom-bounds.top,zoom=clampZoom(Math.min((rect.width-pad*2)/Math.max(1,w),(rect.height-pad*2)/Math.max(1,h),2));
+            animateViewTo({zoom,x:(rect.width-w*zoom)/2-bounds.left*zoom,y:(rect.height-h*zoom)/2-bounds.top*zoom});
+        }
+        const frameSelectionButton=document.getElementById('fit-canvas').cloneNode(true);
+        frameSelectionButton.id='frame-selection';frameSelectionButton.title='Enquadrar seleção (F)';frameSelectionButton.setAttribute('aria-label','Enquadrar seleção (F)');frameSelectionButton.dataset.tooltip='Enquadrar seleção (F)';frameSelectionButton.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 9V4h5m6 0h5v5M4 15v5h5m6 0h5v-5"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>';
+        frameSelectionButton.addEventListener('click',frameSelectedDevices);document.getElementById('fit-canvas').after(frameSelectionButton);
+        document.addEventListener('keydown',event=>{if(event.key.toLowerCase()==='f'&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!event.target.closest('input,textarea,select,[contenteditable],button')){event.preventDefault();frameSelectedDevices();}});
         document.getElementById('fit-canvas').addEventListener('click', () => {
             const devices = Object.values(appState.project.devices);
             if (!devices.length) { animateViewTo({zoom:1,x:0,y:0}); return; }
@@ -3530,8 +3542,8 @@ const Hardware = (() => {
             if(!force&&now-lastEquipmentAcoustics<250)return;lastEquipmentAcoustics=now;
             const context=appState.audio.context;
             const enabled=!!context&&audioPrimed&&context.state==='running'&&!document.hidden&&!appState.project.restoringProject;
-            if(!equipmentAcoustics&&enabled&&appState.preferences.uiSoundVolume>0)equipmentAcoustics=EquipmentAcoustics.create(context,appState.audio.listeningToneInput);
-            equipmentAcoustics?.sync(Object.values(appState.project.devices),{enabled,volume:appState.preferences.uiSoundVolume});
+            if(!equipmentAcoustics&&enabled&&appState.preferences.equipmentSoundVolume>0)equipmentAcoustics=EquipmentAcoustics.create(context,appState.audio.listeningToneInput);
+            equipmentAcoustics?.sync(Object.values(appState.project.devices),{enabled,volume:appState.preferences.equipmentSoundVolume});
         }
         document.addEventListener('visibilitychange',()=>syncEquipmentAcoustics(performance.now(),true));
         window.addEventListener('pagehide',()=>{equipmentAcoustics?.dispose();equipmentAcoustics=null;});
@@ -3700,6 +3712,10 @@ const Hardware = (() => {
         soundControls.className='flex flex-col gap-2 mb-4';
         soundControls.innerHTML='<label for="ui-sound-volume" class="text-xs text-gray-400">Sons de interação <span id="ui-sound-value">50%</span></label><input id="ui-sound-volume" aria-label="Volume dos sons de interação; zero silencia" type="range" min="0" max="100" step="5" value="50">';
         clearCatalogFooter.prepend(soundControls);
+        const equipmentSoundControls=document.createElement('div');equipmentSoundControls.className='flex flex-col gap-2 mb-4';
+        equipmentSoundControls.innerHTML='<label for="equipment-sound-volume" class="text-xs text-gray-400">Sons de funcionamento <span id="equipment-sound-value">50%</span></label><input id="equipment-sound-volume" aria-label="Volume dos sons de funcionamento" type="range" min="0" max="100" step="5" value="50">';
+        soundControls.appendChild(equipmentSoundControls);
+        equipmentSoundControls.querySelector('input').addEventListener('input',event=>{const value=Math.max(0,Math.min(100,Number(event.target.value)||0));appStateStore.actions.setPreference('equipmentSoundVolume',value/100);document.getElementById('equipment-sound-value').textContent=value?`${value}%`:'desligados';syncEquipmentAcoustics(performance.now(),true);scheduleProjectSave();});
         function setInteractionVolume(percent){
             const value=Math.max(0,Math.min(100,Number(percent)||0));
             appStateStore.actions.setPreference('uiSoundVolume',value/100);
@@ -4926,29 +4942,49 @@ const Hardware = (() => {
         equipmentSearch.addEventListener('keydown', event => {
             if (event.key === 'Escape') { equipmentSearch.value = ''; equipmentSearch.dispatchEvent(new Event('input')); }
         });
-        document.querySelectorAll('.catalog-item').forEach(item => {
+        function updateCatalogPlacementPreview(preview,target){
+            const el=preview.el,w=el.offsetWidth,h=el.offsetHeight,bottom=target.y+h,wall=!!WALL_LAMP_TYPES[preview.type],pendant=preview.type==='pendantLamp',valid=wall||pendant?target.x>=sceneSideInset()&&target.x+w<=world.offsetWidth-sceneSideInset()&&target.y>=0&&bottom<=(wall?wallPlacementBottom():maxEquipmentBottom()):canPlaceEquipment(preview,target.x,target.y);
+            const supported=Math.abs(bottom-maxEquipmentBottom())<=2||Object.values(appState.project.devices).some(other=>placementShapes(other,parseFloat(other.el.style.left)||0,parseFloat(other.el.style.top)||0).some(shape=>Math.abs(bottom-shape.y)<=2&&Math.min(target.x+w,shape.x+shape.width)-Math.max(target.x,shape.x)>0));
+            el.style.left=target.x+'px';el.style.top=target.y+'px';el.classList.toggle('is-invalid',!valid);el.classList.toggle('is-supported',valid&&supported);
+            const label=!valid?'Espaço indisponível':wall?'Fixado à parede':pendant?'Suspenso':supported?'Apoiado':'Espaço livre';el.dataset.previewLabel=`${AudioSystemLanguage.translate(label)} · ${w} × ${h}`;
+        }
+        let activeCatalogPreviewCleanup=null;
+        function bindCatalogItem(item) {
             item.addEventListener('dragstart', e => e.preventDefault());
             item.addEventListener('pointerdown', e => {
                 if (e.button !== 0) return;
+                activeCatalogPreviewCleanup?.();
                 if(e.pointerType==='touch'&&!item.firstElementChild.contains(e.target)){
                     const start={x:e.clientX,y:e.clientY,id:e.pointerId};
                     const cleanup=()=>{item.removeEventListener('pointerup',tap);item.removeEventListener('pointercancel',cleanup);};
                     const tap=event=>{
                         cleanup();if(event.pointerId!==start.id||Math.hypot(event.clientX-start.x,event.clientY-start.y)>8)return;
-                        const rect=canvas.getBoundingClientRect(),point=screenToWorld(rect.left+rect.width/2,rect.top+rect.height/2);
-                        createDevice(item.dataset.template,point.x-150,point.y-70);playUiSound('drop');closeMobilePanels();
-                        const added=appState.project.devices[appState.interface.selectedDeviceId];
-                        if(compactLayout.matches&&added){
-                            const width=added.el.offsetWidth,height=added.el.offsetHeight,tools=document.querySelector('.canvas-tools'),usableHeight=Math.max(120,rect.height-tools.offsetHeight-40);
-                            const zoom=clampZoom(Math.min(view.zoom,(rect.width-32)/width,(usableHeight-32)/height));
-                            animateViewTo({zoom,x:(rect.width-width*zoom)/2-(parseFloat(added.el.style.left)||0)*zoom,y:(usableHeight-height*zoom)/2-(parseFloat(added.el.style.top)||0)*zoom});
-                        }
+                        const rect=canvas.getBoundingClientRect(),point=screenToWorld(rect.left+rect.width/2,rect.top+rect.height/2),type=item.dataset.template;
+                        const preview=createDevice(type,0,0,null,true);if(!preview)return;
+                        preview.el.hidden=false;
+                        const x=Math.max(sceneSideInset(),Math.min(world.offsetWidth-preview.el.offsetWidth-sceneSideInset(),snapCoordinate(point.x-preview.el.offsetWidth/2)));
+                        const y=Math.max(0,Math.min(maxEquipmentBottom()-preview.el.offsetHeight,snapCoordinate(point.y-preview.el.offsetHeight/2+preview.el.offsetHeight)-preview.el.offsetHeight));
+                        const target=snapOnEquipment(preview,x,y);updateCatalogPlacementPreview(preview,target);
+                        closeMobilePanels();
+                        const actions=document.createElement('div');actions.className='catalog-preview-actions';actions.innerHTML='<button type="button" data-preview-cancel>Cancelar</button><button type="button" data-preview-confirm>Adicionar</button>';document.body.appendChild(actions);
+                        const cleanupPreview=()=>{preview.el.remove();actions.remove();document.removeEventListener('keydown',escapePreview);if(activeCatalogPreviewCleanup===cleanupPreview)activeCatalogPreviewCleanup=null;};activeCatalogPreviewCleanup=cleanupPreview;
+                        const escapePreview=event=>{if(event.key==='Escape'){event.preventDefault();cleanupPreview();}};document.addEventListener('keydown',escapePreview);
+                        actions.querySelector('[data-preview-cancel]').onclick=cleanupPreview;
+                        actions.querySelector('[data-preview-confirm]').onclick=()=>{cleanupPreview();createDevice(type,target.x,target.y);rememberCatalogItem(type);playUiSound('drop');
+                            const added=appState.project.devices[appState.interface.selectedDeviceId];
+                            if(compactLayout.matches&&added){
+                                const width=added.el.offsetWidth,height=added.el.offsetHeight,tools=document.querySelector('.canvas-tools'),usableHeight=Math.max(120,rect.height-tools.offsetHeight-40);
+                                const zoom=clampZoom(Math.min(view.zoom,(rect.width-32)/width,(usableHeight-32)/height));
+                                animateViewTo({zoom,x:(rect.width-width*zoom)/2-(parseFloat(added.el.style.left)||0)*zoom,y:(usableHeight-height*zoom)/2-(parseFloat(added.el.style.top)||0)*zoom});
+                            }
+                        };actions.querySelector('[data-preview-confirm]').focus({preventScroll:true});
                     };
                     item.addEventListener('pointerup',tap);item.addEventListener('pointercancel',cleanup);return;
                 }
                 e.preventDefault();
                 window.getSelection()?.removeAllRanges();
                 const type = item.dataset.template;
+                const placementPreview=createDevice(type,0,0,null,true);
                 const rect = item.getBoundingClientRect();
                 const cRect = canvas.getBoundingClientRect();
                 
@@ -4971,24 +5007,54 @@ const Hardware = (() => {
                     if(e.pointerType==='touch'&&Math.hypot(ev.clientX-e.clientX,ev.clientY-e.clientY)>8)closeMobilePanels();
                     ghost.style.left = `${ev.clientX - offsetX}px`;
                     ghost.style.top = `${ev.clientY - offsetY}px`;
+                    if(placementPreview){
+                        const inside=ev.clientX>cRect.left&&ev.clientX<cRect.right&&ev.clientY>cRect.top&&ev.clientY<cRect.bottom;
+                        placementPreview.el.hidden=!inside;
+                        if(inside){const pos=screenToWorld(ev.clientX-offsetX+rect.width/2,ev.clientY-offsetY+rect.height/2),x=Math.max(0,snapCoordinate(pos.x-rect.width/2)),y=Math.max(0,snapCoordinate(pos.y-rect.height/2+placementPreview.el.offsetHeight)-placementPreview.el.offsetHeight),target=snapOnEquipment(placementPreview,x,y);updateCatalogPlacementPreview(placementPreview,target);}
+                    }
                 };
                 
                 const up = ev => {
                     window.removeEventListener('pointermove', move);
                     window.removeEventListener('pointerup', up);
-                    ghost.remove();
+                    window.removeEventListener('pointercancel', up);
+                    ghost.remove();placementPreview?.el.remove();
                     
-                    if (!ev.cancelled && ev.clientX > cRect.left && ev.clientX < cRect.right && ev.clientY > cRect.top && ev.clientY < cRect.bottom) {
+                    if (ev.type!=='pointercancel' && !ev.cancelled && ev.clientX > cRect.left && ev.clientX < cRect.right && ev.clientY > cRect.top && ev.clientY < cRect.bottom) {
                         const pos = screenToWorld(ev.clientX - offsetX + rect.width / 2, ev.clientY - offsetY + rect.height / 2);
                         createDevice(type, pos.x - rect.width / 2, pos.y - rect.height / 2);
+                        rememberCatalogItem(type);
                         playUiSound('drop');
                     }
                 };
                 
                 window.addEventListener('pointermove', move);
                 window.addEventListener('pointerup', up);
+                window.addEventListener('pointercancel', up);
             });
-        });
+        }
+        document.querySelectorAll('.catalog-item').forEach(bindCatalogItem);
+        const quickCatalog=document.createElement('section');quickCatalog.className='catalog-quick-access';
+        catalogContainer.prepend(quickCatalog);
+        const quickKey='audio-system-catalog-quick-v1';
+        let quickData;try{quickData=JSON.parse(localStorage.getItem(quickKey))||{};}catch{quickData={};}
+        const validTypes=new Set(catalogItems.map(item=>item.dataset.template));
+        const clean=list=>Array.isArray(list)?[...new Set(list.filter(type=>validTypes.has(type)))].slice(0,12):[];
+        quickData={favorites:clean(quickData.favorites),recent:clean(quickData.recent)};
+        function saveQuick(){try{localStorage.setItem(quickKey,JSON.stringify(quickData));}catch{}}
+        function updateStars(){catalogItems.forEach(item=>{const button=item.querySelector('.catalog-favorite');button?.setAttribute('aria-pressed',String(quickData.favorites.includes(item.dataset.template)));});}
+        function renderQuick(){
+            quickCatalog.replaceChildren();
+            for(const [title,types] of [['Favoritos',quickData.favorites],['Recentes',quickData.recent]]){
+                if(!types.length)continue;const section=document.createElement('div');section.className='mb-6';const heading=document.createElement('h3');heading.className='text-[10px] font-bold text-gray-500 mb-3 tracking-wider uppercase';heading.textContent=title;const grid=document.createElement('div');grid.className='grid grid-cols-2 gap-3';section.append(heading,grid);
+                types.forEach(type=>{const original=catalogItems.find(item=>item.dataset.template===type);if(!original)return;const copy=original.cloneNode(true);copy.querySelector('.catalog-favorite')?.remove();bindCatalogItem(copy);grid.appendChild(copy);});quickCatalog.appendChild(section);
+            }
+            updateStars();AudioSystemLanguage.translateTree?.(quickCatalog);
+        }
+        catalogItems.forEach(item=>{const button=document.createElement('button');button.type='button';button.className='catalog-favorite';button.title='Favoritar equipamento';button.setAttribute('aria-label','Favoritar equipamento');button.textContent='☆';button.addEventListener('pointerdown',event=>event.stopPropagation());button.addEventListener('click',event=>{event.stopPropagation();const type=item.dataset.template;quickData.favorites=quickData.favorites.includes(type)?quickData.favorites.filter(t=>t!==type):[type,...quickData.favorites].slice(0,12);saveQuick();renderQuick();});item.appendChild(button);});
+        equipmentSearch.addEventListener('input',()=>{quickCatalog.hidden=!!equipmentSearch.value.trim();});
+        function rememberCatalogItem(type){quickData.recent=[type,...quickData.recent.filter(t=>t!==type)].slice(0,8);saveQuick();renderQuick();}
+        renderQuick();
 
         function standardizeStereoPorts(root) {
             const channelOf = port => port?.dataset.channel || (/L$/.test(port?.dataset.node || '') ? 'L' : /R$/.test(port?.dataset.node || '') ? 'R' : '');
@@ -5988,7 +6054,7 @@ const Hardware = (() => {
             const drivers=type==='floorDiamond'?driver('mid',140,38)+driver('bass',172,270)+driver('bass',172,502):type==='floorCoax'?driver('bass',160,50)+driver('bass',160,255)+driver('coax',128,511)+driver('bass',160,735)+driver('bass',160,940):driver('mid',166,20)+driver('tweeter',52,214)+driver('bass',166,300)+driver('bass',166,498)+driver('bass',166,696);
             return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><section class="tower-body tower-${config.finish}">${type==='floorDiamond'?'<div class="tower-top-tweeter" aria-hidden="true"><i><b></b></i></div>':''}<div class="tower-cabinet"><div class="tower-baffle">${drivers}${type==='floorFlax'?'<div class="tower-front-vent" aria-hidden="true"></div>':''}<div class="tower-terminal"><div class="port" data-type="wire" data-io="in" data-node="in" data-signal="amplified" title="Entrada amplificada para caixa passiva"></div><small>SPEAKER IN</small></div></div></div><div class="tower-plinth" aria-hidden="true"></div><i class="tower-foot foot-left" aria-hidden="true"></i><i class="tower-foot foot-right" aria-hidden="true"></i></section>`;
         }
-        function createPendantLamp(x,y,requestedId=null){
+        function createPendantLamp(x,y,requestedId=null,previewOnly=false){
             const id=requestedId||'dev_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
             const el=document.createElement('div');
             el.id=id;el.className='device-node device-type-pendantLamp';el.dataset.equipmentType='pendantLamp';
@@ -6008,10 +6074,11 @@ const Hardware = (() => {
             el.style.left=Math.max(sceneSideInset(),Math.min(world.offsetWidth-504-sceneSideInset(),x))+'px';
             el.style.top=Math.max(0,Math.min(maxEquipmentBottom()-276,y))+'px';
             world.appendChild(el);
+            if(previewOnly){el.classList.add('catalog-placement-preview');el.hidden=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type:'pendantLamp',el};}
             const dev={id,type:'pendantLamp',el,nodes:{},state:{},powered:true};
             appStateStore.actions.registerDevice(dev);bindDeviceEvents(dev);selectDevice(id);updateCables();scheduleProjectSave();
         }
-        function createWallLamp(type,x,y,requestedId=null){
+        function createWallLamp(type,x,y,requestedId=null,previewOnly=false){
             const id=requestedId||'dev_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
             const model=WALL_LAMP_TYPES[type];
             const el=document.createElement('div');
@@ -6020,6 +6087,7 @@ const Hardware = (() => {
             el.tabIndex=0;el.setAttribute('aria-label',`${DEVICE_NAMES[type]}. Arraste pela luminária para posicionar.`);
             const shade=model==='dome'?'<svg class="wall-lamp-dome-shade" viewBox="0 0 420 110" aria-hidden="true"><defs><linearGradient id="wall-shade-'+id+'" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#171b1a"/><stop offset=".19" stop-color="#303532"/><stop offset=".5" stop-color="#515550"/><stop offset=".81" stop-color="#303532"/><stop offset="1" stop-color="#171b1a"/></linearGradient><pattern id="wall-brush-'+id+'" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 1h5M0 4h5" stroke="#c9c2ac" stroke-opacity=".1" stroke-width=".5"/></pattern></defs><path d="M193 5 Q183 7 175 16 C140 51 89 73 16 87 Q10 89 12 93 Q100 99 210 98 Q320 99 408 93 Q410 89 404 87 C331 73 280 51 245 16 Q237 7 227 5Z" fill="url(#wall-shade-'+id+')"/><path d="M193 5 Q183 7 175 16 C140 51 89 73 16 87 Q10 89 12 93 Q100 99 210 98 Q320 99 408 93 Q410 89 404 87 C331 73 280 51 245 16 Q237 7 227 5Z" fill="url(#wall-brush-'+id+')"/><path d="M173 19Q210 25 247 19M45 84Q210 95 375 84" fill="none" stroke="#b5b3a3" stroke-opacity=".24" stroke-width="1"/><path d="M13 92Q210 103 407 92" fill="none" stroke="#9a937f" stroke-opacity=".55" stroke-width="5"/><path d="M40 97Q210 111 380 97" fill="none" stroke="#bb925e" stroke-opacity=".4" stroke-width="5"/></svg>':'';
             el.innerHTML=`<div class="device-header" aria-hidden="true"></div><span class="wall-lamp-plate"><i></i><i></i></span><span class="wall-lamp-arm"></span><span class="wall-lamp-socket"></span><span class="wall-lamp-bulb"><i class="wall-lamp-filament"></i></span>${model==='cage'?'<span class="wall-lamp-glass"></span><span class="wall-lamp-cage"></span>':shade}`;
+            if(previewOnly){world.appendChild(el);el.classList.add('catalog-placement-preview');el.hidden=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type,el};}
             wallLampLayer.appendChild(el);
             const parallaxScale=canvas.dataset.theme==='scene'?parseFloat(world.style.getPropertyValue('--room-far-scale'))||1:1;
             const farX=canvas.dataset.theme==='scene'?parseFloat(world.style.getPropertyValue('--room-far-x'))||0:0;
@@ -6099,10 +6167,10 @@ const Hardware = (() => {
             inspectorContent.querySelectorAll('[data-classic-setting]').forEach(input=>input.addEventListener('input',()=>{dev.setClassicPreamp(input.dataset.classicSetting,Number(input.value));const output=input.parentElement.querySelector('output');if(output)output.textContent=integratedSettingText('bass',Number(input.value));}));
             inspectorContent.querySelectorAll('[data-classic-inspector-toggle]').forEach(button=>button.addEventListener('click',()=>dev.el.querySelector(`[data-classic-toggle="${button.dataset.classicInspectorToggle}"]`).click()));
         }
-        function createDevice(type, x, y, requestedId=null) {
-            if(type==='pendantLamp')return createPendantLamp(x,y,requestedId);
-            if(WALL_LAMP_TYPES[type])return createWallLamp(type,x,y,requestedId);
-            initAudio();
+        function createDevice(type, x, y, requestedId=null, previewOnly=false) {
+            if(type==='pendantLamp')return createPendantLamp(x,y,requestedId,previewOnly);
+            if(WALL_LAMP_TYPES[type])return createWallLamp(type,x,y,requestedId,previewOnly);
+            if(!previewOnly)initAudio();
             const id = requestedId||'dev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
             const el = document.createElement('div');
             el.className = 'device-node';el.dataset.equipmentType=type;
@@ -6328,6 +6396,7 @@ const Hardware = (() => {
             });
             Hardware.layout({type,el});
             world.appendChild(el);
+            if(previewOnly){el.classList.add('catalog-placement-preview');el.hidden=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type,el};}
 
             const dev = { id, type, el, nodes: {}, state: { volume: 0.8, bass: 0, treble: 0, eq: [0, 0, 0, 0, 0] }, powered: true };
             const placement = appState.project.restoringProject?{
@@ -9063,7 +9132,7 @@ const Hardware = (() => {
             let closest = null;
             let minDist = maxDist;
             document.querySelectorAll('.port').forEach(p => {
-                if (p === startPort) return;
+                if (p === startPort || p.closest('.catalog-placement-preview')) return;
                 const rect = p.getBoundingClientRect();
                 const anchor=getPortScreenAnchor(p);
                 const cx=anchor.x,cy=anchor.y;
@@ -9121,7 +9190,7 @@ const Hardware = (() => {
                 dragPhysics.lastTime = now;
                 
                 // Busca porta compatível próxima com efeito magnético
-                const candidate = findTargetPortNear(e.clientX, e.clientY, 32);
+                const candidate = findTargetPortNear(e.clientX, e.clientY, e.pointerType==='touch'?54:36);
                 if (candidate !== hoveredTargetPort) {
                     if (hoveredTargetPort) hoveredTargetPort.classList.remove('port-highlight');
                     hoveredTargetPort = candidate;
@@ -9154,7 +9223,7 @@ const Hardware = (() => {
                 const hazardous=!!attempted?.damageRisk;
                 if(appState.preferences.connectionGuidanceEnabled&&hazardous){cancelCableDrag();offerDamageSimulation(attempted);return;}
                 if (!tPort || isPortOccupied(tPort) || !arePortsCompatible(startPort, tPort)) {
-                    tPort = findTargetPortNear(e.clientX, e.clientY, 36);
+                    tPort = findTargetPortNear(e.clientX, e.clientY, e.pointerType==='touch'?54:36);
                 }
                 
                 if (tPort && arePortsCompatible(startPort, tPort)) {
@@ -9735,7 +9804,7 @@ const Hardware = (() => {
             return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,vinyls,albums,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{
                 environment:{...(appState.audio.environment||DEFAULT_ROOM_SETTINGS)},
                 canvasGrid:appState.canvas.grid||'dots',canvasTheme:appState.canvas.theme||'scene',canvasBackdrop:appState.canvas.backdrop||DEFAULT_BACKDROP,canvasTime:appState.canvas.time||'dusk',
-                soundVolume:appState.preferences.uiSoundVolume??DEFAULT_UI_SOUND_VOLUME,hideCables:!!appState.canvas.hideCables,
+                soundVolume:appState.preferences.uiSoundVolume??DEFAULT_UI_SOUND_VOLUME,equipmentSoundVolume:appState.preferences.equipmentSoundVolume??.5,hideCables:!!appState.canvas.hideCables,
                 selected:[...appState.interface.selectedDeviceIds],selectedCable:appState.project.connections.indexOf(appState.interface.selectedConnection),
                 search:document.getElementById('equipment-search').value,catalogScroll:catalogScroll?.scrollTop||0,inspectorScroll:inspectorContent.scrollTop
             }};
@@ -9892,6 +9961,7 @@ const Hardware = (() => {
                 setRoomSettings(ui.environment);
                 cableVisibilityButton.setAttribute('aria-pressed',String(!!ui.hideCables));
                 appStateStore.actions.setPreference('uiSoundVolume',typeof ui.soundVolume==='number'?Math.max(0,Math.min(1,ui.soundVolume)):DEFAULT_UI_SOUND_VOLUME);appStateStore.actions.setCanvasOption('hideCables',!!ui.hideCables);
+                appStateStore.actions.setPreference('equipmentSoundVolume',typeof ui.equipmentSoundVolume==='number'?Math.max(0,Math.min(1,ui.equipmentSoundVolume)):.5);const equipmentSound=document.getElementById('equipment-sound-volume');equipmentSound.value=Math.round(appState.preferences.equipmentSoundVolume*100);document.getElementById('equipment-sound-value').textContent=appState.preferences.equipmentSoundVolume?`${equipmentSound.value}%`:'desligados';syncEquipmentAcoustics(performance.now(),true);
                 const sound=document.getElementById('ui-sound-volume');sound.value=Math.round(appState.preferences.uiSoundVolume*100);document.getElementById('ui-sound-value').textContent=appState.preferences.uiSoundVolume?`${sound.value}%`:'desligados';uiEffectsGain?.gain.setValueAtTime(interactionGain(appState.preferences.uiSoundVolume),appState.audio.context.currentTime);
                 const search=document.getElementById('equipment-search');search.value=typeof ui.search==='string'?ui.search:'';search.dispatchEvent(new Event('input'));
                 if(snapshot.view&&snapshot.devices.length){view.zoom=clampZoom(Number(snapshot.view.zoom)||1);view.x=Number(snapshot.view.x)||0;view.y=Number(snapshot.view.y)||0;}

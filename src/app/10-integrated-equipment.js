@@ -526,7 +526,7 @@
             const drivers=type==='floorDiamond'?driver('mid',140,38)+driver('bass',172,270)+driver('bass',172,502):type==='floorCoax'?driver('bass',160,50)+driver('bass',160,255)+driver('coax',128,511)+driver('bass',160,735)+driver('bass',160,940):driver('mid',166,20)+driver('tweeter',52,214)+driver('bass',166,300)+driver('bass',166,498)+driver('bass',166,696);
             return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><section class="tower-body tower-${config.finish}">${type==='floorDiamond'?'<div class="tower-top-tweeter" aria-hidden="true"><i><b></b></i></div>':''}<div class="tower-cabinet"><div class="tower-baffle">${drivers}${type==='floorFlax'?'<div class="tower-front-vent" aria-hidden="true"></div>':''}<div class="tower-terminal"><div class="port" data-type="wire" data-io="in" data-node="in" data-signal="amplified" title="Entrada amplificada para caixa passiva"></div><small>SPEAKER IN</small></div></div></div><div class="tower-plinth" aria-hidden="true"></div><i class="tower-foot foot-left" aria-hidden="true"></i><i class="tower-foot foot-right" aria-hidden="true"></i></section>`;
         }
-        function createPendantLamp(x,y,requestedId=null){
+        function createPendantLamp(x,y,requestedId=null,previewOnly=false){
             const id=requestedId||'dev_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
             const el=document.createElement('div');
             el.id=id;el.className='device-node device-type-pendantLamp';el.dataset.equipmentType='pendantLamp';
@@ -546,10 +546,11 @@
             el.style.left=Math.max(sceneSideInset(),Math.min(world.offsetWidth-504-sceneSideInset(),x))+'px';
             el.style.top=Math.max(0,Math.min(maxEquipmentBottom()-276,y))+'px';
             world.appendChild(el);
+            if(previewOnly){el.classList.add('catalog-placement-preview');el.hidden=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type:'pendantLamp',el};}
             const dev={id,type:'pendantLamp',el,nodes:{},state:{},powered:true};
             appStateStore.actions.registerDevice(dev);bindDeviceEvents(dev);selectDevice(id);updateCables();scheduleProjectSave();
         }
-        function createWallLamp(type,x,y,requestedId=null){
+        function createWallLamp(type,x,y,requestedId=null,previewOnly=false){
             const id=requestedId||'dev_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
             const model=WALL_LAMP_TYPES[type];
             const el=document.createElement('div');
@@ -558,6 +559,7 @@
             el.tabIndex=0;el.setAttribute('aria-label',`${DEVICE_NAMES[type]}. Arraste pela luminária para posicionar.`);
             const shade=model==='dome'?'<svg class="wall-lamp-dome-shade" viewBox="0 0 420 110" aria-hidden="true"><defs><linearGradient id="wall-shade-'+id+'" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#171b1a"/><stop offset=".19" stop-color="#303532"/><stop offset=".5" stop-color="#515550"/><stop offset=".81" stop-color="#303532"/><stop offset="1" stop-color="#171b1a"/></linearGradient><pattern id="wall-brush-'+id+'" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 1h5M0 4h5" stroke="#c9c2ac" stroke-opacity=".1" stroke-width=".5"/></pattern></defs><path d="M193 5 Q183 7 175 16 C140 51 89 73 16 87 Q10 89 12 93 Q100 99 210 98 Q320 99 408 93 Q410 89 404 87 C331 73 280 51 245 16 Q237 7 227 5Z" fill="url(#wall-shade-'+id+')"/><path d="M193 5 Q183 7 175 16 C140 51 89 73 16 87 Q10 89 12 93 Q100 99 210 98 Q320 99 408 93 Q410 89 404 87 C331 73 280 51 245 16 Q237 7 227 5Z" fill="url(#wall-brush-'+id+')"/><path d="M173 19Q210 25 247 19M45 84Q210 95 375 84" fill="none" stroke="#b5b3a3" stroke-opacity=".24" stroke-width="1"/><path d="M13 92Q210 103 407 92" fill="none" stroke="#9a937f" stroke-opacity=".55" stroke-width="5"/><path d="M40 97Q210 111 380 97" fill="none" stroke="#bb925e" stroke-opacity=".4" stroke-width="5"/></svg>':'';
             el.innerHTML=`<div class="device-header" aria-hidden="true"></div><span class="wall-lamp-plate"><i></i><i></i></span><span class="wall-lamp-arm"></span><span class="wall-lamp-socket"></span><span class="wall-lamp-bulb"><i class="wall-lamp-filament"></i></span>${model==='cage'?'<span class="wall-lamp-glass"></span><span class="wall-lamp-cage"></span>':shade}`;
+            if(previewOnly){world.appendChild(el);el.classList.add('catalog-placement-preview');el.hidden=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type,el};}
             wallLampLayer.appendChild(el);
             const parallaxScale=canvas.dataset.theme==='scene'?parseFloat(world.style.getPropertyValue('--room-far-scale'))||1:1;
             const farX=canvas.dataset.theme==='scene'?parseFloat(world.style.getPropertyValue('--room-far-x'))||0:0;

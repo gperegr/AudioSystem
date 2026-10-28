@@ -492,6 +492,7 @@ const Hardware = (() => {
     function bindKnob(el,{get,set,min=0,max=1,step=null,activate,format,model,kind='knob',pointerToValue,width,height}){
         if(!el||bindings.has(el))return;
         if(kind==='knob')setControlSize(el,{width,height});
+        const defaultValue=get();
         const continuous=step==null&&kind==='linear',precision=step??(max-min)/(kind==='knob'?physics.detents:1000);
         const keyboardStep=step??(kind==='knob'?precision:min<0&&max>0 ? .1 : (max-min)/100);
         const detents=continuous?(min<0&&max>0?[0]:min===0&&max===1?[0,.5,1]:[min,max]):[];
@@ -506,13 +507,14 @@ const Hardware = (() => {
         const commit=()=>{if(el.isConnected){updateCableFlows();scheduleProjectSave();}};
         el.addEventListener('pointerdown',event=>{
             if(event.button!==0||el.disabled)return;event.preventDefault();event.stopPropagation();activate?.();el.classList.add('hw-pointer-focus');el.focus({preventScroll:true});
-            const pointer=event.pointerId,start=get(),x=event.clientX,y=event.clientY,zoom=Math.max(.1,view.zoom);let holdOpened=false;el.setPointerCapture(pointer);el.classList.add('hw-turning');showKnobReadout(el);
+            const pointer=event.pointerId,start=get(),x=event.clientX,y=event.clientY,zoom=Math.max(.1,view.zoom);let holdOpened=false,anchorX=x,anchorY=y,anchorValue=start,fine=event.shiftKey;el.setPointerCapture(pointer);el.classList.add('hw-turning');showKnobReadout(el);
             clearTimeout(knobHoldTimer);knobHoldTimer=setTimeout(()=>{if(el.hasPointerCapture(pointer)){holdOpened=true;showFineControl(el);}},480);
             if(pointerToValue)change(pointerToValue(event),true);
-            const move=e=>{if(e.pointerId===pointer){if(Math.hypot(e.clientX-x,e.clientY-y)>8&&!holdOpened)clearTimeout(knobHoldTimer);e.preventDefault();change(pointerToValue?pointerToValue(e):start+((y-e.clientY)+(e.clientX-x)*.35)*(max-min)/(physics.travel*zoom),true);}};
+            const move=e=>{if(e.pointerId===pointer){if(Math.hypot(e.clientX-x,e.clientY-y)>8&&!holdOpened)clearTimeout(knobHoldTimer);e.preventDefault();if(!pointerToValue&&fine!==e.shiftKey){fine=e.shiftKey;anchorX=e.clientX;anchorY=e.clientY;anchorValue=get();}change(pointerToValue?(e.shiftKey?start+(pointerToValue(e)-start)*.2:pointerToValue(e)):anchorValue+((anchorY-e.clientY)+(e.clientX-anchorX)*.35)*(max-min)/(physics.travel*zoom)*(fine?.2:1),!e.shiftKey);}};
             const finish=e=>{if(e?.pointerId!=null&&e.pointerId!==pointer)return;clearTimeout(knobHoldTimer);el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',finish);el.removeEventListener('pointercancel',finish);el.removeEventListener('lostpointercapture',finish);window.removeEventListener('blur',finish);releases.delete(el);el.classList.remove('hw-turning');if(el.hasPointerCapture(pointer))el.releasePointerCapture(pointer);hideKnobReadout();if(holdOpened&&fineControlPanel){fineControlPanel.querySelector('input').focus({preventScroll:true});}commit();};
             releases.set(el,finish);el.addEventListener('pointermove',move);el.addEventListener('pointerup',finish);el.addEventListener('pointercancel',finish);el.addEventListener('lostpointercapture',finish);window.addEventListener('blur',finish);
         });
+        if(kind==='knob')el.addEventListener('dblclick',event=>{event.preventDefault();event.stopPropagation();activate?.();change(min<0&&max>0?0:defaultValue);commit();});
         el.addEventListener('blur',()=>{el.classList.remove('hw-pointer-focus');if(readoutOwner===el)hideKnobReadout(0);});
         el.addEventListener('keydown',event=>{
             el.classList.remove('hw-pointer-focus');

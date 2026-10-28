@@ -28,3 +28,5 @@ The two turntable browser tests share `turntable-geometry.helpers.cjs`: they com
 `node tests/electrostatic-speaker.browser.cjs` checks the classic electrostatic panel dimensions, passive input, electrical references, sensitivity trim and actual Web Audio filter response. It also checks the inspector and disposal. Preview: `/tmp/electrostatic-speaker.png`.
 
 `equipment-acoustics.test.cjs` checks equipment eligibility, transport state, a bounded voice count and resource disposal. `node tests/equipment-acoustics.browser.cjs` checks real Web Audio, an offline-rendered RMS/peak loudness budget, power/removal, page visibility and interaction mute. It accepts `TAILWIND_SCRIPT_FILE` for offline styling.
+
+`node tests/quality-of-life.browser.cjs` verifies catalog previews without registering devices, dimensions for all catalog models, drag cleanup, persisted favorites and recents, the frame button and the separate operating sound control. Set `TAILWIND_SCRIPT_FILE` to test offline.
