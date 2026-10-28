@@ -1624,8 +1624,12 @@ const Hardware = (() => {
         const canvasThemeControl=document.createElement('label');canvasThemeControl.className='canvas-theme-control';
         canvasThemeControl.innerHTML='<span>Fundo</span><select id="canvas-theme" aria-label="Cor do fundo do canvas">'+Object.entries(canvasThemes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
         document.querySelector('.canvas-tools').appendChild(canvasThemeControl);
+        function syncInterfacePalette(){
+            const state=appState.canvas,root=document.documentElement;
+            root.dataset.uiPalette=state.theme==='scene'?`scene-${state.backdrop||'studioIllustrated'}-${state.time||'dusk'}`:state.theme;
+        }
         function setCanvasTheme(theme){
-            theme=Object.hasOwn(canvasThemes,theme)?theme:'scene';appStateStore.actions.setCanvasTheme(theme);canvas.dataset.theme=theme;
+            theme=Object.hasOwn(canvasThemes,theme)?theme:'scene';appStateStore.actions.setCanvasTheme(theme);canvas.dataset.theme=theme;syncInterfacePalette();
             if(theme==='scene')startRoomMotes();else stopRoomMotes();
             if(theme==='scene')Object.values(appState.project.devices).forEach(dev=>{
                 dev.el.style.left=Math.max(ROOM_SIDE_INSET,Math.min(world.offsetWidth-dev.el.offsetWidth-ROOM_SIDE_INSET,dev.el.offsetLeft))+'px';
@@ -1773,7 +1777,7 @@ const Hardware = (() => {
         document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')startRoomMotes();else stopRoomMotes();});
         function setCanvasBackdrop(mode){
             mode=legacyBackdrops[mode]||mode;
-            mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studioIllustrated';appStateStore.actions.setCanvasBackdrop(mode);canvas.dataset.backdrop=mode;canvasBackdropControl.querySelector('select').value=mode;
+            mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studioIllustrated';appStateStore.actions.setCanvasBackdrop(mode);canvas.dataset.backdrop=mode;syncInterfacePalette();canvasBackdropControl.querySelector('select').value=mode;
             const scene=RoomScenes.scenes[mode];
             const imageName=RoomScenes.imageForTime(scene,appState.canvas.time);
             const src=`./assets/rooms/${imageName}.webp?v=aligned-floor`;
@@ -9537,16 +9541,17 @@ const Hardware = (() => {
             if(!spectrum.canvas.isConnected||!appState.project.devices[spectrum.dev.id]){disposeSpectrum();return;}
             const canvas=spectrum.canvas,width=Math.max(220,canvas.clientWidth),height=170,ratio=window.devicePixelRatio||1;
             if(canvas.width!==Math.round(width*ratio)||canvas.height!==Math.round(height*ratio)){canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);}
-            const ctx=canvas.getContext('2d');ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,width,height);ctx.fillStyle='#10171c';ctx.fillRect(0,0,width,height);
+            const ctx=canvas.getContext('2d'),palette=getComputedStyle(document.documentElement);ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,width,height);ctx.fillStyle=palette.getPropertyValue('--ui-control').trim()||'#10171c';ctx.fillRect(0,0,width,height);
             const left=30,right=12,top=14,bottom=25,w=width-left-right,h=height-top-bottom;
             const x=f=>left+Math.log10(f/20)/3*w,y=db=>top+(1-Math.max(0,Math.min(1,(db+90)/90)))*h;
+            const muted=palette.getPropertyValue('--ui-muted').trim()||'#8294a0',border=palette.getPropertyValue('--ui-border').trim()||'#34404a',accent=palette.getPropertyValue('--ui-accent').trim()||'#55c7ff';
             ctx.font='9px "Inter",sans-serif';ctx.lineWidth=1;
-            [0,-30,-60,-90].forEach(db=>{ctx.strokeStyle='#34404a';ctx.beginPath();ctx.moveTo(left,y(db));ctx.lineTo(width-right,y(db));ctx.stroke();ctx.fillStyle='#8294a0';ctx.textAlign='right';ctx.fillText(String(db),left-5,y(db)+3);});
-            [[20,'20'],[100,'100'],[1000,'1k'],[10000,'10k'],[20000,'20k']].forEach(([f,label])=>{ctx.strokeStyle='#25323b';ctx.beginPath();ctx.moveTo(x(f),top);ctx.lineTo(x(f),height-bottom);ctx.stroke();ctx.fillStyle='#8294a0';ctx.textAlign='center';ctx.fillText(label,x(f),height-9);});
+            [0,-30,-60,-90].forEach(db=>{ctx.strokeStyle=border;ctx.beginPath();ctx.moveTo(left,y(db));ctx.lineTo(width-right,y(db));ctx.stroke();ctx.fillStyle=muted;ctx.textAlign='right';ctx.fillText(String(db),left-5,y(db)+3);});
+            [[20,'20'],[100,'100'],[1000,'1k'],[10000,'10k'],[20000,'20k']].forEach(([f,label])=>{ctx.strokeStyle=border;ctx.beginPath();ctx.moveTo(x(f),top);ctx.lineTo(x(f),height-bottom);ctx.stroke();ctx.fillStyle=muted;ctx.textAlign='center';ctx.fillText(label,x(f),height-9);});
             let inputPeak=-Infinity;
             spectrum.taps.forEach((tap,index)=>{
                 tap.analyzer.getFloatFrequencyData(tap.data);
-                ctx.strokeStyle=index?'#55c7ff':'#a3adb8';ctx.lineWidth=index?1.8:1.2;ctx.beginPath();
+                ctx.strokeStyle=index?accent:muted;ctx.lineWidth=index?1.8:1.2;ctx.beginPath();
                 for(let step=0;step<=180;step++){
                     const f=20*Math.pow(1000,step/180),next=20*Math.pow(1000,(step+1)/180);
                     const bin=f/(appState.audio.context.sampleRate/2)*tap.data.length,end=Math.min(tap.data.length-1,Math.ceil(next/(appState.audio.context.sampleRate/2)*tap.data.length));

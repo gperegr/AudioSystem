@@ -1,0 +1,96 @@
+/* Interface-only colors. Equipment artwork and the room never inherit these values. */
+:root{
+  --ui-top:#20262d;--ui-side:#181f26;--ui-panel:#202b35;--ui-control:#293743;--ui-hover:#344856;--ui-border:#526575;
+  --ui-text:#edf3f6;--ui-secondary:#b5c5d0;--ui-muted:#93a8b6;--ui-active:#3d5a69;--ui-accent:#8bbfda;--ui-shadow:#0006;--ui-scheme:dark;
+  --bg-panel:var(--ui-panel);
+}
+:root[data-ui-palette="light"]{--ui-top:#f4f5f5;--ui-side:#ebeeee;--ui-panel:#f8f9f9;--ui-control:#e2e8e9;--ui-hover:#d1dddf;--ui-border:#98aeb2;--ui-text:#203239;--ui-secondary:#3c555e;--ui-muted:#546f77;--ui-active:#c4dfe3;--ui-accent:#226c80;--ui-shadow:#243f482b;--ui-scheme:light;}
+:root[data-ui-palette="sepia"]{--ui-top:#eee4d1;--ui-side:#e6d9c1;--ui-panel:#f4ead7;--ui-control:#e1d2b9;--ui-hover:#d4c0a1;--ui-border:#a79375;--ui-text:#3c3024;--ui-secondary:#594634;--ui-muted:#705b42;--ui-active:#d7c3a2;--ui-accent:#865a2b;--ui-shadow:#54351e33;--ui-scheme:light;}
+:root[data-ui-palette="graphite"]{--ui-top:#242729;--ui-side:#1c1f21;--ui-panel:#2b3032;--ui-control:#373e40;--ui-hover:#485052;--ui-border:#657174;--ui-text:#f0f3f2;--ui-secondary:#c2ceca;--ui-muted:#a1b0ab;--ui-active:#4c625d;--ui-accent:#a8d2bf;}
+:root[data-ui-palette="midnight"]{--ui-top:#162338;--ui-side:#111c2c;--ui-panel:#1c2d43;--ui-control:#273f59;--ui-hover:#36536f;--ui-border:#526e8b;--ui-text:#eef5ff;--ui-secondary:#c1d2e4;--ui-muted:#9cb4cc;--ui-active:#355d7d;--ui-accent:#9dcdf1;}
+/* Each room has a distinct tint at each time of day. */
+:root[data-ui-palette="scene-studioIllustrated-dawn"]{--ui-top:#e6e6dd;--ui-side:#dadbd1;--ui-panel:#f0efe4;--ui-control:#d2d8ce;--ui-hover:#c2cbc0;--ui-border:#93a399;--ui-text:#283a34;--ui-secondary:#405a50;--ui-muted:#597266;--ui-active:#b7d0c0;--ui-accent:#316c59;--ui-shadow:#313e3033;--ui-scheme:light;}
+:root[data-ui-palette="scene-listeningIllustrated-dawn"]{--ui-top:#eee5d8;--ui-side:#e5d6c5;--ui-panel:#f5eadd;--ui-control:#e0cebc;--ui-hover:#d3bda5;--ui-border:#a9957e;--ui-text:#3a3028;--ui-secondary:#59483b;--ui-muted:#735d4c;--ui-active:#d8bfa4;--ui-accent:#825237;--ui-shadow:#4b332233;--ui-scheme:light;}
+:root[data-ui-palette="scene-loftIllustrated-dawn"]{--ui-top:#e1e5e3;--ui-side:#d5dcda;--ui-panel:#eef1ed;--ui-control:#cdd8d3;--ui-hover:#bccdc6;--ui-border:#8da59b;--ui-text:#283b35;--ui-secondary:#425c52;--ui-muted:#597268;--ui-active:#b3d0c1;--ui-accent:#326f58;--ui-shadow:#293d3433;--ui-scheme:light;}
+:root[data-ui-palette="scene-studioIllustrated-dusk"]{--ui-top:#302a26;--ui-side:#26211f;--ui-panel:#372e29;--ui-control:#493c33;--ui-hover:#5a493b;--ui-border:#806d59;--ui-text:#f6eee4;--ui-secondary:#dccaba;--ui-muted:#c1ab96;--ui-active:#6a4e38;--ui-accent:#ebbc88;}
+:root[data-ui-palette="scene-listeningIllustrated-dusk"]{--ui-top:#302723;--ui-side:#261d1b;--ui-panel:#382b26;--ui-control:#4a3931;--ui-hover:#5d493d;--ui-border:#846c5b;--ui-text:#f8eee4;--ui-secondary:#ddc7b7;--ui-muted:#c2a795;--ui-active:#704d3a;--ui-accent:#e9b48b;}
+:root[data-ui-palette="scene-loftIllustrated-dusk"]{--ui-top:#2d2926;--ui-side:#24211e;--ui-panel:#342e29;--ui-control:#453d35;--ui-hover:#584b3d;--ui-border:#7f705d;--ui-text:#f4eee4;--ui-secondary:#d9cabc;--ui-muted:#bda995;--ui-active:#645442;--ui-accent:#dfbd93;}
+:root[data-ui-palette="scene-studioIllustrated-night"]{--ui-top:#19252c;--ui-side:#131e24;--ui-panel:#20313a;--ui-control:#2b414b;--ui-hover:#385560;--ui-border:#53727d;--ui-text:#e9f3f4;--ui-secondary:#b9d0d4;--ui-muted:#9cb8bd;--ui-active:#345b61;--ui-accent:#9fd4d0;}
+:root[data-ui-palette="scene-listeningIllustrated-night"]{--ui-top:#20232d;--ui-side:#181b26;--ui-panel:#292d3a;--ui-control:#383e4d;--ui-hover:#4a5161;--ui-border:#667082;--ui-text:#f0f1f8;--ui-secondary:#c6cad9;--ui-muted:#aeb4c6;--ui-active:#4d566b;--ui-accent:#b7c9e3;}
+:root[data-ui-palette="scene-loftIllustrated-night"]{--ui-top:#192633;--ui-side:#121f2b;--ui-panel:#203342;--ui-control:#2b4354;--ui-hover:#3a586a;--ui-border:#567387;--ui-text:#eaf3f8;--ui-secondary:#bbd0df;--ui-muted:#9fb9cb;--ui-active:#385c72;--ui-accent:#a0cee9;}
+
+/* The application chrome, sidebars and settings inherit their current palette. */
+#app-topbar{background:var(--ui-top)!important;border-color:var(--ui-border)!important;color:var(--ui-text)!important;}
+#app-topbar :is(.text-gray-100,.text-gray-200,.text-gray-300){color:var(--ui-text)!important;}
+#app-topbar .canvas-tools,#app-topbar .canvas-tools button{color:var(--ui-secondary);}
+#app-topbar .canvas-tools button:hover:not(:disabled),#app-topbar .canvas-tools button:focus-visible{background:var(--ui-hover);color:var(--ui-text);}
+#app-topbar .canvas-tools #zoom-label,#app-topbar .canvas-tools .selection-hint{color:var(--ui-secondary);}
+#equipment-catalog,#inspector{background:var(--ui-side)!important;border-color:var(--ui-border)!important;color:var(--ui-text);color-scheme:var(--ui-scheme);}
+#equipment-catalog .catalog-item{background:var(--ui-panel);border-color:var(--ui-border);color:var(--ui-text);}
+#equipment-catalog .catalog-item:hover{background:var(--ui-hover);border-color:var(--ui-accent);}
+#equipment-catalog .catalog-item>span{color:var(--ui-text)!important;}
+#equipment-catalog .catalog-item svg{color:var(--ui-secondary)!important;}
+#equipment-catalog h3,#equipment-catalog .touch-catalog-hint{color:var(--ui-secondary)!important;}
+#equipment-catalog :is(input[type=search],.catalog-search){background:var(--ui-control)!important;color:var(--ui-text)!important;border-color:var(--ui-border)!important;}
+#equipment-catalog input[type=search]::placeholder{color:var(--ui-muted);opacity:1;}
+#equipment-catalog .catalog-favorite:not([aria-pressed=true]){color:var(--ui-muted);opacity:.65;}
+#equipment-catalog .catalog-favorite[aria-pressed=true]{color:var(--ui-accent);}
+#inspector>.inspector-panel-header,#inspector-empty{background:var(--ui-side);border-color:var(--ui-border);color:var(--ui-secondary)!important;}
+#inspector .inspector-panel-header>span{color:var(--ui-text);}
+#inspector-content{color:var(--ui-text);}
+#inspector-content :is(.text-gray-100,.text-gray-200,.text-gray-300){color:var(--ui-text)!important;}
+#inspector-content :is(.text-gray-400,.text-gray-500){color:var(--ui-secondary)!important;}
+#inspector-content :is(.border-gray-700,.border-gray-800){border-color:var(--ui-border)!important;}
+#inspector-content :is(.sonic-profile,.sonic-signature-panel,.model-specs,.headphone-output-specs,.port-signal-panel,.listening-output-controls,.ai-inspector,.spectrum-panel,.signal-history-panel,.spotify-coverflow-inspector){border-color:var(--ui-border);}
+#inspector-content :is(.sonic-profile,.sonic-signature-panel,.model-specs,.headphone-output-specs,.port-signal-panel,.listening-output-controls,.ai-inspector,.spectrum-panel,.signal-history-panel,.spotify-coverflow-inspector){background:var(--ui-panel);color:var(--ui-text);}
+#inspector-content :is(.sonic-profile-title,.sonic-trait-label,.sonic-signature-panel h3,.port-signal-panel h3,.port-signal-row strong,.model-specs-heading,.headphone-output-heading,.ai-inspector h3,.signal-history-panel summary){color:var(--ui-text);}
+#inspector-content :is(.sonic-trait-extremes,.sonic-trait-extremes>span:nth-child(2),.sonic-profile-note,.port-signal-row small,.ai-inspector p,.ai-inspector small,.signal-history-panel>small,.signal-history-legend small,.signal-history-reading small){color:var(--ui-secondary);}
+#inspector-content :is(.model-spec,.sonic-band,.headphone-output-specs dl>div){background:var(--ui-control);border-color:var(--ui-border);}
+#inspector-content :is(.model-spec dt,.headphone-output-specs dt,.sonic-band-name){color:var(--ui-secondary);}
+#inspector-content :is(.model-spec dd,.headphone-output-specs dd,.signal-history-reading output){color:var(--ui-text);}
+#inspector-content :is(.model-spec-icon,.port-signal-direction){background:var(--ui-panel);border-color:var(--ui-border);color:var(--ui-secondary);}
+#inspector-content :is(.tt-insp-btn,button:not(.signal-history-name)):not([data-state=protection]){background:var(--ui-control)!important;border-color:var(--ui-border)!important;color:var(--ui-text)!important;}
+#inspector-content :is(.tt-insp-btn,button):is(.is-on,[aria-pressed=true]){background:var(--ui-active)!important;border-color:var(--ui-accent)!important;color:var(--ui-text)!important;}
+#inspector-content :is(.tt-insp-btn,button):hover:not(:disabled){background:var(--ui-hover)!important;}
+#inspector-content .sonic-trait-dot,#inspector-content .sonic-band-dots i{background:var(--ui-control);border-color:var(--ui-border);}
+#inspector-content .sonic-trait-dot.is-active,#inspector-content .sonic-band-dots i.is-active{background:var(--ui-accent);border-color:var(--ui-text);}
+.app-settings{color:var(--ui-text);}
+.app-settings>summary,.sidebar-pin,.sidebar-edge-tab,.mobile-inspector-close,.mobile-catalog-close,.mobile-panel-controls button{background:var(--ui-control)!important;border-color:var(--ui-border)!important;color:var(--ui-text)!important;}
+.app-settings>summary:hover,.app-settings[open]>summary,.mobile-panel-controls button:hover{background:var(--ui-hover)!important;}
+.app-settings-content{background:var(--ui-side);border-color:var(--ui-border);color:var(--ui-text);box-shadow:0 12px 36px var(--ui-shadow);color-scheme:var(--ui-scheme);}
+.app-settings-content :is(.settings-group,.language-setting){background:var(--ui-panel);border-color:var(--ui-border);color:var(--ui-text);}
+.app-settings-content :is(.settings-group>summary,.canvas-theme-control,.connection-help-setting,.language-setting){color:var(--ui-text);}
+.app-settings-content :is(.settings-group>summary svg,.settings-group>summary::after,.connection-help-setting small,.settings-particle-control small,.room-settings p,.headphone-calibration-setting p,.listening-level-settings p){color:var(--ui-secondary);}
+.app-settings-content .settings-group-content{border-color:var(--ui-border);}
+.app-settings-content :is(button,select):not(#clear-system){background:var(--ui-control);border-color:var(--ui-border);color:var(--ui-text);color-scheme:var(--ui-scheme);}
+.app-settings-content :is(button,select):not(#clear-system):hover:not(:disabled){background:var(--ui-hover);border-color:var(--ui-accent);}
+.app-settings-content :is(.settings-icon-options button,.language-options .language-choice)[aria-pressed=true]{background:var(--ui-active);border-color:var(--ui-accent);color:var(--ui-text);}
+.app-settings-content .language-options{background:var(--ui-side);border-color:var(--ui-border);}
+:is(#inspector-content,.app-settings-content,.headphone-calibration-dialog){--menu-slider-track:var(--ui-border);--menu-slider-thumb:var(--ui-accent);}
+.app-select-trigger,.app-settings-content .app-select-trigger{background:var(--ui-control)!important;border-color:var(--ui-border)!important;color:var(--ui-text)!important;}
+.app-select-popup{background:var(--ui-panel);border-color:var(--ui-border);color:var(--ui-text);scrollbar-color:var(--ui-border) var(--ui-panel);}
+.app-select-popup :is([role=option],button){color:var(--ui-text);}
+.app-select-popup :is([role=option],button):is(:hover,[aria-selected=true]){background:var(--ui-active);color:var(--ui-text);}
+:is(.app-confirm-dialog,.tutorial-dialog,.headphone-calibration-dialog){background:var(--ui-panel);border-color:var(--ui-border);color:var(--ui-text);}
+:is(.app-confirm-dialog,.tutorial-dialog,.headphone-calibration-dialog) :is(h1,h2,h3,p){color:var(--ui-text);}
+:is(.app-confirm-dialog,.tutorial-dialog,.headphone-calibration-dialog) button:not([data-dialog-accept].is-danger),.tutorial-bar button{background:var(--ui-control);border-color:var(--ui-border);color:var(--ui-text);}
+.tutorial-bar{background:var(--ui-side);border-color:var(--ui-border);color:var(--ui-text);}
+.sidebar-pin:focus-visible,.sidebar-edge-tab:focus-visible,:is(#equipment-catalog,#inspector,.app-settings-content) button:focus-visible{outline-color:var(--ui-accent);}
+/* Shared hardware inspector gives every section a card background. */
+#inspector-content[data-hardware-panel] section{background:var(--ui-panel);border-color:var(--ui-border)!important;color:var(--ui-text);}
+#inspector-content .sonic-band-state{color:var(--ui-secondary)!important;}
+#inspector-content .spotify-track-panel{background:var(--ui-panel);border-color:var(--ui-border);color:var(--ui-text);}
+#inspector-content :is(.spotify-track-album,.spotify-track-title,.spotify-track-number,.spotify-track-item time){color:var(--ui-secondary);}
+/* The spectrum is an inspector visualization, so its surface and labels follow the UI palette. */
+#inspector-content .spectrum-panel{background:var(--ui-panel)!important;border-color:var(--ui-border)!important;color:var(--ui-text)!important;}
+#inspector-content .spectrum-selectors label,#inspector-content #spectrum-description{color:var(--ui-secondary)!important;}
+#inspector-content .spectrum-selectors select{background:var(--ui-control)!important;border-color:var(--ui-border)!important;color:var(--ui-text)!important;color-scheme:var(--ui-scheme);}
+#inspector-content .spectrum-legend{color:var(--ui-secondary);}
+#inspector-content .spectrum-legend [data-series="input"]::before{border-color:var(--ui-muted);}
+#inspector-content .spectrum-legend [data-series="output"]::before{border-color:var(--ui-accent);}
+#inspector-content #audio-spectrum{background:var(--ui-control)!important;border-color:var(--ui-border)!important;}
+/* Native custom dropdowns and their selected/highlighted rows. */
+.app-select-popup .app-select-option{color:var(--ui-text);}
+.app-select-popup .app-select-option[aria-selected="true"]{background:var(--ui-active);color:var(--ui-text);}
+.app-select-popup .app-select-option.is-highlighted{background:var(--ui-hover);color:var(--ui-text);}
+.app-settings-content .settings-group>summary::after{color:var(--ui-secondary);}

@@ -24,8 +24,12 @@
         const canvasThemeControl=document.createElement('label');canvasThemeControl.className='canvas-theme-control';
         canvasThemeControl.innerHTML='<span>Fundo</span><select id="canvas-theme" aria-label="Cor do fundo do canvas">'+Object.entries(canvasThemes).map(([key,label])=>`<option value="${key}">${label}</option>`).join('')+'</select>';
         document.querySelector('.canvas-tools').appendChild(canvasThemeControl);
+        function syncInterfacePalette(){
+            const state=appState.canvas,root=document.documentElement;
+            root.dataset.uiPalette=state.theme==='scene'?`scene-${state.backdrop||'studioIllustrated'}-${state.time||'dusk'}`:state.theme;
+        }
         function setCanvasTheme(theme){
-            theme=Object.hasOwn(canvasThemes,theme)?theme:'scene';appStateStore.actions.setCanvasTheme(theme);canvas.dataset.theme=theme;
+            theme=Object.hasOwn(canvasThemes,theme)?theme:'scene';appStateStore.actions.setCanvasTheme(theme);canvas.dataset.theme=theme;syncInterfacePalette();
             if(theme==='scene')startRoomMotes();else stopRoomMotes();
             if(theme==='scene')Object.values(appState.project.devices).forEach(dev=>{
                 dev.el.style.left=Math.max(ROOM_SIDE_INSET,Math.min(world.offsetWidth-dev.el.offsetWidth-ROOM_SIDE_INSET,dev.el.offsetLeft))+'px';
@@ -173,7 +177,7 @@
         document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')startRoomMotes();else stopRoomMotes();});
         function setCanvasBackdrop(mode){
             mode=legacyBackdrops[mode]||mode;
-            mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studioIllustrated';appStateStore.actions.setCanvasBackdrop(mode);canvas.dataset.backdrop=mode;canvasBackdropControl.querySelector('select').value=mode;
+            mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studioIllustrated';appStateStore.actions.setCanvasBackdrop(mode);canvas.dataset.backdrop=mode;syncInterfacePalette();canvasBackdropControl.querySelector('select').value=mode;
             const scene=RoomScenes.scenes[mode];
             const imageName=RoomScenes.imageForTime(scene,appState.canvas.time);
             const src=`./assets/rooms/${imageName}.webp?v=aligned-floor`;
