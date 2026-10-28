@@ -8274,8 +8274,10 @@ const Hardware = (() => {
         function positionInspectorWindow(){
             inspectorPositionFrame=0;
             if(!inspectorAnchorDevice?.isConnected||inspectorWindow.dataset.floating!=='true')return;
-            const anchor=inspectorAnchorDevice.getBoundingClientRect(),panel=inspectorWindow.getBoundingClientRect(),gap=16,margin=12;
-            const width=Math.min(380,innerWidth-margin*2),height=Math.min(panel.height,innerHeight-margin*2);
+            const anchor=inspectorAnchorDevice.getBoundingClientRect(),gap=16,margin=12;
+            // offsetHeight is independent of the elastic scale animation; using
+            // getBoundingClientRect().height here made the window drift as it inflated.
+            const width=Math.min(380,innerWidth-margin*2),height=Math.min(inspectorWindow.offsetHeight,innerHeight-margin*2);
             const rightSpace=innerWidth-anchor.right,leftSpace=anchor.left;
             const left=rightSpace>=width+gap?anchor.right+gap:leftSpace>=width+gap?anchor.left-width-gap:Math.max(margin,Math.min(innerWidth-width-margin,anchor.left+(anchor.width-width)/2));
             const top=Math.max(margin,Math.min(innerHeight-height-margin,anchor.top+(anchor.height-height)/2));
