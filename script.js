@@ -4905,6 +4905,23 @@ const Hardware = (() => {
         document.addEventListener('pointercancel',()=>{clearTimeout(contextHelpTimer);contextTouchTarget=null;contextTouchStart=null;},true);
         document.addEventListener('pointerdown',event=>{if(event.pointerType==='touch'&&contextHelpTarget&&!contextHelpTarget.contains(event.target))hideContextHelp();},false);
         const equipmentSearch = document.getElementById('equipment-search');
+        const catalogSearchShell=equipmentSearch.closest('.catalog-search');
+        const catalogSearchToggle=document.getElementById('catalog-search-toggle');
+        function setCatalogSearchExpanded(expanded,focus=false){
+            catalogSearchShell.dataset.expanded=String(expanded);
+            catalogSearchToggle.setAttribute('aria-expanded',String(expanded));
+            catalogSearchToggle.setAttribute('aria-label',AudioSystemLanguage.translate(expanded?'Fechar busca do catálogo':'Abrir busca do catálogo'));
+            if(focus&&expanded)requestAnimationFrame(()=>equipmentSearch.focus());
+        }
+        catalogSearchToggle.addEventListener('click',()=>{
+            const expanded=catalogSearchShell.dataset.expanded!=='true';
+            setCatalogSearchExpanded(expanded,expanded);
+            if(!expanded)equipmentSearch.blur();
+        });
+        equipmentSearch.addEventListener('focus',()=>setCatalogSearchExpanded(true));
+        equipmentSearch.addEventListener('blur',()=>requestAnimationFrame(()=>{
+            if(document.activeElement!==equipmentSearch)setCatalogSearchExpanded(false);
+        }));
         const catalogSections = [...equipmentCatalog.querySelectorAll('.mb-6')].filter(section => section.querySelector('.catalog-item'));
         const catalogSearchSynonyms={optica:['optical','toslink','digital'],optical:['optica','toslink','digital'],digital:['optica','optical','toslink'],entrada:['input'],input:['entrada'],saida:['output'],output:['saida'],linha:['line'],line:['linha'],phono:['vinil','toca discos','riaa'],rca:['analogo','audio'],p2:['minijack','fone','headphone'],p10:['jack','fone','headphone','6 35 mm'],wire:['fio','borne','caixa passiva'],fio:['wire','borne','caixa passiva'],passiva:['passive','amplificado','speaker'],passivo:['passive','amplificado','speaker'],caixa:['speaker','alto falante'],fone:['headphone','p2','p10'],bluetooth:['sem fio','wireless'],potencia:['amplificado','speaker']};
         function catalogPortTerms(item){
@@ -4939,7 +4956,7 @@ const Hardware = (() => {
             searchEmpty.hidden = total > 0;
         });
         equipmentSearch.addEventListener('keydown', event => {
-            if (event.key === 'Escape') { equipmentSearch.value = ''; equipmentSearch.dispatchEvent(new Event('input')); }
+            if (event.key === 'Escape') { equipmentSearch.value = ''; equipmentSearch.dispatchEvent(new Event('input')); setCatalogSearchExpanded(false); equipmentSearch.blur(); }
         });
         function updateCatalogPlacementPreview(preview,target){
             const el=preview.el,w=el.offsetWidth,h=el.offsetHeight,bottom=target.y+h,wall=!!WALL_LAMP_TYPES[preview.type],pendant=preview.type==='pendantLamp',valid=wall||pendant?target.x>=sceneSideInset()&&target.x+w<=world.offsetWidth-sceneSideInset()&&target.y>=0&&bottom<=(wall?wallPlacementBottom():maxEquipmentBottom()):canPlaceEquipment(preview,target.x,target.y);

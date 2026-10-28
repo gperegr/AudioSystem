@@ -10,6 +10,8 @@
         'Preparando seu sistema…':'Preparing your system…',
         'Ative o JavaScript para abrir o programa.':'Enable JavaScript to open the app.',
         'Buscar equipamentos por nome, função, conector ou sinal':'Search equipment by name, function, connector, or signal',
+        'Abrir busca do catálogo':'Open catalog search',
+        'Fechar busca do catálogo':'Close catalog search',
         'Nome, função, conector ou sinal...':'Name, function, connector, or signal…',
         'Fixar painel de equipamentos aberto':'Keep equipment panel open',
         'Fixar painel aberto':'Keep panel open',

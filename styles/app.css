@@ -4255,7 +4255,15 @@
    influence the sidebar width, and collapsing should slide it off-canvas. */
 #inspector {box-sizing:border-box;width:18rem;min-width:18rem;flex:0 0 18rem;}
 .catalog-panel-header {display:flex;align-items:center;gap:8px;}
-.catalog-search {flex:1;min-width:0;}
+.catalog-search {display:flex;align-items:center;gap:0;flex:0 0 44px;width:44px;min-width:44px;height:44px;box-sizing:border-box;padding:0 4px;overflow:hidden;border:0;border-radius:10px;background:transparent;transition:flex-basis 320ms cubic-bezier(.2,.75,.25,1),width 320ms cubic-bezier(.2,.75,.25,1),background-color 180ms ease;}
+.catalog-search[data-expanded="true"] {flex:1 1 auto;width:100%;min-width:42px;gap:8px;padding-inline:11px;background:var(--ui-control);}
+.catalog-search>button {display:grid;place-items:center;flex:none;width:36px;height:40px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--ui-muted);cursor:pointer;transition:color 180ms ease,transform 320ms cubic-bezier(.2,.75,.25,1);}
+.catalog-search>button:hover {color:var(--ui-text);}
+.catalog-search>button:focus-visible {outline:0;}
+.catalog-search>button svg {display:block;width:20px;height:20px;}
+.catalog-search>input[type="search"] {flex:1;min-width:0;width:0;margin:0;padding:0;border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;color:var(--ui-text)!important;opacity:0;visibility:hidden;transition:opacity 160ms ease 40ms;}
+.catalog-search[data-expanded="true"]>input[type="search"] {width:auto;opacity:1;visibility:visible;}
+.catalog-search>input[type="search"]:focus,.catalog-search>input[type="search"]:focus-visible {outline:0!important;border:0!important;box-shadow:none!important;}
 .sidebar-toggle {display:grid;place-items:center;flex:none;width:36px;height:36px;border:1px solid #45515b;border-radius:6px;background:#242c33;color:#d4dce1;font:500 24px/1 "Inter",sans-serif;cursor:pointer;transition:background 150ms,color 150ms;}
 .sidebar-toggle:hover {background:#33414b;color:#fff;}
 .sidebar-toggle:focus-visible {outline:2px solid #8fc7e4;outline-offset:2px;}
@@ -4328,7 +4336,7 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
 .sidebar-pin[aria-pressed="true"] svg {transform:rotate(0);}
 .sidebar-pin:hover,.sidebar-pin:focus-visible {color:#fff;border-color:#90aabb;}
 .sidebar-pin:focus-visible {outline:2px solid #8fc7e4;outline-offset:2px;}
-@media(prefers-reduced-motion:reduce){#equipment-catalog,#inspector,.sidebar-toggle,#canvas{transition:none!important;}}
+@media(prefers-reduced-motion:reduce){#equipment-catalog,#inspector,.sidebar-toggle,#canvas,.catalog-search,.catalog-search>button,.catalog-search>input{transition:none!important;}}
 
 @media(max-width:1000px),(hover:none) and (pointer:coarse) and (max-width:1400px) {
     body.catalog-pinned #canvas,body.properties-pinned #canvas {margin-left:0;margin-right:0;}
