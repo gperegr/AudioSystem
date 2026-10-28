@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="./styles/app.css?v=catalog-amp-hover-dots-v2">
     <link rel="stylesheet" href="./styles/signal-history.css?v=signal-history-v1">
     <link rel="stylesheet" href="./styles/equipment/adapters.css?v=physical-adapters-v1">
+    <link rel="stylesheet" href="./styles/equipment/electrostatic-speaker.css?v=1">
     <link rel="stylesheet" href="./styles/equipment/classic-preamp.css?v=2">
     <link rel="stylesheet" href="./styles/equipment/direct-turntable.css?v=3">
     <link rel="stylesheet" href="./styles/equipment/glass-turntable.css?v=2">
@@ -506,6 +507,20 @@
         <div class="headphone-body"><div class="headphone-object">
             <img class="headphone-artwork" src="./assets/headphones/over-ear.svg" alt="" loading="lazy" decoding="async" draggable="false" aria-hidden="true">
         </div><div class="headphone-controls"><span></span><div class="port" data-type="p2" data-io="in" data-node="in" data-signal="headphone" title="Entrada de fones · P2 TRS estéreo"></div><button class="btn-bt-pair">BLUETOOTH</button></div></div>
+    </template>
+
+    <template id="tpl-spkElectrostatic">
+        <div class="device-header"><span>Caixa Eletrostática · Painel Clássico</span></div>
+        <section class="electrostatic-body">
+            <div class="electrostatic-leg leg-left" aria-hidden="true"></div><div class="electrostatic-leg leg-right" aria-hidden="true"></div>
+            <div class="electrostatic-frame"><div class="electrostatic-cheek cheek-left" aria-hidden="true"></div><div class="electrostatic-cheek cheek-right" aria-hidden="true"></div>
+                <div class="electrostatic-grille" aria-hidden="true"><div class="electrostatic-stators"><i></i><i></i><i></i></div></div>
+                <div class="electrostatic-top-edge" aria-hidden="true"></div><div class="electrostatic-bottom-edge" aria-hidden="true"></div>
+                <i class="electrostatic-fastener fastener-tl" aria-hidden="true"></i><i class="electrostatic-fastener fastener-tr" aria-hidden="true"></i><i class="electrostatic-fastener fastener-bl" aria-hidden="true"></i><i class="electrostatic-fastener fastener-br" aria-hidden="true"></i>
+                <span class="electrostatic-badge">ELECTROSTATIC <small>FULL RANGE</small></span>
+                <div class="electrostatic-terminal"><span>SPEAKER IN</span><div class="port" data-type="wire" data-io="in" data-node="in" data-signal="amplified" title="Entrada amplificada para caixa passiva"></div></div>
+            </div>
+        </section>
     </template>
 
     <template id="tpl-turntableBelt">
@@ -1493,7 +1508,7 @@
     <script src="./src/modules/adapter-design.js?v=physical-adapters-v3"></script>
     <script src="./src/modules/application-state.js?v=domain-state-v1"></script>
     <script src="./src/modules/signal-history.js?v=signal-history-v1"></script>
-    <script src="./src/i18n/languages.js?v=classic-preamp-v1"></script>
-    <script src="./script.js?v=direct-controls-v2"></script>
+    <script src="./src/i18n/languages.js?v=electrostatic-v1"></script>
+    <script src="./script.js?v=electrostatic-v1"></script>
 </body>
 </html>

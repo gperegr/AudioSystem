@@ -24,3 +24,5 @@ The browser suite creates every inventory type using `createDevice`, checks its 
 The two turntable browser tests share `turntable-geometry.helpers.cjs`: they compare lid articulation with the existing turntable, check all five cover faces, a fixed hinge, mouse/keyboard operation, normal and reduced motion, and control containment/overlap. Open-lid previews are saved to `/tmp/glass-lid-open.png` and `/tmp/direct-lid-open.png`.
 
 `node tests/classic-preamp.browser.cjs` verifies the wood-console preamp with real Web Audio: five channel modes, output balance and mute, independent L/R tone, low/high filters, tape monitor routing, power gating, keyboard/pointer controls, settings restoration, English labels and control geometry. The preview is saved to `/tmp/classic-preamp.png`; `TAILWIND_SCRIPT_FILE` supports offline styling.
+
+`node tests/electrostatic-speaker.browser.cjs` checks the classic electrostatic panel dimensions, passive input, electrical references, sensitivity trim and actual Web Audio filter response. It also checks the inspector and disposal. Preview: `/tmp/electrostatic-speaker.png`.

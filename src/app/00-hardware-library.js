@@ -858,6 +858,13 @@ const Hardware = (() => {
             fill(box(device.querySelector('.classic-box-cab')),3);
             const stand=device.querySelector('.classic-box-base');
             if(stand){const rect=box(stand);ctx.save();ctx.translate(rect.x,rect.y);ctx.scale(rect.width/244,rect.height/27);stand.querySelectorAll('[data-stand-silhouette]').forEach(part=>ctx.fill(new Path2D(part.getAttribute('d'))));ctx.restore();}
+        }else if(device.classList.contains('device-type-spkElectrostatic')){
+            fill(box(device.querySelector('.electrostatic-frame')),33);
+            device.querySelectorAll('.electrostatic-leg').forEach(leg=>{
+                const w=leg.offsetWidth,h=leg.offsetHeight,m=new DOMMatrixReadOnly(getComputedStyle(leg).transform);
+                ctx.save();ctx.translate(leg.offsetLeft+w/2,leg.offsetTop+h/2);ctx.transform(m.a,m.b,m.c,m.d,0,0);
+                ctx.beginPath();[[.29,0],[.73,0],[1,1],[0,1]].forEach(([x,y],i)=>ctx[i?'lineTo':'moveTo']((x-.5)*w,(y-.5)*h));ctx.closePath();ctx.fill();ctx.restore();
+            });
         }else if(device.classList.contains('floorstanding-speaker')||device.classList.contains('bookshelf-speaker')||device.querySelector('.sp-cab')){
             device.querySelectorAll('.sp-cab,.bookshelf-cabinet,.tower-cabinet,.tower-plinth,.tower-foot,.tower-top-tweeter,.shelf-top-tweeter').forEach(part=>fill(box(part),parseFloat(getComputedStyle(part).borderTopLeftRadius)||3));
         }else if(device.classList.contains('device-type-turntableLinear')){

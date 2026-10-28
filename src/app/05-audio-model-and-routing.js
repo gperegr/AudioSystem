@@ -1,5 +1,8 @@
 /* Listening signatures, electrical models, amplifier loads, and cable properties. */
         const LISTENING_PROFILES = {
+            // Approximation of a classic dipole panel, not an anechoic measurement.
+            // -6 dB shared headroom plus a relative -6 dB sensitivity trim (84 vs 90 dB).
+            spkElectrostatic:{label:'Eletrostática · médios naturais e graves contidos',highpass:55,headroomDb:-12,curveMinDb:-36,filterSpecs:[{type:'highpass',frequency:55,Q:Math.SQRT1_2},{type:'highpass',frequency:55,Q:Math.SQRT1_2},{type:'peaking',frequency:1200,Q:.65,gain:.6},{type:'highshelf',frequency:7500,gain:-1.5},{type:'lowpass',frequency:18000,Q:Math.SQRT1_2}]},
             hpKubaDisco2:{label:'Disco 2 · escuta sem coloração adicional',bands:[0,0,0]},
             headphone:{label:'Moderno · graves presentes',bands:[3,-.5,.5]},
             hpStudio:{label:'Studio · graves definidos',bands:[2,0,1]},
@@ -538,7 +541,8 @@
             if(amp||passive){
                 const spec=FIXED_AMP_SPECS[dev.type],recommended=isRecommendedSpeakerPower(dev.type);
                 const fields=amp?[["power",'Potência por canal',`${dev.state.ratedWatts} W / 8 Ω`],["impedance",'Carga mínima simulada',`${dev.state.minOhms} Ω`],["load",'Potência por carga',Object.entries(spec.powerByOhms).map(([r,p])=>`${p} W / ${r} Ω`).join(' · ')]]:[["impedance",PASSIVE_SUB_TYPES.has(dev.type)?'Impedância por bobina isolada':'Impedância nominal',`${dev.state.speakerOhms} Ω`],["power",recommended?'Amplificação recomendada':'Potência nominal suportada',`${dev.state.speakerWatts} W`]];
-                const icons={power:'W',impedance:'Ω',load:'W'};
+                if(dev.type==='spkElectrostatic')fields.push(['sensitivity','Sensibilidade de referência','84 dB / 2,83 V / 1 m']);
+                const icons={power:'W',impedance:'Ω',load:'W',sensitivity:'dB'};
                 html+=`<section class="model-specs"><div class="model-specs-heading"><span>Características do modelo</span></div><dl class="model-specs-grid">${fields.map(([kind,label,value])=>`<div class="model-spec" data-kind="${kind}"><dt><span class="model-spec-icon" aria-hidden="true">${icons[kind]}</span>${label}</dt><dd>${value}</dd></div>`).join('')}</dl><div id="power-load-status" class="model-specs-status"></div></section>`;
             }
             if(PASSIVE_SUB_TYPES.has(dev.type))html+='<p class="text-xs text-gray-400">Entradas L/R representam bobinas eletricamente isoladas. A potência total soma as duas bobinas; não una saídas de amplificadores entre si.</p>';

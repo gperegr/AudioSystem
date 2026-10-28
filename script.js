@@ -858,6 +858,13 @@ const Hardware = (() => {
             fill(box(device.querySelector('.classic-box-cab')),3);
             const stand=device.querySelector('.classic-box-base');
             if(stand){const rect=box(stand);ctx.save();ctx.translate(rect.x,rect.y);ctx.scale(rect.width/244,rect.height/27);stand.querySelectorAll('[data-stand-silhouette]').forEach(part=>ctx.fill(new Path2D(part.getAttribute('d'))));ctx.restore();}
+        }else if(device.classList.contains('device-type-spkElectrostatic')){
+            fill(box(device.querySelector('.electrostatic-frame')),33);
+            device.querySelectorAll('.electrostatic-leg').forEach(leg=>{
+                const w=leg.offsetWidth,h=leg.offsetHeight,m=new DOMMatrixReadOnly(getComputedStyle(leg).transform);
+                ctx.save();ctx.translate(leg.offsetLeft+w/2,leg.offsetTop+h/2);ctx.transform(m.a,m.b,m.c,m.d,0,0);
+                ctx.beginPath();[[.29,0],[.73,0],[1,1],[0,1]].forEach(([x,y],i)=>ctx[i?'lineTo':'moveTo']((x-.5)*w,(y-.5)*h));ctx.closePath();ctx.fill();ctx.restore();
+            });
         }else if(device.classList.contains('floorstanding-speaker')||device.classList.contains('bookshelf-speaker')||device.querySelector('.sp-cab')){
             device.querySelectorAll('.sp-cab,.bookshelf-cabinet,.tower-cabinet,.tower-plinth,.tower-foot,.tower-top-tweeter,.shelf-top-tweeter').forEach(part=>fill(box(part),parseFloat(getComputedStyle(part).borderTopLeftRadius)||3));
         }else if(device.classList.contains('device-type-turntableLinear')){
@@ -2283,7 +2290,7 @@ const Hardware = (() => {
             receiver: 'Receiver Vintage',powerValve:'Potência · Valvulado',powerDual:'Potência · Duplo Canal',powerBias:'Potência · Visor Circular',
             integratedBlue:'Integrado · Visores Azuis',integratedMinimal:'Integrado · Minimalista',integratedSilver:'Integrado · Prateado',
             integratedUtility:'Integrado · Essencial',prePrecision:'Pré · Precisão',
-            preGlass:'Pré · Vidro Clássico',preClassic:'Pré · Console de Madeira',
+            preGlass:'Pré · Vidro Clássico',preClassic:'Pré · Console de Madeira',spkElectrostatic:'Caixa Eletrostática · Painel Clássico',
             headphoneAmp: 'Amplificador de Fone Vintage', headphoneAmpModern: 'Amplificador de Fone Normal',
             headphoneAmp4: 'Amplificador de Fones 4 Canais',
             rcaSwitch: 'Seletor RCA Estéreo', rcaSwitchVintage: 'Seletor RCA Vintage',
@@ -2317,7 +2324,7 @@ const Hardware = (() => {
         const DEVICE_FAMILIES = {
             streamIntegrated:'modern',
             integratedUtility:'vintage',prePrecision:'studio',
-            preGlass:'vintage',preClassic:'vintage',
+            preGlass:'vintage',preClassic:'vintage',spkElectrostatic:'vintage',
             turntableLinear:'vintage',
             hpMonitor:'modern',hpMax:'modern',
             signalGeneratorVintage:'vintage',benchMeterVintage:'vintage',benchMeter:'modern',
@@ -2653,6 +2660,7 @@ const Hardware = (() => {
             shelfTop:{height:578,width:269,watts:120,ohms:8,recommended:true,finish:'top',description:'Bookshelf passiva com tweeter separado no topo e cone prateado. Agudos destacados.'}
         };
         const FLOOR_SPEAKERS={
+            spkElectrostatic:{height:790,cabinet:876,watts:15,ohms:15,finish:'electrostatic',sensitivity:84,description:'Painel eletrostático de faixa ampla e baixa sensibilidade. Médios naturais, graves limitados e agudos suaves; 15 Ω nominais e referência conservadora de 15 W na simulação.'},
             floorDiamond:{height:1040,cabinet:244,watts:200,ohms:8,recommended:true,finish:'diamond',description:'Caixa de piso passiva com gabinete curvo, tweeter separado, um médio e dois woofers. Impedância nominal de 8 Ω e amplificação recomendada até 200 W.'},
             floorCoax:{height:1240,cabinet:200,watts:300,ohms:4,recommended:true,finish:'coax',description:'Caixa de piso passiva com conjunto coaxial e quatro woofers em gabinete estreito. Impedância nominal de 4 Ω e amplificação recomendada até 300 W.'},
             floorFlax:{height:1120,cabinet:248,watts:300,ohms:8,recommended:true,finish:'flax',description:'Caixa de piso passiva com médio e três woofers em tom de linho, tweeter de domo invertido e base de vidro. Impedância nominal de 8 Ω e amplificação recomendada até 300 W.'}
@@ -2737,6 +2745,9 @@ const Hardware = (() => {
         }
 
         const LISTENING_PROFILES = {
+            // Approximation of a classic dipole panel, not an anechoic measurement.
+            // -6 dB shared headroom plus a relative -6 dB sensitivity trim (84 vs 90 dB).
+            spkElectrostatic:{label:'Eletrostática · médios naturais e graves contidos',highpass:55,headroomDb:-12,curveMinDb:-36,filterSpecs:[{type:'highpass',frequency:55,Q:Math.SQRT1_2},{type:'highpass',frequency:55,Q:Math.SQRT1_2},{type:'peaking',frequency:1200,Q:.65,gain:.6},{type:'highshelf',frequency:7500,gain:-1.5},{type:'lowpass',frequency:18000,Q:Math.SQRT1_2}]},
             hpKubaDisco2:{label:'Disco 2 · escuta sem coloração adicional',bands:[0,0,0]},
             headphone:{label:'Moderno · graves presentes',bands:[3,-.5,.5]},
             hpStudio:{label:'Studio · graves definidos',bands:[2,0,1]},
@@ -3275,7 +3286,8 @@ const Hardware = (() => {
             if(amp||passive){
                 const spec=FIXED_AMP_SPECS[dev.type],recommended=isRecommendedSpeakerPower(dev.type);
                 const fields=amp?[["power",'Potência por canal',`${dev.state.ratedWatts} W / 8 Ω`],["impedance",'Carga mínima simulada',`${dev.state.minOhms} Ω`],["load",'Potência por carga',Object.entries(spec.powerByOhms).map(([r,p])=>`${p} W / ${r} Ω`).join(' · ')]]:[["impedance",PASSIVE_SUB_TYPES.has(dev.type)?'Impedância por bobina isolada':'Impedância nominal',`${dev.state.speakerOhms} Ω`],["power",recommended?'Amplificação recomendada':'Potência nominal suportada',`${dev.state.speakerWatts} W`]];
-                const icons={power:'W',impedance:'Ω',load:'W'};
+                if(dev.type==='spkElectrostatic')fields.push(['sensitivity','Sensibilidade de referência','84 dB / 2,83 V / 1 m']);
+                const icons={power:'W',impedance:'Ω',load:'W',sensitivity:'dB'};
                 html+=`<section class="model-specs"><div class="model-specs-heading"><span>Características do modelo</span></div><dl class="model-specs-grid">${fields.map(([kind,label,value])=>`<div class="model-spec" data-kind="${kind}"><dt><span class="model-spec-icon" aria-hidden="true">${icons[kind]}</span>${label}</dt><dd>${value}</dd></div>`).join('')}</dl><div id="power-load-status" class="model-specs-status"></div></section>`;
             }
             if(PASSIVE_SUB_TYPES.has(dev.type))html+='<p class="text-xs text-gray-400">Entradas L/R representam bobinas eletricamente isoladas. A potência total soma as duas bobinas; não una saídas de amplificadores entre si.</p>';
@@ -4603,6 +4615,7 @@ const Hardware = (() => {
                 drawing = '<rect x="11" y="5" width="34" height="34" rx="2"/><circle cx="28" cy="21" r="11"/><circle cx="28" cy="21" r="5"/><path d="M20 35h16"/>' + (type.includes('Passive') ? '' : '<path d="M41 8v4"/>');
             } else if(BOOKSHELF_SPEAKERS[type]){
                 drawing=type==='shelfCoax'?'<rect x="15" y="4" width="26" height="36" rx="6"/><circle cx="28" cy="21" r="10"/><circle cx="28" cy="21" r="3"/><path d="m28 11 0 7m0 6v7m-10-10h7m6 0h7"/>':type==='shelfWood'?'<rect x="16" y="3" width="24" height="38" rx="1"/><circle cx="28" cy="12" r="4"/><circle cx="28" cy="28" r="9"/><circle cx="28" cy="28" r="4"/><path d="M19 5v34m18-34v34"/>':'<rect x="17" y="11" width="22" height="30" rx="3"/><circle cx="28" cy="5" r="4"/><path d="M28 9v2"/><circle cx="28" cy="25" r="9"/><circle cx="28" cy="25" r="4"/>';
+            } else if(type==='spkElectrostatic'){drawing='<path d="M5 5h46v30H5zM9 8h38v23H9zM11 35 8 43h8l2-8m20 0 2 8h8l-3-8M13 12h30m-30 4h30m-30 4h30m-30 4h30m-30 4h30"/>';
             } else if(FLOOR_SPEAKERS[type]){
                 drawing=type==='floorDiamond'?'<path d="M19 9h18v30H19zM17 40h22M22 43v-3m12 0v3"/><circle cx="28" cy="5" r="3"/><circle cx="28" cy="16" r="4"/><circle cx="28" cy="26" r="5"/><circle cx="28" cy="35" r="3"/>':type==='floorCoax'?'<path d="M21 3h14v36H21zM17 40h22m-18 3v-3m14 0v3"/><circle cx="28" cy="9" r="4"/><circle cx="28" cy="17" r="3.5"/><circle cx="28" cy="23" r="2.5"/><circle cx="28" cy="29" r="3.5"/><circle cx="28" cy="36" r="3"/>':'<path d="M18 3h20v36H18zM16 40h24m-20 3v-3m16 0v3"/><circle cx="28" cy="9" r="4"/><circle cx="28" cy="16" r="1.6"/><circle cx="28" cy="22" r="4"/><circle cx="28" cy="30" r="4"/><path d="M24 36h8"/>';
             } else if (type.startsWith('spk') || type === 'speaker') {
@@ -5944,6 +5957,7 @@ const Hardware = (() => {
             return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><section class="bookshelf-body shelf-finish-${config.finish}">${type==='shelfTop'?'<div class="shelf-top-tweeter" aria-hidden="true"><i></i></div>':''}<div class="bookshelf-cabinet">${type==='shelfCoax'?driver('woofer',214,92):type==='shelfWood'?driver('tweeter',94,35)+driver('woofer',224,195):driver('woofer',222,90)}${['shelfWood','shelfCoax','shelfTop'].includes(type)?'':'<button class="speaker-grille bookshelf-grille" type="button" aria-label="Remover grade da caixa" title="Remover grade"></button><button class="grille-restore" type="button" title="Recolocar grade">RECOLOCAR GRADE</button>'}<div class="tower-terminal"><div class="port" data-type="wire" data-io="in" data-node="in" data-signal="amplified" title="Entrada amplificada para caixa passiva"></div><small>SPEAKER IN</small></div></div></section>`;
         }
         function floorSpeakerMarkup(type){
+            if(type==='spkElectrostatic')return document.getElementById('tpl-spkElectrostatic').innerHTML;
             const config=FLOOR_SPEAKERS[type];
             const driver=(kind,size,top)=>`<div class="tower-driver tower-${kind} ${kind==='bass'?'spk-woofer':''}" style="--driver-size:${size}px;top:${top}px"><i class="tower-cone"><b></b>${kind==='coax'?'<em class="tower-coax-tweeter"></em>':''}</i><span class="tower-driver-screws" aria-hidden="true"><i></i><i></i><i></i><i></i></span></div>`;
             const drivers=type==='floorDiamond'?driver('mid',140,38)+driver('bass',172,270)+driver('bass',172,502):type==='floorCoax'?driver('bass',160,50)+driver('bass',160,255)+driver('coax',128,511)+driver('bass',160,735)+driver('bass',160,940):driver('mid',166,20)+driver('tweeter',52,214)+driver('bass',166,300)+driver('bass',166,498)+driver('bass',166,696);

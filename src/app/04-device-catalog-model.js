@@ -8,7 +8,7 @@
             receiver: 'Receiver Vintage',powerValve:'Potência · Valvulado',powerDual:'Potência · Duplo Canal',powerBias:'Potência · Visor Circular',
             integratedBlue:'Integrado · Visores Azuis',integratedMinimal:'Integrado · Minimalista',integratedSilver:'Integrado · Prateado',
             integratedUtility:'Integrado · Essencial',prePrecision:'Pré · Precisão',
-            preGlass:'Pré · Vidro Clássico',preClassic:'Pré · Console de Madeira',
+            preGlass:'Pré · Vidro Clássico',preClassic:'Pré · Console de Madeira',spkElectrostatic:'Caixa Eletrostática · Painel Clássico',
             headphoneAmp: 'Amplificador de Fone Vintage', headphoneAmpModern: 'Amplificador de Fone Normal',
             headphoneAmp4: 'Amplificador de Fones 4 Canais',
             rcaSwitch: 'Seletor RCA Estéreo', rcaSwitchVintage: 'Seletor RCA Vintage',
@@ -42,7 +42,7 @@
         const DEVICE_FAMILIES = {
             streamIntegrated:'modern',
             integratedUtility:'vintage',prePrecision:'studio',
-            preGlass:'vintage',preClassic:'vintage',
+            preGlass:'vintage',preClassic:'vintage',spkElectrostatic:'vintage',
             turntableLinear:'vintage',
             hpMonitor:'modern',hpMax:'modern',
             signalGeneratorVintage:'vintage',benchMeterVintage:'vintage',benchMeter:'modern',
@@ -378,6 +378,7 @@
             shelfTop:{height:578,width:269,watts:120,ohms:8,recommended:true,finish:'top',description:'Bookshelf passiva com tweeter separado no topo e cone prateado. Agudos destacados.'}
         };
         const FLOOR_SPEAKERS={
+            spkElectrostatic:{height:790,cabinet:876,watts:15,ohms:15,finish:'electrostatic',sensitivity:84,description:'Painel eletrostático de faixa ampla e baixa sensibilidade. Médios naturais, graves limitados e agudos suaves; 15 Ω nominais e referência conservadora de 15 W na simulação.'},
             floorDiamond:{height:1040,cabinet:244,watts:200,ohms:8,recommended:true,finish:'diamond',description:'Caixa de piso passiva com gabinete curvo, tweeter separado, um médio e dois woofers. Impedância nominal de 8 Ω e amplificação recomendada até 200 W.'},
             floorCoax:{height:1240,cabinet:200,watts:300,ohms:4,recommended:true,finish:'coax',description:'Caixa de piso passiva com conjunto coaxial e quatro woofers em gabinete estreito. Impedância nominal de 4 Ω e amplificação recomendada até 300 W.'},
             floorFlax:{height:1120,cabinet:248,watts:300,ohms:8,recommended:true,finish:'flax',description:'Caixa de piso passiva com médio e três woofers em tom de linho, tweeter de domo invertido e base de vidro. Impedância nominal de 8 Ω e amplificação recomendada até 300 W.'}
