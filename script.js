@@ -6277,7 +6277,7 @@ const Hardware = (() => {
                 detail.innerHTML='<span class="phone-housing-cheek is-left"></span><span class="phone-housing-cheek is-right"></span><span class="phone-housing-frame"></span><span class="phone-housing-vent"></span><span class="phone-housing-screws"><i></i><i></i><i></i><i></i></span>';
                 el.querySelector('.phone-amp-face,.amp4-rack-face').prepend(detail);
             }
-            const assemblySurface=el.querySelector([
+            const assemblySurface=type==='powerValve'?el.querySelector('.custom-power-connections'):el.querySelector([
                 '.audio-interface-face','.integrated-face','.receiver-front','.poweramp-body',
                 '.eq-studio-face','.eq-vintage-face','.mixer-rack-panel','.xover-panel',
                 '.selector-face','.signal-face','.bench-face','.streamer-face','.cd-face',
