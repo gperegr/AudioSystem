@@ -16,7 +16,7 @@ const root=path.resolve(__dirname,'..');
             let body=fs.readFileSync(file);
             if(file===path.join(root,'script.js')){
                 const source=body.toString(),marker='        renderVisuals();',index=source.lastIndexOf(marker);
-                assert(index>0);body=source.slice(0,index)+'window.__signal={setCanvasTheme,setCanvasTime,setCanvasBackdrop,createDevice,selectDevice,selectDevice,deleteDevice,connectProjectPorts,toggleDevicePower,updateSignalHistory,names:DEVICE_NAMES,appState,records:signalHistoryRecords};\n'+source.slice(index);
+                assert(index>0);body=source.slice(0,index)+'window.__signal={setCanvasTheme,setCanvasTime,setCanvasBackdrop,createDevice,selectDevice,setDeviceSelection,deleteDevice,connectProjectPorts,toggleDevicePower,updateSignalHistory,names:DEVICE_NAMES,appState,records:signalHistoryRecords};\n'+source.slice(index);
             }
             const ext=path.extname(file),mime={'.html':'text/html','.js':'application/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.json':'application/json'};
             return route.fulfill({contentType:mime[ext]||'application/octet-stream',body});
@@ -51,7 +51,7 @@ const root=path.resolve(__dirname,'..');
                 const controls=await page.evaluate(()=>{
                     const color=el=>getComputedStyle(el);
                     const visible=el=>!!el.getClientRects().length;
-                    const buttons=[...document.querySelectorAll('.app-settings-content button,.app-settings>summary,.sidebar-pin,#inspector .inspector-window-close')].filter(visible);
+                    const buttons=[...document.querySelectorAll('.app-settings-content button:not(.app-select-trigger),.sidebar-pin')].filter(visible);
                     const favorite=document.querySelector('.catalog-favorite:not([aria-pressed="true"])');
                     const header=document.querySelector('.catalog-panel-header');
                     const rgb=s=>s.match(/[\d.]+/g).slice(0,3).map(Number);
@@ -61,12 +61,14 @@ const root=path.resolve(__dirname,'..');
                     return {
                         borders:buttons.filter(el=>{const s=color(el);return s.borderTopWidth!=='0px'&&s.borderTopColor!=='rgba(0, 0, 0, 0)';}).map(el=>el.outerHTML.slice(0,160)),
                         header:color(header).backgroundColor,side:color(document.querySelector('#equipment-catalog')).backgroundColor,
+                        floatingCloseVisible:visible(document.querySelector('#inspector-sidebar-pin')),
                         favorite:contrast(color(favorite).color,color(favorite.closest('.catalog-item')).backgroundColor),
                         labels:[...document.querySelectorAll('.headphone-calibration-setting strong,.listening-level-settings strong,.listening-level-settings label,.settings-particle-control output,.listening-level-settings output')].filter(visible).map(el=>({text:el.textContent,contrast:contrast(color(el).color,settingsBackground)}))
                     };
                 });
                 assert.deepEqual(controls.borders,[],`${sample.key}: decorative button borders`);
                 assert.equal(controls.header,controls.side,`${sample.key}: catalog header follows palette`);
+                assert.equal(controls.floatingCloseVisible,false,`${sample.key}: floating inspector has no close button`);
                 assert(controls.favorite>=3,`${sample.key}: favorite visibility ${controls.favorite}`);
                 for(const label of controls.labels)assert(label.contrast>=4.5,`${sample.key}: ${label.text} contrast ${label.contrast}`);
                 const favoriteStates=await page.evaluate(()=>{
@@ -104,6 +106,12 @@ const root=path.resolve(__dirname,'..');
         assert.equal(new Set(samples.map(s=>s.side)).size,13,'each palette has its own sidebar color');
         assert.equal(new Set(samples.map(s=>s.spectrum)).size,13,'spectrum inspector matches every palette');
         assert.equal(new Set(samples.map(s=>s.device)).size,1,'equipment artwork stays unchanged');
+        await page.evaluate(()=>__signal.setDeviceSelection(['palette-speaker','palette-meter'],'palette-meter'));
+        assert.equal(await page.locator('#inspector').getAttribute('data-floating'),'false','multi-selection closes the floating properties menu');
+        assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('inspector-floating')),false,'multi-selection removes floating menu mode');
+        assert.equal(await page.evaluate(()=>__signal.appState.interface.selectedDeviceIds.size),2,'multi-selection stays active while properties are closed');
+        await page.evaluate(()=>__signal.setDeviceSelection(['palette-speaker'],'palette-speaker'));
+        assert.equal(await page.locator('#inspector').getAttribute('data-floating'),'true','single selection reopens properties');
         async function assertInspectorWithinCanvas(){
             await page.waitForTimeout(650);
             const bounds=await page.evaluate(()=>{

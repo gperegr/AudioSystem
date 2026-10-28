@@ -204,7 +204,6 @@
 .app-settings>summary,.sidebar-pin,.sidebar-edge-tab,.mobile-inspector-close,
 .mobile-panel-controls button,.app-settings-content button,.app-select-trigger,.app-settings-content .app-select-trigger,
 :is(.app-confirm-dialog,.tutorial-dialog,.headphone-calibration-dialog,.tutorial-bar) button,
-#inspector .inspector-window-close{border-color:transparent!important;box-shadow:none!important;}
 .app-settings-content .settings-icon-options button[aria-pressed="true"]{background:var(--ui-active);color:var(--ui-text);box-shadow:none!important;}
 :is(#equipment-catalog,#inspector,.app-settings,.app-select-popup,.app-confirm-dialog,.tutorial-dialog,.headphone-calibration-dialog,.tutorial-bar) :is(button,summary,[role="option"]):focus-visible{outline:2px solid var(--ui-accent)!important;outline-offset:2px;}
 /* Inspector graphs share the surrounding palette instead of a fixed dark overlay. */

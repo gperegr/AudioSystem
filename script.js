@@ -8349,7 +8349,6 @@ const Hardware = (() => {
                 inspectorWindow.dataset.floating=String(floating);
                 document.body.classList.toggle('inspector-floating',floating);
                 document.body.classList.toggle('mobile-properties-open',!floating);
-                inspectorCloseButton.classList.toggle('inspector-window-close',floating);
                 inspectorWindow.classList.remove('inspector-window-enter');
                 syncMobilePanels();
             }
@@ -8378,12 +8377,11 @@ const Hardware = (() => {
         for(const element of [inspectorLayer,inspectorWindow,equipmentCatalog,document.getElementById('app-topbar')])inspectorLayoutObserver.observe(element);
         window.addEventListener('pointermove',scheduleInspectorPosition,{passive:true});
         window.addEventListener('wheel',scheduleInspectorPosition,{passive:true});
-        const inspectorCloseButton=document.getElementById('inspector-sidebar-pin');
-        inspectorCloseButton.addEventListener('click',event=>{if(inspectorWindow.dataset.floating!=='true')return;event.preventDefault();event.stopImmediatePropagation();selectDevice(null);},{capture:true});
         const parameterlessDeviceTypes=new Set(['cdCollection','pendantLamp','wallLampCage','wallLampDome']);
 
         function selectDevice(id, preserveSelection = false) {
             GuidedAccess.notify();
+            if(preserveSelection&&appState.interface.selectedDeviceIds.size>1)id=null;
             const dev=id?appState.project.devices[id]:null;
             const hasParameters=!!dev&&!parameterlessDeviceTypes.has(dev.type);
             const floating=hasParameters&&matchMedia('(min-width:701px)').matches;
@@ -8572,7 +8570,6 @@ const Hardware = (() => {
                 document.body.classList.remove('inspector-floating','mobile-properties-open');
                 inspectorAnchorDevice=null;
                 inspectorWindow.classList.remove('inspector-window-enter');
-                inspectorCloseButton.classList.remove('inspector-window-close');
                 inspectorContent.classList.add('hidden');
                 inspectorEmpty.classList.add('hidden');
                 return;
@@ -8580,17 +8577,11 @@ const Hardware = (() => {
             bindSignalHistoryPreference();
             if(floating){
                 inspectorWindow.setAttribute('role','region');
-                inspectorCloseButton.setAttribute('aria-label',document.documentElement.lang==='en'?'Close parameters':'Fechar parâmetros');
-                inspectorCloseButton.title=inspectorCloseButton.getAttribute('aria-label');
-                inspectorCloseButton.classList.add('inspector-window-close');
-                inspectorCloseButton.setAttribute('aria-pressed','false');
-                inspectorCloseButton.setAttribute('aria-label',document.documentElement.lang==='en'?'Close parameters':'Fechar parâmetros');
-                inspectorCloseButton.title=inspectorCloseButton.getAttribute('aria-label');
                 positionInspectorWindow();
                 inspectorWindow.classList.remove('inspector-window-enter');
                 void inspectorWindow.offsetWidth;
                 inspectorWindow.classList.add('inspector-window-enter');
-            }else inspectorCloseButton.classList.remove('inspector-window-close');
+            }
             Hardware.inspector(inspectorContent);
             MenuSlider.mount(inspectorContent);
             if(dev.type==='furnitureCoverflow')SpotifyCoverflow.bindInspector(inspectorContent,dev.el.querySelector('.spotify-coverflow-host'));
