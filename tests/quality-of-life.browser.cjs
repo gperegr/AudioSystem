@@ -61,7 +61,7 @@ const root=path.resolve(__dirname,'..');
         await mobileCard.scrollIntoViewIfNeeded();await mobileCard.locator('span').last().tap();await page.locator('[data-preview-confirm]').click();assert.equal(await page.locator('.catalog-preview-actions').count(),0);
         for(const width of [800,1200,1600]){await page.setViewportSize({width,height:1100});await assertCatalogVisible();}
         await page.screenshot({path:'/tmp/permanent-catalog-desktop.png'});
-        assert.equal(await page.locator('#frame-selection').count(),0);assert.equal(await page.locator('#fit-canvas').count(),1);
+        assert.equal(await page.locator('#frame-selection').count(),0);assert.equal(await page.locator('#fit-selection').count(),1);assert.equal(await page.locator('#center-devices,#fit-canvas').count(),0);
         assert.equal(await page.locator('#equipment-sound-volume').count(),1);
         assert.deepEqual(errors,[]);console.log('Quality of life: true-sized preview without device creation, persisted favorites, frame button and separate sound control passed.');
     }finally{await browser.close();}

@@ -169,7 +169,7 @@
                 restore:previous=>restoreLocalProject(previous.snapshot,key=>Promise.resolve(previous.audio.get(key))),
                 recoveryFailed:previous=>{projectPersistenceBlocked=true;try{localStorage.setItem('audio-system-project-fallback',JSON.stringify(previous.snapshot));}catch{}},
                 end:()=>{appStateStore.actions.setProjectRestoring(false);projectRestoring=false;exampleLoading=false;clearExampleHistory();},
-                commit:async()=>{projectRestoring=false;await saveLocalProject(true,true);document.getElementById('fit-canvas').click();selectDevice(exampleAssembly.gear[0].id,true);}
+                commit:async()=>{projectRestoring=false;await saveLocalProject(true,true);document.getElementById('fit-selection').click();selectDevice(exampleAssembly.gear[0].id,true);}
             }
         });
         const guideSetting=document.createElement('section');guideSetting.className='headphone-calibration-setting';

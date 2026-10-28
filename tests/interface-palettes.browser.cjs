@@ -16,7 +16,7 @@ const root=path.resolve(__dirname,'..');
             let body=fs.readFileSync(file);
             if(file===path.join(root,'script.js')){
                 const source=body.toString(),marker='        renderVisuals();',index=source.lastIndexOf(marker);
-                assert(index>0);body=source.slice(0,index)+'window.__signal={setCanvasTheme,setCanvasTime,setCanvasBackdrop,createDevice,selectDevice,setDeviceSelection,deleteDevice,connectProjectPorts,toggleDevicePower,updateSignalHistory,names:DEVICE_NAMES,appState,records:signalHistoryRecords};\n'+source.slice(index);
+                assert(index>0);body=source.slice(0,index)+'window.__signal={setCanvasTheme,setCanvasTime,setCanvasBackdrop,createDevice,selectDevice,setDeviceSelection,deleteDevice,connectProjectPorts,toggleDevicePower,updateSignalHistory,names:DEVICE_NAMES,appState,view,records:signalHistoryRecords};\n'+source.slice(index);
             }
             const ext=path.extname(file),mime={'.html':'text/html','.js':'application/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.json':'application/json'};
             return route.fulfill({contentType:mime[ext]||'application/octet-stream',body});
@@ -118,6 +118,14 @@ const root=path.resolve(__dirname,'..');
         assert(selectedContour.filter.includes('drop-shadow')&&hoverContour.filter.includes('drop-shadow'),'selected and hovered devices both have a silhouette contour');
         assert.notEqual(selectedContour.color,hoverContour.color,'selection and hover use different palette colors');
         assert.notEqual(selectedContour.filter,hoverContour.filter,'selected and hovered devices have distinct contours');
+        await page.locator('#fit-selection').click();await page.waitForTimeout(350);
+        const selectedView=await page.evaluate(()=>{const dev=document.getElementById('palette-speaker').getBoundingClientRect(),canvas=document.getElementById('canvas').getBoundingClientRect();return{zoom:__signal.view.zoom,visible:dev.left>=canvas.left-1&&dev.top>=canvas.top-1&&dev.right<=canvas.right+1&&dev.bottom<=canvas.bottom+1};});
+        assert(selectedView.visible,'the single shortcut fits the selection in the visible area');
+        await page.evaluate(()=>__signal.setDeviceSelection([]));await page.locator('#fit-selection').click();await page.waitForTimeout(350);
+        const allView=await page.evaluate(()=>{const canvas=document.getElementById('canvas').getBoundingClientRect(),devices=[...document.querySelectorAll('#audio-world>.device-node')],bounds=devices.map(el=>el.getBoundingClientRect());return{zoom:__signal.view.zoom,visible:bounds.every(rect=>rect.left>=canvas.left-1&&rect.top>=canvas.top-1&&rect.right<=canvas.right+1&&rect.bottom<=canvas.bottom+1)};});
+        assert(allView.visible,'without a selection the same shortcut fits all equipment in the visible area');
+        assert(selectedView.zoom>allView.zoom,'fitting one selected device zooms in more than fitting all devices');
+        await page.evaluate(()=>__signal.setDeviceSelection(['palette-speaker'],'palette-speaker'));
         async function assertInspectorWithinCanvas(){
             await page.waitForTimeout(650);
             const bounds=await page.evaluate(()=>{
@@ -178,7 +186,7 @@ const root=path.resolve(__dirname,'..');
         await page.waitForTimeout(300);await page.screenshot({path:'/tmp/interface-light.png'});
         await page.evaluate(()=>{__signal.setCanvasTheme('scene');__signal.setCanvasBackdrop('listeningIllustrated');__signal.setCanvasTime('dusk');});
         await page.waitForTimeout(300);await page.screenshot({path:'/tmp/interface-scene.png'});
-        await page.setViewportSize({width:390,height:844});if(await page.locator('[data-mobile-panel=properties]').getAttribute('aria-expanded')!=='true')await page.locator('[data-mobile-panel=properties]').click();await assertInspectorWithinCanvas();await page.screenshot({path:'/tmp/interface-mobile.png'});
+        await page.setViewportSize({width:390,height:844});await page.waitForTimeout(100);if(await page.locator('[data-mobile-panel=properties]').getAttribute('aria-expanded')!=='true')await page.locator('[data-mobile-panel=properties]').click();await assertInspectorWithinCanvas();await page.screenshot({path:'/tmp/interface-mobile.png'});
         await page.evaluate(()=>{__signal.deleteDevice(__signal.appState.project.devices['palette-meter'],false);__signal.deleteDevice(__signal.appState.project.devices['palette-speaker'],false);});
         assert.deepEqual(errors,[]);console.log('Interface palettes: 13 combinations, contrast, equipment artwork and mobile layout passed.');
     }finally{await browser.close();}

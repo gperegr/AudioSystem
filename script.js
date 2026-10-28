@@ -1952,18 +1952,6 @@ const Hardware = (() => {
             const pixels=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?canvas.clientHeight:1);
             setZoomAt(view.zoom*Math.exp(-Math.max(-160,Math.min(160,pixels))*.001),e.clientX,e.clientY);
         },{passive:false});
-        document.getElementById('fit-canvas').addEventListener('click', () => {
-            const devices = Object.values(appState.project.devices);
-            if (!devices.length) { animateViewTo({zoom:1,x:0,y:0}); return; }
-            const bounds = devices.reduce((b, dev) => {
-                const left = parseFloat(dev.el.style.left) || 0, top = parseFloat(dev.el.style.top) || 0;
-                return { left: Math.min(b.left, left), top: Math.min(b.top, top), right: Math.max(b.right, left + dev.el.offsetWidth), bottom: Math.max(b.bottom, top + dev.el.offsetHeight) };
-            }, { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity });
-            const rect = canvas.getBoundingClientRect(), pad = 48;
-            const zoom=clampZoom(Math.min((rect.width-pad*2)/Math.max(1,bounds.right-bounds.left),(rect.height-pad*2)/Math.max(1,bounds.bottom-bounds.top)));
-            animateViewTo({zoom,x:(rect.width-(bounds.right-bounds.left)*zoom)/2-bounds.left*zoom,y:(rect.height-(bounds.bottom-bounds.top)*zoom)/2-bounds.top*zoom});
-        });
-
         const canvasTouches=new Map();let canvasPinch=null;
         function cancelPointerInteraction(event){
             const cancel=new PointerEvent('pointerup',{pointerId:event.pointerId||0,pointerType:'touch',clientX:event.clientX||0,clientY:event.clientY||0,button:0,buttons:0});
@@ -2010,14 +1998,14 @@ const Hardware = (() => {
         document.documentElement.classList.toggle('has-touch-input',navigator.maxTouchPoints>0);
         touchMoveModeButton.addEventListener('click',()=>{touchMovementMode=!touchMovementMode;touchMoveModeButton.setAttribute('aria-pressed',String(touchMovementMode));touchMoveModeButton.dataset.tooltip=touchMovementMode?'Modo Touch ativo · toque e arraste para mover imediatamente':'Modo Touch desligado · segure brevemente um equipamento antes de arrastá-lo';});
         const mobileControls=document.createElement('div');mobileControls.className='mobile-panel-controls';
-        mobileControls.innerHTML='<button type="button" data-mobile-panel="properties" aria-label="Propriedades" data-tooltip="Propriedades" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="18" r="2"/></svg><small>Ajustes</small></button><button type="button" data-mobile-action="center" aria-label="Centralizar" data-tooltip="Centralizar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v5m0 8v5M3 12h5m8 0h5"/><circle cx="12" cy="12" r="4"/></svg><small>Centro</small></button><button type="button" data-mobile-action="undo" aria-label="Desfazer" data-tooltip="Desfazer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h9a7 7 0 0 1 0 14h-2"/></svg><small>Desfazer</small></button><button type="button" data-mobile-action="redo" aria-label="Refazer" data-tooltip="Refazer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5m5 5h-9a7 7 0 0 0 0 14h2"/></svg><small>Refazer</small></button><button type="button" data-mobile-action="settings" aria-label="Configurações" data-tooltip="Configurações"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3m14 0h3"/></svg><small>Ajustes</small></button>';
+        mobileControls.innerHTML='<button type="button" data-mobile-panel="properties" aria-label="Propriedades" data-tooltip="Propriedades" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="18" r="2"/></svg><small>Ajustes</small></button><button type="button" data-mobile-action="fit-selection" aria-label="Ajustar seleção" data-tooltip="Ajustar seleção à área visível"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M8 8h8v8H8z"/></svg><small>Ajustar</small></button><button type="button" data-mobile-action="undo" aria-label="Desfazer" data-tooltip="Desfazer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h9a7 7 0 0 1 0 14h-2"/></svg><small>Desfazer</small></button><button type="button" data-mobile-action="redo" aria-label="Refazer" data-tooltip="Refazer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5m5 5h-9a7 7 0 0 0 0 14h2"/></svg><small>Refazer</small></button><button type="button" data-mobile-action="settings" aria-label="Configurações" data-tooltip="Configurações"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3m14 0h3"/></svg><small>Ajustes</small></button>';
         document.getElementById('app-topbar').lastElementChild.prepend(mobileControls);
         // Fixed phone navigation must escape the topbar's scrolling container.
         const phoneNavigationLayout=matchMedia('(max-width:700px)');
         const placePhoneNavigation=()=>{if(phoneNavigationLayout.matches)document.body.append(mobileControls);else document.querySelector('#app-topbar>.topbar-controls').prepend(mobileControls);};
         phoneNavigationLayout.addEventListener('change',placePhoneNavigation);placePhoneNavigation();
         const mobileContextActions=document.createElement('div');mobileContextActions.className='mobile-context-actions';mobileContextActions.hidden=true;mobileContextActions.setAttribute('aria-label','Ações do equipamento selecionado');
-        mobileContextActions.innerHTML='<button type="button" data-context-action="power"><svg viewBox="0 0 24 24"><path d="M12 3v9"/><path d="M6.1 6.1a8 8 0 1 0 11.8 0"/></svg><span>Ligar</span></button><button type="button" data-context-action="play"><svg viewBox="0 0 24 24"><path d="m8 5 12 7-12 7z"/></svg><span>Reproduzir</span></button><button type="button" data-context-action="center"><svg viewBox="0 0 24 24"><path d="M12 2v6m0 8v6M2 12h6m8 0h6"/><circle cx="12" cy="12" r="4"/></svg><span>Centralizar</span></button><button type="button" data-context-action="remove"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5m4-5v5"/></svg><span>Remover</span></button>';
+        mobileContextActions.innerHTML='<button type="button" data-context-action="power"><svg viewBox="0 0 24 24"><path d="M12 3v9"/><path d="M6.1 6.1a8 8 0 1 0 11.8 0"/></svg><span>Ligar</span></button><button type="button" data-context-action="play"><svg viewBox="0 0 24 24"><path d="m8 5 12 7-12 7z"/></svg><span>Reproduzir</span></button><button type="button" data-context-action="fit-selection" aria-label="Ajustar seleção"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M8 8h8v8H8z"/></svg><span>Ajustar</span></button><button type="button" data-context-action="remove"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5m4-5v5"/></svg><span>Remover</span></button>';
         document.body.appendChild(mobileContextActions);
         function syncMobileContextActions(){
             const id=appState.interface.selectedDeviceId,dev=id&&appState.project.devices[id];mobileContextActions.hidden=!compactTouchLayout.matches||!dev||document.body.classList.contains('mobile-properties-open');
@@ -2030,7 +2018,7 @@ const Hardware = (() => {
             const button=event.target.closest('[data-context-action]');if(!button)return;const dev=appState.project.devices[appState.interface.selectedDeviceId];if(!dev)return;
             if(button.dataset.contextAction==='power'){dev.el.querySelector('.power-btn')?.click();setTimeout(syncMobileContextActions,0);}
             if(button.dataset.contextAction==='play')dev.el.querySelector('[data-source-play],.at-startstop')?.click();
-            if(button.dataset.contextAction==='center')centerDeviceSet([dev]);
+            if(button.dataset.contextAction==='fit-selection')fitDeviceSet([dev]);
             if(button.dataset.contextAction==='remove'){deleteDevice(dev,true);scheduleProjectSave();}
         });
         const compactLayout=matchMedia('(max-width:1000px), (hover:none) and (pointer:coarse) and (max-width:1400px)');
@@ -2055,7 +2043,7 @@ const Hardware = (() => {
         mobileBackdrop.addEventListener('click',()=>{closeMobilePanels();mobileControls.querySelector('[data-mobile-panel=properties]').focus();});
         compactLayout.addEventListener('change',()=>{syncCompactViewport();if(!compactLayout.matches)closeMobilePanels();else syncMobilePanels();});
         mobileControls.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{
-            if(button.dataset.mobileAction==='center'){document.getElementById('center-devices')?.click();return;}
+            if(button.dataset.mobileAction==='fit-selection'){document.getElementById('fit-selection')?.click();return;}
             if(button.dataset.mobileAction==='undo'){document.getElementById('undo-movement')?.click();return;}
             if(button.dataset.mobileAction==='redo'){document.getElementById('redo-movement')?.click();return;}
             if(button.dataset.mobileAction==='settings'){document.querySelector('.app-settings>summary')?.click();return;}
@@ -2182,8 +2170,19 @@ const Hardware = (() => {
             animateViewTo({zoom:view.zoom,x:rect.width/2-centerX*view.zoom,y:rect.height/2-centerY*view.zoom});
         }
 
-        function centerSelectedDevices() {
-            centerDeviceSet(devicesForCanvasAction(true));
+        function fitDeviceSet(devices) {
+            if(!devices.length){animateViewTo({zoom:1,x:0,y:0});return;}
+            const bounds=devices.reduce((b,dev)=>{
+                const left=parseFloat(dev.el.style.left)||0,top=parseFloat(dev.el.style.top)||0;
+                return{left:Math.min(b.left,left),top:Math.min(b.top,top),right:Math.max(b.right,left+dev.el.offsetWidth),bottom:Math.max(b.bottom,top+dev.el.offsetHeight)};
+            },{left:Infinity,top:Infinity,right:-Infinity,bottom:-Infinity});
+            const rect=canvas.getBoundingClientRect(),pad=48;
+            const zoom=clampZoom(Math.min((rect.width-pad*2)/Math.max(1,bounds.right-bounds.left),(rect.height-pad*2)/Math.max(1,bounds.bottom-bounds.top)));
+            animateViewTo({zoom,x:(rect.width-(bounds.right-bounds.left)*zoom)/2-bounds.left*zoom,y:(rect.height-(bounds.bottom-bounds.top)*zoom)/2-bounds.top*zoom});
+        }
+
+        function adjustSelection() {
+            fitDeviceSet(devicesForCanvasAction(true));
         }
 
         function organizeDevices() {
@@ -2215,7 +2214,7 @@ const Hardware = (() => {
             centerDeviceSet(devices);
         }
 
-        document.getElementById('center-devices').addEventListener('click', centerSelectedDevices);
+        document.getElementById('fit-selection').addEventListener('click', adjustSelection);
 
         window.addEventListener('keydown', e => {
             if (e.target.closest?.('input, textarea, select, [contenteditable="true"]')) return;
@@ -2229,7 +2228,7 @@ const Hardware = (() => {
             } else if (!e.metaKey && !e.ctrlKey && !e.altKey && key === 'o') {
                 organizeDevices();
             } else if (!e.metaKey && !e.ctrlKey && !e.altKey && key === 'c') {
-                centerSelectedDevices();
+                adjustSelection();
             }
         });
 
@@ -10518,7 +10517,7 @@ const Hardware = (() => {
                 restore:previous=>restoreLocalProject(previous.snapshot,key=>Promise.resolve(previous.audio.get(key))),
                 recoveryFailed:previous=>{projectPersistenceBlocked=true;try{localStorage.setItem('audio-system-project-fallback',JSON.stringify(previous.snapshot));}catch{}},
                 end:()=>{appStateStore.actions.setProjectRestoring(false);projectRestoring=false;exampleLoading=false;clearExampleHistory();},
-                commit:async()=>{projectRestoring=false;await saveLocalProject(true,true);document.getElementById('fit-canvas').click();selectDevice(exampleAssembly.gear[0].id,true);}
+                commit:async()=>{projectRestoring=false;await saveLocalProject(true,true);document.getElementById('fit-selection').click();selectDevice(exampleAssembly.gear[0].id,true);}
             }
         });
         const guideSetting=document.createElement('section');guideSetting.className='headphone-calibration-setting';

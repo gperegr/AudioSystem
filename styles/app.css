@@ -4075,10 +4075,10 @@ body.mobile-properties-open #inspector {visibility:visible;pointer-events:auto;}
     #canvas .canvas-tools .movement-history-tools {grid-column:span 2;justify-content:center;gap:2px;margin:0;padding:0;border:0;}
     #canvas .canvas-tools .movement-history-tools button {min-width:32px;padding:0;}
     #canvas .canvas-tools>button {padding:5px 3px;font-size:10px;}
-    #canvas .canvas-tools #center-devices {grid-column:span 2;}
+    #canvas .canvas-tools #fit-selection {grid-column:span 2;}
     #canvas .canvas-tools .canvas-zoom-group {grid-column:span 2;justify-content:center;gap:0;}
     #canvas .canvas-tools .canvas-zoom-group button {min-width:28px;padding:4px;}
-    #canvas .canvas-tools #fit-canvas,#canvas .canvas-tools .cable-visibility-toggle {grid-column:span 3;min-height:36px;}
+    #canvas .canvas-tools .cable-visibility-toggle {grid-column:span 3;min-height:36px;}
     #canvas .canvas-tools #selection-count,#canvas .canvas-tools #connection-guidance {grid-column:1/-1;padding:2px 5px;}
 }
 @media (max-width:360px) {
