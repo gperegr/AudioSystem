@@ -113,7 +113,7 @@
                 ['volume','bass','treble','balance'].forEach(key=>updateKnobAngle(dev,`[data-receiver-control="${key}"]`,s[key],key==='volume'?0:key==='balance'?-1:-15,key==='volume'||key==='balance'?1:15));
                 s.finish='vintage';dev.el.classList.remove('receiver-modern');
             }
-            if(TURNTABLE_TYPES.has(dev.type)){dev.restoreLinear?.();dev.ttSetPitch(clamp(s.tt.pitch,-1,1,0));dev.ttSetOutput(s.tt.output==='phono'?'phono':'line');dev.refreshTurntable();}
+            if(TURNTABLE_TYPES.has(dev.type)){dev.restoreLinear?.();if(dev.ttSetDirect){dev.ttSetDirect('speed',s.tt.speed);dev.ttSetDirect('pitchRange',s.tt.pitchRange);dev.ttSetDirect('stylusLight',s.tt.stylusLight);}dev.ttSetPitch(clamp(s.tt.pitch,-1,1,0));dev.ttSetOutput(s.tt.output==='phono'?'phono':'line');dev.refreshTurntable();}
             if(SIGNAL_GENERATOR_TYPES.has(dev.type))configureSignalGenerator(dev);
             if(dev.applyPreamp){s.preSource=clamp(s.preSource,1,4,1);dev.applyPreamp();}
             if(dev.applyTapeSettings){s.tapeVolume=clamp(s.tapeVolume,0,1,.8);s.tapeHiss=clamp(s.tapeHiss,0,100,35);s.tapeWow=clamp(s.tapeWow,1,100,35);dev.applyTapeSettings();}

@@ -44,6 +44,7 @@
                 dev.powerGain.gain.setValueAtTime(dev.powered ? 1.0 : 0.0, powerTime);
             }
             (dev.powerNodes || []).forEach(node => node.gain.setValueAtTime(dev.powered ? 1.0 : 0.0, powerTime));
+            dev.refreshDirectControls?.();
             if(dev.type==='turntableBelt'&&dev.powered)setSourcePlaying(dev,true);
             
             const btn = dev.el.querySelector('.power-btn');
@@ -303,19 +304,22 @@
             if(dev.type==='turntableLinear'){setupLinearTurntable(dev);return;}
             const tt = dev.state.tt = { running: false, pitch: 0, output: 'line' };
             const el = dev.el;
-            const PITCH_RANGE = 0.08;
-            dev.ttRate = () => 1 + tt.pitch * PITCH_RANGE;
+            const direct=dev.type==='turntableDirect';
+            if(direct)Object.assign(tt,{speed:33,pitchRange:8,stylusLight:false});
+            dev.ttPitchRange=()=>direct&&tt.pitchRange===16?16:8;
+            dev.ttRate = () => (direct&&tt.speed===45?1.35:1)*(1 + tt.pitch * dev.ttPitchRange()/100);
             const stop = e => e.stopPropagation();
             const startBtn = el.querySelector('[data-tt="startstop"]');
             const outSw = el.querySelector('[data-tt="output"]');
             const pitchEl = el.querySelector('[data-tt="pitch"]');
             const record = el.querySelector('[data-tt="record"]');
-            const pitchPct = () => Math.round(tt.pitch * PITCH_RANGE * 1000) / 10;
+            const pitchPct = () => Math.round(tt.pitch * dev.ttPitchRange() * 10) / 10;
             const pitchText = () => `${pitchPct() > 0 ? '+' : ''}${pitchPct().toFixed(1)}%`;
             dev.refreshTurntable = () => {
                 el.classList.toggle('tt-motor', dev.powered && tt.running);
                 el.classList.toggle('tt-stopped', !tt.running);
-                record.style.setProperty('--tt-period', (1.8 / (1 + tt.pitch * PITCH_RANGE)).toFixed(3) + 's');
+                record.style.setProperty('--tt-period', (1.8 / dev.ttRate()).toFixed(3) + 's');
+                dev.refreshDirectControls?.();
                 startBtn?.setAttribute('aria-pressed', String(tt.running));
                 outSw?.setAttribute('aria-checked', String(tt.output === 'phono'));
                 outSw?.setAttribute('aria-label',`Saída do toca-discos: ${tt.output.toUpperCase()}. Use as setas para selecionar LINE ou PHONO.`);
@@ -323,6 +327,7 @@
                 outSw?.querySelectorAll('[data-m]').forEach(n => n.classList.toggle('is-on', n.dataset.m === tt.output));
                 pitchEl?.style.setProperty('--p', ((tt.pitch + 1) / 2).toFixed(3));
                 pitchEl?.setAttribute('aria-valuenow', pitchPct());
+                pitchEl?.setAttribute('aria-valuemin',-dev.ttPitchRange());pitchEl?.setAttribute('aria-valuemax',dev.ttPitchRange());
                 if(pitchEl)pitchEl.title = `Pitch ${pitchText()} · arraste (duplo clique para zerar)`;
                 // Painel de propriedades (se este aparelho estiver selecionado)
                 if (appState.interface.selectedDeviceId === dev.id) {
@@ -330,7 +335,7 @@
                     const run = q('tt-insp-run');
                     if (run) { run.setAttribute('aria-pressed', String(tt.running)); run.classList.toggle('is-on', tt.running); }
                     ['line', 'phono'].forEach(m => q('tt-insp-out-' + m)?.classList.toggle('is-on', tt.output === m));
-                    const ps = q('tt-insp-pitch'); if (ps && Number(ps.value) !== pitchPct()) ps.value = pitchPct();
+                    const ps = q('tt-insp-pitch'); if(ps){ps.min=-dev.ttPitchRange();ps.max=dev.ttPitchRange();ps.value=pitchPct();}
                     const pl = q('tt-insp-pitch-lbl'); if (pl) pl.textContent = pitchText();
                 }
             };
@@ -352,6 +357,7 @@
                 tt.pitch = Math.abs(n) < .06 ? 0 : n;
                 if (restartFile) startFilePlayback(dev);
                 dev.refreshTurntable();
+                updateCableFlows();
             };
             startBtn?.addEventListener('pointerdown', stop);
             startBtn?.addEventListener('click', e => { stop(e); dev.ttToggleRun(); });
@@ -363,15 +369,47 @@
                 return 1-2*Math.max(0,Math.min(1,(event.clientY-track.top)/Math.max(1,track.height)));
             }});
             pitchEl?.addEventListener('dblclick',event=>{stop(event);dev.ttSetPitch(0);});
+            if(direct){
+                dev.refreshDirectControls=()=>{
+                    el.classList.toggle('direct-light-on',dev.powered&&tt.stylusLight);
+                    const roots=[el,...(appState.interface.selectedDeviceId===dev.id?[inspectorContent]:[])];
+                    roots.forEach(root=>{
+                        root.querySelectorAll('[data-direct-speed]').forEach(button=>{const active=Number(button.dataset.directSpeed)===tt.speed;button.setAttribute('aria-pressed',String(active));button.classList.toggle('is-on',active);});
+                        root.querySelectorAll('[data-direct-range]').forEach(button=>{const label='±'+dev.ttPitchRange();(button.querySelector('.hw-plunger-legend,.hw-mechanical-key-legend')||button).textContent=label;const sizer=button.querySelector('.hw-button-sizer');if(sizer)sizer.textContent=label;button.setAttribute('aria-pressed',String(tt.pitchRange===16));button.classList.toggle('is-on',tt.pitchRange===16);});
+                        root.querySelectorAll('[data-direct-light]').forEach(button=>{button.setAttribute('aria-pressed',String(tt.stylusLight));button.classList.toggle('is-on',tt.stylusLight);});
+                    });
+                };
+                dev.ttSetDirect=(key,value)=>{
+                    if(!['speed','pitchRange','stylusLight'].includes(key))return;
+                    const restart=!!dev.filePlayback&&key!=='stylusLight';if(restart)stopFilePlayback(dev);
+                    tt[key]=key==='speed'?(Number(value)===45?45:33):key==='pitchRange'?(Number(value)===16?16:8):!!value;
+                    if(restart)startFilePlayback(dev);dev.refreshTurntable();updateCableFlows();scheduleProjectSave();
+                };
+                bindDirectTurntableControls(dev,el);
+            }
             dev.refreshTurntable();
+        }
+
+        function bindDirectTurntableControls(dev,root){
+            root.querySelectorAll('[data-direct-speed],[data-direct-range],[data-direct-reset],[data-direct-light]').forEach(button=>{
+                button.addEventListener('pointerdown',event=>event.stopPropagation());
+                button.addEventListener('click',event=>{
+                    event.stopPropagation();const tt=dev.state.tt;
+                    if(button.hasAttribute('data-direct-speed'))dev.ttSetDirect('speed',button.dataset.directSpeed);
+                    else if(button.hasAttribute('data-direct-range'))dev.ttSetDirect('pitchRange',tt.pitchRange===16?8:16);
+                    else if(button.hasAttribute('data-direct-light'))dev.ttSetDirect('stylusLight',!tt.stylusLight);
+                    else{dev.ttSetPitch(0);scheduleProjectSave();}
+                });
+            });
         }
 
         function turntableInspectorHtml(dev) {
             if(dev.type==='turntableLinear')return linearTurntableInspector(dev);
             const tt = dev.state.tt;
-            const pct = Math.round(tt.pitch * 8 * 10) / 10;
+            const range=dev.ttPitchRange(),pct = Math.round(tt.pitch * range * 10) / 10;
             return `
                 <div class="flex flex-col gap-4">
+                    ${dev.type==='turntableDirect'?'<div class="grid grid-cols-2 gap-2"><button type="button" class="tt-insp-btn" data-direct-speed="33">33⅓ RPM</button><button type="button" class="tt-insp-btn" data-direct-speed="45">45 RPM</button><label>Faixa de pitch<button type="button" class="tt-insp-btn" data-direct-range aria-label="Faixa de pitch">±8</button></label><button type="button" class="tt-insp-btn" data-direct-reset>Zerar pitch</button><button type="button" class="tt-insp-btn" data-direct-light>Luz da agulha</button></div>':''}
                     <div class="flex flex-col gap-2">
                         <span class="text-sm text-gray-300">Start / Stop</span>
                         <button id="tt-insp-run" type="button" class="tt-insp-btn ${tt.running ? 'is-on' : ''}" aria-pressed="${tt.running}">INICIAR / PARAR</button>
@@ -386,7 +424,7 @@
                     </div>
                     <div class="flex flex-col gap-2">
                         <div class="flex items-center justify-between"><span class="text-sm text-gray-300">Pitch</span><span class="text-xs text-blue-400 font-mono" id="tt-insp-pitch-lbl">${pct > 0 ? '+' : ''}${pct.toFixed(1)}%</span></div>
-                        <input id="tt-insp-pitch" aria-label="Pitch" type="range" min="-8" max="8" step="0.1" value="${pct}" class="w-full">
+                        <input id="tt-insp-pitch" aria-label="Pitch" type="range" min="-${range}" max="${range}" step="0.1" value="${pct}" class="w-full">
                     </div>
                 </div>`;
         }
@@ -397,7 +435,8 @@
             q('tt-insp-run').addEventListener('click', () => dev.ttToggleRun());
             q('tt-insp-out-line').addEventListener('click', () => dev.ttSetOutput('line'));
             q('tt-insp-out-phono').addEventListener('click', () => dev.ttSetOutput('phono'));
-            q('tt-insp-pitch').addEventListener('input', e => dev.ttSetPitch(Number(e.target.value) / 8));
+            q('tt-insp-pitch').addEventListener('input', e => dev.ttSetPitch(Number(e.target.value) / dev.ttPitchRange()));
+            if(dev.type==='turntableDirect'){bindDirectTurntableControls(dev,inspectorContent);dev.refreshDirectControls();}
         }
 
         async function refreshCaptureInputs(dev,select=document.getElementById('ai-input-device')){

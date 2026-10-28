@@ -18,6 +18,8 @@
                 drawing='<path d="M5 12h46v27H5ZM19 12V8h18v4M5 34h46M8 15v17m40-17v17"/><rect x="17" y="17" width="23" height="14" rx="1"/><path d="m20 27 5-5 5 3 6-5m9-3v2m0 4v2M10 38h4m28 0h4"/><circle cx="11" cy="28" r="2"/>';
             } else if(type==='turntableBelt'){
                 drawing='<path d="M3 34h50v5H3zM6 32V9h44v23M10 29h29v3H10zm26-8h10v10m-3-10H23l-7 6M7 37h3"/>';
+            } else if(type==='turntableDirect'){
+                drawing='<path d="M3 9h50v29H3zM3 29h50M8 24h29v4H8zM10 26h2m2 0h2m2 0h2m2 0h2m2 0h2m2 0h2m2 0h2M43 15v9M43 15H28l-9 5M7 34h5m4 0h3m3 0h3m22-3v6"/>';
             } else if(type==='turntableLinear'){
                 drawing='<path d="M3 8h50v29H3zM3 24h50M7 15h35M8 21h26m-23-2h20m8-7v9m4-9v9M7 29h8m-8 4h8m6-4h2m4 0h2m6 0h12m-12 4h12"/>';
             } else if (TURNTABLE_TYPES.has(type)) {

@@ -76,6 +76,11 @@ const Hardware = (() => {
             "[data-tt=\"output\"]": {width:112, height:26},
             ".tt-lid-button": {width:24, height:20},
         },
+        turntableDirect: {
+            ".power-btn": {width:24,height:24},
+            ".at-startstop": {width:48,height:26},
+            ".tt-lid-button": {width:22,height:18},
+        },
         turntableBelt: {
             ".power-btn": {width:18,height:14},
             ".tt-lid-button": {width:22,height:18},
@@ -778,7 +783,7 @@ const Hardware = (() => {
             skinKnob(el,bindings.get(el)?.model||knobModel(dev,el));const accent=el.dataset.demoAccent||accentModel(dev,el);if(accent)skinAccent(dev,el,accent);
         });
         dev.el.querySelectorAll('.speaker-grille').forEach(el=>{el.dataset.hardwareSurface='grille';});
-        dev.el.querySelectorAll('button:not([data-hardware-knob]):not(.speaker-grille):not(.cd-tray)').forEach(el=>skinButton(el,buttonModel(dev,el)));
+        dev.el.querySelectorAll('button:not([data-hardware-knob]):not(.speaker-grille):not(.cd-tray):not(.direct-stylus-light)').forEach(el=>skinButton(el,buttonModel(dev,el)));
         dev.el.querySelectorAll('input[type="range"]').forEach(slider);
         dev.el.querySelectorAll('.device-led,.at-led,.integrated-status-led,.selector-input-led,.graphic-eq-led,[data-dual-led],.stereo-power-meters i,.bt-indicator').forEach(el=>{
             const model=el.hasAttribute('data-dual-led')?'signal':dev.el.classList.contains('device-family-vintage')?'warm':el.classList.contains('bt-indicator')?'blue':'power',spec=leds[model];
@@ -864,8 +869,9 @@ const Hardware = (() => {
             const plinth=device.querySelector('.at-plinth');
             if(plinth){const rect=box(plinth),deckHeight=parseFloat(getComputedStyle(device).getPropertyValue('--tt-deck-height'))||120;fill({x:rect.x,y:rect.y+deckHeight,width:rect.width,height:Math.max(0,rect.height-deckHeight)},5);}
             const platter=device.querySelector('.at-front-mechanism .at-platter');if(platter)fill(box(platter),4);
-            if(device.classList.contains('device-type-turntableBelt')){
+            if(device.classList.contains('device-type-turntableBelt')||device.classList.contains('device-type-turntableDirect')){
                 const deck=box(device.querySelector('.at-deck'));fill({x:deck.x,y:deck.y+deck.height-6,width:deck.width,height:6},1);
+                const lamp=device.querySelector('.direct-stylus-light');if(lamp)fill(box(lamp),3);
                 const art=device.querySelector('.at-arm-svg');
                 if(art){
                     let image=art._lightingMaskImage;
@@ -2268,7 +2274,7 @@ const Hardware = (() => {
         const DEVICE_NAMES = {
             furnitureRack:'Rack de Áudio', furnitureCoverflow:'Coleção de Discos · Spotify', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureRackSixTall:'Rack com Vãos Altos · 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio', cdCollection:'Conjunto de CDs', pendantLamp:'Luminária pendente', wallLampCage:'Arandela industrial', wallLampDome:'Arandela de prato',
             adapterRcaP2:'Adaptador RCA → P2', adapterP2Rca:'Adaptador P2 → RCA', adapterP10P2:'Adaptador P10 → P2', adapterP2P10:'Adaptador P2 → P10', adapterRcaP10:'Adaptador RCA → P10', adapterP10Rca:'Adaptador P10 → RCA', phonoConverter:'Conversor Phono → Linha', speakerConverter:'Conversor Amplificado → Linha',
-            turntableBelt: 'Toca-discos · Prato de Vidro', turntable: 'Toca-discos', turntableVintage: 'Toca-discos Vintage', turntableLinear:'Toca-discos Tangencial',
+            turntableDirect: 'Toca-discos · Tração Direta', turntableBelt: 'Toca-discos · Prato de Vidro', turntable: 'Toca-discos', turntableVintage: 'Toca-discos Vintage', turntableLinear:'Toca-discos Tangencial',
             hardwareDemo:'Modelo · Controles',signalGeneratorVintage:'Gerador de Sinais Vintage', signalGenerator:'Gerador de Sinais', cdPlayer: 'CD Player', tapeDeck:'Tape Deck de Rolo', preamp:'Pré · Slim',preReference:'Pré · Visor Verde',preControl:'Pré · Controle 2.1',preDisplay:'Pré · Tela Central', benchMeter:'Medidor de Bancada', benchMeterVintage:'Medidor de Bancada Vintage',
             streamer: 'Streamer Hi-Fi',streamIntegrated:'Streamer Integrado',audioInterface1:'Interface USB · Compacta',audioInterface2:'Interface USB · Central',audioInterface3:'Interface USB · Estéreo',audioInterface4:'Interface USB · Dupla',
             receiver: 'Receiver Vintage',powerValve:'Potência · Valvulado',powerDual:'Potência · Duplo Canal',powerBias:'Potência · Visor Circular',
@@ -2601,7 +2607,7 @@ const Hardware = (() => {
             phonoConverter:{name:'PHONO → LINHA',input:'rca',output:'rca',inputSignal:'phono',outputSignal:'line',description:'Pré de phono: aplica ganho e equalização RIAA ao sinal phono e entrega nível de linha por RCA R/L.'},
             speakerConverter:{name:'AMPLIFICADO → LINHA',input:'wire',output:'rca',inputSignal:'amplified',outputSignal:'line',description:'Conversor de nível alto para baixo: atenua uma saída SPEAKER amplificada para uma entrada de linha RCA. Não serve para saída de fones.'}
         };
-        const TURNTABLE_TYPES = new Set(['turntable', 'turntableVintage','turntableLinear','turntableBelt']);
+        const TURNTABLE_TYPES = new Set(['turntable', 'turntableVintage','turntableLinear','turntableBelt','turntableDirect']);
         function rotateAudioAdapter(dev,delta){
             if(!AudioAdapterDesign.models[dev.type])return;
             dev.adapterErrorMotion?.cancel();
@@ -4548,6 +4554,8 @@ const Hardware = (() => {
                 drawing='<path d="M5 12h46v27H5ZM19 12V8h18v4M5 34h46M8 15v17m40-17v17"/><rect x="17" y="17" width="23" height="14" rx="1"/><path d="m20 27 5-5 5 3 6-5m9-3v2m0 4v2M10 38h4m28 0h4"/><circle cx="11" cy="28" r="2"/>';
             } else if(type==='turntableBelt'){
                 drawing='<path d="M3 34h50v5H3zM6 32V9h44v23M10 29h29v3H10zm26-8h10v10m-3-10H23l-7 6M7 37h3"/>';
+            } else if(type==='turntableDirect'){
+                drawing='<path d="M3 9h50v29H3zM3 29h50M8 24h29v4H8zM10 26h2m2 0h2m2 0h2m2 0h2m2 0h2m2 0h2m2 0h2M43 15v9M43 15H28l-9 5M7 34h5m4 0h3m3 0h3m22-3v6"/>';
             } else if(type==='turntableLinear'){
                 drawing='<path d="M3 8h50v29H3zM3 24h50M7 15h35M8 21h26m-23-2h20m8-7v9m4-9v9M7 29h8m-8 4h8m6-4h2m4 0h2m6 0h12m-12 4h12"/>';
             } else if (TURNTABLE_TYPES.has(type)) {
@@ -5993,7 +6001,7 @@ const Hardware = (() => {
             el.style.left = `${Math.max(0, snapCoordinate(x))}px`;
             el.style.top = `${Math.max(0, snapCoordinate(y))}px`;
             
-            if (['turntableVintage','turntableBelt'].includes(type)) el.classList.add('device-type-turntable');
+            if (['turntableVintage','turntableBelt','turntableDirect'].includes(type)) el.classList.add('device-type-turntable');
             const tpl = document.getElementById(`tpl-${type === 'turntableVintage' ? 'turntable' : type}`);
             if(tpl) el.innerHTML = tpl.innerHTML;
             else { el.innerHTML = `<div class="device-header"><span>${type}</span></div><div class="p-4"><span class="text-[8px] font-bold">INPUT · RCA R</span><div class="port" data-type="rca-r" data-io="in" data-node="in" title="Entrada RCA direita R"></div></div>`; }
@@ -6017,6 +6025,7 @@ const Hardware = (() => {
                 el.querySelector('.classic-box-base').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 244 27" aria-hidden="true"><defs><linearGradient id="${id}-stand" x2="0" y2="1"><stop stop-color="#525852"/><stop offset=".25" stop-color="#292e29"/><stop offset="1" stop-color="#0c100d"/></linearGradient></defs><path data-stand-silhouette d="M1 0h242v6H1Z" fill="url(#${id}-stand)" stroke="#111712" stroke-width=".7"/><path d="M3 1h238" stroke="#9ba392" stroke-width=".6"/><path data-stand-silhouette d="M11 6h15l9 17H19Zm222 0h-15l-9 17h16Z" fill="url(#${id}-stand)" stroke="#131914" stroke-width=".7"/><path d="m13 7 8 15m210-15-8 15" stroke="#707b69" stroke-width=".7"/><path data-stand-silhouette d="M31 17h182v4H31Z" fill="#161d16"/><path d="M32 17.5h180" stroke="#4d5847" stroke-width=".5"/><path data-stand-silhouette d="M17 23h23v4H17Zm187 0h23v4h-23Z" fill="#111511"/><path d="M18 24h21m166 0h21" stroke="#475140" stroke-width=".65"/><path d="M14 2h17m182 0h17" stroke="#0e150d" stroke-width="2"/><circle cx="23" cy="10" r="1.4" fill="#a1aa95"/><circle cx="221" cy="10" r="1.4" fill="#a1aa95"/></svg>`;
             }
             if(type==='turntableLinear')el.innerHTML=tpl.innerHTML.replaceAll('linear-art-',`${id}-art-`);
+            if(type==='turntableDirect')el.innerHTML=tpl.innerHTML.replaceAll('direct-arm-steel',`${id}-arm-steel`);
             
             if(type==='hardwareDemo')el.innerHTML=Hardware.demoMarkup();
             if(type==='streamIntegrated')el.innerHTML=streamIntegratedMarkup();
@@ -6778,6 +6787,7 @@ const Hardware = (() => {
                 dev.powerGain.gain.setValueAtTime(dev.powered ? 1.0 : 0.0, powerTime);
             }
             (dev.powerNodes || []).forEach(node => node.gain.setValueAtTime(dev.powered ? 1.0 : 0.0, powerTime));
+            dev.refreshDirectControls?.();
             if(dev.type==='turntableBelt'&&dev.powered)setSourcePlaying(dev,true);
             
             const btn = dev.el.querySelector('.power-btn');
@@ -7037,19 +7047,22 @@ const Hardware = (() => {
             if(dev.type==='turntableLinear'){setupLinearTurntable(dev);return;}
             const tt = dev.state.tt = { running: false, pitch: 0, output: 'line' };
             const el = dev.el;
-            const PITCH_RANGE = 0.08;
-            dev.ttRate = () => 1 + tt.pitch * PITCH_RANGE;
+            const direct=dev.type==='turntableDirect';
+            if(direct)Object.assign(tt,{speed:33,pitchRange:8,stylusLight:false});
+            dev.ttPitchRange=()=>direct&&tt.pitchRange===16?16:8;
+            dev.ttRate = () => (direct&&tt.speed===45?1.35:1)*(1 + tt.pitch * dev.ttPitchRange()/100);
             const stop = e => e.stopPropagation();
             const startBtn = el.querySelector('[data-tt="startstop"]');
             const outSw = el.querySelector('[data-tt="output"]');
             const pitchEl = el.querySelector('[data-tt="pitch"]');
             const record = el.querySelector('[data-tt="record"]');
-            const pitchPct = () => Math.round(tt.pitch * PITCH_RANGE * 1000) / 10;
+            const pitchPct = () => Math.round(tt.pitch * dev.ttPitchRange() * 10) / 10;
             const pitchText = () => `${pitchPct() > 0 ? '+' : ''}${pitchPct().toFixed(1)}%`;
             dev.refreshTurntable = () => {
                 el.classList.toggle('tt-motor', dev.powered && tt.running);
                 el.classList.toggle('tt-stopped', !tt.running);
-                record.style.setProperty('--tt-period', (1.8 / (1 + tt.pitch * PITCH_RANGE)).toFixed(3) + 's');
+                record.style.setProperty('--tt-period', (1.8 / dev.ttRate()).toFixed(3) + 's');
+                dev.refreshDirectControls?.();
                 startBtn?.setAttribute('aria-pressed', String(tt.running));
                 outSw?.setAttribute('aria-checked', String(tt.output === 'phono'));
                 outSw?.setAttribute('aria-label',`Saída do toca-discos: ${tt.output.toUpperCase()}. Use as setas para selecionar LINE ou PHONO.`);
@@ -7057,6 +7070,7 @@ const Hardware = (() => {
                 outSw?.querySelectorAll('[data-m]').forEach(n => n.classList.toggle('is-on', n.dataset.m === tt.output));
                 pitchEl?.style.setProperty('--p', ((tt.pitch + 1) / 2).toFixed(3));
                 pitchEl?.setAttribute('aria-valuenow', pitchPct());
+                pitchEl?.setAttribute('aria-valuemin',-dev.ttPitchRange());pitchEl?.setAttribute('aria-valuemax',dev.ttPitchRange());
                 if(pitchEl)pitchEl.title = `Pitch ${pitchText()} · arraste (duplo clique para zerar)`;
                 // Painel de propriedades (se este aparelho estiver selecionado)
                 if (appState.interface.selectedDeviceId === dev.id) {
@@ -7064,7 +7078,7 @@ const Hardware = (() => {
                     const run = q('tt-insp-run');
                     if (run) { run.setAttribute('aria-pressed', String(tt.running)); run.classList.toggle('is-on', tt.running); }
                     ['line', 'phono'].forEach(m => q('tt-insp-out-' + m)?.classList.toggle('is-on', tt.output === m));
-                    const ps = q('tt-insp-pitch'); if (ps && Number(ps.value) !== pitchPct()) ps.value = pitchPct();
+                    const ps = q('tt-insp-pitch'); if(ps){ps.min=-dev.ttPitchRange();ps.max=dev.ttPitchRange();ps.value=pitchPct();}
                     const pl = q('tt-insp-pitch-lbl'); if (pl) pl.textContent = pitchText();
                 }
             };
@@ -7086,6 +7100,7 @@ const Hardware = (() => {
                 tt.pitch = Math.abs(n) < .06 ? 0 : n;
                 if (restartFile) startFilePlayback(dev);
                 dev.refreshTurntable();
+                updateCableFlows();
             };
             startBtn?.addEventListener('pointerdown', stop);
             startBtn?.addEventListener('click', e => { stop(e); dev.ttToggleRun(); });
@@ -7097,15 +7112,47 @@ const Hardware = (() => {
                 return 1-2*Math.max(0,Math.min(1,(event.clientY-track.top)/Math.max(1,track.height)));
             }});
             pitchEl?.addEventListener('dblclick',event=>{stop(event);dev.ttSetPitch(0);});
+            if(direct){
+                dev.refreshDirectControls=()=>{
+                    el.classList.toggle('direct-light-on',dev.powered&&tt.stylusLight);
+                    const roots=[el,...(appState.interface.selectedDeviceId===dev.id?[inspectorContent]:[])];
+                    roots.forEach(root=>{
+                        root.querySelectorAll('[data-direct-speed]').forEach(button=>{const active=Number(button.dataset.directSpeed)===tt.speed;button.setAttribute('aria-pressed',String(active));button.classList.toggle('is-on',active);});
+                        root.querySelectorAll('[data-direct-range]').forEach(button=>{const label='±'+dev.ttPitchRange();(button.querySelector('.hw-plunger-legend,.hw-mechanical-key-legend')||button).textContent=label;const sizer=button.querySelector('.hw-button-sizer');if(sizer)sizer.textContent=label;button.setAttribute('aria-pressed',String(tt.pitchRange===16));button.classList.toggle('is-on',tt.pitchRange===16);});
+                        root.querySelectorAll('[data-direct-light]').forEach(button=>{button.setAttribute('aria-pressed',String(tt.stylusLight));button.classList.toggle('is-on',tt.stylusLight);});
+                    });
+                };
+                dev.ttSetDirect=(key,value)=>{
+                    if(!['speed','pitchRange','stylusLight'].includes(key))return;
+                    const restart=!!dev.filePlayback&&key!=='stylusLight';if(restart)stopFilePlayback(dev);
+                    tt[key]=key==='speed'?(Number(value)===45?45:33):key==='pitchRange'?(Number(value)===16?16:8):!!value;
+                    if(restart)startFilePlayback(dev);dev.refreshTurntable();updateCableFlows();scheduleProjectSave();
+                };
+                bindDirectTurntableControls(dev,el);
+            }
             dev.refreshTurntable();
+        }
+
+        function bindDirectTurntableControls(dev,root){
+            root.querySelectorAll('[data-direct-speed],[data-direct-range],[data-direct-reset],[data-direct-light]').forEach(button=>{
+                button.addEventListener('pointerdown',event=>event.stopPropagation());
+                button.addEventListener('click',event=>{
+                    event.stopPropagation();const tt=dev.state.tt;
+                    if(button.hasAttribute('data-direct-speed'))dev.ttSetDirect('speed',button.dataset.directSpeed);
+                    else if(button.hasAttribute('data-direct-range'))dev.ttSetDirect('pitchRange',tt.pitchRange===16?8:16);
+                    else if(button.hasAttribute('data-direct-light'))dev.ttSetDirect('stylusLight',!tt.stylusLight);
+                    else{dev.ttSetPitch(0);scheduleProjectSave();}
+                });
+            });
         }
 
         function turntableInspectorHtml(dev) {
             if(dev.type==='turntableLinear')return linearTurntableInspector(dev);
             const tt = dev.state.tt;
-            const pct = Math.round(tt.pitch * 8 * 10) / 10;
+            const range=dev.ttPitchRange(),pct = Math.round(tt.pitch * range * 10) / 10;
             return `
                 <div class="flex flex-col gap-4">
+                    ${dev.type==='turntableDirect'?'<div class="grid grid-cols-2 gap-2"><button type="button" class="tt-insp-btn" data-direct-speed="33">33⅓ RPM</button><button type="button" class="tt-insp-btn" data-direct-speed="45">45 RPM</button><label>Faixa de pitch<button type="button" class="tt-insp-btn" data-direct-range aria-label="Faixa de pitch">±8</button></label><button type="button" class="tt-insp-btn" data-direct-reset>Zerar pitch</button><button type="button" class="tt-insp-btn" data-direct-light>Luz da agulha</button></div>':''}
                     <div class="flex flex-col gap-2">
                         <span class="text-sm text-gray-300">Start / Stop</span>
                         <button id="tt-insp-run" type="button" class="tt-insp-btn ${tt.running ? 'is-on' : ''}" aria-pressed="${tt.running}">INICIAR / PARAR</button>
@@ -7120,7 +7167,7 @@ const Hardware = (() => {
                     </div>
                     <div class="flex flex-col gap-2">
                         <div class="flex items-center justify-between"><span class="text-sm text-gray-300">Pitch</span><span class="text-xs text-blue-400 font-mono" id="tt-insp-pitch-lbl">${pct > 0 ? '+' : ''}${pct.toFixed(1)}%</span></div>
-                        <input id="tt-insp-pitch" aria-label="Pitch" type="range" min="-8" max="8" step="0.1" value="${pct}" class="w-full">
+                        <input id="tt-insp-pitch" aria-label="Pitch" type="range" min="-${range}" max="${range}" step="0.1" value="${pct}" class="w-full">
                     </div>
                 </div>`;
         }
@@ -7131,7 +7178,8 @@ const Hardware = (() => {
             q('tt-insp-run').addEventListener('click', () => dev.ttToggleRun());
             q('tt-insp-out-line').addEventListener('click', () => dev.ttSetOutput('line'));
             q('tt-insp-out-phono').addEventListener('click', () => dev.ttSetOutput('phono'));
-            q('tt-insp-pitch').addEventListener('input', e => dev.ttSetPitch(Number(e.target.value) / 8));
+            q('tt-insp-pitch').addEventListener('input', e => dev.ttSetPitch(Number(e.target.value) / dev.ttPitchRange()));
+            if(dev.type==='turntableDirect'){bindDirectTurntableControls(dev,inspectorContent);dev.refreshDirectControls();}
         }
 
         async function refreshCaptureInputs(dev,select=document.getElementById('ai-input-device')){
@@ -9662,7 +9710,7 @@ const Hardware = (() => {
                 ['volume','bass','treble','balance'].forEach(key=>updateKnobAngle(dev,`[data-receiver-control="${key}"]`,s[key],key==='volume'?0:key==='balance'?-1:-15,key==='volume'||key==='balance'?1:15));
                 s.finish='vintage';dev.el.classList.remove('receiver-modern');
             }
-            if(TURNTABLE_TYPES.has(dev.type)){dev.restoreLinear?.();dev.ttSetPitch(clamp(s.tt.pitch,-1,1,0));dev.ttSetOutput(s.tt.output==='phono'?'phono':'line');dev.refreshTurntable();}
+            if(TURNTABLE_TYPES.has(dev.type)){dev.restoreLinear?.();if(dev.ttSetDirect){dev.ttSetDirect('speed',s.tt.speed);dev.ttSetDirect('pitchRange',s.tt.pitchRange);dev.ttSetDirect('stylusLight',s.tt.stylusLight);}dev.ttSetPitch(clamp(s.tt.pitch,-1,1,0));dev.ttSetOutput(s.tt.output==='phono'?'phono':'line');dev.refreshTurntable();}
             if(SIGNAL_GENERATOR_TYPES.has(dev.type))configureSignalGenerator(dev);
             if(dev.applyPreamp){s.preSource=clamp(s.preSource,1,4,1);dev.applyPreamp();}
             if(dev.applyTapeSettings){s.tapeVolume=clamp(s.tapeVolume,0,1,.8);s.tapeHiss=clamp(s.tapeHiss,0,100,35);s.tapeWow=clamp(s.tapeWow,1,100,35);dev.applyTapeSettings();}

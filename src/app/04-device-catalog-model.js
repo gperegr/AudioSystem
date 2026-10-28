@@ -2,7 +2,7 @@
         const DEVICE_NAMES = {
             furnitureRack:'Rack de Áudio', furnitureCoverflow:'Coleção de Discos · Spotify', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureRackSixTall:'Rack com Vãos Altos · 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio', cdCollection:'Conjunto de CDs', pendantLamp:'Luminária pendente', wallLampCage:'Arandela industrial', wallLampDome:'Arandela de prato',
             adapterRcaP2:'Adaptador RCA → P2', adapterP2Rca:'Adaptador P2 → RCA', adapterP10P2:'Adaptador P10 → P2', adapterP2P10:'Adaptador P2 → P10', adapterRcaP10:'Adaptador RCA → P10', adapterP10Rca:'Adaptador P10 → RCA', phonoConverter:'Conversor Phono → Linha', speakerConverter:'Conversor Amplificado → Linha',
-            turntableBelt: 'Toca-discos · Prato de Vidro', turntable: 'Toca-discos', turntableVintage: 'Toca-discos Vintage', turntableLinear:'Toca-discos Tangencial',
+            turntableDirect: 'Toca-discos · Tração Direta', turntableBelt: 'Toca-discos · Prato de Vidro', turntable: 'Toca-discos', turntableVintage: 'Toca-discos Vintage', turntableLinear:'Toca-discos Tangencial',
             hardwareDemo:'Modelo · Controles',signalGeneratorVintage:'Gerador de Sinais Vintage', signalGenerator:'Gerador de Sinais', cdPlayer: 'CD Player', tapeDeck:'Tape Deck de Rolo', preamp:'Pré · Slim',preReference:'Pré · Visor Verde',preControl:'Pré · Controle 2.1',preDisplay:'Pré · Tela Central', benchMeter:'Medidor de Bancada', benchMeterVintage:'Medidor de Bancada Vintage',
             streamer: 'Streamer Hi-Fi',streamIntegrated:'Streamer Integrado',audioInterface1:'Interface USB · Compacta',audioInterface2:'Interface USB · Central',audioInterface3:'Interface USB · Estéreo',audioInterface4:'Interface USB · Dupla',
             receiver: 'Receiver Vintage',powerValve:'Potência · Valvulado',powerDual:'Potência · Duplo Canal',powerBias:'Potência · Visor Circular',
@@ -335,7 +335,7 @@
             phonoConverter:{name:'PHONO → LINHA',input:'rca',output:'rca',inputSignal:'phono',outputSignal:'line',description:'Pré de phono: aplica ganho e equalização RIAA ao sinal phono e entrega nível de linha por RCA R/L.'},
             speakerConverter:{name:'AMPLIFICADO → LINHA',input:'wire',output:'rca',inputSignal:'amplified',outputSignal:'line',description:'Conversor de nível alto para baixo: atenua uma saída SPEAKER amplificada para uma entrada de linha RCA. Não serve para saída de fones.'}
         };
-        const TURNTABLE_TYPES = new Set(['turntable', 'turntableVintage','turntableLinear','turntableBelt']);
+        const TURNTABLE_TYPES = new Set(['turntable', 'turntableVintage','turntableLinear','turntableBelt','turntableDirect']);
         function rotateAudioAdapter(dev,delta){
             if(!AudioAdapterDesign.models[dev.type])return;
             dev.adapterErrorMotion?.cancel();

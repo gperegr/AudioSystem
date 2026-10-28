@@ -16,7 +16,7 @@ const root=path.resolve(__dirname,'..');
             let body=fs.readFileSync(file);
             if(file===path.join(root,'script.js')){
                 const source=body.toString(),marker='        renderVisuals();',index=source.lastIndexOf(marker);
-                assert(index>0);body=source.slice(0,index)+'window.__signal={createDevice,selectDevice,deleteDevice,connectProjectPorts,toggleDevicePower,createSpotifyVinyl,placeSpotifyVinyl,removeSpotifyVinyl,updateSignalHistory,names:DEVICE_NAMES,appState,records:signalHistoryRecords};\n'+source.slice(index);
+                assert(index>0);body=source.slice(0,index)+'window.__signal={applySavedDevice,createDevice,selectDevice,deleteDevice,connectProjectPorts,toggleDevicePower,createSpotifyVinyl,placeSpotifyVinyl,removeSpotifyVinyl,updateSignalHistory,names:DEVICE_NAMES,appState,records:signalHistoryRecords};\n'+source.slice(index);
             }
             const ext=path.extname(file),mime={'.html':'text/html','.js':'application/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.json':'application/json'};
             return route.fulfill({contentType:mime[ext]||'application/octet-stream',body});
@@ -43,6 +43,10 @@ const root=path.resolve(__dirname,'..');
             const vinyl=api.createSpotifyVinyl({uri:'spotify:album:GlassDeckTest',name:'Test record'});
             if(!api.placeSpotifyVinyl(vinyl,dev,false)||dev.spotifyVinyl!==vinyl)throw Error('Spotify record placement');
             api.removeSpotifyVinyl(vinyl,false);dev.setLidOpen(false);
+            api.applySavedDevice(dev,{settings:{tt:{pitch:.5,output:'phono',running:true},lidOpen:true}});
+            if(dev.state.tt.running||dev.state.playing)throw Error('Restore must remain paused');
+            if(dev.state.tt.output!=='phono'||!dev.state.lidOpen||Math.abs(dev.ttRate()-1.04)>1e-6)throw Error('Saved settings not restored');
+            dev.ttSetPitch(0);dev.ttSetOutput('line');dev.setLidOpen(false);
             AudioSystemLanguage.set('en');api.selectDevice(dev.id);
         });
         const deck=page.locator('#glass-deck');

@@ -76,6 +76,11 @@ const Hardware = (() => {
             "[data-tt=\"output\"]": {width:112, height:26},
             ".tt-lid-button": {width:24, height:20},
         },
+        turntableDirect: {
+            ".power-btn": {width:24,height:24},
+            ".at-startstop": {width:48,height:26},
+            ".tt-lid-button": {width:22,height:18},
+        },
         turntableBelt: {
             ".power-btn": {width:18,height:14},
             ".tt-lid-button": {width:22,height:18},
@@ -778,7 +783,7 @@ const Hardware = (() => {
             skinKnob(el,bindings.get(el)?.model||knobModel(dev,el));const accent=el.dataset.demoAccent||accentModel(dev,el);if(accent)skinAccent(dev,el,accent);
         });
         dev.el.querySelectorAll('.speaker-grille').forEach(el=>{el.dataset.hardwareSurface='grille';});
-        dev.el.querySelectorAll('button:not([data-hardware-knob]):not(.speaker-grille):not(.cd-tray)').forEach(el=>skinButton(el,buttonModel(dev,el)));
+        dev.el.querySelectorAll('button:not([data-hardware-knob]):not(.speaker-grille):not(.cd-tray):not(.direct-stylus-light)').forEach(el=>skinButton(el,buttonModel(dev,el)));
         dev.el.querySelectorAll('input[type="range"]').forEach(slider);
         dev.el.querySelectorAll('.device-led,.at-led,.integrated-status-led,.selector-input-led,.graphic-eq-led,[data-dual-led],.stereo-power-meters i,.bt-indicator').forEach(el=>{
             const model=el.hasAttribute('data-dual-led')?'signal':dev.el.classList.contains('device-family-vintage')?'warm':el.classList.contains('bt-indicator')?'blue':'power',spec=leds[model];
@@ -864,8 +869,9 @@ const Hardware = (() => {
             const plinth=device.querySelector('.at-plinth');
             if(plinth){const rect=box(plinth),deckHeight=parseFloat(getComputedStyle(device).getPropertyValue('--tt-deck-height'))||120;fill({x:rect.x,y:rect.y+deckHeight,width:rect.width,height:Math.max(0,rect.height-deckHeight)},5);}
             const platter=device.querySelector('.at-front-mechanism .at-platter');if(platter)fill(box(platter),4);
-            if(device.classList.contains('device-type-turntableBelt')){
+            if(device.classList.contains('device-type-turntableBelt')||device.classList.contains('device-type-turntableDirect')){
                 const deck=box(device.querySelector('.at-deck'));fill({x:deck.x,y:deck.y+deck.height-6,width:deck.width,height:6},1);
+                const lamp=device.querySelector('.direct-stylus-light');if(lamp)fill(box(lamp),3);
                 const art=device.querySelector('.at-arm-svg');
                 if(art){
                     let image=art._lightingMaskImage;
