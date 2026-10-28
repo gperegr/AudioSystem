@@ -112,6 +112,12 @@ const root=path.resolve(__dirname,'..');
         assert.equal(await page.evaluate(()=>__signal.appState.interface.selectedDeviceIds.size),2,'multi-selection stays active while properties are closed');
         await page.evaluate(()=>__signal.setDeviceSelection(['palette-speaker'],'palette-speaker'));
         assert.equal(await page.locator('#inspector').getAttribute('data-floating'),'true','single selection reopens properties');
+        const selectedContour=await page.locator('#palette-speaker').evaluate(el=>({filter:getComputedStyle(el).filter,color:getComputedStyle(document.documentElement).getPropertyValue('--ui-accent').trim()}));
+        const meterBounds=await page.locator('#palette-meter').boundingBox();await page.mouse.move(meterBounds.x+meterBounds.width/2,meterBounds.y+meterBounds.height/2);
+        const hoverContour=await page.locator('#palette-meter').evaluate(el=>({filter:getComputedStyle(el).filter,color:getComputedStyle(document.documentElement).getPropertyValue('--ui-muted').trim()}));
+        assert(selectedContour.filter.includes('drop-shadow')&&hoverContour.filter.includes('drop-shadow'),'selected and hovered devices both have a silhouette contour');
+        assert.notEqual(selectedContour.color,hoverContour.color,'selection and hover use different palette colors');
+        assert.notEqual(selectedContour.filter,hoverContour.filter,'selected and hovered devices have distinct contours');
         async function assertInspectorWithinCanvas(){
             await page.waitForTimeout(650);
             const bounds=await page.evaluate(()=>{

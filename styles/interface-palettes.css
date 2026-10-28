@@ -148,6 +148,11 @@
 #equipment-catalog .catalog-favorite[aria-pressed="true"] path{fill:var(--ui-accent);}
 #equipment-catalog .catalog-favorite:hover{transform:scale(1.12);}
 @media(prefers-reduced-motion:reduce){#equipment-catalog .catalog-favorite path{transition:none;}}
+/* Device silhouettes use separate palette colors for persistent selection and mouse hover. */
+@media(hover:hover) and (pointer:fine){
+  #audio-world>.device-node:not(.equipment-dragging):not(.selected):hover{filter:drop-shadow(var(--atmosphere-shadow,0 2px 1.5px rgb(0 0 0 / .36))) drop-shadow(0 0 1.5px var(--ui-muted)) drop-shadow(0 0 3px color-mix(in srgb,var(--ui-muted) 48%,transparent));}
+}
+#audio-world>.device-node.selected:not(.equipment-dragging){filter:drop-shadow(var(--atmosphere-shadow,0 2px 1.5px rgb(0 0 0 / .36))) drop-shadow(0 0 1.5px var(--ui-accent)) drop-shadow(0 0 3.5px color-mix(in srgb,var(--ui-accent) 58%,transparent));}
 /* Equipment parameter buttons communicate state with surface color, not outlines. */
 #inspector-content button:not(.signal-history-name){border:0!important;outline-offset:3px;box-shadow:none!important;}
 #inspector-content button:not(.signal-history-name):is(.is-on,.active,[aria-pressed="true"],[aria-selected="true"],[data-active="true"]){background:var(--ui-active)!important;color:var(--ui-text)!important;}
