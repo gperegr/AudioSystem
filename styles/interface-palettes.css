@@ -144,8 +144,8 @@
 /* OFF stays close to the card surface; ON uses the active palette accent. */
 #equipment-catalog .catalog-favorite{display:grid;place-items:center;color:var(--ui-muted);opacity:1;text-shadow:none;}
 #equipment-catalog .catalog-favorite svg{width:16px;height:16px;overflow:visible;}
-#equipment-catalog .catalog-favorite path{stroke:var(--ui-muted);stroke-width:1.7;stroke-linejoin:round;fill:color-mix(in srgb,var(--ui-panel) 88%,var(--ui-muted));transition:fill .18s ease,stroke .18s ease;}
-#equipment-catalog .catalog-favorite[aria-pressed="true"] path{fill:var(--ui-accent);stroke:var(--ui-accent);}
+#equipment-catalog .catalog-favorite path{stroke:none!important;stroke-width:0!important;fill:color-mix(in srgb,var(--ui-panel) 88%,var(--ui-muted));transition:fill .18s ease;}
+#equipment-catalog .catalog-favorite[aria-pressed="true"] path{fill:var(--ui-accent);}
 #equipment-catalog .catalog-favorite:hover{transform:scale(1.12);}
 @media(prefers-reduced-motion:reduce){#equipment-catalog .catalog-favorite path{transition:none;}}
 /* Equipment parameter buttons communicate state with surface color, not outlines. */
