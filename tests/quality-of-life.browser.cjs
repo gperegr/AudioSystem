@@ -16,7 +16,7 @@ const root=path.resolve(__dirname,'..');
             let body=fs.readFileSync(file);
             if(file===path.join(root,'script.js')){
                 const source=body.toString(),marker='        renderVisuals();',index=source.lastIndexOf(marker);
-                assert(index>0);body=source.slice(0,index)+'window.__signal={frameSelectedDevices,findTargetPortNear,createDevice,selectDevice,deleteDevice,connectProjectPorts,toggleDevicePower,updateSignalHistory,names:DEVICE_NAMES,appState,records:signalHistoryRecords};\n'+source.slice(index);
+                assert(index>0);body=source.slice(0,index)+'window.__signal={findTargetPortNear,createDevice,selectDevice,deleteDevice,connectProjectPorts,toggleDevicePower,updateSignalHistory,names:DEVICE_NAMES,appState,records:signalHistoryRecords};\n'+source.slice(index);
             }
             const ext=path.extname(file),mime={'.html':'text/html','.js':'application/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.json':'application/json'};
             return route.fulfill({contentType:mime[ext]||'application/octet-stream',body});
@@ -51,7 +51,7 @@ const root=path.resolve(__dirname,'..');
         await page.locator('[data-preview-cancel]').click();assert.equal(await page.locator('.catalog-placement-preview').count(),0);
         await page.locator('[data-mobile-panel=catalog]').click();await mobileCard.scrollIntoViewIfNeeded();await mobileCard.locator('span').last().tap();await page.locator('[data-preview-confirm]').click();assert.equal(await page.locator('.catalog-preview-actions').count(),0);
         await page.setViewportSize({width:1600,height:1100});
-        assert.equal(await page.locator('#frame-selection').count(),1);
+        assert.equal(await page.locator('#frame-selection').count(),0);assert.equal(await page.locator('#fit-canvas').count(),1);
         assert.equal(await page.locator('#equipment-sound-volume').count(),1);
         assert.deepEqual(errors,[]);console.log('Quality of life: true-sized preview without device creation, persisted favorites, frame button and separate sound control passed.');
     }finally{await browser.close();}

@@ -1948,15 +1948,6 @@ const Hardware = (() => {
             const pixels=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?canvas.clientHeight:1);
             setZoomAt(view.zoom*Math.exp(-Math.max(-160,Math.min(160,pixels))*.001),e.clientX,e.clientY);
         },{passive:false});
-        function frameSelectedDevices(){
-            const devices=[...appState.interface.selectedDeviceIds].map(id=>appState.project.devices[id]).filter(Boolean);if(!devices.length)return;
-            const bounds=devices.reduce((b,d)=>{const x=parseFloat(d.el.style.left)||0,y=parseFloat(d.el.style.top)||0;return {left:Math.min(b.left,x),top:Math.min(b.top,y),right:Math.max(b.right,x+d.el.offsetWidth),bottom:Math.max(b.bottom,y+d.el.offsetHeight)};},{left:Infinity,top:Infinity,right:-Infinity,bottom:-Infinity});
-            const rect=canvas.getBoundingClientRect(),pad=48,w=bounds.right-bounds.left,h=bounds.bottom-bounds.top,zoom=clampZoom(Math.min((rect.width-pad*2)/Math.max(1,w),(rect.height-pad*2)/Math.max(1,h),2));
-            animateViewTo({zoom,x:(rect.width-w*zoom)/2-bounds.left*zoom,y:(rect.height-h*zoom)/2-bounds.top*zoom});
-        }
-        const frameSelectionButton=document.getElementById('fit-canvas').cloneNode(true);
-        frameSelectionButton.id='frame-selection';frameSelectionButton.title='Enquadrar seleção';frameSelectionButton.setAttribute('aria-label','Enquadrar seleção');frameSelectionButton.dataset.tooltip='Enquadrar seleção';frameSelectionButton.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 9V4h5m6 0h5v5M4 15v5h5m6 0h5v-5"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>';
-        frameSelectionButton.addEventListener('click',frameSelectedDevices);document.getElementById('fit-canvas').after(frameSelectionButton);
         document.getElementById('fit-canvas').addEventListener('click', () => {
             const devices = Object.values(appState.project.devices);
             if (!devices.length) { animateViewTo({zoom:1,x:0,y:0}); return; }
