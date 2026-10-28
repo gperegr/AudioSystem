@@ -93,7 +93,7 @@ const SpotifyCoverflow=(()=>{
     async function ensurePlayer(){
         if(player||!tokenData())return;
         await sdk();if(player)return;
-        player=new Spotify.Player({name:'AudioSystem · Discos',volume:.5,getOAuthToken:async callback=>callback(await getToken()||'')});
+        player=new Spotify.Player({name:'Audio Lab · Discos',volume:.5,getOAuthToken:async callback=>callback(await getToken()||'')});
         player.addListener('ready',event=>{deviceId=event.device_id;broadcast();});
         player.addListener('not_ready',()=>{deviceId=null;playbackElementActivated=false;broadcast();});
         player.addListener('player_state_changed',state=>{playback=state;playbackUpdatedAt=Date.now();trackRepeat=state?.repeat_mode===2;shuffleEnabled=!!state?.shuffle;broadcast();});

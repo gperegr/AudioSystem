@@ -10114,7 +10114,7 @@ const Hardware = (() => {
             try{
                 await saveLocalProject(true);const snapshot=projectCapture(),embeddedAudio={};
                 for(const dev of Object.values(appState.project.devices)){if(dev.mediaKey&&dev.mediaBlob)embeddedAudio[dev.mediaKey]=await readBlobDataURL(dev.mediaBlob);}
-                const url=URL.createObjectURL(new Blob([JSON.stringify({...snapshot,embeddedAudio})],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='audio-system-projeto.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),10000);projectStatus('Cópia exportada com os arquivos de áudio.');
+                const url=URL.createObjectURL(new Blob([JSON.stringify({...snapshot,embeddedAudio})],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='audio-lab-projeto.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),10000);projectStatus('Cópia exportada com os arquivos de áudio.');
             }catch(error){projectStatus('Não foi possível exportar: '+error.message,true);}finally{button.disabled=false;}
         };
         document.getElementById('import-project').onclick=()=>document.getElementById('project-file').click();
@@ -10173,6 +10173,23 @@ const Hardware = (() => {
 
         const roomSection=document.createElement('section');roomSection.className='room-settings';
         roomSection.innerHTML='<label>Ambiente sonoro<select id="room-preset">'+Object.entries(ROOM_PRESETS).map(([key,value])=>`<option value="${key}">${value.name}</option>`).join('')+'</select></label><label for="room-intensity">Intensidade <output id="room-intensity-value">0/10</output></label><input id="room-intensity" type="range" min="0" max="10" step="1" value="0"><p>Reverberação estéreo na escuta final. Em zero, o áudio permanece seco.</p>';
+        const roomPresetSelect=roomSection.querySelector('#room-preset');roomPresetSelect.hidden=true;roomPresetSelect.dataset.iconChoice='';
+        const roomPresetIconPaths={
+            near:'<path d="M4 13V11a8 8 0 0 1 16 0v2"/><rect x="3" y="12" width="4" height="7" rx="1.5"/><rect x="17" y="12" width="4" height="7" rx="1.5"/><path d="M7 19c1 2 3 2 5 2h2"/>',
+            small:'<path d="M4 20V5h16v15M4 20h16M8 9v7m8-7v7M10 12h4"/><circle cx="12" cy="12" r="1"/>',
+            large:'<path d="M2 20V4h20v16H2ZM7 8v9m10-9v9M10 11h4m-4 4h4M5 4l2 4m12-4-2 4"/>'
+        };
+        const roomPresetButtons=document.createElement('div');roomPresetButtons.className='room-preset-buttons';roomPresetButtons.setAttribute('role','group');
+        function syncRoomPresetButtons(){
+            roomPresetButtons.setAttribute('aria-label',AudioSystemLanguage.translate('Ambiente sonoro'));
+            roomPresetButtons.querySelectorAll('button').forEach(button=>{const name=AudioSystemLanguage.translate(ROOM_PRESETS[button.dataset.value].name);button.title=name;button.setAttribute('aria-label',name);button.setAttribute('aria-pressed',String(button.dataset.value===roomPresetSelect.value));});
+        }
+        for(const [key,preset] of Object.entries(ROOM_PRESETS)){
+            const button=document.createElement('button');button.type='button';button.dataset.value=key;button.setAttribute('aria-pressed','false');
+            button.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${roomPresetIconPaths[key]}</svg>`;
+            button.addEventListener('click',()=>{roomPresetSelect.value=key;roomPresetSelect.dispatchEvent(new Event('input',{bubbles:true}));});roomPresetButtons.appendChild(button);
+        }
+        roomPresetSelect.after(roomPresetButtons);syncRoomPresetButtons();AudioSystemLanguage.subscribe(syncRoomPresetButtons);
         clearCatalogFooter.insertBefore(roomSection,soundControls);
         SpotifyCoverflow.setBeforeRedirect(()=>{guidedAccess.save();return saveLocalProject(true);});
         const headphoneCalibrationSetting=document.createElement('section');headphoneCalibrationSetting.className='headphone-calibration-setting';
@@ -10186,7 +10203,7 @@ const Hardware = (() => {
         for(const kind of ['bass','treble'])listeningLevels.querySelector(`#listening-${kind}-level`).addEventListener('input',event=>setListeningTone(kind,event.target.value));
         function setRoomSettings(settings){
             appStateStore.actions.setAudioEnvironment({preset:Object.hasOwn(ROOM_PRESETS,settings?.preset)?settings.preset:DEFAULT_ROOM_SETTINGS.preset,intensity:Number.isFinite(settings?.intensity)?Math.max(0,Math.min(10,Math.round(settings.intensity))):DEFAULT_ROOM_SETTINGS.intensity});
-            roomSection.querySelector('#room-preset').value=appState.audio.environment.preset;roomSection.querySelector('#room-intensity').value=appState.audio.environment.intensity;roomSection.querySelector('#room-intensity-value').textContent=appState.audio.environment.intensity+'/10';applyRoomAudio();
+            roomPresetSelect.value=appState.audio.environment.preset;syncRoomPresetButtons();roomSection.querySelector('#room-intensity').value=appState.audio.environment.intensity;roomSection.querySelector('#room-intensity-value').textContent=appState.audio.environment.intensity+'/10';applyRoomAudio();
         }
         roomSection.addEventListener('input',()=>{setRoomSettings({preset:document.getElementById('room-preset').value,intensity:Number(document.getElementById('room-intensity').value)});scheduleProjectSave();});
         setRoomSettings(appState.audio.environment);
@@ -10252,12 +10269,6 @@ const Hardware = (() => {
         document.addEventListener('keydown',event=>{if(event.key==='Escape'&&settingsMenu.open){settingsMenu.open=false;settingsMenu.querySelector('summary').focus();}});
         function setupAppDropdowns(){
             const widgets=new WeakMap();let active=null,sequence=0,typeBuffer='',typeTime=0;
-            const roomIcons={
-                near:'<path d="M4 13V11a8 8 0 0 1 16 0v2"/><rect x="3" y="12" width="4" height="7" rx="1.5"/><rect x="17" y="12" width="4" height="7" rx="1.5"/><path d="M7 19c1 2 3 2 5 2h2"/>',
-                small:'<path d="M4 20V5h16v15M4 20h16M8 9v7m8-7v7M10 12h4"/><circle cx="12" cy="12" r="1"/>',
-                large:'<path d="M2 20V4h20v16H2ZM7 8v9m10-9v9M10 11h4m-4 4h4M5 4l2 4m12-4-2 4"/>'
-            };
-            const roomIcon=key=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${roomIcons[key]||''}</svg>`;
             const valueDescriptor=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'value'),indexDescriptor=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'selectedIndex'),disabledDescriptor=Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype,'disabled');
             function close(restoreFocus=false){
                 if(!active)return;const current=active;active=null;current.popup.remove();current.button.setAttribute('aria-expanded','false');current.button.removeAttribute('aria-activedescendant');if(restoreFocus&&current.button.isConnected)current.button.focus();
@@ -10285,7 +10296,7 @@ const Hardware = (() => {
                 if(!active)return;const current=active;current.popup.replaceChildren();current.choices=[];
                 [...current.select.options].forEach((option,index)=>{
                     const item=document.createElement('div');item.id=current.popup.id+'-'+index;item.className='app-select-option';item.setAttribute('role','option');item.setAttribute('aria-selected',String(index===current.select.selectedIndex));item.setAttribute('aria-disabled',String(option.disabled||!!option.parentElement.disabled));
-                    const label=document.createElement('span');label.className='app-select-option-label';label.textContent=option.label||option.textContent;const check=document.createElement('span');check.className='app-select-check';check.textContent=index===current.select.selectedIndex?'✓':'';check.setAttribute('aria-hidden','true');if(current.select.id==='room-preset'){const icon=document.createElement('span');icon.className='app-select-room-icon';icon.setAttribute('aria-hidden','true');icon.innerHTML=roomIcon(option.value);item.append(icon);}item.append(label,check);
+                    const label=document.createElement('span');label.className='app-select-option-label';label.textContent=option.label||option.textContent;const check=document.createElement('span');check.className='app-select-check';check.textContent=index===current.select.selectedIndex?'✓':'';check.setAttribute('aria-hidden','true');item.append(label,check);
                     item.addEventListener('pointermove',event=>{if(event.pointerType!=='touch'&&item.getAttribute('aria-disabled')!=='true')highlight(index);});
                     item.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();choose(index);});current.choices.push(item);current.popup.appendChild(item);
                 });
@@ -10308,7 +10319,7 @@ const Hardware = (() => {
                 select.before(wrapper);wrapper.append(select,button);select.classList.add('app-select-native');select.tabIndex=-1;select.setAttribute('aria-hidden','true');
                 const widget={select,wrapper,button,caption,popupId};widgets.set(select,widget);
                 const refresh=()=>{
-                    const option=select.options[select.selectedIndex];caption.textContent=option?.label||option?.textContent||'Selecionar';if(select.id==='room-preset'&&option){const icon=document.createElement('span'),label=document.createElement('span');icon.className='app-select-room-icon';icon.setAttribute('aria-hidden','true');icon.innerHTML=roomIcon(option.value);label.textContent=caption.textContent;caption.replaceChildren(icon,label);}button.disabled=select.disabled||!select.options.length;
+                    const option=select.options[select.selectedIndex];caption.textContent=option?.label||option?.textContent||'Selecionar';button.disabled=select.disabled||!select.options.length;
                     const label=select.getAttribute('aria-label')||[...(select.labels||[])].map(label=>[...label.childNodes].filter(node=>node.nodeType===Node.TEXT_NODE).map(node=>node.textContent).join(' ').trim()).filter(Boolean).join(' ')||'Selecionar opção';button.setAttribute('aria-label',label);button.title=caption.textContent;
                     if(active?.select===select){if(button.disabled)close();else buildOptions();}
                 };

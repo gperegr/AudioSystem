@@ -194,7 +194,7 @@
             try{
                 await saveLocalProject(true);const snapshot=projectCapture(),embeddedAudio={};
                 for(const dev of Object.values(appState.project.devices)){if(dev.mediaKey&&dev.mediaBlob)embeddedAudio[dev.mediaKey]=await readBlobDataURL(dev.mediaBlob);}
-                const url=URL.createObjectURL(new Blob([JSON.stringify({...snapshot,embeddedAudio})],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='audio-system-projeto.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),10000);projectStatus('Cópia exportada com os arquivos de áudio.');
+                const url=URL.createObjectURL(new Blob([JSON.stringify({...snapshot,embeddedAudio})],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='audio-lab-projeto.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),10000);projectStatus('Cópia exportada com os arquivos de áudio.');
             }catch(error){projectStatus('Não foi possível exportar: '+error.message,true);}finally{button.disabled=false;}
         };
         document.getElementById('import-project').onclick=()=>document.getElementById('project-file').click();

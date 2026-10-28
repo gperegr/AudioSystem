@@ -1,8 +1,15 @@
-# Audio System Simulator
+# Audio Lab
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/brand/audio-lab-logo-inverse.svg">
+  <img src="assets/brand/audio-lab-logo.svg" alt="Audio Lab — um A integrado a uma onda sonora" width="360">
+</picture>
 
 Monte um sistema de som virtual, conecte os equipamentos e ouça o resultado no navegador. Explore fontes, amplificadores, equalizadores, caixas e fones com estilos vintage, de estúdio e modernos.
 
-![Exemplo de montagem: catálogo à esquerda, sistema estéreo no centro e ajustes do integrado à direita](docs/images/visao-geral.png)
+![Audio Lab: catálogo permanente à esquerda e montagem estéreo com CD, integrado e caixas](docs/images/visao-geral.png)
+
+O símbolo e as assinaturas para fundos claros e escuros estão em [assets/brand](assets/brand/README.md), em SVG editável.
 
 **[Wiki e guias completos](https://github.com/gperegr/AudioSystem/wiki)** · **[Exemplos de montagem](https://github.com/gperegr/AudioSystem/wiki/Exemplos-de-montagem)** · **[Solução de problemas](https://github.com/gperegr/AudioSystem/wiki/Problemas-frequentes)**
 
@@ -55,13 +62,12 @@ Os avisos explicam níveis incorretos, carga e possíveis danos simulados. Desat
 
 | Ação | Como fazer |
 | --- | --- |
-| Ajustar um aparelho | Selecione-o; o painel direito mostra seu nome e os controles disponíveis. |
-| Recolher o painel direito | Use a seta ao lado de **Configurações**, na barra superior. A largura é fixa entre equipamentos e o painel desliza ao abrir/fechar. |
-| Recolher o catálogo | Use a seta no cabeçalho do catálogo; a alça permite reabri-lo. |
+| Ajustar um aparelho | Selecione um único equipamento; as propriedades aparecem em um painel flutuante limitado pela área do canvas. Deselecionar fecha o painel. |
+| Consultar o catálogo | O catálogo à esquerda fica sempre visível; no celular, usa uma coluna. |
 | Procurar equipamentos | Busque por nome, função, conector ou sinal. |
 | Ajustar knobs e faders | Arraste; controles compatíveis aceitam teclado e mostram o valor durante o ajuste. |
-| Selecionar vários | **Shift + clique/arraste**; **Ctrl/Cmd + A** seleciona todos quando o foco está na montagem. |
-| Navegar na montagem | Use zoom, **Centralizar** e **Ajustar para exibir tudo**. |
+| Selecionar vários | **Shift + clique/arraste**; **Ctrl/Cmd + A** seleciona todos quando o foco está na montagem. A seleção múltipla mantém o painel de propriedades fechado. |
+| Navegar na montagem | Use zoom e **Ajustar seleção** (**C**): enquadra os selecionados ou todos, quando não há seleção. |
 | Desfazer/refazer movimento | Use as setas da barra ou **Ctrl/Cmd + Z** / **Ctrl/Cmd + Shift + Z**. Esse histórico é de posições. |
 | Organizar cabos | Selecione um cabo para ajustar etiqueta, cor, visibilidade e folga. Ocultar não corta o áudio. |
 
@@ -83,7 +89,7 @@ O catálogo separa **Móveis** de **Iluminação**. Em Iluminação, a **Luminá
 
 Em **Móveis**, adicione **Coleção de Discos · Spotify**, com acabamentos de madeira clara ou escura. Arraste, role ou use as setas sobre as capas para percorrer seus álbuns salvos. Selecione uma capa para abrir o disco; clique novamente ou use o botão de reprodução para tocar. A barra inferior permite ir diretamente a uma posição e ordenar a coleção. Apenas as capas próximas da posição atual são renderizadas.
 
-Para conectar, cadastre o **Redirect URI** mostrado em **Configurações → Spotify** no [Spotify for Developers](https://developer.spotify.com/dashboard). O Client ID fornecido pelo projeto já vem preenchido e pode ser alterado nessa seção. Abra o AudioSystem em HTTPS ou em `http://127.0.0.1` com um servidor local: a autorização PKCE e o Web Playback SDK não funcionam ao abrir `index.html` diretamente como arquivo. Uma conta **Spotify Premium** é necessária para a reprodução pelo navegador. O player Spotify é compartilhado entre os móveis e seu áudio não passa pelos cabos ou pelo sistema de sinais simulados.
+Para conectar, cadastre o **Redirect URI** mostrado em **Configurações → Spotify** no [Spotify for Developers](https://developer.spotify.com/dashboard). O Client ID fornecido pelo projeto já vem preenchido e pode ser alterado nessa seção. Abra o Audio Lab em HTTPS ou em `http://127.0.0.1` com um servidor local: a autorização PKCE e o Web Playback SDK não funcionam ao abrir `index.html` diretamente como arquivo. Uma conta **Spotify Premium** é necessária para a reprodução pelo navegador. O player Spotify é compartilhado entre os móveis e seu áudio não passa pelos cabos ou pelo sistema de sinais simulados.
 
 O projeto salva a posição, a ordenação e o álbum selecionado em cada móvel. O Client ID fica no navegador; tokens de acesso ficam somente na sessão. A biblioteca e os tokens não são exportados com o projeto. Ao abrir o projeto em outro navegador, conecte sua conta novamente.
 

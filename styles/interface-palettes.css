@@ -224,3 +224,5 @@
 :root[data-ui-palette] .app-select-trigger{
   border:0!important;border-color:transparent!important;box-shadow:none!important;
 }
+.app-settings-content .room-preset-buttons button{background:var(--ui-control)!important;color:var(--ui-secondary)!important;}
+.app-settings-content .room-preset-buttons button[aria-pressed="true"]{background:var(--ui-active)!important;color:var(--ui-accent)!important;}

@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Audio System Simulator</title>
+    <title>Audio Lab</title>
+    <meta name="application-name" content="Audio Lab">
+    <link rel="icon" type="image/svg+xml" href="./assets/brand/audio-lab-mark.svg">
     <style>
         html.app-starting {background:#181f28;}
         html.app-starting #app-topbar,html.app-starting #workspace-shell {visibility:hidden;}
@@ -15,7 +17,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./styles/app.css?v=adjust-selection-v10">
+    <link rel="stylesheet" href="./styles/app.css?v=audio-lab-brand-v13">
     <link rel="stylesheet" href="./styles/signal-history.css?v=signal-history-v1">
     <link rel="stylesheet" href="./styles/equipment/adapters.css?v=physical-adapters-v1">
     <link rel="stylesheet" href="./styles/equipment/electrostatic-speaker.css?v=1">
@@ -31,16 +33,16 @@
     <link rel="stylesheet" href="./styles/equipment/speakers-bookshelf.css?v=bookshelf-details-v1">
     <link rel="stylesheet" href="./styles/equipment/subwoofers.css?v=subwoofer-details-v1">
     <link rel="stylesheet" href="./styles/equipment/visual-refinements.css?v=visual-refinements-v5">
-    <link rel="stylesheet" href="./styles/interface-palettes.css?v=flat-interface-buttons-v11">
+    <link rel="stylesheet" href="./styles/interface-palettes.css?v=room-preset-buttons-v12">
 </head>
 <body class="flex flex-col h-screen bg-black text-white">
     <div id="app-startup" role="status">Preparando seu sistema…<noscript>Ative o JavaScript para abrir o programa.</noscript></div>
 
     <div id="app-topbar" class="h-14 bg-[#1e2329] border-b border-gray-800 flex items-center justify-between px-4 shrink-0 z-40 relative shadow-md">
         <div class="flex items-center gap-6">
-            <div class="app-brand flex items-center gap-2 font-bold text-lg">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-blue-500"><path d="M2 12h4l3-9 5 18 3-9h5"/></svg>
-                Audio System
+            <div class="app-brand flex items-center gap-2 font-bold text-lg" aria-label="Audio Lab">
+                <svg class="app-brand-mark" width="32" height="32" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 39 20.55 9.65c1.35-2.93 5.51-2.93 6.87 0L41 39" stroke-width="5.5"/><path d="M12 29h5.25c3.15 0 3.15-7.5 6.3-7.5s3.15 11 6.3 11H38" stroke-width="4.2"/></svg>
+                Audio Lab
             </div>
         </div>
         
@@ -285,7 +287,7 @@
 
     <dialog id="app-confirm-dialog" class="app-confirm-dialog" aria-labelledby="app-confirm-title" aria-describedby="app-confirm-message">
         <form method="dialog" class="app-confirm-card">
-            <span class="app-confirm-kicker">Audio System</span>
+            <span class="app-confirm-kicker">Audio Lab</span>
             <h2 id="app-confirm-title"></h2>
             <p id="app-confirm-message"></p>
             <div class="app-confirm-actions">

@@ -2130,6 +2130,9 @@ body.mobile-properties-open #inspector {transform:translateX(0);}
         .signal-properties {display:flex;flex-direction:column;gap:15px;}.signal-properties label {display:flex;flex-direction:column;gap:8px;font-size:13px;color:#cbd5e1;}.signal-properties select,.room-settings select {width:100%;padding:8px;border:1px solid #475569;border-radius:5px;background:#26313e;color:#e2e8f0;font-size:13px;}
         .signal-properties p,.room-settings p {font-size:11px;line-height:1.5;color:#94a3b8;}
         .room-settings {display:flex;flex-direction:column;gap:10px;padding:14px 0;border-top:1px solid #374151;border-bottom:1px solid #374151;}.room-settings label {display:flex;flex-direction:column;gap:8px;}.room-settings input {width:100%;}.room-settings output {display:inline;}
+        .room-preset-buttons {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+        .app-settings-content .room-preset-buttons button {width:100%;height:48px;min-height:48px;padding:10px;border-radius:8px;}
+        .room-preset-buttons svg {width:25px;height:25px;}
 
         .signal-face>[data-power-slot] {position:relative;display:flex;align-items:center;justify-content:center;}
         .signal-face .power-control-panel {position:relative!important;margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;}
@@ -3100,7 +3103,8 @@ body.mobile-properties-open #inspector {transform:translateX(0);}
         #inspector .text-sm,.app-settings-content .text-sm {font-size:16px;line-height:1.4;}
         #app-topbar button,#app-topbar summary {font-family:var(--font-ui);font-weight:600;}
 
-        .app-brand {font-family:var(--font-accent);font-size:24px;font-weight:600;letter-spacing:-.02em;}
+        .app-brand {font-family:var(--font-ui);font-size:24px;font-weight:700;letter-spacing:-.035em;gap:10px;white-space:nowrap;}
+        .app-brand .app-brand-mark {flex:none;color:var(--ui-accent);}
         #equipment-catalog h3 {font-family:var(--font-ui);font-size:15px;font-weight:650;letter-spacing:.015em;text-transform:none;line-height:1.25;}
 
 /* Shared hardware: equipment chooses a component model; geometry and motion live here. */
@@ -4524,12 +4528,6 @@ body.inspector-collapsed #inspector {width:min(360px,calc(100vw - 24px));min-wid
 :is(#inspector-content,.app-settings-content,.headphone-calibration-dialog) input.app-menu-slider[type="range"]::-moz-range-track {box-sizing:border-box;width:100%;height:var(--menu-slider-track-size);border:0;border-radius:999px;background:var(--menu-slider-track);box-shadow:none;cursor:pointer;}
 :is(#inspector-content,.app-settings-content,.headphone-calibration-dialog) input.app-menu-slider[type="range"]::-moz-range-thumb {box-sizing:border-box;width:var(--menu-slider-thumb-size);height:var(--menu-slider-thumb-size);border:0;border-radius:50%;background:var(--menu-slider-thumb);box-shadow:none;cursor:pointer;}
 :is(#inspector-content,.app-settings-content,.headphone-calibration-dialog) input.app-menu-slider[type="range"]:focus-visible {outline:2px solid #93c5fd;outline-offset:2px;border-radius:5px;}
-
-.app-select-caption:has(.app-select-room-icon),.app-select-option:has(.app-select-room-icon) {display:flex;align-items:center;gap:9px;}
-.app-select-room-icon {flex:none;display:grid;place-items:center;width:22px;height:22px;color:#a9c6d7;}
-.app-select-room-icon svg {display:block;width:22px;height:22px;}
-.app-select-option:has(.app-select-room-icon) .app-select-option-label {flex:1;min-width:0;}
-.app-select-option[aria-selected="true"] .app-select-room-icon {color:#d2e7f5;}
 
 #cable-properties .cable-label-row {display:flex;align-items:center;gap:8px;min-width:0;}
 #cable-properties .cable-label-row input {flex:1;min-width:0;}

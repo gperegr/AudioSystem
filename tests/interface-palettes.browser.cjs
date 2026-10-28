@@ -106,6 +106,21 @@ const root=path.resolve(__dirname,'..');
         assert.equal(new Set(samples.map(s=>s.side)).size,13,'each palette has its own sidebar color');
         assert.equal(new Set(samples.map(s=>s.spectrum)).size,13,'spectrum inspector matches every palette');
         assert.equal(new Set(samples.map(s=>s.device)).size,1,'equipment artwork stays unchanged');
+        await page.locator('.app-settings').evaluate(el=>el.open=true);
+        const roomPresetButtons=page.locator('.room-preset-buttons button');
+        assert.equal(await roomPresetButtons.count(),3,'room acoustics are three side-by-side icon buttons');
+        assert.deepEqual(await roomPresetButtons.evaluateAll(buttons=>buttons.map(button=>({title:button.title,label:button.getAttribute('aria-label'),text:button.textContent.trim(),pressed:button.getAttribute('aria-pressed')}))),[
+            {title:'Audição próxima',label:'Audição próxima',text:'',pressed:'false'},
+            {title:'Sala pequena',label:'Sala pequena',text:'',pressed:'true'},
+            {title:'Sala ampla',label:'Sala ampla',text:'',pressed:'false'}
+        ]);
+        await roomPresetButtons.nth(2).click();
+        assert.equal(await page.locator('#room-preset').inputValue(),'large','choosing a room icon updates the acoustic preset');
+        assert.equal(await roomPresetButtons.nth(2).getAttribute('aria-pressed'),'true','chosen room icon exposes its selected state');
+        await roomPresetButtons.nth(1).click();
+        await page.evaluate(()=>AudioSystemLanguage.set('en'));
+        assert.equal(await roomPresetButtons.nth(0).getAttribute('aria-label'),'Near-field listening','room icon tooltip follows the selected language');
+        await page.evaluate(()=>AudioSystemLanguage.set('pt'));
         await page.evaluate(()=>__signal.setDeviceSelection(['palette-speaker','palette-meter'],'palette-meter'));
         assert.equal(await page.locator('#inspector').getAttribute('data-floating'),'false','multi-selection closes the floating properties menu');
         assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('inspector-floating')),false,'multi-selection removes floating menu mode');

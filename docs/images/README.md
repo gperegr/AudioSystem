@@ -1,11 +1,11 @@
 # Imagens da documentação
 
-Capturas do próprio **Audio System Simulator**, revisadas em **22 de outubro de 2026**, com Chromium em modo desktop e celular. Não são fotografias nem medições de equipamentos físicos. Os exemplos usam a interface e os controles reais; o sistema estéreo de `visao-geral.png` tem conexões reais no circuito da aplicação.
+Capturas do próprio **Audio Lab**, com Chromium em modo desktop e celular. A visão geral, o menu de configurações e o painel móvel foram atualizados em **28 de outubro de 2026** com o novo logo; as demais capturas são de **22 de outubro de 2026** e podem mostrar a identidade anterior. Não são fotografias nem medições de equipamentos físicos. Os exemplos usam a interface e os controles reais; o sistema estéreo de `visao-geral.png` tem conexões reais no circuito da aplicação.
 
 | Arquivos | Uso |
 | --- | --- |
-| `visao-geral.png` | Catálogo, cadeia CD → integrado → caixas e painel com nome do equipamento |
-| `painel-mobile.png` | Gaveta de propriedades em tela de celular |
+| `visao-geral.png` | Audio Lab com catálogo permanente e cadeia CD → integrado → caixas |
+| `painel-mobile.png` | Marca compacta e propriedades do integrado em tela de celular |
 | `tape-controles.png`, `vinil-ruido.png` | Ícones de ruído e oscilação |
 | `ganho-potencia.png` | Ganhos A/B em 5/10 na Potência · Visor Circular |
 | `assinatura-neutra.png`, `assinatura-medios.png`, `assinatura-agudos.png` | Curvas e indicadores nas mesmas referências |

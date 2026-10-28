@@ -1,6 +1,8 @@
 # Design system da interface
 
-Este guia é a referência para menus, catálogo, configurações, painéis, diálogos e controles do Audio System. O desenho dos equipamentos e do ambiente no canvas possui estilos próprios. Ao alterar a interface, reutilize os componentes existentes e os tokens de `styles/interface-palettes.css`; não copie cores fixas de uma paleta para outra.
+Este guia é a referência para menus, catálogo, configurações, painéis, diálogos e controles do Audio Lab. O desenho dos equipamentos e do ambiente no canvas possui estilos próprios. Ao alterar a interface, reutilize os componentes existentes e os tokens de `styles/interface-palettes.css`; não copie cores fixas de uma paleta para outra.
+
+A marca combina um A com uma onda sonora. Os vetores originais ficam em `assets/brand/`; a barra superior usa o símbolo em `--ui-accent`, acompanhado pelo nome Audio Lab em Inter Bold. Em telas pequenas, o símbolo aparece sozinho com o nome acessível preservado.
 
 ## Paletas e tokens
 
