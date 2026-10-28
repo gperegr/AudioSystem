@@ -117,3 +117,24 @@
 #inspector .inspector-panel-header{border-color:color-mix(in srgb,var(--ui-border) 30%,transparent);}
 /* Keep a clear keyboard focus ring and semantic signal states. */
 :is(#equipment-catalog,#inspector,.app-settings-content,.tutorial-bar) :is(button,input,select,summary):focus-visible{outline:2px solid var(--ui-accent);outline-offset:2px;}
+
+/* Final border reset: keep surfaces and spacing as the visual grouping cues. */
+#app-topbar,#equipment-catalog,#inspector,#inspector-empty,#inspector-content,
+#equipment-catalog .catalog-item,#inspector-content section,#inspector-content .model-spec,
+#inspector-content .sonic-band,#inspector-content .headphone-output-specs dl>div,
+#inspector-content .sonic-profile,#inspector-content .sonic-signature-panel,#inspector-content .model-specs,
+#inspector-content .headphone-output-specs,#inspector-content .port-signal-panel,#inspector-content .listening-output-controls,
+#inspector-content .ai-inspector,#inspector-content .spectrum-panel,#inspector-content .signal-history-panel,
+#inspector-content .spotify-coverflow-inspector,#inspector-content .spotify-track-panel,
+#inspector-content button:not(.signal-history-name),.app-settings-content button,.app-settings-content select,
+.app-settings-content .settings-group,.app-settings-content .language-setting,.app-select-trigger,.app-select-popup,
+.app-confirm-dialog,.tutorial-dialog,.headphone-calibration-dialog,.tutorial-bar,.tutorial-bar button,
+#inspector[data-floating="true"]{border-color:transparent!important;}
+#equipment-catalog .catalog-item,#inspector-content section,#inspector-content .model-spec,
+#inspector-content .sonic-band,#inspector-content .headphone-output-specs dl>div,
+.app-settings-content .settings-group,.app-settings-content .language-setting{border-width:0!important;}
+#equipment-catalog .catalog-item{box-shadow:0 2px 8px var(--ui-shadow);}
+#inspector-content section{box-shadow:none!important;}
+#inspector-content[data-hardware-panel] section{border-color:transparent!important;border-width:0!important;box-shadow:none!important;}
+#inspector-content :is(.tt-insp-btn,button:not(.signal-history-name)):not([data-state=protection]){border-color:transparent!important;}
+#inspector-content :is(.tt-insp-btn,button):is(.is-on,[aria-pressed=true]){border-color:transparent!important;}
