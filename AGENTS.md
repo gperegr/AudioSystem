@@ -1,3 +1,3 @@
-# Orientações para agentes
+# Agent guidance
 
-Para alterações na interface de usuário, consulte `docs/UI-DESIGN-SYSTEM.md` antes de implementar. Reutilize os componentes e tokens ali indicados e mantenha o visual do canvas e dos equipamentos fora do escopo de alterações da interface, salvo pedido explícito.
+For user-interface changes, consult `docs/UI-DESIGN-SYSTEM.md` before implementation. Reuse the components and tokens described there, and keep canvas and equipment styling outside the scope of interface changes unless explicitly requested.

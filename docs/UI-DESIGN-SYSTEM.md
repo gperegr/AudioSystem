@@ -1,78 +1,80 @@
-# Design system da interface
+# Interface design system
 
-Este guia é a referência para menus, catálogo, configurações, painéis, diálogos e controles do Audio Lab. O desenho dos equipamentos e do ambiente no canvas possui estilos próprios. Ao alterar a interface, reutilize os componentes existentes e os tokens de `styles/interface-palettes.css`; não copie cores fixas de uma paleta para outra.
+This guide covers the Audio Lab menus, catalog, settings, panels, dialogs, and controls. Equipment and room artwork on the canvas have their own styling. Reuse existing components and tokens from `styles/interface-palettes.css`; do not copy fixed colors from one palette into another.
 
-A marca combina um A com uma onda sonora. Os vetores originais ficam em `assets/brand/`; a barra superior usa o símbolo em `--ui-accent`, acompanhado pelo nome Audio Lab em Inter Bold. Em telas pequenas, o símbolo aparece sozinho com o nome acessível preservado.
+The brand combines an A with a sound wave. The original vectors are in `assets/brand/`. The top bar uses the symbol in `--ui-accent` beside the Audio Lab name in Inter Bold. On small screens, only the symbol appears while its accessible name remains available.
 
-## Paletas e tokens
+## Palettes and tokens
 
-`document.documentElement.dataset.uiPalette` é sincronizado com o fundo, cenário e horário em `src/app/02-room-and-canvas-theme.js`. As definições e valores reais ficam em `styles/interface-palettes.css`; consulte esse arquivo como fonte de verdade. Existem `light`, `sepia`, `graphite`, `midnight` e `scene-{studioIllustrated|listeningIllustrated|loftIllustrated}-{dawn|dusk|night}`. O seletor `:root` oferece valores de reserva. Não atribua o atributo manualmente a partir de um componente.
+`document.documentElement.dataset.uiPalette` stays in sync with the background, room, and time in `src/app/02-room-and-canvas-theme.js`. The definitions and actual values are in `styles/interface-palettes.css`; treat that file as the source of truth. Available palettes are `light`, `sepia`, `graphite`, `midnight`, and `scene-{studioIllustrated|listeningIllustrated|loftIllustrated}-{dawn|dusk|night}`. The `:root` selector supplies fallback values. Do not set this attribute manually from a component.
 
-| Token | Uso |
+| Token | Use |
 | --- | --- |
-| `--ui-top` | Barra superior |
-| `--ui-side` | Fundos de barras laterais e configurações |
-| `--ui-panel` | Cartões, seções e diálogos |
-| `--ui-control` | Fundo de controles e campos |
-| `--ui-hover` | Superfície sob o ponteiro |
-| `--ui-active` | Controle selecionado ou acionado |
-| `--ui-border` | Bordas e divisórias |
-| `--ui-text` | Texto principal |
-| `--ui-secondary` | Rótulos e texto secundário |
-| `--ui-muted` | Texto discreto e indicações auxiliares |
-| `--ui-accent` | Destaque, foco e seleção |
-| `--ui-shadow` | Sombras da interface |
-| `--ui-scheme` | `color-scheme` dos controles nativos |
+| `--ui-top` | Top bar |
+| `--ui-side` | Sidebars and settings backgrounds |
+| `--ui-panel` | Cards, sections, and dialogs |
+| `--ui-control` | Control and field backgrounds |
+| `--ui-hover` | Surface beneath the pointer |
+| `--ui-active` | Selected or engaged control |
+| `--ui-border` | Dividers and panel edges where used |
+| `--ui-text` | Primary text |
+| `--ui-secondary` | Labels and secondary text |
+| `--ui-muted` | Subtle text and helper indicators |
+| `--ui-accent` | Highlights, focus, and selection |
+| `--ui-shadow` | Interface shadows |
+| `--ui-scheme` | Native control `color-scheme` |
 
-Cores de estado de sinal, alerta e perigo têm significado próprio; preserve esse significado e garanta contraste em fundos claros e escuros. Para gráficos desenhados em canvas da interface, obtenha os tokens por `getComputedStyle(document.documentElement)` ao desenhar, como no analisador de espectro. Não aplique esses tokens ao desenho de equipamentos.
+Signal, warning, and danger colors have distinct meanings. Preserve them and ensure contrast on light and dark backgrounds. For charts drawn on interface canvases, read tokens with `getComputedStyle(document.documentElement)` at draw time, as the spectrum analyzer does. Do not apply these tokens to equipment artwork.
 
-## Paletas dos cenários
+## Room palettes
 
-As nove paletas acompanham os materiais e a iluminação das imagens de `assets/rooms`, conforme o mapeamento de `assets/rooms/scenes.js`:
+The nine palettes follow the materials and lighting in `assets/rooms`, as mapped in `assets/rooms/scenes.js`:
 
-| Cenário | Nascer do dia | Fim de tarde | Noite |
+| Room | Dawn | Late afternoon | Night |
 | --- | --- | --- | --- |
-| Estúdio | Carvão com madeira suave | Nogueira e âmbar | Grafite azulado e luz fria |
-| Sala de audição | Calcário, madeira e oliva discreto | Areia dourada e mel | Ardósia suave e azul do luar |
-| Loft industrial | Concreto claro e terracota | Tijolo queimado e cobre | Aço azulado e reflexos quentes da cidade |
+| Studio | Charcoal with soft wood | Walnut and amber | Blue graphite and cool light |
+| Listening room | Limestone, wood, and subtle olive | Golden sand and honey | Soft slate and moonlit blue |
+| Industrial loft | Light concrete and terracotta | Burnt brick and copper | Blue steel and warm city reflections |
 
-A claridade da interface acompanha o interior da imagem: o estúdio permanece escuro mesmo ao amanhecer; a sala de audição conserva a luminosidade da parede ao pôr do sol. Estados ativos e favoritos usam o destaque de cada paleta, mantendo contraste com o fundo.
+Interface brightness follows the image interior: the studio stays dark even at dawn, while the listening room retains the wall's brightness in late afternoon. Active states and favorites use each palette's accent while maintaining contrast against the background.
 
-## Tipografia e composição
+## Typography and layout
 
-Use `var(--font-ui, "Inter", sans-serif)`. O padrão existente usa títulos de seção em torno de 16 px e peso 700, rótulos de 12–13 px e peso 600, e texto auxiliar de 11–12 px com entrelinha de aproximadamente 1,4. Mantenha a hierarquia legível, sem depender apenas de caixa alta ou cor. Use alinhamento consistente, espaçamento de 8–14 px entre elementos e cartões com borda de 1 px e raio de 7–10 px, acompanhando os componentes próximos. Os tamanhos são referências do estilo existente, não classes ou tokens CSS já implementados.
+Use `var(--font-ui, "Inter", sans-serif)`. Existing styles use section headings around 16 px at weight 700, labels at 12–13 px and weight 600, and helper text at 11–12 px with about 1.4 line height. Keep hierarchy legible without relying on uppercase or color alone. Use consistent alignment, 8–14 px spacing between elements, and cards with a 1 px edge and 7–10 px radius where surrounding components use them. These measurements describe the existing style; they are not implemented CSS classes or tokens.
 
-## Componentes
+## Components
 
-| Componente | Referência existente | Aplicação |
+| Component | Existing reference | Guidance |
 | --- | --- | --- |
-| Botão | `.tt-insp-btn`, `.app-settings-content button` | Fundo `--ui-control`, texto `--ui-text`, borda `--ui-border`; hover `--ui-hover`, estado ativo `--ui-active`. Use `button` e `aria-pressed` para alternância. |
-| Botão de ícone | `.canvas-tools button`, `.sidebar-pin` | Ícone com `currentColor`, nome acessível via `aria-label` e foco visível. |
-| Slider | `input[type=range]`, `--menu-slider-track`, `--menu-slider-thumb` | Use range nativo com rótulo, valor e unidade; permita teclado. A trilha e o controle usam os tokens existentes; preserve cores de medição com significado. |
-| Dropdown | `.app-select-trigger`, `.app-select-popup`, `.app-select-option` | Reutilize o seletor compartilhado e o `select` que o alimenta; mantenha estado selecionado, navegação por teclado e foco. Não implemente uma segunda versão local. |
-| Checkbox | `input[type=checkbox]` com `label` | Use controle nativo associado ao rótulo e `color-scheme: var(--ui-scheme)`; estados marcado, desabilitado e foco devem ser perceptíveis. Não existe classe global específica consolidada. |
-| Campo de texto | Busca do catálogo | Use `--ui-control`, `--ui-text`, `--ui-border` e placeholder `--ui-muted`; inclua rótulo acessível. |
-| Grupo expansível | `.settings-group`, `.signal-history-panel` | Use `details`/`summary`, título claro, indicador de abertura e foco de teclado. |
-| Cartão | `.model-specs`, `.sonic-signature-panel`, `.settings-group` | Fundo `--ui-panel`, borda `--ui-border`, títulos `--ui-text` e texto auxiliar `--ui-secondary`. |
-| Diálogo | `.app-confirm-dialog`, `.tutorial-dialog` | Reutilize o fluxo de diálogo existente, com título, ação principal clara, cancelamento e gerenciamento de foco. |
-| Gráfico e legenda | `.spectrum-panel`, `#audio-spectrum` | Diferencie séries por legenda e cor; use os tokens para superfície e eixos, mantendo contraste em todas as paletas. |
+| Button | `.tt-insp-btn`, `.app-settings-content button` | Use `--ui-control` for the surface and `--ui-text` for text. App buttons have no decorative outline; use `--ui-hover` on hover and `--ui-active` when selected. Use a semantic `button` and `aria-pressed` for toggles. |
+| Icon button | `.canvas-tools button` | Use `currentColor` for the icon, provide an accessible name through `aria-label`, and keep keyboard focus visible. |
+| Slider | `input[type=range]`, `--menu-slider-track`, `--menu-slider-thumb` | Use a native range with a label, value, and unit; support keyboard input. Use existing track and thumb tokens, and preserve the meaning of meter colors. |
+| Dropdown | `.app-select-trigger`, `.app-select-popup`, `.app-select-option` | Reuse the shared selector and its backing `select`; retain selected state, keyboard navigation, and focus. Do not create a second local implementation. |
+| Checkbox | `input[type=checkbox]` with `label` | Associate a native control with its label and use `color-scheme: var(--ui-scheme)`. Make checked, disabled, and focus states perceptible. There is no consolidated global class. |
+| Text field | Catalog search | Use `--ui-control`, `--ui-text`, `--ui-border`, and `--ui-muted` for the placeholder; include an accessible label. |
+| Expandable group | `.settings-group`, `.signal-history-panel` | Use `details`/`summary`, a clear title, an open-state indicator, and keyboard focus. |
+| Card | `.model-specs`, `.sonic-signature-panel`, `.settings-group` | Use `--ui-panel` for the surface, `--ui-text` for headings, and `--ui-secondary` for supporting text. |
+| Dialog | `.app-confirm-dialog`, `.tutorial-dialog` | Reuse the existing dialog flow with a title, clear primary action, cancellation, and focus management. |
+| Chart and legend | `.spectrum-panel`, `#audio-spectrum` | Distinguish series by legend and color; use tokens for surfaces and axes and retain contrast across all palettes. |
 
-Evite criar componentes visualmente semelhantes com comportamento ou classes independentes. Onde ainda não houver componente compartilhado, siga os contratos acima e registre a implementação neste documento quando ela for consolidada.
+Favorites use an unoutlined star. The off state has a lighter fill; the selected state uses a darker fill in the palette accent. Selected equipment and hover use distinct highlight colors. Multi-selection opens no floating properties panel.
 
-## Estados, acessibilidade e idioma
+Avoid visually similar components with separate behavior or classes. Where no shared component exists yet, follow these contracts and document the implementation here once it is consolidated.
 
-Inclua estados normal, hover, foco visível, selecionado, desabilitado e erro quando aplicáveis. Foco deve continuar visível com teclado; não dependa de hover para acesso no toque. Como referência, a interface usa áreas de toque de 44 px em opções de seleção para ponteiros de toque. Preserve os rótulos, `title`, `aria-label` e opções traduzíveis em PT e EN pelos mecanismos de `src/i18n/`. Texto normal deve atingir contraste de pelo menos 4,5:1; verifique também ícones, bordas, estados e mensagens sobre seus fundos reais.
+## States, accessibility, and language
 
-## Checklist para agentes
+Include normal, hover, visible focus, selected, disabled, and error states where applicable. Keyboard focus must remain visible; touch access must not depend on hover. As a reference, selection options use 44 px touch targets for touch pointers. Preserve labels, `title`, `aria-label`, and localized options using the mechanisms in `src/i18n/`. Body text should reach at least 4.5:1 contrast; also check icons, edges, states, and messages against their actual backgrounds.
 
-1. Identifique o componente compartilhado e seus estilos em `styles/app.css` e `styles/interface-palettes.css` antes de criar outro.
-2. Use os tokens semânticos, mantenha o estado e as traduções, e preserve o comportamento por mouse, teclado e toque.
-3. Confira temas claros e escuros, cenário e horário, controles ativos e desabilitados, além de uma largura móvel.
-4. Execute as verificações pertinentes. `node tests/interface-palettes.browser.cjs` cobre as 13 combinações, contraste dos componentes principais e preservação do visual de um equipamento; aceita `TAILWIND_SCRIPT_FILE` para uso offline. `node --test tests/*.test.cjs` executa a suíte Node.
-5. Se alterar tokens ou contratos compartilhados, atualize este guia e os pontos de uso relevantes. CSS de equipamentos em `styles/equipment/` e seus controles no canvas seguem suas próprias regras.
+## Implementation checklist
 
-## Catálogo permanente
+1. Check shared components and styles in `styles/app.css` and `styles/interface-palettes.css` before adding another implementation.
+2. Use semantic tokens, retain state and translations, and preserve mouse, keyboard, and touch behavior.
+3. Check light and dark themes, room and time palettes, active and disabled controls, and a mobile viewport.
+4. Run relevant checks. `node tests/interface-palettes.browser.cjs` covers all 13 combinations, contrast for key components, and preservation of equipment appearance; it accepts `TAILWIND_SCRIPT_FILE` for offline use. `node --test tests/*.test.cjs` runs the Node test suite.
+5. If shared tokens or contracts change, update this guide and affected usage. Equipment CSS in `styles/equipment/` and its canvas controls follow separate rules.
 
-O catálogo à esquerda permanece visível, sem seta, alfinete, recolhimento automático ou preferência de fixação. O canvas reserva a largura do catálogo; em telas de até 700 px, o catálogo usa 136 px e uma coluna de equipamentos. A busca, os favoritos e o descarte por arraste continuam disponíveis. O cabeçalho da busca desfoca gradualmente os itens que rolam atrás dele; a busca permanece aberta enquanto houver texto, até que ele seja apagado.
+## Permanent catalog and floating panels
 
-Os painéis de propriedades ficam em uma camada com os limites do canvas, abaixo da barra superior e à direita do catálogo. Posição, tamanho, animação e sombra respeitam esses limites; quando falta espaço, reduzem largura e altura com rolagem interna. O posicionamento se atualiza quando o painel, o catálogo ou a barra superior mudam de tamanho.
+The left catalog stays visible; it has no collapse arrow, pin, automatic hiding, or pin preference. The canvas reserves space for it. At widths up to 700 px, the catalog is 136 px wide and uses one equipment column. Search, favorites, and drag-to-discard remain available. The search header gradually blurs items scrolling behind it; the search field stays open while it contains text and closes only after the text is cleared.
+
+Floating properties panels are confined to the canvas, below the top bar and to the right of the catalog. Their position, size, animation, and shadow respect those boundaries. When space is limited, panels shrink and scroll internally. Their position updates when the panel, catalog, or top bar changes size.

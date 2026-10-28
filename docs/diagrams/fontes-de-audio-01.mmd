@@ -1,5 +1,5 @@
 flowchart LR
-    L["Toca-discos em LINE"] -->|"Linha"| IL["Entrada LINE"]
-    P["Toca-discos em PHONO"] -->|"Phono"| IP["Entrada PHONO com RIAA"]
-    P -->|"Phono"| C["Conversor PHONO → LINHA"]
-    C -->|"Linha"| IL
+    L["Turntable set to LINE"] -->|"Line level"| IL["LINE input"]
+    P["Turntable set to PHONO"] -->|"Phono level"| IP["PHONO input with RIAA"]
+    P -->|"Phono level"| C["PHONO-to-LINE converter"]
+    C -->|"Line level"| IL

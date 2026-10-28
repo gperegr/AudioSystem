@@ -1,11 +1,11 @@
-# Audio Lab
+# Audio Lab brand assets
 
-O símbolo une a letra A a uma onda sonora, com curvas arredondadas para continuar legível em tamanhos pequenos.
+The symbol combines the letter A with a sound wave. Rounded strokes keep it legible at small sizes.
 
-- `audio-lab-mark.svg`: símbolo isolado e favicon.
-- `audio-lab-logo.svg`: assinatura horizontal para fundos claros.
-- `audio-lab-logo-inverse.svg`: assinatura horizontal para fundos escuros.
+- `audio-lab-mark.svg`: standalone symbol and favicon.
+- `audio-lab-logo.svg`: horizontal wordmark for light backgrounds.
+- `audio-lab-logo-inverse.svg`: horizontal wordmark for dark backgrounds.
 
-Os arquivos são vetores sem imagens incorporadas e podem ser importados no Figma. O nome está convertido em curvas a partir de Inter Bold para preservar a tipografia.
+These are editable SVG vectors with no embedded images. The wordmark is converted to outlines from Inter Bold so it renders consistently without a font dependency.
 
-Na interface, o símbolo usa `--ui-accent` e o nome herda `--ui-text`; o texto permanece como texto HTML acessível. Em telas pequenas, aparece apenas o símbolo.
+In the application header, the symbol uses `--ui-accent` and the name inherits `--ui-text`. The name remains accessible HTML text. On narrow screens, the header shows only the symbol while preserving the accessible name.

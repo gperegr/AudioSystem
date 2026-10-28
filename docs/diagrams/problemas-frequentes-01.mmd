@@ -1,7 +1,7 @@
 flowchart TD
-    A{"Fonte em reprodução?"} -->|"Não"| B["Clique/toque e inicie a fonte"]
-    A -->|"Sim"| C{"Medidores mostram sinal?"}
-    C -->|"Não"| D["Confira entrada, energia, cabos e arquivo"]
-    C -->|"Sim"| E{"Escuta sem mute e sem proteção?"}
-    E -->|"Não"| F["Revise SOLO/MUTE, carga e avisos"]
-    E -->|"Sim"| G["Confira volume, saída do dispositivo e aba"]
+    A{"Is the source playing?"} -->|"No"| B["Click or tap and start the source"]
+    A -->|"Yes"| C{"Do meters show a signal?"}
+    C -->|"No"| D["Check input, power, cables, and file"]
+    C -->|"Yes"| E{"Is listening enabled without mute or protection?"}
+    E -->|"No"| F["Review SOLO/MUTE, load, and warnings"]
+    E -->|"Yes"| G["Check volume, device output, and browser tab"]

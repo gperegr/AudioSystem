@@ -1,12 +1,12 @@
-# Fontes dos equipamentos
+# Equipment fonts
 
-Estas fontes são gratuitas e permitem uso, incorporação e redistribuição, inclusive comercial, sob a **SIL Open Font License 1.1**. Elas têm direitos autorais; a licença livre autoriza esses usos. Os avisos de autoria e a licença integral acompanham cada família em `OFL.txt`. Não remover esses arquivos ao redistribuir as fontes.
+These fonts are distributed under the **SIL Open Font License 1.1**, which permits use, embedding, and redistribution, including commercial use. The font files remain copyrighted; the license grants these permissions. Keep each family's copyright notices and full license in its `OFL.txt` file when redistributing.
 
-| Aplicação | Família / arquivo | Fonte original |
+| Use | Family / file | Upstream source |
 | --- | --- | --- |
-| Inscrições vintage e instrumentos analógicos | Barlow Condensed SemiBold | https://github.com/google/fonts/tree/main/ofl/barlowcondensed |
-| Inscrições técnicas de estúdio | Barlow Medium | https://github.com/google/fonts/tree/main/ofl/barlow |
-| Equipamentos modernos | Manrope, variável | https://github.com/google/fonts/tree/main/ofl/manrope |
-| Visores digitais e leituras numéricas | IBM Plex Mono Medium | https://github.com/google/fonts/tree/main/ofl/ibmplexmono |
+| Vintage lettering and analog instruments | Barlow Condensed SemiBold | https://github.com/google/fonts/tree/main/ofl/barlowcondensed |
+| Technical studio lettering | Barlow Medium | https://github.com/google/fonts/tree/main/ofl/barlow |
+| Modern equipment | Manrope Variable | https://github.com/google/fonts/tree/main/ofl/manrope |
+| Digital displays and numeric readouts | IBM Plex Mono Medium | https://github.com/google/fonts/tree/main/ofl/ibmplexmono |
 
-Arquivos originais, sem modificações, obtidos do repositório Google Fonts. O carregamento é local via `@font-face` em [`styles/app.css`](../../styles/app.css); estas quatro famílias não exigem conexão a um serviço de fontes externo. A tipografia da interface geral permanece independente.
+The original, unmodified files come from Google Fonts. They load locally through `@font-face` in [`styles/app.css`](../../styles/app.css), so these four families do not depend on an external font service. The general application interface uses a separate typeface.

@@ -2,156 +2,158 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/brand/audio-lab-logo-inverse.svg">
-  <img src="assets/brand/audio-lab-logo.svg" alt="Audio Lab — um A integrado a uma onda sonora" width="360">
+  <img src="assets/brand/audio-lab-logo.svg" alt="Audio Lab — an A integrated with a sound wave" width="360">
 </picture>
 
-Monte um sistema de som virtual, conecte os equipamentos e ouça o resultado no navegador. Explore fontes, amplificadores, equalizadores, caixas e fones com estilos vintage, de estúdio e modernos.
+Build a virtual audio system, connect its components, and listen in your browser. Explore sources, amplifiers, equalizers, speakers, and headphones in vintage, studio, and modern styles.
 
-![Audio Lab: catálogo permanente à esquerda e montagem estéreo com CD, integrado e caixas](docs/images/visao-geral.png)
+![Audio Lab with its permanent catalog and a connected stereo system: CD player, integrated amplifier, and speakers](docs/images/visao-geral.png)
 
-O símbolo e as assinaturas para fundos claros e escuros estão em [assets/brand](assets/brand/README.md), em SVG editável.
+The symbol and light and dark wordmarks are editable SVGs in [`assets/brand`](assets/brand/README.md).
 
-**[Wiki e guias completos](https://github.com/gperegr/AudioSystem/wiki)** · **[Exemplos de montagem](https://github.com/gperegr/AudioSystem/wiki/Exemplos-de-montagem)** · **[Solução de problemas](https://github.com/gperegr/AudioSystem/wiki/Problemas-frequentes)**
+**[Complete wiki and guides](https://github.com/gperegr/AudioSystem/wiki)** · **[Setup examples](https://github.com/gperegr/AudioSystem/wiki/Exemplos-de-montagem)** · **[Troubleshooting](https://github.com/gperegr/AudioSystem/wiki/Problemas-frequentes)**
 
-## Abrir e ouvir
+## Open Audio Lab and listen
 
-1. Baixe o repositório em **Code → Download ZIP** e extraia todo o conteúdo.
-2. Abra **index.html** em Chrome, Edge ou outro navegador atualizado, mantendo as pastas juntas.
-3. Mantenha internet disponível para os recursos externos de estilo e as fontes da interface.
-4. Clique ou toque no programa para liberar o áudio. Comece com o volume do computador baixo.
+1. Download the repository with **Code → Download ZIP**, then extract the complete archive.
+2. Open **index.html** in an up-to-date browser such as Chrome or Edge. Keep the extracted folders together.
+3. Keep an internet connection available for the interface styles and externally hosted interface fonts.
+4. Click or tap the app to enable audio. Start with your computer's volume turned down.
 
-Na primeira abertura, um guia opcional recomenda fones e oferece exemplos de som forte, detalhe sutil, canais esquerdo/direito, graves, agudos e sons da interface. Os exemplos de som forte, detalhe, graves e agudos se repetem com pausas curtas após tocar em **Tocar**; é possível avançar sem escolher uma resposta. Em **Detalhe sutil**, cada resposta toca uma prévia única quando a repetição está parada. As respostas sobre som forte e detalhe ajustam o **volume do programa**. Os sliders de graves e agudos ajustam a saída de escuta entre −6 e +6 dB; o slider de **sons de interação** toca uma prévia ao mover. Você pode voltar ou pular, repetir o guia em **Configurações → Calibrar volume dos fones** ou editar os níveis em **Configurações → Níveis de escuta**. O navegador não mede o volume real do fone; comece com o dispositivo baixo e mantenha um nível confortável.
+An optional first-run guide recommends headphones and offers listening examples for loudness, subtle detail, left/right channels, bass, treble, and interface sounds. The loudness, detail, bass, and treble examples repeat briefly after you press **Play**; you can continue without choosing an answer. In **Subtle detail**, each answer plays one preview when repetition is stopped. Loudness and detail answers adjust the app volume. The bass and treble sliders adjust listening output from −6 to +6 dB; the **Interaction sounds** slider plays a preview as you move it. Return to a previous step, skip, repeat the guide in **Settings → Calibrate headphone volume**, or edit the levels in **Settings → Listening levels**. The browser does not measure the actual headphone volume. Start with your device volume low and keep listening at a comfortable level.
 
-Se você recebeu o endereço da aplicação publicada, abra-o diretamente. O programa não exige instalar Node.js para ser usado.
+If you have the published app URL, open it directly. You do not need Node.js to use Audio Lab.
 
-## Sua primeira montagem
+## Build your first system
 
-Adicione um **CD Player**, um **Integrado · Visores Azuis** e duas **Caixas Passivas Vintage**. Arraste do catálogo; no toque, toque no nome para adicionar.
+Add a **CD Player**, an **Integrated · Blue Meters**, and two **Vintage Passive Speakers**. Drag items from the catalog, or tap an item name to add it on touch screens.
 
 ```mermaid
 flowchart LR
-    CD["CD Player"] -->|"RCA L/R · linha"| INT["Integrado · entrada Linha 1"]
-    INT -->|"SPEAKERS L · amplificado"| L["Caixa passiva esquerda"]
-    INT -->|"SPEAKERS R · amplificado"| R["Caixa passiva direita"]
+    CD["CD player"] -->|"RCA L/R · line"| INT["Integrated amp · Line 1 input"]
+    INT -->|"SPEAKERS L · amplified"| L["Left passive speaker"]
+    INT -->|"SPEAKERS R · amplified"| R["Right passive speaker"]
 ```
 
-1. Ligue RCA OUT L/R do CD à entrada **Linha 1 L/R** do integrado.
-2. Ligue uma caixa a **SPEAKERS L** e a outra a **SPEAKERS R**.
-3. Confira a alimentação dos aparelhos, selecione **Linha 1** e inicie a reprodução no CD.
-4. Ajuste o volume do integrado gradualmente.
+1. Connect the CD player's RCA OUT L/R to the integrated amp's **Line 1 L/R** input.
+2. Connect one speaker to **SPEAKERS L** and the other to **SPEAKERS R**.
+3. Turn on the equipment, select **Line 1**, and start playback on the CD player.
+4. Raise the integrated amp's volume gradually.
 
-As fontes musicais oferecem demonstração quando não há música própria. Para ouvir um arquivo local, selecione a fonte e use **Música própria → CARREGAR ÁUDIO**. MP3 e WAV são opções comuns; a compatibilidade depende do navegador. O Streamer Integrado também lê metadados e capa de MP3/FLAC quando disponíveis.
+Music sources provide a demo when no personal audio is loaded. To play a local file, select a source and choose **My music → LOAD AUDIO**. MP3 and WAV are common options; support depends on the browser. The Integrated Streamer also reads available MP3/FLAC metadata and cover art.
 
-As interfaces USB de captura permitem selecionar uma entrada de áudio do computador, ajustar os níveis de entrada e encaminhar o sinal sem efeitos às saídas de linha e fones conectadas. Algumas têm controle de saída compartilhado; outras permitem regular linha e fones separadamente. Selecione a interface, clique em **Iniciar captura** e conceda a permissão do navegador. A captura exige HTTPS ou localhost e não é retomada automaticamente ao abrir um projeto.
+USB audio interfaces can select a computer input, adjust its level, and route the unprocessed signal to connected line and headphone outputs. Some share their output control; others adjust line and headphones separately. Select an interface, choose **Start capture**, and grant browser permission. Capture requires HTTPS or localhost and does not resume automatically when a project is opened.
 
-## Entradas, saídas e níveis
+## Inputs, outputs, and levels
 
-| Sinal | Origem | Destino |
+| Signal | Source | Destination |
 | --- | --- | --- |
-| Linha / LINE | CD, streamer, pré ou processador | LINE de amplificador, processador ou caixa ativa |
-| PHONO | Toca-discos em PHONO | Entrada PHONO ou conversor PHONO → LINHA |
-| PHONES | Amplificador ou saída de fones | Fones compatíveis |
-| Amplificado / SPEAKERS | Potência, integrado ou receiver | Caixa ou subwoofer passivo |
-| SUB / LFE | Saída de graves em nível de linha | Subwoofer ativo |
+| Line / LINE | CD player, streamer, preamp, or processor | Amplifier, processor, or active-speaker LINE input |
+| PHONO | Turntable set to PHONO | PHONO input or PHONO-to-LINE converter |
+| PHONES | Amplifier or headphone output | Compatible headphones |
+| Amplified / SPEAKERS | Power amp, integrated amp, or receiver | Passive speaker or subwoofer |
+| SUB / LFE | Line-level bass output | Active subwoofer |
 
-Preserve **L e R**. P2/P10 podem reunir estéreo, mas há entradas mono, como a P10 da **Caixa Ativa · Precisão**. Confira os rótulos: o formato do plugue sozinho não determina o sinal. Adaptadores passivos mudam conectores e canais; conversores alteram o nível ou a preparação do áudio.
+Keep **L and R** matched. Stereo 3.5 mm/6.35 mm plugs may carry both channels, but some inputs are mono, such as the 6.35 mm input on the **Precision Active Speaker**. Check the labels: plug shape alone does not determine the signal. Passive adapters change connector or channel routing; converters change signal level or processing.
 
-Os avisos explicam níveis incorretos, carga e possíveis danos simulados. Desativar a ajuda em Configurações não permite encaixar plugues de formatos diferentes. Consulte [Sinais e conexões](https://github.com/gperegr/AudioSystem/wiki/Sinais-e-conexoes).
+Warnings explain incompatible levels, loads, and simulated damage. Turning off connection guidance in Settings does not allow mismatched plug shapes to connect. See [Signals and connections](https://github.com/gperegr/AudioSystem/wiki/Sinais-e-conexoes).
 
-## Navegação e controles
+## Navigation and controls
 
-| Ação | Como fazer |
+| Task | How it works |
 | --- | --- |
-| Ajustar um aparelho | Selecione um único equipamento; as propriedades aparecem em um painel flutuante limitado pela área do canvas. Deselecionar fecha o painel. |
-| Consultar o catálogo | O catálogo à esquerda fica sempre visível; no celular, usa uma coluna. |
-| Procurar equipamentos | Busque por nome, função, conector ou sinal. |
-| Ajustar knobs e faders | Arraste; controles compatíveis aceitam teclado e mostram o valor durante o ajuste. |
-| Selecionar vários | **Shift + clique/arraste**; **Ctrl/Cmd + A** seleciona todos quando o foco está na montagem. A seleção múltipla mantém o painel de propriedades fechado. |
-| Navegar na montagem | Use zoom e **Ajustar seleção** (**C**): enquadra os selecionados ou todos, quando não há seleção. |
-| Desfazer/refazer movimento | Use as setas da barra ou **Ctrl/Cmd + Z** / **Ctrl/Cmd + Shift + Z**. Esse histórico é de posições. |
-| Organizar cabos | Selecione um cabo para ajustar etiqueta, cor, visibilidade e folga. Ocultar não corta o áudio. |
+| Adjust a device | Select one item to open its floating properties panel, confined to the canvas. Deselect it to close the panel. |
+| Browse the catalog | The left catalog stays visible; on phones it becomes a single column. |
+| Find equipment | Search by name, function, connector, or signal. |
+| Adjust knobs and faders | Drag them. Supported controls also work with the keyboard and show their value while changing. |
+| Select several devices | Use **Shift + click/drag**. **Ctrl/Cmd + A** selects all when the assembly has focus. Multi-selection keeps the properties panel closed. |
+| Navigate the assembly | Use zoom and **Fit selection** (**C**): frames selected devices, or all devices when none are selected. |
+| Undo/redo movement | Use the toolbar arrows or **Ctrl/Cmd + Z** / **Ctrl/Cmd + Shift + Z**. This history tracks positions. |
+| Organize cables | Select a cable to set its label, color, visibility, and slack. Hiding a cable does not break the connection. |
 
-Os controles de ajuste usam passos discretos; seletores e sintonia têm escalas próprias. **Restaurar Configurações** aparece nos aparelhos com ajustes restauráveis. Nas potências, o ganho padrão é **5/10**; projetos com ganhos próprios preservam seus valores. Isso não significa metade da potência nominal em watts.
+Adjustment controls use discrete steps; input selectors and tuning have their own scales. **Restore Settings** appears on devices with restorable adjustments. Power amplifiers start at gain **5/10**; projects with saved gains preserve those values. This control position does not mean half of the rated wattage.
 
-### Cenário, piso e iluminação
+### Scene, floor, and lighting
 
-Em **Configurações → Fundo**, escolha **Cenário** para mostrar **Estúdio**, **Sala de audição** ou **Loft industrial**. Essas opções usam as imagens ilustradas, criadas sobre a composição das imagens anteriores com formas e texturas mais próximas da arte dos equipamentos. As imagens anteriores permanecem em `assets/rooms`, mas não aparecem no menu. O menu **Hora do dia** oferece **Nascer do dia**, **Fim de tarde** e **Noite**; a hora ajusta a iluminação dos equipamentos, enquanto a imagem do fundo permanece sem filtros ou fachos de luz dinâmicos. Cada cenário mantém seu próprio piso. Os outros fundos (Claro, Grafite, Azul noturno e Sépia) continuam disponíveis. Na primeira abertura, os padrões são **Cenário → Loft industrial**, **Fim de tarde**, grade de **Pontos**, orientação de conexões ativa, modo desenvolvedor desativado, **Sala pequena** com intensidade **5**, volume do programa em **100%** e sons de interação em **50%**. Fundo, cenário, hora do dia, grade e zoom são lembrados no navegador e acompanham o projeto salvo. Projetos antigos com cenários anteriores são abertos nas opções ilustradas correspondentes.
+In **Settings → Appearance → Background**, choose **Room** to show **Studio**, **Listening Room**, or **Industrial Loft**. These illustrated scenes were created from the earlier compositions with shapes and textures closer to the equipment artwork. Earlier background images remain in `assets/rooms` but are not offered in the menu. **Time of day** offers **Dawn**, **Late afternoon**, and **Night**. Time changes equipment lighting while leaving the background image free of filters and dynamic light beams. Each scene has its own floor. Other backgrounds (**Light**, **Graphite**, **Midnight Blue**, and **Sepia**) remain available.
 
-Os cenários são imagens WebP propositalmente desfocadas e sem móveis nem luminárias fixas. `assets/rooms/scenes.js` guarda a escolha da imagem, o piso e as fontes virtuais invisíveis alinhadas às janelas. Elas iluminam equipamentos e móveis; as partículas continuam flutuando à frente dos equipamentos. A luminária opcional da Mesa de Áudio, a luminária pendente e as arandelas adicionadas pelo usuário também emitem luz e participam das sombras dinâmicas dos equipamentos. O fundo não recebe mais brilho desenhado em canvas, fachos em CSS ou filtros de iluminação. Knobs, teclas, sliders e plugues mantêm sombras de contato e alturas diferentes; prateleiras e laterais dos móveis criam sombras no seu interior. Móveis e equipamentos também projetam sombras suaves no piso. A vista permanece frontal; áudio, conexões e funcionamento dos controles não dependem dos efeitos visuais.
+First-run defaults are **Room → Industrial Loft**, **Late afternoon**, **Dots** grid, connection guidance on, developer mode off, **Small Room** with intensity **5**, app volume at **100%**, and interaction sounds at **50%**. Background, scene, time, grid, and zoom are remembered in the browser and stored with a project. Older projects using previous scenes open with their corresponding illustrated options.
 
-A direção visual combina interiores mid-century modernos com materiais fotográficos suavizados: madeira de veios discretos, concreto, tijolo e tecido acústico. O fundo tem menos contraste que os aparelhos e seus controles.
+The illustrated WebP scenes are intentionally soft and contain no fixed furniture or lamps. `assets/rooms/scenes.js` maps each image, floor, and invisible virtual light sources aligned with the windows. They illuminate equipment and furniture; particles continue to float in front of devices. The optional Audio Desk lamp, pendant light, and user-added wall lights also emit light and contribute to dynamic device shadows. The background is no longer overlaid with canvas glow, CSS beams, or lighting filters. Knobs, keys, sliders, and plugs retain contact shadows and distinct heights; shelves and furniture sides cast shadows inside their openings. Furniture and equipment cast soft shadows on the floor. The view stays frontal, and sound, connections, and control operation do not depend on visual effects.
 
-Ao deslocar ou ampliar o canvas, a imagem do cenário se move em velocidade diferente dos equipamentos, criando paralaxe. Mover somente o cursor não altera esse efeito. O enquadramento permite zoom-out de 50% em telas amplas, sem redimensionar móveis ou equipamentos. Os aparelhos podem avançar um pouco sobre o piso da imagem para parecerem apoiados nele.
+The art direction combines modern mid-century interiors with softened photographic materials: restrained wood grain, concrete, brick, and acoustic fabric. Background contrast stays lower than the equipment and its controls.
 
-O catálogo separa **Móveis** de **Iluminação**. Em Iluminação, a **Luminária pendente** acompanha a altura do teto com o cabo e balança discretamente; as arandelas **Industrial** e **de prato** podem ser arrastadas pelas paredes. Todas iluminam os equipamentos, e as cúpulas bloqueiam a luz fora da sua abertura. A categoria **DEBUG** fica oculta por padrão; ative **Configurações → Modo desenvolvedor** para mostrar **Modelo · Controles** no catálogo. Em caixas com grade removível, um pequeno botão quadrado com ícone permite recolocá-la.
+When the canvas moves or zooms, the scene image moves at a different rate from the equipment to create parallax. Moving the pointer alone does not change the effect. Wide screens support zooming out to 50% without resizing furniture or equipment. Devices can extend slightly onto the pictured floor so they appear to rest on it.
 
-### Coleção de discos do Spotify
+The catalog separates **Furniture** from **Lighting**. The **Pendant light** follows ceiling height with an adjustable cable and gently swings; **Industrial** and **Dish** wall lamps can be moved along the walls. All lights illuminate equipment, and their shades block light outside their openings. The **DEBUG** category is hidden by default; enable **Settings → Developer mode** to show **Controls · Demo**. A small square icon on compatible speakers restores a removed grille.
 
-Em **Móveis**, adicione **Coleção de Discos · Spotify**, com acabamentos de madeira clara ou escura. Arraste, role ou use as setas sobre as capas para percorrer seus álbuns salvos. Selecione uma capa para abrir o disco; clique novamente ou use o botão de reprodução para tocar. A barra inferior permite ir diretamente a uma posição e ordenar a coleção. Apenas as capas próximas da posição atual são renderizadas.
+### Spotify album collection
 
-Para conectar, cadastre o **Redirect URI** mostrado em **Configurações → Spotify** no [Spotify for Developers](https://developer.spotify.com/dashboard). O Client ID fornecido pelo projeto já vem preenchido e pode ser alterado nessa seção. Abra o Audio Lab em HTTPS ou em `http://127.0.0.1` com um servidor local: a autorização PKCE e o Web Playback SDK não funcionam ao abrir `index.html` diretamente como arquivo. Uma conta **Spotify Premium** é necessária para a reprodução pelo navegador. O player Spotify é compartilhado entre os móveis e seu áudio não passa pelos cabos ou pelo sistema de sinais simulados.
+Under **Furniture**, add **Record Collection · Spotify**, available in light or dark wood. Drag, scroll, or use the arrows over the covers to browse saved albums. Select a cover to open the record; select it again or use the play control to start playback. The lower bar jumps to a position and sorts the collection. Only covers near the current position are rendered.
 
-O projeto salva a posição, a ordenação e o álbum selecionado em cada móvel. O Client ID fica no navegador; tokens de acesso ficam somente na sessão. A biblioteca e os tokens não são exportados com o projeto. Ao abrir o projeto em outro navegador, conecte sua conta novamente.
+To connect, register the **Redirect URI** shown in **Settings → Spotify** at [Spotify for Developers](https://developer.spotify.com/dashboard). The project provides a prefilled Client ID that you can change in that section. Open Audio Lab over HTTPS or at `http://127.0.0.1` through a local server: PKCE authorization and the Web Playback SDK do not work when opening `index.html` directly from disk. Spotify Premium is required for browser playback. The Spotify player is shared across furniture items; its audio does not pass through the simulated cables or signal system.
 
-### Celulares e tablets
+Each item saves its position, sort order, and selected album. The Client ID remains in the browser; access tokens stay in the session. The library and tokens are not exported with a project. Reconnect your account after opening the project in another browser.
 
-Os ícones **Equipamentos** e **Propriedades** abrem gavetas sobre a montagem. Feche pelo botão fixo ou tocando fora. Em telas estreitas, deslize a barra superior horizontalmente. Use dois dedos para mover/ampliar o canvas; pressione e segure antes de mover um aparelho, ou ative **Modo Touch** para arraste imediato.
+### Phones and tablets
 
-<img src="docs/images/painel-mobile.png" alt="Painel de ajustes aberto em celular, com nome do integrado e botão para ocultar propriedades" width="320">
+The **Equipment** and **Properties** icons open drawers over the assembly. Close a drawer with its fixed button or by tapping outside. On narrow screens, swipe the top toolbar horizontally. Use two fingers to move or zoom the canvas; press and hold before moving a device, or enable **Touch Mode** for immediate dragging.
 
-### Ruído, assinatura sonora e comparação
+<img src="docs/images/painel-mobile.png" alt="Audio Lab properties panel open on a phone, showing the selected integrated amplifier" width="320">
 
-Nos toca-discos, os quatro ícones de **Ruído do vinil** escolhem sem ruído, baixo, médio ou alto. No tape deck, **Ruído de fita** usa os mesmos quatro níveis; as três ondas em **Oscilação da fita** escolhem baixa, média ou alta. O botão ativo fica iluminado e os nomes aparecem nas dicas e na navegação acessível.
+### Noise, sound signature, and comparison
 
-![Painel do tape deck com os ícones de ruído e oscilação da fita](docs/images/tape-controles.png)
+On turntables, the four **Vinyl noise** icons choose none, low, medium, or high. On the tape deck, **Tape noise** uses the same four levels; the three **Tape wow** waves choose low, medium, or high. The active choice is highlighted, and names are available in tooltips and accessible navigation.
 
-Nos fones e caixas com **Assinatura sonora**, os indicadores resumem a mesma curva do gráfico: graves em **60–200 Hz**, médios em **300–2.500 Hz** e agudos em **5.000–12.000 Hz**. O centro é neutro entre **−1 e +1 dB**; recuo/realce forte começa em **4 dB** de desvio. Um pico localizado pode diferir da média da faixa. A redução global de volume para reservar margem não desloca os indicadores.
+![Tape deck panel with English controls for noise and wow](docs/images/tape-controles.png)
 
-![Exemplo: realce dos agudos da Bookshelf · Tweeter Superior, coerente com a curva](docs/images/assinatura-agudos.png)
+On headphones and speakers with a **Sound signature** panel, indicators summarize the same curve shown in the graph: bass at **60–200 Hz**, mids at **300–2,500 Hz**, and treble at **5,000–12,000 Hz**. The center is neutral from **−1 to +1 dB**; strong cut/boost begins at a **4 dB** deviation. A local peak can differ from the average across a band. Global volume reduction for headroom does not move the indicators.
 
-Em amplificadores, **Comportamento sonoro** usa outra escala: compara o perfil base de graves, agudos, saturação e harmônicos pares. Para comparar saídas, mantenha níveis próximos e use **SOLO** e **MUTE** no painel de escuta. A assinatura é um perfil tonal do modelo; o espectro mostra o conteúdo do sinal naquele ponto.
+![Example: strong treble boost on Bookshelf · Upper Tweeter, consistent with its response curve](docs/images/assinatura-agudos.png)
 
-## Guias por assunto
+On amplifiers, **Sonic behavior** uses a different scale to compare the model's bass, treble, saturation, and even harmonics. To compare outputs, keep levels similar and use **SOLO** and **MUTE** in the listening panel. Sound signature describes a model's tonal profile; a spectrum shows signal content at a particular point in the chain.
 
-| Guia da wiki | Conteúdo |
+## Guides by topic
+
+| Wiki guide | Topics |
 | --- | --- |
-| [Fontes de áudio](https://github.com/gperegr/AudioSystem/wiki/Fontes-de-audio) | Toca-discos articulados e tangencial, tape, CD, streamer, rádio e Bluetooth virtual |
-| [Amplificação](https://github.com/gperegr/AudioSystem/wiki/Amplificacao) | Prés, integrados, receivers, potências e saídas de fones |
-| [Caixas, subwoofers e fones](https://github.com/gperegr/AudioSystem/wiki/Caixas-subwoofers-e-fones) | Ativos/passivos, grades, modelos de fones e impedância |
-| [Assinatura sonora](https://github.com/gperegr/AudioSystem/wiki/Assinatura-sonora) | Referência de 0 dB, indicadores, faixas e exemplos visuais |
-| [Processadores](https://github.com/gperegr/AudioSystem/wiki/Processadores-de-audio) | EQ de sete bandas, mixers e crossovers |
-| [Seletores e adaptadores](https://github.com/gperegr/AudioSystem/wiki/Seletores-e-adaptadores) | Caminhos A/B, matriz e conversão de níveis |
-| [Geradores e medidores](https://github.com/gperegr/AudioSystem/wiki/Geradores-e-medidores) | Senoide, varredura, ruído rosa e medições do sinal |
-| [Configurações e projetos](https://github.com/gperegr/AudioSystem/wiki/Configuracoes-e-projetos) | Móveis, bancada, apresentação, áudio, salvamento e exportação |
+| [Audio sources](https://github.com/gperegr/AudioSystem/wiki/Fontes-de-audio) | Turntables, tape, CD, streamers, radio, and virtual Bluetooth |
+| [Amplification](https://github.com/gperegr/AudioSystem/wiki/Amplificacao) | Preamps, integrated amps, receivers, power amps, and headphone outputs |
+| [Speakers, subwoofers, and headphones](https://github.com/gperegr/AudioSystem/wiki/Caixas-subwoofers-e-fones) | Active/passive models, grilles, headphones, and impedance |
+| [Sound signature](https://github.com/gperegr/AudioSystem/wiki/Assinatura-sonora) | 0 dB reference, indicators, frequency bands, and visual examples |
+| [Processors](https://github.com/gperegr/AudioSystem/wiki/Processadores-de-audio) | Seven-band EQ, mixers, and crossovers |
+| [Selectors and adapters](https://github.com/gperegr/AudioSystem/wiki/Seletores-e-adaptadores) | A/B paths, routing matrices, and level conversion |
+| [Generators and meters](https://github.com/gperegr/AudioSystem/wiki/Geradores-e-medidores) | Sine, sweep, pink noise, and signal measurement |
+| [Settings and projects](https://github.com/gperegr/AudioSystem/wiki/Configuracoes-e-projetos) | Furniture, the audio desk, presentation, sound, saving, and export |
 
-Bluetooth e rádio são virtuais; o programa não faz pareamento com aparelhos físicos nem recebe emissoras por uma antena do computador. Compare o mesmo trecho e um componente de cada vez.
+Bluetooth and FM radio are virtual; the app does not pair with physical devices or receive broadcasts through a computer antenna. Compare the same passage and change one component at a time.
 
-## Salvar e compartilhar
+## Save and share
 
-O salvamento automático usa o armazenamento local, quando disponível. Confira o status na interface; os dados pertencem ao navegador e ao endereço usados.
+When available, autosave uses local browser storage. Check the status in the interface; saved data belongs to the browser and address used to open the app.
 
 ```mermaid
 flowchart LR
-    M["Montagem atual"] -->|"Automático"| N["Armazenamento deste navegador"]
-    M -->|"Exportar projeto"| A["Arquivo com montagem e áudios disponíveis"]
-    A -->|"Abrir projeto"| R["Montagem restaurada · fontes pausadas"]
+    M["Current assembly"] -->|"Autosave"| N["This browser's storage"]
+    M -->|"Export project"| A["File with assembly and available audio"]
+    A -->|"Open project"| R["Restored assembly · sources paused"]
 ```
 
-**Exportar projeto** baixa uma cópia com posições, cabos, ajustes e músicas disponíveis. **Abrir projeto** substitui a montagem atual; exporte antes o que quiser preservar. Limpar dados, mudar de navegador/endereço ou usar navegação privada pode impedir recuperar o salvamento local. Exporte os projetos importantes.
+**Export project** downloads a copy containing device positions, cables, settings, and available music files. **Open project** replaces the current assembly; export anything you want to keep first. Clearing browser data, changing browsers or addresses, or using private browsing may prevent local saves from being recovered. Export important projects.
 
-## Se não houver som
+## If there is no sound
 
-1. Clique/toque na aplicação e inicie a fonte; projetos restaurados começam pausados.
-2. Confira o volume de mídia, a saída do dispositivo e se a aba está silenciada.
-3. Verifique alimentação, volume/ganho, entrada selecionada, SOLO e MUTE.
-4. Siga a cadeia da fonte à escuta, conferindo L/R, tipo de sinal e avisos de carga.
-5. Para música própria, teste outro arquivo compatível, como MP3 ou WAV.
+1. Click or tap the app and start the source. Restored projects begin paused.
+2. Check media volume, the selected device output, and whether the browser tab is muted.
+3. Check power, volume/gain, the selected input, SOLO, and MUTE.
+4. Follow the path from source to listening output; check L/R, signal type, and load warnings.
+5. For personal music, try another compatible file such as MP3 or WAV.
 
-No Safari de iPhone/iPad, toque em Reproduzir. Ao voltar de outra aba, a sessão já ativada tenta retomar; se necessário, toque novamente. Veja [Problemas frequentes](https://github.com/gperegr/AudioSystem/wiki/Problemas-frequentes).
+On iPhone or iPad Safari, tap **Play**. When returning from another tab, an already activated session attempts to resume; tap again if needed. See [Troubleshooting](https://github.com/gperegr/AudioSystem/wiki/Problemas-frequentes).
 
-## Desenvolvimento e referências
+## Development and references
 
-A aplicação é composta de HTML, CSS e JavaScript; os testes abaixo exigem Node.js, sem dependências adicionais:
+The app uses HTML, CSS, and JavaScript. These checks require Node.js but no additional dependencies:
 
 ```sh
 node tools/build-script.cjs --check
@@ -159,24 +161,24 @@ node --check script.js
 node --test tests/*.test.cjs
 ```
 
-O código da aplicação fica dividido por responsabilidade em [`src/app/`](src/app/README.md); módulos auxiliares ficam em [`src/modules/`](src/modules/README.md), traduções em [`src/i18n/`](src/i18n/README.md) e estilos em [`styles/`](styles/README.md). Depois de editar uma seção de `src/app/`, regenere `script.js` com `node tools/build-script.cjs`; o app e a hospedagem continuam carregando esse ponto de entrada clássico, mantido na raiz junto de `index.html`.
+Application code is split by responsibility in [`src/app/`](src/app/README.md); supporting modules are in [`src/modules/`](src/modules/README.md), translations in [`src/i18n/`](src/i18n/README.md), and styles in [`styles/`](styles/README.md). After editing a section under `src/app/`, regenerate `script.js` with `node tools/build-script.cjs`. The app and hosting continue to load this classic entry point from the repository root beside `index.html`.
 
-A interface oferece Português e English no seletor **Idioma**, na raiz das configurações. As traduções e o acompanhamento dos elementos dinâmicos ficam em [languages.js](src/i18n/languages.js); a preferência é salva neste navegador.
+Choose Portuguese or English in the **Language** selector at the root of Settings. [`languages.js`](src/i18n/languages.js) provides translations and tracks dynamic interface elements; the selected language is saved in this browser.
 
-A suíte cobre ativação/retomada do áudio, movimento de grupos em móveis e coerência dos indicadores de assinatura sonora. Consulte [modelo de sinais e limites elétricos](docs/reference/REVISAO-SINAIS.md), [biblioteca de controles](docs/reference/COMPONENTES.md) e [fontes dos equipamentos](assets/fonts/README.md).
+The test suite covers audio activation/resumption, moving groups with furniture, and consistent sound-signature indicators. See the [signal model and electrical limits](docs/reference/REVISAO-SINAIS.md), [control library](docs/reference/COMPONENTES.md), and [equipment fonts](assets/fonts/README.md).
 
-As [imagens da documentação](docs/images/README.md) são capturas do simulador; os diagramas mostram percursos de sinal. Os modelos são aproximações virtuais: W, Ω, dB e os gráficos não são medições de equipamentos físicos nem previsão do volume acústico na sala. Para um sistema real, consulte as especificações dos fabricantes.
+The [documentation images](docs/images/README.md) are simulator captures; diagrams illustrate signal paths. Models are virtual approximations: W, Ω, dB, and graphs are not measurements of physical equipment or predictions of acoustic volume in a room. Consult manufacturers' specifications for real systems.
 
-### Acesso guiado e exemplos
+### Guided access and examples
 
-**Configurações → Acesso guiado** abre um tutorial interativo no projeto atual. Uma faixa inferior orienta uma ação por vez, destaca os controles e oferece **Localizar**, **Voltar**, **Pular tópico** e **Sair**. A seta de avanço é habilitada quando o programa detecta a ação concluída. Nenhuma música, autenticação ou captura começa automaticamente. As alterações feitas durante a prática permanecem no projeto.
+**Settings → Guided access** opens an interactive tutorial in the current project. A lower bar guides one action at a time, highlights controls, and offers **Locate**, **Back**, **Skip topic**, and **Exit**. The next arrow becomes available when the app detects the completed action. No music, authentication, or capture starts automatically. Changes made while practicing remain in the project.
 
-Na primeira abertura, o convite aparece após concluir ou pular a calibração. É possível recusar, continuar depois ou recomeçar pelas configurações. O progresso também é preservado ao voltar da autenticação do Spotify. No tópico Spotify, o guia explica que equalizadores e outros efeitos não processam esse áudio: a cadeia controla audibilidade e volume.
+On first launch, the invitation appears after calibration is completed or skipped. You can decline, continue later, or restart from Settings. Progress is preserved when returning from Spotify authentication. The Spotify topic explains that equalizers and other effects do not process Spotify audio; the chain controls audibility and volume.
 
-**Configurações → Montagens de exemplo** é uma opção independente, com cinco sistemas em móveis: CD/MP3 com caixas ativas; entrada externa com amplificador e caixas passivas; laboratório de equalização; fita com fones compartilhados; e coleção Spotify com toca-discos. O menu informa o requisito e o primeiro passo de cada exemplo. Quando o canvas contém objetos, é necessário confirmar a substituição. Exporte seu projeto se quiser guardá-lo para depois. O programa guarda a montagem atual no armazenamento local antes de substituí-la e a restaura com seus arquivos de áudio se o carregamento falhar. A substituição exige armazenamento local disponível e reinicia o histórico de movimentos. Fontes começam pausadas, sem captura ativa.
+**Settings → Setup examples** is a separate feature with five systems on furniture: CD/MP3 with active speakers; external input with an amplifier and passive speakers; an equalization lab; tape with shared headphones; and a Spotify collection with a turntable. The menu lists each example's requirements and first step. Replacing a nonempty canvas requires confirmation. Export your project first if you may need it later. The app stores the current assembly locally before replacement and restores it with its audio files if loading fails. Replacement requires local storage and resets movement history. Sources start paused, with no active capture.
 
-A gravidade começa desativada para novas preferências; escolhas já salvas são preservadas.
+Gravity is off for new preferences; existing saved choices are preserved.
 
-Para validar o tutorial: `node --test tests/guided-access.test.cjs`. A verificação opcional de navegador usa Playwright e Chromium: com um servidor local em execução, rode `node tests/guided-access.browser.cjs` (`TEST_BASE_URL` e `CHROMIUM_PATH` permitem ajustar o endereço e o executável).
+To validate guided access, run `node --test tests/guided-access.test.cjs`. The optional browser check uses Playwright and Chromium: start a local server, then run `node tests/guided-access.browser.cjs` (`TEST_BASE_URL` and `CHROMIUM_PATH` can change the address and executable).
 
-Capas e vinis soltos encaixam na grade ao serem largados no canvas, inclusive ao restaurar o projeto. O disco colocado em um toca-discos segue a posição exata do prato. Durante a abertura, a interface aparece depois da preparação do catálogo e da restauração do projeto; o HTML não mantém os antigos desenhos substituídos do catálogo.
+Loose album covers and records snap to the grid when dropped on the canvas, including when restoring a project. A record on a turntable follows the platter's exact position. During startup, the interface appears after catalog preparation and project restoration; the HTML no longer contains the replaced catalog drawings.

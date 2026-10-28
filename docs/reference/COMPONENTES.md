@@ -1,23 +1,23 @@
-# Componentes compartilhados
+# Shared components
 
-A biblioteca `Hardware`, no início de `script.js`, concentra as definições de controles. Os equipamentos fornecem os parâmetros e os setters do áudio. `Hardware.mount(dev)` aplica os modelos ao terminar a construção de cada aparelho.
+The `Hardware` library in `src/app/00-hardware-library.js` centralizes control definitions. Equipment supplies the audio parameters and setters. `Hardware.mount(dev)` applies the shared models after each device is constructed.
 
 ## Knobs
 
-| Modelo | Diâmetro | Construção e uso principal |
+| Model | Diameter | Construction and main use |
 | --- | --- | --- |
-| rubber | 22 px | Borracha moldada com grip recortado; volume de caixas compactas, monitor de precisão e subs |
-| faceted | 28 px | Face metálica facetada em moldura quadrada; canais do amp de fones, potência tradicional, entrada dos prés modernos e nível do EQ moderno |
-| recessed | 36 px | Cilindro dentro de um poço circular; amplificador de fones moderno, controles de prés e nível do gerador moderno |
-| touchDisc | 52 px | Disco fino, liso e quase rente à frente; volume do integrado minimalista, pré de tela central e receiver moderno |
-| machined | 36 px | Alumínio usinado com face radial e índice preto; tonalidade clássica, ganho da potência de visor circular e nível do gerador vintage com escala gravada |
-| skirted | 52 px | Saia cromada larga com miolo preto elevado; volume dos integrados e prés de frente metálica/clássica |
-| bakelite | 36 px | Baquelite marrom com recortes profundos e traço marfim; tape deck, potência e equalizador vintage |
-| ivory | 36 px | Marfim moldado, parafuso central de latão e triângulo vermelho; caixa ativa vintage e amplificador de fones vintage |
-| pointer | 44 px | Ponteiro saliente de instrumento com pegador largo; disponível na biblioteca |
-| flywheel | 52 px | Volante com borda serrilhada, anéis metálicos e concavidade central; sintonia FM |
+| rubber | 22 px | Molded rubber with recessed grip; volume for compact speakers, precision monitor, and subwoofers |
+| faceted | 28 px | Faceted metal face in a square frame; headphone amp channels, traditional power amp, modern preamp input, and modern EQ level |
+| recessed | 36 px | Cylinder inside a circular recess; modern headphone amp, preamp controls, and modern generator level |
+| touchDisc | 52 px | Thin, smooth, nearly flush disc; minimalist integrated amp volume, central-display preamp, and modern receiver |
+| machined | 36 px | Machined aluminum with a radial face and black index; classic tone, circular-display power amp gain, and vintage generator level with an engraved scale |
+| skirted | 52 px | Wide chrome skirt with raised black center; volume for integrated amps and metal/classic-front preamps |
+| bakelite | 36 px | Brown bakelite with deep cuts and an ivory mark; vintage tape deck, power amp, and equalizer |
+| ivory | 36 px | Molded ivory, central brass screw, and red triangle; vintage active speaker and headphone amplifier |
+| pointer | 44 px | Protruding instrument pointer with a wide grip; available in the library |
+| flywheel | 52 px | Flywheel with a knurled edge, metal rings, and a recessed center; FM tuning |
 
-O mesmo modelo compartilha face e movimento, com dimensões padrão que podem ser sobrescritas por equipamento ou instância. A face gira dentro do aro; posição e rótulo pertencem ao layout do equipamento. Os indicadores usam as variáveis de ângulo atualizadas pelos setters existentes.
+A model shares its face and movement behavior, with default dimensions that can be overridden per device or instance. The face rotates inside the rim; position and label belong to the device layout. Indicators use the angle variables updated by existing setters.
 
 ```js
 Hardware.bindKnob(element, {
@@ -29,88 +29,88 @@ Hardware.bindKnob(element, {
 });
 ```
 
-O modelo pode ser declarado explicitamente ou escolhido pela função central `knobModel`. A física compartilhada oferece arraste com mouse/touch, compensação do zoom, captura de ponteiro, teclado, Home/End, PageUp/PageDown e limpeza ao cancelar, perder foco ou excluir o aparelho. Há dez intervalos magnéticos por padrão; seleção de entrada e sintonia FM especificam passos próprios. A interação não modifica os parâmetros apenas por abrir o painel.
+A model can be declared explicitly or selected by the central `knobModel` function. Shared physics supports mouse/touch dragging, zoom compensation, pointer capture, keyboard input, Home/End, PageUp/PageDown, and cleanup on cancellation, focus loss, or device removal. There are ten magnetic intervals by default; input selection and FM tuning define their own steps. Opening a panel does not change parameters.
 
-## Demais componentes
+## Other components
 
-- `Hardware.buttons`: teclas, transporte, toggles, interruptores verticais/horizontais, versões compactas e botões de menu. As ações continuam sendo específicas do equipamento; tamanho e resposta visual pertencem ao modelo.
-- `Hardware.sliders`: trilhos e cursores horizontais, verticais e de busca. Os faders usam dez intervalos; a busca de músicas permanece contínua. O pitch mecânico usa `Hardware.bindLinear`, compartilhando interação e cancelamento com os knobs.
-- `Hardware.leds` e `Hardware.setLed`: dimensões, cores, estado aceso/apagado e indicação de saturação. Os instrumentos continuam determinando quando há sinal.
-- `Hardware.plugs` e `Hardware.plugMarkup`: desenho dos plugues e espessuras de P2, P10, RCA e fio de caixa em um único registro.
-- `Hardware.inspector`: superfície, botões, sliders e medidas de controles dos menus, mantendo os parâmetros particulares de cada equipamento.
+- `Hardware.buttons`: keys, transport controls, toggles, vertical/horizontal switches, compact versions, and menu buttons. Actions remain device-specific; size and visual response belong to the model.
+- `Hardware.sliders`: horizontal, vertical, and search tracks and thumbs. Faders use ten intervals; music search remains continuous. Mechanical pitch uses `Hardware.bindLinear`, sharing interaction and cancellation behavior with knobs.
+- `Hardware.leds` and `Hardware.setLed`: dimensions, colors, on/off state, and clipping indication. Instruments continue to determine when a signal is present.
+- `Hardware.plugs` and `Hardware.plugMarkup`: plug artwork and thicknesses for 3.5 mm, 6.35 mm, RCA, and speaker wire in one registry.
+- `Hardware.inspector`: menu surface, buttons, sliders, and control dimensions, while retaining each device’s specific parameters.
 
-Os estilos compartilhados ficam na seção final de `styles/app.css`. A duração de movimento é definida por `Hardware.physics`. A preferência de movimento reduzido desativa as transições dos controles.
+Shared styles live in `styles/app.css`. `Hardware.physics` defines movement duration. The reduced-motion preference disables control transitions.
 
 ## Chassis
 
-`Hardware.sizes` define três alturas: baixo **120 px**, médio **180 px** e alto **240 px**. As larguras são compacta **380 px** e completa **760 px**.
+`Hardware.sizes` defines three heights: low **120 px**, medium **180 px**, and high **240 px**. The widths are compact **380 px** and full **760 px**.
 
-`Hardware.layout` escolhe o formato antes de medir a colocação no canvas. Processadores, seletores e amplificadores compactos usam o formato baixo; integrados, prés completos, receivers, instrumentos e potências maiores usam o médio; a potência com válvulas expostas e o Streamer Integrado usam o alto. No streamer, os 240 px incluem o botão superior, o gabinete, os conectores e os pés; a largura própria de 520 px é preservada. Interfaces e amplificadores de fones compactos usam a largura compacta.
+`Hardware.layout` selects the chassis before measuring canvas placement. Processors, selectors, and compact amplifiers use the low format; integrated amplifiers, full-size preamps, receivers, instruments, and larger power amplifiers use the medium format; the exposed-tube power amplifier and Integrated Streamer use the high format. On the streamer, the 240 px include the top button, cabinet, connectors, and feet; its custom 520 px width is preserved. Interfaces and compact headphone amplifiers use the compact width.
 
-Fontes musicais, caixas, subwoofers, fones e móveis preservam as proporções próprias. Visores, gráficos, gauges e processamento de áudio continuam específicos dos equipamentos. O formato é reconstruído pelo tipo do aparelho ao abrir um projeto; não exige migração do arquivo salvo.
+Music sources, speakers, subwoofers, headphones, and furniture retain their own proportions. Displays, charts, gauges, and audio processing remain device-specific. The format is reconstructed from the device type when a project opens; no saved-file migration is required.
 
-A grade usa `Hardware.sizes.grid` (20 px). As três alturas são múltiplas desse passo: 120, 180 e 240 px. Somados os pezinhos de 20 px, o empilhamento também mantém o alinhamento.
+The grid uses `Hardware.sizes.grid` (20 px). All three heights are multiples of that step: 120, 180, and 240 px. Including the 20 px feet, stacked devices remain aligned as well.
 
-## Variações decorativas opcionais
+## Optional decorative variations
 
-`Hardware.accents` acrescenta escalas gravadas ou arcos de LEDs aos modelos de knob existentes. A escolha é centralizada em `accentModel`, por equipamento e função do controle; não é aplicada indiscriminadamente.
+`Hardware.accents` adds engraved scales or LED arcs to existing knob models. The choice is centralized in `accentModel` by device and control function; it is not applied indiscriminately.
 
-- Arco luminoso: volume do Pré · Tela Central, Integrado Minimalista e amplificador de fones moderno. Os pontos seguem o ajuste real de volume e apagam ao desligar.
-- Escala gravada: controles de volume selecionados em frentes clássicas e metálicas. Sem iluminação.
-- Interruptor deslizante metálico: Pré · Controle 2.1 e amplificador de fones moderno. Usa o mesmo estado e a mesma função de energia, com deslocamento animado da peça física.
+- Illuminated arc: volume controls on the Central Display Preamp, Minimalist Integrated Amp, and modern headphone amplifier. The lights follow the actual volume setting and turn off with the device.
+- Engraved scale: selected volume controls on classic and metal fronts. No illumination.
+- Metal slide switch: 2.1 Control Preamp and modern headphone amplifier. It uses the same power state and function, with animated movement of the physical part.
 
-A seleção de arco luminoso bloqueia explicitamente equipamentos da família vintage. Os detalhes são SVG/CSS, sem imagens externas ou mudanças no processamento de áudio.
+The illuminated-arc selection explicitly excludes devices in the vintage family. Details use SVG/CSS, with no external images or changes to audio processing.
 
-A construção de cada modelo é definida por `data-knob-model` e recebe camadas próprias de aro, corpo, miolo, fixação e indicador. Os detalhes luminosos e escalas não substituem essa construção. O material e a silhueta diferenciam os modelos mesmo sem considerar o diâmetro.
+Each model construction is identified by `data-knob-model` and has its own layers for the ring, body, center, fastener, and indicator. Lighting and scales do not replace this construction. Material and silhouette distinguish models independently of diameter.
 
-## Botões e interruptores: materiais, movimento e som
+## Buttons and switches: materials, motion, and sound
 
-Os identificadores permanecem os mesmos no equipamento **Modelo · Controles**. Cada construção combina moldura fixa, peça móvel, percurso e perfil sonoro. As inscrições dos botões permanecem fixas.
+Identifiers remain the same on the **Model · Controls** device. Each construction combines a fixed frame, moving part, travel path, and sound profile. Button labels remain fixed.
 
-| Modelo | Construção | Ação no modelo de demonstração |
+| Model | Construction | Action in demo model |
 | --- | --- | --- |
-| `vintageSteel` | Tecla elevada de aço escovado, bordas polidas e marca gravada | Com trava |
-| `vintageRecessed` | Tecla metálica rebaixada em moldura funda | Com trava |
-| `modernSteel` | Tecla de metal acetinado com cantos suaves | Retorno ao soltar |
-| `modernGraphite` | Tecla de metal escuro e indicação discreta | Com trava |
-| `key` | Tecla compacta moldada com lente central | Retorno ao soltar |
-| `transport` | Tecla de transporte com superfície metálica e lente central | Com trava |
-| `toggle` | Tecla rebaixada com lente vermelha/verde | Com trava |
-| `power`, `powerLarge`, `powerHorizontal`, `powerSmall` | Interruptor com corpo basculante, marcas I/O e eixo horizontal ou vertical | Duas posições estáveis |
-| `slidePower` | Trilho rebaixado, cursor metálico estriado e luz embutida | Duas posições estáveis |
-| `ui` | Botão moderno de superfície suave | Retorno ao soltar |
+| `vintageSteel` | Raised brushed-steel key with polished edges and engraved mark | Latching |
+| `vintageRecessed` | Recessed metal key in a deep frame | Latching |
+| `modernSteel` | Satin-metal key with soft corners | Returns on release |
+| `modernGraphite` | Dark metal key with a subtle indicator | Latching |
+| `key` | Compact molded key with a central lens | Returns on release |
+| `transport` | Transport key with a metal surface and central lens | Latching |
+| `toggle` | Recessed key with a red/green lens | Latching |
+| `power`, `powerLarge`, `powerHorizontal`, `powerSmall` | Rocker switch with I/O marks and a horizontal or vertical axis | Two stable positions |
+| `slidePower` | Recessed track, ridged metal slider, and built-in light | Two stable positions |
+| `ui` | Modern button with a soft surface | Returns on release |
 
-`Hardware.buttons` define `action` e `sound`. `action` controla a demonstração; as funções reais dos equipamentos continuam determinando seus próprios estados. `Hardware.buttonSounds` reúne os sons sintetizados de contato, retorno de mola, ressonância metálica e encaixe, com variação pequena por interação. Interruptores têm sons distintos para ON/OFF. O áudio usa o volume global de interação e não entra na cadeia de música.
+`Hardware.buttons` defines `action` and `sound`. `action` controls the demonstration; each device’s actual functions continue to determine its state. `Hardware.buttonSounds` collects synthesized contact, spring-return, metal-resonance, and detent sounds, with slight variation per interaction. Switches have distinct ON/OFF sounds. These sounds use the global interaction-volume setting and are separate from the music signal chain.
 
-O controlador visual mantém a pressão até soltar o ponteiro ou a tecla. Cancelamento, perda de foco e remoção do equipamento liberam a peça e removem os listeners temporários. A navegação por teclado mantém o foco visível; movimento reduzido desativa as transições. Não há animação ou áudio contínuo em repouso.
+The visual controller holds the button down until the pointer or key is released. Cancellation, focus loss, or device removal releases the part and removes temporary listeners. Keyboard navigation keeps focus visible; reduced motion disables transitions. There is no continuous animation or sound at rest.
 
-## Regra de composição dos equipamentos
+## Device composition rules
 
-`buttonModel(dev, element)` é o único resolvedor dos botões físicos. `Hardware.mount(dev)` passa todos os controles por `skinButton`; a mesma fábrica desenha os exemplos do Modelo. Um equipamento escolhe o identificador, o texto/ícone e a função, preservando o material, a animação e o som da biblioteca; as dimensões padrão aceitam ajustes explícitos por equipamento ou instância. A largura das teclas de texto acompanha a inscrição; modelos com largura declarada mantêm a medida exata.
+`buttonModel(dev, element)` is the single resolver for physical buttons. `Hardware.mount(dev)` sends all controls through `skinButton`; the same factory draws examples on the Model device. A device selects the identifier, text/icon, and function while preserving the library material, animation, and sound. Default dimensions can be explicitly overridden per device or instance. Text keys size to their label; models with a declared width retain that exact measurement.
 
-Foram incluídas três construções no demonstrador:
+The demo includes three constructions:
 
-- `roundKey`: botão circular de 28 × 28 px, usado no Bluetooth dos fones.
-- `selectorKey`: tecla de seleção de 26 × 22 px, usada nos seletores de posições fixas dos geradores.
-- `slideSelector`: interruptor de seleção de 112 × 28 px, usado para LINE/PHONO nos toca-discos.
+- `roundKey`: 28 × 28 px circular button used for headphone Bluetooth.
+- `selectorKey`: 26 × 22 px selector key used for fixed-position generator selectors.
+- `slideSelector`: 112 × 28 px selector switch used for LINE/PHONO on turntables.
 
-Os botões do Tape Deck e o START/STOP do toca-discos vintage mantêm `vintageSteel`. Os dois aparelhos Bluetooth usam `power`. Reproduzir/pausar do CD Player e do Streamer compartilha `transport`, com a mesma inscrição vetorial fixa. Os botões de tampa e de recolocar grade usam `key`. A própria grade removível é uma superfície de manipulação, identificada por `data-hardware-surface="grille"`, e mantém a geometria da caixa.
+The Tape Deck buttons and vintage turntable START/STOP retain `vintageSteel`. Both Bluetooth devices use `power`. The CD Player and Streamer share the `transport` play/pause model with the same fixed vector label. Lid and grille-restoration buttons use `key`. The removable grille itself is an interactive surface identified by `data-hardware-surface="grille"`, and retains the speaker cabinet geometry.
 
-As inscrições são definidas na construção. `Hardware.setButtonLabel` aceita apenas elementos ainda não montados; componentes já construídos mantêm o texto e os ícones fixos. Os menus mantêm o modelo `ui`; o desenho do instrumento não é copiado para os botões dos menus.
+Labels are set during construction. `Hardware.setButtonLabel` accepts only elements that have not yet been mounted; already-built components keep their fixed text and icons. Menus retain the `ui` model; physical instrument artwork is not copied onto menu buttons.
 
-Os modelos `power*` compartilham uma moldura moldada, cavidade escura, detalhes do eixo e face curva com marcas I/O em SVG, preservando o círculo sem deformação em qualquer orientação. `powerSmall` reduz o rebaixo para manter a face legível; `powerLarge` aumenta a borda interna sem alterar a geometria do componente. O estado e a pressão mudam a inclinação e a sombra da mesma peça.
+The `power*` models share a molded frame, dark recess, shaft details, and a curved SVG face with I/O marks, preserving the circle in every orientation. `powerSmall` reduces the recess to keep the face legible; `powerLarge` increases the inner rim without changing the component geometry. State and pressure change the tilt and shadow of the same part.
 
-## Largura e altura ajustáveis no código
+## Adjustable width and height in code
 
-As medidas são em pixels do canvas, antes do zoom. O tamanho é aplicado à caixa real do controle e à área de interação.
+Measurements are in canvas pixels before zoom. The size applies to both the control’s visible box and its interaction area.
 
-### Tamanho padrão do modelo
+### Model defaults
 
-Edite `width` e `height` nos registros `knobs` e `buttons`, no começo de `script.js`. Os knobs agora também declaram as duas medidas, em vez de um único `diameter`. Botões de texto sem `width` continuam acompanhando a inscrição.
+Edit `width` and `height` in the `knobs` and `buttons` records in `src/app/00-hardware-library.js`. Knobs declare both dimensions instead of a single `diameter`. Text buttons without a `width` continue to size to their label.
 
-### Por equipamento e função
+### Per device and function
 
-Edite a tabela `controlSizes`, logo após os modelos de botões:
+Edit the `controlSizes` table after the button models:
 
 ```js
 const controlSizes = {
@@ -124,9 +124,9 @@ const controlSizes = {
 };
 ```
 
-As regras do equipamento são aplicadas na ordem da tabela. É possível informar somente a largura ou somente a altura.
+Device rules are applied in table order. You can specify only a width or only a height.
 
-### Na construção do controle
+### During control construction
 
 ```js
 Hardware.bindKnob(knob, {
@@ -139,76 +139,76 @@ Hardware.bindKnob(knob, {
 Hardware.button(button, 'power', {width:28, height:42});
 ```
 
-Também é possível definir medidas no HTML:
+You can also set dimensions in HTML:
 
 ```html
 <button class="power-btn" data-control-width="28" data-control-height="42"></button>
 ```
 
-Ou alterar uma instância já construída:
+Or change an instance that has already been built:
 
 ```js
 Hardware.setControlSize(element, {width:48, height:48});
-Hardware.setControlSize(element, {width:null, height:null}); // Remove ajustes da API.
+Hardware.setControlSize(element, {width:null, height:null}); // Remove API overrides.
 ```
 
-A prioridade é: padrão do modelo → tabela do equipamento → atributos HTML → opções da construção/API. `null` remove um ajuste da API, recuperando a medida dos níveis anteriores. Valores inválidos são ignorados. Os ajustes feitos na tabela são reconstruídos ao carregar o projeto, sem adicionar controles de tamanho à interface.
+Priority is: model default → device table → HTML attributes → construction/API options. `null` removes an API override and restores the value from the preceding levels. Invalid values are ignored. Table adjustments are reconstructed when a project loads; no size controls are added to the interface.
 
-## Inscrições fixas
+## Fixed labels
 
-Acionar um botão nunca troca sua inscrição. Reproduzir/pausar mantém o símbolo combinado; energia mantém seus símbolos fixos; o pareamento Bluetooth mantém o símbolo ou BLUETOOTH. Os controles de propriedades também usam títulos fixos. A posição mecânica, iluminação, `aria-pressed`/`aria-checked` e os visores informam o estado. Tooltips e descrições acessíveis podem informar a ação disponível sem alterar a superfície do equipamento.
+Pressing a button never changes its printed label. Play/pause keeps its combined symbol; power retains its fixed symbols; Bluetooth pairing retains its symbol or BLUETOOTH label. Property controls also use fixed titles. Mechanical position, lighting, `aria-pressed`/`aria-checked`, and displays communicate state. Tooltips and accessible descriptions may explain the available action without changing the equipment surface.
 
-## Proporções por equipamento
+## Device-specific proportions
 
-A tabela `controlSizes` contém a revisão dos controles de fontes, receivers, integrados, prés, potências, amplificadores de fones, instrumentos, seletores, Bluetooth, caixas ativas, subwoofers e fones Bluetooth. Os mesmos modelos de componentes são reutilizados com medidas adequadas a cada função. O demonstrador mantém as medidas de referência dos modelos.
+The `controlSizes` table covers controls for sources, receivers, integrated amplifiers, preamps, power amplifiers, headphone amplifiers, instruments, selectors, Bluetooth devices, active speakers, subwoofers, and Bluetooth headphones. The same component models are reused with dimensions suited to each function. The demo retains each model’s reference dimensions.
 
-- Volume principal e sintonia têm mais destaque; tonalidade, seleção e comandos auxiliares usam medidas menores.
-- Botões com inscrições longas usam formatos retangulares, e as inscrições acompanham a altura disponível.
-- CD Player e Streamer mantêm controles de transporte idênticos, agora de 52 × 28 px.
-- Os controles do Tape Deck mantêm `vintageSteel` e `bakelite`, ajustados ao espaço dos VUs e conexões.
-- Os amplificadores de fones preservam seus três gabinetes detalhados e alinham os controles aos respectivos canais.
-- As caixas e fones preservam as proporções dos gabinetes/conchas; controles e etiquetas recebem ajustes locais.
-- Mixers usam o chassi médio de 180 px para acomodar faders e inscrições; as três alturas e duas larguras continuam sendo as mesmas.
+- Main volume and tuning receive greater emphasis; tone, selection, and auxiliary controls are smaller.
+- Buttons with long labels use rectangular shapes, and labels fit the available height.
+- The CD Player and Streamer have identical transport controls, now 52 × 28 px.
+- The Tape Deck controls retain `vintageSteel` and `bakelite`, sized to fit around the VU meters and connections.
+- The headphone amplifiers retain their three detailed cabinets and align controls with their respective channels.
+- Speakers and headphones retain their cabinet and earcup proportions; controls and labels receive local adjustments.
+- Mixers use the 180 px medium chassis to fit faders and labels; the three heights and two widths remain unchanged.
 
-Os layouts dos painéis foram ajustados junto com a tabela: fontes, blocos de tonalidade, comandos abaixo dos visores, saídas e interruptores têm seus próprios espaços. Gabinetes passivos e móveis mantêm suas proporções.
+Panel layouts were adjusted alongside the table: sources, tone blocks, controls below displays, outputs, and switches each have their own space. Passive cabinets and furniture retain their proportions.
 
-### Sons de movimento
+### Movement sounds
 
-`Hardware.movementSounds` reúne dez timbres de knobs e quatro de sliders. Borracha e disco usam atrito suave; alumínio usinado e seletor facetado usam contatos mais secos; baquelite tem um contato grave; o volante tem atrito baixo. Sliders horizontais, faders verticais, busca e pitch têm perfis próprios.
+`Hardware.movementSounds` contains ten knob timbres and four slider timbres. Rubber and touch-disc controls use soft friction; machined aluminum and faceted selectors use drier contacts; bakelite uses a low contact sound; the flywheel uses low friction. Horizontal sliders, vertical faders, search, and pitch each have their own profiles.
 
-`Hardware.movementSound(elemento, tipo)` resolve o perfil pela construção compartilhada. O som só é disparado ao mudar efetivamente o valor com mouse, toque ou teclado; montagem, restauração e atualizações programáticas não produzem movimento sonoro. Envelopes curtos e intervalos mínimos por perfil evitam sobreposição excessiva. Todos respeitam o volume global de sons de interação, incluindo zero. Os botões mantêm seus próprios sons de pressionar, soltar e comutar.
+`Hardware.movementSound(element, type)` resolves a profile from the shared construction. A sound plays only when the value actually changes through mouse, touch, or keyboard input; mounting, restoration, and programmatic updates do not produce movement sounds. Short envelopes and profile-specific minimum intervals avoid excessive overlap. All sounds respect the global interaction-sounds volume, including zero. Buttons retain their own press, release, and switch sounds.
 
-O perfil `catalogGear`, em `uiSoundProfiles`, produz o engrenamento leve do catálogo. `enableCatalogScrollSound` acompanha o deslocamento real com mouse, toque ou teclado, incluindo a inércia; `playUiSound` recebe intensidade e altura proporcionais à velocidade. O efeito usa o mesmo volume global, só toca com o áudio desbloqueado e não acumula sons para depois da parada.
+The `catalogGear` profile in `uiSoundProfiles` produces a light catalog gear sound. `enableCatalogScrollSound` follows actual movement from mouse, touch, or keyboard input, including inertia; `playUiSound` receives intensity and pitch proportional to speed. The effect uses the same global volume, plays only after audio is unlocked, and does not queue sounds after scrolling stops.
 
-### Novas construções de botões
+### New button constructions
 
-Todas aparecem automaticamente no equipamento Modelo, com o identificador abaixo, e usam o mesmo sistema de dimensões ajustáveis e inscrições fixas.
+All appear automatically on the Model device under the identifiers below, and use the same adjustable-dimension and fixed-label systems.
 
-| Modelo | Construção | Aplicação |
+| Model | Construction | Application |
 | --- | --- | --- |
-| `ivoryPiano` | Marfim, borda inferior chanfrada e movimento articulado | Frequência do gerador vintage |
-| `brassPill` | Cápsula metálica com aro de latão | DIRECT do integrado de visores azuis |
-| `studioCap` | Capa técnica escura, ranhuras inferiores e trava | Seletores de bancada e Start/Stop do toca-discos moderno |
-| `flushMetal` | Alumínio escovado rente ao painel e curso curto | Pré Controle 2.1 e integrado prateado |
-| `illuminatedBar` | Capa escura e lente linear integrada | Pré Tela Central, integrado minimalista, gerador moderno e RX/TX Bluetooth |
-| `membrane` | Superfície arredondada em elastômero, deformação curta | Modelo disponível na biblioteca |
+| `ivoryPiano` | Ivory with a beveled lower edge and hinged movement | Vintage generator frequency |
+| `brassPill` | Metal capsule with a brass rim | DIRECT on the blue-meter integrated amp |
+| `studioCap` | Dark technical cap with lower grooves and detent | Bench selectors and Start/Stop on the modern turntable |
+| `flushMetal` | Flush brushed aluminum with short travel | 2.1 Control Preamp and silver integrated amp |
+| `illuminatedBar` | Dark cap with integrated linear lens | Central Display Preamp, minimalist integrated amp, modern generator, and Bluetooth RX/TX |
+| `membrane` | Rounded elastomer surface with short deformation | Available in the library |
 
-Cada construção reutiliza o som de contato adequado da biblioteca (metálico, trava, contato grave ou macio). A barra luminosa acompanha `aria-pressed` e apaga com a energia; as inscrições não mudam. Os transportes de CD/streamer e as teclas `vintageSteel` de tape deck/toca-discos vintage permanecem nos modelos já escolhidos.
+Each construction reuses a suitable library contact sound (metallic, detent, low, or soft). The illuminated bar follows `aria-pressed` and turns off with power; labels do not change. CD/streamer transport controls and the `vintageSteel` buttons on the Tape Deck and vintage turntable retain their selected models.
 
-### Inscrições e contraste
+### Labels and contrast
 
-As cores de impressão são centralizadas em `--hw-legend-ink` e `--hw-legend-relief`, por modelo de botão. Metal claro, marfim e latão usam tinta escura; grafite, membrana e teclas escuras usam tinta clara. Nos controles escuros vintage, o branco é aquecido. Textos aninhados e símbolos SVG herdam a mesma tinta. Pressionar, selecionar ou desligar o equipamento não troca nem esmaece a inscrição física; lentes e LEDs mantêm sua própria indicação de estado.
+Printed colors are centralized in `--hw-legend-ink` and `--hw-legend-relief` per button model. Light metal, ivory, and brass use dark ink; graphite, membrane, and dark keys use light ink. Dark vintage controls use a warmed white. Nested text and SVG symbols inherit the same ink. Pressing a control, selecting it, or turning off the device does not change or dim its physical label; lenses and LEDs keep their own state indication.
 
-`slideSelectorModern`: variante LINE/PHONO aplicada ao toca-discos moderno e disponível no Modelo. Placa de grafite anodizado, inscrições claras fixas, trilho escuro e cursor de alumínio com três ranhuras. Compartilha dimensões ajustáveis, duas posições, som de contato e interação do `slideSelector`; o toca-discos vintage conserva a variante original.
+`slideSelectorModern` is the LINE/PHONO variant on the modern turntable and is available on the Model device. It has an anodized graphite plate, fixed light labels, a dark track, and an aluminum slider with three grooves. It shares adjustable dimensions, two positions, contact sound, and interaction with `slideSelector`; the vintage turntable retains the original variant.
 
-### Estado de dano
+### Damage state
 
-Os componentes visuais respeitam `state.damage`: o equipamento fica desligado e identificado no painel. As regras de ligação, alerta, persistência e corte de áudio estão em [REVISAO-SINAIS.md](REVISAO-SINAIS.md#5-dano-e-sobrecarga).
+Visual components honor `state.damage`: the device is switched off and marked in its panel. Connection, warning, persistence, and audio-cutoff rules are described in [REVISAO-SINAIS.md](REVISAO-SINAIS.md#5-damage-and-overload).
 
-### Legibilidade dos geradores
+### Generator readability
 
-Os seletores SINAL/CANAL/VARREDURA usam `vintageSteel` no vintage e `illuminatedBar` no moderno. Frequência usa `ivoryPiano` no vintage e `selectorKey` no moderno; transporte usa `vintageSteel`/`selectorKey`. Teclas de seleção medem 34×24 px (durações: 28×24), frequência 34×26 e transporte 60×28. Inscrições de seleção usam 7,5 px; símbolos de frequência 13 px. A cor definida pelo material tem prioridade sobre a preferência genérica do tema vintage, evitando tinta clara sobre metal claro. Controles indisponíveis continuam legíveis e mantêm as inscrições fixas.
+The SIGNAL/CHANNEL/SWEEP selectors use `vintageSteel` on vintage generators and `illuminatedBar` on modern ones. Frequency uses `ivoryPiano` on vintage models and `selectorKey` on modern ones; transport uses `vintageSteel`/`selectorKey`. Selector buttons are 34×24 px (duration buttons: 28×24), frequency buttons are 34×26, and transport buttons are 60×28. Selector labels use 7.5 px text; frequency symbols use 13 px. Material-defined color takes precedence over the generic vintage-theme preference, preventing light ink on light metal. Unavailable controls remain legible and keep their fixed labels.
 
-## Lógica de áudio
+## Audio logic
 
-A referência atual para níveis de sinal, compatibilidade, potência, impedância, dano e limites da simulação é [REVISAO-SINAIS.md](REVISAO-SINAIS.md). As constantes e funções de `script.js` definem os parâmetros; este documento concentra a biblioteca visual e as interações dos controles.
+The current reference for signal levels, compatibility, power, impedance, damage, and simulation limits is [REVISAO-SINAIS.md](REVISAO-SINAIS.md). Constants and functions in `src/app/` define the parameters; this document focuses on the visual library and control interactions.
