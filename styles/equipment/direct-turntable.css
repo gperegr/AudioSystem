@@ -45,9 +45,5 @@
 .device-node.device-type-turntableDirect .direct-stylus-light i{display:block;width:4px;height:3px;margin:4px auto;background:#455052;border-radius:1px;}
 .device-node.device-type-turntableDirect.direct-light-on .direct-stylus-light i{background:#fff1ca;box-shadow:0 0 4px 1px #fff3bb88;}
 .device-node.device-type-turntableDirect .at-lid-scene{bottom:6px;}
-.device-node.device-type-turntableDirect .at-dust-cover,.device-node.device-type-turntableDirect .at-cover-front{transform:none;}
-.device-node.device-type-turntableDirect .at-cover-front{background:#a6b5b908;border-color:#a7b9be70;box-shadow:inset 0 1px #f4fff944;}
-.device-node.device-type-turntableDirect .at-cover-roof,.device-node.device-type-turntableDirect .at-cover-back,.device-node.device-type-turntableDirect .at-cover-side{display:none;}
-.device-node.device-type-turntableDirect.lid-open .at-dust-cover{transform:translateY(-32px) scaleY(1.2);}
 .device-node.device-type-turntableDirect .tt-lid-button{opacity:.45;}
 .device-node.device-type-turntableDirect:is(:hover,:focus-within) .tt-lid-button{opacity:1;}

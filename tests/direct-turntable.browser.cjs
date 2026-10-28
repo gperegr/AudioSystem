@@ -74,6 +74,7 @@ const root=path.resolve(__dirname,'..');
         await lamp.click();
         assert.equal(await deck.evaluate(el=>el.classList.contains('direct-light-on')),true);
         await deck.screenshot({path:'/tmp/direct-deck.png'});
+        await require('./turntable-geometry.helpers.cjs')(page,deck,'direct');
         const dimensions=await deck.evaluate(el=>({width:el.offsetWidth,height:el.offsetHeight}));
         assert(dimensions.width>dimensions.height*2,'front elevation stays low and wide');
         await page.evaluate(()=>__signal.deleteDevice(__signal.appState.project.devices['direct-deck'],false));

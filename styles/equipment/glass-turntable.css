@@ -20,7 +20,7 @@
 .device-node.device-type-turntableBelt .at-front-mechanism .at-platter::before{top:-4px;left:0;right:0;height:4px;background:linear-gradient(#262c28,#080c09);box-shadow:none;}
 .device-node.device-type-turntableBelt .at-front-mechanism .at-platter::after{display:none;}
 .device-node.device-type-turntableBelt .at-front-mechanism .at-record{top:-7px;background:linear-gradient(#53554e,#080b09 55%,#151c17);}
-.device-node.device-type-turntableBelt .at-front-mechanism .at-arm-svg{top:-7px;}
+.device-node.device-type-turntableBelt .at-front-mechanism .at-arm-svg{top:-10px;height:100px;}
 .device-node.device-type-turntableBelt .at-controls,
 .device-node.device-type-turntableBelt .at-io{margin:0;padding:0 14px;border:0;border-radius:0;background:transparent;box-shadow:none;align-items:center;}
 .device-node.device-type-turntableBelt .at-controls{justify-content:flex-start;}
@@ -31,14 +31,6 @@
 .device-node.device-type-turntableBelt .at-io-ch{display:flex;flex-direction:row;gap:4px;align-items:center;}
 .device-node.device-type-turntableBelt .at-io-ch>span{font-size:7px;color:#4d3824;}
 .device-node.device-type-turntableBelt .at-lid-scene{bottom:6px;}
-.device-node.device-type-turntableBelt .at-dust-cover{transform:none;}
-.device-node.device-type-turntableBelt .at-cover-front{transform:none;}
-.device-node.device-type-turntableBelt .at-cover-roof,
-.device-node.device-type-turntableBelt .at-cover-back,
-.device-node.device-type-turntableBelt .at-cover-side{display:none;}
-.device-node.device-type-turntableBelt.lid-open .at-dust-cover{transform:translateY(-28px) scaleY(1.25);}
-.device-node.device-type-turntableBelt .at-dust-cover>span{background:#d6e7e905;border-color:#cbd5d466;box-shadow:none;}
-.device-node.device-type-turntableBelt .at-cover-front{border-top:2px solid #e7eeeca8;}
 .device-node.device-type-turntableBelt .tt-lid-button{opacity:.4;}
 .device-node.device-type-turntableBelt:is(:hover,:focus-within) .tt-lid-button{opacity:1;}
 @media(prefers-reduced-motion:reduce){.device-node.device-type-turntableBelt .at-arm{transition:none;}}

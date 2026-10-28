@@ -55,10 +55,11 @@ const root=path.resolve(__dirname,'..');
         assert.equal(await deck.locator('.at-controls button').count(),1);
         await page.evaluate(()=>{
             const preview=document.createElement('div');preview.className='equipment-preview-world';
-            preview.style.cssText='position:fixed;left:350px;top:300px;width:650px;height:200px;z-index:100000;background:#263133';document.body.appendChild(preview);
+            preview.style.cssText='position:fixed;left:350px;top:300px;width:650px;height:200px;z-index:100000;pointer-events:auto;background:#263133';document.body.appendChild(preview);
             const el=document.getElementById('glass-deck');preview.appendChild(el);el.style.left='30px';el.style.top='30px';el.style.transform='none';
         });
         await deck.screenshot({path:'/tmp/glass-deck.png'});
+        await require('./turntable-geometry.helpers.cjs')(page,deck,'glass');
         const dimensions=await deck.evaluate(el=>({width:el.offsetWidth,height:el.offsetHeight}));
         assert(dimensions.width>dimensions.height*2,'front elevation stays low and wide');
         await page.evaluate(()=>__signal.deleteDevice(__signal.appState.project.devices['glass-deck'],false));
