@@ -1955,9 +1955,8 @@ const Hardware = (() => {
             animateViewTo({zoom,x:(rect.width-w*zoom)/2-bounds.left*zoom,y:(rect.height-h*zoom)/2-bounds.top*zoom});
         }
         const frameSelectionButton=document.getElementById('fit-canvas').cloneNode(true);
-        frameSelectionButton.id='frame-selection';frameSelectionButton.title='Enquadrar seleção (F)';frameSelectionButton.setAttribute('aria-label','Enquadrar seleção (F)');frameSelectionButton.dataset.tooltip='Enquadrar seleção (F)';frameSelectionButton.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 9V4h5m6 0h5v5M4 15v5h5m6 0h5v-5"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>';
+        frameSelectionButton.id='frame-selection';frameSelectionButton.title='Enquadrar seleção';frameSelectionButton.setAttribute('aria-label','Enquadrar seleção');frameSelectionButton.dataset.tooltip='Enquadrar seleção';frameSelectionButton.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 9V4h5m6 0h5v5M4 15v5h5m6 0h5v-5"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>';
         frameSelectionButton.addEventListener('click',frameSelectedDevices);document.getElementById('fit-canvas').after(frameSelectionButton);
-        document.addEventListener('keydown',event=>{if(event.key.toLowerCase()==='f'&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!event.target.closest('input,textarea,select,[contenteditable],button')){event.preventDefault();frameSelectedDevices();}});
         document.getElementById('fit-canvas').addEventListener('click', () => {
             const devices = Object.values(appState.project.devices);
             if (!devices.length) { animateViewTo({zoom:1,x:0,y:0}); return; }

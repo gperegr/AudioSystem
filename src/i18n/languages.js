@@ -159,7 +159,7 @@
         'Espaço indisponível':'Space unavailable',
         'Espaço livre':'Space available',
         'Apoiado':'Supported',
-        'Enquadrar seleção (F)':'Frame selection (F)',
+        'Enquadrar seleção':'Frame selection',
         'Sons de funcionamento':'Equipment operating sounds',
         'Volume dos sons de funcionamento':'Equipment operating sound volume',
         'Sons de interação':'Interface sounds',
