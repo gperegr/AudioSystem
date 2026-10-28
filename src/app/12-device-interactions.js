@@ -822,10 +822,6 @@
                         if(!isDragging)return;
                             movingDevices.forEach(item=>item.el.classList.add('equipment-dragging'));
                         aim(ev);updateDiscardPreview(ev);
-                        if(compactLayout.matches){
-                            if(ev.clientX<28)document.body.classList.add('mobile-catalog-open');
-                            else if(ev.clientX>equipmentCatalog.getBoundingClientRect().right+32)document.body.classList.remove('mobile-catalog-open');
-                        }
                         equipmentCatalog.classList.add('discard-ready');
                         discardZone.setAttribute('aria-hidden','false');
                         discardZone.querySelector('strong').textContent=isOverCatalog(ev)?'Solte para descartar':'Arraste aqui para descartar';

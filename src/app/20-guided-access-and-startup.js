@@ -77,7 +77,7 @@
             document.querySelectorAll('.tutorial-target').forEach(node=>node.classList.remove('tutorial-target'));
             const collection=tutorialCollection();let dev=tutorialDevice(topic);
             if(topic==='spotify'&&(step==='account'||step==='cover'))dev=collection;
-            const mobilePanel=key=>{if(compactLayout.matches){closeMobilePanels();document.body.classList.add(key==='catalog'?'mobile-catalog-open':'mobile-properties-open');syncMobilePanels();}else openSidebar(key,15000);};
+            const mobilePanel=key=>{if(key==='catalog')return;if(compactLayout.matches){closeMobilePanels();document.body.classList.add('mobile-properties-open');syncMobilePanels();}else openSidebar(key,15000);};
             let requestedType=null;
             if(topic==='basic'&&step==='amplifier'&&dev&&!tutorialAmplifier(dev)){
                 const amp=Object.values(appState.project.devices).find(item=>['headphoneAmp','headphoneAmpModern','headphoneAmp4'].includes(item.type)||POWER_OUTPUT_TYPES.has(item.type));
@@ -89,7 +89,6 @@
                 mobilePanel('catalog');const search=document.getElementById('equipment-search');search.value='';search.dispatchEvent(new Event('input'));const card=equipmentCatalog.querySelector(`[data-template="${type}"]`);card?.scrollIntoView({block:'center',behavior:'instant'});await new Promise(resolve=>setTimeout(resolve,320));return card;
             }
             selectDevice(dev.id,true);mobilePanel('properties');
-            if(!compactLayout.matches)closeSidebar('catalog');
             const selector={permission:'#ai-authorize-inputs',device:'#ai-input-device',capture:'#ai-capture-toggle',file:'#source-load-audio',level:dev.type==='audioInterface2'?'#ai-line':'#ai-gain-L',spotify:'[data-sp-action="connect"]'}[action];
             const native=selector&&inspectorContent.querySelector(selector);
             const control=native?.closest('.app-select')||native;

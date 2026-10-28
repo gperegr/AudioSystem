@@ -60,7 +60,7 @@
 #inspector-content .sonic-trait-dot,#inspector-content .sonic-band-dots i{background:var(--ui-control);border-color:var(--ui-border);}
 #inspector-content .sonic-trait-dot.is-active,#inspector-content .sonic-band-dots i.is-active{background:var(--ui-accent);border-color:var(--ui-text);}
 .app-settings{color:var(--ui-text);}
-.app-settings>summary,.sidebar-pin,.sidebar-edge-tab,.mobile-inspector-close,.mobile-catalog-close,.mobile-panel-controls button{background:var(--ui-control)!important;border-color:var(--ui-border)!important;color:var(--ui-text)!important;}
+.app-settings>summary,.sidebar-pin,.sidebar-edge-tab,.mobile-inspector-close,.mobile-panel-controls button{background:var(--ui-control)!important;border-color:var(--ui-border)!important;color:var(--ui-text)!important;}
 .app-settings>summary:hover,.app-settings[open]>summary,.mobile-panel-controls button:hover{background:var(--ui-hover)!important;}
 .app-settings-content{background:var(--ui-side);border-color:var(--ui-border);color:var(--ui-text);box-shadow:0 12px 36px var(--ui-shadow);color-scheme:var(--ui-scheme);}
 .app-settings-content :is(.settings-group,.language-setting){background:var(--ui-panel);border-color:var(--ui-border);color:var(--ui-text);}
@@ -198,7 +198,7 @@
 .app-settings-content :is(.room-settings,.headphone-calibration-setting,.listening-level-settings){border-color:transparent;}
 
 /* Flat button surfaces retain hover, selection and keyboard focus cues. */
-.app-settings>summary,.sidebar-pin,.sidebar-edge-tab,.mobile-inspector-close,.mobile-catalog-close,
+.app-settings>summary,.sidebar-pin,.sidebar-edge-tab,.mobile-inspector-close,
 .mobile-panel-controls button,.app-settings-content button,.app-select-trigger,.app-settings-content .app-select-trigger,
 :is(.app-confirm-dialog,.tutorial-dialog,.headphone-calibration-dialog,.tutorial-bar) button,
 #inspector .inspector-window-close{border-color:transparent!important;box-shadow:none!important;}

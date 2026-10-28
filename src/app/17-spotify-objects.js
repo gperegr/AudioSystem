@@ -16,8 +16,6 @@
             return {move(ev){ghost.style.left=(ev.clientX-offsetX)+'px';ghost.style.top=(ev.clientY-offsetY)+'px';},restore(){ghost.remove();element.style.visibility=previousVisibility;}};
         }
         function updateSpotifyDiscardTarget(event,kind){
-            if(compactLayout.matches&&event.clientX<28&&!document.body.classList.contains('mobile-catalog-open')){document.body.classList.add('mobile-catalog-open');syncMobilePanels();}
-            else if(!compactLayout.matches&&event.clientX<32&&document.body.classList.contains('catalog-collapsed'))openSidebar('catalog',6000);
             const over=isOverCatalog(event),label=kind==='vinyl'?'disco':'capa';
             equipmentCatalog.classList.add('discard-ready');discardZone.setAttribute('aria-hidden','false');
             discardZone.querySelector('strong').textContent=over?`Solte para guardar ${label}`:`Arraste aqui para guardar ${label}`;

@@ -56,3 +56,7 @@ Inclua estados normal, hover, foco visível, selecionado, desabilitado e erro qu
 3. Confira temas claros e escuros, cenário e horário, controles ativos e desabilitados, além de uma largura móvel.
 4. Execute as verificações pertinentes. `node tests/interface-palettes.browser.cjs` cobre as 13 combinações, contraste dos componentes principais e preservação do visual de um equipamento; aceita `TAILWIND_SCRIPT_FILE` para uso offline. `node --test tests/*.test.cjs` executa a suíte Node.
 5. Se alterar tokens ou contratos compartilhados, atualize este guia e os pontos de uso relevantes. CSS de equipamentos em `styles/equipment/` e seus controles no canvas seguem suas próprias regras.
+
+## Catálogo permanente
+
+O catálogo à esquerda permanece visível, sem seta, alfinete, recolhimento automático ou preferência de fixação. O canvas reserva a largura do catálogo; em telas de até 700 px, o catálogo usa 136 px e uma coluna de equipamentos. A busca, os favoritos e o descarte por arraste continuam disponíveis.

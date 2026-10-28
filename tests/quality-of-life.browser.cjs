@@ -24,6 +24,14 @@ const root=path.resolve(__dirname,'..');
         await page.goto('http://127.0.0.1:9876/');
         await page.locator('#headphone-calibration-skip').click();
         await page.getByRole('button',{name:'Agora não',exact:true}).click();
+        async function assertCatalogVisible(){
+            await page.waitForTimeout(500);
+            const state=await page.locator('#equipment-catalog').evaluate(el=>{const r=el.getBoundingClientRect(),canvas=document.querySelector('#canvas').getBoundingClientRect();return {visible:getComputedStyle(el).visibility,inert:el.inert,left:r.left,right:r.right,width:r.width,canvasLeft:canvas.left};});
+            assert.equal(state.visible,'visible');assert.equal(state.inert,false);assert(state.width>0&&state.left>=0);assert(state.canvasLeft>=state.right-1,JSON.stringify(state));
+            assert.equal(await page.locator('#catalog-sidebar-toggle,#catalog-sidebar-pin,.mobile-catalog-close,[data-mobile-panel=catalog]').count(),0);
+        }
+        await assertCatalogVisible();
+        await page.locator('#canvas').click({position:{x:600,y:600}});await page.keyboard.press('Escape');await page.waitForTimeout(3500);await assertCatalogVisible();
         const result=await page.evaluate(()=>{
             const before=Object.keys(__signal.appState.project.devices).length;
             const preview=__signal.createDevice('preClassic',0,0,null,true);preview.el.hidden=false;
@@ -41,16 +49,18 @@ const root=path.resolve(__dirname,'..');
         await page.mouse.move(a.x+a.width/2,a.y+a.height/2);await page.mouse.down();await page.mouse.move(canvas.x+canvas.width/2,canvas.y+canvas.height/2,{steps:5});
         assert.equal(await page.locator('.catalog-placement-preview').count(),1);await page.mouse.up();
         assert.equal(await page.locator('.catalog-placement-preview').count(),0);assert.equal(await page.locator('.catalog-quick-access .catalog-item[data-template="preClassic"]').count(),1);
-        await page.reload();await page.waitForSelector('.catalog-quick-access .catalog-item[data-template="preClassic"]');
+        await page.evaluate(()=>{const key='audio-system-interface-preferences';localStorage.setItem(key,JSON.stringify({...JSON.parse(localStorage.getItem(key)||'{}'),catalogPinned:false}));});
+        await page.reload();await assertCatalogVisible();await page.waitForSelector('.catalog-quick-access .catalog-item[data-template="preClassic"]');
         assert.equal(await page.locator('.catalog-item[data-template="preClassic"] .catalog-favorite').getAttribute('aria-pressed'),'true');
         await page.locator('.catalog-item[data-template="preClassic"] .catalog-favorite').click();
         assert.equal(await page.locator('.catalog-quick-access .catalog-item[data-template="preClassic"]').count(),0);
-        await page.setViewportSize({width:390,height:844});await page.locator('[data-mobile-panel=catalog]').click();
+        await page.setViewportSize({width:390,height:844});await assertCatalogVisible();await page.locator('#canvas').click({position:{x:200,y:100}});await page.screenshot({path:'/tmp/permanent-catalog-mobile.png'});
         const mobileCard=page.locator('.catalog-item[data-template="preClassic"]').filter({has:page.locator('.catalog-favorite')});await mobileCard.scrollIntoViewIfNeeded();
         await mobileCard.locator('span').last().tap();assert.equal(await page.locator('.catalog-preview-actions').count(),1);assert.equal(await page.locator('.catalog-placement-preview').count(),1);
         await page.locator('[data-preview-cancel]').click();assert.equal(await page.locator('.catalog-placement-preview').count(),0);
-        await page.locator('[data-mobile-panel=catalog]').click();await mobileCard.scrollIntoViewIfNeeded();await mobileCard.locator('span').last().tap();await page.locator('[data-preview-confirm]').click();assert.equal(await page.locator('.catalog-preview-actions').count(),0);
-        await page.setViewportSize({width:1600,height:1100});
+        await mobileCard.scrollIntoViewIfNeeded();await mobileCard.locator('span').last().tap();await page.locator('[data-preview-confirm]').click();assert.equal(await page.locator('.catalog-preview-actions').count(),0);
+        for(const width of [800,1200,1600]){await page.setViewportSize({width,height:1100});await assertCatalogVisible();}
+        await page.screenshot({path:'/tmp/permanent-catalog-desktop.png'});
         assert.equal(await page.locator('#frame-selection').count(),0);assert.equal(await page.locator('#fit-canvas').count(),1);
         assert.equal(await page.locator('#equipment-sound-volume').count(),1);
         assert.deepEqual(errors,[]);console.log('Quality of life: true-sized preview without device creation, persisted favorites, frame button and separate sound control passed.');
