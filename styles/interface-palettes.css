@@ -138,3 +138,7 @@
 #inspector-content[data-hardware-panel] section{border-color:transparent!important;border-width:0!important;box-shadow:none!important;}
 #inspector-content :is(.tt-insp-btn,button:not(.signal-history-name)):not([data-state=protection]){border-color:transparent!important;}
 #inspector-content :is(.tt-insp-btn,button):is(.is-on,[aria-pressed=true]){border-color:transparent!important;}
+/* Make the favorite toggle read clearly in both states while keeping the star small. */
+#equipment-catalog .catalog-favorite:not([aria-pressed="true"]){color:var(--ui-panel)!important;opacity:1;-webkit-text-stroke:1px var(--ui-muted);text-shadow:none;}
+#equipment-catalog .catalog-favorite[aria-pressed="true"]{color:var(--ui-accent)!important;opacity:1;-webkit-text-stroke:0;text-shadow:0 1px 5px color-mix(in srgb,var(--ui-accent) 45%,transparent);}
+#equipment-catalog .catalog-favorite:hover{transform:scale(1.12);}
