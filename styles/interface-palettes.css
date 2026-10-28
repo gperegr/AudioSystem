@@ -172,3 +172,9 @@
 .app-settings-content .connection-help-setting input[type="checkbox"]:focus-visible{outline:2px solid var(--ui-accent);outline-offset:3px;}
 .app-settings-content .connection-help-setting strong{color:var(--ui-text);font-size:13px;}
 .app-settings-content .connection-help-setting small{color:var(--ui-secondary);font-size:12px;line-height:1.5;}
+/* Port and electrical status pills use their semantic fill colors without outlines. */
+#inspector-content .signal-badge,
+#inspector-content .electrical-channel,
+#inspector-content .electrical-status-badge,
+#inspector-content .electrical-current{border:0!important;}
+#inspector-content .signal-badge i{box-shadow:none!important;}
