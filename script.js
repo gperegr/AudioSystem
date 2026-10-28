@@ -400,9 +400,12 @@ const Hardware = (() => {
         if(kind==='linear')return 'movePitch';
         if(kind==='slider')return el.dataset.hardwareSlider==='seek'?'moveSeek':el.dataset.hardwareSlider==='vertical'||el.closest('.mixer-channel')||el.matches('.mixer-level-control')?'moveFader':'moveSlider';
         const model=el.dataset.knobModel||bindings.get(el)?.model||'recessed';
-        return 'move'+model[0].toUpperCase()+model.slice(1);
+        const voices={silverFluted:'moveMachined',plainPlastic:'moveBakelite',haloDisc:'moveFlywheel',inputDialSmall:'moveRubber',inputDial:'moveRubber',inputDialCompact:'moveRubber',outputDialLarge:'moveMachined',outputDial:'moveRecessed',monitorDial:'moveMachined',encoderDial:'moveFaceted'};
+        return voices[model]||'move'+model[0].toUpperCase()+model.slice(1);
     }
     const buttonSounds=freeze({
+        hwSwitchOn:{duration:.055,frequency:1700,noise:.065,tone:180,body:.008,attack:.003,lowpass:3400,bounce:.014,bounceLevel:.18},
+        hwSwitchOff:{duration:.048,frequency:1300,noise:.055,tone:145,body:.007,attack:.003,lowpass:2900},
         hwKeyDown:{duration:.032,frequency:2400,noise:.075,tone:340,body:.010,attack:.001,lowpass:6400},
         hwKeyUp:{duration:.022,frequency:3300,noise:.040,tone:440,body:.005,attack:.001,lowpass:7000},
         hwTransportDown:{duration:.050,frequency:1500,noise:.100,tone:180,body:.023,attack:.001,lowpass:4700,bounce:.012,bounceLevel:.22},
@@ -498,7 +501,7 @@ const Hardware = (() => {
             const detent=magnetic?detents.find(point=>Math.abs(next-point)<(max-min)*.012):undefined;
             if(detent!==undefined)next=detent;
             el.classList.toggle('hw-at-detent',detents.some(point=>Math.abs(next-point)<1e-7));
-            if(Math.abs(next-get())>1e-7){set(next);playUiSound(movementSound(el,kind));}paintKnob(el);if(el.dataset.interfaceKnob)el.dispatchEvent(new Event('interface-control-change',{bubbles:true}));
+            if(Math.abs(next-get())>1e-7){set(next);playEquipmentControlSound(movementSound(el,kind),el);}paintKnob(el);if(el.dataset.interfaceKnob)el.dispatchEvent(new Event('interface-control-change',{bubbles:true}));
         };
         const commit=()=>{if(el.isConnected){updateCableFlows();scheduleProjectSave();}};
         el.addEventListener('pointerdown',event=>{
@@ -666,7 +669,7 @@ const Hardware = (() => {
         if(!el.closest('.device-node')||el.hasAttribute('data-hardware-feedback'))return;
         el.dataset.hardwareFeedback='';el.dataset.buttonAction=spec.action;
         let held=false,pointer=null,lastDown=-Infinity,releaseTimer=null;
-        const switching=spec.action==='rocker'||spec.action==='slide';
+        const switching=spec.action==='rocker'||spec.action==='slide'||spec.action==='lever';
         const preview=()=>{
             if(!el.hasAttribute('data-demo-button')||spec.action!=='momentary')return;
             el.setAttribute('aria-pressed',String(held));el.classList.toggle('active',held);el.classList.toggle('off',!held);
@@ -678,14 +681,14 @@ const Hardware = (() => {
             held=false;pointer=null;clearTimeout(releaseTimer);el.classList.remove('hw-pressing');
             document.removeEventListener('pointerup',finish,true);document.removeEventListener('pointercancel',finish,true);window.removeEventListener('blur',finish);
             releases.delete(el);preview();
-            if(!cancelled&&!switching)playUiSound(spec.sound+'Up');
+            if(!cancelled&&!switching)playEquipmentControlSound(spec.sound+'Up',el);
         };
         const begin=event=>{
             if(held||el.disabled)return;
             held=true;pointer=event?.pointerId??null;lastDown=performance.now();el.classList.add('hw-pressing');preview();
             document.addEventListener('pointerup',finish,true);document.addEventListener('pointercancel',finish,true);window.addEventListener('blur',finish);
             releases.set(el,()=>finish({type:'cancel'}));
-            playUiSound(switching?'hwSwitchPreload':spec.sound+'Down');
+            playEquipmentControlSound(switching?'hwSwitchPreload':spec.sound+'Down',el);
         };
         el.addEventListener('pointerdown',event=>{if(event.button===0){el.classList.add('hw-pointer-focus');begin(event);}});
         el.addEventListener('keydown',event=>{el.classList.remove('hw-pointer-focus');if([' ','Enter'].includes(event.key)){if(event.repeat){event.preventDefault();return;}begin(event);}});
@@ -696,8 +699,8 @@ const Hardware = (() => {
             if(event.detail===0&&!held&&performance.now()-lastDown>350){begin();releaseTimer=setTimeout(()=>finish(),90);}
             if(switching)queueMicrotask(()=>{
                 if(!el.isConnected)return;
-                const on=el.hasAttribute('aria-checked')?el.getAttribute('aria-checked')==='true':!el.classList.contains('off');
-                playUiSound(spec.sound+(on?'On':'Off'));
+                const on=el.hasAttribute('aria-checked')?el.getAttribute('aria-checked')==='true':el.hasAttribute('aria-pressed')?el.getAttribute('aria-pressed')==='true':!el.classList.contains('off');
+                playEquipmentControlSound(spec.sound+(on?'On':'Off'),el);
             });
         });
     }
@@ -3522,6 +3525,26 @@ const Hardware = (() => {
         window.addEventListener('pagehide',()=>{audioNeedsGestureRecovery=true;legacyPlaybackAudio?.pause();});
 
         const uiSoundTimes = {};
+        let equipmentAcoustics=null,lastEquipmentAcoustics=0;
+        function syncEquipmentAcoustics(now=performance.now(),force=false){
+            if(!force&&now-lastEquipmentAcoustics<250)return;lastEquipmentAcoustics=now;
+            const context=appState.audio.context;
+            const enabled=!!context&&audioPrimed&&context.state==='running'&&!document.hidden&&!appState.project.restoringProject;
+            if(!equipmentAcoustics&&enabled&&appState.preferences.uiSoundVolume>0)equipmentAcoustics=EquipmentAcoustics.create(context,appState.audio.listeningToneInput);
+            equipmentAcoustics?.sync(Object.values(appState.project.devices),{enabled,volume:appState.preferences.uiSoundVolume});
+        }
+        document.addEventListener('visibilitychange',()=>syncEquipmentAcoustics(performance.now(),true));
+        window.addEventListener('pagehide',()=>{equipmentAcoustics?.dispose();equipmentAcoustics=null;});
+        function playEquipmentControlSound(kind,element){
+            if(!element.closest('.device-node'))return playUiSound(kind);
+            const sliding=!!element.closest('.device-type-preClassic')&&element.matches('[data-classic-toggle],[data-integrated-direct]');
+            if(sliding&&kind==='hwSwitchPreload')return;
+            if(sliding)kind='hwSlide'+(element.getAttribute('aria-pressed')==='true'?'On':'Off');
+            const moving=kind.startsWith('move'),detent=element.matches('[data-pre-rotary],[data-classic-knob="classicMode"],[data-signal-mode-knob]');
+            const profile=moving?(detent?{duration:.023,frequency:1300,noise:.022,tone:190,body:.002,attack:.002,lowpass:2600,cooldown:90}:{...(Hardware.movementSounds[kind]||Hardware.movementSounds.moveRecessed),duration:.055,attack:.009,tone:0,body:0}):undefined;
+            return playUiSound(kind,{equipment:true,level:.7,profile});
+        }
+
         let uiNoiseBuffer=null,uiEffectsGain=null,uiEffectsLimiter=null;
         const interactionGain=value=>Math.min(1.4,Math.max(0,value)*1.3);
         function ensureUiEffectsBus(context){
@@ -3563,7 +3586,8 @@ const Hardware = (() => {
         },{capture:true});
         async function playUiSound(kind = 'click', options = {}) {
             if(appState.project.restoringProject)return;
-            const now=performance.now(),profile=uiSoundProfiles[kind]||uiSoundProfiles.click;
+            const now=performance.now(),baseProfile=options.equipment&&options.profile?options.profile:uiSoundProfiles[kind]||uiSoundProfiles.click;
+            const profile=options.equipment?{...baseProfile,noise:baseProfile.noise*.8,body:(baseProfile.body||0)*.75,lowpass:Math.min(4200,baseProfile.lowpass||2600),ringLevel:(baseProfile.ringLevel||0)*.45,cooldown:Math.max(65,baseProfile.cooldown||0)}:baseProfile;
             if(now-(uiSoundTimes[kind]??-Infinity)<(profile.cooldown??(kind==='drag'?140:kind==='adjust'?95:55)))return;
             uiSoundTimes[kind]=now;
             if(appState.preferences.uiSoundVolume===0)return;
@@ -3684,6 +3708,7 @@ const Hardware = (() => {
             document.getElementById('headphone-calibration-ui-slider').value=value;
             document.getElementById('headphone-calibration-ui-value').textContent=value?`${value}%`:'desligados';
             uiEffectsGain?.gain.setTargetAtTime(interactionGain(appState.preferences.uiSoundVolume),appState.audio.context.currentTime,.02);
+            syncEquipmentAcoustics(performance.now(),true);
             scheduleProjectSave();
         }
         soundControls.querySelector('input').addEventListener('input',event=>setInteractionVolume(event.target.value));
@@ -7744,6 +7769,7 @@ const Hardware = (() => {
         function disposeDeviceRuntime(dev) {
             if(!dev||dev.runtimeDisposed)return;
             dev.runtimeDisposed=true;
+            syncEquipmentAcoustics(performance.now(),true);
             disposeSignalHistory();
 
             // Stop asynchronous capture first. A pending getUserMedia request is
@@ -9511,6 +9537,7 @@ const Hardware = (() => {
             updateTransportMotion(performance.now());
             updateExtraDisplays(performance.now());
             updateIntegratedDisplays(performance.now());
+            syncEquipmentAcoustics();
             updateReceiverRadioDisplays(performance.now());
             updateCustomPowerDisplays(performance.now());
 

@@ -96,6 +96,26 @@
         window.addEventListener('pagehide',()=>{audioNeedsGestureRecovery=true;legacyPlaybackAudio?.pause();});
 
         const uiSoundTimes = {};
+        let equipmentAcoustics=null,lastEquipmentAcoustics=0;
+        function syncEquipmentAcoustics(now=performance.now(),force=false){
+            if(!force&&now-lastEquipmentAcoustics<250)return;lastEquipmentAcoustics=now;
+            const context=appState.audio.context;
+            const enabled=!!context&&audioPrimed&&context.state==='running'&&!document.hidden&&!appState.project.restoringProject;
+            if(!equipmentAcoustics&&enabled&&appState.preferences.uiSoundVolume>0)equipmentAcoustics=EquipmentAcoustics.create(context,appState.audio.listeningToneInput);
+            equipmentAcoustics?.sync(Object.values(appState.project.devices),{enabled,volume:appState.preferences.uiSoundVolume});
+        }
+        document.addEventListener('visibilitychange',()=>syncEquipmentAcoustics(performance.now(),true));
+        window.addEventListener('pagehide',()=>{equipmentAcoustics?.dispose();equipmentAcoustics=null;});
+        function playEquipmentControlSound(kind,element){
+            if(!element.closest('.device-node'))return playUiSound(kind);
+            const sliding=!!element.closest('.device-type-preClassic')&&element.matches('[data-classic-toggle],[data-integrated-direct]');
+            if(sliding&&kind==='hwSwitchPreload')return;
+            if(sliding)kind='hwSlide'+(element.getAttribute('aria-pressed')==='true'?'On':'Off');
+            const moving=kind.startsWith('move'),detent=element.matches('[data-pre-rotary],[data-classic-knob="classicMode"],[data-signal-mode-knob]');
+            const profile=moving?(detent?{duration:.023,frequency:1300,noise:.022,tone:190,body:.002,attack:.002,lowpass:2600,cooldown:90}:{...(Hardware.movementSounds[kind]||Hardware.movementSounds.moveRecessed),duration:.055,attack:.009,tone:0,body:0}):undefined;
+            return playUiSound(kind,{equipment:true,level:.7,profile});
+        }
+
         let uiNoiseBuffer=null,uiEffectsGain=null,uiEffectsLimiter=null;
         const interactionGain=value=>Math.min(1.4,Math.max(0,value)*1.3);
         function ensureUiEffectsBus(context){
@@ -137,7 +157,8 @@
         },{capture:true});
         async function playUiSound(kind = 'click', options = {}) {
             if(appState.project.restoringProject)return;
-            const now=performance.now(),profile=uiSoundProfiles[kind]||uiSoundProfiles.click;
+            const now=performance.now(),baseProfile=options.equipment&&options.profile?options.profile:uiSoundProfiles[kind]||uiSoundProfiles.click;
+            const profile=options.equipment?{...baseProfile,noise:baseProfile.noise*.8,body:(baseProfile.body||0)*.75,lowpass:Math.min(4200,baseProfile.lowpass||2600),ringLevel:(baseProfile.ringLevel||0)*.45,cooldown:Math.max(65,baseProfile.cooldown||0)}:baseProfile;
             if(now-(uiSoundTimes[kind]??-Infinity)<(profile.cooldown??(kind==='drag'?140:kind==='adjust'?95:55)))return;
             uiSoundTimes[kind]=now;
             if(appState.preferences.uiSoundVolume===0)return;
@@ -258,6 +279,7 @@
             document.getElementById('headphone-calibration-ui-slider').value=value;
             document.getElementById('headphone-calibration-ui-value').textContent=value?`${value}%`:'desligados';
             uiEffectsGain?.gain.setTargetAtTime(interactionGain(appState.preferences.uiSoundVolume),appState.audio.context.currentTime,.02);
+            syncEquipmentAcoustics(performance.now(),true);
             scheduleProjectSave();
         }
         soundControls.querySelector('input').addEventListener('input',event=>setInteractionVolume(event.target.value));

@@ -297,6 +297,7 @@
             updateTransportMotion(performance.now());
             updateExtraDisplays(performance.now());
             updateIntegratedDisplays(performance.now());
+            syncEquipmentAcoustics();
             updateReceiverRadioDisplays(performance.now());
             updateCustomPowerDisplays(performance.now());
 

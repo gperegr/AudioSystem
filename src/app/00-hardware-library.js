@@ -400,9 +400,12 @@ const Hardware = (() => {
         if(kind==='linear')return 'movePitch';
         if(kind==='slider')return el.dataset.hardwareSlider==='seek'?'moveSeek':el.dataset.hardwareSlider==='vertical'||el.closest('.mixer-channel')||el.matches('.mixer-level-control')?'moveFader':'moveSlider';
         const model=el.dataset.knobModel||bindings.get(el)?.model||'recessed';
-        return 'move'+model[0].toUpperCase()+model.slice(1);
+        const voices={silverFluted:'moveMachined',plainPlastic:'moveBakelite',haloDisc:'moveFlywheel',inputDialSmall:'moveRubber',inputDial:'moveRubber',inputDialCompact:'moveRubber',outputDialLarge:'moveMachined',outputDial:'moveRecessed',monitorDial:'moveMachined',encoderDial:'moveFaceted'};
+        return voices[model]||'move'+model[0].toUpperCase()+model.slice(1);
     }
     const buttonSounds=freeze({
+        hwSwitchOn:{duration:.055,frequency:1700,noise:.065,tone:180,body:.008,attack:.003,lowpass:3400,bounce:.014,bounceLevel:.18},
+        hwSwitchOff:{duration:.048,frequency:1300,noise:.055,tone:145,body:.007,attack:.003,lowpass:2900},
         hwKeyDown:{duration:.032,frequency:2400,noise:.075,tone:340,body:.010,attack:.001,lowpass:6400},
         hwKeyUp:{duration:.022,frequency:3300,noise:.040,tone:440,body:.005,attack:.001,lowpass:7000},
         hwTransportDown:{duration:.050,frequency:1500,noise:.100,tone:180,body:.023,attack:.001,lowpass:4700,bounce:.012,bounceLevel:.22},
@@ -498,7 +501,7 @@ const Hardware = (() => {
             const detent=magnetic?detents.find(point=>Math.abs(next-point)<(max-min)*.012):undefined;
             if(detent!==undefined)next=detent;
             el.classList.toggle('hw-at-detent',detents.some(point=>Math.abs(next-point)<1e-7));
-            if(Math.abs(next-get())>1e-7){set(next);playUiSound(movementSound(el,kind));}paintKnob(el);if(el.dataset.interfaceKnob)el.dispatchEvent(new Event('interface-control-change',{bubbles:true}));
+            if(Math.abs(next-get())>1e-7){set(next);playEquipmentControlSound(movementSound(el,kind),el);}paintKnob(el);if(el.dataset.interfaceKnob)el.dispatchEvent(new Event('interface-control-change',{bubbles:true}));
         };
         const commit=()=>{if(el.isConnected){updateCableFlows();scheduleProjectSave();}};
         el.addEventListener('pointerdown',event=>{
@@ -666,7 +669,7 @@ const Hardware = (() => {
         if(!el.closest('.device-node')||el.hasAttribute('data-hardware-feedback'))return;
         el.dataset.hardwareFeedback='';el.dataset.buttonAction=spec.action;
         let held=false,pointer=null,lastDown=-Infinity,releaseTimer=null;
-        const switching=spec.action==='rocker'||spec.action==='slide';
+        const switching=spec.action==='rocker'||spec.action==='slide'||spec.action==='lever';
         const preview=()=>{
             if(!el.hasAttribute('data-demo-button')||spec.action!=='momentary')return;
             el.setAttribute('aria-pressed',String(held));el.classList.toggle('active',held);el.classList.toggle('off',!held);
@@ -678,14 +681,14 @@ const Hardware = (() => {
             held=false;pointer=null;clearTimeout(releaseTimer);el.classList.remove('hw-pressing');
             document.removeEventListener('pointerup',finish,true);document.removeEventListener('pointercancel',finish,true);window.removeEventListener('blur',finish);
             releases.delete(el);preview();
-            if(!cancelled&&!switching)playUiSound(spec.sound+'Up');
+            if(!cancelled&&!switching)playEquipmentControlSound(spec.sound+'Up',el);
         };
         const begin=event=>{
             if(held||el.disabled)return;
             held=true;pointer=event?.pointerId??null;lastDown=performance.now();el.classList.add('hw-pressing');preview();
             document.addEventListener('pointerup',finish,true);document.addEventListener('pointercancel',finish,true);window.addEventListener('blur',finish);
             releases.set(el,()=>finish({type:'cancel'}));
-            playUiSound(switching?'hwSwitchPreload':spec.sound+'Down');
+            playEquipmentControlSound(switching?'hwSwitchPreload':spec.sound+'Down',el);
         };
         el.addEventListener('pointerdown',event=>{if(event.button===0){el.classList.add('hw-pointer-focus');begin(event);}});
         el.addEventListener('keydown',event=>{el.classList.remove('hw-pointer-focus');if([' ','Enter'].includes(event.key)){if(event.repeat){event.preventDefault();return;}begin(event);}});
@@ -696,8 +699,8 @@ const Hardware = (() => {
             if(event.detail===0&&!held&&performance.now()-lastDown>350){begin();releaseTimer=setTimeout(()=>finish(),90);}
             if(switching)queueMicrotask(()=>{
                 if(!el.isConnected)return;
-                const on=el.hasAttribute('aria-checked')?el.getAttribute('aria-checked')==='true':!el.classList.contains('off');
-                playUiSound(spec.sound+(on?'On':'Off'));
+                const on=el.hasAttribute('aria-checked')?el.getAttribute('aria-checked')==='true':el.hasAttribute('aria-pressed')?el.getAttribute('aria-pressed')==='true':!el.classList.contains('off');
+                playEquipmentControlSound(spec.sound+(on?'On':'Off'),el);
             });
         });
     }

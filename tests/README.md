@@ -26,3 +26,5 @@ The two turntable browser tests share `turntable-geometry.helpers.cjs`: they com
 `node tests/classic-preamp.browser.cjs` verifies the wood-console preamp with real Web Audio: five channel modes, output balance and mute, independent L/R tone, low/high filters, tape monitor routing, power gating, keyboard/pointer controls, settings restoration, English labels and control geometry. The preview is saved to `/tmp/classic-preamp.png`; `TAILWIND_SCRIPT_FILE` supports offline styling.
 
 `node tests/electrostatic-speaker.browser.cjs` checks the classic electrostatic panel dimensions, passive input, electrical references, sensitivity trim and actual Web Audio filter response. It also checks the inspector and disposal. Preview: `/tmp/electrostatic-speaker.png`.
+
+`equipment-acoustics.test.cjs` checks equipment eligibility, transport state, a bounded voice count and resource disposal. `node tests/equipment-acoustics.browser.cjs` checks real Web Audio, an offline-rendered RMS/peak loudness budget, power/removal, page visibility and interaction mute. It accepts `TAILWIND_SCRIPT_FILE` for offline styling.

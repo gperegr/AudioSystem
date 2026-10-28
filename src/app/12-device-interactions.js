@@ -910,6 +910,7 @@
         function disposeDeviceRuntime(dev) {
             if(!dev||dev.runtimeDisposed)return;
             dev.runtimeDisposed=true;
+            syncEquipmentAcoustics(performance.now(),true);
             disposeSignalHistory();
 
             // Stop asynchronous capture first. A pending getUserMedia request is
