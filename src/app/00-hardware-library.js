@@ -76,6 +76,10 @@ const Hardware = (() => {
             "[data-tt=\"output\"]": {width:112, height:26},
             ".tt-lid-button": {width:24, height:20},
         },
+        turntableBelt: {
+            ".power-btn": {width:18,height:14},
+            ".tt-lid-button": {width:22,height:18},
+        },
         turntableVintage: {
             ".power-btn": {width:44, height:24},
             ".at-startstop": {width:48, height:28},
@@ -860,6 +864,15 @@ const Hardware = (() => {
             const plinth=device.querySelector('.at-plinth');
             if(plinth){const rect=box(plinth),deckHeight=parseFloat(getComputedStyle(device).getPropertyValue('--tt-deck-height'))||120;fill({x:rect.x,y:rect.y+deckHeight,width:rect.width,height:Math.max(0,rect.height-deckHeight)},5);}
             const platter=device.querySelector('.at-front-mechanism .at-platter');if(platter)fill(box(platter),4);
+            if(device.classList.contains('device-type-turntableBelt')){
+                const deck=box(device.querySelector('.at-deck'));fill({x:deck.x,y:deck.y+deck.height-6,width:deck.width,height:6},1);
+                const art=device.querySelector('.at-arm-svg');
+                if(art){
+                    let image=art._lightingMaskImage;
+                    if(!image){image=new Image();art._lightingMaskImage=image;image.addEventListener('load',()=>mountLightingSilhouette(device),{once:true});image.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(art));}
+                    if(image.complete&&image.naturalWidth){const rect=box(art);ctx.drawImage(image,rect.x,rect.y,rect.width,rect.height);}
+                }
+            }
         }
         device.style.setProperty('--lighting-silhouette-mask',`url("${mask.toDataURL()}")`);
         device.classList.add('lighting-shaped-silhouette');

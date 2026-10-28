@@ -6,6 +6,8 @@
 
 ## Catalog
 
+`node tests/glass-turntable.browser.cjs` checks the glass-platter turntable's motor/power behavior, local audio playback, LINE/PHONO switching, pitch, dust cover, Spotify record placement, ports and cleanup. Like the signal-history browser test, it accepts `TAILWIND_SCRIPT_FILE` for offline styling. Its preview is written to `/tmp/glass-deck.png`.
+
 `equipment-contracts.test.cjs` runs with the normal Node suite. Its explicit inventory at `fixtures/equipment-contract-types.json` is the reviewed list of catalog equipment. Adding or removing a type requires updating this inventory and satisfying the numeric, translation, and model-table checks.
 
 Run the full browser contract suite against the real app after starting a local server:

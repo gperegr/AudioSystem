@@ -16,7 +16,7 @@
             el.style.left = `${Math.max(0, snapCoordinate(x))}px`;
             el.style.top = `${Math.max(0, snapCoordinate(y))}px`;
             
-            if (type === 'turntableVintage') el.classList.add('device-type-turntable');
+            if (['turntableVintage','turntableBelt'].includes(type)) el.classList.add('device-type-turntable');
             const tpl = document.getElementById(`tpl-${type === 'turntableVintage' ? 'turntable' : type}`);
             if(tpl) el.innerHTML = tpl.innerHTML;
             else { el.innerHTML = `<div class="device-header"><span>${type}</span></div><div class="p-4"><span class="text-[8px] font-bold">INPUT · RCA R</span><div class="port" data-type="rca-r" data-io="in" data-node="in" title="Entrada RCA direita R"></div></div>`; }

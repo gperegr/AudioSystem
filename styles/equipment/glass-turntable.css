@@ -1,0 +1,44 @@
+/* Front elevation: thin veneered plinth, glass edge and a straight cast tonearm. */
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-turntableBelt{
+    --tt-deck-height:100px;--tt-cover-height:94px;
+    width:590px;padding:0!important;border:0!important;border-radius:2px;background:transparent!important;box-shadow:none!important;
+}
+.device-node.device-type-turntableBelt .at-plinth{
+    padding:0!important;grid-template-columns:minmax(0,1fr) 132px;grid-template-rows:100px 36px;column-gap:0;
+}
+.device-node.device-type-turntableBelt .at-plinth::before{
+    top:100px;bottom:0;border:1px solid #9b794a;border-radius:1px 1px 2px 2px;
+    background:repeating-linear-gradient(1deg,transparent 0 3px,#5d390c12 3.5px,transparent 4px 8px),repeating-linear-gradient(177deg,#dcb8790a 0 5px,#865b2026 6px,transparent 7px 14px),linear-gradient(90deg,#bf955d,#dfbd83 23%,#c89e61 52%,#e4c48e 77%,#bc9155);
+    box-shadow:inset 0 2px #f6e1b2aa,inset 0 -2px #75522388,0 3px 4px #0005;
+}
+.device-node.device-type-turntableBelt .at-deck::before{height:6px;background:linear-gradient(#debf8c,#ad8046);box-shadow:inset 0 1px #f0d9aa88;border-radius:0;}
+.device-node.device-type-turntableBelt .at-front-mechanism .at-platter{
+    left:26px;top:73px;width:352px;height:20px;border-radius:1px;border:1px solid #81a7a1;
+    background:linear-gradient(#e6f4ee 0 1px,#91beb64d 2px,#5c86817a 6px,#d4f3e8a8 9px,#80aaa586 13px,#c4e6da 16px,#567f7c 19px);
+    box-shadow:inset 1px 0 #effffb,0 4px 3px #0005;
+}
+.device-node.device-type-turntableBelt .at-front-mechanism .at-platter::before{top:-4px;left:0;right:0;height:4px;background:linear-gradient(#262c28,#080c09);box-shadow:none;}
+.device-node.device-type-turntableBelt .at-front-mechanism .at-platter::after{display:none;}
+.device-node.device-type-turntableBelt .at-front-mechanism .at-record{top:-7px;background:linear-gradient(#53554e,#080b09 55%,#151c17);}
+.device-node.device-type-turntableBelt .at-front-mechanism .at-arm-svg{top:-7px;}
+.device-node.device-type-turntableBelt .at-controls,
+.device-node.device-type-turntableBelt .at-io{margin:0;padding:0 14px;border:0;border-radius:0;background:transparent;box-shadow:none;align-items:center;}
+.device-node.device-type-turntableBelt .at-controls{justify-content:flex-start;}
+.device-node.device-type-turntableBelt .at-power-slot{background:#302a20;border-radius:2px;padding:2px;box-shadow:0 1px #f1d3a088;}
+.device-node.device-type-turntableBelt .at-io{display:flex;gap:8px;padding:0 12px 0 0;}
+.device-node.device-type-turntableBelt .at-io>span{display:none;}
+.device-node.device-type-turntableBelt .at-io-ports{display:flex;flex-direction:row;gap:14px;}
+.device-node.device-type-turntableBelt .at-io-ch{display:flex;flex-direction:row;gap:4px;align-items:center;}
+.device-node.device-type-turntableBelt .at-io-ch>span{font-size:7px;color:#4d3824;}
+.device-node.device-type-turntableBelt .at-lid-scene{bottom:6px;}
+.device-node.device-type-turntableBelt .at-dust-cover{transform:none;}
+.device-node.device-type-turntableBelt .at-cover-front{transform:none;}
+.device-node.device-type-turntableBelt .at-cover-roof,
+.device-node.device-type-turntableBelt .at-cover-back,
+.device-node.device-type-turntableBelt .at-cover-side{display:none;}
+.device-node.device-type-turntableBelt.lid-open .at-dust-cover{transform:translateY(-28px) scaleY(1.25);}
+.device-node.device-type-turntableBelt .at-dust-cover>span{background:#d6e7e905;border-color:#cbd5d466;box-shadow:none;}
+.device-node.device-type-turntableBelt .at-cover-front{border-top:2px solid #e7eeeca8;}
+.device-node.device-type-turntableBelt .tt-lid-button{opacity:.4;}
+.device-node.device-type-turntableBelt:is(:hover,:focus-within) .tt-lid-button{opacity:1;}
+@media(prefers-reduced-motion:reduce){.device-node.device-type-turntableBelt .at-arm{transition:none;}}

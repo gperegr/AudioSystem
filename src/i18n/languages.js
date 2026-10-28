@@ -32,6 +32,7 @@
         'Streamer Integrado':'Integrated streamer',
         'Tape Deck de Rolo':'Reel-to-reel tape deck',
         'Toca-discos':'Turntable',
+        'Toca-discos · Prato de Vidro':'Glass-platter turntable',
         'Toca-discos Tangencial':'Linear tracking turntable',
         'Toca-discos Vintage':'Vintage turntable',
         'Transmissor BT Pro':'Pro Bluetooth transmitter',

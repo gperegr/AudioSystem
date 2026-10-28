@@ -76,6 +76,10 @@ const Hardware = (() => {
             "[data-tt=\"output\"]": {width:112, height:26},
             ".tt-lid-button": {width:24, height:20},
         },
+        turntableBelt: {
+            ".power-btn": {width:18,height:14},
+            ".tt-lid-button": {width:22,height:18},
+        },
         turntableVintage: {
             ".power-btn": {width:44, height:24},
             ".at-startstop": {width:48, height:28},
@@ -860,6 +864,15 @@ const Hardware = (() => {
             const plinth=device.querySelector('.at-plinth');
             if(plinth){const rect=box(plinth),deckHeight=parseFloat(getComputedStyle(device).getPropertyValue('--tt-deck-height'))||120;fill({x:rect.x,y:rect.y+deckHeight,width:rect.width,height:Math.max(0,rect.height-deckHeight)},5);}
             const platter=device.querySelector('.at-front-mechanism .at-platter');if(platter)fill(box(platter),4);
+            if(device.classList.contains('device-type-turntableBelt')){
+                const deck=box(device.querySelector('.at-deck'));fill({x:deck.x,y:deck.y+deck.height-6,width:deck.width,height:6},1);
+                const art=device.querySelector('.at-arm-svg');
+                if(art){
+                    let image=art._lightingMaskImage;
+                    if(!image){image=new Image();art._lightingMaskImage=image;image.addEventListener('load',()=>mountLightingSilhouette(device),{once:true});image.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(art));}
+                    if(image.complete&&image.naturalWidth){const rect=box(art);ctx.drawImage(image,rect.x,rect.y,rect.width,rect.height);}
+                }
+            }
         }
         device.style.setProperty('--lighting-silhouette-mask',`url("${mask.toDataURL()}")`);
         device.classList.add('lighting-shaped-silhouette');
@@ -2255,7 +2268,7 @@ const Hardware = (() => {
         const DEVICE_NAMES = {
             furnitureRack:'Rack de Áudio', furnitureCoverflow:'Coleção de Discos · Spotify', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureRackSixTall:'Rack com Vãos Altos · 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio', cdCollection:'Conjunto de CDs', pendantLamp:'Luminária pendente', wallLampCage:'Arandela industrial', wallLampDome:'Arandela de prato',
             adapterRcaP2:'Adaptador RCA → P2', adapterP2Rca:'Adaptador P2 → RCA', adapterP10P2:'Adaptador P10 → P2', adapterP2P10:'Adaptador P2 → P10', adapterRcaP10:'Adaptador RCA → P10', adapterP10Rca:'Adaptador P10 → RCA', phonoConverter:'Conversor Phono → Linha', speakerConverter:'Conversor Amplificado → Linha',
-            turntable: 'Toca-discos', turntableVintage: 'Toca-discos Vintage', turntableLinear:'Toca-discos Tangencial',
+            turntableBelt: 'Toca-discos · Prato de Vidro', turntable: 'Toca-discos', turntableVintage: 'Toca-discos Vintage', turntableLinear:'Toca-discos Tangencial',
             hardwareDemo:'Modelo · Controles',signalGeneratorVintage:'Gerador de Sinais Vintage', signalGenerator:'Gerador de Sinais', cdPlayer: 'CD Player', tapeDeck:'Tape Deck de Rolo', preamp:'Pré · Slim',preReference:'Pré · Visor Verde',preControl:'Pré · Controle 2.1',preDisplay:'Pré · Tela Central', benchMeter:'Medidor de Bancada', benchMeterVintage:'Medidor de Bancada Vintage',
             streamer: 'Streamer Hi-Fi',streamIntegrated:'Streamer Integrado',audioInterface1:'Interface USB · Compacta',audioInterface2:'Interface USB · Central',audioInterface3:'Interface USB · Estéreo',audioInterface4:'Interface USB · Dupla',
             receiver: 'Receiver Vintage',powerValve:'Potência · Valvulado',powerDual:'Potência · Duplo Canal',powerBias:'Potência · Visor Circular',
@@ -2588,7 +2601,7 @@ const Hardware = (() => {
             phonoConverter:{name:'PHONO → LINHA',input:'rca',output:'rca',inputSignal:'phono',outputSignal:'line',description:'Pré de phono: aplica ganho e equalização RIAA ao sinal phono e entrega nível de linha por RCA R/L.'},
             speakerConverter:{name:'AMPLIFICADO → LINHA',input:'wire',output:'rca',inputSignal:'amplified',outputSignal:'line',description:'Conversor de nível alto para baixo: atenua uma saída SPEAKER amplificada para uma entrada de linha RCA. Não serve para saída de fones.'}
         };
-        const TURNTABLE_TYPES = new Set(['turntable', 'turntableVintage','turntableLinear']);
+        const TURNTABLE_TYPES = new Set(['turntable', 'turntableVintage','turntableLinear','turntableBelt']);
         function rotateAudioAdapter(dev,delta){
             if(!AudioAdapterDesign.models[dev.type])return;
             dev.adapterErrorMotion?.cancel();
@@ -4533,6 +4546,8 @@ const Hardware = (() => {
                 drawing = AudioAdapterDesign.models[type]?AudioAdapterDesign.icon(type):'<rect x="6" y="11" width="44" height="24" rx="3"/><circle cx="14" cy="23" r="3"/><circle cx="42" cy="23" r="3"/><path d="M21 23h14m-4-4 4 4-4 4"/><path d="m26 13-3 6h6l-3 6"/>';
             } else if(type==='streamIntegrated'){
                 drawing='<path d="M5 12h46v27H5ZM19 12V8h18v4M5 34h46M8 15v17m40-17v17"/><rect x="17" y="17" width="23" height="14" rx="1"/><path d="m20 27 5-5 5 3 6-5m9-3v2m0 4v2M10 38h4m28 0h4"/><circle cx="11" cy="28" r="2"/>';
+            } else if(type==='turntableBelt'){
+                drawing='<path d="M3 34h50v5H3zM6 32V9h44v23M10 29h29v3H10zm26-8h10v10m-3-10H23l-7 6M7 37h3"/>';
             } else if(type==='turntableLinear'){
                 drawing='<path d="M3 8h50v29H3zM3 24h50M7 15h35M8 21h26m-23-2h20m8-7v9m4-9v9M7 29h8m-8 4h8m6-4h2m4 0h2m6 0h12m-12 4h12"/>';
             } else if (TURNTABLE_TYPES.has(type)) {
@@ -5978,7 +5993,7 @@ const Hardware = (() => {
             el.style.left = `${Math.max(0, snapCoordinate(x))}px`;
             el.style.top = `${Math.max(0, snapCoordinate(y))}px`;
             
-            if (type === 'turntableVintage') el.classList.add('device-type-turntable');
+            if (['turntableVintage','turntableBelt'].includes(type)) el.classList.add('device-type-turntable');
             const tpl = document.getElementById(`tpl-${type === 'turntableVintage' ? 'turntable' : type}`);
             if(tpl) el.innerHTML = tpl.innerHTML;
             else { el.innerHTML = `<div class="device-header"><span>${type}</span></div><div class="p-4"><span class="text-[8px] font-bold">INPUT · RCA R</span><div class="port" data-type="rca-r" data-io="in" data-node="in" title="Entrada RCA direita R"></div></div>`; }
@@ -6763,6 +6778,7 @@ const Hardware = (() => {
                 dev.powerGain.gain.setValueAtTime(dev.powered ? 1.0 : 0.0, powerTime);
             }
             (dev.powerNodes || []).forEach(node => node.gain.setValueAtTime(dev.powered ? 1.0 : 0.0, powerTime));
+            if(dev.type==='turntableBelt'&&dev.powered)setSourcePlaying(dev,true);
             
             const btn = dev.el.querySelector('.power-btn');
             if (btn) {
@@ -7034,14 +7050,14 @@ const Hardware = (() => {
                 el.classList.toggle('tt-motor', dev.powered && tt.running);
                 el.classList.toggle('tt-stopped', !tt.running);
                 record.style.setProperty('--tt-period', (1.8 / (1 + tt.pitch * PITCH_RANGE)).toFixed(3) + 's');
-                startBtn.setAttribute('aria-pressed', String(tt.running));
-                outSw.setAttribute('aria-checked', String(tt.output === 'phono'));
-                outSw.setAttribute('aria-label',`Saída do toca-discos: ${tt.output.toUpperCase()}. Use as setas para selecionar LINE ou PHONO.`);
-                outSw.title=tt.output==='line'?'LINE · pré interno ligado, sinal de linha':'PHONO · cápsula MM, requer pré/RIAA externo';
-                outSw.querySelectorAll('[data-m]').forEach(n => n.classList.toggle('is-on', n.dataset.m === tt.output));
-                pitchEl.style.setProperty('--p', ((tt.pitch + 1) / 2).toFixed(3));
-                pitchEl.setAttribute('aria-valuenow', pitchPct());
-                pitchEl.title = `Pitch ${pitchText()} · arraste (duplo clique para zerar)`;
+                startBtn?.setAttribute('aria-pressed', String(tt.running));
+                outSw?.setAttribute('aria-checked', String(tt.output === 'phono'));
+                outSw?.setAttribute('aria-label',`Saída do toca-discos: ${tt.output.toUpperCase()}. Use as setas para selecionar LINE ou PHONO.`);
+                if(outSw)outSw.title=tt.output==='line'?'LINE · pré interno ligado, sinal de linha':'PHONO · cápsula MM, requer pré/RIAA externo';
+                outSw?.querySelectorAll('[data-m]').forEach(n => n.classList.toggle('is-on', n.dataset.m === tt.output));
+                pitchEl?.style.setProperty('--p', ((tt.pitch + 1) / 2).toFixed(3));
+                pitchEl?.setAttribute('aria-valuenow', pitchPct());
+                if(pitchEl)pitchEl.title = `Pitch ${pitchText()} · arraste (duplo clique para zerar)`;
                 // Painel de propriedades (se este aparelho estiver selecionado)
                 if (appState.interface.selectedDeviceId === dev.id) {
                     const q = id => document.getElementById(id);
@@ -7071,16 +7087,16 @@ const Hardware = (() => {
                 if (restartFile) startFilePlayback(dev);
                 dev.refreshTurntable();
             };
-            startBtn.addEventListener('pointerdown', stop);
-            startBtn.addEventListener('click', e => { stop(e); dev.ttToggleRun(); });
-            outSw.addEventListener('pointerdown', stop);
-            outSw.addEventListener('click', e => {stop(e);const mode=e.target.closest('[data-m]')?.dataset.m;dev.ttSetOutput(mode||(tt.output==='phono'?'line':'phono'));});
-            outSw.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();e.stopPropagation();dev.ttSetOutput(e.key==='ArrowLeft'||e.key==='Home'?'line':'phono');}});
-            Hardware.bindLinear(pitchEl,{get:()=>tt.pitch,set:dev.ttSetPitch,min:-1,max:1,format:()=>pitchText(),pointerToValue:event=>{
+            startBtn?.addEventListener('pointerdown', stop);
+            startBtn?.addEventListener('click', e => { stop(e); dev.ttToggleRun(); });
+            outSw?.addEventListener('pointerdown', stop);
+            outSw?.addEventListener('click', e => {stop(e);const mode=e.target.closest('[data-m]')?.dataset.m;dev.ttSetOutput(mode||(tt.output==='phono'?'line':'phono'));});
+            outSw?.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();e.stopPropagation();dev.ttSetOutput(e.key==='ArrowLeft'||e.key==='Home'?'line':'phono');}});
+            if(pitchEl)Hardware.bindLinear(pitchEl,{get:()=>tt.pitch,set:dev.ttSetPitch,min:-1,max:1,format:()=>pitchText(),pointerToValue:event=>{
                 const track=pitchEl.querySelector('.at-pitch-track').getBoundingClientRect();
                 return 1-2*Math.max(0,Math.min(1,(event.clientY-track.top)/Math.max(1,track.height)));
             }});
-            pitchEl.addEventListener('dblclick',event=>{stop(event);dev.ttSetPitch(0);});
+            pitchEl?.addEventListener('dblclick',event=>{stop(event);dev.ttSetPitch(0);});
             dev.refreshTurntable();
         }
 

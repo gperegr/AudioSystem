@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="./styles/app.css?v=catalog-amp-hover-dots-v2">
     <link rel="stylesheet" href="./styles/signal-history.css?v=signal-history-v1">
     <link rel="stylesheet" href="./styles/equipment/adapters.css?v=physical-adapters-v1">
+    <link rel="stylesheet" href="./styles/equipment/glass-turntable.css?v=1">
     <link rel="stylesheet" href="./styles/equipment/tape-deck.css?v=materials-v1">
     <link rel="stylesheet" href="./styles/equipment/audio-interfaces.css?v=interfaces-standard-io-20261025">
     <link rel="stylesheet" href="./styles/equipment/materials.css?v=wood-steel-only-v1">
@@ -80,6 +81,7 @@
                             <span class="text-xs text-center text-gray-300">Toca-discos</span>
                         </div>
 <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="turntableLinear"><div aria-hidden="true"></div><span class="text-xs text-center text-gray-300">Toca-discos Tangencial</span></div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="turntableBelt"><div aria-hidden="true"></div><span class="text-xs text-center text-gray-300">Toca-discos · Prato de Vidro</span></div>
                         <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="turntableVintage">
                             <div aria-hidden="true"></div><span class="text-xs text-center text-gray-300">Toca-discos Vintage</span>
                         </div>
@@ -501,6 +503,58 @@
         <div class="headphone-body"><div class="headphone-object">
             <img class="headphone-artwork" src="./assets/headphones/over-ear.svg" alt="" loading="lazy" decoding="async" draggable="false" aria-hidden="true">
         </div><div class="headphone-controls"><span></span><div class="port" data-type="p2" data-io="in" data-node="in" data-signal="headphone" title="Entrada de fones · P2 TRS estéreo"></div><button class="btn-bt-pair">BLUETOOTH</button></div></div>
+    </template>
+
+    <template id="tpl-turntableBelt">
+        <div class="device-header"><span>Toca-discos · Prato de Vidro</span></div>
+        <div class="at-plinth">
+            <div class="at-deck">
+                <div class="at-front-mechanism">
+                    <div class="at-platter"><div class="at-record" data-tt="record"><div class="at-label"></div><div class="at-spindle"></div></div></div>
+                    <svg class="at-arm-svg" viewBox="0 0 558 120" aria-hidden="true">
+                        <path d="M430 91h46v7h-46Z" fill="#171b1b" stroke="#626863"/>
+                        <path d="M445 46h15v45h-15Z" fill="#202625" stroke="#636c66"/>
+                        <path d="M448 49v39" stroke="#8c9790" stroke-width="1.2"/>
+                        <rect x="432" y="27" width="38" height="27" rx="10" fill="#101615" stroke="#59635e"/>
+                        <circle cx="451" cy="39" r="10" fill="#2d3430" stroke="#070b09" stroke-width="2"/>
+                        <circle cx="451" cy="39" r="4" fill="#777c70"/><path d="M448 39h6" stroke="#242923"/>
+                        <path d="M410 89V66h6m-4 1 5-12" fill="none" stroke="#181d19" stroke-width="3"/>
+                        <g class="at-arm">
+                            <rect x="473" y="26" width="40" height="27" rx="5" fill="#242a26" stroke="#060a08" stroke-width="2"/>
+                            <path d="M478 28v23m4-23v23m4-23v23m4-23v23m4-23v23m4-23v23m4-23v23m4-23v23" stroke="#667067" opacity=".5"/>
+                            <path d="M482 39H451L173 65l-19 8" fill="none" stroke="#0b100d" stroke-width="9" stroke-linecap="round"/>
+                            <path d="M450 36 174 62l-18 8" fill="none" stroke="#747d71" stroke-width="1.5"/>
+                            <path d="m154 68 23-2 8 9-28 5Z" fill="#1c241d" stroke="#525e4c"/>
+                            <path d="m163 70 11-1m-10 4 11-1" stroke="#050805" stroke-width="2"/>
+                            <path d="m159 79 15-2 1 7-14 2Z" fill="#ceae40" stroke="#7b6526"/>
+                            <path d="m164 85-1 6" stroke="#d0d0ad"/><path d="m182 73 9-3" stroke="#7f8778" stroke-width="2"/>
+                            <circle cx="160" cy="72" r="1.2" fill="#aab39e"/><circle cx="176" cy="71" r="1.2" fill="#aab39e"/>
+                        </g>
+                    </svg>
+                </div>
+                <div class="at-lid-scene" aria-hidden="true">
+                    <span class="at-lid-hinge at-lid-hinge-left"></span><span class="at-lid-hinge at-lid-hinge-right"></span>
+                    <div class="at-dust-cover">
+                        <span class="at-cover-roof"></span><span class="at-cover-front"></span><span class="at-cover-back"></span>
+                        <span class="at-cover-side at-cover-side-left"></span><span class="at-cover-side at-cover-side-right"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="at-controls"><div class="at-power-slot" data-power-slot><button class="power-btn" title="Ligar / Desligar"></button></div></div>
+            <div class="at-io">
+                <span>SAÍDA · RCA R/L</span>
+                <div class="at-io-ports">
+                    <div class="at-io-ch">
+                        <span class="text-red-400">R</span>
+                        <div class="port" data-type="rca-r" data-io="out" data-node="outR" title="Saída RCA direito R"></div>
+                    </div>
+                    <div class="at-io-ch">
+                        <span class="text-gray-300">L</span>
+                        <div class="port" data-type="rca-l" data-io="out" data-node="outL" title="Saída RCA esquerdo L"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </template>
 
     <template id="tpl-turntable">
@@ -1374,7 +1428,7 @@
     <script src="./src/modules/adapter-design.js?v=physical-adapters-v3"></script>
     <script src="./src/modules/application-state.js?v=domain-state-v1"></script>
     <script src="./src/modules/signal-history.js?v=signal-history-v1"></script>
-    <script src="./src/i18n/languages.js?v=pt-en-v2"></script>
-    <script src="./script.js?v=split-app-source-v2"></script>
+    <script src="./src/i18n/languages.js?v=glass-turntable-v1"></script>
+    <script src="./script.js?v=glass-turntable-v1"></script>
 </body>
 </html>

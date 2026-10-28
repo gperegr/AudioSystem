@@ -44,6 +44,7 @@
                 dev.powerGain.gain.setValueAtTime(dev.powered ? 1.0 : 0.0, powerTime);
             }
             (dev.powerNodes || []).forEach(node => node.gain.setValueAtTime(dev.powered ? 1.0 : 0.0, powerTime));
+            if(dev.type==='turntableBelt'&&dev.powered)setSourcePlaying(dev,true);
             
             const btn = dev.el.querySelector('.power-btn');
             if (btn) {
@@ -315,14 +316,14 @@
                 el.classList.toggle('tt-motor', dev.powered && tt.running);
                 el.classList.toggle('tt-stopped', !tt.running);
                 record.style.setProperty('--tt-period', (1.8 / (1 + tt.pitch * PITCH_RANGE)).toFixed(3) + 's');
-                startBtn.setAttribute('aria-pressed', String(tt.running));
-                outSw.setAttribute('aria-checked', String(tt.output === 'phono'));
-                outSw.setAttribute('aria-label',`Saída do toca-discos: ${tt.output.toUpperCase()}. Use as setas para selecionar LINE ou PHONO.`);
-                outSw.title=tt.output==='line'?'LINE · pré interno ligado, sinal de linha':'PHONO · cápsula MM, requer pré/RIAA externo';
-                outSw.querySelectorAll('[data-m]').forEach(n => n.classList.toggle('is-on', n.dataset.m === tt.output));
-                pitchEl.style.setProperty('--p', ((tt.pitch + 1) / 2).toFixed(3));
-                pitchEl.setAttribute('aria-valuenow', pitchPct());
-                pitchEl.title = `Pitch ${pitchText()} · arraste (duplo clique para zerar)`;
+                startBtn?.setAttribute('aria-pressed', String(tt.running));
+                outSw?.setAttribute('aria-checked', String(tt.output === 'phono'));
+                outSw?.setAttribute('aria-label',`Saída do toca-discos: ${tt.output.toUpperCase()}. Use as setas para selecionar LINE ou PHONO.`);
+                if(outSw)outSw.title=tt.output==='line'?'LINE · pré interno ligado, sinal de linha':'PHONO · cápsula MM, requer pré/RIAA externo';
+                outSw?.querySelectorAll('[data-m]').forEach(n => n.classList.toggle('is-on', n.dataset.m === tt.output));
+                pitchEl?.style.setProperty('--p', ((tt.pitch + 1) / 2).toFixed(3));
+                pitchEl?.setAttribute('aria-valuenow', pitchPct());
+                if(pitchEl)pitchEl.title = `Pitch ${pitchText()} · arraste (duplo clique para zerar)`;
                 // Painel de propriedades (se este aparelho estiver selecionado)
                 if (appState.interface.selectedDeviceId === dev.id) {
                     const q = id => document.getElementById(id);
@@ -352,16 +353,16 @@
                 if (restartFile) startFilePlayback(dev);
                 dev.refreshTurntable();
             };
-            startBtn.addEventListener('pointerdown', stop);
-            startBtn.addEventListener('click', e => { stop(e); dev.ttToggleRun(); });
-            outSw.addEventListener('pointerdown', stop);
-            outSw.addEventListener('click', e => {stop(e);const mode=e.target.closest('[data-m]')?.dataset.m;dev.ttSetOutput(mode||(tt.output==='phono'?'line':'phono'));});
-            outSw.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();e.stopPropagation();dev.ttSetOutput(e.key==='ArrowLeft'||e.key==='Home'?'line':'phono');}});
-            Hardware.bindLinear(pitchEl,{get:()=>tt.pitch,set:dev.ttSetPitch,min:-1,max:1,format:()=>pitchText(),pointerToValue:event=>{
+            startBtn?.addEventListener('pointerdown', stop);
+            startBtn?.addEventListener('click', e => { stop(e); dev.ttToggleRun(); });
+            outSw?.addEventListener('pointerdown', stop);
+            outSw?.addEventListener('click', e => {stop(e);const mode=e.target.closest('[data-m]')?.dataset.m;dev.ttSetOutput(mode||(tt.output==='phono'?'line':'phono'));});
+            outSw?.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();e.stopPropagation();dev.ttSetOutput(e.key==='ArrowLeft'||e.key==='Home'?'line':'phono');}});
+            if(pitchEl)Hardware.bindLinear(pitchEl,{get:()=>tt.pitch,set:dev.ttSetPitch,min:-1,max:1,format:()=>pitchText(),pointerToValue:event=>{
                 const track=pitchEl.querySelector('.at-pitch-track').getBoundingClientRect();
                 return 1-2*Math.max(0,Math.min(1,(event.clientY-track.top)/Math.max(1,track.height)));
             }});
-            pitchEl.addEventListener('dblclick',event=>{stop(event);dev.ttSetPitch(0);});
+            pitchEl?.addEventListener('dblclick',event=>{stop(event);dev.ttSetPitch(0);});
             dev.refreshTurntable();
         }
 
