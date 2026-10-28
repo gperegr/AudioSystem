@@ -182,16 +182,19 @@
         window.addEventListener('wheel',scheduleInspectorPosition,{passive:true});
         const inspectorCloseButton=document.getElementById('inspector-sidebar-pin');
         inspectorCloseButton.addEventListener('click',event=>{if(inspectorWindow.dataset.floating!=='true')return;event.preventDefault();event.stopImmediatePropagation();selectDevice(null);},{capture:true});
+        const parameterlessDeviceTypes=new Set(['cdCollection','pendantLamp','wallLampCage','wallLampDome']);
 
         function selectDevice(id, preserveSelection = false) {
             GuidedAccess.notify();
-            const floating=id&&matchMedia('(min-width:701px)').matches;
+            const dev=id?appState.project.devices[id]:null;
+            const hasParameters=!!dev&&!parameterlessDeviceTypes.has(dev.type);
+            const floating=hasParameters&&matchMedia('(min-width:701px)').matches;
             inspectorWindow.dataset.floating=String(!!floating);
             document.body.classList.toggle('inspector-floating',!!floating);
-            if(!id)document.body.classList.remove('mobile-properties-open');
-            inspectorAnchorDevice=id?appState.project.devices[id]?.el||null:null;
+            if(!id||!hasParameters)document.body.classList.remove('mobile-properties-open');
+            inspectorAnchorDevice=hasParameters?dev.el:null;
             inspectorWindow.style.removeProperty('left');inspectorWindow.style.removeProperty('top');
-            if(id&&!appState.project.restoringProject&&!compactLayout.matches)openSidebar('properties',4000);
+            if(hasParameters&&!appState.project.restoringProject&&!compactLayout.matches)openSidebar('properties',4000);
             if (id && appState.interface.selectedConnection) selectCable(null,false);
             disposeSpectrum();
             if (!preserveSelection) appStateStore.actions.setSelectedDevices(new Set(id ? [id] : []));
@@ -203,8 +206,14 @@
                 inspectorEmpty.classList.remove('hidden'); inspectorContent.classList.add('hidden');
                 return;
             }
+
+            if(dev&&!hasParameters){
+                inspectorEmpty.classList.add('hidden');
+                inspectorContent.classList.add('hidden');
+                inspectorWindow.classList.remove('inspector-window-enter');
+                return;
+            }
             
-            const dev = appState.project.devices[id];
             if (!dev) {
                 inspectorWindow.dataset.floating='false';document.body.classList.remove('inspector-floating','mobile-properties-open');
                 appStateStore.actions.setSelectedDevice(null);
