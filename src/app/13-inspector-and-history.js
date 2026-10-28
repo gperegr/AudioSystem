@@ -368,6 +368,17 @@
             html+=signalHistoryInspectorHtml(dev);
             Hardware.sync(dev);
             inspectorContent.innerHTML = conciseEquipmentInspector(html);
+            const hasParameterControl=!!inspectorContent.querySelector('button:not(.signal-history-name),input:not([type="hidden"]),select,textarea,[role="slider"]');
+            if(!hasParameterControl){
+                inspectorWindow.dataset.floating='false';
+                document.body.classList.remove('inspector-floating','mobile-properties-open');
+                inspectorAnchorDevice=null;
+                inspectorWindow.classList.remove('inspector-window-enter');
+                inspectorCloseButton.classList.remove('inspector-window-close');
+                inspectorContent.classList.add('hidden');
+                inspectorEmpty.classList.add('hidden');
+                return;
+            }
             bindSignalHistoryPreference();
             if(floating){
                 inspectorWindow.setAttribute('role','region');
