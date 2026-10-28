@@ -94,3 +94,10 @@
 .app-select-popup .app-select-option[aria-selected="true"]{background:var(--ui-active);color:var(--ui-text);}
 .app-select-popup .app-select-option.is-highlighted{background:var(--ui-hover);color:var(--ui-text);}
 .app-settings-content .settings-group>summary::after{color:var(--ui-secondary);}
+
+/* Ease palette changes across interface surfaces and text, without animating device artwork. */
+:root{--ui-palette-duration:420ms;--ui-palette-easing:cubic-bezier(.22,.61,.36,1);}
+:root[data-ui-palette] :is(#app-topbar,#equipment-catalog,#inspector,#inspector-empty,#inspector-content,.inspector-panel-header,.catalog-item,.catalog-item>span,.catalog-item svg,.app-settings>summary,.app-settings-content,.app-settings-content *,#app-topbar .canvas-tools button,.mobile-panel-controls button,.sidebar-pin,.sidebar-edge-tab,.tutorial-bar,.tutorial-bar button,.app-select-trigger,.app-select-popup,.app-select-option,.app-confirm-dialog,.tutorial-dialog,.headphone-calibration-dialog,.spectrum-panel,#audio-spectrum){
+  transition:background-color var(--ui-palette-duration) var(--ui-palette-easing),color var(--ui-palette-duration) var(--ui-palette-easing),border-color var(--ui-palette-duration) var(--ui-palette-easing),outline-color var(--ui-palette-duration) var(--ui-palette-easing),box-shadow var(--ui-palette-duration) var(--ui-palette-easing);
+}
+@media(prefers-reduced-motion:reduce){:root[data-ui-palette] :is(#app-topbar,#equipment-catalog,#inspector,#inspector-empty,#inspector-content,.inspector-panel-header,.catalog-item,.catalog-item>span,.catalog-item svg,.app-settings>summary,.app-settings-content,.app-settings-content *,#app-topbar .canvas-tools button,.mobile-panel-controls button,.sidebar-pin,.sidebar-edge-tab,.tutorial-bar,.tutorial-bar button,.app-select-trigger,.app-select-popup,.app-select-option,.app-confirm-dialog,.tutorial-dialog,.headphone-calibration-dialog,.spectrum-panel,#audio-spectrum){transition-duration:0s;}}
