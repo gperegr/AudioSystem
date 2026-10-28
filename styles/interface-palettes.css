@@ -156,3 +156,19 @@
 #inspector-content button:not(.signal-history-name):focus-visible{outline:2px solid var(--ui-accent)!important;}
 #inspector-content button:is(.is-on,.active,[aria-pressed="true"],[aria-selected="true"],[data-active="true"]){border:0!important;outline:0!important;box-shadow:none!important;}
 .app-settings-content .settings-color-dot{border:0!important;box-shadow:none!important;}
+/* Refined settings controls: language is a quiet segmented choice, toggles use a custom fill state. */
+.app-settings-content .language-options{gap:5px;padding:0;border:0!important;background:transparent;}
+.app-settings-content .language-options .language-choice{min-width:52px;min-height:42px;padding:0 14px;border:0!important;border-radius:11px;background:var(--ui-control);color:var(--ui-secondary);font-size:13px;letter-spacing:.035em;box-shadow:none!important;transition:background-color .18s ease,color .18s ease,transform .18s ease;}
+.app-settings-content .language-options .language-choice:hover{background:var(--ui-hover)!important;color:var(--ui-text);transform:translateY(-1px);}
+.app-settings-content .language-options .language-choice[aria-pressed="true"]{border:0!important;background:var(--ui-active)!important;color:var(--ui-text);box-shadow:inset 0 -2px var(--ui-accent)!important;}
+.app-settings-content .language-options .language-choice:focus-visible{outline:2px solid var(--ui-accent);outline-offset:3px;}
+.app-settings-content .connection-help-setting{position:relative;gap:13px;padding:14px;border:0!important;border-radius:12px;background:var(--ui-control);box-shadow:none!important;transition:background-color .18s ease,transform .18s ease;}
+.app-settings-content .connection-help-setting:hover{background:var(--ui-hover);transform:translateY(-1px);}
+.app-settings-content .connection-help-setting:has(input:checked){background:color-mix(in srgb,var(--ui-active) 48%,var(--ui-control));}
+.app-settings-content .connection-help-setting input[type="checkbox"]{appearance:none;-webkit-appearance:none;display:grid;place-items:center;width:23px;height:23px;margin:1px 0 0;border:0;border-radius:6px;background:var(--ui-side);color:var(--ui-text);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ui-muted) 35%,transparent);cursor:pointer;}
+.app-settings-content .connection-help-setting input[type="checkbox"]::before{content:"";width:6px;height:11px;border:solid currentColor;border-width:0 2px 2px 0;transform:rotate(45deg) scale(0);transition:transform .12s ease;}
+.app-settings-content .connection-help-setting input[type="checkbox"]:checked{background:var(--ui-accent);color:var(--ui-side);box-shadow:none;}
+.app-settings-content .connection-help-setting input[type="checkbox"]:checked::before{transform:rotate(45deg) scale(1);}
+.app-settings-content .connection-help-setting input[type="checkbox"]:focus-visible{outline:2px solid var(--ui-accent);outline-offset:3px;}
+.app-settings-content .connection-help-setting strong{color:var(--ui-text);font-size:13px;}
+.app-settings-content .connection-help-setting small{color:var(--ui-secondary);font-size:12px;line-height:1.5;}
