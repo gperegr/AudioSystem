@@ -30,7 +30,7 @@
 .device-node.device-type-turntableDirect .at-io>span,
 .device-node.device-type-turntableDirect .at-io-ch>span{color:#253639;font-size:7px;letter-spacing:.06em;}
 .device-node.device-type-turntableDirect .at-startstop{border-radius:1px;background:linear-gradient(#f5f6ee,#b2babb);box-shadow:inset 0 1px #fff,1px 2px 2px #0006;border:1px solid #6a797b;}
-.device-node.device-type-turntableDirect .at-power-slot{background:#283538;border-radius:50%;padding:2px;box-shadow:0 1px #fff8;}
+.device-node.device-type-turntableDirect .at-power-slot{box-sizing:border-box;width:32px;height:32px;flex:0 0 32px;background:#283538;border-radius:50%;padding:4px;box-shadow:0 1px #fff8;}
 .device-node.device-type-turntableDirect .at-ctl button[data-direct-speed],
 .device-node.device-type-turntableDirect .at-ctl button[data-direct-range],
 .device-node.device-type-turntableDirect .at-ctl button[data-direct-reset]{position:relative;min-width:26px;height:22px;padding:2px 4px;font:600 8px Inter,sans-serif;color:#243238;border:1px solid #7d898c;background:linear-gradient(#e4eae7,#a9b6b7);border-radius:1px;box-shadow:inset 0 1px #fff9,0 1px 2px #0004;}
@@ -47,3 +47,11 @@
 .device-node.device-type-turntableDirect .at-lid-scene{bottom:6px;}
 .device-node.device-type-turntableDirect .tt-lid-button{opacity:.45;}
 .device-node.device-type-turntableDirect:is(:hover,:focus-within) .tt-lid-button{opacity:1;}
+
+/* Keep range label and selector together at every inspector width. */
+#inspector-content .direct-inspector-controls{display:flex;flex-direction:column;gap:12px;}
+#inspector-content .direct-speed-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+#inspector-content .direct-pitch-range{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+#inspector-content .direct-pitch-range>span{min-width:0;font-size:14px;line-height:1.4;color:#cbd5e1;}
+#inspector-content .direct-pitch-range>[data-direct-range]{flex:0 0 92px;width:92px;}
+#inspector-content .direct-inspector-controls>[data-direct-reset]{width:100%;}

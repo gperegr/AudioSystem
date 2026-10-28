@@ -61,6 +61,18 @@ const root=path.resolve(__dirname,'..');
         assert.equal(await deck.locator('.port[data-io=in]').count(),0);
         assert.equal(await deck.locator('.at-controls button').count(),6);
         assert.equal(await deck.locator('[data-tt=pitch]').count(),1);
+        const controls=page.locator('#inspector-content .direct-inspector-controls');
+        assert.equal(await controls.locator('[data-direct-light]').count(),0,'inspector omits stylus light button');
+        const range=controls.locator('[data-direct-range]');
+        await range.click();assert((await range.textContent()).includes('±16'));await range.click();
+        for(const width of [1600,390]){
+            await page.setViewportSize({width,height:1100});
+            await page.evaluate(()=>document.body.classList.add('mobile-properties-open'));
+            const row=await controls.locator('.direct-pitch-range').evaluate(el=>{const text=el.querySelector('span').getBoundingClientRect(),button=el.querySelector('button').getBoundingClientRect(),row=el.getBoundingClientRect();return {centerGap:Math.abs((text.y+text.height/2)-(button.y+button.height/2)),gap:button.x-text.right,inside:button.right<=row.right+1};});
+            assert(row.centerGap<1&&row.gap>=10&&row.inside,'range label and selector aligned without overlap');
+        }
+        await page.setViewportSize({width:1600,height:1100});
+        await page.locator('#inspector').screenshot({path:'/tmp/direct-inspector.png'});
         await page.evaluate(()=>{
             const preview=document.createElement('div');preview.className='equipment-preview-world';
             preview.style.cssText='position:fixed;left:350px;top:300px;width:650px;height:200px;z-index:100000;pointer-events:auto;background:#263133';document.body.appendChild(preview);
@@ -73,6 +85,8 @@ const root=path.resolve(__dirname,'..');
         assert.equal(await deck.evaluate(el=>el.classList.contains('direct-light-on')),false);
         await lamp.click();
         assert.equal(await deck.evaluate(el=>el.classList.contains('direct-light-on')),true);
+        const power=await deck.locator('.at-power-slot').evaluate(el=>{const a=el.getBoundingClientRect(),b=el.querySelector('.power-btn').getBoundingClientRect();return {outer:Math.abs(a.width-a.height),inner:Math.abs(b.width-b.height)};});
+        assert(power.outer<1&&power.inner<1,'power housing and button stay circular');
         await deck.screenshot({path:'/tmp/direct-deck.png'});
         await require('./turntable-geometry.helpers.cjs')(page,deck,'direct');
         const dimensions=await deck.evaluate(el=>({width:el.offsetWidth,height:el.offsetHeight}));

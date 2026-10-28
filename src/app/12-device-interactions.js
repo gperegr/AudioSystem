@@ -409,7 +409,7 @@
             const range=dev.ttPitchRange(),pct = Math.round(tt.pitch * range * 10) / 10;
             return `
                 <div class="flex flex-col gap-4">
-                    ${dev.type==='turntableDirect'?'<div class="grid grid-cols-2 gap-2"><button type="button" class="tt-insp-btn" data-direct-speed="33">33⅓ RPM</button><button type="button" class="tt-insp-btn" data-direct-speed="45">45 RPM</button><label>Faixa de pitch<button type="button" class="tt-insp-btn" data-direct-range aria-label="Faixa de pitch">±8</button></label><button type="button" class="tt-insp-btn" data-direct-reset>Zerar pitch</button><button type="button" class="tt-insp-btn" data-direct-light>Luz da agulha</button></div>':''}
+                    ${dev.type==='turntableDirect'?'<div class="direct-inspector-controls"><div class="direct-speed-options"><button type="button" class="tt-insp-btn" data-direct-speed="33">33⅓ RPM</button><button type="button" class="tt-insp-btn" data-direct-speed="45">45 RPM</button></div><div class="direct-pitch-range"><span>Faixa de pitch</span><button type="button" class="tt-insp-btn" data-direct-range aria-label="Faixa de pitch">±8</button></div><button type="button" class="tt-insp-btn" data-direct-reset>Zerar pitch</button></div>':''}
                     <div class="flex flex-col gap-2">
                         <span class="text-sm text-gray-300">Start / Stop</span>
                         <button id="tt-insp-run" type="button" class="tt-insp-btn ${tt.running ? 'is-on' : ''}" aria-pressed="${tt.running}">INICIAR / PARAR</button>
