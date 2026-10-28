@@ -672,7 +672,11 @@
                     let discardPreviewLayer=null;
                     let alignmentGuideLayer=null;
                     const alignmentTolerance=10;
-                    function clearAlignmentGuides(){alignmentGuideLayer?.remove();alignmentGuideLayer=null;}
+                    function clearAlignmentGuides(remove=false){
+                        if(!alignmentGuideLayer)return;
+                        if(remove){alignmentGuideLayer.remove();alignmentGuideLayer=null;return;}
+                        alignmentGuideLayer.querySelectorAll('i').forEach(line=>line.style.display='none');
+                    }
                     function alignDragTargets(){
                         if(initialPositions.length===0)return;
                         const movingIds=new Set(initialPositions.map(item=>item.dev.id));
@@ -703,9 +707,9 @@
                             alignmentGuideLayer.innerHTML='<i class="alignment-guide-x"></i><i class="alignment-guide-y"></i>';document.body.appendChild(alignmentGuideLayer);
                         }
                         const bounds=canvas.getBoundingClientRect(),worldBounds=world.getBoundingClientRect(),gx=alignmentGuideLayer.querySelector('.alignment-guide-x'),gy=alignmentGuideLayer.querySelector('.alignment-guide-y');
-                        if(snapX){const x=worldBounds.left+snapX.value*view.zoom;gx.style.display='block';gx.style.left=`${bounds.left}px`;gx.style.top=`${Math.max(bounds.top,worldBounds.top)}px`;gx.style.width=`${bounds.width}px`;gx.style.height=`${Math.max(0,Math.min(bounds.bottom,worldBounds.bottom)-Math.max(bounds.top,worldBounds.top))}px`;gx.style.transform=`translateX(${x-bounds.left}px)`;}
+                        if(snapX){const x=worldBounds.left+snapX.value*view.zoom,top=Math.max(bounds.top,worldBounds.top),height=Math.max(0,Math.min(bounds.bottom,worldBounds.bottom)-top);gx.style.display='block';gx.style.left=`${x}px`;gx.style.top=`${top}px`;gx.style.width='1px';gx.style.height=`${height}px`;gx.style.transform='none';}
                         else gx.style.display='none';
-                        if(snapY){const y=worldBounds.top+snapY.value*view.zoom;gy.style.display='block';gy.style.left=`${Math.max(bounds.left,worldBounds.left)}px`;gy.style.top=`${bounds.top}px`;gy.style.height=`${bounds.height}px`;gy.style.width=`${Math.max(0,Math.min(bounds.right,worldBounds.right)-Math.max(bounds.left,worldBounds.left))}px`;gy.style.transform=`translateY(${y-bounds.top}px)`;}
+                        if(snapY){const y=worldBounds.top+snapY.value*view.zoom,left=Math.max(bounds.left,worldBounds.left),width=Math.max(0,Math.min(bounds.right,worldBounds.right)-left);gy.style.display='block';gy.style.left=`${left}px`;gy.style.top=`${y}px`;gy.style.width=`${width}px`;gy.style.height='1px';gy.style.transform='none';}
                         else gy.style.display='none';
                     }
                     const discardGrabOffsets=new Map(movingDevices.map(item=>{const rect=item.el.getBoundingClientRect();return [item.id,{dx:rect.left-startX,dy:rect.top-startY}];}));
@@ -747,7 +751,7 @@
                     }
 
                     movingDevices.forEach(item=>item.cancelPlacementMotion?.());
-                    const cancel = () => { clearDiscardPreview();clearAlignmentGuides();cancelAnimationFrame(frame); frame=0;movingDevices.forEach(item=>{item.el.style.translate='none';delete item.dragVisualPosition;item.el.classList.remove('equipment-dragging','history-settling');}); };
+                    const cancel = () => { clearDiscardPreview();clearAlignmentGuides(true);cancelAnimationFrame(frame); frame=0;movingDevices.forEach(item=>{item.el.style.translate='none';delete item.dragVisualPosition;item.el.classList.remove('equipment-dragging','history-settling');}); };
                     movingDevices.forEach(item=>item.cancelPlacementMotion=cancel);
                     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
                     let falling=new Map();
@@ -837,7 +841,7 @@
                         discardZone.setAttribute('aria-hidden','true');
                         window.removeEventListener('blur',abortDrag);
                         window.removeEventListener('keydown',cancelWithEscape);
-                        released=true;clearDiscardPreview();
+                        released=true;clearDiscardPreview();clearAlignmentGuides(true);
                         if(isDragging)movingDevices.forEach(item=>item.el.classList.add('history-settling'));
                         if(isDragging&&isOverCatalog(ev)){
                             playUiSound('discard');showDiscardCloud(ev.clientX,ev.clientY);
