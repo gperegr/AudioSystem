@@ -4729,7 +4729,7 @@ body.tutorial-open .app-settings-content {max-height:calc(100dvh - 90px - var(--
 .tutorial-spotlight>span {position:absolute;left:6px;top:0;transform:translateY(-50%);padding:2px 9px;border-radius:6px;background:#b0e9fc;color:#142733;font:700 12px/1.5 var(--font-ui,'Inter',sans-serif);}
 @media(max-width:700px){.tutorial-bar .tutorial-status {margin-left:0;flex:1;font-size:10px;}}
 
-.catalog-item{position:relative}.catalog-favorite{position:absolute;top:4px;right:4px;width:28px;height:28px;border:0;background:transparent;color:#91a5b3;font-size:19px;line-height:1;cursor:pointer}.catalog-favorite[aria-pressed="true"]{color:#f1be6e}.catalog-favorite[aria-pressed="true"]::after{content:"★";position:absolute;inset:0;display:grid;place-items:center}.catalog-favorite:focus-visible{outline:2px solid #8dc8f1;border-radius:4px}
+.catalog-item{position:relative}.catalog-favorite{position:absolute;top:4px;right:4px;width:28px;height:28px;border:0;background:transparent;color:#151c21;font-size:14px;line-height:1;cursor:pointer}.catalog-favorite[aria-pressed="true"]{color:#f1be6e}.catalog-favorite:focus-visible{outline:2px solid #8dc8f1;border-radius:4px}
 
 #audio-world .catalog-placement-preview{pointer-events:none!important;opacity:.5;filter:grayscale(1) brightness(1.4);outline:3px solid #7ce5b9;outline-offset:2px;z-index:1000!important;}
 #audio-world .catalog-placement-preview.is-invalid{outline-color:#ff6c71;filter:grayscale(1) sepia(.7) hue-rotate(310deg);}
