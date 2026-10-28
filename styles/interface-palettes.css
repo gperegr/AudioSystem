@@ -38,8 +38,6 @@
 #equipment-catalog .catalog-search>input[type=search]{border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;}
 #equipment-catalog .catalog-search>input[type=search]:focus-visible{outline:0!important;box-shadow:none!important;}
 #equipment-catalog input[type=search]::placeholder{color:var(--ui-muted);opacity:1;}
-#equipment-catalog .catalog-favorite:not([aria-pressed=true]){color:var(--ui-muted);opacity:.65;}
-#equipment-catalog .catalog-favorite[aria-pressed=true]{color:var(--ui-accent);}
 #inspector>.inspector-panel-header,#inspector-empty{background:var(--ui-side);border-color:var(--ui-border);color:var(--ui-secondary)!important;}
 #inspector .inspector-panel-header>span{color:var(--ui-text);}
 #inspector-content{color:var(--ui-text);}
@@ -143,11 +141,13 @@
 #inspector-content[data-hardware-panel] section{border-color:transparent!important;border-width:0!important;box-shadow:none!important;}
 #inspector-content :is(.tt-insp-btn,button:not(.signal-history-name)):not([data-state=protection]){border-color:transparent!important;}
 #inspector-content :is(.tt-insp-btn,button):is(.is-on,[aria-pressed=true]){border-color:transparent!important;}
-/* Favorite state uses shape as well as color: hollow off, filled on. */
-#equipment-catalog .catalog-favorite{-webkit-text-stroke:0;text-shadow:none;opacity:1;}
-#equipment-catalog .catalog-favorite:not([aria-pressed="true"]){color:var(--ui-muted);}
-#equipment-catalog .catalog-favorite[aria-pressed="true"]{color:var(--ui-accent);}
+/* A pale fill marks an available favorite; selection uses the outline color. */
+#equipment-catalog .catalog-favorite{display:grid;place-items:center;color:var(--ui-muted);opacity:1;text-shadow:none;}
+#equipment-catalog .catalog-favorite svg{width:16px;height:16px;overflow:visible;}
+#equipment-catalog .catalog-favorite path{stroke:var(--ui-muted);stroke-width:1.7;stroke-linejoin:round;fill:color-mix(in srgb,var(--ui-muted) 20%,white);transition:fill .18s ease;}
+#equipment-catalog .catalog-favorite[aria-pressed="true"] path{fill:var(--ui-muted);}
 #equipment-catalog .catalog-favorite:hover{transform:scale(1.12);}
+@media(prefers-reduced-motion:reduce){#equipment-catalog .catalog-favorite path{transition:none;}}
 /* Equipment parameter buttons communicate state with surface color, not outlines. */
 #inspector-content button:not(.signal-history-name){border:0!important;outline-offset:3px;box-shadow:none!important;}
 #inspector-content button:not(.signal-history-name):is(.is-on,.active,[aria-pressed="true"],[aria-selected="true"],[data-active="true"]){background:var(--ui-active)!important;color:var(--ui-text)!important;}
@@ -190,8 +190,6 @@
 
 /* Keep catalog chrome and secondary settings legible in every room palette. */
 #equipment-catalog .catalog-panel-header{background:var(--ui-side)!important;border-color:transparent!important;box-shadow:none;}
-#equipment-catalog .catalog-favorite:not([aria-pressed="true"]){color:var(--ui-muted)!important;opacity:1;}
-#equipment-catalog .catalog-favorite:not([aria-pressed="true"]):hover{color:var(--ui-text)!important;opacity:1;}
 .app-settings-content :is(.settings-particle-control,.listening-level-settings label){color:var(--ui-secondary);}
 .app-settings-content :is(.headphone-calibration-setting strong,.listening-level-settings strong){color:var(--ui-text);}
 .app-settings-content :is(.settings-particle-control output,.listening-level-settings output,.room-settings output){color:var(--ui-accent);}

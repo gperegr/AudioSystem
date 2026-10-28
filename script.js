@@ -5065,7 +5065,6 @@ const Hardware = (() => {
             if(!button)return;
             const favorite=quickData.favorites.includes(item.dataset.template);
             button.setAttribute('aria-pressed',String(favorite));
-            button.textContent=favorite?'★':'☆';
         });}
         function renderQuick(){
             quickCatalog.replaceChildren();
@@ -5075,7 +5074,7 @@ const Hardware = (() => {
             }
             updateStars();AudioSystemLanguage.translateTree?.(quickCatalog);
         }
-        catalogItems.forEach(item=>{const button=document.createElement('button');button.type='button';button.className='catalog-favorite';button.title='Favoritar equipamento';button.setAttribute('aria-label','Favoritar equipamento');button.textContent='☆';button.addEventListener('pointerdown',event=>event.stopPropagation());button.addEventListener('click',event=>{event.stopPropagation();const type=item.dataset.template;quickData.favorites=quickData.favorites.includes(type)?quickData.favorites.filter(t=>t!==type):[type,...quickData.favorites].slice(0,12);saveQuick();renderQuick();});item.appendChild(button);});
+        catalogItems.forEach(item=>{const button=document.createElement('button');button.type='button';button.className='catalog-favorite';button.title='Favoritar equipamento';button.setAttribute('aria-label','Favoritar equipamento');button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.9 6.5.9-4.7 4.6 1.1 6.5-5.7-3.1-5.7 3.1 1.1-6.5L2.7 9.8l6.5-.9Z"/></svg>';button.addEventListener('pointerdown',event=>event.stopPropagation());button.addEventListener('click',event=>{event.stopPropagation();const type=item.dataset.template;quickData.favorites=quickData.favorites.includes(type)?quickData.favorites.filter(t=>t!==type):[type,...quickData.favorites].slice(0,12);saveQuick();renderQuick();});item.appendChild(button);});
         equipmentSearch.addEventListener('input',()=>{quickCatalog.hidden=!!equipmentSearch.value.trim();});
         renderQuick();
 
