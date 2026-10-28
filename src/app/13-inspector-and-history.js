@@ -199,7 +199,6 @@
             }
             if(dev.state.damage)html+='<div class="equipment-damage-notice" role="status">DANIFICADO · Sobrecarga elétrica simulada. Substitua o equipamento por outro do catálogo.</div>';
             html+=amplificationInspectorHtml(dev);
-            html+=signalHistoryInspectorHtml(dev);
 
             if(dev.type==='streamIntegrated'){html+=streamIntegratedInspector(dev);
             }else if(SIGNAL_GENERATOR_TYPES.has(dev.type)){html+=signalInspectorHtml(dev);
@@ -329,6 +328,7 @@
             html+=portSignalsInspectorHtml(dev);
             html+=listeningInspectorHtml(dev);
             if(dev.el.querySelector('.speaker-grille'))html+=`<button type="button" class="tt-insp-btn" id="inspector-grille" aria-pressed="${dev.el.classList.contains('grille-off')}">GRADE</button>`;
+            html+=signalHistoryInspectorHtml(dev);
             Hardware.sync(dev);
             inspectorContent.innerHTML = conciseEquipmentInspector(html);
             Hardware.inspector(inspectorContent);

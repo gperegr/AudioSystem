@@ -4,7 +4,7 @@
         const signalHistoryText=text=>window.AudioSystemLanguage?.translate(text)||text;
         function signalHistoryInspectorHtml(dev){
             if(!dev.el.querySelector('.port')&&!dev.btPairedId)return '';
-            return '<details id="signal-history-panel" class="signal-history-panel" open><summary>Histórico do sinal</summary><div class="signal-history-legend"><span>Entrada</span><span>Saída</span><small>12 s · −60 → 0 dBFS</small></div><small>Maior nível entre portas e canais. Escala digital, não volume real.</small><small>Spotify não passa por estes medidores.</small><div id="signal-history-rows" data-signal-history-rows></div></details>';
+            return '<details id="signal-history-panel" class="signal-history-panel"><summary>Histórico do sinal</summary><div class="signal-history-legend"><span>Entrada</span><span>Saída</span><small>12 s · −60 → 0 dBFS</small></div><small>Maior nível entre portas e canais. Escala digital, não volume real.</small><small>Spotify não passa por estes medidores.</small><div id="signal-history-rows" data-signal-history-rows></div></details>';
         }
         function disposeSignalHistoryRecord(record){
             for(const [source,target,output]of record.links){try{source.disconnect(target,output);}catch{}}

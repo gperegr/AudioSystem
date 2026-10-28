@@ -36,14 +36,18 @@ const root=path.resolve(__dirname,'..');
         });
         await page.evaluate(()=>document.getElementById('inspector-sidebar-pin').click());
         const panel=page.locator('#signal-history-panel');await panel.scrollIntoViewIfNeeded();
+        assert(await panel.evaluate(el=>!el.open&&!el.nextElementSibling),'history starts collapsed after every other inspector element');
+        await panel.locator('summary').click();
         await page.waitForFunction(()=>document.querySelectorAll('.signal-history-device').length===2);
         await page.waitForFunction(()=>[...document.querySelectorAll('.signal-history-reading[data-direction=in]')].some(row=>row.dataset.state==='signal'));
         assert.match(await panel.innerText(),/Signal history/);
         assert(!/Histórico|Entrada|Saída|Saturação/.test(await panel.innerText()));
         await page.evaluate(()=>__signal.toggleDevicePower(__signal.appState.project.devices['history-amp']));
+        await panel.scrollIntoViewIfNeeded();await panel.locator('summary').click();
         await page.waitForFunction(()=>document.querySelector('.signal-history-device [data-direction=out]')?.dataset.state==='silent');
         assert.equal(await panel.locator('.signal-history-device').first().locator('[data-direction=in]').getAttribute('data-state'),'signal','an unpowered amp still has an incoming signal');
         await page.evaluate(()=>__signal.toggleDevicePower(__signal.appState.project.devices['history-amp']));
+        await panel.scrollIntoViewIfNeeded();await panel.locator('summary').click();
         // Attenuating a real incoming tone produces a low-level indication.
         await page.evaluate(()=>__signal.gain.gain.value=.003);
         await page.waitForFunction(()=>[...document.querySelectorAll('.signal-history-reading')].some(row=>row.dataset.state==='low'));
@@ -67,7 +71,7 @@ const root=path.resolve(__dirname,'..');
             for(const type of Object.keys(api.names)){
                 api.createDevice(type,100,100,'history-contract');
                 const panel=document.getElementById('signal-history-panel');
-                if(panel){panel.scrollIntoView({block:'center'});api.updateSignalHistory(performance.now());if(!api.records.has('history-contract'))throw Error(type+' has no signal history');count++;}
+                if(panel){if(panel.open||panel.nextElementSibling)throw Error(type+' history is not collapsed and last');panel.open=true;panel.scrollIntoView({block:'center'});api.updateSignalHistory(performance.now());if(!api.records.has('history-contract'))throw Error(type+' has no signal history');count++;}
                 api.deleteDevice(api.appState.project.devices['history-contract'],false);
                 if(api.records.size)throw Error(type+' leaked signal taps');
             }
