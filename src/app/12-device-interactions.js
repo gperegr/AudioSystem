@@ -707,9 +707,9 @@
                             alignmentGuideLayer.innerHTML='<i class="alignment-guide-x"></i><i class="alignment-guide-y"></i>';document.body.appendChild(alignmentGuideLayer);
                         }
                         const bounds=canvas.getBoundingClientRect(),worldBounds=world.getBoundingClientRect(),gx=alignmentGuideLayer.querySelector('.alignment-guide-x'),gy=alignmentGuideLayer.querySelector('.alignment-guide-y');
-                        if(snapX){const x=worldBounds.left+snapX.value*view.zoom,top=Math.max(bounds.top,worldBounds.top),height=Math.max(0,Math.min(bounds.bottom,worldBounds.bottom)-top);gx.style.display='block';gx.style.left=`${x}px`;gx.style.top=`${top}px`;gx.style.width='1px';gx.style.height=`${height}px`;gx.style.transform='none';}
+                        if(snapX){const x=worldBounds.left+snapX.value*view.zoom;gx.style.display='block';gx.style.left=`${x}px`;gx.style.top=`${bounds.top}px`;gx.style.width='1px';gx.style.height=`${bounds.height}px`;gx.style.transform='none';}
                         else gx.style.display='none';
-                        if(snapY){const y=worldBounds.top+snapY.value*view.zoom,left=Math.max(bounds.left,worldBounds.left),width=Math.max(0,Math.min(bounds.right,worldBounds.right)-left);gy.style.display='block';gy.style.left=`${left}px`;gy.style.top=`${y}px`;gy.style.width=`${width}px`;gy.style.height='1px';gy.style.transform='none';}
+                        if(snapY){const y=worldBounds.top+snapY.value*view.zoom;gy.style.display='block';gy.style.left=`${bounds.left}px`;gy.style.top=`${y}px`;gy.style.width=`${bounds.width}px`;gy.style.height='1px';gy.style.transform='none';}
                         else gy.style.display='none';
                     }
                     const discardGrabOffsets=new Map(movingDevices.map(item=>{const rect=item.el.getBoundingClientRect();return [item.id,{dx:rect.left-startX,dy:rect.top-startY}];}));
