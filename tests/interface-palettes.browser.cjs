@@ -51,7 +51,7 @@ const root=path.resolve(__dirname,'..');
                 const controls=await page.evaluate(()=>{
                     const color=el=>getComputedStyle(el);
                     const visible=el=>!!el.getClientRects().length;
-                    const buttons=[...document.querySelectorAll('.app-settings-content button:not(.app-select-trigger),.sidebar-pin')].filter(visible);
+                    const buttons=[...document.querySelectorAll('.app-settings>summary,.app-settings-content button,.tt-insp-btn,#app-topbar .canvas-tools button,.mobile-context-actions button,.mobile-panel-controls button,.sidebar-pin')].filter(visible);
                     const favorite=document.querySelector('.catalog-favorite:not([aria-pressed="true"])');
                     const header=document.querySelector('.catalog-panel-header');
                     const rgb=s=>s.match(/[\d.]+/g).slice(0,3).map(Number);
@@ -59,7 +59,7 @@ const root=path.resolve(__dirname,'..');
                     const contrast=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
                     const settingsBackground=color(document.querySelector('.settings-group')).backgroundColor;
                     return {
-                        borders:buttons.filter(el=>{const s=color(el);return s.borderTopWidth!=='0px'&&s.borderTopColor!=='rgba(0, 0, 0, 0)';}).map(el=>el.outerHTML.slice(0,160)),
+                        borders:buttons.filter(el=>color(el).borderTopWidth!=='0px').map(el=>el.outerHTML.slice(0,160)),
                         header:color(header).backgroundColor,side:color(document.querySelector('#equipment-catalog')).backgroundColor,
                         floatingCloseVisible:visible(document.querySelector('#inspector-sidebar-pin')),
                         favorite:contrast(color(favorite).color,color(favorite.closest('.catalog-item')).backgroundColor),

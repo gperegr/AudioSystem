@@ -217,3 +217,10 @@
 #inspector-content .sonic-curve-graph line{stroke:var(--ui-border);}
 #inspector-content .sonic-curve-graph path{stroke:var(--ui-accent);}
 #inspector>.mobile-inspector-close{background:var(--ui-control)!important;color:var(--ui-text)!important;}
+
+/* Interface buttons use palette fills without visible borders in any state. */
+:root[data-ui-palette] :is(#app-topbar,#equipment-catalog,#inspector,.app-settings-content,.app-select-popup,.tutorial-bar,.mobile-context-actions,.mobile-panel-controls,.app-confirm-dialog,.tutorial-dialog,.headphone-calibration-dialog) :is(button,summary,[role="button"]),
+:root[data-ui-palette] .app-settings>summary,
+:root[data-ui-palette] .app-select-trigger{
+  border:0!important;border-color:transparent!important;box-shadow:none!important;
+}
