@@ -101,3 +101,19 @@
   transition:background-color var(--ui-palette-duration) var(--ui-palette-easing),color var(--ui-palette-duration) var(--ui-palette-easing),border-color var(--ui-palette-duration) var(--ui-palette-easing),outline-color var(--ui-palette-duration) var(--ui-palette-easing),box-shadow var(--ui-palette-duration) var(--ui-palette-easing);
 }
 @media(prefers-reduced-motion:reduce){:root[data-ui-palette] :is(#app-topbar,#equipment-catalog,#inspector,#inspector-empty,#inspector-content,.inspector-panel-header,.catalog-item,.catalog-item>span,.catalog-item svg,.app-settings>summary,.app-settings-content,.app-settings-content *,#app-topbar .canvas-tools button,.mobile-panel-controls button,.sidebar-pin,.sidebar-edge-tab,.tutorial-bar,.tutorial-bar button,.app-select-trigger,.app-select-popup,.app-select-option,.app-confirm-dialog,.tutorial-dialog,.headphone-calibration-dialog,.spectrum-panel,#audio-spectrum){transition-duration:0s;}}
+
+/* Quiet UI surfaces: hierarchy comes from spacing, tone and soft depth, not heavy outlines. */
+#equipment-catalog .catalog-item{border-color:color-mix(in srgb,var(--ui-border) 34%,var(--ui-panel));box-shadow:0 1px 3px var(--ui-shadow);}
+#equipment-catalog .catalog-item:hover{border-color:transparent;box-shadow:0 3px 10px var(--ui-shadow);}
+#inspector-content[data-hardware-panel] section,
+#inspector-content :is(.sonic-profile,.sonic-signature-panel,.model-specs,.headphone-output-specs,.port-signal-panel,.listening-output-controls,.ai-inspector,.spectrum-panel,.signal-history-panel,.spotify-coverflow-inspector,.spotify-track-panel){border-color:transparent!important;box-shadow:0 1px 5px var(--ui-shadow);}
+#inspector-content :is(.model-spec,.sonic-band,.headphone-output-specs dl>div){border-color:transparent!important;box-shadow:0 1px 3px var(--ui-shadow);}
+#inspector-content :is(button,.tt-insp-btn):not([data-state=protection]){border-color:transparent!important;box-shadow:0 1px 3px var(--ui-shadow);}
+#inspector-content :is(button,.tt-insp-btn):is(.is-on,[aria-pressed=true]){box-shadow:0 2px 7px var(--ui-shadow),inset 0 0 0 1px color-mix(in srgb,var(--ui-accent) 30%,transparent);}
+.app-settings-content :is(.settings-group,.language-setting){border-color:transparent;box-shadow:0 1px 5px var(--ui-shadow);}
+.app-settings-content :is(button,select):not(#clear-system){border-color:transparent;box-shadow:0 1px 3px var(--ui-shadow);}
+.app-select-trigger,.app-select-popup,.app-confirm-dialog,.tutorial-dialog,.headphone-calibration-dialog,.tutorial-bar{border-color:color-mix(in srgb,var(--ui-border) 40%,transparent);box-shadow:0 8px 28px var(--ui-shadow);}
+#inspector[data-floating="true"]{border-color:transparent;}
+#inspector .inspector-panel-header{border-color:color-mix(in srgb,var(--ui-border) 30%,transparent);}
+/* Keep a clear keyboard focus ring and semantic signal states. */
+:is(#equipment-catalog,#inspector,.app-settings-content,.tutorial-bar) :is(button,input,select,summary):focus-visible{outline:2px solid var(--ui-accent);outline-offset:2px;}
