@@ -186,6 +186,7 @@
             const floating=id&&matchMedia('(min-width:701px)').matches;
             inspectorWindow.dataset.floating=String(!!floating);
             document.body.classList.toggle('inspector-floating',!!floating);
+            if(!id)document.body.classList.remove('mobile-properties-open');
             inspectorAnchorDevice=id?appState.project.devices[id]?.el||null:null;
             inspectorWindow.style.removeProperty('left');inspectorWindow.style.removeProperty('top');
             if(id&&!appState.project.restoringProject&&!compactLayout.matches)openSidebar('properties',4000);
@@ -203,6 +204,7 @@
             
             const dev = appState.project.devices[id];
             if (!dev) {
+                inspectorWindow.dataset.floating='false';document.body.classList.remove('inspector-floating','mobile-properties-open');
                 appStateStore.actions.setSelectedDevice(null);
                 document.getElementById('inspector-title').textContent='Selecione um equipamento';
                 inspectorEmpty.classList.remove('hidden'); inspectorContent.classList.add('hidden');

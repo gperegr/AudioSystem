@@ -4763,3 +4763,7 @@ body.inspector-floating #inspector-sidebar-toggle{display:none!important;}
 #inspector[data-floating="true"].inspector-window-enter{transform:none!important;animation:inspector-elastic-fill 520ms cubic-bezier(.2,.8,.25,1) both;transform-origin:center;}
 #inspector[data-floating="true"]:not(.inspector-window-enter){scale:1;}
 @media(prefers-reduced-motion:reduce){#inspector[data-floating="true"].inspector-window-enter{animation:none;scale:1;opacity:1;clip-path:none;}}
+/* The legacy right rail must never occupy or paint a blank area. */
+#inspector:not([data-floating="true"]){display:none!important;}
+#inspector-sidebar-toggle,.sidebar-edge-tab-right{display:none!important;}
+@media(max-width:700px){body.mobile-properties-open #inspector:not([data-floating="true"]){display:flex!important;}}
