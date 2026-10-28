@@ -5063,7 +5063,13 @@ const Hardware = (() => {
         const clean=list=>Array.isArray(list)?[...new Set(list.filter(type=>validTypes.has(type)))].slice(0,12):[];
         quickData={favorites:clean(quickData.favorites)};
         function saveQuick(){try{localStorage.setItem(quickKey,JSON.stringify(quickData));}catch{}}
-        function updateStars(){catalogItems.forEach(item=>{const button=item.querySelector('.catalog-favorite');button?.setAttribute('aria-pressed',String(quickData.favorites.includes(item.dataset.template)));});}
+        function updateStars(){catalogItems.forEach(item=>{
+            const button=item.querySelector('.catalog-favorite');
+            if(!button)return;
+            const favorite=quickData.favorites.includes(item.dataset.template);
+            button.setAttribute('aria-pressed',String(favorite));
+            button.textContent=favorite?'★':'☆';
+        });}
         function renderQuick(){
             quickCatalog.replaceChildren();
             for(const [title,types] of [['Favoritos',quickData.favorites]]){
@@ -5072,7 +5078,7 @@ const Hardware = (() => {
             }
             updateStars();AudioSystemLanguage.translateTree?.(quickCatalog);
         }
-        catalogItems.forEach(item=>{const button=document.createElement('button');button.type='button';button.className='catalog-favorite';button.title='Favoritar equipamento';button.setAttribute('aria-label','Favoritar equipamento');button.textContent='★';button.addEventListener('pointerdown',event=>event.stopPropagation());button.addEventListener('click',event=>{event.stopPropagation();const type=item.dataset.template;quickData.favorites=quickData.favorites.includes(type)?quickData.favorites.filter(t=>t!==type):[type,...quickData.favorites].slice(0,12);saveQuick();renderQuick();});item.appendChild(button);});
+        catalogItems.forEach(item=>{const button=document.createElement('button');button.type='button';button.className='catalog-favorite';button.title='Favoritar equipamento';button.setAttribute('aria-label','Favoritar equipamento');button.textContent='☆';button.addEventListener('pointerdown',event=>event.stopPropagation());button.addEventListener('click',event=>{event.stopPropagation();const type=item.dataset.template;quickData.favorites=quickData.favorites.includes(type)?quickData.favorites.filter(t=>t!==type):[type,...quickData.favorites].slice(0,12);saveQuick();renderQuick();});item.appendChild(button);});
         equipmentSearch.addEventListener('input',()=>{quickCatalog.hidden=!!equipmentSearch.value.trim();});
         renderQuick();
 
