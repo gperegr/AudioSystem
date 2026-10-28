@@ -364,6 +364,9 @@
                 inspectorCloseButton.setAttribute('aria-label',document.documentElement.lang==='en'?'Close parameters':'Fechar parâmetros');
                 inspectorCloseButton.title=inspectorCloseButton.getAttribute('aria-label');
                 scheduleInspectorPosition();
+                inspectorWindow.classList.remove('inspector-window-enter');
+                void inspectorWindow.offsetWidth;
+                inspectorWindow.classList.add('inspector-window-enter');
             }else inspectorCloseButton.classList.remove('inspector-window-close');
             Hardware.inspector(inspectorContent);
             MenuSlider.mount(inspectorContent);
