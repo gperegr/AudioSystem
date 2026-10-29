@@ -7701,7 +7701,7 @@ const Hardware = (() => {
                     }
 
                     movingDevices.forEach(item=>item.cancelPlacementMotion?.());
-                    const cancel = () => { clearDiscardPreview();clearAlignmentGuides(true);cancelAnimationFrame(frame); frame=0;movingDevices.forEach(item=>{item.el.style.translate='none';delete item.dragVisualPosition;item.el.classList.remove('equipment-dragging','history-settling');}); };
+                    const cancel = () => { document.body.classList.remove('equipment-drag-active');clearDiscardPreview();clearAlignmentGuides(true);cancelAnimationFrame(frame); frame=0;movingDevices.forEach(item=>{item.el.style.translate='none';delete item.dragVisualPosition;item.el.classList.remove('equipment-dragging','history-settling');}); };
                     movingDevices.forEach(item=>item.cancelPlacementMotion=cancel);
                     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
                     let falling=new Map();
@@ -7770,6 +7770,7 @@ const Hardware = (() => {
                         ev.preventDefault();
                         isDragging = Math.hypot(ev.clientX-startX,ev.clientY-startY)>3||isDragging;
                         if(!isDragging)return;
+                        document.body.classList.add('equipment-drag-active');
                             movingDevices.forEach(item=>item.el.classList.add('equipment-dragging'));
                         aim(ev);updateDiscardPreview(ev);
                         equipmentCatalog.classList.add('discard-ready');
@@ -7787,7 +7788,7 @@ const Hardware = (() => {
                         discardZone.setAttribute('aria-hidden','true');
                         window.removeEventListener('blur',abortDrag);
                         window.removeEventListener('keydown',cancelWithEscape);
-                        released=true;clearDiscardPreview();clearAlignmentGuides(true);
+                        released=true;document.body.classList.remove('equipment-drag-active');clearDiscardPreview();clearAlignmentGuides(true);scheduleInspectorPosition();
                         if(isDragging)movingDevices.forEach(item=>item.el.classList.add('history-settling'));
                         if(isDragging&&isOverCatalog(ev)){
                             playUiSound('discard');showDiscardCloud(ev.clientX,ev.clientY);
@@ -7802,7 +7803,7 @@ const Hardware = (() => {
                         cancel();
                         initialPositions.forEach(p=>{if(appState.project.devices[p.dev.id]){p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;}});
                         equipmentCatalog.classList.remove('return-drag-over','discard-ready');discardZone.setAttribute('aria-hidden','true');
-                        updateCables();
+                        updateCables();scheduleInspectorPosition();
                     };
                     const cancelWithEscape=event=>{if(event.key==='Escape'){event.preventDefault();abortDrag();}};
                     window.addEventListener('blur',abortDrag);

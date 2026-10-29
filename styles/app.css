@@ -4791,3 +4791,6 @@ body.inspector-floating #inspector-sidebar-toggle{display:none!important;}
 @media(max-width:700px){
     #equipment-catalog{--catalog-search-space:68px;}
 }
+
+/* Hide device properties only while a device is actively being dragged. */
+body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events:none!important;}
