@@ -179,7 +179,6 @@ On first launch, the invitation appears after calibration is completed or skippe
 
 **Settings → Setup examples** is a separate feature with five systems on furniture: CD/MP3 with active speakers; external input with an amplifier and passive speakers; an equalization lab; tape with shared headphones; and a Spotify collection with a turntable. The menu lists each example's requirements and first step. Replacing a nonempty canvas requires confirmation. Export your project first if you may need it later. The app stores the current assembly locally before replacement and restores it with its audio files if loading fails. Replacement requires local storage and resets movement history. Sources start paused, with no active capture.
 
-Gravity is off for new preferences; existing saved choices are preserved.
 
 To validate guided access, run `node --test tests/guided-access.test.cjs`. The optional browser check uses Playwright and Chromium: start a local server, then run `node tests/guided-access.browser.cjs` (`TEST_BASE_URL` and `CHROMIUM_PATH` can change the address and executable).
 

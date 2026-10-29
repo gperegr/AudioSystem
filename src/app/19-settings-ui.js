@@ -1,15 +1,12 @@
 /* Settings panel, theme controls, custom selects, and settings interactions. */
         const settingsMenu=document.createElement('details');settingsMenu.className='app-settings';
-        settingsMenu.innerHTML='<summary aria-label="Abrir configurações"><svg class="settings-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7.1"/><circle cx="12" cy="12" r="2.7"/><path d="M12 1.8v3.1m0 14.2v3.1M1.8 12h3.1m14.2 0h3.1M4.3 4.3l2.2 2.2m11 11 2.2 2.2m0-15.4-2.2 2.2m-11 11-2.2 2.2"/></svg><span>Configurações</span></summary>';
+        settingsMenu.innerHTML='<summary aria-label="Abrir configurações" title="Configurações"><svg class="settings-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7.1"/><circle cx="12" cy="12" r="2.7"/><path d="M12 1.8v3.1m0 14.2v3.1M1.8 12h3.1m14.2 0h3.1M4.3 4.3l2.2 2.2m11 11 2.2 2.2m0-15.4-2.2 2.2m-11 11-2.2 2.2"/></svg></summary>';
         clearCatalogFooter.className='app-settings-content';
         const themeSection=document.createElement('section');themeSection.className='settings-theme-section';themeSection.appendChild(canvasThemeControl);themeSection.appendChild(canvasGridControl);themeSection.appendChild(canvasBackdropControl);themeSection.appendChild(canvasTimeControl);
         const connectionHelpSetting=document.createElement('label');connectionHelpSetting.className='connection-help-setting';connectionHelpSetting.innerHTML='<input id="connection-help-enabled" type="checkbox"><span><strong>Orientação de conexões</strong><small>Mostra dicas e impede ligações incompatíveis. Desative para permitir erros quando os plugues encaixarem.</small></span>';
         const interactionSection=document.createElement('section');interactionSection.className='settings-theme-section';
         const connectionHelpCheckbox=connectionHelpSetting.querySelector('input');connectionHelpCheckbox.checked=appState.preferences.connectionGuidanceEnabled;interactionSection.appendChild(connectionHelpSetting);
         connectionHelpCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('connectionGuidanceEnabled',connectionHelpCheckbox.checked);hideContextHelp();updatePortGuidance(true);scheduleAppPreferencesSave();});
-        const gravitySetting=document.createElement('label');gravitySetting.className='connection-help-setting';gravitySetting.innerHTML='<input id="gravity-enabled" type="checkbox"><span><strong>Gravidade</strong><small>Ao soltar, equipamentos e móveis descem até o piso ou o primeiro apoio. Não afeta luminárias nem vinis.</small></span>';
-        const gravityCheckbox=gravitySetting.querySelector('input');gravityCheckbox.checked=appState.preferences.gravityEnabled;interactionSection.appendChild(gravitySetting);
-        gravityCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('gravityEnabled',gravityCheckbox.checked);scheduleAppPreferencesSave();});
         const developerModeSetting=document.createElement('label');developerModeSetting.className='connection-help-setting';developerModeSetting.innerHTML='<input id="developer-mode-enabled" type="checkbox"><span><strong>Modo desenvolvedor</strong><small>Mostra a categoria DEBUG e os modelos de teste no catálogo.</small></span>';
         const developerModeCheckbox=developerModeSetting.querySelector('input');developerModeCheckbox.checked=appState.preferences.developerModeEnabled;
         developerModeCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('developerModeEnabled',developerModeCheckbox.checked);equipmentSearch.dispatchEvent(new Event('input'));scheduleAppPreferencesSave();});
@@ -104,15 +101,15 @@
             languageSetting,
             settingsGroup('Visual','<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="1.5"/><path d="m4 17 5-5 3 3 3-4 5 6"/>',[themeSection],true),
             settingsGroup('Interação','<path d="M8 12V5a2 2 0 0 1 4 0v5m0-3a2 2 0 0 1 4 0v4m0-2a2 2 0 0 1 4 0v6c0 4-3 6-7 6h-2c-3 0-5-2-6-5l-2-4a2 2 0 0 1 3-2l2 2"/>',[interactionSection]),
-            settingsGroup('Escuta','<path d="M4 13v-2a8 8 0 0 1 16 0v2M4 13h3v7H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 1-2Zm16 0h-3v7h2a2 2 0 0 0 2-2v-3a2 2 0 0 0-1-2Z"/>',[roomSection,headphoneCalibrationSetting,listeningLevels]),
-            settingsGroup('Projeto','<path d="M3 7V4h7l2 3h9v13H3z"/>',[projectTools,clearButton]),
-            settingsGroup('Avançado','<path d="m8 7-5 5 5 5m8-10 5 5-5 5M14 4l-4 16"/>',[developerModeSetting])
+            settingsGroup('Som','<path d="M4 13v-2a8 8 0 0 1 16 0v2M4 13h3v7H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 1-2Zm16 0h-3v7h2a2 2 0 0 0 2-2v-3a2 2 0 0 0-1-2Z"/>',[roomSection,headphoneCalibrationSetting,listeningLevels]),
+            settingsGroup('Avançado','<path d="m8 7-5 5 5 5m8-10 5 5-5 5M14 4l-4 16"/>',[developerModeSetting]),
+            clearButton
         );
 
         settingsMenu.appendChild(clearCatalogFooter);
         MenuSlider.mount(settingsMenu);
         const topbarControls=document.getElementById('app-topbar').lastElementChild;
-        topbarControls.appendChild(settingsMenu);
+        topbarControls.append(projectTools,settingsMenu);
         topbarControls.insertBefore(document.querySelector('.canvas-tools'),settingsMenu);
         document.addEventListener('pointerdown',event=>{if(settingsMenu.open&&!settingsMenu.contains(event.target)&&!event.target.closest('.app-select-popup'))settingsMenu.open=false;});
         document.addEventListener('keydown',event=>{if(event.key==='Escape'&&settingsMenu.open){settingsMenu.open=false;settingsMenu.querySelector('summary').focus();}});

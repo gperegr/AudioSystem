@@ -13,7 +13,6 @@
         function readAppPreferences(){try{const value=JSON.parse(localStorage.getItem(APP_PREFERENCES_KEY)||'{}');return value&&typeof value==='object'?value:{};}catch{return {};}}
         const savedAppPreferences=readAppPreferences();
         appStateStore.actions.setPreference('connectionGuidanceEnabled',savedAppPreferences.connectionGuidanceEnabled!==false);
-        appStateStore.actions.setPreference('gravityEnabled',savedAppPreferences.gravityEnabled===true);
         appStateStore.actions.setPreference('roomParticleAmount',Number.isFinite(savedAppPreferences.roomParticleAmount)?Math.max(0,Math.min(100,savedAppPreferences.roomParticleAmount/(savedAppPreferences.particleScaleVersion===2?1:2))):25);
         if(Number.isFinite(savedAppPreferences.roomParticleAmount)&&savedAppPreferences.particleScaleVersion!==2){
             try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({...savedAppPreferences,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2}));}catch{}
@@ -31,7 +30,7 @@
             appPreferencesSaveTimer=setTimeout(()=>{
                 if(!canvas.clientWidth||!canvas.clientHeight)return;
                 const focusX=(canvas.clientWidth/2-view.x)/view.zoom,focusY=(canvas.clientHeight/2-view.y)/view.zoom;
-                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:appState.canvas.theme,grid:appState.canvas.grid,backdrop:appState.canvas.backdrop,time:appState.canvas.time,connectionGuidanceEnabled:appState.preferences.connectionGuidanceEnabled,gravityEnabled:appState.preferences.gravityEnabled,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2,developerMode:appState.preferences.developerModeEnabled,headphonePromptSeen:appState.preferences.headphonePromptSeen,inspectorPinned:sidebarPinned.properties,signalHistoryExpanded,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble,zoom:view.zoom,focusX,focusY}));}catch{}
+                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:appState.canvas.theme,grid:appState.canvas.grid,backdrop:appState.canvas.backdrop,time:appState.canvas.time,connectionGuidanceEnabled:appState.preferences.connectionGuidanceEnabled,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2,developerMode:appState.preferences.developerModeEnabled,headphonePromptSeen:appState.preferences.headphonePromptSeen,inspectorPinned:sidebarPinned.properties,signalHistoryExpanded,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble,zoom:view.zoom,focusX,focusY}));}catch{}
             },450);
         }
         const appDialog=document.getElementById('app-confirm-dialog');

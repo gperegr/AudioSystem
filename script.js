@@ -1381,7 +1381,6 @@ const Hardware = (() => {
         function readAppPreferences(){try{const value=JSON.parse(localStorage.getItem(APP_PREFERENCES_KEY)||'{}');return value&&typeof value==='object'?value:{};}catch{return {};}}
         const savedAppPreferences=readAppPreferences();
         appStateStore.actions.setPreference('connectionGuidanceEnabled',savedAppPreferences.connectionGuidanceEnabled!==false);
-        appStateStore.actions.setPreference('gravityEnabled',savedAppPreferences.gravityEnabled===true);
         appStateStore.actions.setPreference('roomParticleAmount',Number.isFinite(savedAppPreferences.roomParticleAmount)?Math.max(0,Math.min(100,savedAppPreferences.roomParticleAmount/(savedAppPreferences.particleScaleVersion===2?1:2))):25);
         if(Number.isFinite(savedAppPreferences.roomParticleAmount)&&savedAppPreferences.particleScaleVersion!==2){
             try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({...savedAppPreferences,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2}));}catch{}
@@ -1399,7 +1398,7 @@ const Hardware = (() => {
             appPreferencesSaveTimer=setTimeout(()=>{
                 if(!canvas.clientWidth||!canvas.clientHeight)return;
                 const focusX=(canvas.clientWidth/2-view.x)/view.zoom,focusY=(canvas.clientHeight/2-view.y)/view.zoom;
-                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:appState.canvas.theme,grid:appState.canvas.grid,backdrop:appState.canvas.backdrop,time:appState.canvas.time,connectionGuidanceEnabled:appState.preferences.connectionGuidanceEnabled,gravityEnabled:appState.preferences.gravityEnabled,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2,developerMode:appState.preferences.developerModeEnabled,headphonePromptSeen:appState.preferences.headphonePromptSeen,inspectorPinned:sidebarPinned.properties,signalHistoryExpanded,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble,zoom:view.zoom,focusX,focusY}));}catch{}
+                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:appState.canvas.theme,grid:appState.canvas.grid,backdrop:appState.canvas.backdrop,time:appState.canvas.time,connectionGuidanceEnabled:appState.preferences.connectionGuidanceEnabled,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2,developerMode:appState.preferences.developerModeEnabled,headphonePromptSeen:appState.preferences.headphonePromptSeen,inspectorPinned:sidebarPinned.properties,signalHistoryExpanded,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble,zoom:view.zoom,focusX,focusY}));}catch{}
             },450);
         }
         const appDialog=document.getElementById('app-confirm-dialog');
@@ -2489,44 +2488,6 @@ const Hardware = (() => {
             }
             return best?targets.map(p=>({...p,x:p.x+best.dx,y:p.y+best.dy})):fallback;
         }
-        function gravityDropTargets(targets,ignored){
-            if(!appState.preferences.gravityEnabled||targets.some(p=>p.dev.type==='pendantLamp'||WALL_LAMP_TYPES[p.dev.type]))return targets;
-            const obstacles=Object.values(appState.project.devices).filter(dev=>!ignored.has(dev.id)&&dev.type!=='pendantLamp'&&!WALL_LAMP_TYPES[dev.type]).flatMap(dev=>placementShapes(dev,parseFloat(dev.el.style.left)||0,parseFloat(dev.el.style.top)||0).map(shape=>({...shape,dev})));
-            let distance=Math.min(...targets.map(p=>maxEquipmentBottom()-p.y-p.dev.el.offsetHeight));
-            for(const p of targets){
-                for(const shape of placementShapes(p.dev,p.x,p.y)){
-                    for(const obstacle of obstacles){
-                        const overlap=Math.min(shape.x+shape.width,obstacle.x+obstacle.width)-Math.max(shape.x,obstacle.x);
-                        if(overlap<Math.min(12,shape.width*.2))continue;
-                        const furniture=FURNITURE_TYPES[obstacle.dev.type],supportX=parseFloat(obstacle.dev.el.style.left)||0;
-                        const shelf=furniture?.surfaces.some(surface=>Math.abs(obstacle.y-(parseFloat(obstacle.dev.el.style.top)||0)-surface)<.5);
-                        const feet=hasStackFeet(p.dev)&&((furniture&&shelf&&p.x>=supportX+furniture.inset-1&&p.x+p.dev.el.offsetWidth<=supportX+furniture.width-furniture.inset+1)||(!furniture&&hasStackFeet(obstacle.dev)&&overlap>=Math.min(shape.width,obstacle.width)*.7))?STACK_FEET.height:0;
-                        const gap=obstacle.y-shape.y-shape.height;
-                        if(gap>=-.5)distance=Math.min(distance,Math.max(0,gap-feet));
-                    }
-                }
-            }
-            return distance>.5?targets.map(p=>({...p,y:p.y+distance})):targets;
-        }
-        function settleNewDeviceWithGravity(dev){
-            if(appState.project.restoringProject||!appState.preferences.gravityEnabled||dev.type==='pendantLamp'||WALL_LAMP_TYPES[dev.type])return;
-            const startY=parseFloat(dev.el.style.top)||0;
-            const target=gravityDropTargets([{dev,x:parseFloat(dev.el.style.left)||0,y:startY}],new Set([dev.id]))[0];
-            if(target.y-startY<1)return;
-            if(matchMedia('(prefers-reduced-motion: reduce)').matches){dev.el.style.top=target.y+'px';updateCables();scheduleProjectSave();return;}
-            const started=performance.now(),duration=Math.min(1150,540+(target.y-startY)*.24);
-            let frame=0;
-            const step=now=>{
-                if(!appState.project.devices[dev.id])return;
-                const progress=Math.min(1,(now-started)/duration),ease=progress*progress;
-                dev.el.style.top=(startY+(target.y-startY)*ease)+'px';updateCables(new Set([dev.id]));
-                if(progress<1)frame=requestAnimationFrame(step);
-                else {frame=0;dev.cancelPlacementMotion=null;updateCables();scheduleProjectSave();}
-            };
-            dev.cancelPlacementMotion=()=>{cancelAnimationFrame(frame);frame=0;dev.cancelPlacementMotion=null;};
-            frame=requestAnimationFrame(step);
-        }
-
         // Supports live outside device boxes so they do not alter grid alignment.
         let deployedFootSupports=new Map();
         function updateStackFeet() {
@@ -6947,7 +6908,6 @@ const Hardware = (() => {
             if(!FURNITURE_TYPES[type]) setupAudioMeters(dev);
             animateDevicePower(dev);
             selectDevice(id);
-            settleNewDeviceWithGravity(dev);
             updateCableFlows();
         }
 
@@ -7706,7 +7666,6 @@ const Hardware = (() => {
                     const cancel = () => { document.body.classList.remove('equipment-drag-active');clearDiscardPreview();clearAlignmentGuides(true);cancelAnimationFrame(frame); frame=0;movingDevices.forEach(item=>{item.el.style.translate='none';delete item.dragVisualPosition;item.el.classList.remove('equipment-dragging','history-settling');}); };
                     movingDevices.forEach(item=>item.cancelPlacementMotion=cancel);
                     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-                    let falling=new Map();
                     const animate = now => {
                         frame=0;
                         if (!targets.every(p=>appState.project.devices[p.dev.id])) return;
@@ -7714,9 +7673,7 @@ const Hardware = (() => {
                         const blend=!released||reducedMotion?1:1-Math.exp(-dt/55);
                         const intermediate=targets.map(p=>{
                             const current=visualPositions.get(p.dev.id)||p,x=current.x,y=current.y;
-                            const fall=falling.get(p.dev.id);
-                            const progress=fall?Math.min(1,(now-fall.started)/fall.duration):0;
-                            const nextY=fall?fall.y+(p.y-fall.y)*progress*progress:Math.abs(p.y-y)<.2?p.y:y+(p.y-y)*blend;
+                            const nextY=Math.abs(p.y-y)<.2?p.y:y+(p.y-y)*blend;
                             return {dev:p.dev,x:Math.abs(p.x-x)<.2?p.x:x+(p.x-x)*blend,y:nextY};
                         });
                         const resolved=intermediate;
@@ -7751,14 +7708,7 @@ const Hardware = (() => {
                         if(!settle)alignDragTargets();else clearAlignmentGuides();
                         if(settle){
                             targets=settleEquipmentDrop(targets,ignored,initialPositions);
-                            if(targets!==initialPositions){
-                                const beforeGravity=targets;
-                                targets=gravityDropTargets(targets,ignored);
-                                if(!reducedMotion)falling=new Map(targets.filter((p,i)=>p.y-beforeGravity[i].y>1).map(p=>{
-                                    const y=parseFloat(p.dev.el.style.top)||0;
-                                    return [p.dev.id,{y,started:performance.now(),duration:Math.min(1150,540+(p.y-y)*.24)}];
-                                }));
-                            }
+
                         }
                         if(!frame){lastTime=0;frame=requestAnimationFrame(animate);}
                     };
@@ -9929,7 +9879,7 @@ const Hardware = (() => {
         let exampleLoading=false;
         let projectDatabase=null,projectPersistenceBlocked=false,projectRestoring=false,projectSaving=false,projectSaveAgain=false,lastProjectSignature='',knownAudioKeys=new Set();
         const projectTools=document.createElement('section');projectTools.className='project-tools';
-        projectTools.innerHTML='<div class="project-file-actions"><button type="button" id="export-project">Exportar projeto</button><button type="button" id="import-project">Abrir projeto</button></div><input id="project-file" type="file" accept=".json,application/json" hidden><span id="project-save-status" class="sr-only" role="status" aria-live="polite"></span>';
+        projectTools.innerHTML='<div class="project-file-actions"><button type="button" id="export-project" aria-label="Exportar projeto" title="Exportar projeto"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3"/></svg></button><button type="button" id="import-project" aria-label="Abrir projeto" title="Abrir projeto"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v11H3zM12 16V10m-3 3 3-3 3 3"/></svg></button></div><input id="project-file" type="file" accept=".json,application/json" hidden><span id="project-save-status" class="sr-only" role="status" aria-live="polite"></span>';
         clearCatalogFooter.appendChild(projectTools);
         const projectStatus=(message,error=false)=>{const node=document.getElementById('project-save-status');node.textContent=message;node.classList.toggle('is-error',error);};
         const projectJSON=value=>JSON.parse(JSON.stringify(value),(key,item)=>['__proto__','constructor','prototype'].includes(key)?undefined:item);
@@ -10157,16 +10107,13 @@ const Hardware = (() => {
             finally{initialShield.remove();projectRestoring=false;appStateStore.actions.setProjectRestoring(false);}
         }
         const settingsMenu=document.createElement('details');settingsMenu.className='app-settings';
-        settingsMenu.innerHTML='<summary aria-label="Abrir configurações"><svg class="settings-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7.1"/><circle cx="12" cy="12" r="2.7"/><path d="M12 1.8v3.1m0 14.2v3.1M1.8 12h3.1m14.2 0h3.1M4.3 4.3l2.2 2.2m11 11 2.2 2.2m0-15.4-2.2 2.2m-11 11-2.2 2.2"/></svg><span>Configurações</span></summary>';
+        settingsMenu.innerHTML='<summary aria-label="Abrir configurações" title="Configurações"><svg class="settings-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7.1"/><circle cx="12" cy="12" r="2.7"/><path d="M12 1.8v3.1m0 14.2v3.1M1.8 12h3.1m14.2 0h3.1M4.3 4.3l2.2 2.2m11 11 2.2 2.2m0-15.4-2.2 2.2m-11 11-2.2 2.2"/></svg></summary>';
         clearCatalogFooter.className='app-settings-content';
         const themeSection=document.createElement('section');themeSection.className='settings-theme-section';themeSection.appendChild(canvasThemeControl);themeSection.appendChild(canvasGridControl);themeSection.appendChild(canvasBackdropControl);themeSection.appendChild(canvasTimeControl);
         const connectionHelpSetting=document.createElement('label');connectionHelpSetting.className='connection-help-setting';connectionHelpSetting.innerHTML='<input id="connection-help-enabled" type="checkbox"><span><strong>Orientação de conexões</strong><small>Mostra dicas e impede ligações incompatíveis. Desative para permitir erros quando os plugues encaixarem.</small></span>';
         const interactionSection=document.createElement('section');interactionSection.className='settings-theme-section';
         const connectionHelpCheckbox=connectionHelpSetting.querySelector('input');connectionHelpCheckbox.checked=appState.preferences.connectionGuidanceEnabled;interactionSection.appendChild(connectionHelpSetting);
         connectionHelpCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('connectionGuidanceEnabled',connectionHelpCheckbox.checked);hideContextHelp();updatePortGuidance(true);scheduleAppPreferencesSave();});
-        const gravitySetting=document.createElement('label');gravitySetting.className='connection-help-setting';gravitySetting.innerHTML='<input id="gravity-enabled" type="checkbox"><span><strong>Gravidade</strong><small>Ao soltar, equipamentos e móveis descem até o piso ou o primeiro apoio. Não afeta luminárias nem vinis.</small></span>';
-        const gravityCheckbox=gravitySetting.querySelector('input');gravityCheckbox.checked=appState.preferences.gravityEnabled;interactionSection.appendChild(gravitySetting);
-        gravityCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('gravityEnabled',gravityCheckbox.checked);scheduleAppPreferencesSave();});
         const developerModeSetting=document.createElement('label');developerModeSetting.className='connection-help-setting';developerModeSetting.innerHTML='<input id="developer-mode-enabled" type="checkbox"><span><strong>Modo desenvolvedor</strong><small>Mostra a categoria DEBUG e os modelos de teste no catálogo.</small></span>';
         const developerModeCheckbox=developerModeSetting.querySelector('input');developerModeCheckbox.checked=appState.preferences.developerModeEnabled;
         developerModeCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('developerModeEnabled',developerModeCheckbox.checked);equipmentSearch.dispatchEvent(new Event('input'));scheduleAppPreferencesSave();});
@@ -10261,15 +10208,15 @@ const Hardware = (() => {
             languageSetting,
             settingsGroup('Visual','<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="1.5"/><path d="m4 17 5-5 3 3 3-4 5 6"/>',[themeSection],true),
             settingsGroup('Interação','<path d="M8 12V5a2 2 0 0 1 4 0v5m0-3a2 2 0 0 1 4 0v4m0-2a2 2 0 0 1 4 0v6c0 4-3 6-7 6h-2c-3 0-5-2-6-5l-2-4a2 2 0 0 1 3-2l2 2"/>',[interactionSection]),
-            settingsGroup('Escuta','<path d="M4 13v-2a8 8 0 0 1 16 0v2M4 13h3v7H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 1-2Zm16 0h-3v7h2a2 2 0 0 0 2-2v-3a2 2 0 0 0-1-2Z"/>',[roomSection,headphoneCalibrationSetting,listeningLevels]),
-            settingsGroup('Projeto','<path d="M3 7V4h7l2 3h9v13H3z"/>',[projectTools,clearButton]),
-            settingsGroup('Avançado','<path d="m8 7-5 5 5 5m8-10 5 5-5 5M14 4l-4 16"/>',[developerModeSetting])
+            settingsGroup('Som','<path d="M4 13v-2a8 8 0 0 1 16 0v2M4 13h3v7H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 1-2Zm16 0h-3v7h2a2 2 0 0 0 2-2v-3a2 2 0 0 0-1-2Z"/>',[roomSection,headphoneCalibrationSetting,listeningLevels]),
+            settingsGroup('Avançado','<path d="m8 7-5 5 5 5m8-10 5 5-5 5M14 4l-4 16"/>',[developerModeSetting]),
+            clearButton
         );
 
         settingsMenu.appendChild(clearCatalogFooter);
         MenuSlider.mount(settingsMenu);
         const topbarControls=document.getElementById('app-topbar').lastElementChild;
-        topbarControls.appendChild(settingsMenu);
+        topbarControls.append(projectTools,settingsMenu);
         topbarControls.insertBefore(document.querySelector('.canvas-tools'),settingsMenu);
         document.addEventListener('pointerdown',event=>{if(settingsMenu.open&&!settingsMenu.contains(event.target)&&!event.target.closest('.app-select-popup'))settingsMenu.open=false;});
         document.addEventListener('keydown',event=>{if(event.key==='Escape'&&settingsMenu.open){settingsMenu.open=false;settingsMenu.querySelector('summary').focus();}});

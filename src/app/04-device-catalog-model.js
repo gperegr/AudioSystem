@@ -202,44 +202,6 @@
             }
             return best?targets.map(p=>({...p,x:p.x+best.dx,y:p.y+best.dy})):fallback;
         }
-        function gravityDropTargets(targets,ignored){
-            if(!appState.preferences.gravityEnabled||targets.some(p=>p.dev.type==='pendantLamp'||WALL_LAMP_TYPES[p.dev.type]))return targets;
-            const obstacles=Object.values(appState.project.devices).filter(dev=>!ignored.has(dev.id)&&dev.type!=='pendantLamp'&&!WALL_LAMP_TYPES[dev.type]).flatMap(dev=>placementShapes(dev,parseFloat(dev.el.style.left)||0,parseFloat(dev.el.style.top)||0).map(shape=>({...shape,dev})));
-            let distance=Math.min(...targets.map(p=>maxEquipmentBottom()-p.y-p.dev.el.offsetHeight));
-            for(const p of targets){
-                for(const shape of placementShapes(p.dev,p.x,p.y)){
-                    for(const obstacle of obstacles){
-                        const overlap=Math.min(shape.x+shape.width,obstacle.x+obstacle.width)-Math.max(shape.x,obstacle.x);
-                        if(overlap<Math.min(12,shape.width*.2))continue;
-                        const furniture=FURNITURE_TYPES[obstacle.dev.type],supportX=parseFloat(obstacle.dev.el.style.left)||0;
-                        const shelf=furniture?.surfaces.some(surface=>Math.abs(obstacle.y-(parseFloat(obstacle.dev.el.style.top)||0)-surface)<.5);
-                        const feet=hasStackFeet(p.dev)&&((furniture&&shelf&&p.x>=supportX+furniture.inset-1&&p.x+p.dev.el.offsetWidth<=supportX+furniture.width-furniture.inset+1)||(!furniture&&hasStackFeet(obstacle.dev)&&overlap>=Math.min(shape.width,obstacle.width)*.7))?STACK_FEET.height:0;
-                        const gap=obstacle.y-shape.y-shape.height;
-                        if(gap>=-.5)distance=Math.min(distance,Math.max(0,gap-feet));
-                    }
-                }
-            }
-            return distance>.5?targets.map(p=>({...p,y:p.y+distance})):targets;
-        }
-        function settleNewDeviceWithGravity(dev){
-            if(appState.project.restoringProject||!appState.preferences.gravityEnabled||dev.type==='pendantLamp'||WALL_LAMP_TYPES[dev.type])return;
-            const startY=parseFloat(dev.el.style.top)||0;
-            const target=gravityDropTargets([{dev,x:parseFloat(dev.el.style.left)||0,y:startY}],new Set([dev.id]))[0];
-            if(target.y-startY<1)return;
-            if(matchMedia('(prefers-reduced-motion: reduce)').matches){dev.el.style.top=target.y+'px';updateCables();scheduleProjectSave();return;}
-            const started=performance.now(),duration=Math.min(1150,540+(target.y-startY)*.24);
-            let frame=0;
-            const step=now=>{
-                if(!appState.project.devices[dev.id])return;
-                const progress=Math.min(1,(now-started)/duration),ease=progress*progress;
-                dev.el.style.top=(startY+(target.y-startY)*ease)+'px';updateCables(new Set([dev.id]));
-                if(progress<1)frame=requestAnimationFrame(step);
-                else {frame=0;dev.cancelPlacementMotion=null;updateCables();scheduleProjectSave();}
-            };
-            dev.cancelPlacementMotion=()=>{cancelAnimationFrame(frame);frame=0;dev.cancelPlacementMotion=null;};
-            frame=requestAnimationFrame(step);
-        }
-
         // Supports live outside device boxes so they do not alter grid alignment.
         let deployedFootSupports=new Map();
         function updateStackFeet() {

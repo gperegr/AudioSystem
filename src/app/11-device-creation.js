@@ -755,7 +755,6 @@
             if(!FURNITURE_TYPES[type]) setupAudioMeters(dev);
             animateDevicePower(dev);
             selectDevice(id);
-            settleNewDeviceWithGravity(dev);
             updateCableFlows();
         }
 

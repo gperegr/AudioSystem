@@ -3,7 +3,7 @@
         let exampleLoading=false;
         let projectDatabase=null,projectPersistenceBlocked=false,projectRestoring=false,projectSaving=false,projectSaveAgain=false,lastProjectSignature='',knownAudioKeys=new Set();
         const projectTools=document.createElement('section');projectTools.className='project-tools';
-        projectTools.innerHTML='<div class="project-file-actions"><button type="button" id="export-project">Exportar projeto</button><button type="button" id="import-project">Abrir projeto</button></div><input id="project-file" type="file" accept=".json,application/json" hidden><span id="project-save-status" class="sr-only" role="status" aria-live="polite"></span>';
+        projectTools.innerHTML='<div class="project-file-actions"><button type="button" id="export-project" aria-label="Exportar projeto" title="Exportar projeto"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3"/></svg></button><button type="button" id="import-project" aria-label="Abrir projeto" title="Abrir projeto"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v11H3zM12 16V10m-3 3 3-3 3 3"/></svg></button></div><input id="project-file" type="file" accept=".json,application/json" hidden><span id="project-save-status" class="sr-only" role="status" aria-live="polite"></span>';
         clearCatalogFooter.appendChild(projectTools);
         const projectStatus=(message,error=false)=>{const node=document.getElementById('project-save-status');node.textContent=message;node.classList.toggle('is-error',error);};
         const projectJSON=value=>JSON.parse(JSON.stringify(value),(key,item)=>['__proto__','constructor','prototype'].includes(key)?undefined:item);

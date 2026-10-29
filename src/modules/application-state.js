@@ -19,7 +19,7 @@
             project:{devices:{},connections:[],restoringProject:false,adapterRotation:0},
             canvas:{theme:'scene',grid:'dots',backdrop:'loftIllustrated',time:'dusk',floor:null,hideCables:false},
             audio:{isPlaying:false,playing:false,context:null,masterGain:null,environment:{preset:'small',intensity:5},sequenceInterval:null,roomAudio:null,listeningToneInput:null,listeningToneFilters:null},
-            preferences:{connectionGuidanceEnabled:true,gravityEnabled:false,roomParticleAmount:25,developerModeEnabled:false,headphonePromptSeen:false,listening:{outputLevel:1,bass:0,treble:0},uiSoundVolume:.5,equipmentSoundVolume:.5},
+            preferences:{connectionGuidanceEnabled:true,roomParticleAmount:25,developerModeEnabled:false,headphonePromptSeen:false,listening:{outputLevel:1,bass:0,treble:0},uiSoundVolume:.5,equipmentSoundVolume:.5},
             interface:{selectedDeviceId:null,selectedDeviceIds:new Set(),selectedConnection:null,pairingId:null,hardwareDemo:null},
             legacy:{}
         };

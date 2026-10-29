@@ -754,7 +754,6 @@
                     const cancel = () => { document.body.classList.remove('equipment-drag-active');clearDiscardPreview();clearAlignmentGuides(true);cancelAnimationFrame(frame); frame=0;movingDevices.forEach(item=>{item.el.style.translate='none';delete item.dragVisualPosition;item.el.classList.remove('equipment-dragging','history-settling');}); };
                     movingDevices.forEach(item=>item.cancelPlacementMotion=cancel);
                     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-                    let falling=new Map();
                     const animate = now => {
                         frame=0;
                         if (!targets.every(p=>appState.project.devices[p.dev.id])) return;
@@ -762,9 +761,7 @@
                         const blend=!released||reducedMotion?1:1-Math.exp(-dt/55);
                         const intermediate=targets.map(p=>{
                             const current=visualPositions.get(p.dev.id)||p,x=current.x,y=current.y;
-                            const fall=falling.get(p.dev.id);
-                            const progress=fall?Math.min(1,(now-fall.started)/fall.duration):0;
-                            const nextY=fall?fall.y+(p.y-fall.y)*progress*progress:Math.abs(p.y-y)<.2?p.y:y+(p.y-y)*blend;
+                            const nextY=Math.abs(p.y-y)<.2?p.y:y+(p.y-y)*blend;
                             return {dev:p.dev,x:Math.abs(p.x-x)<.2?p.x:x+(p.x-x)*blend,y:nextY};
                         });
                         const resolved=intermediate;
@@ -799,14 +796,7 @@
                         if(!settle)alignDragTargets();else clearAlignmentGuides();
                         if(settle){
                             targets=settleEquipmentDrop(targets,ignored,initialPositions);
-                            if(targets!==initialPositions){
-                                const beforeGravity=targets;
-                                targets=gravityDropTargets(targets,ignored);
-                                if(!reducedMotion)falling=new Map(targets.filter((p,i)=>p.y-beforeGravity[i].y>1).map(p=>{
-                                    const y=parseFloat(p.dev.el.style.top)||0;
-                                    return [p.dev.id,{y,started:performance.now(),duration:Math.min(1150,540+(p.y-y)*.24)}];
-                                }));
-                            }
+
                         }
                         if(!frame){lastTime=0;frame=requestAnimationFrame(animate);}
                     };
