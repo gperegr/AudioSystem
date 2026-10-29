@@ -8728,6 +8728,7 @@ const Hardware = (() => {
             return `M ${p1.x} ${p1.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
         }
 
+        let rightAngleLanes=null;
         function rightAngleCablePath(start,end,source,target,offset=0){
             const margin=12,rects=Object.values(appState.project.devices).map(dev=>{
                 const box=dev.el.getBoundingClientRect(),worldBox=world.getBoundingClientRect();
@@ -8736,7 +8737,12 @@ const Hardware = (() => {
             const from=rects.find(r=>r.id===source),to=rects.find(r=>r.id===target);
             const startExit={x:start.x,y:Math.max(start.y+32,from?.bottom||0)},endExit={x:end.x,y:Math.max(end.y+32,to?.bottom||0)};
             const obstacles=rects.filter(r=>r.id!==source&&r.id!==target);
-            const lane=Math.max(startExit.y,endExit.y,...obstacles.filter(r=>r.left<Math.max(start.x,end.x)&&r.right>Math.min(start.x,end.x)&&r.top<Math.max(startExit.y,endExit.y)+20).map(r=>r.bottom))+20+Math.abs(offset);
+            let lane=Math.max(startExit.y,endExit.y,...obstacles.filter(r=>r.left<Math.max(start.x,end.x)&&r.right>Math.min(start.x,end.x)&&r.top<Math.max(startExit.y,endExit.y)+20).map(r=>r.bottom))+20+Math.abs(offset);
+            if(rightAngleLanes){
+                const left=Math.min(start.x,end.x),right=Math.max(start.x,end.x),spacing=18;
+                while(rightAngleLanes.some(other=>left<other.right+spacing&&right>other.left-spacing&&Math.abs(lane-other.y)<spacing))lane+=spacing;
+                rightAngleLanes.push({left,right,y:lane});
+            }
             // Route around obstacles intersecting either vertical exit using an outside corridor.
             const blocking=obstacles.filter(r=>(start.x>r.left&&start.x<r.right&&r.top<lane&&r.bottom>startExit.y)||(end.x>r.left&&end.x<r.right&&r.top<lane&&r.bottom>endExit.y));
             function escape(point){
@@ -8817,7 +8823,7 @@ const Hardware = (() => {
             });
             const [start,end]=endpoints;
             const pull=Math.max(24,Math.min(180,Math.hypot(p2.x-p1.x,p2.y-p1.y)*.3));
-            const pathData=rightAngle?rightAngleCablePath(showPlugs?start.base:p1,showPlugs?end.base:p2,source,target,routeOffset):showPlugs&&!seating?`M ${start.base.x} ${start.base.y} C ${start.base.x+start.direction.x*pull} ${start.base.y+start.direction.y*pull}, ${end.base.x+end.direction.x*pull} ${end.base.y+end.direction.y*pull}, ${end.base.x} ${end.base.y}`:guide;
+            const pathData=rightAngle?guide:showPlugs&&!seating?`M ${start.base.x} ${start.base.y} C ${start.base.x+start.direction.x*pull} ${start.base.y+start.direction.y*pull}, ${end.base.x+end.direction.x*pull} ${end.base.y+end.direction.y*pull}, ${end.base.x} ${end.base.y}`:guide;
 
             if (cableType === 'wire') {
                 // Desenha o Fio de Caixa Trançado (Vermelho e Preto)
@@ -9412,6 +9418,7 @@ const Hardware = (() => {
                 }
             }
             appStateStore.actions.removeConnection(idx);
+            if(appState.preferences.orthogonalCables)updateCables();
             invalidateCableBundles();
             updateCableFlows();
             updatePortGuidance(true);
@@ -9453,6 +9460,7 @@ const Hardware = (() => {
         }
         function updateCables(affectedDeviceIds=null) {
             const partial=affectedDeviceIds instanceof Set&&!appState.preferences.orthogonalCables;
+            rightAngleLanes=appState.preferences.orthogonalCables?[]:null;
             appState.project.connections.forEach(c => {
                 if(partial){const [from,to]=connectionDevices(c);if(!affectedDeviceIds.has(from)&&!affectedDeviceIds.has(to))return;}
                 const p1 = document.getElementById(c.outId); const p2 = document.getElementById(c.inId);
@@ -9473,6 +9481,7 @@ const Hardware = (() => {
                 if(p1 && p2) drawCable(c.el, getPortCenter(p1), getPortCenter(p2), [], c.type, {x:0,y:settle}, getCableBundleOffset(c));
                 applyCableAppearance(c);
             });
+            rightAngleLanes=null;
             updateBluetoothLinks(partial?affectedDeviceIds:null);
             syncPlatterVinyls(partial?affectedDeviceIds:null);
             if(partial){

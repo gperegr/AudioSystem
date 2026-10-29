@@ -495,6 +495,7 @@
                 }
             }
             appStateStore.actions.removeConnection(idx);
+            if(appState.preferences.orthogonalCables)updateCables();
             invalidateCableBundles();
             updateCableFlows();
             updatePortGuidance(true);

@@ -25,6 +25,7 @@
         }
         function updateCables(affectedDeviceIds=null) {
             const partial=affectedDeviceIds instanceof Set&&!appState.preferences.orthogonalCables;
+            rightAngleLanes=appState.preferences.orthogonalCables?[]:null;
             appState.project.connections.forEach(c => {
                 if(partial){const [from,to]=connectionDevices(c);if(!affectedDeviceIds.has(from)&&!affectedDeviceIds.has(to))return;}
                 const p1 = document.getElementById(c.outId); const p2 = document.getElementById(c.inId);
@@ -45,6 +46,7 @@
                 if(p1 && p2) drawCable(c.el, getPortCenter(p1), getPortCenter(p2), [], c.type, {x:0,y:settle}, getCableBundleOffset(c));
                 applyCableAppearance(c);
             });
+            rightAngleLanes=null;
             updateBluetoothLinks(partial?affectedDeviceIds:null);
             syncPlatterVinyls(partial?affectedDeviceIds:null);
             if(partial){
