@@ -63,15 +63,14 @@
                 rightAngleLanes.push({left,right,y:lane});
             }
             // Route around obstacles intersecting either vertical exit using an outside corridor.
-            const blocking=obstacles.filter(r=>(start.x>r.left&&start.x<r.right&&r.top<lane&&r.bottom>startExit.y)||(end.x>r.left&&end.x<r.right&&r.top<lane&&r.bottom>endExit.y));
-            function escape(point){
-                const block=blocking.filter(r=>point.x>r.left&&point.x<r.right&&r.top<lane&&r.bottom>point.y).sort((a,b)=>a.top-b.top)[0];
+            function escape(point,ownId){
+                const block=rects.filter(r=>r.id!==ownId&&point.x>r.left&&point.x<r.right&&r.top<lane&&r.bottom>point.y).sort((a,b)=>a.top-b.top)[0];
                 if(!block)return [point,{x:point.x,y:lane}];
                 const x=Math.abs(point.x-block.left)<Math.abs(point.x-block.right)?block.left-1:block.right+1;
                 const y=Math.max(point.y,block.top-1);
                 return [point,{x:point.x,y},{x,y},{x,y:lane}];
             }
-            const points=[start,...escape(startExit),...escape(endExit).reverse(),end];
+            const points=[start,...escape(startExit,source),...escape(endExit,target).reverse(),end];
             return points.map((p,i)=>`${i?'L':'M'} ${p.x} ${p.y}`).join(' ');
         }
         const CABLE_GEOMETRY=Hardware.plugs;

@@ -32,8 +32,19 @@ const root=path.resolve(__dirname,'..');
         await page.evaluate(()=>{__cables.connectProjectPorts(__cables.appState.project.devices.source,'outR',__cables.appState.project.devices.amp,'inR');__cables.updateCables();});
         const lanes=await page.evaluate(()=>__cables.appState.project.connections.map(c=>{const d=c.el.querySelector('path').getAttribute('d');const points=[...d.matchAll(/[ML] ([\d.-]+) ([\d.-]+)/g)].map(m=>({x:+m[1],y:+m[2]}));return points.find((p,i)=>i&&p.y===points[i-1].y&&Math.abs(p.x-points[i-1].x)>100)?.y;}));
         assert(lanes.every(Number.isFinite));assert(Math.abs(lanes[0]-lanes[1])>=18,'overlapping horizontal segments must use separate lanes');
+        const stacked=await page.evaluate(()=>{
+            const a=__cables.appState.project.devices.source,b=__cables.appState.project.devices.amp;
+            a.el.style.left='600px';a.el.style.top='400px';b.el.style.left='600px';b.el.style.top=(400+a.el.offsetHeight+4)+'px';__cables.updateCables();
+            const d=__cables.appState.project.connections[0].el.querySelector('path').getAttribute('d');
+            return [...d.matchAll(/[ML] ([\d.-]+) ([\d.-]+)/g)].map(m=>({x:+m[1],y:+m[2]}));
+        });
+        assert(stacked.slice(2).some((p,i)=>p.y===stacked[1].y&&p.x!==stacked[1].x&&i<2),'stacked device must trigger an immediate horizontal escape');
         await page.waitForTimeout(700);assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('audio-system-interface-preferences')).orthogonalCables),true);
         await page.locator('#orthogonal-cables').evaluate(el=>{el.checked=false;el.dispatchEvent(new Event('change',{bubbles:true}));});assert.match(await cablePath(),/ C /);
+        assert.equal(await page.locator('#alignment-guides-enabled').isChecked(),true);
+        await page.locator('#alignment-guides-enabled').evaluate(el=>{el.checked=false;el.dispatchEvent(new Event('change',{bubbles:true}));});
+        await page.waitForTimeout(700);assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('audio-system-interface-preferences')).alignmentGuides),false);
+        await page.reload();assert.equal(await page.locator('#alignment-guides-enabled').isChecked(),false);
         assert.deepEqual(errors,[]);console.log('Right-angle cable toggle and persistence passed');
     }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

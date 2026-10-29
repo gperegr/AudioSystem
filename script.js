@@ -1382,6 +1382,7 @@ const Hardware = (() => {
         const savedAppPreferences=readAppPreferences();
         appStateStore.actions.setPreference('connectionGuidanceEnabled',savedAppPreferences.connectionGuidanceEnabled!==false);
         appStateStore.actions.setPreference('orthogonalCables',savedAppPreferences.orthogonalCables===true);
+        appStateStore.actions.setPreference('alignmentGuides',savedAppPreferences.alignmentGuides!==false);
         appStateStore.actions.setPreference('roomParticleAmount',Number.isFinite(savedAppPreferences.roomParticleAmount)?Math.max(0,Math.min(100,savedAppPreferences.roomParticleAmount/(savedAppPreferences.particleScaleVersion===2?1:2))):25);
         if(Number.isFinite(savedAppPreferences.roomParticleAmount)&&savedAppPreferences.particleScaleVersion!==2){
             try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({...savedAppPreferences,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2}));}catch{}
@@ -1399,7 +1400,7 @@ const Hardware = (() => {
             appPreferencesSaveTimer=setTimeout(()=>{
                 if(!canvas.clientWidth||!canvas.clientHeight)return;
                 const focusX=(canvas.clientWidth/2-view.x)/view.zoom,focusY=(canvas.clientHeight/2-view.y)/view.zoom;
-                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:appState.canvas.theme,grid:appState.canvas.grid,backdrop:appState.canvas.backdrop,time:appState.canvas.time,connectionGuidanceEnabled:appState.preferences.connectionGuidanceEnabled,orthogonalCables:appState.preferences.orthogonalCables,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2,developerMode:appState.preferences.developerModeEnabled,headphonePromptSeen:appState.preferences.headphonePromptSeen,inspectorPinned:sidebarPinned.properties,signalHistoryExpanded,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble,zoom:view.zoom,focusX,focusY}));}catch{}
+                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:appState.canvas.theme,grid:appState.canvas.grid,backdrop:appState.canvas.backdrop,time:appState.canvas.time,connectionGuidanceEnabled:appState.preferences.connectionGuidanceEnabled,orthogonalCables:appState.preferences.orthogonalCables,alignmentGuides:appState.preferences.alignmentGuides,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2,developerMode:appState.preferences.developerModeEnabled,headphonePromptSeen:appState.preferences.headphonePromptSeen,inspectorPinned:sidebarPinned.properties,signalHistoryExpanded,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble,zoom:view.zoom,focusX,focusY}));}catch{}
             },450);
         }
         const appDialog=document.getElementById('app-confirm-dialog');
@@ -7591,6 +7592,7 @@ const Hardware = (() => {
                         alignmentGuideLayer.querySelectorAll('i').forEach(line=>line.style.display='none');
                     }
                     function alignDragTargets(){
+                        if(!appState.preferences.alignmentGuides){clearAlignmentGuides();return;}
                         if(initialPositions.length===0)return;
                         const movingIds=new Set(initialPositions.map(item=>item.dev.id));
                         const stationary=Object.values(appState.project.devices).filter(item=>!movingIds.has(item.id)&&item.el?.isConnected);
@@ -8744,15 +8746,14 @@ const Hardware = (() => {
                 rightAngleLanes.push({left,right,y:lane});
             }
             // Route around obstacles intersecting either vertical exit using an outside corridor.
-            const blocking=obstacles.filter(r=>(start.x>r.left&&start.x<r.right&&r.top<lane&&r.bottom>startExit.y)||(end.x>r.left&&end.x<r.right&&r.top<lane&&r.bottom>endExit.y));
-            function escape(point){
-                const block=blocking.filter(r=>point.x>r.left&&point.x<r.right&&r.top<lane&&r.bottom>point.y).sort((a,b)=>a.top-b.top)[0];
+            function escape(point,ownId){
+                const block=rects.filter(r=>r.id!==ownId&&point.x>r.left&&point.x<r.right&&r.top<lane&&r.bottom>point.y).sort((a,b)=>a.top-b.top)[0];
                 if(!block)return [point,{x:point.x,y:lane}];
                 const x=Math.abs(point.x-block.left)<Math.abs(point.x-block.right)?block.left-1:block.right+1;
                 const y=Math.max(point.y,block.top-1);
                 return [point,{x:point.x,y},{x,y},{x,y:lane}];
             }
-            const points=[start,...escape(startExit),...escape(endExit).reverse(),end];
+            const points=[start,...escape(startExit,source),...escape(endExit,target).reverse(),end];
             return points.map((p,i)=>`${i?'L':'M'} ${p.x} ${p.y}`).join(' ');
         }
         const CABLE_GEOMETRY=Hardware.plugs;
@@ -10153,6 +10154,9 @@ const Hardware = (() => {
         const rightAngleSetting=document.createElement('label');rightAngleSetting.className='connection-help-setting';rightAngleSetting.innerHTML='<input id="orthogonal-cables" type="checkbox"><span><strong>Cabos em ângulos retos</strong><small>Traça cabos com segmentos horizontais e verticais.</small></span>';
         const rightAngleCheckbox=rightAngleSetting.querySelector('input');rightAngleCheckbox.checked=appState.preferences.orthogonalCables;interactionSection.appendChild(rightAngleSetting);
         rightAngleCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('orthogonalCables',rightAngleCheckbox.checked);updateCables();scheduleAppPreferencesSave();});
+        const alignmentSetting=document.createElement('label');alignmentSetting.className='connection-help-setting';alignmentSetting.innerHTML='<input id="alignment-guides-enabled" type="checkbox"><span><strong>Guias magnéticas</strong><small>Exibe linhas e aproxima equipamentos alinhados durante o arraste.</small></span>';
+        const alignmentCheckbox=alignmentSetting.querySelector('input');alignmentCheckbox.checked=appState.preferences.alignmentGuides;interactionSection.appendChild(alignmentSetting);
+        alignmentCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('alignmentGuides',alignmentCheckbox.checked);scheduleAppPreferencesSave();});
         const developerModeSetting=document.createElement('label');developerModeSetting.className='connection-help-setting';developerModeSetting.innerHTML='<input id="developer-mode-enabled" type="checkbox"><span><strong>Modo desenvolvedor</strong><small>Mostra a categoria DEBUG e os modelos de teste no catálogo.</small></span>';
         const developerModeCheckbox=developerModeSetting.querySelector('input');developerModeCheckbox.checked=appState.preferences.developerModeEnabled;
         developerModeCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('developerModeEnabled',developerModeCheckbox.checked);equipmentSearch.dispatchEvent(new Event('input'));scheduleAppPreferencesSave();});

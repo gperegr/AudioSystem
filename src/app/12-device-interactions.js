@@ -678,6 +678,7 @@
                         alignmentGuideLayer.querySelectorAll('i').forEach(line=>line.style.display='none');
                     }
                     function alignDragTargets(){
+                        if(!appState.preferences.alignmentGuides){clearAlignmentGuides();return;}
                         if(initialPositions.length===0)return;
                         const movingIds=new Set(initialPositions.map(item=>item.dev.id));
                         const stationary=Object.values(appState.project.devices).filter(item=>!movingIds.has(item.id)&&item.el?.isConnected);
