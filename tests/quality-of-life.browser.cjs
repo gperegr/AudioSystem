@@ -58,6 +58,9 @@ const root=path.resolve(__dirname,'..');
         await page.mouse.move(box.x+box.width/2,box.y+12);await page.mouse.down();
         await page.mouse.move(box.x+box.width/2+35,box.y+30,{steps:5});
         assert.equal(await panel.isVisible(),false,'panel must be hidden during device drag');
+        const layerOrder=await page.evaluate(()=>({cables:Number(getComputedStyle(document.querySelector('#cables-layer')).zIndex),dragged:Number(getComputedStyle(document.querySelector('.device-node.equipment-dragging')).zIndex)}));
+        assert(layerOrder.cables>layerOrder.dragged,'cables must remain in front of dragged equipment');
+
         await page.mouse.up();await page.waitForTimeout(100);
         assert(await panel.isVisible(),'panel must return after dropping the selected device');
         await page.evaluate(()=>__signal.deleteDevice(__signal.appState.project.devices['regression-speaker']));

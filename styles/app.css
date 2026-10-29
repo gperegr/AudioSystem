@@ -735,7 +735,7 @@
         .port[data-type="p10"].connected::after { background: var(--port-p10); }
         .port[data-type="wire"].connected::after { background: var(--port-wire); }
 
-        #cables-layer { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 25; }
+        #cables-layer { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 2000; }
         
         .cable-group { --cable-outer:4.2px;--cable-inner:2.6px;pointer-events:stroke;cursor:pointer; }
         .cable-outline { fill:none; stroke:#11171d; stroke-width:var(--cable-outer,4.2px); stroke-linecap:round; stroke-linejoin:round; opacity:.94; pointer-events:stroke; }
