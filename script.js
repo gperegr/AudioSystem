@@ -8739,13 +8739,14 @@ const Hardware = (() => {
             const from=rects.find(r=>r.id===source),to=rects.find(r=>r.id===target);
             const startExit={x:start.x,y:Math.max(start.y+32,from?.bottom||0)},endExit={x:end.x,y:Math.max(end.y+32,to?.bottom||0)};
             const obstacles=rects.filter(r=>r.id!==source&&r.id!==target);
-            let lane=Math.max(startExit.y,endExit.y)+20+Math.abs(offset);
+            const stacked=from&&to&&from.left<to.right&&from.right>to.left&&(from.bottom<=to.top+margin*2||to.bottom<=from.top+margin*2);
+            let lane=Math.max(startExit.y,endExit.y)+(stacked?0:20)+Math.abs(offset);
             // Only move the lane below an obstacle when the horizontal segment
             // actually crosses its interior; equipment farther down is irrelevant.
             const leftEdge=Math.min(start.x,end.x),rightEdge=Math.max(start.x,end.x);
             let obstructing;
             do{
-                obstructing=obstacles.find(r=>r.left<rightEdge&&r.right>leftEdge&&r.top<lane&&r.bottom>lane);
+                obstructing=stacked?null:obstacles.find(r=>r.left<rightEdge&&r.right>leftEdge&&r.top<lane&&r.bottom>lane);
                 if(obstructing)lane=obstructing.bottom+1;
             }while(obstructing);
             if(rightAngleLanes){
