@@ -39,6 +39,8 @@ const root=path.resolve(__dirname,'..');
             const centers=boxes.map(box=>box.y+box.height/2);
             assert(Math.max(...centers)-Math.min(...centers)<2,`toolbar button centers differ: ${centers}`);
             assert(boxes[0].x+boxes[0].width<=boxes[1].x+1 && boxes[1].x+boxes[1].width<=boxes[2].x+1,'toolbar buttons must not overlap');
+            const gaps=[boxes[1].x-(boxes[0].x+boxes[0].width),boxes[2].x-(boxes[1].x+boxes[1].width)];
+            assert(Math.abs(gaps[0]-gaps[1])<1,`toolbar spacing must be even: ${gaps}`);
         }
         await page.setViewportSize({width:1600,height:1100});
         await page.evaluate(()=>{__signal.createDevice('spkElectrostatic',200,200,'regression-speaker');__signal.selectDevice('regression-speaker');});

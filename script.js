@@ -10217,7 +10217,7 @@ const Hardware = (() => {
         MenuSlider.mount(settingsMenu);
         const topbarControls=document.getElementById('app-topbar').lastElementChild;
         topbarControls.append(projectTools,settingsMenu);
-        topbarControls.insertBefore(document.querySelector('.canvas-tools'),settingsMenu);
+        topbarControls.insertBefore(document.querySelector('.canvas-tools'),projectTools);
         document.addEventListener('pointerdown',event=>{if(settingsMenu.open&&!settingsMenu.contains(event.target)&&!event.target.closest('.app-select-popup'))settingsMenu.open=false;});
         document.addEventListener('keydown',event=>{if(event.key==='Escape'&&settingsMenu.open){settingsMenu.open=false;settingsMenu.querySelector('summary').focus();}});
         function setupAppDropdowns(){

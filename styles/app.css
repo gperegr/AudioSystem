@@ -4796,8 +4796,8 @@ body.inspector-floating #inspector-sidebar-toggle{display:none!important;}
 body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events:none!important;}
 
 /* Project actions sit beside the icon-only settings control. */
-#app-topbar .project-tools{display:flex;align-items:center;flex:none;margin:0;padding:0;border:0;}
-#app-topbar .project-file-actions{display:flex;gap:4px;}
+#app-topbar .project-tools{display:flex;align-items:center;flex:none;margin:0;padding:0;border:0;gap:inherit;}
+#app-topbar .project-file-actions{display:flex;gap:inherit;}
 #app-topbar .project-file-actions button,#app-topbar .app-settings>summary{display:grid;place-items:center;box-sizing:border-box;width:40px;height:40px;padding:9px;border:0;border-radius:8px;background:var(--ui-control);color:var(--ui-text);cursor:pointer;}
 #app-topbar .project-file-actions button:hover,#app-topbar .app-settings>summary:hover{background:var(--ui-hover);}
 #app-topbar .project-file-actions button:focus-visible,#app-topbar .app-settings>summary:focus-visible{outline:2px solid var(--ui-accent);outline-offset:2px;}
