@@ -550,8 +550,10 @@
         }
         function bindListeningInspector(dev){
             ['solo','muted'].forEach(key=>{
-                document.getElementById(key==='solo'?'listening-solo':'listening-mute')?.addEventListener('click',()=>{
-                    dev.state[key]=!dev.state[key];updateListeningControls();selectDevice(dev.id,true);
+                document.getElementById(key==='solo'?'listening-solo':'listening-mute')?.addEventListener('click',event=>{
+                    dev.state[key]=!dev.state[key];updateListeningControls();
+                    event.currentTarget.setAttribute('aria-pressed',String(dev.state[key]));
+                    event.currentTarget.classList.toggle('is-on',dev.state[key]);
                 });
             });
             updateListeningControls();
