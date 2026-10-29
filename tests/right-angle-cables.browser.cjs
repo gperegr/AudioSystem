@@ -39,6 +39,14 @@ const root=path.resolve(__dirname,'..');
             return [...d.matchAll(/[ML] ([\d.-]+) ([\d.-]+)/g)].map(m=>({x:+m[1],y:+m[2]}));
         });
         assert(stacked.slice(2).some((p,i)=>p.y===stacked[1].y&&p.x!==stacked[1].x&&i<2),'stacked device must trigger an immediate horizontal escape');
+        const lower=await page.evaluate(()=>{
+            const amp=__cables.appState.project.devices.amp;
+            __cables.createDevice('powerAmp',0,0,'lower');const dev=__cables.appState.project.devices.lower;
+            dev.el.style.left=amp.el.style.left;dev.el.style.top=(parseFloat(amp.el.style.top)+amp.el.offsetHeight+80)+'px';__cables.updateCables();
+            const d=__cables.appState.project.connections[0].el.querySelector('path').getAttribute('d');
+            return {top:parseFloat(dev.el.style.top),ys:[...d.matchAll(/[ML] ([\d.-]+) ([\d.-]+)/g)].map(m=>+m[2])};
+        });
+        assert(Math.max(...lower.ys)<lower.top,'cable must not descend below unrelated lower equipment');
         const segments=await page.evaluate(()=>__cables.appState.project.connections.map(c=>{const points=[...c.el.querySelector('path').getAttribute('d').matchAll(/[ML] ([\d.-]+) ([\d.-]+)/g)].map(m=>({x:+m[1],y:+m[2]}));return points.slice(2,-1).map((p,i)=>({a:points[i+1],b:p})).filter(s=>s.a.x===s.b.x&&s.a.y!==s.b.y);}));
         for(const a of segments[0])for(const b of segments[1])if(Math.max(Math.min(a.a.y,a.b.y),Math.min(b.a.y,b.b.y))<Math.min(Math.max(a.a.y,a.b.y),Math.max(b.a.y,b.b.y)))assert(Math.abs(a.a.x-b.a.x)>=17,'vertical detours must have separate lanes');
         await page.waitForTimeout(700);assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('audio-system-interface-preferences')).orthogonalCables),true);

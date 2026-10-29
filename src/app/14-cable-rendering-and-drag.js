@@ -56,7 +56,15 @@
             const from=rects.find(r=>r.id===source),to=rects.find(r=>r.id===target);
             const startExit={x:start.x,y:Math.max(start.y+32,from?.bottom||0)},endExit={x:end.x,y:Math.max(end.y+32,to?.bottom||0)};
             const obstacles=rects.filter(r=>r.id!==source&&r.id!==target);
-            let lane=Math.max(startExit.y,endExit.y,...obstacles.filter(r=>r.left<Math.max(start.x,end.x)&&r.right>Math.min(start.x,end.x)&&r.top<Math.max(startExit.y,endExit.y)+20).map(r=>r.bottom))+20+Math.abs(offset);
+            let lane=Math.max(startExit.y,endExit.y)+20+Math.abs(offset);
+            // Only move the lane below an obstacle when the horizontal segment
+            // actually crosses its interior; equipment farther down is irrelevant.
+            const leftEdge=Math.min(start.x,end.x),rightEdge=Math.max(start.x,end.x);
+            let obstructing;
+            do{
+                obstructing=obstacles.find(r=>r.left<rightEdge&&r.right>leftEdge&&r.top<lane&&r.bottom>lane);
+                if(obstructing)lane=obstructing.bottom+1;
+            }while(obstructing);
             if(rightAngleLanes){
                 const left=Math.min(start.x,end.x),right=Math.max(start.x,end.x),spacing=18;
                 while(rightAngleLanes.some(other=>other.axis==='h'&&left<other.right+spacing&&right>other.left-spacing&&Math.abs(lane-other.y)<spacing))lane+=spacing;
@@ -72,7 +80,7 @@
                 if(rightAngleLanes){
                     const spacing=18;
                     while(rightAngleLanes.some(other=>other.axis==='v'&&Math.abs(x-other.x)<spacing&&y<other.bottom&&lane>other.top))x+=side*spacing;
-                    while(rightAngleLanes.some(other=>other.axis==='h'&&Math.abs(y-other.y)<spacing&&Math.min(x,point.x)<other.right&&Math.max(x,point.x)>other.left))y+=spacing;
+                    while(y+spacing<=lane&&rightAngleLanes.some(other=>other.axis==='h'&&Math.abs(y-other.y)<spacing&&Math.min(x,point.x)<other.right&&Math.max(x,point.x)>other.left))y+=spacing;
                 }
                 return [point,{x:point.x,y},{x,y},{x,y:lane}];
             }
