@@ -198,7 +198,7 @@
 #inspector-content input[type="range"]:not(.gain-spark-slider):not(.eq-slider):not(.hw-slider)::-moz-range-thumb{background:var(--ui-accent)!important;}
 
 /* Keep catalog chrome and secondary settings legible in every room palette. */
-#equipment-catalog .catalog-panel-header{background:var(--ui-side)!important;border-color:transparent!important;box-shadow:none;}
+#equipment-catalog .catalog-panel-header{background:color-mix(in srgb,var(--ui-side) 78%,transparent)!important;border-color:transparent!important;box-shadow:none;}
 #equipment-catalog .catalog-panel-header::after{background:linear-gradient(to bottom,var(--ui-side),color-mix(in srgb,var(--ui-side) 76%,transparent),transparent);}
 .app-settings-content :is(.settings-particle-control,.listening-level-settings label){color:var(--ui-secondary);}
 .app-settings-content :is(.headphone-calibration-setting strong,.listening-level-settings strong){color:var(--ui-text);}
