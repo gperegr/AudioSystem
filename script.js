@@ -8728,9 +8728,26 @@ const Hardware = (() => {
             return `M ${p1.x} ${p1.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
         }
 
-        function rightAngleCablePath(start,end,lane){
-            if(Math.abs(start.x-end.x)<.01)return `M ${start.x} ${start.y} V ${end.y}`;
-            return `M ${start.x} ${start.y} V ${lane} H ${end.x} V ${end.y}`;
+        function rightAngleCablePath(start,end,source,target,offset=0){
+            const margin=12,rects=Object.values(appState.project.devices).map(dev=>{
+                const box=dev.el.getBoundingClientRect(),worldBox=world.getBoundingClientRect();
+                return {id:dev.id,left:(box.left-worldBox.left)/view.zoom-margin,right:(box.right-worldBox.left)/view.zoom+margin,top:(box.top-worldBox.top)/view.zoom-margin,bottom:(box.bottom-worldBox.top)/view.zoom+margin};
+            });
+            const from=rects.find(r=>r.id===source),to=rects.find(r=>r.id===target);
+            const startExit={x:start.x,y:Math.max(start.y+32,from?.bottom||0)},endExit={x:end.x,y:Math.max(end.y+32,to?.bottom||0)};
+            const obstacles=rects.filter(r=>r.id!==source&&r.id!==target);
+            const lane=Math.max(startExit.y,endExit.y,...obstacles.filter(r=>r.left<Math.max(start.x,end.x)&&r.right>Math.min(start.x,end.x)&&r.top<Math.max(startExit.y,endExit.y)+20).map(r=>r.bottom))+20+Math.abs(offset);
+            // Route around obstacles intersecting either vertical exit using an outside corridor.
+            const blocking=obstacles.filter(r=>(start.x>r.left&&start.x<r.right&&r.top<lane&&r.bottom>startExit.y)||(end.x>r.left&&end.x<r.right&&r.top<lane&&r.bottom>endExit.y));
+            function escape(point){
+                const block=blocking.filter(r=>point.x>r.left&&point.x<r.right&&r.top<lane&&r.bottom>point.y).sort((a,b)=>a.top-b.top)[0];
+                if(!block)return [point,{x:point.x,y:lane}];
+                const x=Math.abs(point.x-block.left)<Math.abs(point.x-block.right)?block.left-1:block.right+1;
+                const y=Math.max(point.y,block.top-1);
+                return [point,{x:point.x,y},{x,y},{x,y:lane}];
+            }
+            const points=[start,...escape(startExit),...escape(endExit).reverse(),end];
+            return points.map((p,i)=>`${i?'L':'M'} ${p.x} ${p.y}`).join(' ');
         }
         const CABLE_GEOMETRY=Hardware.plugs;
         const cableGeometry=type=>CABLE_GEOMETRY[type]||CABLE_GEOMETRY.rca;
@@ -8786,8 +8803,11 @@ const Hardware = (() => {
             container.style.setProperty('--cable-inner',geometry.inner+'px');
             const slack=Number(container.dataset.slack??5);
             const rightAngle=appState.preferences.orthogonalCables;
-            const lane=Math.abs(p1.y-p2.y)>=70?(p1.y+p2.y)/2:Math.max(p1.y,p2.y)+48+Math.abs(routeOffset);
-            const guide=rightAngle?rightAngleCablePath(p1,p2,lane):calculateSagPath(p1,p2,swing,routeOffset,slack);
+            const connection=appState.project.connections.find(item=>item.el===container);
+            const source=connection?.outDeviceId||startPort?.closest('.device-node')?.id;
+            const target=connection?.inDeviceId;
+            const lane=Math.max(p1.y,p2.y)+48;
+            const guide=rightAngle?rightAngleCablePath(p1,p2,source,target,routeOffset):calculateSagPath(p1,p2,swing,routeOffset,slack);
             const coords=guide.match(/-?\d+(?:\.\d+)?(?:e[+-]?\d+)?/gi).map(Number);
             const rear=cableType==='wire'?20:(cableType==='p10'||cableType==='p2')?28*geometry.scale:25;
             const endpoints=[{tip:p1,control:rightAngle?{x:p1.x,y:lane}:{x:coords[2],y:coords[3]}},{tip:p2,control:rightAngle?{x:p2.x,y:lane}:{x:coords[4],y:coords[5]}}].map(({tip,control})=>{
@@ -8797,7 +8817,7 @@ const Hardware = (() => {
             });
             const [start,end]=endpoints;
             const pull=Math.max(24,Math.min(180,Math.hypot(p2.x-p1.x,p2.y-p1.y)*.3));
-            const pathData=rightAngle?rightAngleCablePath(showPlugs?start.base:p1,showPlugs?end.base:p2,lane):showPlugs&&!seating?`M ${start.base.x} ${start.base.y} C ${start.base.x+start.direction.x*pull} ${start.base.y+start.direction.y*pull}, ${end.base.x+end.direction.x*pull} ${end.base.y+end.direction.y*pull}, ${end.base.x} ${end.base.y}`:guide;
+            const pathData=rightAngle?rightAngleCablePath(showPlugs?start.base:p1,showPlugs?end.base:p2,source,target,routeOffset):showPlugs&&!seating?`M ${start.base.x} ${start.base.y} C ${start.base.x+start.direction.x*pull} ${start.base.y+start.direction.y*pull}, ${end.base.x+end.direction.x*pull} ${end.base.y+end.direction.y*pull}, ${end.base.x} ${end.base.y}`:guide;
 
             if (cableType === 'wire') {
                 // Desenha o Fio de Caixa Trançado (Vermelho e Preto)
@@ -9432,7 +9452,7 @@ const Hardware = (() => {
             updateStackFeet();
         }
         function updateCables(affectedDeviceIds=null) {
-            const partial=affectedDeviceIds instanceof Set;
+            const partial=affectedDeviceIds instanceof Set&&!appState.preferences.orthogonalCables;
             appState.project.connections.forEach(c => {
                 if(partial){const [from,to]=connectionDevices(c);if(!affectedDeviceIds.has(from)&&!affectedDeviceIds.has(to))return;}
                 const p1 = document.getElementById(c.outId); const p2 = document.getElementById(c.inId);

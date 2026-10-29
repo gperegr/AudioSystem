@@ -28,7 +28,7 @@ const root=path.resolve(__dirname,'..');
         const cablePath=()=>page.evaluate(()=>__cables.appState.project.connections[0].el.querySelector('path').getAttribute('d'));
         assert.match(await cablePath(),/ C /);
         await page.locator('#orthogonal-cables').evaluate(el=>{el.checked=true;el.dispatchEvent(new Event('change',{bubbles:true}));});
-        assert.match(await cablePath(),/ V .* H .* V /);assert.doesNotMatch(await cablePath(),/ C /);
+        assert.match(await cablePath(),/ L /);assert.doesNotMatch(await cablePath(),/ C /);
         await page.waitForTimeout(700);assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('audio-system-interface-preferences')).orthogonalCables),true);
         await page.locator('#orthogonal-cables').evaluate(el=>{el.checked=false;el.dispatchEvent(new Event('change',{bubbles:true}));});assert.match(await cablePath(),/ C /);
         assert.deepEqual(errors,[]);console.log('Right-angle cable toggle and persistence passed');

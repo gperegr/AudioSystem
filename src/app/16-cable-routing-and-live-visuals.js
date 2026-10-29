@@ -24,7 +24,7 @@
             updateStackFeet();
         }
         function updateCables(affectedDeviceIds=null) {
-            const partial=affectedDeviceIds instanceof Set;
+            const partial=affectedDeviceIds instanceof Set&&!appState.preferences.orthogonalCables;
             appState.project.connections.forEach(c => {
                 if(partial){const [from,to]=connectionDevices(c);if(!affectedDeviceIds.has(from)&&!affectedDeviceIds.has(to))return;}
                 const p1 = document.getElementById(c.outId); const p2 = document.getElementById(c.inId);
