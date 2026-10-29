@@ -84,7 +84,19 @@
                 }
                 return [point,{x:point.x,y},{x,y},{x,y:lane}];
             }
-            const points=[start,...escape(startExit,source),...escape(endExit,target).reverse(),end];
+            const rawPoints=[start,...escape(startExit,source),...escape(endExit,target).reverse(),end];
+            const points=[];
+            for(const point of rawPoints){
+                const previous=points.at(-1);
+                if(previous&&previous.x===point.x&&previous.y===point.y)continue;
+                points.push(point);
+                while(points.length>=3){
+                    const a=points.at(-3),b=points.at(-2),c=points.at(-1);
+                    if(!((a.x===b.x&&b.x===c.x)||(a.y===b.y&&b.y===c.y)))break;
+                    points.splice(points.length-2,1);
+                    if(points.length>=2&&points.at(-1).x===points.at(-2).x&&points.at(-1).y===points.at(-2).y)points.pop();
+                }
+            }
             if(rightAngleLanes)for(let i=1;i<points.length;i++){
                 const a=points[i-1],b=points[i];
                 if(a.y===b.y&&a.x!==b.x)rightAngleLanes.push({axis:'h',left:Math.min(a.x,b.x),right:Math.max(a.x,b.x),y:a.y});

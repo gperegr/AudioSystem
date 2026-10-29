@@ -39,6 +39,7 @@ const root=path.resolve(__dirname,'..');
             return [...d.matchAll(/[ML] ([\d.-]+) ([\d.-]+)/g)].map(m=>({x:+m[1],y:+m[2]}));
         });
         assert(stacked.slice(2).some((p,i)=>p.y===stacked[1].y&&p.x!==stacked[1].x&&i<2),'stacked device must trigger an immediate horizontal escape');
+        for(let i=2;i<stacked.length;i++){const a=stacked[i-2],b=stacked[i-1],c=stacked[i];assert(!((a.x===b.x&&b.x===c.x)||(a.y===b.y&&b.y===c.y)),'route must not backtrack along the same line');}
         const lower=await page.evaluate(()=>{
             const amp=__cables.appState.project.devices.amp;
             __cables.createDevice('powerAmp',0,0,'lower');const dev=__cables.appState.project.devices.lower;
