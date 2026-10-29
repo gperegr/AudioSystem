@@ -1381,6 +1381,7 @@ const Hardware = (() => {
         function readAppPreferences(){try{const value=JSON.parse(localStorage.getItem(APP_PREFERENCES_KEY)||'{}');return value&&typeof value==='object'?value:{};}catch{return {};}}
         const savedAppPreferences=readAppPreferences();
         appStateStore.actions.setPreference('connectionGuidanceEnabled',savedAppPreferences.connectionGuidanceEnabled!==false);
+        appStateStore.actions.setPreference('orthogonalCables',savedAppPreferences.orthogonalCables===true);
         appStateStore.actions.setPreference('roomParticleAmount',Number.isFinite(savedAppPreferences.roomParticleAmount)?Math.max(0,Math.min(100,savedAppPreferences.roomParticleAmount/(savedAppPreferences.particleScaleVersion===2?1:2))):25);
         if(Number.isFinite(savedAppPreferences.roomParticleAmount)&&savedAppPreferences.particleScaleVersion!==2){
             try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({...savedAppPreferences,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2}));}catch{}
@@ -1398,7 +1399,7 @@ const Hardware = (() => {
             appPreferencesSaveTimer=setTimeout(()=>{
                 if(!canvas.clientWidth||!canvas.clientHeight)return;
                 const focusX=(canvas.clientWidth/2-view.x)/view.zoom,focusY=(canvas.clientHeight/2-view.y)/view.zoom;
-                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:appState.canvas.theme,grid:appState.canvas.grid,backdrop:appState.canvas.backdrop,time:appState.canvas.time,connectionGuidanceEnabled:appState.preferences.connectionGuidanceEnabled,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2,developerMode:appState.preferences.developerModeEnabled,headphonePromptSeen:appState.preferences.headphonePromptSeen,inspectorPinned:sidebarPinned.properties,signalHistoryExpanded,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble,zoom:view.zoom,focusX,focusY}));}catch{}
+                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:appState.canvas.theme,grid:appState.canvas.grid,backdrop:appState.canvas.backdrop,time:appState.canvas.time,connectionGuidanceEnabled:appState.preferences.connectionGuidanceEnabled,orthogonalCables:appState.preferences.orthogonalCables,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2,developerMode:appState.preferences.developerModeEnabled,headphonePromptSeen:appState.preferences.headphonePromptSeen,inspectorPinned:sidebarPinned.properties,signalHistoryExpanded,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble,zoom:view.zoom,focusX,focusY}));}catch{}
             },450);
         }
         const appDialog=document.getElementById('app-confirm-dialog');
@@ -8727,6 +8728,10 @@ const Hardware = (() => {
             return `M ${p1.x} ${p1.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
         }
 
+        function rightAngleCablePath(start,end,lane){
+            if(Math.abs(start.x-end.x)<.01)return `M ${start.x} ${start.y} V ${end.y}`;
+            return `M ${start.x} ${start.y} V ${lane} H ${end.x} V ${end.y}`;
+        }
         const CABLE_GEOMETRY=Hardware.plugs;
         const cableGeometry=type=>CABLE_GEOMETRY[type]||CABLE_GEOMETRY.rca;
         function drawCablePlugs(container, cableType, endpoints) {
@@ -8780,17 +8785,19 @@ const Hardware = (() => {
             container.style.setProperty('--cable-outer',geometry.outer+'px');
             container.style.setProperty('--cable-inner',geometry.inner+'px');
             const slack=Number(container.dataset.slack??5);
-            const guide=calculateSagPath(p1,p2,swing,routeOffset,slack);
+            const rightAngle=appState.preferences.orthogonalCables;
+            const lane=Math.abs(p1.y-p2.y)>=70?(p1.y+p2.y)/2:Math.max(p1.y,p2.y)+48+Math.abs(routeOffset);
+            const guide=rightAngle?rightAngleCablePath(p1,p2,lane):calculateSagPath(p1,p2,swing,routeOffset,slack);
             const coords=guide.match(/-?\d+(?:\.\d+)?(?:e[+-]?\d+)?/gi).map(Number);
             const rear=cableType==='wire'?20:(cableType==='p10'||cableType==='p2')?28*geometry.scale:25;
-            const endpoints=[{tip:p1,control:{x:coords[2],y:coords[3]}},{tip:p2,control:{x:coords[4],y:coords[5]}}].map(({tip,control})=>{
+            const endpoints=[{tip:p1,control:rightAngle?{x:p1.x,y:lane}:{x:coords[2],y:coords[3]}},{tip:p2,control:rightAngle?{x:p2.x,y:lane}:{x:coords[4],y:coords[5]}}].map(({tip,control})=>{
                 const dx=control.x-tip.x,dy=control.y-tip.y,length=Math.hypot(dx,dy)||1;
                 const direction={x:dx/length,y:dy/length},offset=rear+(cableType==='wire'?0:8);
                 return {tip,rear,direction,angle:Math.atan2(dy,dx)*180/Math.PI,base:{x:tip.x+direction.x*offset,y:tip.y+direction.y*offset}};
             });
             const [start,end]=endpoints;
             const pull=Math.max(24,Math.min(180,Math.hypot(p2.x-p1.x,p2.y-p1.y)*.3));
-            const pathData=showPlugs&&!seating?`M ${start.base.x} ${start.base.y} C ${start.base.x+start.direction.x*pull} ${start.base.y+start.direction.y*pull}, ${end.base.x+end.direction.x*pull} ${end.base.y+end.direction.y*pull}, ${end.base.x} ${end.base.y}`:guide;
+            const pathData=rightAngle?rightAngleCablePath(showPlugs?start.base:p1,showPlugs?end.base:p2,lane):showPlugs&&!seating?`M ${start.base.x} ${start.base.y} C ${start.base.x+start.direction.x*pull} ${start.base.y+start.direction.y*pull}, ${end.base.x+end.direction.x*pull} ${end.base.y+end.direction.y*pull}, ${end.base.x} ${end.base.y}`:guide;
 
             if (cableType === 'wire') {
                 // Desenha o Fio de Caixa Trançado (Vermelho e Preto)
@@ -10114,6 +10121,9 @@ const Hardware = (() => {
         const interactionSection=document.createElement('section');interactionSection.className='settings-theme-section';
         const connectionHelpCheckbox=connectionHelpSetting.querySelector('input');connectionHelpCheckbox.checked=appState.preferences.connectionGuidanceEnabled;interactionSection.appendChild(connectionHelpSetting);
         connectionHelpCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('connectionGuidanceEnabled',connectionHelpCheckbox.checked);hideContextHelp();updatePortGuidance(true);scheduleAppPreferencesSave();});
+        const rightAngleSetting=document.createElement('label');rightAngleSetting.className='connection-help-setting';rightAngleSetting.innerHTML='<input id="orthogonal-cables" type="checkbox"><span><strong>Cabos em ângulos retos</strong><small>Traça cabos com segmentos horizontais e verticais.</small></span>';
+        const rightAngleCheckbox=rightAngleSetting.querySelector('input');rightAngleCheckbox.checked=appState.preferences.orthogonalCables;interactionSection.appendChild(rightAngleSetting);
+        rightAngleCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('orthogonalCables',rightAngleCheckbox.checked);updateCables();scheduleAppPreferencesSave();});
         const developerModeSetting=document.createElement('label');developerModeSetting.className='connection-help-setting';developerModeSetting.innerHTML='<input id="developer-mode-enabled" type="checkbox"><span><strong>Modo desenvolvedor</strong><small>Mostra a categoria DEBUG e os modelos de teste no catálogo.</small></span>';
         const developerModeCheckbox=developerModeSetting.querySelector('input');developerModeCheckbox.checked=appState.preferences.developerModeEnabled;
         developerModeCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('developerModeEnabled',developerModeCheckbox.checked);equipmentSearch.dispatchEvent(new Event('input'));scheduleAppPreferencesSave();});
