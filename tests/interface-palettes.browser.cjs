@@ -67,7 +67,7 @@ const root=path.resolve(__dirname,'..');
                     };
                 });
                 assert.deepEqual(controls.borders,[],`${sample.key}: decorative button borders`);
-                assert.equal(controls.header,controls.side,`${sample.key}: catalog header follows palette`);
+                assert.equal(controls.header,'rgba(0, 0, 0, 0)',`${sample.key}: catalog search header must be transparent`);
                 assert.equal(controls.floatingCloseVisible,false,`${sample.key}: floating inspector has no close button`);
                 assert(controls.favorite>=3,`${sample.key}: favorite visibility ${controls.favorite}`);
                 for(const label of controls.labels)assert(label.contrast>=4.5,`${sample.key}: ${label.text} contrast ${label.contrast}`);

@@ -4805,3 +4805,6 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 #app-topbar .project-file-actions button:disabled{opacity:.5;cursor:wait;}
 .app-settings-content #clear-system{width:100%;}
 @media(max-width:700px){#app-topbar .project-file-actions button,#app-topbar .app-settings>summary{width:44px;height:44px;}}
+
+/* Category titles scroll with the catalog instead of covering equipment on phones. */
+@media(max-width:700px){#equipment-catalog .mb-6>h3{position:static;padding:0;background:transparent;}}

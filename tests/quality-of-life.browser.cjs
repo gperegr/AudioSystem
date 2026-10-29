@@ -31,6 +31,34 @@ const root=path.resolve(__dirname,'..');
             assert.equal(await page.locator('#catalog-sidebar-toggle,#catalog-sidebar-pin,.mobile-catalog-close,[data-mobile-panel=catalog]').count(),0);
         }
         await assertCatalogVisible();
+        // Toolbar actions must share the same vertical center at desktop and mobile widths.
+        for(const width of [1600,800,390]){
+            await page.setViewportSize({width,height:900});
+            const boxes=await Promise.all(['#export-project','#import-project','.app-settings>summary'].map(selector=>page.locator(selector).boundingBox()));
+            assert(boxes.every(Boolean),'project and settings buttons must be visible');
+            const centers=boxes.map(box=>box.y+box.height/2);
+            assert(Math.max(...centers)-Math.min(...centers)<2,`toolbar button centers differ: ${centers}`);
+            assert(boxes[0].x+boxes[0].width<=boxes[1].x+1 && boxes[1].x+boxes[1].width<=boxes[2].x+1,'toolbar buttons must not overlap');
+        }
+        await page.setViewportSize({width:1600,height:1100});
+        await page.evaluate(()=>{__signal.createDevice('spkElectrostatic',200,200,'regression-speaker');__signal.selectDevice('regression-speaker');});
+        const panel=page.locator('#inspector');await panel.waitFor({state:'visible'});await page.waitForTimeout(700);
+        for(const id of ['listening-solo','listening-mute']){
+            const button=page.locator('#'+id), before=await button.getAttribute('aria-pressed');
+            await button.evaluate(el=>{window.__regressionButton=el;window.__regressionAnimation=document.querySelector('#inspector').getAnimations().map(a=>a.currentTime);});
+            await button.click();
+            assert.equal(await button.getAttribute('aria-pressed'),String(before!=='true'));
+            assert(await button.evaluate(el=>el===window.__regressionButton),'toggle must not recreate the panel controls');
+            assert(await panel.isVisible(),'panel must remain visible after toggle');
+            assert.equal(await panel.evaluate(el=>el.getAnimations().filter(a=>a.animationName==='inspector-elastic-fill'&&a.playState==='running').length),0,'toggle must not replay the opening animation');
+        }
+        const device=page.locator('#regression-speaker'),box=await device.boundingBox();
+        await page.mouse.move(box.x+box.width/2,box.y+12);await page.mouse.down();
+        await page.mouse.move(box.x+box.width/2+35,box.y+30,{steps:5});
+        assert.equal(await panel.isVisible(),false,'panel must be hidden during device drag');
+        await page.mouse.up();await page.waitForTimeout(100);
+        assert(await panel.isVisible(),'panel must return after dropping the selected device');
+        await page.evaluate(()=>__signal.deleteDevice(__signal.appState.project.devices['regression-speaker']));
         await page.locator('#canvas').click({position:{x:600,y:600}});await page.keyboard.press('Escape');await page.waitForTimeout(3500);await assertCatalogVisible();
         const result=await page.evaluate(()=>{
             const before=Object.keys(__signal.appState.project.devices).length;

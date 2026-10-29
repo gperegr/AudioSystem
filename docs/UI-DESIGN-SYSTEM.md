@@ -75,6 +75,6 @@ Include normal, hover, visible focus, selected, disabled, and error states where
 
 ## Permanent catalog and floating panels
 
-The left catalog stays visible; it has no collapse arrow, pin, automatic hiding, or pin preference. The canvas reserves space for it. At widths up to 700 px, the catalog is 136 px wide and uses one equipment column. Search, favorites, and drag-to-discard remain available. The search header floats above the scrolling list, with space reserved at the top so the first items start below it. It gradually blurs items scrolling behind it; the search field stays open while it contains text and closes only after the text is cleared.
+The left catalog stays visible; it has no collapse arrow, pin, automatic hiding, or pin preference. The canvas reserves space for it. At widths up to 700 px, the catalog is 136 px wide and uses one equipment column. Search, favorites, and drag-to-discard remain available. The search header floats above the scrolling list, with space reserved at the top so the first items start below it. Only the search control has a surface, and it blurs items scrolling behind it; the search field stays open while it contains text and closes only after the text is cleared.
 
 Floating properties panels are confined to the canvas, below the top bar and to the right of the catalog. Their position, size, animation, and shadow respect those boundaries. When space is limited, panels shrink and scroll internally. Their position updates when the panel, catalog, or top bar changes size.
