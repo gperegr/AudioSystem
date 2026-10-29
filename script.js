@@ -8382,6 +8382,7 @@ const Hardware = (() => {
         const parameterlessDeviceTypes=new Set(['cdCollection','pendantLamp','wallLampCage','wallLampDome']);
 
         function selectDevice(id, preserveSelection = false) {
+            const wasOpenForDevice = !!id && appState.interface.selectedDeviceId === id && inspectorAnchorDevice?.isConnected && !inspectorContent.classList.contains('hidden');
             GuidedAccess.notify();
             if(preserveSelection&&appState.interface.selectedDeviceIds.size>1)id=null;
             const dev=id?appState.project.devices[id]:null;
@@ -8580,9 +8581,11 @@ const Hardware = (() => {
             if(floating){
                 inspectorWindow.setAttribute('role','region');
                 positionInspectorWindow();
-                inspectorWindow.classList.remove('inspector-window-enter');
-                void inspectorWindow.offsetWidth;
-                inspectorWindow.classList.add('inspector-window-enter');
+                if(!wasOpenForDevice){
+                    inspectorWindow.classList.remove('inspector-window-enter');
+                    void inspectorWindow.offsetWidth;
+                    inspectorWindow.classList.add('inspector-window-enter');
+                }
             }
             Hardware.inspector(inspectorContent);
             MenuSlider.mount(inspectorContent);
