@@ -59,18 +59,29 @@
             let lane=Math.max(startExit.y,endExit.y,...obstacles.filter(r=>r.left<Math.max(start.x,end.x)&&r.right>Math.min(start.x,end.x)&&r.top<Math.max(startExit.y,endExit.y)+20).map(r=>r.bottom))+20+Math.abs(offset);
             if(rightAngleLanes){
                 const left=Math.min(start.x,end.x),right=Math.max(start.x,end.x),spacing=18;
-                while(rightAngleLanes.some(other=>left<other.right+spacing&&right>other.left-spacing&&Math.abs(lane-other.y)<spacing))lane+=spacing;
-                rightAngleLanes.push({left,right,y:lane});
+                while(rightAngleLanes.some(other=>other.axis==='h'&&left<other.right+spacing&&right>other.left-spacing&&Math.abs(lane-other.y)<spacing))lane+=spacing;
+
             }
             // Route around obstacles intersecting either vertical exit using an outside corridor.
             function escape(point,ownId){
                 const block=rects.filter(r=>r.id!==ownId&&point.x>r.left&&point.x<r.right&&r.top<lane&&r.bottom>point.y).sort((a,b)=>a.top-b.top)[0];
                 if(!block)return [point,{x:point.x,y:lane}];
-                const x=Math.abs(point.x-block.left)<Math.abs(point.x-block.right)?block.left-1:block.right+1;
-                const y=Math.max(point.y,block.top-1);
+                const side=Math.abs(point.x-block.left)<Math.abs(point.x-block.right)?-1:1;
+                let x=side<0?block.left-1:block.right+1;
+                let y=Math.max(point.y,block.top-1);
+                if(rightAngleLanes){
+                    const spacing=18;
+                    while(rightAngleLanes.some(other=>other.axis==='v'&&Math.abs(x-other.x)<spacing&&y<other.bottom&&lane>other.top))x+=side*spacing;
+                    while(rightAngleLanes.some(other=>other.axis==='h'&&Math.abs(y-other.y)<spacing&&Math.min(x,point.x)<other.right&&Math.max(x,point.x)>other.left))y+=spacing;
+                }
                 return [point,{x:point.x,y},{x,y},{x,y:lane}];
             }
             const points=[start,...escape(startExit,source),...escape(endExit,target).reverse(),end];
+            if(rightAngleLanes)for(let i=1;i<points.length;i++){
+                const a=points[i-1],b=points[i];
+                if(a.y===b.y&&a.x!==b.x)rightAngleLanes.push({axis:'h',left:Math.min(a.x,b.x),right:Math.max(a.x,b.x),y:a.y});
+                else if(a.x===b.x&&a.y!==b.y&&i>1&&i<points.length-1)rightAngleLanes.push({axis:'v',x:a.x,top:Math.min(a.y,b.y),bottom:Math.max(a.y,b.y)});
+            }
             return points.map((p,i)=>`${i?'L':'M'} ${p.x} ${p.y}`).join(' ');
         }
         const CABLE_GEOMETRY=Hardware.plugs;
