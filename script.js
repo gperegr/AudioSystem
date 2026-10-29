@@ -10095,7 +10095,7 @@ const Hardware = (() => {
                     if(saved.y>=0){
                         const oldFloorBottom=world.offsetHeight-196;
                         const legacyHeight=dev.type==='turntableLinear'?252:TURNTABLE_TYPES.has(dev.type)?dev.el.offsetHeight+8:dev.el.offsetHeight;
-                        const legacyY=saved.y+Math.max(0,legacyHeight-dev.el.offsetHeight);
+                        const legacyY=saved.y;
                         const targetY=canvas.dataset.theme==='scene'&&Math.abs(saved.y+legacyHeight-oldFloorBottom)<1?bottom-dev.el.offsetHeight:legacyY;
                         dev.el.style.top=`${Math.max(0,Math.min(bottom-dev.el.offsetHeight,targetY))}px`;
                     }
