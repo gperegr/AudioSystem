@@ -4829,3 +4829,5 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 .app-settings-content :is(#room-rain-enabled,#room-particle-enabled) {position:relative;}
 .app-settings-content :is(#room-rain-enabled,#room-particle-enabled)::after {content:'';position:absolute;left:8px;top:21px;width:28px;height:2px;border-radius:2px;background:currentColor;box-shadow:0 0 0 2px var(--ui-control);transform:rotate(-45deg);pointer-events:none;}
 .app-settings-content :is(#room-rain-enabled,#room-particle-enabled)[aria-pressed="true"]::after {display:none;}
+
+.app-settings-content .atmosphere-heading[hidden] {display:none!important;}

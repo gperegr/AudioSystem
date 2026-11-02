@@ -10216,6 +10216,7 @@ const Hardware = (() => {
         const developerModeSetting=document.createElement('label');developerModeSetting.className='connection-help-setting';developerModeSetting.innerHTML='<input id="developer-mode-enabled" type="checkbox"><span><strong>Modo desenvolvedor</strong><small>Mostra a categoria DEBUG e os modelos de teste no catálogo.</small></span>';
         const developerModeCheckbox=developerModeSetting.querySelector('input');developerModeCheckbox.checked=appState.preferences.developerModeEnabled;
         developerModeCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('developerModeEnabled',developerModeCheckbox.checked);equipmentSearch.dispatchEvent(new Event('input'));scheduleAppPreferencesSave();});
+        const atmosphereHeading=document.createElement('div');atmosphereHeading.className='settings-icon-control atmosphere-heading';atmosphereHeading.textContent='Atmosfera';themeSection.appendChild(atmosphereHeading);
         const particleLevels=[12,25,50];
         let particleLevel=particleLevels.reduce((best,level)=>Math.abs(level-(savedAppPreferences.particleLastLevel||appState.preferences.roomParticleAmount||25))<Math.abs(best-(savedAppPreferences.particleLastLevel||appState.preferences.roomParticleAmount||25))?level:best,25);
         appStateStore.actions.setPreference('particleLastLevel',particleLevel);
@@ -10318,7 +10319,7 @@ const Hardware = (() => {
             const sync=()=>choices.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.value===select.value)));
             select.addEventListener('change',sync);new MutationObserver(sync).observe(canvas,{attributes:true,attributeFilter:['data-theme','data-grid','data-backdrop','data-time']});sync();
         }
-        const syncParticleVisibility=()=>{particleSetting.hidden=canvas.dataset.theme!=='scene';rainSetting.hidden=canvas.dataset.theme!=='scene';};
+        const syncParticleVisibility=()=>{const hidden=canvas.dataset.theme!=='scene';atmosphereHeading.hidden=hidden;particleSetting.hidden=hidden;rainSetting.hidden=hidden;};
         new MutationObserver(syncParticleVisibility).observe(canvas,{attributes:true,attributeFilter:['data-theme']});syncParticleVisibility();
         const settingsGroup=(title,icon,nodes,open=false)=>{
             const group=document.createElement('details');group.className='settings-group';group.open=open;

@@ -17,6 +17,7 @@
         'Chuva média':'Moderate rain',
         'Chuva forte':'Heavy rain',
         'Intensidade da chuva':'Rain intensity',
+        'Atmosfera':'Atmosphere',
         'Abrir configurações':'Open settings',
         'Configurações':'Settings',
         'Idioma':'Language',
