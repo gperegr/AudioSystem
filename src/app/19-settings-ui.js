@@ -20,12 +20,21 @@
         particleSetting.innerHTML=`<label for="room-particle-amount">Partículas <output id="room-particle-value">${appState.preferences.roomParticleAmount}%</output></label><input id="room-particle-amount" type="range" min="0" max="100" step="5" value="${appState.preferences.roomParticleAmount}" aria-label="Quantidade de partículas no cenário"><small>0 desliga as partículas; 25 mantém a densidade padrão.</small>`;
         particleSetting.querySelector('input').addEventListener('input',event=>{appStateStore.actions.setPreference('roomParticleAmount',Number(event.target.value));particleSetting.querySelector('output').textContent=appState.preferences.roomParticleAmount+'%';updateRoomMotes(appState.canvas.backdrop,appState.canvas.time);scheduleAppPreferencesSave();});
         themeSection.appendChild(particleSetting);
-        const rainSetting=document.createElement('section');rainSetting.className='settings-particle-control';
-        rainSetting.innerHTML='<label class="connection-help-setting"><input id="room-rain-enabled" type="checkbox"><span><strong>Chuva nas janelas</strong></span></label><label for="room-rain-intensity">Intensidade da chuva <output id="room-rain-value"></output></label><input id="room-rain-intensity" type="range" min="0" max="100" step="5">';
-        const rainEnabled=rainSetting.querySelector('#room-rain-enabled'),rainIntensity=rainSetting.querySelector('#room-rain-intensity'),rainValue=rainSetting.querySelector('#room-rain-value');
-        rainEnabled.checked=appState.preferences.rainEnabled;rainIntensity.value=appState.preferences.rainIntensity;rainValue.textContent=rainIntensity.value+'%';
-        rainEnabled.addEventListener('change',()=>{appStateStore.actions.setPreference('rainEnabled',rainEnabled.checked);updateRoomRain();scheduleAppPreferencesSave();});
-        rainIntensity.addEventListener('input',()=>{appStateStore.actions.setPreference('rainIntensity',Number(rainIntensity.value));rainValue.textContent=rainIntensity.value+'%';updateRoomRain();scheduleAppPreferencesSave();});
+        const rainSetting=document.createElement('section');rainSetting.className='settings-particle-control rain-controls';
+        const rainCloud='<path d="M5 16a4 4 0 0 1-.5-8 6 6 0 0 1 11.5-2 4.5 4.5 0 0 1 1 9h-1"/>';
+        const rainIcon=lines=>`<svg viewBox="0 0 24 24" aria-hidden="true">${rainCloud}<path d="${lines}"/></svg>`;
+        rainSetting.innerHTML='<button id="room-rain-enabled" type="button" aria-label="Chuva nas janelas" title="Chuva nas janelas">'+rainIcon('m8 16-2 4m7-4-2 4m7-4-2 4')+'</button><div class="rain-intensity-control"><span title="Chuva leve">'+rainIcon('m12 17-1 3')+'</span><input id="room-rain-intensity" aria-label="Intensidade da chuva" type="range" min="0" max="2" step="1"><span title="Chuva forte">'+rainIcon('m6 16-2 5m7-5-2 5m7-5-2 5m7-5-2 5')+'</span></div>';
+        const rainEnabled=rainSetting.querySelector('#room-rain-enabled'),rainIntensity=rainSetting.querySelector('#room-rain-intensity');
+        const rainLevelLabels=['Chuva leve','Chuva média','Chuva forte'];
+        function syncRainControls(){
+            rainEnabled.setAttribute('aria-pressed',String(appState.preferences.rainEnabled));
+            rainIntensity.value=rainIntensityLevels.indexOf(appState.preferences.rainIntensity);
+            const name=AudioSystemLanguage.translate(rainLevelLabels[Number(rainIntensity.value)]);
+            rainIntensity.setAttribute('aria-valuetext',name);rainIntensity.title=name;
+        }
+        syncRainControls();AudioSystemLanguage.subscribe(syncRainControls);
+        rainEnabled.addEventListener('click',()=>{appStateStore.actions.setPreference('rainEnabled',!appState.preferences.rainEnabled);syncRainControls();updateRoomRain();scheduleAppPreferencesSave();});
+        rainIntensity.addEventListener('input',()=>{appStateStore.actions.setPreference('rainIntensity',rainIntensityLevels[Number(rainIntensity.value)]);syncRainControls();updateRoomRain();scheduleAppPreferencesSave();});
         themeSection.appendChild(rainSetting);
 
         clearCatalogFooter.insertBefore(themeSection,soundControls);

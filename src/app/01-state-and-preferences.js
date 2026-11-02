@@ -15,7 +15,8 @@
         appStateStore.actions.setPreference('connectionGuidanceEnabled',savedAppPreferences.connectionGuidanceEnabled!==false);
         appStateStore.actions.setPreference('orthogonalCables',savedAppPreferences.orthogonalCables===true);
         appStateStore.actions.setPreference('rainEnabled',savedAppPreferences.rainEnabled===true);
-        appStateStore.actions.setPreference('rainIntensity',Number.isFinite(savedAppPreferences.rainIntensity)?Math.max(0,Math.min(100,savedAppPreferences.rainIntensity)):50);
+        const rainIntensityLevels=[20,50,100];
+        appStateStore.actions.setPreference('rainIntensity',rainIntensityLevels.reduce((best,level)=>Math.abs(level-(savedAppPreferences.rainIntensity??50))<Math.abs(best-(savedAppPreferences.rainIntensity??50))?level:best,50));
         appStateStore.actions.setPreference('alignmentGuides',savedAppPreferences.alignmentGuides!==false);
         appStateStore.actions.setPreference('roomParticleAmount',Number.isFinite(savedAppPreferences.roomParticleAmount)?Math.max(0,Math.min(100,savedAppPreferences.roomParticleAmount/(savedAppPreferences.particleScaleVersion===2?1:2))):25);
         if(Number.isFinite(savedAppPreferences.roomParticleAmount)&&savedAppPreferences.particleScaleVersion!==2){

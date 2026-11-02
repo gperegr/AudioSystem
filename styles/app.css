@@ -4823,3 +4823,10 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 /* Keep rain at the same focal depth as its window and the wall lamps. */
 #canvas[data-theme="scene"] {--room-depth-blur:2px;}
 #canvas[data-theme="scene"] :is(.room-scene-image,.room-rain) {filter:blur(var(--room-depth-blur));}
+.app-settings-content .rain-controls {display:flex;flex-direction:row;align-items:center;gap:12px;}
+.app-settings-content #room-rain-enabled {display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;padding:9px;border:0;border-radius:8px;background:var(--ui-control);color:var(--ui-secondary);}
+.app-settings-content #room-rain-enabled[aria-pressed="true"] {background:var(--ui-active);color:var(--ui-accent);}
+.rain-controls svg {width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+.rain-intensity-control {display:flex;align-items:center;gap:8px;flex:1;min-width:0;}
+.rain-intensity-control>span {display:flex;flex:none;color:var(--ui-secondary);}
+.rain-intensity-control>input {flex:1;min-width:0;width:100%;}

@@ -25,10 +25,10 @@ const root=path.resolve(__dirname,'..');
         await page.locator('#headphone-calibration-skip').click();
         await page.getByRole('button',{name:'Agora não',exact:true}).click();
         const toggle=page.locator('#room-rain-enabled'),slider=page.locator('#room-rain-intensity');
-        assert.equal(await toggle.isChecked(),false);
-        await toggle.evaluate(el=>{el.checked=true;el.dispatchEvent(new Event('change',{bubbles:true}));});
+        assert.equal(await toggle.getAttribute('aria-pressed'),'false');
+        await toggle.evaluate(el=>el.click());
         await page.waitForTimeout(200);assert.equal(await page.locator('.room-rain').getAttribute('data-scene'),'loft');assert.equal(await page.locator('.room-rain-pane').count(),3);
-        await slider.evaluate(el=>{el.value=20;el.dispatchEvent(new Event('input',{bubbles:true}));});assert.equal(await page.locator('.room-rain-drop').count(),54);
+        await slider.evaluate(el=>{el.value=0;el.dispatchEvent(new Event('input',{bubbles:true}));});assert.equal(await page.locator('.room-rain-drop').count(),54);
         assert.equal(await page.locator('.room-rain-glass').count(),48,'loft rain must be clipped to individual glass lights');
         const variation=await page.locator('.room-rain-drop').evaluateAll(els=>new Set(els.map(el=>el.style.getPropertyValue('--rain-duration'))).size);
         assert(variation>30,'drops should have independently varied speeds');
@@ -43,7 +43,7 @@ const root=path.resolve(__dirname,'..');
             assert(clips.every(p=>p.clip.startsWith('polygon(')&&p.overflow==='hidden'));
         }
         const slowRatio=await page.locator('.room-rain-drop').first().evaluate(el=>parseFloat(getComputedStyle(el).animationDuration)/parseFloat(el.style.getPropertyValue('--rain-duration')));
-        await slider.evaluate(el=>{el.value=100;el.dispatchEvent(new Event('input',{bubbles:true}));});
+        await slider.evaluate(el=>{el.value=2;el.dispatchEvent(new Event('input',{bubbles:true}));});
         const fastRatio=await page.locator('.room-rain-drop').first().evaluate(el=>parseFloat(getComputedStyle(el).animationDuration)/parseFloat(el.style.getPropertyValue('--rain-duration')));
         assert(fastRatio<slowRatio*.6,'increasing intensity must accelerate the rain');
         const focus=await page.evaluate(()=>({rain:getComputedStyle(document.querySelector('.room-rain')).filter,image:getComputedStyle(document.querySelector('.room-scene-image')).filter}));
@@ -53,14 +53,15 @@ const root=path.resolve(__dirname,'..');
         await page.evaluate(()=>{const grid=document.getElementById('canvas-grid');grid.value='hidden';grid.dispatchEvent(new Event('change'));});
         await page.waitForTimeout(1200);
         await page.screenshot({path:'/tmp/window-rain-loft.png'});
-        await slider.evaluate(el=>{el.value=20;el.dispatchEvent(new Event('input',{bubbles:true}));});
+        await slider.evaluate(el=>{el.value=0;el.dispatchEvent(new Event('input',{bubbles:true}));});
 
         await page.evaluate(()=>{const select=document.getElementById('canvas-backdrop');select.value='listeningIllustrated';select.dispatchEvent(new Event('change'));});
         assert.equal(await page.locator('.room-rain-pane').count(),1);assert.equal(await page.locator('.room-rain-glass').count(),1);assert.equal(await page.locator('.room-rain').getAttribute('data-scene'),'listening');
         await page.evaluate(()=>{const select=document.getElementById('canvas-backdrop');select.value='studioIllustrated';select.dispatchEvent(new Event('change'));});
         assert.equal(await page.locator('.room-rain').getAttribute('data-scene'),'studio');
-        await page.waitForTimeout(900);await page.reload();await page.waitForFunction(()=>document.querySelector('#room-rain-enabled')?.checked);
-        assert.equal(await slider.inputValue(),'20');
+        await page.waitForTimeout(900);await page.reload();await page.waitForFunction(()=>document.querySelector('#room-rain-enabled')?.getAttribute('aria-pressed')==='true');
+        assert.equal(await slider.inputValue(),'0');
+        assert.equal(await slider.getAttribute('step'),'1');assert.equal(await slider.getAttribute('max'),'2');
         await page.locator('#app-topbar').click({position:{x:8,y:8}});
         // Measure the actual noise output rather than only checking the slider.
         await page.evaluate(()=>{
@@ -69,10 +70,10 @@ const root=path.resolve(__dirname,'..');
         });
         const rms=()=>page.evaluate(()=>{const data=new Float32Array(window.__rainAnalyser.fftSize);window.__rainAnalyser.getFloatTimeDomainData(data);return Math.sqrt(data.reduce((sum,x)=>sum+x*x,0)/data.length);});
         await page.waitForTimeout(800);const quiet=await rms();assert(quiet>0,'rain must produce audio');
-        await slider.evaluate(el=>{el.value=80;el.dispatchEvent(new Event('input',{bubbles:true}));});await page.waitForTimeout(900);
+        await slider.evaluate(el=>{el.value=2;el.dispatchEvent(new Event('input',{bubbles:true}));});await page.waitForTimeout(900);
         assert(await rms()>quiet*3,'noise level must follow intensity');
         assert(await page.evaluate(()=>__cables.getRainAudio().source===window.__rainSource),'intensity changes must reuse the source');
-        await toggle.evaluate(el=>{el.checked=false;el.dispatchEvent(new Event('change',{bubbles:true}));});
+        await toggle.evaluate(el=>el.click());
         assert.equal(await page.locator('.room-rain').isVisible(),false);
         await page.waitForTimeout(850);assert.equal(await page.evaluate(()=>__cables.getRainAudio()),null,'disabled rain must release its audio nodes');
 
