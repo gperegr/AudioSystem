@@ -670,49 +670,6 @@
                     const initialById=new Map(initialPositions.map(p=>[p.dev.id,{x:p.x,y:p.y}]));
                     const discardPreviews=new Map();
                     let discardPreviewLayer=null;
-                    let alignmentGuideLayer=null;
-                    const alignmentTolerance=10;
-                    function clearAlignmentGuides(remove=false){
-                        if(!alignmentGuideLayer)return;
-                        if(remove){alignmentGuideLayer.remove();alignmentGuideLayer=null;return;}
-                        alignmentGuideLayer.querySelectorAll('i').forEach(line=>line.style.display='none');
-                    }
-                    function alignDragTargets(){
-                        if(!appState.preferences.alignmentGuides){clearAlignmentGuides();return;}
-                        if(initialPositions.length===0)return;
-                        const movingIds=new Set(initialPositions.map(item=>item.dev.id));
-                        const stationary=Object.values(appState.project.devices).filter(item=>!movingIds.has(item.id)&&item.el?.isConnected);
-                        const findSnap=(axis)=>{
-                            const horizontal=axis==='x',candidates=[];
-                            targets.forEach(p=>{
-                                const size=horizontal?p.dev.el.offsetWidth:p.dev.el.offsetHeight,start=horizontal?p.x:p.y;
-                                candidates.push({value:start,offset:0},{value:start+size/2,offset:size/2},{value:start+size,offset:size});
-                            });
-                            let best=null;
-                            for(const p of targets)for(const other of stationary){
-                                const start=horizontal?p.x:p.y,size=horizontal?p.dev.el.offsetWidth:p.dev.el.offsetHeight,otherStart=horizontal?parseFloat(other.el.style.left)||0:parseFloat(other.el.style.top)||0,otherSize=horizontal?other.el.offsetWidth:other.el.offsetHeight;
-                                const own=[start,start+size/2,start+size],fixed=[otherStart,otherStart+otherSize/2,otherStart+otherSize];
-                                for(const value of own)for(const target of fixed){const delta=target-value,distance=Math.abs(delta);if(distance<=alignmentTolerance/view.zoom&&(!best||distance<best.distance))best={delta,value:value+delta};}
-                            }
-                            return best;
-                        };
-                        let snapX=findSnap('x'),snapY=findSnap('y');
-                        const sideInset=sceneSideInset(),bottomLimit=movingDevices.some(item=>WALL_LAMP_TYPES[item.type])?wallPlacementBottom():maxEquipmentBottom();
-                        if(snapX&&targets.some(p=>p.x+snapX.delta<sideInset||p.x+snapX.delta+p.dev.el.offsetWidth>world.offsetWidth-sideInset))snapX=null;
-                        if(snapY&&targets.some(p=>p.y+snapY.delta<0||p.y+snapY.delta+p.dev.el.offsetHeight>bottomLimit))snapY=null;
-                        if(snapX)targets=targets.map(p=>({...p,x:p.x+snapX.delta}));
-                        if(snapY)targets=targets.map(p=>({...p,y:p.y+snapY.delta}));
-                        if(!snapX&&!snapY){clearAlignmentGuides();return;}
-                        if(!alignmentGuideLayer){
-                            alignmentGuideLayer=document.createElement('div');alignmentGuideLayer.className='alignment-guide-layer';alignmentGuideLayer.setAttribute('aria-hidden','true');
-                            alignmentGuideLayer.innerHTML='<i class="alignment-guide-x"></i><i class="alignment-guide-y"></i>';document.body.appendChild(alignmentGuideLayer);
-                        }
-                        const bounds=canvas.getBoundingClientRect(),worldBounds=world.getBoundingClientRect(),gx=alignmentGuideLayer.querySelector('.alignment-guide-x'),gy=alignmentGuideLayer.querySelector('.alignment-guide-y');
-                        if(snapX){const x=worldBounds.left+snapX.value*view.zoom;gx.style.display='block';gx.style.left=`${x}px`;gx.style.top=`${bounds.top}px`;gx.style.width='1px';gx.style.height=`${bounds.height}px`;gx.style.transform='none';}
-                        else gx.style.display='none';
-                        if(snapY){const y=worldBounds.top+snapY.value*view.zoom;gy.style.display='block';gy.style.left=`${bounds.left}px`;gy.style.top=`${y}px`;gy.style.width=`${bounds.width}px`;gy.style.height='1px';gy.style.transform='none';}
-                        else gy.style.display='none';
-                    }
                     const discardGrabOffsets=new Map(movingDevices.map(item=>{const rect=item.el.getBoundingClientRect();return [item.id,{dx:rect.left-startX,dy:rect.top-startY}];}));
                     function updateDiscardPreview(ev){
                         if(!isOverCatalog(ev)){clearDiscardPreview();return;}
@@ -752,7 +709,7 @@
                     }
 
                     movingDevices.forEach(item=>item.cancelPlacementMotion?.());
-                    const cancel = () => { document.body.classList.remove('equipment-drag-active');clearDiscardPreview();clearAlignmentGuides(true);cancelAnimationFrame(frame); frame=0;movingDevices.forEach(item=>{item.el.style.translate='none';delete item.dragVisualPosition;item.el.classList.remove('equipment-dragging','history-settling');}); };
+                    const cancel = () => { document.body.classList.remove('equipment-drag-active');clearDiscardPreview();cancelAnimationFrame(frame); frame=0;movingDevices.forEach(item=>{item.el.style.translate='none';delete item.dragVisualPosition;item.el.classList.remove('equipment-dragging','history-settling');}); };
                     movingDevices.forEach(item=>item.cancelPlacementMotion=cancel);
                     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
                     const animate = now => {
@@ -794,7 +751,6 @@
                             const target=settle&&initialPositions.length===1?snapOnEquipment(p.dev,x,y):{x,y};
                             return {dev:p.dev,x:target.x,y:target.y};
                         });
-                        if(!settle)alignDragTargets();else clearAlignmentGuides();
                         if(settle){
                             targets=settleEquipmentDrop(targets,ignored,initialPositions);
 
@@ -829,7 +785,7 @@
                         discardZone.setAttribute('aria-hidden','true');
                         window.removeEventListener('blur',abortDrag);
                         window.removeEventListener('keydown',cancelWithEscape);
-                        released=true;document.body.classList.remove('equipment-drag-active');clearDiscardPreview();clearAlignmentGuides(true);scheduleInspectorPosition();
+                        released=true;document.body.classList.remove('equipment-drag-active');clearDiscardPreview();scheduleInspectorPosition();
                         if(isDragging)movingDevices.forEach(item=>item.el.classList.add('history-settling'));
                         if(isDragging&&isOverCatalog(ev)){
                             playUiSound('discard');showDiscardCloud(ev.clientX,ev.clientY);

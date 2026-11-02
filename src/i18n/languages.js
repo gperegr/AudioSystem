@@ -5,8 +5,6 @@
     const translations = Object.freeze({
         'Cabos em ângulos retos':'Right-angle cables',
         'Traça cabos com segmentos horizontais e verticais.':'Draws cables with horizontal and vertical segments.',
-        'Guias magnéticas':'Magnetic guides',
-        'Exibe linhas e aproxima equipamentos alinhados durante o arraste.':'Shows guides and snaps equipment into alignment while dragging.',
         'Chuva nas janelas':'Rain on windows',
         'Ativar partículas':'Enable particles',
         'Desativar partículas':'Disable particles',

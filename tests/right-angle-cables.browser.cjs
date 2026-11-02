@@ -51,10 +51,6 @@ const root=path.resolve(__dirname,'..');
         for(const a of segments[0])for(const b of segments[1])if(Math.max(Math.min(a.a.y,a.b.y),Math.min(b.a.y,b.b.y))<Math.min(Math.max(a.a.y,a.b.y),Math.max(b.a.y,b.b.y)))assert(Math.abs(a.a.x-b.a.x)>=17,'vertical detours must have separate lanes');
         await page.waitForTimeout(700);assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('audio-system-interface-preferences')).orthogonalCables),true);
         await page.locator('#orthogonal-cables').evaluate(el=>{el.checked=false;el.dispatchEvent(new Event('change',{bubbles:true}));});assert.match(await cablePath(),/ C /);
-        assert.equal(await page.locator('#alignment-guides-enabled').isChecked(),true);
-        await page.locator('#alignment-guides-enabled').evaluate(el=>{el.checked=false;el.dispatchEvent(new Event('change',{bubbles:true}));});
-        await page.waitForTimeout(700);assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('audio-system-interface-preferences')).alignmentGuides),false);
-        await page.reload();assert.equal(await page.locator('#alignment-guides-enabled').isChecked(),false);
         assert.deepEqual(errors,[]);console.log('Right-angle cable toggle and persistence passed');
     }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
