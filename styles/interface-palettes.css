@@ -203,12 +203,12 @@
 #equipment-catalog .catalog-panel-header .catalog-search{
   pointer-events:auto;
   background:color-mix(in srgb,var(--ui-control) 48%,transparent)!important;
-  backdrop-filter:blur(14px) saturate(1.25);
-  -webkit-backdrop-filter:blur(14px) saturate(1.25);
+  backdrop-filter:blur(28px) saturate(1.25);
+  -webkit-backdrop-filter:blur(28px) saturate(1.25);
   box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ui-text) 14%,transparent),inset 0 -1px 0 color-mix(in srgb,var(--ui-text) 6%,transparent);
 }
 @supports (backdrop-filter: url("#catalog-glass-refraction")) {
-  #equipment-catalog .catalog-panel-header .catalog-search {backdrop-filter:blur(12px) url("#catalog-glass-refraction") saturate(1.25);}
+  #equipment-catalog .catalog-panel-header .catalog-search {backdrop-filter:blur(26px) url("#catalog-glass-refraction") saturate(1.25);}
 }
 .app-settings-content :is(.settings-particle-control,.listening-level-settings label){color:var(--ui-secondary);}
 .app-settings-content :is(.headphone-calibration-setting strong,.listening-level-settings strong){color:var(--ui-text);}
