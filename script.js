@@ -1382,6 +1382,8 @@ const Hardware = (() => {
         const savedAppPreferences=readAppPreferences();
         appStateStore.actions.setPreference('connectionGuidanceEnabled',savedAppPreferences.connectionGuidanceEnabled!==false);
         appStateStore.actions.setPreference('orthogonalCables',savedAppPreferences.orthogonalCables===true);
+        appStateStore.actions.setPreference('rainEnabled',savedAppPreferences.rainEnabled===true);
+        appStateStore.actions.setPreference('rainIntensity',Number.isFinite(savedAppPreferences.rainIntensity)?Math.max(0,Math.min(100,savedAppPreferences.rainIntensity)):50);
         appStateStore.actions.setPreference('alignmentGuides',savedAppPreferences.alignmentGuides!==false);
         appStateStore.actions.setPreference('roomParticleAmount',Number.isFinite(savedAppPreferences.roomParticleAmount)?Math.max(0,Math.min(100,savedAppPreferences.roomParticleAmount/(savedAppPreferences.particleScaleVersion===2?1:2))):25);
         if(Number.isFinite(savedAppPreferences.roomParticleAmount)&&savedAppPreferences.particleScaleVersion!==2){
@@ -1400,7 +1402,7 @@ const Hardware = (() => {
             appPreferencesSaveTimer=setTimeout(()=>{
                 if(!canvas.clientWidth||!canvas.clientHeight)return;
                 const focusX=(canvas.clientWidth/2-view.x)/view.zoom,focusY=(canvas.clientHeight/2-view.y)/view.zoom;
-                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:appState.canvas.theme,grid:appState.canvas.grid,backdrop:appState.canvas.backdrop,time:appState.canvas.time,connectionGuidanceEnabled:appState.preferences.connectionGuidanceEnabled,orthogonalCables:appState.preferences.orthogonalCables,alignmentGuides:appState.preferences.alignmentGuides,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2,developerMode:appState.preferences.developerModeEnabled,headphonePromptSeen:appState.preferences.headphonePromptSeen,inspectorPinned:sidebarPinned.properties,signalHistoryExpanded,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble,zoom:view.zoom,focusX,focusY}));}catch{}
+                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:appState.canvas.theme,grid:appState.canvas.grid,backdrop:appState.canvas.backdrop,time:appState.canvas.time,connectionGuidanceEnabled:appState.preferences.connectionGuidanceEnabled,orthogonalCables:appState.preferences.orthogonalCables,rainEnabled:appState.preferences.rainEnabled,rainIntensity:appState.preferences.rainIntensity,alignmentGuides:appState.preferences.alignmentGuides,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2,developerMode:appState.preferences.developerModeEnabled,headphonePromptSeen:appState.preferences.headphonePromptSeen,inspectorPinned:sidebarPinned.properties,signalHistoryExpanded,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble,zoom:view.zoom,focusX,focusY}));}catch{}
             },450);
         }
         const appDialog=document.getElementById('app-confirm-dialog');
@@ -1608,6 +1610,28 @@ const Hardware = (() => {
         document.documentElement.classList.add('lighting-demo-enabled');
         const roomBackdrop=document.createElement('div');roomBackdrop.id='room-backdrop';roomBackdrop.setAttribute('aria-hidden','true');
         roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far is-visible" alt="" decoding="async" draggable="false"><i class="room-grid-overlay"></i>';
+        const roomRain=document.createElement('div');roomRain.className='room-rain';roomRain.setAttribute('aria-hidden','true');roomBackdrop.appendChild(roomRain);
+        function updateRoomRain(){
+            const scene=appState.canvas.backdrop||'studioIllustrated';
+            const type=scene.startsWith('studio')?'studio':scene.startsWith('listening')?'listening':'loft';
+            roomRain.dataset.scene=type;
+            roomRain.hidden=canvas.dataset.theme!=='scene'||!appState.preferences.rainEnabled||!appState.preferences.rainIntensity;
+            const count=Math.round(appState.preferences.rainIntensity*.9);
+            if(roomRain.dataset.count===String(count))return;
+            roomRain.dataset.count=String(count);roomRain.replaceChildren();
+            const windows=type==='loft'?3:1;
+            for(let w=0;w<windows;w++){
+                const pane=document.createElement('div');pane.className='room-rain-pane';pane.dataset.pane=String(w);
+                for(let i=0;i<count;i++){
+                    const drop=document.createElement('i');drop.className='room-rain-drop';
+                    const seed=(i*137+w*53)%997;
+                    drop.style.left=((seed*67)%990)/10+'%';drop.style.top=((seed*41)%990)/10+'%';
+                    drop.style.setProperty('--rain-duration',(3+(seed%70)/10)+'s');drop.style.setProperty('--rain-delay',-(seed%100)/13+'s');drop.style.setProperty('--rain-length',(5+seed%20)+'px');
+                    pane.appendChild(drop);
+                }
+                roomRain.appendChild(pane);
+            }
+        }
         const roomMotes=document.createElement('div');roomMotes.className='room-motes';roomMotes.setAttribute('aria-hidden','true');
         const roomMoteCanvas=document.createElement('canvas');roomMoteCanvas.className='room-mote-canvas';roomMoteCanvas.setAttribute('aria-hidden','true');
         const roomMoteContext=roomMoteCanvas.getContext('2d',{alpha:true});
@@ -1632,6 +1656,7 @@ const Hardware = (() => {
         function setCanvasTheme(theme){
             theme=Object.hasOwn(canvasThemes,theme)?theme:'scene';appStateStore.actions.setCanvasTheme(theme);canvas.dataset.theme=theme;syncInterfacePalette();
             if(theme==='scene')startRoomMotes();else stopRoomMotes();
+            updateRoomRain();
             if(theme==='scene')Object.values(appState.project.devices).forEach(dev=>{
                 dev.el.style.left=Math.max(ROOM_SIDE_INSET,Math.min(world.offsetWidth-dev.el.offsetWidth-ROOM_SIDE_INSET,dev.el.offsetLeft))+'px';
                 dev.el.style.top=Math.max(0,Math.min((dev.el.classList.contains('wall-lamp-node')?wallPlacementBottom():floorPlacementBottom())-dev.el.offsetHeight,dev.el.offsetTop))+'px';
@@ -1671,7 +1696,8 @@ const Hardware = (() => {
             if(!Number.isFinite(imageHorizon))return;
             image.dataset.roomHorizon=String(imageHorizon);
             const farScale=parseFloat(world.style.getPropertyValue('--room-far-scale'))||1;
-            image.style.setProperty('--room-horizon-shift',((ROOM_HORIZON_IMAGE_Y-imageHorizon)*world.offsetHeight*1.1/720*farScale).toFixed(1)+'px');
+            const shift=((ROOM_HORIZON_IMAGE_Y-imageHorizon)*world.offsetHeight*1.1/720*farScale).toFixed(1)+'px';
+            image.style.setProperty('--room-horizon-shift',shift);roomRain.style.setProperty('--room-horizon-shift',shift);
         }
         function showRoomImage(src,horizon=ROOM_HORIZON_IMAGE_Y){
             if(src===roomImageTarget){roomBackdrop.querySelectorAll('.room-scene-image').forEach(image=>positionRoomImage(image,horizon));return;}
@@ -1780,6 +1806,7 @@ const Hardware = (() => {
             mode=legacyBackdrops[mode]||mode;
             mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studioIllustrated';appStateStore.actions.setCanvasBackdrop(mode);canvas.dataset.backdrop=mode;syncInterfacePalette();canvasBackdropControl.querySelector('select').value=mode;
             const scene=RoomScenes.scenes[mode];
+            roomRain.dataset.count='';updateRoomRain();
             const imageName=RoomScenes.imageForTime(scene,appState.canvas.time);
             const src=`./assets/rooms/${imageName}.webp?v=aligned-floor`;
             showRoomImage(src,scene.horizon?.[appState.canvas.time]);
@@ -10173,6 +10200,14 @@ const Hardware = (() => {
         particleSetting.innerHTML=`<label for="room-particle-amount">Partículas <output id="room-particle-value">${appState.preferences.roomParticleAmount}%</output></label><input id="room-particle-amount" type="range" min="0" max="100" step="5" value="${appState.preferences.roomParticleAmount}" aria-label="Quantidade de partículas no cenário"><small>0 desliga as partículas; 25 mantém a densidade padrão.</small>`;
         particleSetting.querySelector('input').addEventListener('input',event=>{appStateStore.actions.setPreference('roomParticleAmount',Number(event.target.value));particleSetting.querySelector('output').textContent=appState.preferences.roomParticleAmount+'%';updateRoomMotes(appState.canvas.backdrop,appState.canvas.time);scheduleAppPreferencesSave();});
         themeSection.appendChild(particleSetting);
+        const rainSetting=document.createElement('section');rainSetting.className='settings-particle-control';
+        rainSetting.innerHTML='<label class="connection-help-setting"><input id="room-rain-enabled" type="checkbox"><span><strong>Chuva nas janelas</strong></span></label><label for="room-rain-intensity">Intensidade da chuva <output id="room-rain-value"></output></label><input id="room-rain-intensity" type="range" min="0" max="100" step="5">';
+        const rainEnabled=rainSetting.querySelector('#room-rain-enabled'),rainIntensity=rainSetting.querySelector('#room-rain-intensity'),rainValue=rainSetting.querySelector('#room-rain-value');
+        rainEnabled.checked=appState.preferences.rainEnabled;rainIntensity.value=appState.preferences.rainIntensity;rainValue.textContent=rainIntensity.value+'%';
+        rainEnabled.addEventListener('change',()=>{appStateStore.actions.setPreference('rainEnabled',rainEnabled.checked);updateRoomRain();scheduleAppPreferencesSave();});
+        rainIntensity.addEventListener('input',()=>{appStateStore.actions.setPreference('rainIntensity',Number(rainIntensity.value));rainValue.textContent=rainIntensity.value+'%';updateRoomRain();scheduleAppPreferencesSave();});
+        themeSection.appendChild(rainSetting);
+
         clearCatalogFooter.insertBefore(themeSection,soundControls);
         setCanvasTheme(appState.canvas.theme);
 
@@ -10243,7 +10278,7 @@ const Hardware = (() => {
             const sync=()=>choices.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.value===select.value)));
             select.addEventListener('change',sync);new MutationObserver(sync).observe(canvas,{attributes:true,attributeFilter:['data-theme','data-grid','data-backdrop','data-time']});sync();
         }
-        const syncParticleVisibility=()=>{particleSetting.hidden=canvas.dataset.theme!=='scene';};
+        const syncParticleVisibility=()=>{particleSetting.hidden=canvas.dataset.theme!=='scene';rainSetting.hidden=canvas.dataset.theme!=='scene';};
         new MutationObserver(syncParticleVisibility).observe(canvas,{attributes:true,attributeFilter:['data-theme']});syncParticleVisibility();
         const settingsGroup=(title,icon,nodes,open=false)=>{
             const group=document.createElement('details');group.className='settings-group';group.open=open;

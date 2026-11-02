@@ -7,6 +7,28 @@
         document.documentElement.classList.add('lighting-demo-enabled');
         const roomBackdrop=document.createElement('div');roomBackdrop.id='room-backdrop';roomBackdrop.setAttribute('aria-hidden','true');
         roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far is-visible" alt="" decoding="async" draggable="false"><i class="room-grid-overlay"></i>';
+        const roomRain=document.createElement('div');roomRain.className='room-rain';roomRain.setAttribute('aria-hidden','true');roomBackdrop.appendChild(roomRain);
+        function updateRoomRain(){
+            const scene=appState.canvas.backdrop||'studioIllustrated';
+            const type=scene.startsWith('studio')?'studio':scene.startsWith('listening')?'listening':'loft';
+            roomRain.dataset.scene=type;
+            roomRain.hidden=canvas.dataset.theme!=='scene'||!appState.preferences.rainEnabled||!appState.preferences.rainIntensity;
+            const count=Math.round(appState.preferences.rainIntensity*.9);
+            if(roomRain.dataset.count===String(count))return;
+            roomRain.dataset.count=String(count);roomRain.replaceChildren();
+            const windows=type==='loft'?3:1;
+            for(let w=0;w<windows;w++){
+                const pane=document.createElement('div');pane.className='room-rain-pane';pane.dataset.pane=String(w);
+                for(let i=0;i<count;i++){
+                    const drop=document.createElement('i');drop.className='room-rain-drop';
+                    const seed=(i*137+w*53)%997;
+                    drop.style.left=((seed*67)%990)/10+'%';drop.style.top=((seed*41)%990)/10+'%';
+                    drop.style.setProperty('--rain-duration',(3+(seed%70)/10)+'s');drop.style.setProperty('--rain-delay',-(seed%100)/13+'s');drop.style.setProperty('--rain-length',(5+seed%20)+'px');
+                    pane.appendChild(drop);
+                }
+                roomRain.appendChild(pane);
+            }
+        }
         const roomMotes=document.createElement('div');roomMotes.className='room-motes';roomMotes.setAttribute('aria-hidden','true');
         const roomMoteCanvas=document.createElement('canvas');roomMoteCanvas.className='room-mote-canvas';roomMoteCanvas.setAttribute('aria-hidden','true');
         const roomMoteContext=roomMoteCanvas.getContext('2d',{alpha:true});
@@ -31,6 +53,7 @@
         function setCanvasTheme(theme){
             theme=Object.hasOwn(canvasThemes,theme)?theme:'scene';appStateStore.actions.setCanvasTheme(theme);canvas.dataset.theme=theme;syncInterfacePalette();
             if(theme==='scene')startRoomMotes();else stopRoomMotes();
+            updateRoomRain();
             if(theme==='scene')Object.values(appState.project.devices).forEach(dev=>{
                 dev.el.style.left=Math.max(ROOM_SIDE_INSET,Math.min(world.offsetWidth-dev.el.offsetWidth-ROOM_SIDE_INSET,dev.el.offsetLeft))+'px';
                 dev.el.style.top=Math.max(0,Math.min((dev.el.classList.contains('wall-lamp-node')?wallPlacementBottom():floorPlacementBottom())-dev.el.offsetHeight,dev.el.offsetTop))+'px';
@@ -70,7 +93,8 @@
             if(!Number.isFinite(imageHorizon))return;
             image.dataset.roomHorizon=String(imageHorizon);
             const farScale=parseFloat(world.style.getPropertyValue('--room-far-scale'))||1;
-            image.style.setProperty('--room-horizon-shift',((ROOM_HORIZON_IMAGE_Y-imageHorizon)*world.offsetHeight*1.1/720*farScale).toFixed(1)+'px');
+            const shift=((ROOM_HORIZON_IMAGE_Y-imageHorizon)*world.offsetHeight*1.1/720*farScale).toFixed(1)+'px';
+            image.style.setProperty('--room-horizon-shift',shift);roomRain.style.setProperty('--room-horizon-shift',shift);
         }
         function showRoomImage(src,horizon=ROOM_HORIZON_IMAGE_Y){
             if(src===roomImageTarget){roomBackdrop.querySelectorAll('.room-scene-image').forEach(image=>positionRoomImage(image,horizon));return;}
@@ -179,6 +203,7 @@
             mode=legacyBackdrops[mode]||mode;
             mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studioIllustrated';appStateStore.actions.setCanvasBackdrop(mode);canvas.dataset.backdrop=mode;syncInterfacePalette();canvasBackdropControl.querySelector('select').value=mode;
             const scene=RoomScenes.scenes[mode];
+            roomRain.dataset.count='';updateRoomRain();
             const imageName=RoomScenes.imageForTime(scene,appState.canvas.time);
             const src=`./assets/rooms/${imageName}.webp?v=aligned-floor`;
             showRoomImage(src,scene.horizon?.[appState.canvas.time]);

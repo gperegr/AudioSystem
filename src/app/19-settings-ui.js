@@ -20,6 +20,14 @@
         particleSetting.innerHTML=`<label for="room-particle-amount">Partículas <output id="room-particle-value">${appState.preferences.roomParticleAmount}%</output></label><input id="room-particle-amount" type="range" min="0" max="100" step="5" value="${appState.preferences.roomParticleAmount}" aria-label="Quantidade de partículas no cenário"><small>0 desliga as partículas; 25 mantém a densidade padrão.</small>`;
         particleSetting.querySelector('input').addEventListener('input',event=>{appStateStore.actions.setPreference('roomParticleAmount',Number(event.target.value));particleSetting.querySelector('output').textContent=appState.preferences.roomParticleAmount+'%';updateRoomMotes(appState.canvas.backdrop,appState.canvas.time);scheduleAppPreferencesSave();});
         themeSection.appendChild(particleSetting);
+        const rainSetting=document.createElement('section');rainSetting.className='settings-particle-control';
+        rainSetting.innerHTML='<label class="connection-help-setting"><input id="room-rain-enabled" type="checkbox"><span><strong>Chuva nas janelas</strong></span></label><label for="room-rain-intensity">Intensidade da chuva <output id="room-rain-value"></output></label><input id="room-rain-intensity" type="range" min="0" max="100" step="5">';
+        const rainEnabled=rainSetting.querySelector('#room-rain-enabled'),rainIntensity=rainSetting.querySelector('#room-rain-intensity'),rainValue=rainSetting.querySelector('#room-rain-value');
+        rainEnabled.checked=appState.preferences.rainEnabled;rainIntensity.value=appState.preferences.rainIntensity;rainValue.textContent=rainIntensity.value+'%';
+        rainEnabled.addEventListener('change',()=>{appStateStore.actions.setPreference('rainEnabled',rainEnabled.checked);updateRoomRain();scheduleAppPreferencesSave();});
+        rainIntensity.addEventListener('input',()=>{appStateStore.actions.setPreference('rainIntensity',Number(rainIntensity.value));rainValue.textContent=rainIntensity.value+'%';updateRoomRain();scheduleAppPreferencesSave();});
+        themeSection.appendChild(rainSetting);
+
         clearCatalogFooter.insertBefore(themeSection,soundControls);
         setCanvasTheme(appState.canvas.theme);
 
@@ -90,7 +98,7 @@
             const sync=()=>choices.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.value===select.value)));
             select.addEventListener('change',sync);new MutationObserver(sync).observe(canvas,{attributes:true,attributeFilter:['data-theme','data-grid','data-backdrop','data-time']});sync();
         }
-        const syncParticleVisibility=()=>{particleSetting.hidden=canvas.dataset.theme!=='scene';};
+        const syncParticleVisibility=()=>{particleSetting.hidden=canvas.dataset.theme!=='scene';rainSetting.hidden=canvas.dataset.theme!=='scene';};
         new MutationObserver(syncParticleVisibility).observe(canvas,{attributes:true,attributeFilter:['data-theme']});syncParticleVisibility();
         const settingsGroup=(title,icon,nodes,open=false)=>{
             const group=document.createElement('details');group.className='settings-group';group.open=open;
