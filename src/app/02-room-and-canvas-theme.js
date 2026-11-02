@@ -8,26 +8,42 @@
         const roomBackdrop=document.createElement('div');roomBackdrop.id='room-backdrop';roomBackdrop.setAttribute('aria-hidden','true');
         roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far is-visible" alt="" decoding="async" draggable="false"><i class="room-grid-overlay"></i>';
         const roomRain=document.createElement('div');roomRain.className='room-rain';roomRain.setAttribute('aria-hidden','true');roomBackdrop.appendChild(roomRain);
+        let roomRainAudio=null;
         function updateRoomRain(){
+            syncRoomRainAudio();
             const scene=appState.canvas.backdrop||'studioIllustrated';
             const type=scene.startsWith('studio')?'studio':scene.startsWith('listening')?'listening':'loft';
             roomRain.dataset.scene=type;
             roomRain.hidden=canvas.dataset.theme!=='scene'||!appState.preferences.rainEnabled||!appState.preferences.rainIntensity;
             const count=Math.round(appState.preferences.rainIntensity*.9);
-            if(roomRain.dataset.count===String(count))return;
-            roomRain.dataset.count=String(count);roomRain.replaceChildren();
-            const windows=type==='loft'?3:1;
-            for(let w=0;w<windows;w++){
+            const key=scene+':'+appState.canvas.time+':'+count;
+            if(roomRain.dataset.count===key)return;
+            roomRain.dataset.count=key;roomRain.replaceChildren();
+            RoomScenes.rainGlass(scene).forEach((glass,w)=>{
                 const pane=document.createElement('div');pane.className='room-rain-pane';pane.dataset.pane=String(w);
-                for(let i=0;i<count;i++){
-                    const drop=document.createElement('i');drop.className='room-rain-drop';
-                    const seed=(i*137+w*53)%997;
-                    drop.style.left=((seed*67)%990)/10+'%';drop.style.top=((seed*41)%990)/10+'%';
-                    drop.style.setProperty('--rain-duration',(3+(seed%70)/10)+'s');drop.style.setProperty('--rain-delay',-(seed%100)/13+'s');drop.style.setProperty('--rain-length',(5+seed%20)+'px');
-                    pane.appendChild(drop);
-                }
+                const areas=glass.map(polygon=>{const xs=polygon.map(p=>p[0]),ys=polygon.map(p=>p[1]);return (Math.max(...xs)-Math.min(...xs))*(Math.max(...ys)-Math.min(...ys));});
+                const total=areas.reduce((sum,area)=>sum+area,0);let assigned=0;
+                glass.forEach((polygon,cell)=>{
+                    const xs=polygon.map(p=>p[0]),ys=polygon.map(p=>p[1]);
+                    const left=Math.min(...xs),top=Math.min(...ys),width=Math.max(...xs)-left,height=Math.max(...ys)-top;
+                    const sheet=document.createElement('div');sheet.className='room-rain-glass';
+                    Object.assign(sheet.style,{left:left/1672*100+'%',top:top/941*100+'%',width:width/1672*100+'%',height:height/941*100+'%',clipPath:'polygon('+polygon.map(([x,y])=>`${(x-left)/width*100}% ${(y-top)/height*100}%`).join(',')+')'});
+                    const cumulative=areas.slice(0,cell+1).reduce((sum,area)=>sum+area,0);
+                    const number=Math.round(count*cumulative/total)-assigned;assigned+=number;
+                    for(let i=0;i<number;i++){
+                        const seed=(i*137+w*53+cell*71)%997;
+                        const drop=document.createElement('i');drop.className='room-rain-drop'+(i%3===0?' is-bead':'');
+                        drop.style.left=(5+(seed*67)%900/10)+'%';drop.style.top=(seed*41)%950/10+'%';
+                        drop.style.setProperty('--rain-duration',(5+seed%120/10)+'s');drop.style.setProperty('--rain-delay',-(seed%130)/7+'s');
+                        drop.style.setProperty('--rain-size',(6+seed%70/10)+'px');drop.style.setProperty('--rain-trail',(30+seed%100)+'px');
+                        drop.style.setProperty('--rain-drift',(seed%2===0?1:-1)*(1+seed%3)+'px');
+                        drop.style.setProperty('--rain-travel',Math.max(70,height/941*world.offsetHeight*.65)+'px');
+                        sheet.appendChild(drop);
+                    }
+                    pane.appendChild(sheet);
+                });
                 roomRain.appendChild(pane);
-            }
+            });
         }
         const roomMotes=document.createElement('div');roomMotes.className='room-motes';roomMotes.setAttribute('aria-hidden','true');
         const roomMoteCanvas=document.createElement('canvas');roomMoteCanvas.className='room-mote-canvas';roomMoteCanvas.setAttribute('aria-hidden','true');

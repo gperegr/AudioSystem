@@ -26,7 +26,7 @@ function harness({apple=false,ipad=false,session=true,sessionThrows=false,reject
     if(session){let type='auto';navigator.audioSession={get type(){return type;},set type(value){if(sessionThrows)throw Error('Unsupported session');type=value;}};}
     const appStateStore=createStore();appStateStore.domains.project.devices={};
     const sandbox={window,document,navigator,appState:appStateStore.domains,appStateStore,setupRoomAudio(){graphSetups++;},updateCableFlows(){},URL:{createObjectURL(blob){blobs.push(blob);return 'blob:local-silence';}},Blob,Uint8Array,DataView};
-    vm.createContext(sandbox);vm.runInContext('let audioPrimed=false,audioNeedsGestureRecovery=false,legacyPlaybackAudio=null;\n'+moduleSource,sandbox);
+    vm.createContext(sandbox);vm.runInContext('let audioPrimed=false,audioNeedsGestureRecovery=false,legacyPlaybackAudio=null,roomRainAudio=null;const canvas={dataset:{theme:"scene"}};\n'+moduleSource,sandbox);
     function dispatch(name,{trusted=true,pointerType='touch',button=0,key='Enter',repeat=false}={}){
         gesture=name;try{handlers.get('doc:'+name).fn({type:name,isTrusted:trusted,pointerType,button,key,repeat});}finally{gesture=null;}
     }

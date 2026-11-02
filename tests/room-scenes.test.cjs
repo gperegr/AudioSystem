@@ -25,3 +25,26 @@ test('the selected illustrated room stays selected while time variants change',(
         assert.ok(scene.horizon?.dawn!==undefined&&scene.horizon?.night!==undefined,`${key} has horizon alignment for every time`);
     }
 });
+
+
+test('rain glass polygons leave the loft frames and mullions dry',()=>{
+    const {rainGlass}=context.window.RoomScenes;
+    const inside=(point,polygon)=>{
+        let result=false;
+        for(let i=0,j=polygon.length-1;i<polygon.length;j=i++){
+            const [x,y]=polygon[i],[px,py]=polygon[j];
+            if((y>point[1])!==(py>point[1])&&point[0]<(px-x)*(point[1]-y)/(py-y)+x)result=!result;
+        }
+        return result;
+    };
+    for(const name of ['loft','loftIllustrated']){
+        const glass=rainGlass(name).flat();
+        for(const x of [126,212,298,756,840,925,1383,1468,1554])for(const y of [120,240,360,500]){
+            assert(!glass.some(p=>inside([x,y],p)),`${name}: vertical mullion at ${x},${y}`);
+        }
+        for(const y of [184,303,428])for(const x of [80,160,250,340,710,800,880,970,1340,1420,1510,1600]){
+            assert(!glass.some(p=>inside([x,y],p)),`${name}: horizontal bar at ${x},${y}`);
+        }
+        assert(glass.some(p=>inside([170,240],p)),'glass interior should receive rain');
+    }
+});

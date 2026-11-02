@@ -25,6 +25,44 @@
             }
             if(legacyPlaybackAudio.paused)legacyPlaybackAudio.play()?.catch(()=>{});
         }
+        function disposeRoomRainAudio(){
+            if(!roomRainAudio)return;
+            const audio=roomRainAudio;roomRainAudio=null;clearTimeout(audio.stopTimer);
+            try{audio.source.stop();}catch{}
+            for(const node of [audio.source,audio.highpass,audio.lowpass,audio.gain])node.disconnect();
+        }
+        function syncRoomRainAudio(){
+            const context=appState.audio.context;
+            const intensity=appState.preferences.rainIntensity/100;
+            const enabled=!!context&&!!appState.audio.listeningToneInput&&canvas.dataset.theme==='scene'&&appState.preferences.rainEnabled&&intensity>0&&!document.hidden;
+            if(!enabled){
+                if(roomRainAudio&&!roomRainAudio.stopTimer){
+                    roomRainAudio.gain.gain.setTargetAtTime(0,context.currentTime,.12);
+                    roomRainAudio.stopTimer=setTimeout(disposeRoomRainAudio,700);
+                }
+                return;
+            }
+            if(!roomRainAudio){
+                const buffer=context.createBuffer(2,context.sampleRate*4,context.sampleRate);
+                for(let channel=0;channel<2;channel++){
+                    const samples=buffer.getChannelData(channel);
+                    for(let i=0;i<samples.length;i++)samples[i]=Math.random()*2-1;
+                }
+                const source=context.createBufferSource(),highpass=context.createBiquadFilter(),lowpass=context.createBiquadFilter(),gain=context.createGain();
+                source.buffer=buffer;source.loop=true;
+                highpass.type='highpass';highpass.frequency.value=170;highpass.Q.value=.5;
+                lowpass.type='lowpass';lowpass.frequency.value=4800;lowpass.Q.value=.5;
+                gain.gain.value=0;
+                source.connect(highpass);highpass.connect(lowpass);lowpass.connect(gain);gain.connect(appState.audio.listeningToneInput);
+                roomRainAudio={source,highpass,lowpass,gain,stopTimer:0};source.start();
+            }
+            clearTimeout(roomRainAudio.stopTimer);roomRainAudio.stopTimer=0;
+            // Quiet ambient noise, independent of equipment signals and meters.
+            roomRainAudio.gain.gain.setTargetAtTime(.035*intensity**1.4*appState.preferences.listening.outputLevel,context.currentTime,.16);
+        }
+        document.addEventListener('visibilitychange',syncRoomRainAudio);
+        window.addEventListener('pagehide',disposeRoomRainAudio);
+        window.addEventListener('pageshow',syncRoomRainAudio);
         function initAudio() {
             if (appState.audio.context) return;
             configurePlaybackSession();
@@ -40,14 +78,16 @@
             bass.connect(treble);treble.connect(peakGuard);peakGuard.connect(appState.audio.context.destination);
             appStateStore.actions.setAudioRuntime('listeningToneInput',bass);appStateStore.actions.setAudioRuntime('listeningToneFilters',{bass,treble});
             setupRoomAudio();
+            syncRoomRainAudio();
             appState.audio.context.addEventListener('statechange', () => {
                 if(appState.audio.context.state==='interrupted')audioNeedsGestureRecovery=true;
-                updateCableFlows();
+                syncRoomRainAudio();updateCableFlows();
             });
         }
         function setListeningOutputLevel(value){
             appStateStore.actions.setListeningPreferences({outputLevel:Math.round(Math.max(.5,Math.min(1.2,Number(value)||1))*100)/100});
             if(appState.audio.masterGain)appState.audio.masterGain.gain.setTargetAtTime(.7*appState.preferences.listening.outputLevel,appState.audio.context.currentTime,.04);
+            syncRoomRainAudio();
             const slider=document.getElementById('listening-output-level'),output=document.getElementById('listening-output-value');
             if(slider)slider.value=Math.round(appState.preferences.listening.outputLevel*100);
             if(output)output.textContent=Math.round(appState.preferences.listening.outputLevel*100)+'%';

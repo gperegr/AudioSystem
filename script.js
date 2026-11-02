@@ -1611,26 +1611,42 @@ const Hardware = (() => {
         const roomBackdrop=document.createElement('div');roomBackdrop.id='room-backdrop';roomBackdrop.setAttribute('aria-hidden','true');
         roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far is-visible" alt="" decoding="async" draggable="false"><i class="room-grid-overlay"></i>';
         const roomRain=document.createElement('div');roomRain.className='room-rain';roomRain.setAttribute('aria-hidden','true');roomBackdrop.appendChild(roomRain);
+        let roomRainAudio=null;
         function updateRoomRain(){
+            syncRoomRainAudio();
             const scene=appState.canvas.backdrop||'studioIllustrated';
             const type=scene.startsWith('studio')?'studio':scene.startsWith('listening')?'listening':'loft';
             roomRain.dataset.scene=type;
             roomRain.hidden=canvas.dataset.theme!=='scene'||!appState.preferences.rainEnabled||!appState.preferences.rainIntensity;
             const count=Math.round(appState.preferences.rainIntensity*.9);
-            if(roomRain.dataset.count===String(count))return;
-            roomRain.dataset.count=String(count);roomRain.replaceChildren();
-            const windows=type==='loft'?3:1;
-            for(let w=0;w<windows;w++){
+            const key=scene+':'+appState.canvas.time+':'+count;
+            if(roomRain.dataset.count===key)return;
+            roomRain.dataset.count=key;roomRain.replaceChildren();
+            RoomScenes.rainGlass(scene).forEach((glass,w)=>{
                 const pane=document.createElement('div');pane.className='room-rain-pane';pane.dataset.pane=String(w);
-                for(let i=0;i<count;i++){
-                    const drop=document.createElement('i');drop.className='room-rain-drop';
-                    const seed=(i*137+w*53)%997;
-                    drop.style.left=((seed*67)%990)/10+'%';drop.style.top=((seed*41)%990)/10+'%';
-                    drop.style.setProperty('--rain-duration',(3+(seed%70)/10)+'s');drop.style.setProperty('--rain-delay',-(seed%100)/13+'s');drop.style.setProperty('--rain-length',(5+seed%20)+'px');
-                    pane.appendChild(drop);
-                }
+                const areas=glass.map(polygon=>{const xs=polygon.map(p=>p[0]),ys=polygon.map(p=>p[1]);return (Math.max(...xs)-Math.min(...xs))*(Math.max(...ys)-Math.min(...ys));});
+                const total=areas.reduce((sum,area)=>sum+area,0);let assigned=0;
+                glass.forEach((polygon,cell)=>{
+                    const xs=polygon.map(p=>p[0]),ys=polygon.map(p=>p[1]);
+                    const left=Math.min(...xs),top=Math.min(...ys),width=Math.max(...xs)-left,height=Math.max(...ys)-top;
+                    const sheet=document.createElement('div');sheet.className='room-rain-glass';
+                    Object.assign(sheet.style,{left:left/1672*100+'%',top:top/941*100+'%',width:width/1672*100+'%',height:height/941*100+'%',clipPath:'polygon('+polygon.map(([x,y])=>`${(x-left)/width*100}% ${(y-top)/height*100}%`).join(',')+')'});
+                    const cumulative=areas.slice(0,cell+1).reduce((sum,area)=>sum+area,0);
+                    const number=Math.round(count*cumulative/total)-assigned;assigned+=number;
+                    for(let i=0;i<number;i++){
+                        const seed=(i*137+w*53+cell*71)%997;
+                        const drop=document.createElement('i');drop.className='room-rain-drop'+(i%3===0?' is-bead':'');
+                        drop.style.left=(5+(seed*67)%900/10)+'%';drop.style.top=(seed*41)%950/10+'%';
+                        drop.style.setProperty('--rain-duration',(5+seed%120/10)+'s');drop.style.setProperty('--rain-delay',-(seed%130)/7+'s');
+                        drop.style.setProperty('--rain-size',(6+seed%70/10)+'px');drop.style.setProperty('--rain-trail',(30+seed%100)+'px');
+                        drop.style.setProperty('--rain-drift',(seed%2===0?1:-1)*(1+seed%3)+'px');
+                        drop.style.setProperty('--rain-travel',Math.max(70,height/941*world.offsetHeight*.65)+'px');
+                        sheet.appendChild(drop);
+                    }
+                    pane.appendChild(sheet);
+                });
                 roomRain.appendChild(pane);
-            }
+            });
         }
         const roomMotes=document.createElement('div');roomMotes.className='room-motes';roomMotes.setAttribute('aria-hidden','true');
         const roomMoteCanvas=document.createElement('canvas');roomMoteCanvas.className='room-mote-canvas';roomMoteCanvas.setAttribute('aria-hidden','true');
@@ -3448,6 +3464,44 @@ const Hardware = (() => {
             }
             if(legacyPlaybackAudio.paused)legacyPlaybackAudio.play()?.catch(()=>{});
         }
+        function disposeRoomRainAudio(){
+            if(!roomRainAudio)return;
+            const audio=roomRainAudio;roomRainAudio=null;clearTimeout(audio.stopTimer);
+            try{audio.source.stop();}catch{}
+            for(const node of [audio.source,audio.highpass,audio.lowpass,audio.gain])node.disconnect();
+        }
+        function syncRoomRainAudio(){
+            const context=appState.audio.context;
+            const intensity=appState.preferences.rainIntensity/100;
+            const enabled=!!context&&!!appState.audio.listeningToneInput&&canvas.dataset.theme==='scene'&&appState.preferences.rainEnabled&&intensity>0&&!document.hidden;
+            if(!enabled){
+                if(roomRainAudio&&!roomRainAudio.stopTimer){
+                    roomRainAudio.gain.gain.setTargetAtTime(0,context.currentTime,.12);
+                    roomRainAudio.stopTimer=setTimeout(disposeRoomRainAudio,700);
+                }
+                return;
+            }
+            if(!roomRainAudio){
+                const buffer=context.createBuffer(2,context.sampleRate*4,context.sampleRate);
+                for(let channel=0;channel<2;channel++){
+                    const samples=buffer.getChannelData(channel);
+                    for(let i=0;i<samples.length;i++)samples[i]=Math.random()*2-1;
+                }
+                const source=context.createBufferSource(),highpass=context.createBiquadFilter(),lowpass=context.createBiquadFilter(),gain=context.createGain();
+                source.buffer=buffer;source.loop=true;
+                highpass.type='highpass';highpass.frequency.value=170;highpass.Q.value=.5;
+                lowpass.type='lowpass';lowpass.frequency.value=4800;lowpass.Q.value=.5;
+                gain.gain.value=0;
+                source.connect(highpass);highpass.connect(lowpass);lowpass.connect(gain);gain.connect(appState.audio.listeningToneInput);
+                roomRainAudio={source,highpass,lowpass,gain,stopTimer:0};source.start();
+            }
+            clearTimeout(roomRainAudio.stopTimer);roomRainAudio.stopTimer=0;
+            // Quiet ambient noise, independent of equipment signals and meters.
+            roomRainAudio.gain.gain.setTargetAtTime(.035*intensity**1.4*appState.preferences.listening.outputLevel,context.currentTime,.16);
+        }
+        document.addEventListener('visibilitychange',syncRoomRainAudio);
+        window.addEventListener('pagehide',disposeRoomRainAudio);
+        window.addEventListener('pageshow',syncRoomRainAudio);
         function initAudio() {
             if (appState.audio.context) return;
             configurePlaybackSession();
@@ -3463,14 +3517,16 @@ const Hardware = (() => {
             bass.connect(treble);treble.connect(peakGuard);peakGuard.connect(appState.audio.context.destination);
             appStateStore.actions.setAudioRuntime('listeningToneInput',bass);appStateStore.actions.setAudioRuntime('listeningToneFilters',{bass,treble});
             setupRoomAudio();
+            syncRoomRainAudio();
             appState.audio.context.addEventListener('statechange', () => {
                 if(appState.audio.context.state==='interrupted')audioNeedsGestureRecovery=true;
-                updateCableFlows();
+                syncRoomRainAudio();updateCableFlows();
             });
         }
         function setListeningOutputLevel(value){
             appStateStore.actions.setListeningPreferences({outputLevel:Math.round(Math.max(.5,Math.min(1.2,Number(value)||1))*100)/100});
             if(appState.audio.masterGain)appState.audio.masterGain.gain.setTargetAtTime(.7*appState.preferences.listening.outputLevel,appState.audio.context.currentTime,.04);
+            syncRoomRainAudio();
             const slider=document.getElementById('listening-output-level'),output=document.getElementById('listening-output-value');
             if(slider)slider.value=Math.round(appState.preferences.listening.outputLevel*100);
             if(output)output.textContent=Math.round(appState.preferences.listening.outputLevel*100)+'%';

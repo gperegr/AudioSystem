@@ -33,5 +33,18 @@
             elevation:260,layer:'far'
         }));
     }
-    window.RoomScenes={scenes,times,lights,imageForTime};
+    // Glass-only polygons in the source images' 1672 × 941 coordinate space.
+    // Leave a small inset around painted frames, mullions and the curved heads.
+    function rainGlass(name){
+        if(name.startsWith('studio'))return [[[[540,236],[1130,236],[1130,446],[540,446]]]];
+        if(name.startsWith('listening'))return [[[[3,5],[35,5],[201,90],[201,705],[3,750]]]];
+        const columns=[[[49,120],[135,203],[220,290],[306,375]],[[678,749],[766,833],[850,917],[934,1005]],[[1305,1375],[1393,1460],[1478,1546],[1563,1631]]];
+        const rows=[[86,175],[194,291],[316,418],[439,552]];
+        return columns.map(window=>window.flatMap(([left,right],col)=>rows.map(([top,bottom],row)=>{
+            // The top lights follow the arch; middle columns start higher.
+            const archTop=row===0?(col===1||col===2?65:top):top;
+            return [[left,archTop],[right,archTop],[right,bottom],[left,bottom]];
+        })));
+    }
+    window.RoomScenes={scenes,times,lights,imageForTime,rainGlass};
 })();
