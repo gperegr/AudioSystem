@@ -33,7 +33,7 @@
     <link rel="stylesheet" href="./styles/equipment/speakers-bookshelf.css?v=bookshelf-details-v1">
     <link rel="stylesheet" href="./styles/equipment/subwoofers.css?v=subwoofer-details-v1">
     <link rel="stylesheet" href="./styles/equipment/visual-refinements.css?v=visual-refinements-v5">
-    <link rel="stylesheet" href="./styles/interface-palettes.css?v=search-expanded-floating-search-v1">
+    <link rel="stylesheet" href="./styles/interface-palettes.css?v=liquid-glass-floating-search-v1">
 </head>
 <body class="flex flex-col h-screen bg-black text-white">
     <div id="app-startup" role="status">Preparando seu sistema…<noscript>Ative o JavaScript para abrir o programa.</noscript></div>
@@ -48,6 +48,14 @@
         
         <div class="flex items-center gap-3 topbar-controls"></div>
     </div>
+
+    <svg aria-hidden="true" width="0" height="0" style="position:absolute;pointer-events:none">
+        <filter id="catalog-glass-refraction" x="-10%" y="-30%" width="120%" height="160%" color-interpolation-filters="sRGB">
+            <feTurbulence type="fractalNoise" baseFrequency="0.012 0.04" numOctaves="1" seed="8" result="glass-noise"/>
+            <feGaussianBlur in="glass-noise" stdDeviation="2" result="glass-map"/>
+            <feDisplacementMap in="SourceGraphic" in2="glass-map" scale="9" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+    </svg>
 
     <div id="workspace-shell" class="flex flex-1 overflow-hidden">
         
