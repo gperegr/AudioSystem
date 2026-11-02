@@ -58,7 +58,7 @@
             }
             clearTimeout(roomRainAudio.stopTimer);roomRainAudio.stopTimer=0;
             // Quiet ambient noise, independent of equipment signals and meters.
-            roomRainAudio.gain.gain.setTargetAtTime(.035*intensity**1.4*appState.preferences.listening.outputLevel,context.currentTime,.16);
+            roomRainAudio.gain.gain.setTargetAtTime(.035*(intensity*.15)**1.4*appState.preferences.listening.outputLevel,context.currentTime,.16);
         }
         document.addEventListener('visibilitychange',syncRoomRainAudio);
         window.addEventListener('pagehide',disposeRoomRainAudio);

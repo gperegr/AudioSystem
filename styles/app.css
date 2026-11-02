@@ -4812,9 +4812,10 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 .room-rain[hidden] {display:none!important;}
 .room-rain-pane {position:absolute;inset:0;pointer-events:none;}
 .room-rain-glass {position:absolute;overflow:hidden;pointer-events:none;contain:paint;}
-.room-rain-drop {position:absolute;display:block;width:var(--rain-size);height:calc(var(--rain-size)*1.65);border-radius:48% 52% 45% 55%;background:radial-gradient(ellipse at 30% 25%,#f0f8ff9c,transparent 44%),radial-gradient(ellipse at 65% 72%,transparent 35%,#14202a55 70%,#e5f3ff70 94%);box-shadow:inset .5px .5px .7px #fff8,inset -.5px -.5px .7px #12212d55;opacity:.65;animation:room-rain-slide var(--rain-duration) cubic-bezier(.45,.05,.65,.95) var(--rain-delay) infinite;}
+.room-rain-drop {position:absolute;display:block;width:var(--rain-size);height:calc(var(--rain-size)*1.65);border-radius:48% 52% 45% 55%;background:radial-gradient(ellipse at 30% 25%,#f0f8ff9c,transparent 44%),radial-gradient(ellipse at 65% 72%,transparent 35%,#14202a55 70%,#e5f3ff70 94%);box-shadow:inset .5px .5px .7px #fff8,inset -.5px -.5px .7px #12212d55;opacity:var(--rain-opacity,.65);animation:room-rain-slide var(--rain-duration) cubic-bezier(.45,.05,.65,.95) var(--rain-delay) infinite;}
 .room-rain-drop::before {content:'';position:absolute;bottom:70%;left:35%;width:30%;height:var(--rain-trail);border-radius:60%;background:linear-gradient(to bottom,transparent,#dceaff18 50%,#dceaff55);}
-.room-rain-drop.is-bead {height:var(--rain-size);opacity:.38;animation:none;}
+.room-rain-drop.is-bead {height:var(--rain-size);animation-name:room-rain-bead;}
 .room-rain-drop.is-bead::before {content:none;}
-@keyframes room-rain-slide {0%{transform:translate(0,-20px);opacity:0}8%{opacity:.65}25%{transform:translate(0,0)}40%{transform:translate(var(--rain-drift),8px)}85%{opacity:.6}100%{transform:translate(0,var(--rain-travel));opacity:0}}
-@media(prefers-reduced-motion:reduce){.room-rain-drop{animation:none;opacity:.35;}.room-rain-drop::before{content:none;}}
+@keyframes room-rain-slide {0%{transform:translate(0,-20px);opacity:0}8%{opacity:var(--rain-opacity,.65)}25%{transform:translate(0,0)}40%,52%{transform:translate(var(--rain-drift),var(--rain-mid-y,8px))}85%{opacity:var(--rain-opacity,.6)}100%{transform:translate(0,var(--rain-travel));opacity:0}}
+@keyframes room-rain-bead {0%,100%{opacity:0;scale:.65}20%,65%{opacity:var(--rain-opacity,.4);scale:1}85%{opacity:.15;scale:1.15}}
+@media(prefers-reduced-motion:reduce){.room-rain-drop,.room-rain-drop.is-bead{animation:none;opacity:.35;}.room-rain-drop::before{content:none;}}

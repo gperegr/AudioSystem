@@ -1612,6 +1612,21 @@ const Hardware = (() => {
         roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far is-visible" alt="" decoding="async" draggable="false"><i class="room-grid-overlay"></i>';
         const roomRain=document.createElement('div');roomRain.className='room-rain';roomRain.setAttribute('aria-hidden','true');roomBackdrop.appendChild(roomRain);
         let roomRainAudio=null;
+        function randomizeRainDrop(drop,height,first=false){
+            const duration=drop.classList.contains('is-bead')?9+Math.random()*23:4+Math.random()*17;
+            drop.style.left=(3+Math.random()*92)+'%';drop.style.top=(Math.random()*92)+'%';
+            if(first){drop.style.setProperty('--rain-duration',duration+'s');drop.style.setProperty('--rain-delay',-Math.random()*duration+'s');}
+            drop.style.setProperty('--rain-size',(4+Math.random()**1.5*11)+'px');
+            drop.style.setProperty('--rain-trail',(15+Math.random()**1.2*150)+'px');
+            drop.style.setProperty('--rain-drift',((Math.random()-.5)*14)+'px');
+            drop.style.setProperty('--rain-mid-y',(5+Math.random()*45)+'px');
+            drop.style.setProperty('--rain-travel',Math.max(70,height*(.4+Math.random()*.9))+'px');
+            drop.style.setProperty('--rain-opacity',(.3+Math.random()*.45).toFixed(2));
+        }
+        roomRain.addEventListener('animationiteration',event=>{
+            if(event.target.classList.contains('room-rain-drop'))randomizeRainDrop(event.target,event.target.parentElement.offsetHeight);
+        });
+
         function updateRoomRain(){
             syncRoomRainAudio();
             const scene=appState.canvas.backdrop||'studioIllustrated';
@@ -1634,13 +1649,8 @@ const Hardware = (() => {
                     const cumulative=areas.slice(0,cell+1).reduce((sum,area)=>sum+area,0);
                     const number=Math.round(count*cumulative/total)-assigned;assigned+=number;
                     for(let i=0;i<number;i++){
-                        const seed=(i*137+w*53+cell*71)%997;
-                        const drop=document.createElement('i');drop.className='room-rain-drop'+(i%3===0?' is-bead':'');
-                        drop.style.left=(5+(seed*67)%900/10)+'%';drop.style.top=(seed*41)%950/10+'%';
-                        drop.style.setProperty('--rain-duration',(5+seed%120/10)+'s');drop.style.setProperty('--rain-delay',-(seed%130)/7+'s');
-                        drop.style.setProperty('--rain-size',(6+seed%70/10)+'px');drop.style.setProperty('--rain-trail',(30+seed%100)+'px');
-                        drop.style.setProperty('--rain-drift',(seed%2===0?1:-1)*(1+seed%3)+'px');
-                        drop.style.setProperty('--rain-travel',Math.max(70,height/941*world.offsetHeight*.65)+'px');
+                        const drop=document.createElement('i');drop.className='room-rain-drop'+(Math.random()<.35?' is-bead':'');
+                        randomizeRainDrop(drop,height/941*world.offsetHeight*1.1,true);
                         sheet.appendChild(drop);
                     }
                     pane.appendChild(sheet);
@@ -3497,7 +3507,7 @@ const Hardware = (() => {
             }
             clearTimeout(roomRainAudio.stopTimer);roomRainAudio.stopTimer=0;
             // Quiet ambient noise, independent of equipment signals and meters.
-            roomRainAudio.gain.gain.setTargetAtTime(.035*intensity**1.4*appState.preferences.listening.outputLevel,context.currentTime,.16);
+            roomRainAudio.gain.gain.setTargetAtTime(.035*(intensity*.15)**1.4*appState.preferences.listening.outputLevel,context.currentTime,.16);
         }
         document.addEventListener('visibilitychange',syncRoomRainAudio);
         window.addEventListener('pagehide',disposeRoomRainAudio);

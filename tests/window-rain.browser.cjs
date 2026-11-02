@@ -30,6 +30,12 @@ const root=path.resolve(__dirname,'..');
         await page.waitForTimeout(200);assert.equal(await page.locator('.room-rain').getAttribute('data-scene'),'loft');assert.equal(await page.locator('.room-rain-pane').count(),3);
         await slider.evaluate(el=>{el.value=20;el.dispatchEvent(new Event('input',{bubbles:true}));});assert.equal(await page.locator('.room-rain-drop').count(),54);
         assert.equal(await page.locator('.room-rain-glass').count(),48,'loft rain must be clipped to individual glass lights');
+        const variation=await page.locator('.room-rain-drop').evaluateAll(els=>new Set(els.map(el=>el.style.getPropertyValue('--rain-duration'))).size);
+        assert(variation>30,'drops should have independently varied speeds');
+        const changing=page.locator('.room-rain-drop').first();const before=await changing.getAttribute('style');
+        await changing.evaluate(el=>el.dispatchEvent(new AnimationEvent('animationiteration',{bubbles:true,animationName:'room-rain-slide'})));
+        assert.notEqual(await changing.getAttribute('style'),before,'each new cycle must vary drop placement and trajectory');
+
         for(const time of ['dawn','dusk','night']){
             await page.evaluate(time=>{const select=document.getElementById('canvas-time');select.value=time;select.dispatchEvent(new Event('change'));},time);
             assert.equal(await page.locator('.room-rain-glass').count(),48);
