@@ -17,7 +17,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./styles/app.css?v=cables-front-v1">
+    <link rel="stylesheet" href="./styles/app.css?v=search-expanded-v1">
     <link rel="stylesheet" href="./styles/signal-history.css?v=signal-history-v1">
     <link rel="stylesheet" href="./styles/equipment/adapters.css?v=physical-adapters-v1">
     <link rel="stylesheet" href="./styles/equipment/electrostatic-speaker.css?v=1">
@@ -33,7 +33,7 @@
     <link rel="stylesheet" href="./styles/equipment/speakers-bookshelf.css?v=bookshelf-details-v1">
     <link rel="stylesheet" href="./styles/equipment/subwoofers.css?v=subwoofer-details-v1">
     <link rel="stylesheet" href="./styles/equipment/visual-refinements.css?v=visual-refinements-v5">
-    <link rel="stylesheet" href="./styles/interface-palettes.css?v=floating-search-v1">
+    <link rel="stylesheet" href="./styles/interface-palettes.css?v=search-expanded-floating-search-v1">
 </head>
 <body class="flex flex-col h-screen bg-black text-white">
     <div id="app-startup" role="status">Preparando seu sistema…<noscript>Ative o JavaScript para abrir o programa.</noscript></div>
@@ -53,8 +53,8 @@
         
         <div id="equipment-catalog" class="w-64 md:w-72 bg-[#181d23] border-r border-gray-800 flex flex-col shrink-0 z-30 shadow-xl">
             <div class="catalog-panel-header p-4 border-b border-gray-800">
-                <div class="catalog-search" data-expanded="false">
-                    <button id="catalog-search-toggle" type="button" aria-label="Abrir busca do catálogo" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+                <div class="catalog-search">
+                    <span class="catalog-search-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
                     <input id="equipment-search" type="search" aria-label="Buscar equipamentos por nome, função, conector ou sinal" autocomplete="off" class="bg-transparent border-none outline-none text-sm w-full text-gray-300">
                 </div>
             </div>
@@ -1512,6 +1512,6 @@
     <script src="./src/modules/equipment-acoustics.js?v=1"></script>
     <script src="./src/modules/signal-history.js?v=signal-history-v1"></script>
     <script src="./src/i18n/languages.js?v=alignment-guides-v1"></script>
-    <script src="./script.js?v=turntable-restore-v1"></script>
+    <script src="./script.js?v=search-expanded-v1"></script>
 </body>
 </html>

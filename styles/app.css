@@ -4256,14 +4256,10 @@ body.mobile-properties-open #inspector {visibility:visible;pointer-events:auto;}
 .catalog-panel-header {display:flex;align-items:center;gap:8px;}
 .catalog-panel-header{position:relative;z-index:2;isolation:isolate;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);}
 .catalog-panel-header::after{content:"";position:absolute;z-index:-1;left:0;right:0;bottom:-18px;height:18px;pointer-events:none;background:linear-gradient(to bottom,var(--ui-side),color-mix(in srgb,var(--ui-side) 76%,transparent),transparent);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);}
-.catalog-search {display:flex;align-items:center;gap:0;flex:0 0 44px;width:44px;min-width:44px;height:44px;box-sizing:border-box;padding:0 4px;overflow:hidden;border:0;border-radius:10px;background:transparent;transition:flex-grow 320ms cubic-bezier(.2,.75,.25,1),background-color 180ms ease;}
-.catalog-search[data-expanded="true"] {flex-grow:1;gap:8px;background:var(--ui-control);}
-.catalog-search>button {display:grid;place-items:center;flex:none;width:36px;height:40px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--ui-muted);cursor:pointer;transition:color 180ms ease,transform 320ms cubic-bezier(.2,.75,.25,1);}
-.catalog-search>button:hover {color:var(--ui-text);}
-.catalog-search>button:focus-visible {outline:2px solid var(--ui-accent);outline-offset:-2px;}
-.catalog-search>button svg {display:block;width:20px;height:20px;}
-.catalog-search>input[type="search"] {flex:1;min-width:0;width:0;margin:0;padding:0;border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;color:var(--ui-text)!important;opacity:0;visibility:hidden;transition:opacity 160ms ease 40ms;}
-.catalog-search[data-expanded="true"]>input[type="search"] {width:auto;opacity:1;visibility:visible;}
+.catalog-search {display:flex;align-items:center;gap:8px;flex:1;min-width:0;height:44px;box-sizing:border-box;padding:0 12px;overflow:hidden;border:0;border-radius:10px;background:var(--ui-control);}
+.catalog-search-icon {display:grid;place-items:center;flex:none;width:20px;height:20px;color:var(--ui-muted);}
+.catalog-search-icon svg {display:block;width:20px;height:20px;}
+.catalog-search>input[type="search"] {flex:1;min-width:0;width:auto;margin:0;padding:0;border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;color:var(--ui-text)!important;opacity:1;visibility:visible;}
 .catalog-search>input[type="search"]:focus,.catalog-search>input[type="search"]:focus-visible {outline:0!important;border:0!important;box-shadow:none!important;}
 .sidebar-toggle {display:grid;place-items:center;flex:none;width:36px;height:36px;border:1px solid #45515b;border-radius:6px;background:#242c33;color:#d4dce1;font:500 24px/1 "Inter",sans-serif;cursor:pointer;transition:background 150ms,color 150ms;}
 .sidebar-toggle:hover {background:#33414b;color:#fff;}
@@ -4808,3 +4804,6 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 
 /* Category titles scroll with the catalog instead of covering equipment on phones. */
 @media(max-width:700px){#equipment-catalog .mb-6>h3{position:static;padding:0;background:transparent;}}
+/* Keep the permanent search field full-width even when category navigation is present. */
+#equipment-catalog .catalog-panel-header { flex-wrap:wrap; }
+#equipment-catalog .catalog-search { flex:1 0 100%; width:100%; }

@@ -31,6 +31,13 @@ const root=path.resolve(__dirname,'..');
             assert.equal(await page.locator('#catalog-sidebar-toggle,#catalog-sidebar-pin,.mobile-catalog-close,[data-mobile-panel=catalog]').count(),0);
         }
         await assertCatalogVisible();
+        for(const width of [1600,390]){
+            await page.setViewportSize({width,height:900});
+            const search=page.locator('#equipment-search');assert(await search.isVisible());
+            await search.fill('CD');await search.press('Escape');assert.equal(await search.inputValue(),'');
+            await page.locator('#app-topbar').click({position:{x:8,y:8}});assert(await search.isVisible(),'search stays expanded after blur');
+        }
+
         // Toolbar actions must share the same vertical center at desktop and mobile widths.
         for(const width of [1600,800,390]){
             await page.setViewportSize({width,height:900});
