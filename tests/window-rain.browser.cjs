@@ -42,7 +42,13 @@ const root=path.resolve(__dirname,'..');
             const clips=await page.locator('.room-rain-glass').evaluateAll(els=>els.map(el=>({clip:getComputedStyle(el).clipPath,overflow:getComputedStyle(el).overflow})));
             assert(clips.every(p=>p.clip.startsWith('polygon(')&&p.overflow==='hidden'));
         }
+        const slowRatio=await page.locator('.room-rain-drop').first().evaluate(el=>parseFloat(getComputedStyle(el).animationDuration)/parseFloat(el.style.getPropertyValue('--rain-duration')));
         await slider.evaluate(el=>{el.value=100;el.dispatchEvent(new Event('input',{bubbles:true}));});
+        const fastRatio=await page.locator('.room-rain-drop').first().evaluate(el=>parseFloat(getComputedStyle(el).animationDuration)/parseFloat(el.style.getPropertyValue('--rain-duration')));
+        assert(fastRatio<slowRatio*.6,'increasing intensity must accelerate the rain');
+        const focus=await page.evaluate(()=>({rain:getComputedStyle(document.querySelector('.room-rain')).filter,image:getComputedStyle(document.querySelector('.room-scene-image')).filter}));
+        assert.equal(focus.rain,focus.image,'rain must share the room background blur');assert.match(focus.rain,/blur\(/);
+
         await page.evaluate(()=>{Object.assign(__cables.view,{x:0,y:0,zoom:.32});__cables.applyView();});
         await page.evaluate(()=>{const grid=document.getElementById('canvas-grid');grid.value='hidden';grid.dispatchEvent(new Event('change'));});
         await page.waitForTimeout(1200);

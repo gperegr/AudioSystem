@@ -26,6 +26,7 @@
 
         function updateRoomRain(){
             syncRoomRainAudio();
+            roomRain.style.setProperty('--rain-speed',(.7+1.8*appState.preferences.rainIntensity/100).toFixed(3));
             const scene=appState.canvas.backdrop||'studioIllustrated';
             const type=scene.startsWith('studio')?'studio':scene.startsWith('listening')?'listening':'loft';
             roomRain.dataset.scene=type;
