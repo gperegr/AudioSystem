@@ -31,6 +31,10 @@ const root=path.resolve(__dirname,'..');
             assert.equal(await page.locator('#catalog-sidebar-toggle,#catalog-sidebar-pin,.mobile-catalog-close,[data-mobile-panel=catalog]').count(),0);
         }
         await assertCatalogVisible();
+        const glass=await page.locator('.catalog-search').evaluate(el=>{const css=getComputedStyle(el);return {background:css.backgroundColor,filter:css.backdropFilter};});
+        assert.match(glass.background,/^(rgba\(|color\()/,'search background must be translucent');
+        assert.notEqual(glass.filter,'none','search must blur its backdrop');
+
         for(const width of [1600,390]){
             await page.setViewportSize({width,height:900});
             const search=page.locator('#equipment-search');assert(await search.isVisible());
