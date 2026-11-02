@@ -1388,7 +1388,7 @@ const Hardware = (() => {
         appStateStore.actions.setPreference('alignmentGuides',savedAppPreferences.alignmentGuides!==false);
         appStateStore.actions.setPreference('roomParticleAmount',Number.isFinite(savedAppPreferences.roomParticleAmount)?Math.max(0,Math.min(100,savedAppPreferences.roomParticleAmount/(savedAppPreferences.particleScaleVersion===2?1:2))):25);
         if(Number.isFinite(savedAppPreferences.roomParticleAmount)&&savedAppPreferences.particleScaleVersion!==2){
-            try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({...savedAppPreferences,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2}));}catch{}
+            try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({...savedAppPreferences,roomParticleAmount:appState.preferences.roomParticleAmount,particleLastLevel:appState.preferences.particleLastLevel,particleScaleVersion:2}));}catch{}
         }
         appStateStore.actions.setPreference('developerModeEnabled',savedAppPreferences.developerMode===true);
         appStateStore.actions.setPreference('headphonePromptSeen',savedAppPreferences.headphonePromptSeen===true);
@@ -1403,7 +1403,7 @@ const Hardware = (() => {
             appPreferencesSaveTimer=setTimeout(()=>{
                 if(!canvas.clientWidth||!canvas.clientHeight)return;
                 const focusX=(canvas.clientWidth/2-view.x)/view.zoom,focusY=(canvas.clientHeight/2-view.y)/view.zoom;
-                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:appState.canvas.theme,grid:appState.canvas.grid,backdrop:appState.canvas.backdrop,time:appState.canvas.time,connectionGuidanceEnabled:appState.preferences.connectionGuidanceEnabled,orthogonalCables:appState.preferences.orthogonalCables,rainEnabled:appState.preferences.rainEnabled,rainIntensity:appState.preferences.rainIntensity,alignmentGuides:appState.preferences.alignmentGuides,roomParticleAmount:appState.preferences.roomParticleAmount,particleScaleVersion:2,developerMode:appState.preferences.developerModeEnabled,headphonePromptSeen:appState.preferences.headphonePromptSeen,inspectorPinned:sidebarPinned.properties,signalHistoryExpanded,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble,zoom:view.zoom,focusX,focusY}));}catch{}
+                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:appState.canvas.theme,grid:appState.canvas.grid,backdrop:appState.canvas.backdrop,time:appState.canvas.time,connectionGuidanceEnabled:appState.preferences.connectionGuidanceEnabled,orthogonalCables:appState.preferences.orthogonalCables,rainEnabled:appState.preferences.rainEnabled,rainIntensity:appState.preferences.rainIntensity,alignmentGuides:appState.preferences.alignmentGuides,roomParticleAmount:appState.preferences.roomParticleAmount,particleLastLevel:appState.preferences.particleLastLevel,particleScaleVersion:2,developerMode:appState.preferences.developerModeEnabled,headphonePromptSeen:appState.preferences.headphonePromptSeen,inspectorPinned:sidebarPinned.properties,signalHistoryExpanded,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble,zoom:view.zoom,focusX,focusY}));}catch{}
             },450);
         }
         const appDialog=document.getElementById('app-confirm-dialog');
@@ -10264,9 +10264,19 @@ const Hardware = (() => {
         const developerModeSetting=document.createElement('label');developerModeSetting.className='connection-help-setting';developerModeSetting.innerHTML='<input id="developer-mode-enabled" type="checkbox"><span><strong>Modo desenvolvedor</strong><small>Mostra a categoria DEBUG e os modelos de teste no catálogo.</small></span>';
         const developerModeCheckbox=developerModeSetting.querySelector('input');developerModeCheckbox.checked=appState.preferences.developerModeEnabled;
         developerModeCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('developerModeEnabled',developerModeCheckbox.checked);equipmentSearch.dispatchEvent(new Event('input'));scheduleAppPreferencesSave();});
-        const particleSetting=document.createElement('div');particleSetting.className='settings-particle-control';
-        particleSetting.innerHTML=`<label for="room-particle-amount">Partículas <output id="room-particle-value">${appState.preferences.roomParticleAmount}%</output></label><input id="room-particle-amount" type="range" min="0" max="100" step="5" value="${appState.preferences.roomParticleAmount}" aria-label="Quantidade de partículas no cenário"><small>0 desliga as partículas; 25 mantém a densidade padrão.</small>`;
-        particleSetting.querySelector('input').addEventListener('input',event=>{appStateStore.actions.setPreference('roomParticleAmount',Number(event.target.value));particleSetting.querySelector('output').textContent=appState.preferences.roomParticleAmount+'%';updateRoomMotes(appState.canvas.backdrop,appState.canvas.time);scheduleAppPreferencesSave();});
+        const particleLevels=[12,25,50];
+        let particleLevel=particleLevels.reduce((best,level)=>Math.abs(level-(savedAppPreferences.particleLastLevel||appState.preferences.roomParticleAmount||25))<Math.abs(best-(savedAppPreferences.particleLastLevel||appState.preferences.roomParticleAmount||25))?level:best,25);
+        appStateStore.actions.setPreference('particleLastLevel',particleLevel);
+        if(appState.preferences.roomParticleAmount>0){appStateStore.actions.setPreference('roomParticleAmount',particleLevel);updateRoomMotes(appState.canvas.backdrop,appState.canvas.time);}
+        const particleSetting=document.createElement('div');particleSetting.className='settings-particle-control rain-controls particle-controls';
+        const particleIcon=marks=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${marks}"/></svg>`;
+        const sparkle='M12 2l1.4 4.6L18 8l-4.6 1.4L12 14l-1.4-4.6L6 8l4.6-1.4L12 2ZM5 15l.7 2.3L8 18l-2.3.7L5 21l-.7-2.3L2 18l2.3-.7L5 15Zm13-4 .8 2.2L21 14l-2.2.8L18 17l-.8-2.2L15 14l2.2-.8L18 11Z';
+        particleSetting.innerHTML='<button id="room-particle-enabled" type="button" aria-label="Partículas" title="Partículas">'+particleIcon(sparkle)+'</button><div class="rain-intensity-control"><span title="Poucas partículas">'+particleIcon('M12 7v10M7 12h10')+'</span><input id="room-particle-amount" aria-label="Quantidade de partículas no cenário" type="range" min="0" max="2" step="1"><span title="Muitas partículas">'+particleIcon(sparkle)+'</span></div>';
+        const particleToggle=particleSetting.querySelector('#room-particle-enabled'),particleSlider=particleSetting.querySelector('#room-particle-amount');
+        function syncParticleControls(){const enabled=appState.preferences.roomParticleAmount>0;particleToggle.setAttribute('aria-pressed',String(enabled));const action=AudioSystemLanguage.translate(enabled?'Desativar partículas':'Ativar partículas');particleToggle.title=action;particleToggle.setAttribute('aria-label',action);particleSlider.value=particleLevels.indexOf(particleLevel);const name=AudioSystemLanguage.translate(['Poucas partículas','Partículas médias','Muitas partículas'][Number(particleSlider.value)]);particleSlider.setAttribute('aria-valuetext',name);particleSlider.title=name;}
+        syncParticleControls();AudioSystemLanguage.subscribe(syncParticleControls);
+        particleToggle.addEventListener('click',()=>{appStateStore.actions.setPreference('roomParticleAmount',appState.preferences.roomParticleAmount>0?0:particleLevel);syncParticleControls();updateRoomMotes(appState.canvas.backdrop,appState.canvas.time);scheduleAppPreferencesSave();});
+        particleSlider.addEventListener('input',()=>{particleLevel=particleLevels[Number(particleSlider.value)];appStateStore.actions.setPreference('particleLastLevel',particleLevel);if(appState.preferences.roomParticleAmount>0)appStateStore.actions.setPreference('roomParticleAmount',particleLevel);syncParticleControls();updateRoomMotes(appState.canvas.backdrop,appState.canvas.time);scheduleAppPreferencesSave();});
         themeSection.appendChild(particleSetting);
         const rainSetting=document.createElement('section');rainSetting.className='settings-particle-control rain-controls';
         const rainCloud='<path d="M5 16a4 4 0 0 1-.5-8 6 6 0 0 1 11.5-2 4.5 4.5 0 0 1 1 9h-1"/>';
@@ -10276,6 +10286,7 @@ const Hardware = (() => {
         const rainLevelLabels=['Chuva leve','Chuva média','Chuva forte'];
         function syncRainControls(){
             rainEnabled.setAttribute('aria-pressed',String(appState.preferences.rainEnabled));
+            const action=AudioSystemLanguage.translate(appState.preferences.rainEnabled?'Desativar chuva':'Ativar chuva');rainEnabled.title=action;rainEnabled.setAttribute('aria-label',action);
             rainIntensity.value=rainIntensityLevels.indexOf(appState.preferences.rainIntensity);
             const name=AudioSystemLanguage.translate(rainLevelLabels[Number(rainIntensity.value)]);
             rainIntensity.setAttribute('aria-valuetext',name);rainIntensity.title=name;
