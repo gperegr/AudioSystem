@@ -70,6 +70,7 @@ Warnings explain incompatible levels, loads, and simulated damage. Turning off c
 | Navigate the assembly | Use zoom and **Fit selection** (**C**): frames selected devices, or all devices when none are selected. |
 | Undo/redo movement | Use the toolbar arrows or **Ctrl/Cmd + Z** / **Ctrl/Cmd + Shift + Z**. This history tracks positions. |
 | Organize cables | Select a cable to set its label, color, visibility, and slack. Hiding a cable does not break the connection. |
+| Right-angle cables | Enable **Settings → Right-angle cables** for short horizontal/vertical routes. Cables pass in front of furniture and detour around intervening equipment; parallel spacing does not force routes toward the floor. |
 
 Adjustment controls use discrete steps; input selectors and tuning have their own scales. **Restore Settings** appears on devices with restorable adjustments. Power amplifiers start at gain **5/10**; projects with saved gains preserve those values. This control position does not mean half of the rated wattage.
 

@@ -30,3 +30,10 @@ The two turntable browser tests share `turntable-geometry.helpers.cjs`: they com
 `equipment-acoustics.test.cjs` checks equipment eligibility, transport state, a bounded voice count and resource disposal. `node tests/equipment-acoustics.browser.cjs` checks real Web Audio, an offline-rendered RMS/peak loudness budget, power/removal, page visibility and interaction mute. It accepts `TAILWIND_SCRIPT_FILE` for offline styling.
 
 `node tests/quality-of-life.browser.cjs` verifies catalog previews without registering devices, dimensions for all catalog models, drag cleanup, persisted favorites, the canvas controls and the separate operating sound control. It also checks toolbar alignment at desktop and mobile widths, Solo/Mute without recreating or reanimating the properties panel, and panel visibility while dragging and after dropping a device. Set `TAILWIND_SCRIPT_FILE` to test offline.
+
+
+## Right-angle cable length regressions
+
+`node --test tests/orthogonal-cables.test.cjs` checks local route length, short exits in tight stacks, routing above a tall obstacle, stereo spacing, bounded detours in congested lanes, and multiple obstacles in either direction. It requires no browser or DOM.
+
+`node tests/right-angle-cable-lengths.browser.cjs` constructs a direct-drive turntable → studio EQ → bench meter → RCA matrix → two compact active speakers over a table. It requires ten real compatible connections, local route lengths, and invariance when the table's bounding box extends farther down. It saves `/tmp/right-angle-cable-lengths.png`; `CABLE_SCREENSHOT` changes the output path. The existing `right-angle-cables.browser.cjs` covers the setting, stereo lanes, tight stacks, unrelated equipment below, persistence, and return to sagging cables. Both browser tests accept `CHROMIUM_PATH` and `TAILWIND_SCRIPT_FILE`; Playwright must be available to Node.

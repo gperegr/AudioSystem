@@ -26,6 +26,7 @@
         function updateCables(affectedDeviceIds=null) {
             const partial=affectedDeviceIds instanceof Set&&!appState.preferences.orthogonalCables;
             rightAngleLanes=appState.preferences.orthogonalCables?[]:null;
+            rightAngleObstacles=rightAngleLanes?collectRightAngleObstacles():null;
             appState.project.connections.forEach(c => {
                 if(partial){const [from,to]=connectionDevices(c);if(!affectedDeviceIds.has(from)&&!affectedDeviceIds.has(to))return;}
                 const p1 = document.getElementById(c.outId); const p2 = document.getElementById(c.inId);
@@ -46,7 +47,7 @@
                 if(p1 && p2) drawCable(c.el, getPortCenter(p1), getPortCenter(p2), [], c.type, {x:0,y:settle}, getCableBundleOffset(c));
                 applyCableAppearance(c);
             });
-            rightAngleLanes=null;
+            rightAngleLanes=null;rightAngleObstacles=null;
             updateBluetoothLinks(partial?affectedDeviceIds:null);
             syncPlatterVinyls(partial?affectedDeviceIds:null);
             if(partial){
@@ -336,23 +337,28 @@
                 );
             }
 
-            // Animação de cones dos alto-falantes se a simulação de som estiver ativa
-            {
-                const reduced=powerMotionPreference.matches;
-                Object.values(appState.project.devices).forEach(dev => {
-                    const woofers=dev.visualWoofers??=dev.el.querySelectorAll('.spk-woofer,.classic-box-woofer');
-                    if (dev.analyzer && dev.dataArray && woofers.length) {
-                        dev.analyzer.getByteFrequencyData(dev.dataArray);
-                        let sum=0;for(let i=0;i<Math.min(10,dev.dataArray.length);i++)sum+=dev.dataArray[i];
-                        const avg=sum/Math.min(10,dev.dataArray.length);
-                        const punch = (SUB_TYPES.has(dev.type) || PASSIVE_SUB_TYPES.has(dev.type)) ? .025 : .014;
-                        const scale=1+(!reduced&&dev.powered!==false?(avg/255)*punch:0);
-                        woofers.forEach(w=>{w.style.transform=`${w.classList.contains('classic-box-woofer')?'translateX(-50%) ':''}scale(${scale})`;});
-                    }
-                });
-            }
+            // The real post-filter signal drives a small cone excursion; silence returns to rest.
             const devices=Object.values(appState.project.devices);
-            const activeAudio=devices.some(dev=>dev.state?.playing||dev.state?.radioOn||(dev.meters?.visible&&dev.powered===true&&dev.meters.peaks.some(peak=>peak>.001)));
+            let speakerOutputActive=false;
+            for(const dev of devices){
+                const woofers=dev.visualWoofers??=dev.el.querySelectorAll('.spk-woofer,.classic-box-woofer');
+                if(!dev.analyzer||!dev.dataArray||!woofers.length)continue;
+                let rms=0;
+                if(appState.audio.context?.state==='running'&&dev.powered!==false){
+                    dev.analyzer.getByteTimeDomainData(dev.dataArray);
+                    let energy=0,count=0;
+                    for(let i=0;i<dev.dataArray.length;i+=8){const sample=(dev.dataArray[i]-128)/128;energy+=sample*sample;count++;}
+                    rms=Math.sqrt(energy/count);
+                }
+                if(rms>.003)speakerOutputActive=true;
+                const motion=powerMotionPreference.matches||rms<=.003?0:Math.min(.025,rms*.14);
+                const scale=(1+motion).toFixed(4);
+                if(dev.visualWooferScale!==scale){
+                    dev.visualWooferScale=scale;
+                    woofers.forEach(w=>{w.style.transform=`${w.classList.contains('classic-box-woofer')?'translateX(-50%) ':''}scale(${scale})`;});
+                }
+            }
+            const activeAudio=speakerOutputActive||devices.some(dev=>dev.state?.playing||dev.state?.radioOn||(dev.meters?.visible&&dev.powered===true&&dev.meters.peaks.some(peak=>peak>.001)));
             const activeCable=isPatching||appState.project.connections.some(connection=>connection.seatStarted!=null);
             Hardware.renderLightingDemo();
             visualRendering=false;
