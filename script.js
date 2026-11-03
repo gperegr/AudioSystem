@@ -2056,7 +2056,7 @@ const Hardware = (() => {
         mobileControls.innerHTML='<button type="button" data-mobile-panel="properties" aria-label="Propriedades" data-tooltip="Propriedades" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="18" r="2"/></svg><small>Ajustes</small></button><button type="button" data-mobile-action="fit-selection" aria-label="Ajustar seleção" data-tooltip="Ajustar seleção à área visível"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M8 8h8v8H8z"/></svg><small>Ajustar</small></button><button type="button" data-mobile-action="undo" aria-label="Desfazer" data-tooltip="Desfazer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h9a7 7 0 0 1 0 14h-2"/></svg><small>Desfazer</small></button><button type="button" data-mobile-action="redo" aria-label="Refazer" data-tooltip="Refazer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5m5 5h-9a7 7 0 0 0 0 14h2"/></svg><small>Refazer</small></button><button type="button" data-mobile-action="settings" aria-label="Configurações" data-tooltip="Configurações"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3m14 0h3"/></svg><small>Ajustes</small></button>';
         document.getElementById('app-topbar').lastElementChild.prepend(mobileControls);
         // Fixed phone navigation must escape the topbar's scrolling container.
-        const phoneNavigationLayout=matchMedia('(max-width:700px)');
+        const phoneNavigationLayout=matchMedia(applePhone?'(min-width:0px)':'(max-width:700px)');
         const placePhoneNavigation=()=>{if(phoneNavigationLayout.matches)document.body.append(mobileControls);else document.querySelector('#app-topbar>.topbar-controls').prepend(mobileControls);};
         phoneNavigationLayout.addEventListener('change',placePhoneNavigation);placePhoneNavigation();
         const mobileContextActions=document.createElement('div');mobileContextActions.className='mobile-context-actions';mobileContextActions.hidden=true;mobileContextActions.setAttribute('aria-label','Ações do equipamento selecionado');
@@ -2076,7 +2076,7 @@ const Hardware = (() => {
             if(button.dataset.contextAction==='fit-selection')fitDeviceSet([dev]);
             if(button.dataset.contextAction==='remove'){deleteDevice(dev,true);scheduleProjectSave();}
         });
-        const compactLayout=matchMedia('(max-width:1000px), (hover:none) and (pointer:coarse) and (max-width:1400px)');
+        const compactLayout=matchMedia(applePhone?'(min-width:0px)':'(max-width:700px)');
         compactLayout.addEventListener('change',syncMobileContextActions);
         const compactTouchLayout=matchMedia('(max-width:700px), (hover:none) and (pointer:coarse)');
         compactTouchLayout.addEventListener('change',syncMobileContextActions);
@@ -8326,7 +8326,7 @@ const Hardware = (() => {
         function positionInspectorWindow(){
             inspectorPositionFrame=0;
             if(!inspectorAnchorDevice?.isConnected)return;
-            const floating=matchMedia('(min-width:701px)').matches;
+            const floating=!applePhone&&matchMedia('(min-width:701px)').matches;
             if((inspectorWindow.dataset.floating==='true')!==floating){
                 inspectorWindow.dataset.floating=String(floating);
                 document.body.classList.toggle('inspector-floating',floating);
@@ -8367,7 +8367,7 @@ const Hardware = (() => {
             if(preserveSelection&&appState.interface.selectedDeviceIds.size>1)id=null;
             const dev=id?appState.project.devices[id]:null;
             const hasParameters=!!dev&&!parameterlessDeviceTypes.has(dev.type);
-            const floating=hasParameters&&matchMedia('(min-width:701px)').matches;
+            const floating=hasParameters&&!applePhone&&matchMedia('(min-width:701px)').matches;
             inspectorWindow.dataset.floating=String(!!floating);
             document.body.classList.toggle('inspector-floating',!!floating);
             if(!id||!hasParameters)document.body.classList.remove('mobile-properties-open');
@@ -8757,57 +8757,19 @@ const Hardware = (() => {
             return `M ${p1.x} ${p1.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
         }
 
-        let rightAngleLanes=null;
-        function rightAngleCablePath(start,end,source,target,offset=0){
-            const margin=12,rects=Object.values(appState.project.devices).map(dev=>{
-                const box=dev.el.getBoundingClientRect(),worldBox=world.getBoundingClientRect();
-                return {id:dev.id,left:(box.left-worldBox.left)/view.zoom-margin,right:(box.right-worldBox.left)/view.zoom+margin,top:(box.top-worldBox.top)/view.zoom-margin,bottom:(box.bottom-worldBox.top)/view.zoom+margin};
+        let rightAngleLanes=null,rightAngleObstacles=null;
+        function collectRightAngleObstacles(){
+            const box=world.getBoundingClientRect(),margin=8;
+            // Cables are drawn in front of furniture; its empty space and legs do not block them.
+            return Object.values(appState.project.devices).filter(dev=>!FURNITURE_TYPES[dev.type]).map(dev=>{
+                const r=dev.el.getBoundingClientRect();
+                return {id:dev.id,left:(r.left-box.left)/view.zoom-margin,right:(r.right-box.left)/view.zoom+margin,
+                    top:(r.top-box.top)/view.zoom-margin,bottom:(r.bottom-box.top)/view.zoom+margin};
             });
-            const from=rects.find(r=>r.id===source),to=rects.find(r=>r.id===target);
-            const startExit={x:start.x,y:Math.max(start.y+32,from?.bottom||0)},endExit={x:end.x,y:Math.max(end.y+32,to?.bottom||0)};
-            const obstacles=rects.filter(r=>r.id!==source&&r.id!==target);
-            const stacked=from&&to&&from.left<to.right&&from.right>to.left&&(from.bottom<=to.top+margin*2||to.bottom<=from.top+margin*2);
-            let lane=Math.max(startExit.y,endExit.y)+(stacked?0:20)+Math.abs(offset);
-            // Only move the lane below an obstacle when the horizontal segment
-            // actually crosses its interior; equipment farther down is irrelevant.
-            const leftEdge=Math.min(start.x,end.x),rightEdge=Math.max(start.x,end.x);
-            let obstructing;
-            do{
-                obstructing=stacked?null:obstacles.find(r=>r.left<rightEdge&&r.right>leftEdge&&r.top<lane&&r.bottom>lane);
-                if(obstructing)lane=obstructing.bottom+1;
-            }while(obstructing);
-            if(rightAngleLanes){
-                const left=Math.min(start.x,end.x),right=Math.max(start.x,end.x),spacing=18;
-                while(rightAngleLanes.some(other=>other.axis==='h'&&left<other.right+spacing&&right>other.left-spacing&&Math.abs(lane-other.y)<spacing))lane+=spacing;
-
-            }
-            // Route around obstacles intersecting either vertical exit using an outside corridor.
-            function escape(point,ownId){
-                const block=rects.filter(r=>r.id!==ownId&&point.x>r.left&&point.x<r.right&&r.top<lane&&r.bottom>point.y).sort((a,b)=>a.top-b.top)[0];
-                if(!block)return [point,{x:point.x,y:lane}];
-                const side=Math.abs(point.x-block.left)<Math.abs(point.x-block.right)?-1:1;
-                let x=side<0?block.left-1:block.right+1;
-                let y=Math.max(point.y,block.top-1);
-                if(rightAngleLanes){
-                    const spacing=18;
-                    while(rightAngleLanes.some(other=>other.axis==='v'&&Math.abs(x-other.x)<spacing&&y<other.bottom&&lane>other.top))x+=side*spacing;
-                    while(y+spacing<=lane&&rightAngleLanes.some(other=>other.axis==='h'&&Math.abs(y-other.y)<spacing&&Math.min(x,point.x)<other.right&&Math.max(x,point.x)>other.left))y+=spacing;
-                }
-                return [point,{x:point.x,y},{x,y},{x,y:lane}];
-            }
-            const rawPoints=[start,...escape(startExit,source),...escape(endExit,target).reverse(),end];
-            const points=[];
-            for(const point of rawPoints){
-                const previous=points.at(-1);
-                if(previous&&previous.x===point.x&&previous.y===point.y)continue;
-                points.push(point);
-                while(points.length>=3){
-                    const a=points.at(-3),b=points.at(-2),c=points.at(-1);
-                    if(!((a.x===b.x&&b.x===c.x)||(a.y===b.y&&b.y===c.y)))break;
-                    points.splice(points.length-2,1);
-                    if(points.length>=2&&points.at(-1).x===points.at(-2).x&&points.at(-1).y===points.at(-2).y)points.pop();
-                }
-            }
+        }
+        function rightAngleCablePath(start,end,source,target,offset=0){
+            const obstacles=(rightAngleObstacles||collectRightAngleObstacles()).filter(r=>r.id!==source&&r.id!==target);
+            const points=OrthogonalCables.route(start,end,obstacles,rightAngleLanes||[],offset);
             if(rightAngleLanes)for(let i=1;i<points.length;i++){
                 const a=points[i-1],b=points[i];
                 if(a.y===b.y&&a.x!==b.x)rightAngleLanes.push({axis:'h',left:Math.min(a.x,b.x),right:Math.max(a.x,b.x),y:a.y});
@@ -9521,6 +9483,7 @@ const Hardware = (() => {
         function updateCables(affectedDeviceIds=null) {
             const partial=affectedDeviceIds instanceof Set&&!appState.preferences.orthogonalCables;
             rightAngleLanes=appState.preferences.orthogonalCables?[]:null;
+            rightAngleObstacles=rightAngleLanes?collectRightAngleObstacles():null;
             appState.project.connections.forEach(c => {
                 if(partial){const [from,to]=connectionDevices(c);if(!affectedDeviceIds.has(from)&&!affectedDeviceIds.has(to))return;}
                 const p1 = document.getElementById(c.outId); const p2 = document.getElementById(c.inId);
@@ -9541,7 +9504,7 @@ const Hardware = (() => {
                 if(p1 && p2) drawCable(c.el, getPortCenter(p1), getPortCenter(p2), [], c.type, {x:0,y:settle}, getCableBundleOffset(c));
                 applyCableAppearance(c);
             });
-            rightAngleLanes=null;
+            rightAngleLanes=null;rightAngleObstacles=null;
             updateBluetoothLinks(partial?affectedDeviceIds:null);
             syncPlatterVinyls(partial?affectedDeviceIds:null);
             if(partial){
@@ -9831,23 +9794,28 @@ const Hardware = (() => {
                 );
             }
 
-            // Animação de cones dos alto-falantes se a simulação de som estiver ativa
-            {
-                const reduced=powerMotionPreference.matches;
-                Object.values(appState.project.devices).forEach(dev => {
-                    const woofers=dev.visualWoofers??=dev.el.querySelectorAll('.spk-woofer,.classic-box-woofer');
-                    if (dev.analyzer && dev.dataArray && woofers.length) {
-                        dev.analyzer.getByteFrequencyData(dev.dataArray);
-                        let sum=0;for(let i=0;i<Math.min(10,dev.dataArray.length);i++)sum+=dev.dataArray[i];
-                        const avg=sum/Math.min(10,dev.dataArray.length);
-                        const punch = (SUB_TYPES.has(dev.type) || PASSIVE_SUB_TYPES.has(dev.type)) ? .025 : .014;
-                        const scale=1+(!reduced&&dev.powered!==false?(avg/255)*punch:0);
-                        woofers.forEach(w=>{w.style.transform=`${w.classList.contains('classic-box-woofer')?'translateX(-50%) ':''}scale(${scale})`;});
-                    }
-                });
-            }
+            // The real post-filter signal drives a small cone excursion; silence returns to rest.
             const devices=Object.values(appState.project.devices);
-            const activeAudio=devices.some(dev=>dev.state?.playing||dev.state?.radioOn||(dev.meters?.visible&&dev.powered===true&&dev.meters.peaks.some(peak=>peak>.001)));
+            let speakerOutputActive=false;
+            for(const dev of devices){
+                const woofers=dev.visualWoofers??=dev.el.querySelectorAll('.spk-woofer,.classic-box-woofer');
+                if(!dev.analyzer||!dev.dataArray||!woofers.length)continue;
+                let rms=0;
+                if(appState.audio.context?.state==='running'&&dev.powered!==false){
+                    dev.analyzer.getByteTimeDomainData(dev.dataArray);
+                    let energy=0,count=0;
+                    for(let i=0;i<dev.dataArray.length;i+=8){const sample=(dev.dataArray[i]-128)/128;energy+=sample*sample;count++;}
+                    rms=Math.sqrt(energy/count);
+                }
+                if(rms>.003)speakerOutputActive=true;
+                const motion=powerMotionPreference.matches||rms<=.003?0:Math.min(.025,rms*.14);
+                const scale=(1+motion).toFixed(4);
+                if(dev.visualWooferScale!==scale){
+                    dev.visualWooferScale=scale;
+                    woofers.forEach(w=>{w.style.transform=`${w.classList.contains('classic-box-woofer')?'translateX(-50%) ':''}scale(${scale})`;});
+                }
+            }
+            const activeAudio=speakerOutputActive||devices.some(dev=>dev.state?.playing||dev.state?.radioOn||(dev.meters?.visible&&dev.powered===true&&dev.meters.peaks.some(peak=>peak>.001)));
             const activeCable=isPatching||appState.project.connections.some(connection=>connection.seatStarted!=null);
             Hardware.renderLightingDemo();
             visualRendering=false;

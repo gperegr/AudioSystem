@@ -1933,7 +1933,7 @@
             #canvas .port::before {content:'';position:absolute;inset:-7px;border-radius:50%;}
             .device-node.selected .device-header {opacity:1;visibility:visible;transform:translate(-50%,-100%);}
         }
-        @media (max-width:1000px), (hover:none) and (pointer:coarse) and (max-width:1400px){
+        @media (max-width:700px){
             #app-topbar>div:first-child {max-width:calc(100% - 230px);overflow:hidden;}
             #app-topbar>div:first-child>div {font-size:0;gap:0;}
             #app-topbar>div:first-child svg {flex:none;}
@@ -2067,7 +2067,7 @@ body.mobile-properties-open #inspector {transform:translateX(0);}
         @media(max-width:480px){.app-settings>summary>span {display:none;}}
 
         .mobile-inspector-close {display:none;}
-        @media (max-width:1000px), (hover:none) and (pointer:coarse) and (max-width:1400px){
+        @media (max-width:700px){
             #app-topbar {padding-left:10px;padding-right:10px;gap:8px;}
             #app-topbar>div:first-child {flex:none;max-width:24px;}
             #app-topbar>div:last-child {gap:8px;min-width:0;}
@@ -4031,7 +4031,7 @@ body.mobile-properties-open #inspector {transform:translateX(0);}
 
 /* Compact layouts only; fine-pointer desktop dimensions remain unchanged. */
 .mobile-panel-backdrop{display:none;}
-@media (max-width:1000px), (hover:none) and (pointer:coarse) and (max-width:1400px) {
+@media (max-width:700px) {
     :root {--compact-header-height:calc(56px + env(safe-area-inset-top,0px));}
     html,body {width:100%;height:100%;overflow:hidden;}
     body.h-screen {height:var(--compact-viewport-height,100dvh);min-height:0;}
@@ -4327,7 +4327,7 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
 .sidebar-pin:focus-visible {outline:2px solid #8fc7e4;outline-offset:2px;}
 @media(prefers-reduced-motion:reduce){#equipment-catalog,#inspector,.sidebar-toggle,#canvas,.catalog-search,.catalog-search>button,.catalog-search>input{transition:none!important;}}
 
-@media(max-width:1000px),(hover:none) and (pointer:coarse) and (max-width:1400px) {
+@media(max-width:700px) {
     body.properties-pinned #canvas {margin-left:0;margin-right:0;}
     /* The panels are positioned inside the workspace, below the top bar. */
     #equipment-catalog,#inspector,body.inspector-collapsed #inspector {
@@ -4543,7 +4543,7 @@ body.inspector-collapsed #inspector {width:min(360px,calc(100vw - 24px));min-wid
 @media(prefers-reduced-motion:reduce){#cable-properties #cable-visibility .cable-eye-open,#cable-properties #cable-visibility .cable-eye-closed,#cable-properties #cable-visibility::after {transition:none;}}
 
 :root {--spotify-vinyl-size:384px;}
-@media(max-width:1000px),(hover:none) and (pointer:coarse) and (max-width:1400px){
+@media(max-width:700px){
     .app-settings-content .settings-icon-control {display:flex;flex-direction:column;align-items:stretch;}
 }
 

@@ -82,3 +82,8 @@ Floating properties panels are confined to the canvas, below the top bar and to 
 ## Window rain
 
 Rain uses glass-only polygons in source-image coordinates from `RoomScenes.rainGlass`. Each loft light is clipped individually to protect mullions and frames. The studio and listening-room polygons are inset from their window frames. The overlay shares the room image's horizon shift and parallax; do not position it in screen coordinates. Stationary beads and animated drops with trails vary their positions, sizes, pauses and paths between animation cycles and respect reduced motion. Quiet stereo noise is filtered and mixed into the listening output while scene rain is enabled; intensity changes use gain ramps, and disabling rain or leaving the page fades and releases its audio nodes. Browser user-activation rules still apply. Keep clipping tests in `tests/room-scenes.test.cjs` and controls/persistence coverage in `tests/window-rain.browser.cjs` when changing the effect.
+
+
+## iPhone and iPad
+
+The phone navigation is used on iPhone in both orientations; `styles/phone-landscape.css` mirrors the phone rules for wide landscape iPhone viewports. Regenerate it with `node tools/build-phone-landscape.cjs` after editing `styles/app.css`, and check it with `--check`. iPadOS uses a desktop workspace with touch controls, including in narrow split view via a minimum 768px viewport. Other wide touch devices also use the desktop workspace. The icon for Safari Home Screen shortcuts is `assets/brand/apple-touch-icon.png`; the web manifest supplies standard and maskable icons.
