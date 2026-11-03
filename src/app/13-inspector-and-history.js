@@ -168,7 +168,7 @@
         function positionInspectorWindow(){
             inspectorPositionFrame=0;
             if(!inspectorAnchorDevice?.isConnected)return;
-            const floating=matchMedia('(min-width:701px)').matches;
+            const floating=!applePhone&&matchMedia('(min-width:701px)').matches;
             if((inspectorWindow.dataset.floating==='true')!==floating){
                 inspectorWindow.dataset.floating=String(floating);
                 document.body.classList.toggle('inspector-floating',floating);
@@ -209,7 +209,7 @@
             if(preserveSelection&&appState.interface.selectedDeviceIds.size>1)id=null;
             const dev=id?appState.project.devices[id]:null;
             const hasParameters=!!dev&&!parameterlessDeviceTypes.has(dev.type);
-            const floating=hasParameters&&matchMedia('(min-width:701px)').matches;
+            const floating=hasParameters&&!applePhone&&matchMedia('(min-width:701px)').matches;
             inspectorWindow.dataset.floating=String(!!floating);
             document.body.classList.toggle('inspector-floating',!!floating);
             if(!id||!hasParameters)document.body.classList.remove('mobile-properties-open');

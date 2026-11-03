@@ -1,0 +1,15 @@
+{
+  "name": "Audio Lab",
+  "short_name": "Audio Lab",
+  "description": "Monte e explore seu sistema de áudio virtual.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#181f28",
+  "theme_color": "#181f28",
+  "icons": [
+    {"src":"./assets/brand/app-icon-192.png","sizes":"192x192","type":"image/png"},
+    {"src":"./assets/brand/app-icon-512.png","sizes":"512x512","type":"image/png"},
+    {"src":"./assets/brand/app-icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
+  ]
+}

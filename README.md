@@ -98,9 +98,9 @@ Each item saves its position, sort order, and selected album. The Client ID rema
 
 ### Phones and tablets
 
-The **Equipment** and **Properties** icons open drawers over the assembly. Close a drawer with its fixed button or by tapping outside. On narrow screens, swipe the top toolbar horizontally. Use two fingers to move or zoom the canvas; press and hold before moving a device, or enable **Touch Mode** for immediate dragging.
+On iPhone, the mobile layout offers touch navigation in portrait and landscape. On iPad, the desktop workspace remains visible with touch controls, including two-finger canvas navigation and Touch Mode. In a narrow iPad split view, the desktop layout uses a minimum viewport width of 768 CSS pixels and may appear smaller to fit.
 
-<img src="docs/images/painel-mobile.png" alt="Audio Lab properties panel open on a phone, showing the selected integrated amplifier" width="320">
+To add Audio Lab to the iPhone or iPad Home Screen, open it in Safari and choose **Share → Add to Home Screen**. The installed shortcut uses the Audio Lab icon. If a previously saved shortcut retains an older icon, remove that shortcut and add it again. The Home Screen shortcut and its browser storage depend on the address used to open the app.
 
 ### Noise, sound signature, and comparison
 
