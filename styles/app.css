@@ -4838,3 +4838,8 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 .app-settings-content :is(#room-rain-enabled,#room-particle-enabled)[aria-pressed="true"]::after {display:none;}
 
 .app-settings-content .atmosphere-heading[hidden] {display:none!important;}
+
+/* Adhered water and rivulets become a dense wet-glass layer only at maximum rain. */
+.room-rain[data-soaked="true"] .room-rain-glass::after {content:"";position:absolute;inset:0;pointer-events:none;background-image:var(--soaked-glass-texture);background-size:calc(256px * var(--canvas-inverse-zoom,1)) calc(384px * var(--canvas-inverse-zoom,1));background-position:37% 19%;opacity:.95;}
+.room-rain[data-soaked="true"] .room-rain-glass:nth-child(2n)::after {background-position:81% 63%;}
+#canvas[data-theme="scene"] .room-rain[data-soaked="true"] {filter:blur(calc(.65px * var(--canvas-inverse-zoom,1))) var(--room-light-filter,brightness(1));}

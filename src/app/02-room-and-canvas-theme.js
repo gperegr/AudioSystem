@@ -31,10 +31,35 @@
             if(event.target.classList.contains('room-rain-drop'))randomizeRainDrop(event.target,event.target.parentElement.offsetHeight);
         });
 
+        let soakedGlassTexture='';
+        function getSoakedGlassTexture(){
+            if(soakedGlassTexture)return soakedGlassTexture;
+            // One small cached texture supplies thousands of stationary beads without DOM nodes.
+            const texture=document.createElement('canvas');texture.width=256;texture.height=384;
+            const ctx=texture.getContext('2d');let seed=1937;
+            const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+            ctx.fillStyle='rgba(155,179,193,.10)';ctx.fillRect(0,0,256,384);
+            for(let i=0;i<850;i++){
+                const x=random()*256,y=random()*384,r=.6+random()**2*3.4;
+                ctx.beginPath();ctx.ellipse(x,y,r,r*(1+random()*.65),0,0,Math.PI*2);
+                ctx.fillStyle='rgba(15,25,31,.26)';ctx.fill();
+                ctx.strokeStyle='rgba(231,244,249,.62)';ctx.lineWidth=.65;ctx.stroke();
+                ctx.beginPath();ctx.arc(x-r*.25,y-r*.35,Math.max(.35,r*.28),0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,.82)';ctx.fill();
+            }
+            for(let i=0;i<26;i++){
+                const x=random()*256,y=random()*384,length=24+random()*130;
+                ctx.beginPath();ctx.moveTo(x,y);ctx.bezierCurveTo(x-3,y+length*.3,x+4,y+length*.6,x+1,y+length);
+                ctx.strokeStyle='rgba(15,28,37,.30)';ctx.lineWidth=1.5+random()*2;ctx.stroke();
+                ctx.strokeStyle='rgba(232,247,255,.47)';ctx.lineWidth=.8;ctx.stroke();
+            }
+            soakedGlassTexture=texture.toDataURL('image/png');return soakedGlassTexture;
+        }
         function updateRoomRain(){
             syncRoomRainAudio();
             roomRain.style.setProperty('--rain-visibility',(.8+appState.preferences.rainIntensity/100*.6).toFixed(2));
             roomRain.style.setProperty('--rain-speed',(.7+1.8*appState.preferences.rainIntensity/100).toFixed(3));
+            roomRain.dataset.soaked=String(appState.preferences.rainIntensity===100);
+            if(appState.preferences.rainEnabled&&appState.preferences.rainIntensity===100)roomRain.style.setProperty('--soaked-glass-texture',`url("${getSoakedGlassTexture()}")`);
             const scene=appState.canvas.backdrop||'studioIllustrated';
             const type=scene.startsWith('studio')?'studio':scene.startsWith('listening')?'listening':'loft';
             roomRain.dataset.scene=type;

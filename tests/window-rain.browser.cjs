@@ -57,11 +57,13 @@ const root=path.resolve(__dirname,'..');
         const slowRatio=await page.locator('.room-rain-drop').first().evaluate(el=>parseFloat(getComputedStyle(el).animationDuration)/parseFloat(el.style.getPropertyValue('--rain-duration')));
         await slider.evaluate(el=>{el.value=2;el.dispatchEvent(new Event('input',{bubbles:true}));});
         assert.equal(await page.locator('.room-rain-drop').count(),1080,'maximum loft rain has four times the former density');
+        assert.equal(await page.locator('.room-rain').getAttribute('data-soaked'),'true');
+        assert.match(await page.locator('.room-rain-glass').first().evaluate(el=>getComputedStyle(el,'::after').backgroundImage),/data:image\/png/,'maximum rain adds the cached wet-glass texture');
         const fastRatio=await page.locator('.room-rain-drop').first().evaluate(el=>parseFloat(getComputedStyle(el).animationDuration)/parseFloat(el.style.getPropertyValue('--rain-duration')));
         assert(fastRatio<slowRatio*.6,'increasing intensity must accelerate the rain');
         await page.waitForTimeout(700);
         const focus=await page.evaluate(()=>({rain:getComputedStyle(document.querySelector('.room-rain')).filter,image:getComputedStyle(document.querySelector('.room-scene-image')).filter}));
-        assert.equal(focus.rain,focus.image,'rain must share the room background blur');assert.match(focus.rain,/blur\(/);
+        assert.match(focus.image,/blur\(/);assert.notEqual(focus.rain,focus.image,'maximum rain keeps adhered droplets sharper than the background');assert.match(focus.rain,/blur\(/);
 
         await page.evaluate(()=>{Object.assign(__cables.view,{x:0,y:0,zoom:.32});__cables.applyView();});
         await page.evaluate(()=>{const grid=document.getElementById('canvas-grid');grid.value='hidden';grid.dispatchEvent(new Event('change'));});
