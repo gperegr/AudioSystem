@@ -349,6 +349,17 @@
         window.addEventListener('keydown', e => {
             if (e.target.closest?.('input, textarea, select, [contenteditable="true"]')) return;
             const key = e.key.toLowerCase();
+            if((key==='delete'||key==='backspace')&&!e.metaKey&&!e.ctrlKey&&!e.altKey){
+                if(e.defaultPrevented||e.repeat||e.isComposing||e.target.isContentEditable||e.target.closest?.('[role="textbox"]')||document.querySelector('dialog[open]')||isPatching)return;
+                if(activeCatalogPreviewCleanup){e.preventDefault();activeCatalogPreviewCleanup();return;}
+                const selected=[...appState.interface.selectedDeviceIds].map(id=>appState.project.devices[id]).filter(Boolean);
+                if(!selected.length)return;
+                e.preventDefault();activeEquipmentMoveCleanup?.();
+                recordDeletedDevices(selected);
+                selected.forEach(dev=>deleteDevice(dev,false));
+                setDeviceSelection([]);playUiSound('discard');scheduleProjectSave();
+                return;
+            }
             if ((e.metaKey || e.ctrlKey) && key === 'a') {
                 e.preventDefault();
                 setDeviceSelection(Object.keys(appState.project.devices), Object.keys(appState.project.devices)[0] || null);
