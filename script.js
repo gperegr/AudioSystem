@@ -2314,7 +2314,9 @@ const Hardware = (() => {
                 if(activeCatalogPreviewCleanup){e.preventDefault();activeCatalogPreviewCleanup();return;}
                 const selected=[...appState.interface.selectedDeviceIds].map(id=>appState.project.devices[id]).filter(Boolean);
                 if(!selected.length)return;
+                const discardPoints=selected.map(dev=>{const rect=dev.el.getBoundingClientRect();return {x:rect.left+rect.width/2,y:rect.top+rect.height/2};});
                 e.preventDefault();activeEquipmentMoveCleanup?.();
+                discardPoints.forEach(point=>showDiscardCloud(point.x,point.y));
                 recordDeletedDevices(selected);
                 selected.forEach(dev=>deleteDevice(dev,false));
                 setDeviceSelection([]);playUiSound('discard');scheduleProjectSave();
