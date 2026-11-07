@@ -1633,7 +1633,7 @@ const Hardware = (() => {
             drop.style.setProperty('--rain-drift',((Math.random()-.5)*14)+'px');
             drop.style.setProperty('--rain-mid-y',(5+Math.random()*45)+'px');
             drop.style.setProperty('--rain-travel',Math.max(70,height*(.4+Math.random()*.9))+'px');
-            drop.style.setProperty('--rain-opacity',(.3+Math.random()*.45).toFixed(2));
+            drop.style.setProperty('--rain-opacity',(.55+Math.random()*.4).toFixed(2));
         }
         roomRain.addEventListener('animationiteration',event=>{
             if(event.target.classList.contains('room-rain-drop'))randomizeRainDrop(event.target,event.target.parentElement.offsetHeight);
@@ -1641,6 +1641,7 @@ const Hardware = (() => {
 
         function updateRoomRain(){
             syncRoomRainAudio();
+            roomRain.style.setProperty('--rain-visibility',(.8+appState.preferences.rainIntensity/100*.6).toFixed(2));
             roomRain.style.setProperty('--rain-speed',(.7+1.8*appState.preferences.rainIntensity/100).toFixed(3));
             const scene=appState.canvas.backdrop||'studioIllustrated';
             const type=scene.startsWith('studio')?'studio':scene.startsWith('listening')?'listening':'loft';
