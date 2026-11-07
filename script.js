@@ -1649,7 +1649,9 @@ const Hardware = (() => {
             roomRain.hidden=canvas.dataset.theme!=='scene'||!appState.preferences.rainEnabled||!appState.preferences.rainIntensity;
             if(roomRain.hidden){roomRain.replaceChildren();roomRain.dataset.count='';return;}
             const definition=RoomScenes.scenes[scene];
-            const count=Math.round(appState.preferences.rainIntensity*.9);
+            // Keep low levels light; 100% has four times the former density.
+            const intensity=appState.preferences.rainIntensity/100;
+            const count=Math.round(90*intensity*(1+3*intensity**4));
             const key=scene+':'+count;
             if(roomRain.dataset.count===key)return;
             roomRain.dataset.count=key;roomRain.replaceChildren();

@@ -56,6 +56,7 @@ const root=path.resolve(__dirname,'..');
         }
         const slowRatio=await page.locator('.room-rain-drop').first().evaluate(el=>parseFloat(getComputedStyle(el).animationDuration)/parseFloat(el.style.getPropertyValue('--rain-duration')));
         await slider.evaluate(el=>{el.value=2;el.dispatchEvent(new Event('input',{bubbles:true}));});
+        assert.equal(await page.locator('.room-rain-drop').count(),1080,'maximum loft rain has four times the former density');
         const fastRatio=await page.locator('.room-rain-drop').first().evaluate(el=>parseFloat(getComputedStyle(el).animationDuration)/parseFloat(el.style.getPropertyValue('--rain-duration')));
         assert(fastRatio<slowRatio*.6,'increasing intensity must accelerate the rain');
         await page.waitForTimeout(700);
