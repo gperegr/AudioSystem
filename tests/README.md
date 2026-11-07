@@ -56,3 +56,5 @@ The two turntable browser tests share `turntable-geometry.helpers.cjs`: they com
 `node tests/room-atmosphere.browser.cjs` verifies that time changes reuse the same image and rain elements, particle origins stay in the windows, depth blur survives all nine combinations, and reduced-motion/disabled particles stop their animation loop. It bounds particle and shadow buffers at 4K and saves nine previews to `/tmp/room-ultrawide-{studio|listening|loft}-{dawn|dusk|night}.png`. It accepts `TAILWIND_SCRIPT_FILE`.
 
 `node tests/room-fixture-light.browser.cjs` checks background illumination from both wall lamps and the pendant, removal cleanup, solid-theme exclusion and the 1400-pixel buffer limit. It accepts `TAILWIND_SCRIPT_FILE`.
+
+`node tests/static-rain.browser.cjs` verifies the shared photographic rain material in all three rooms at dusk/night, 2× Retina output, transparent frames, stable cached PNGs across lighting changes, one material download, and at most 18 moving drops. It saves `/tmp/rain-quality-{studio|listening|loft}-{dusk|night}.png` and accepts `TAILWIND_SCRIPT_FILE`.

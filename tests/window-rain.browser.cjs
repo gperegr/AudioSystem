@@ -58,7 +58,7 @@ const root=path.resolve(__dirname,'..');
         await slider.evaluate(el=>{el.value=2;el.dispatchEvent(new Event('input',{bubbles:true}));});
         assert.equal(await page.locator('.room-rain-drop').count(),18,'maximum loft rain caps animated drops while retaining dense wet glass');
         assert.equal(await page.locator('.room-rain:not(.room-rain-static)').getAttribute('data-soaked'),'true');
-        await page.waitForFunction(()=>document.querySelector('.room-rain-static')?.naturalWidth===2304);
+        await page.waitForFunction(()=>document.querySelector('.room-rain-static')?.naturalWidth===Math.round(2304*Math.min(2,Math.max(1,devicePixelRatio||1))));
         assert.match(await page.locator('.room-rain-static').getAttribute('src'),/data:image\/png/);
         const fastRatio=await page.locator('.room-rain-drop').first().evaluate(el=>parseFloat(getComputedStyle(el).animationDuration)/parseFloat(el.style.getPropertyValue('--rain-duration')));
         assert(fastRatio<slowRatio*.6,'increasing intensity must accelerate the rain');

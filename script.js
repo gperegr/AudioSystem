@@ -1687,45 +1687,65 @@ const Hardware = (() => {
             if(event.target.classList.contains('room-rain-drop'))randomizeRainDrop(event.target,event.target.parentElement.offsetHeight);
         });
 
-        let soakedGlassTexture='';
-        function getSoakedGlassTexture(){
-            if(soakedGlassTexture)return soakedGlassTexture;
-            // One small cached texture supplies thousands of stationary beads without DOM nodes.
-            const texture=document.createElement('canvas');texture.width=256;texture.height=384;
-            const ctx=texture.getContext('2d');let seed=1937;
+        let rainMaterialPromise=null;
+        function loadRainMaterial(){
+            if(!rainMaterialPromise){
+                const image=new Image();image.decoding='async';image.src='./assets/rooms/rain-glass-material.webp?v=1';
+                rainMaterialPromise=image.decode().then(()=>{
+                    // Evaluate the photographic material once: neutral glass stays transparent,
+                    // while the water's dark menisci and bright glints retain their optical detail.
+                    const material=document.createElement('canvas');material.width=image.naturalWidth;material.height=image.naturalHeight;
+                    const ctx=material.getContext('2d');ctx.drawImage(image,0,0);
+                    const pixels=ctx.getImageData(0,0,material.width,material.height),data=pixels.data;
+                    for(let i=0;i<data.length;i+=4){
+                        const luminance=data[i]*.2126+data[i+1]*.7152+data[i+2]*.0722;
+                        const difference=luminance-215;
+                        const relief=Math.max(0,Math.abs(difference)-4)/60;
+                        data[i+3]=Math.round(data[i+3]*Math.min(.85,relief));
+                        const highlight=difference>0;
+                        data[i]=highlight?245:15;data[i+1]=highlight?250:24;data[i+2]=highlight?255:29;
+                    }
+                    ctx.putImageData(pixels,0,0);return material;
+                }).catch(error=>{rainMaterialPromise=null;throw error;});
+            }
+            return rainMaterialPromise;
+        }
+        function bakeStaticRain(scene,material,resolution){
+            const definition=RoomScenes.scenes[scene],surface=document.createElement('canvas');
+            surface.width=Math.round(definition.width*resolution);surface.height=Math.round(definition.height*resolution);
+            const ctx=surface.getContext('2d');ctx.scale(resolution,resolution);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+            let seed=scene.startsWith('studio')?1937:scene.startsWith('listening')?4081:7919;
             const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
-            ctx.fillStyle='rgba(155,179,193,.10)';ctx.fillRect(0,0,256,384);
-            for(let i=0;i<850;i++){
-                const x=random()*256,y=random()*384,r=.6+random()**2*3.4;
-                ctx.beginPath();ctx.ellipse(x,y,r,r*(1+random()*.65),0,0,Math.PI*2);
-                ctx.fillStyle='rgba(15,25,31,.26)';ctx.fill();
-                ctx.strokeStyle='rgba(231,244,249,.62)';ctx.lineWidth=.65;ctx.stroke();
-                ctx.beginPath();ctx.arc(x-r*.25,y-r*.35,Math.max(.35,r*.28),0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,.82)';ctx.fill();
-            }
-            for(let i=0;i<26;i++){
-                const x=random()*256,y=random()*384,length=24+random()*130;
-                ctx.beginPath();ctx.moveTo(x,y);ctx.bezierCurveTo(x-3,y+length*.3,x+4,y+length*.6,x+1,y+length);
-                ctx.strokeStyle='rgba(15,28,37,.30)';ctx.lineWidth=1.5+random()*2;ctx.stroke();
-                ctx.strokeStyle='rgba(232,247,255,.47)';ctx.lineWidth=.8;ctx.stroke();
-            }
-            soakedGlassTexture=texture.toDataURL('image/png');return soakedGlassTexture;
+            definition.glass.flat().forEach(polygon=>{
+                const [left,top]=polygon[0],[right,bottom]=polygon[2],width=right-left,height=bottom-top;
+                // A unique photographic crop per pane; no repeated square tiles or stamped circles.
+                const scale=Math.max(.36+random()*.08,width/material.width,height/material.height);
+                const cropWidth=width/scale,cropHeight=height/scale;
+                const sourceX=random()*(material.width-cropWidth),sourceY=random()*(material.height-cropHeight);
+                ctx.save();ctx.beginPath();polygon.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.clip();
+                if(random()>.5){ctx.translate(left+right,0);ctx.scale(-1,1);}
+                ctx.drawImage(material,sourceX,sourceY,cropWidth,cropHeight,left,top,width,height);
+                ctx.restore();
+            });
+            return surface.toDataURL('image/png');
         }
         function updateStaticRain(scene){
             const request=++staticRainRequest;
             roomRainStatic.hidden=roomRain.hidden;
             if(roomRain.hidden)return;
             roomRainStatic.style.opacity=appState.preferences.rainIntensity===100?'1':String(appState.preferences.rainIntensity/160);
-            if(staticRainCache.has(scene)){roomRainStatic.src=staticRainCache.get(scene);return;}
-            const texture=new Image();texture.src=getSoakedGlassTexture();
-            texture.decode().then(()=>{
-                const definition=RoomScenes.scenes[scene],surface=document.createElement('canvas');surface.width=definition.width;surface.height=definition.height;
-                const ctx=surface.getContext('2d');ctx.fillStyle=ctx.createPattern(texture,'repeat');
-                definition.glass.flat().forEach(polygon=>{
-                    ctx.save();ctx.beginPath();polygon.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.clip();
-                    ctx.fillRect(polygon[0][0],polygon[0][1],polygon[2][0]-polygon[0][0],polygon[2][1]-polygon[0][1]);ctx.restore();
-                });
-                const url=surface.toDataURL('image/png');staticRainCache.set(scene,url);
-                if(request===staticRainRequest)roomRainStatic.src=url;
+            // Retina gets up to 2× resolution; cached output keeps navigation free of redraws.
+            const resolution=Math.min(2,Math.max(1,devicePixelRatio||1)),key=scene+':'+resolution;
+            // Cache promises as well as decoded material: rapid time/room changes cannot duplicate a bake.
+            if(!staticRainCache.has(key)){
+                const bake=loadRainMaterial().then(material=>bakeStaticRain(scene,material,resolution));
+                staticRainCache.set(key,bake);
+                bake.catch(()=>{if(staticRainCache.get(key)===bake)staticRainCache.delete(key);});
+            }
+            staticRainCache.get(key).then(url=>{
+                if(request!==staticRainRequest)return;
+                if(roomRainStatic.getAttribute('src')!==url)roomRainStatic.src=url;
+                roomRainStatic.dataset.scene=scene;
             }).catch(()=>{});
         }
         function updateRoomRain(){
