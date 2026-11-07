@@ -243,16 +243,17 @@
 .setup-room{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:var(--ui-muted);stroke-width:1;opacity:.42;}
 .setup-room .setup-ground{fill:var(--ui-shadow);stroke:none;opacity:.3;}
 #equipment-catalog .setup-object{position:absolute;padding:0;min-width:0;background:transparent;color:var(--ui-secondary);border:0;border-radius:4px;cursor:pointer;transition:color .18s,filter .18s;}
-.setup-object svg{display:block;width:100%;height:100%;overflow:visible;fill:var(--ui-panel);stroke:currentColor;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round;}
+.setup-object svg{display:block;width:100%;height:100%;overflow:visible;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round;}
 .setup-object svg .setup-top{fill:var(--ui-control);}
+.setup-object svg .setup-face{fill:var(--ui-panel);}
 .setup-object svg .setup-detail{fill:none;stroke-width:.8;opacity:.65;}
 #equipment-catalog .setup-object:hover,#equipment-catalog .setup-object[aria-pressed="true"]{color:var(--ui-accent);filter:drop-shadow(0 2px 4px var(--ui-shadow));background:transparent;}
-#equipment-catalog .setup-object[aria-pressed="true"] svg>rect:first-of-type{fill:var(--ui-active);}
-#equipment-catalog .setup-all{position:absolute;left:3%;top:4%;width:30px;height:30px;padding:7px;background:transparent;color:var(--ui-muted);border:0;border-radius:6px;cursor:pointer;}
+#equipment-catalog .setup-object[aria-pressed="true"] svg .setup-face{fill:var(--ui-active);}
+#equipment-catalog .setup-all{position:absolute;left:3%;top:3%;width:18%;height:auto;aspect-ratio:1;padding:3%;background:transparent;color:var(--ui-muted);border:0;border-radius:6px;cursor:pointer;}
 .setup-all svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.3;}
 #equipment-catalog .setup-all:hover,#equipment-catalog .setup-all[aria-pressed="true"]{color:var(--ui-accent);background:var(--ui-control);}
 #equipment-catalog .mobile-category-nav{display:none;}
-@media(max-width:700px){.catalog-setup{margin:0 -6px 12px;}.setup-object svg{stroke-width:2;}.setup-object svg .setup-detail{stroke-width:1.2;}#equipment-catalog .setup-all{width:26px;height:26px;padding:6px;top:0;}}
+@media(max-width:700px){.catalog-setup{margin:0 -6px 12px;}.setup-object svg{stroke-width:2;}.setup-object svg .setup-detail{stroke-width:1.2;}}
 @media(prefers-reduced-motion:reduce){#equipment-catalog .setup-object{transition:none;}}
 
 /* Bottom catalog: the setup stays anchored while equipment scrolls sideways. */

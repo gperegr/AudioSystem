@@ -25,6 +25,10 @@ const root=path.resolve(__dirname,'..');
         await page.locator('#headphone-calibration-skip').click();
         await page.getByRole('button',{name:'Agora não',exact:true}).click();
 
+        await page.locator('.setup-object[data-setup-category="furniture"]').click();
+        assert.deepEqual(await page.locator('.catalog-category:visible>h3').allTextContents(),['Móveis','Iluminação'],'furniture and lighting retain separate sections behind one target');
+        await page.locator('.setup-object[data-setup-category="lab"]').focus();await page.keyboard.press('Enter');
+        assert.deepEqual(await page.locator('.catalog-category:visible>h3').allTextContents(),['Medição & Análise','Adaptadores & Conversores'],'the stacked measurement equipment remains keyboard accessible');
         await page.locator('.setup-object[data-setup-category="sources"]').click();
         const strip=page.locator('#equipment-catalog>.overflow-y-auto');
         await strip.hover();await page.mouse.wheel(0,180);
