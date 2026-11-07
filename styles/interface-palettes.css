@@ -246,6 +246,7 @@
 .setup-object svg{display:block;width:100%;height:100%;overflow:visible;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round;}
 .setup-object svg .setup-top{fill:var(--ui-control);}
 .setup-object svg .setup-face{fill:var(--ui-panel);}
+.setup-object svg .setup-feet{fill:currentColor;stroke:none;}
 .setup-object svg .setup-detail{fill:none;stroke-width:.8;opacity:.65;}
 #equipment-catalog .setup-object:hover,#equipment-catalog .setup-object[aria-pressed="true"]{color:var(--ui-accent);filter:drop-shadow(0 2px 4px var(--ui-shadow));background:transparent;}
 #equipment-catalog .setup-object[aria-pressed="true"] svg .setup-face{fill:var(--ui-active);}
