@@ -1,5 +1,7 @@
 /* Application state, preferences, dialogs, and headphone calibration. */
 
+        // Code-only switch: set true and rebuild script.js to expose DEBUG equipment.
+        const DEBUG_CATALOG_ENABLED=false;
         const DEFAULT_BACKDROP='loftIllustrated';
         const DEFAULT_ROOM_SETTINGS={preset:'small',intensity:5};
         const DEFAULT_UI_SOUND_VOLUME=.5;
@@ -21,7 +23,6 @@
         if(Number.isFinite(savedAppPreferences.roomParticleAmount)&&savedAppPreferences.particleScaleVersion!==2){
             try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({...savedAppPreferences,roomParticleAmount:appState.preferences.roomParticleAmount,particleLastLevel:appState.preferences.particleLastLevel,particleScaleVersion:2}));}catch{}
         }
-        appStateStore.actions.setPreference('developerModeEnabled',savedAppPreferences.developerMode===true);
         appStateStore.actions.setPreference('headphonePromptSeen',savedAppPreferences.headphonePromptSeen===true);
         appStateStore.actions.setListeningPreferences({
             outputLevel:Number.isFinite(savedAppPreferences.listeningOutputLevel)?Math.max(.5,Math.min(1.2,savedAppPreferences.listeningOutputLevel)):1,
@@ -34,7 +35,7 @@
             appPreferencesSaveTimer=setTimeout(()=>{
                 if(!canvas.clientWidth||!canvas.clientHeight)return;
                 const focusX=(canvas.clientWidth/2-view.x)/view.zoom,focusY=(canvas.clientHeight/2-view.y)/view.zoom;
-                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:appState.canvas.theme,grid:appState.canvas.grid,backdrop:appState.canvas.backdrop,time:appState.canvas.time,connectionGuidanceEnabled:appState.preferences.connectionGuidanceEnabled,orthogonalCables:appState.preferences.orthogonalCables,rainEnabled:appState.preferences.rainEnabled,rainIntensity:appState.preferences.rainIntensity,roomParticleAmount:appState.preferences.roomParticleAmount,particleLastLevel:appState.preferences.particleLastLevel,particleScaleVersion:2,developerMode:appState.preferences.developerModeEnabled,headphonePromptSeen:appState.preferences.headphonePromptSeen,inspectorPinned:sidebarPinned.properties,signalHistoryExpanded,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble,zoom:view.zoom,focusX,focusY}));}catch{}
+                try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({theme:appState.canvas.theme,grid:appState.canvas.grid,backdrop:appState.canvas.backdrop,time:appState.canvas.time,connectionGuidanceEnabled:appState.preferences.connectionGuidanceEnabled,orthogonalCables:appState.preferences.orthogonalCables,rainEnabled:appState.preferences.rainEnabled,rainIntensity:appState.preferences.rainIntensity,roomParticleAmount:appState.preferences.roomParticleAmount,particleLastLevel:appState.preferences.particleLastLevel,particleScaleVersion:2,headphonePromptSeen:appState.preferences.headphonePromptSeen,inspectorPinned:sidebarPinned.properties,signalHistoryExpanded,listeningOutputLevel:appState.preferences.listening.outputLevel,listeningBass:appState.preferences.listening.bass,listeningTreble:appState.preferences.listening.treble,zoom:view.zoom,focusX,focusY}));}catch{}
             },450);
         }
         const appDialog=document.getElementById('app-confirm-dialog');

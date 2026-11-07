@@ -10,9 +10,6 @@
         const rightAngleSetting=document.createElement('label');rightAngleSetting.className='connection-help-setting';rightAngleSetting.innerHTML='<input id="orthogonal-cables" type="checkbox"><span><strong>Cabos em ângulos retos</strong><small>Traça cabos com segmentos horizontais e verticais.</small></span>';
         const rightAngleCheckbox=rightAngleSetting.querySelector('input');rightAngleCheckbox.checked=appState.preferences.orthogonalCables;interactionSection.appendChild(rightAngleSetting);
         rightAngleCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('orthogonalCables',rightAngleCheckbox.checked);updateCables();scheduleAppPreferencesSave();});
-        const developerModeSetting=document.createElement('label');developerModeSetting.className='connection-help-setting';developerModeSetting.innerHTML='<input id="developer-mode-enabled" type="checkbox"><span><strong>Modo desenvolvedor</strong><small>Mostra a categoria DEBUG e os modelos de teste no catálogo.</small></span>';
-        const developerModeCheckbox=developerModeSetting.querySelector('input');developerModeCheckbox.checked=appState.preferences.developerModeEnabled;
-        developerModeCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('developerModeEnabled',developerModeCheckbox.checked);equipmentSearch.dispatchEvent(new Event('input'));scheduleAppPreferencesSave();});
         const atmosphereHeading=document.createElement('div');atmosphereHeading.className='settings-icon-control atmosphere-heading';atmosphereHeading.textContent='Atmosfera';themeSection.appendChild(atmosphereHeading);
         const particleLevels=[12,25,50];
         let particleLevel=particleLevels.reduce((best,level)=>Math.abs(level-(savedAppPreferences.particleLastLevel||appState.preferences.roomParticleAmount||25))<Math.abs(best-(savedAppPreferences.particleLastLevel||appState.preferences.roomParticleAmount||25))?level:best,25);
@@ -134,7 +131,6 @@
             settingsGroup('Visual','<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8" cy="9" r="1.5"/><path d="m4 17 5-5 3 3 3-4 5 6"/>',[themeSection],true),
             settingsGroup('Interação','<path d="M8 12V5a2 2 0 0 1 4 0v5m0-3a2 2 0 0 1 4 0v4m0-2a2 2 0 0 1 4 0v6c0 4-3 6-7 6h-2c-3 0-5-2-6-5l-2-4a2 2 0 0 1 3-2l2 2"/>',[interactionSection]),
             settingsGroup('Som','<path d="M4 13v-2a8 8 0 0 1 16 0v2M4 13h3v7H5a2 2 0 0 1-2-2v-3a2 2 0 0 1 1-2Zm16 0h-3v7h2a2 2 0 0 0 2-2v-3a2 2 0 0 0-1-2Z"/>',[roomSection,headphoneCalibrationSetting,listeningLevels]),
-            settingsGroup('Avançado','<path d="m8 7-5 5 5 5m8-10 5 5-5 5M14 4l-4 16"/>',[developerModeSetting]),
             clearButton
         );
 

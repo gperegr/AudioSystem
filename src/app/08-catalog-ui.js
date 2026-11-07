@@ -229,7 +229,7 @@
         if(catalogUnassigned.length)throw new Error(`Equipment contract missing catalog category: ${catalogUnassigned.map(item=>item.dataset.template).join(', ')}`);
         previousCatalogSections.forEach(section=>section.remove());
         const debugCatalogSection=[...catalogContainer.querySelectorAll('.catalog-category')].find(section=>section.querySelector('[data-template="hardwareDemo"]'));
-        debugCatalogSection.hidden=!appState.preferences.developerModeEnabled;
+        debugCatalogSection.hidden=!DEBUG_CATALOG_ENABLED;
         document.querySelectorAll('.catalog-item[data-template]').forEach(item => {
             const oldIcon = item.firstElementChild;
             if (oldIcon) oldIcon.outerHTML = catalogIcon(item.dataset.template);
@@ -334,7 +334,7 @@
             const terms = normalizeSearch(equipmentSearch.value).split(/\s+/).filter(Boolean);
             let total = 0;
             catalogSections.forEach(section => {
-                if(section===debugCatalogSection&&!appState.preferences.developerModeEnabled){section.hidden=true;return;}
+                if(section===debugCatalogSection&&!DEBUG_CATALOG_ENABLED){section.hidden=true;return;}
                 let visible = 0;
                 section.querySelectorAll('.catalog-item').forEach(item => {
                     const text = catalogSearchText(item);
