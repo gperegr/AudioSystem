@@ -256,24 +256,29 @@
         document.getElementById('inspector').classList.add('inspector-compact');
         const equipmentCatalog = document.getElementById('equipment-catalog');
         const wheelScrollMotions=new WeakMap();
-        function enableWheelMomentumScroll(element){
+        function enableWheelMomentumScroll(element,{horizontal=false}={}){
             if(!element)return;
-            const motion={position:element.scrollTop,target:element.scrollTop,frame:0,lastTime:0};
+            const positionKey=horizontal?'scrollLeft':'scrollTop';
+            const sizeKey=horizontal?'clientWidth':'clientHeight';
+            const extentKey=horizontal?'scrollWidth':'scrollHeight';
+            element.dataset.scrollAxis=horizontal?'horizontal':'vertical';
+            const motion={position:element[positionKey],target:element[positionKey],frame:0,lastTime:0};
             wheelScrollMotions.set(element,motion);
             element.classList.add('wheel-momentum-scroll');
             element.addEventListener('wheel',event=>{
-                if(event.ctrlKey||event.deltaY===0)return;
+                const wheelDelta=horizontal&&Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY;
+                if(event.ctrlKey||wheelDelta===0)return;
                 event.preventDefault();
-                const unit=event.deltaMode===1?32:event.deltaMode===2?element.clientHeight:1;
-                const delta=Math.max(-180,Math.min(180,event.deltaY*unit));
-                const max=Math.max(0,element.scrollHeight-element.clientHeight);
-                if(!motion.frame){motion.position=element.scrollTop;motion.target=motion.position;motion.lastTime=performance.now();}
+                const unit=event.deltaMode===1?32:event.deltaMode===2?element[sizeKey]:1;
+                const delta=Math.max(-180,Math.min(180,wheelDelta*unit));
+                const max=Math.max(0,element[extentKey]-element[sizeKey]);
+                if(!motion.frame){motion.position=element[positionKey];motion.target=motion.position;motion.lastTime=performance.now();}
                 motion.target=Math.max(-240,Math.min(max+240,motion.target+delta));
                 if(!motion.frame)motion.frame=requestAnimationFrame(step);
             },{passive:false});
             function step(now){
                 const elapsed=Math.min(32,now-motion.lastTime||16);motion.lastTime=now;
-                const max=Math.max(0,element.scrollHeight-element.clientHeight);
+                const max=Math.max(0,element[extentKey]-element[sizeKey]);
                 if(matchMedia('(prefers-reduced-motion: reduce)').matches){
                     motion.position=Math.max(0,Math.min(max,motion.target));motion.target=motion.position;
                 }else{
@@ -284,7 +289,7 @@
                 }
                 const bounded=Math.max(0,Math.min(max,motion.position));
                 const over=motion.position-bounded;
-                element.scrollTop=bounded;
+                element[positionKey]=bounded;
                 element.style.setProperty('--wheel-elastic-offset',`${Math.max(-32,Math.min(32,-over*.32))}px`);element.classList.toggle('wheel-elastic-active',Math.abs(over)>=.25);
                 if(Math.abs(motion.target-bounded)<.25&&Math.abs(over)<.5){
                     motion.position=bounded;motion.target=bounded;motion.frame=0;element.style.setProperty('--wheel-elastic-offset','0px');element.classList.remove('wheel-elastic-active');return;
@@ -292,7 +297,7 @@
                 motion.frame=requestAnimationFrame(step);
             }
         }
-        enableWheelMomentumScroll(equipmentCatalog.querySelector('.overflow-y-auto'));
+        enableWheelMomentumScroll(equipmentCatalog.querySelector('.overflow-y-auto'),{horizontal:true});
         enableWheelMomentumScroll(document.getElementById('inspector-content'));
         enableWheelMomentumScroll(document.getElementById('inspector-empty'));
         const discardZone=document.createElement('div');

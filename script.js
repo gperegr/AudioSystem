@@ -1859,24 +1859,29 @@ const Hardware = (() => {
         document.getElementById('inspector').classList.add('inspector-compact');
         const equipmentCatalog = document.getElementById('equipment-catalog');
         const wheelScrollMotions=new WeakMap();
-        function enableWheelMomentumScroll(element){
+        function enableWheelMomentumScroll(element,{horizontal=false}={}){
             if(!element)return;
-            const motion={position:element.scrollTop,target:element.scrollTop,frame:0,lastTime:0};
+            const positionKey=horizontal?'scrollLeft':'scrollTop';
+            const sizeKey=horizontal?'clientWidth':'clientHeight';
+            const extentKey=horizontal?'scrollWidth':'scrollHeight';
+            element.dataset.scrollAxis=horizontal?'horizontal':'vertical';
+            const motion={position:element[positionKey],target:element[positionKey],frame:0,lastTime:0};
             wheelScrollMotions.set(element,motion);
             element.classList.add('wheel-momentum-scroll');
             element.addEventListener('wheel',event=>{
-                if(event.ctrlKey||event.deltaY===0)return;
+                const wheelDelta=horizontal&&Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY;
+                if(event.ctrlKey||wheelDelta===0)return;
                 event.preventDefault();
-                const unit=event.deltaMode===1?32:event.deltaMode===2?element.clientHeight:1;
-                const delta=Math.max(-180,Math.min(180,event.deltaY*unit));
-                const max=Math.max(0,element.scrollHeight-element.clientHeight);
-                if(!motion.frame){motion.position=element.scrollTop;motion.target=motion.position;motion.lastTime=performance.now();}
+                const unit=event.deltaMode===1?32:event.deltaMode===2?element[sizeKey]:1;
+                const delta=Math.max(-180,Math.min(180,wheelDelta*unit));
+                const max=Math.max(0,element[extentKey]-element[sizeKey]);
+                if(!motion.frame){motion.position=element[positionKey];motion.target=motion.position;motion.lastTime=performance.now();}
                 motion.target=Math.max(-240,Math.min(max+240,motion.target+delta));
                 if(!motion.frame)motion.frame=requestAnimationFrame(step);
             },{passive:false});
             function step(now){
                 const elapsed=Math.min(32,now-motion.lastTime||16);motion.lastTime=now;
-                const max=Math.max(0,element.scrollHeight-element.clientHeight);
+                const max=Math.max(0,element[extentKey]-element[sizeKey]);
                 if(matchMedia('(prefers-reduced-motion: reduce)').matches){
                     motion.position=Math.max(0,Math.min(max,motion.target));motion.target=motion.position;
                 }else{
@@ -1887,7 +1892,7 @@ const Hardware = (() => {
                 }
                 const bounded=Math.max(0,Math.min(max,motion.position));
                 const over=motion.position-bounded;
-                element.scrollTop=bounded;
+                element[positionKey]=bounded;
                 element.style.setProperty('--wheel-elastic-offset',`${Math.max(-32,Math.min(32,-over*.32))}px`);element.classList.toggle('wheel-elastic-active',Math.abs(over)>=.25);
                 if(Math.abs(motion.target-bounded)<.25&&Math.abs(over)<.5){
                     motion.position=bounded;motion.target=bounded;motion.frame=0;element.style.setProperty('--wheel-elastic-offset','0px');element.classList.remove('wheel-elastic-active');return;
@@ -1895,7 +1900,7 @@ const Hardware = (() => {
                 motion.frame=requestAnimationFrame(step);
             }
         }
-        enableWheelMomentumScroll(equipmentCatalog.querySelector('.overflow-y-auto'));
+        enableWheelMomentumScroll(equipmentCatalog.querySelector('.overflow-y-auto'),{horizontal:true});
         enableWheelMomentumScroll(document.getElementById('inspector-content'));
         enableWheelMomentumScroll(document.getElementById('inspector-empty'));
         const discardZone=document.createElement('div');
@@ -3690,18 +3695,19 @@ const Hardware = (() => {
             }catch(error){ /* Feedback is optional when audio is unavailable. */ }
         }
         function enableCatalogScrollSound(element){
-            const scrollKeys=new Set(['ArrowUp','ArrowDown','PageUp','PageDown','Home','End',' ']);
-            let armed=false,inputType='',lastPosition=element.scrollTop,lastTime=performance.now(),lastMovement=0,distance=0,speed=0;
+            const positionKey=element.dataset.scrollAxis==='horizontal'?'scrollLeft':'scrollTop';
+            const scrollKeys=new Set(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','PageUp','PageDown','Home','End',' ']);
+            let armed=false,inputType='',lastPosition=element[positionKey],lastTime=performance.now(),lastMovement=0,distance=0,speed=0;
             function arm(event){
                 if(!event.isTrusted||event.ctrlKey||event.metaKey)return;
                 if(event.type==='keydown'&&(!scrollKeys.has(event.key)||event.target.closest('input,select,textarea,[contenteditable]')))return;
                 const now=performance.now();
-                if(!armed||now-lastMovement>220){lastPosition=element.scrollTop;lastTime=now;distance=0;speed=0;}
+                if(!armed||now-lastMovement>220){lastPosition=element[positionKey];lastTime=now;distance=0;speed=0;}
                 armed=true;inputType=event.type==='wheel'?'wheel':event.type==='keydown'?'keyboard':event.pointerType;lastMovement=now;
             }
             for(const type of ['wheel','pointerdown','keydown'])element.addEventListener(type,arm,{capture:true,passive:true});
             element.addEventListener('scroll',()=>{
-                const now=performance.now(),position=element.scrollTop,travel=Math.abs(position-lastPosition),elapsed=Math.max(8,now-lastTime);
+                const now=performance.now(),position=element[positionKey],travel=Math.abs(position-lastPosition),elapsed=Math.max(8,now-lastTime);
                 lastPosition=position;lastTime=now;
                 if(!armed||(inputType==='wheel'&&!wheelScrollMotions.get(element)?.frame)||now-lastMovement>220||appState.project.restoringProject||document.visibilityState!=='visible'||!element.clientHeight||getComputedStyle(element).visibility==='hidden'){
                     armed=false;distance=0;return;
@@ -5151,11 +5157,24 @@ const Hardware = (() => {
         equipmentCatalog.prepend(dockSilhouette);
         const sizeDockContour=()=>{
             const w=equipmentCatalog.clientWidth,h=equipmentCatalog.clientHeight;
-            const neck=parseFloat(getComputedStyle(equipmentCatalog).getPropertyValue('--setup-dock-width'))||200;
+            const dockBounds=equipmentCatalog.getBoundingClientRect();
+            const search=equipmentCatalog.querySelector('.catalog-search');
+            const searchBounds=search.getBoundingClientRect();
+            const padding=Math.min(16,searchBounds.left-dockBounds.left);
+            const left=searchBounds.left-dockBounds.left-padding;
+            const searchRadius=parseFloat(getComputedStyle(search).borderTopRightRadius)||10;
+            const top=Math.max(1,searchBounds.top-dockBounds.top-padding);
+            const radius=searchRadius+padding;
+            const shoulder=searchBounds.right-dockBounds.left-searchRadius;
+            const outerRight=searchBounds.right-dockBounds.left+padding;
+            const trayTop=equipmentCatalog.querySelector(':scope > .overflow-y-auto').offsetTop;
             dockSilhouette.setAttribute('viewBox',`0 0 ${w} ${h}`);
-            dockContour.setAttribute('d',`M0 32 Q0 1 32 1 H${neck-40} C${neck-16} 1 ${neck-16} 25 ${neck+12} 25 H${w-40} Q${w-1} 25 ${w-1} 64 V${h} H0 Z`);
+            dockContour.setAttribute('d',`M${left} ${h} V${top+radius} Q${left} ${top} ${left+radius} ${top} H${shoulder} C${outerRight} ${top} ${outerRight} ${trayTop} ${outerRight+padding} ${trayTop} H${w-40} Q${w-1} ${trayTop} ${w-1} ${trayTop+39} V${h} Z`);
         };
-        new ResizeObserver(sizeDockContour).observe(equipmentCatalog);sizeDockContour();
+        const dockContourObserver=new ResizeObserver(sizeDockContour);
+        dockContourObserver.observe(equipmentCatalog);
+        dockContourObserver.observe(equipmentCatalog.querySelector('.catalog-search'));
+        sizeDockContour();
 
         equipmentSearch.addEventListener('input',()=>{quickCatalog.hidden=!!equipmentSearch.value.trim()||selectedSetupCategory!==null;});
         equipmentSearch.dispatchEvent(new Event('input'));

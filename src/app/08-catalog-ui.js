@@ -503,11 +503,24 @@
         equipmentCatalog.prepend(dockSilhouette);
         const sizeDockContour=()=>{
             const w=equipmentCatalog.clientWidth,h=equipmentCatalog.clientHeight;
-            const neck=parseFloat(getComputedStyle(equipmentCatalog).getPropertyValue('--setup-dock-width'))||200;
+            const dockBounds=equipmentCatalog.getBoundingClientRect();
+            const search=equipmentCatalog.querySelector('.catalog-search');
+            const searchBounds=search.getBoundingClientRect();
+            const padding=Math.min(16,searchBounds.left-dockBounds.left);
+            const left=searchBounds.left-dockBounds.left-padding;
+            const searchRadius=parseFloat(getComputedStyle(search).borderTopRightRadius)||10;
+            const top=Math.max(1,searchBounds.top-dockBounds.top-padding);
+            const radius=searchRadius+padding;
+            const shoulder=searchBounds.right-dockBounds.left-searchRadius;
+            const outerRight=searchBounds.right-dockBounds.left+padding;
+            const trayTop=equipmentCatalog.querySelector(':scope > .overflow-y-auto').offsetTop;
             dockSilhouette.setAttribute('viewBox',`0 0 ${w} ${h}`);
-            dockContour.setAttribute('d',`M0 32 Q0 1 32 1 H${neck-40} C${neck-16} 1 ${neck-16} 25 ${neck+12} 25 H${w-40} Q${w-1} 25 ${w-1} 64 V${h} H0 Z`);
+            dockContour.setAttribute('d',`M${left} ${h} V${top+radius} Q${left} ${top} ${left+radius} ${top} H${shoulder} C${outerRight} ${top} ${outerRight} ${trayTop} ${outerRight+padding} ${trayTop} H${w-40} Q${w-1} ${trayTop} ${w-1} ${trayTop+39} V${h} Z`);
         };
-        new ResizeObserver(sizeDockContour).observe(equipmentCatalog);sizeDockContour();
+        const dockContourObserver=new ResizeObserver(sizeDockContour);
+        dockContourObserver.observe(equipmentCatalog);
+        dockContourObserver.observe(equipmentCatalog.querySelector('.catalog-search'));
+        sizeDockContour();
 
         equipmentSearch.addEventListener('input',()=>{quickCatalog.hidden=!!equipmentSearch.value.trim()||selectedSetupCategory!==null;});
         equipmentSearch.dispatchEvent(new Event('input'));

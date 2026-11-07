@@ -240,18 +240,19 @@
             }catch(error){ /* Feedback is optional when audio is unavailable. */ }
         }
         function enableCatalogScrollSound(element){
-            const scrollKeys=new Set(['ArrowUp','ArrowDown','PageUp','PageDown','Home','End',' ']);
-            let armed=false,inputType='',lastPosition=element.scrollTop,lastTime=performance.now(),lastMovement=0,distance=0,speed=0;
+            const positionKey=element.dataset.scrollAxis==='horizontal'?'scrollLeft':'scrollTop';
+            const scrollKeys=new Set(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','PageUp','PageDown','Home','End',' ']);
+            let armed=false,inputType='',lastPosition=element[positionKey],lastTime=performance.now(),lastMovement=0,distance=0,speed=0;
             function arm(event){
                 if(!event.isTrusted||event.ctrlKey||event.metaKey)return;
                 if(event.type==='keydown'&&(!scrollKeys.has(event.key)||event.target.closest('input,select,textarea,[contenteditable]')))return;
                 const now=performance.now();
-                if(!armed||now-lastMovement>220){lastPosition=element.scrollTop;lastTime=now;distance=0;speed=0;}
+                if(!armed||now-lastMovement>220){lastPosition=element[positionKey];lastTime=now;distance=0;speed=0;}
                 armed=true;inputType=event.type==='wheel'?'wheel':event.type==='keydown'?'keyboard':event.pointerType;lastMovement=now;
             }
             for(const type of ['wheel','pointerdown','keydown'])element.addEventListener(type,arm,{capture:true,passive:true});
             element.addEventListener('scroll',()=>{
-                const now=performance.now(),position=element.scrollTop,travel=Math.abs(position-lastPosition),elapsed=Math.max(8,now-lastTime);
+                const now=performance.now(),position=element[positionKey],travel=Math.abs(position-lastPosition),elapsed=Math.max(8,now-lastTime);
                 lastPosition=position;lastTime=now;
                 if(!armed||(inputType==='wheel'&&!wheelScrollMotions.get(element)?.frame)||now-lastMovement>220||appState.project.restoringProject||document.visibilityState!=='visible'||!element.clientHeight||getComputedStyle(element).visibility==='hidden'){
                     armed=false;distance=0;return;
