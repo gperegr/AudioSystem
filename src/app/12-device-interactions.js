@@ -966,6 +966,10 @@
 
         function deleteDevice(dev,recordHistory=false) {
             if (!dev || !appState.project.devices[dev.id]) return;
+            // Removing a hovered/focused node does not reliably emit pointerout/focusout.
+            if(contextHelpTarget&&dev.el.contains(contextHelpTarget)||contextTouchTarget&&dev.el.contains(contextTouchTarget)){
+                hideContextHelp();contextTouchTarget=null;contextTouchStart=null;
+            }
             if(recordHistory)recordDeletedDevices([dev]);
             if(dev.spotifyVinyl){if(spotifyPlayingTurntable===dev.id){spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});}dev.spotifyVinyl.turntableId=null;dev.spotifyVinyl.el.classList.remove('is-on-platter');}
             disposeDeviceRuntime(dev);
