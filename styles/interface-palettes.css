@@ -359,3 +359,9 @@ body.equipment-cursor-placement,body.equipment-cursor-placement #canvas,body.equ
 
 #equipment-catalog .setup-favorites{left:65%;}
 #equipment-catalog .setup-favorites[aria-pressed="true"] svg{fill:var(--ui-accent);}
+
+/* Search and setup sit on a raised bay above the horizontally scrolling tray. */
+.catalog-setup-layer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible;filter:drop-shadow(3px 0 3px color-mix(in srgb,var(--ui-shadow) 45%,transparent));}
+.catalog-setup-layer path{fill:color-mix(in srgb,var(--ui-side) 82%,var(--ui-panel));}
+#equipment-catalog>.catalog-setup{z-index:2;}
+#equipment-catalog>.overflow-y-auto{z-index:0;}
