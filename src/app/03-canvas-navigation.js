@@ -12,6 +12,10 @@
         }
         setOpeningView();
         const snapCoordinate = value => Math.round(value / Hardware.sizes.grid) * Hardware.sizes.grid;
+        const snapCoordinateWithin = (value,min,max) => Math.max(
+            Math.ceil(min/Hardware.sizes.grid)*Hardware.sizes.grid,
+            Math.min(snapCoordinate(value),Math.floor(max/Hardware.sizes.grid)*Hardware.sizes.grid)
+        );
         let viewAnimation=0;
         let viewLightingTimer=0;
         function scheduleViewLighting(){

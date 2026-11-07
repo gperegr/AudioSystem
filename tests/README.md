@@ -40,3 +40,7 @@ The two turntable browser tests share `turntable-geometry.helpers.cjs`: they com
 
 
 `node tests/apple-layout.browser.cjs` simulates iPad, narrow iPad split view, iPhone portrait/landscape and Android tablet. It checks navigation mode, catalog visibility, touch capability and the Apple Home Screen icon link. It requires Playwright and a local Tailwind copy via `TAILWIND_SCRIPT_FILE`; these emulations do not replace verification in Safari on a physical device.
+
+## Click placement
+
+`TAILWIND_SCRIPT_FILE=/path/to/tailwind.js node tests/click-placement.browser.cjs` checks mouse pickup without a held button, live grid snapping, confirmation and invalid catalog drops, Escape/blur cleanup, undo/redo, hardware controls, connected groups, furniture supports, zoom changes, reduced motion and touch tap/hold gestures. It serves local assets through Playwright routing and also supports loading Tailwind from the CDN when the environment variable is omitted.

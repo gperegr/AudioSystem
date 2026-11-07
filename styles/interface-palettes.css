@@ -352,3 +352,6 @@
 
 /* The catalog's edge elasticity follows its horizontal scroll direction. */
 .wheel-momentum-scroll[data-scroll-axis="horizontal"].wheel-elastic-active>*{translate:var(--wheel-elastic-offset,0px) 0;}
+
+/* Mouse placement is latched until the next click; hardware controls keep their own behavior. */
+body.equipment-cursor-placement,body.equipment-cursor-placement #canvas,body.equipment-cursor-placement #canvas *{cursor:grabbing!important;}

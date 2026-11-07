@@ -3,6 +3,7 @@
     'use strict';
 
     const translations = Object.freeze({
+        'Clique aqui para descartar':'Click here to discard',
         'Explore seu setup':'Explore your setup',
         'Clique em uma parte para ver os itens.':'Click a part to browse items.',
         'Escolha uma categoria':'Choose a category',

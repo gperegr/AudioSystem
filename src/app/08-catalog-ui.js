@@ -356,11 +356,53 @@
             const label=!valid?'Espaço indisponível':wall?'Fixado à parede':pendant?'Suspenso':supported?'Apoiado':'Espaço livre';el.dataset.previewLabel=`${AudioSystemLanguage.translate(label)} · ${w} × ${h}`;
         }
         let activeCatalogPreviewCleanup=null;
+        let activeEquipmentMoveCleanup=null;
+        function consumePlacementClick(event){
+            event.preventDefault();event.stopImmediatePropagation();
+            // The placement click must not also activate a control beneath the equipment.
+            window.addEventListener('click',click=>{click.preventDefault();click.stopImmediatePropagation();},{capture:true,once:true});
+        }
+        function startCatalogCursorPlacement(item){
+            activeCatalogPreviewCleanup?.();activeEquipmentMoveCleanup?.();
+            const type=item.dataset.template,preview=createDevice(type,0,0,null,true);
+            if(!preview)return;
+            let target=null;
+            const inside=event=>{const rect=canvas.getBoundingClientRect();return event.clientX>=rect.left&&event.clientX<rect.right&&event.clientY>=rect.top&&event.clientY<rect.bottom;};
+            const move=event=>{
+                preview.el.hidden=!inside(event);
+                if(preview.el.hidden){target=null;return;}
+                const point=screenToWorld(event.clientX,event.clientY),width=preview.el.offsetWidth,height=preview.el.offsetHeight;
+                const x=snapCoordinateWithin(point.x-width/2,sceneSideInset(),world.offsetWidth-width-sceneSideInset());
+                const bottomLimit=WALL_LAMP_TYPES[type]?wallPlacementBottom():maxEquipmentBottom();
+                const y=snapCoordinateWithin(point.y+height/2,height,bottomLimit)-height;
+                target=snapOnEquipment(preview,x,y);updateCatalogPlacementPreview(preview,target);
+            };
+            const cleanup=()=>{
+                preview.el.remove();document.body.classList.remove('equipment-cursor-placement','equipment-drag-active');
+                window.removeEventListener('pointermove',move);window.removeEventListener('pointerdown',place,true);
+                window.removeEventListener('keydown',escape,true);window.removeEventListener('blur',cleanup);window.removeEventListener('pointercancel',cleanup);
+                if(activeCatalogPreviewCleanup===cleanup)activeCatalogPreviewCleanup=null;
+            };
+            const place=event=>{
+                if(event.button!==0||event.pointerType==='touch'||!inside(event))return;
+                consumePlacementClick(event);move(event);
+                if(!target||preview.el.classList.contains('is-invalid'))return;
+                const {x,y}=target;cleanup();createDevice(type,x,y);playUiSound('drop');
+            };
+            const escape=event=>{if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();cleanup();}};
+            activeCatalogPreviewCleanup=cleanup;
+            document.body.classList.add('equipment-cursor-placement','equipment-drag-active');
+            hideCatalogAmpTip();
+            window.addEventListener('pointermove',move);window.addEventListener('pointerdown',place,true);
+            window.addEventListener('keydown',escape,true);window.addEventListener('blur',cleanup);window.addEventListener('pointercancel',cleanup);
+        }
+
         function bindCatalogItem(item) {
             item.addEventListener('dragstart', e => e.preventDefault());
             item.addEventListener('pointerdown', e => {
                 if (e.button !== 0) return;
-                activeCatalogPreviewCleanup?.();
+                if(e.pointerType!=='touch'){e.preventDefault();startCatalogCursorPlacement(item);return;}
+                activeCatalogPreviewCleanup?.();activeEquipmentMoveCleanup?.();
                 if(e.pointerType==='touch'&&!item.firstElementChild.contains(e.target)){
                     const start={x:e.clientX,y:e.clientY,id:e.pointerId};
                     const cleanup=()=>{item.removeEventListener('pointerup',tap);item.removeEventListener('pointercancel',cleanup);};

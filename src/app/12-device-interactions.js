@@ -638,6 +638,9 @@
                 dev.el.addEventListener('pointerdown', e => {
                     if (e.button !== 0) return;
                     if (e.target.closest('button, input, select, textarea, .port, .speaker-grille, .grille-restore, [role="button"]')) return;
+                    const clickToPlace=e.pointerType!=='touch';
+                    if(clickToPlace&&(e.shiftKey||e.metaKey||e.ctrlKey)){e.preventDefault();toggleDeviceSelection(dev.id);return;}
+                    activeCatalogPreviewCleanup?.();activeEquipmentMoveCleanup?.();
                     const touchHold = e.pointerType === 'touch';
                     // On touch screens a tap must remain available for wiring and selection.
                     // Movement starts only after a short deliberate press, so passing a cable
@@ -653,7 +656,9 @@
 
                     const startX = e.clientX;
                     const startY = e.clientY;
+                    const grabPoint=screenToWorld(startX,startY);
                     const movingDevices = expandFurnitureGroup([...appState.interface.selectedDeviceIds].map(id => appState.project.devices[id]).filter(Boolean));
+                    movingDevices.forEach(item=>item.cancelPlacementMotion?.());
                     const transformDrag=typeof CSS!=='undefined'&&CSS.supports?.('translate','1px 1px');
                     const initialPositions = movingDevices.map(item => ({
                         dev:item,
@@ -664,7 +669,7 @@
                     const origin = initialPositions[0] || { x:0, y:0 };
                     const baseY = Math.max(...initialPositions.map(position => position.y + position.dev.el.offsetHeight));
                     const ignored = new Set(movingDevices.map(item => item.id));
-                    let isDragging = false, frame = 0, lastTime = 0, released = false;
+                    let isDragging = clickToPlace, frame = 0, lastTime = 0, released = false;
                     let targets = initialPositions.map(p=>({...p}));
                     const visualPositions=new Map(initialPositions.map(p=>[p.dev.id,{x:p.x,y:p.y}]));
                     const initialById=new Map(initialPositions.map(p=>[p.dev.id,{x:p.x,y:p.y}]));
@@ -708,9 +713,12 @@
                         discardPreviewLayer?.remove();discardPreviewLayer=null;
                     }
 
-                    movingDevices.forEach(item=>item.cancelPlacementMotion?.());
                     const cancel = () => { document.body.classList.remove('equipment-drag-active');clearDiscardPreview();cancelAnimationFrame(frame); frame=0;movingDevices.forEach(item=>{item.el.style.translate='none';delete item.dragVisualPosition;item.el.classList.remove('equipment-dragging','history-settling');}); };
-                    movingDevices.forEach(item=>item.cancelPlacementMotion=cancel);
+                    const cancelMotion=()=>{
+                        if(!released){abortDrag();return;}
+                        cancel();targets.forEach(p=>{p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;});
+                    };
+                    movingDevices.forEach(item=>item.cancelPlacementMotion=cancelMotion);
                     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
                     const animate = now => {
                         frame=0;
@@ -736,19 +744,23 @@
                         if(pending&&moved) frame=requestAnimationFrame(animate);
                         else if(released){
                             targets.forEach(p=>{p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;p.dev.el.style.translate='none';delete p.dev.dragVisualPosition;p.dev.el.classList.remove('equipment-dragging','history-settling');});
-                            updateCables();
+                            updateCables();scheduleProjectSave();
                         }
                     };
                     const aim = (ev,settle=false) => {
                         const wallDragScale=movingDevices.length===1&&WALL_LAMP_TYPES[movingDevices[0].type]&&canvas.dataset.theme==='scene'?parseFloat(world.style.getPropertyValue('--room-far-scale'))||1:1;
-                        const rawX=(ev.clientX-startX)/view.zoom/wallDragScale,rawY=(ev.clientY-startY)/view.zoom/wallDragScale;
+                        const point=screenToWorld(ev.clientX,ev.clientY);
+                        const rawX=(clickToPlace?point.x-grabPoint.x:(ev.clientX-startX)/view.zoom)/wallDragScale;
+                        const rawY=(clickToPlace?point.y-grabPoint.y:(ev.clientY-startY)/view.zoom)/wallDragScale;
                         const sideInset=sceneSideInset();
-                        const dx=Math.max(sideInset-dragBounds.left,Math.min(settle?snapCoordinate(origin.x+rawX)-origin.x:rawX,world.offsetWidth-sideInset-dragBounds.right));
+                        const snap=settle||clickToPlace;
+                        const minX=origin.x+sideInset-dragBounds.left,maxX=origin.x+world.offsetWidth-sideInset-dragBounds.right;
+                        const dx=snap?snapCoordinateWithin(origin.x+rawX,minX,maxX)-origin.x:Math.max(sideInset-dragBounds.left,Math.min(rawX,world.offsetWidth-sideInset-dragBounds.right));
                         const bottomLimit=movingDevices.some(item=>WALL_LAMP_TYPES[item.type])?wallPlacementBottom():maxEquipmentBottom();
-                        const dy=Math.max(-dragBounds.top,Math.min(settle?snapCoordinate(baseY+rawY)-baseY:rawY,bottomLimit-dragBounds.bottom));
+                        const dy=snap?snapCoordinateWithin(baseY+rawY,baseY-dragBounds.top,baseY+bottomLimit-dragBounds.bottom)-baseY:Math.max(-dragBounds.top,Math.min(rawY,bottomLimit-dragBounds.bottom));
                         targets=initialPositions.map(p=>{
                             const x=p.x+dx,y=p.y+dy;
-                            const target=settle&&initialPositions.length===1?snapOnEquipment(p.dev,x,y):{x,y};
+                            const target=snap&&initialPositions.length===1?snapOnEquipment(p.dev,x,y):{x,y};
                             return {dev:p.dev,x:target.x,y:target.y};
                         });
                         if(settle){
@@ -772,7 +784,7 @@
                         aim(ev);updateDiscardPreview(ev);
                         equipmentCatalog.classList.add('discard-ready');
                         discardZone.setAttribute('aria-hidden','false');
-                        discardZone.querySelector('strong').textContent=isOverCatalog(ev)?'Solte para descartar':'Arraste aqui para descartar';
+                        discardZone.querySelector('strong').textContent=clickToPlace?'Clique aqui para descartar':isOverCatalog(ev)?'Solte para descartar':'Arraste aqui para descartar';
                         discardZone.querySelector('[data-discard-caption]').textContent=movingDevices.length>1?`Remover ${movingDevices.length} equipamentos e seus cabos.`:'Solte nesta área para remover o equipamento e seus cabos.';
                         equipmentCatalog.classList.toggle('return-drag-over',isOverCatalog(ev));
                     };
@@ -781,10 +793,13 @@
                         if(ev.cancelled){abortDrag();return;}
                         window.removeEventListener('pointermove',move);
                         window.removeEventListener('pointerup',up);
+                        window.removeEventListener('pointerdown',place,true);window.removeEventListener('pointercancel',abortDrag);
+                        document.body.classList.remove('equipment-cursor-placement');
+                        if(activeEquipmentMoveCleanup===abortDrag)activeEquipmentMoveCleanup=null;
                         equipmentCatalog.classList.remove('return-drag-over','discard-ready');
                         discardZone.setAttribute('aria-hidden','true');
                         window.removeEventListener('blur',abortDrag);
-                        window.removeEventListener('keydown',cancelWithEscape);
+                        window.removeEventListener('keydown',cancelWithEscape,true);
                         released=true;document.body.classList.remove('equipment-drag-active');clearDiscardPreview();scheduleInspectorPosition();
                         if(isDragging)movingDevices.forEach(item=>item.el.classList.add('history-settling'));
                         if(isDragging&&isOverCatalog(ev)){
@@ -796,18 +811,35 @@
                     const abortDrag=()=>{
                         clearTimeout(holdTimer); holdTimer = null;
                         window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);
-                        window.removeEventListener('blur',abortDrag);window.removeEventListener('keydown',cancelWithEscape);
+                        window.removeEventListener('pointerdown',place,true);window.removeEventListener('pointercancel',abortDrag);
+                        document.body.classList.remove('equipment-cursor-placement');
+                        if(activeEquipmentMoveCleanup===abortDrag)activeEquipmentMoveCleanup=null;
+                        window.removeEventListener('blur',abortDrag);window.removeEventListener('keydown',cancelWithEscape,true);
                         cancel();
+                        movingDevices.forEach(item=>{if(item.cancelPlacementMotion===cancelMotion)item.cancelPlacementMotion=null;});
                         initialPositions.forEach(p=>{if(appState.project.devices[p.dev.id]){p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;}});
                         equipmentCatalog.classList.remove('return-drag-over','discard-ready');discardZone.setAttribute('aria-hidden','true');
                         updateCables();scheduleInspectorPosition();
                     };
-                    const cancelWithEscape=event=>{if(event.key==='Escape'){event.preventDefault();abortDrag();}};
+                    const place=event=>{
+                        if(event.button!==0||event.pointerType==='touch')return;
+                        const rect=canvas.getBoundingClientRect();
+                        const inside=event.clientX>=rect.left&&event.clientX<rect.right&&event.clientY>=rect.top&&event.clientY<rect.bottom;
+                        if(!inside&&!isOverCatalog(event))return;
+                        consumePlacementClick(event);up(event);
+                    };
+                    const cancelWithEscape=event=>{if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();abortDrag();}};
                     window.addEventListener('blur',abortDrag);
-                    window.addEventListener('keydown',cancelWithEscape);
+                    window.addEventListener('keydown',cancelWithEscape,true);
 
                     window.addEventListener('pointermove', move);
-                    window.addEventListener('pointerup', up);
+                    if(clickToPlace){
+                        activeEquipmentMoveCleanup=abortDrag;
+                        document.body.classList.add('equipment-cursor-placement','equipment-drag-active');
+                        movingDevices.forEach(item=>item.el.classList.add('equipment-dragging'));
+                        window.addEventListener('pointerdown',place,true);
+                    }else window.addEventListener('pointerup',up);
+                    window.addEventListener('pointercancel',abortDrag);
                 });
             }
 
