@@ -1664,6 +1664,10 @@ const Hardware = (() => {
         roomBackdrop.appendChild(rainMaskSvg);
         const rainMaskPath=rainMaskSvg.querySelector('path');
         roomRain.style.clipPath='url(#room-window-glass-clip)';
+        // Stop offscreen glass animations without polling during pan/zoom.
+        const rainVisibilityObserver=new IntersectionObserver(entries=>{
+            entries.forEach(entry=>entry.target.classList.toggle('rain-offscreen',!entry.isIntersecting));
+        },{root:canvas,rootMargin:'80px'});
         let roomRainAudio=null,roomCoverageReady=false;
         function randomizeRainDrop(drop,height,first=false){
             const duration=drop.classList.contains('is-bead')?9+Math.random()*23:4+Math.random()*17;
@@ -1713,14 +1717,14 @@ const Hardware = (() => {
             const type=scene.startsWith('studio')?'studio':scene.startsWith('listening')?'listening':'loft';
             roomRain.dataset.scene=type;
             roomRain.hidden=canvas.dataset.theme!=='scene'||!appState.preferences.rainEnabled||!appState.preferences.rainIntensity;
-            if(roomRain.hidden){roomRain.replaceChildren();roomRain.dataset.count='';return;}
+            if(roomRain.hidden){rainVisibilityObserver.disconnect();roomRain.replaceChildren();roomRain.dataset.count='';return;}
             const definition=RoomScenes.scenes[scene];
-            // Keep low levels light; 100% has four times the former density.
+            // The cached wet-glass texture supplies density; bound moving drops independently.
             const intensity=appState.preferences.rainIntensity/100;
-            const count=Math.round(90*intensity*(1+3*intensity**4));
+            const count=Math.round(90*intensity*(1-.2*intensity**4));
             const key=scene+':'+count;
             if(roomRain.dataset.count===key)return;
-            roomRain.dataset.count=key;roomRain.replaceChildren();
+            roomRain.dataset.count=key;rainVisibilityObserver.disconnect();roomRain.replaceChildren();
             rainMaskPath.setAttribute('d',RoomScenes.rainGlass(scene).flat().map(polygon=>polygon.map(([x,y],index)=>(index?'L':'M')+(x/definition.width)+' '+(y/definition.height)).join(' ')+'Z').join(' '));
             RoomScenes.rainGlass(scene).forEach((glass,w)=>{
                 const pane=document.createElement('div');pane.className='room-rain-pane';pane.dataset.pane=String(w);
@@ -1738,7 +1742,7 @@ const Hardware = (() => {
                         randomizeRainDrop(drop,height/definition.height*world.offsetHeight*1.12,true);
                         sheet.appendChild(drop);
                     }
-                    pane.appendChild(sheet);
+                    pane.appendChild(sheet);rainVisibilityObserver.observe(sheet);
                 });
                 roomRain.appendChild(pane);
             });

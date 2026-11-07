@@ -56,7 +56,7 @@ const root=path.resolve(__dirname,'..');
         }
         const slowRatio=await page.locator('.room-rain-drop').first().evaluate(el=>parseFloat(getComputedStyle(el).animationDuration)/parseFloat(el.style.getPropertyValue('--rain-duration')));
         await slider.evaluate(el=>{el.value=2;el.dispatchEvent(new Event('input',{bubbles:true}));});
-        assert.equal(await page.locator('.room-rain-drop').count(),1080,'maximum loft rain has four times the former density');
+        assert.equal(await page.locator('.room-rain-drop').count(),216,'maximum loft rain caps animated drops while retaining dense wet glass');
         assert.equal(await page.locator('.room-rain').getAttribute('data-soaked'),'true');
         assert.match(await page.locator('.room-rain-glass').first().evaluate(el=>getComputedStyle(el,'::after').backgroundImage),/data:image\/png/,'maximum rain adds the cached wet-glass texture');
         const fastRatio=await page.locator('.room-rain-drop').first().evaluate(el=>parseFloat(getComputedStyle(el).animationDuration)/parseFloat(el.style.getPropertyValue('--rain-duration')));
@@ -68,6 +68,8 @@ const root=path.resolve(__dirname,'..');
         await page.evaluate(()=>{Object.assign(__cables.view,{x:0,y:0,zoom:.32});__cables.applyView();});
         await page.evaluate(()=>{const grid=document.getElementById('canvas-grid');grid.value='hidden';grid.dispatchEvent(new Event('change'));});
         await page.waitForTimeout(1200);
+        assert(await page.locator('.room-rain-glass.rain-offscreen').count()>0,'offscreen glass is culled');
+        assert.equal(await page.locator('.room-rain-glass.rain-offscreen .room-rain-drop').first().evaluate(el=>getComputedStyle(el).animationPlayState),'paused');
         await page.screenshot({path:'/tmp/window-rain-loft.png'});
         await slider.evaluate(el=>{el.value=0;el.dispatchEvent(new Event('input',{bubbles:true}));});
 

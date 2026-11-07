@@ -4846,3 +4846,5 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 
 .room-fixture-light{position:absolute;z-index:2;pointer-events:none;mix-blend-mode:screen;}
 .room-fixture-light[hidden]{display:none!important;}
+
+.room-rain-glass.rain-offscreen .room-rain-drop{animation-play-state:paused;}
