@@ -341,7 +341,7 @@
                     item.hidden = !terms.every(term => [term,...(catalogSearchSynonyms[term]||[])].some(candidate=>text.includes(normalizeSearch(candidate))));
                     if (!item.hidden) visible++;
                 });
-                section.hidden = visible === 0 || (!terms.length && selectedSetupCategory !== 'all' && !selectedSetupCategory?.matches(section.querySelector('.catalog-item').dataset.catalogCategory));
+                section.hidden = visible === 0 || (!terms.length && selectedSetupCategory !== null && !selectedSetupCategory.matches(section.querySelector('.catalog-item').dataset.catalogCategory));
                 total += visible;
             });
             searchEmpty.hidden = total > 0;
@@ -503,10 +503,10 @@
                 if(!types.length)continue;const section=document.createElement('div');section.className='mb-6';const heading=document.createElement('h3');heading.className='text-[10px] font-bold text-gray-500 mb-3 tracking-wider uppercase';heading.textContent=title;const grid=document.createElement('div');grid.className='grid grid-cols-2 gap-3';section.append(heading,grid);
                 types.forEach(type=>{const original=catalogItems.find(item=>item.dataset.template===type);if(!original)return;const copy=original.cloneNode(true);copy.querySelector('.catalog-favorite')?.remove();bindCatalogItem(copy);grid.appendChild(copy);});quickCatalog.appendChild(section);
             }
+            if(!quickData.favorites.length){const empty=document.createElement('p');empty.className='p-4 text-sm';empty.setAttribute('role','status');empty.textContent='Nenhum favorito ainda.';quickCatalog.appendChild(empty);}
             updateStars();AudioSystemLanguage.translateTree?.(quickCatalog);
         }
-        catalogItems.forEach(item=>{const button=document.createElement('button');button.type='button';button.className='catalog-favorite';button.title='Favoritar equipamento';button.setAttribute('aria-label','Favoritar equipamento');button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.9 6.5.9-4.7 4.6 1.1 6.5-5.7-3.1-5.7 3.1 1.1-6.5L2.7 9.8l6.5-.9Z"/></svg>';button.addEventListener('pointerdown',event=>event.stopPropagation());button.addEventListener('click',event=>{event.stopPropagation();const type=item.dataset.template;quickData.favorites=quickData.favorites.includes(type)?quickData.favorites.filter(t=>t!==type):[type,...quickData.favorites].slice(0,12);saveQuick();renderQuick();});item.appendChild(button);});
-        equipmentSearch.addEventListener('input',()=>{quickCatalog.hidden=!!equipmentSearch.value.trim();});
+        catalogItems.forEach(item=>{const button=document.createElement('button');button.type='button';button.className='catalog-favorite';button.title='Favoritar equipamento';button.setAttribute('aria-label','Favoritar equipamento');button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.9 6.5.9-4.7 4.6 1.1 6.5-5.7-3.1-5.7 3.1 1.1-6.5L2.7 9.8l6.5-.9Z"/></svg>';button.addEventListener('pointerdown',event=>event.stopPropagation());button.addEventListener('click',event=>{event.stopPropagation();const type=item.dataset.template;quickData.favorites=quickData.favorites.includes(type)?quickData.favorites.filter(t=>t!==type):[type,...quickData.favorites].slice(0,12);saveQuick();renderQuick();equipmentSearch.dispatchEvent(new Event('input'));});item.appendChild(button);});
         renderQuick();
 
         // Shared shallow top-down perspective: every top recedes 1 px inward per 2 px of depth.
@@ -522,6 +522,12 @@
         const setupNav=document.createElement('section');setupNav.className='catalog-setup';
         setupNav.innerHTML='<div class="catalog-setup-scene" role="group" aria-label="Categorias de equipamentos"><svg class="setup-room" viewBox="0 0 320 300" aria-hidden="true"><ellipse class="setup-ground" cx="162" cy="294" rx="148" ry="5"/><path d="M102 277V110h204v167M102 114h204M102 163h204M102 214h204M102 269h204"/></svg><button type="button" class="setup-all" data-setup-all aria-label="Todos os equipamentos" title="Todos os equipamentos"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="5" height="5" rx="1"/><rect x="15" y="4" width="5" height="5" rx="1"/><rect x="4" y="15" width="5" height="5" rx="1"/><rect x="15" y="15" width="5" height="5" rx="1"/></svg></button></div>';
         const setupScene=setupNav.querySelector('.catalog-setup-scene');
+        const favoritesCategory={id:'favorites',matches:()=>false};
+        const favoritesButton=document.createElement('button');favoritesButton.type='button';favoritesButton.className='setup-all setup-favorites';
+        favoritesButton.dataset.setupCategory='favorites';favoritesButton.setAttribute('aria-label','Favoritos');favoritesButton.title='Favoritos';favoritesButton.setAttribute('aria-pressed','false');
+        favoritesButton.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.9 6.5.9-4.7 4.6 1.1 6.5-5.7-3.1-5.7 3.1 1.1-6.5L2.7 9.8l6.5-.9Z"/></svg>';
+        favoritesButton.addEventListener('click',()=>selectSetupCategory(favoritesCategory));setupScene.appendChild(favoritesButton);
+
         setupCategories.forEach(category=>{
             const button=document.createElement('button');button.type='button';button.className='setup-object';
             button.dataset.setupCategory=category.id;button.setAttribute('aria-label',category.label);button.title=category.label;button.setAttribute('aria-pressed','false');
@@ -531,12 +537,12 @@
             button.addEventListener('click',()=>selectSetupCategory(category));setupScene.appendChild(button);
         });
         function selectSetupCategory(category){
-            selectedSetupCategory=category;equipmentSearch.value='';
-            setupNav.querySelectorAll('[data-setup-category]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.setupCategory===category?.id)));
-            setupNav.querySelector('[data-setup-all]').setAttribute('aria-pressed',String(category==='all'));
+            selectedSetupCategory=category&&selectedSetupCategory?.id===category.id?null:category;equipmentSearch.value='';
+            setupNav.querySelectorAll('[data-setup-category]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.setupCategory===selectedSetupCategory?.id)));
+            setupNav.querySelector('[data-setup-all]').setAttribute('aria-pressed',String(selectedSetupCategory===null));
             equipmentSearch.dispatchEvent(new Event('input'));
         }
-        setupNav.querySelector('[data-setup-all]').addEventListener('click',()=>selectSetupCategory('all'));
+        setupNav.querySelector('[data-setup-all]').addEventListener('click',()=>selectSetupCategory(null));
         equipmentCatalog.appendChild(setupNav);
         const dockSilhouette=document.createElementNS('http://www.w3.org/2000/svg','svg');
         dockSilhouette.classList.add('catalog-dock-silhouette');dockSilhouette.setAttribute('aria-hidden','true');
@@ -563,7 +569,8 @@
         dockContourObserver.observe(equipmentCatalog.querySelector('.catalog-search'));
         sizeDockContour();
 
-        equipmentSearch.addEventListener('input',()=>{quickCatalog.hidden=!!equipmentSearch.value.trim()||selectedSetupCategory!==null;});
+        equipmentSearch.addEventListener('input',()=>{quickCatalog.hidden=!!equipmentSearch.value.trim()||selectedSetupCategory?.id!=='favorites';});
+        setupNav.querySelector('[data-setup-all]').setAttribute('aria-pressed','true');
         equipmentSearch.dispatchEvent(new Event('input'));
 
         function standardizeStereoPorts(root) {

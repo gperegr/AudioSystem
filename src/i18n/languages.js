@@ -3,6 +3,7 @@
     'use strict';
 
     const translations = Object.freeze({
+        'Nenhum favorito ainda.':'No favorites yet.',
         'Móveis & Iluminação':'Furniture & Lighting',
         'Clique aqui para descartar':'Click here to discard',
         'Explore seu setup':'Explore your setup',

@@ -356,3 +356,6 @@
 
 /* Mouse placement is latched until the next click; hardware controls keep their own behavior. */
 body.equipment-cursor-placement,body.equipment-cursor-placement #canvas,body.equipment-cursor-placement #canvas *{cursor:grabbing!important;}
+
+#equipment-catalog .setup-favorites{left:24%;}
+#equipment-catalog .setup-favorites[aria-pressed="true"] svg{fill:var(--ui-accent);}
