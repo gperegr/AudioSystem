@@ -86,7 +86,7 @@
             if(topic==='basic'&&step==='output'&&dev&&!tutorialListeningPath(tutorialDevice(topic)))requestedType='headphone';
             if(!dev||requestedType){
                 const type=requestedType||(topic==='spotify'?(step==='account'||step==='cover'?'furnitureCoverflow':'turntable'):topic==='capture'?'audioInterface1':'cdPlayer');
-                mobilePanel('catalog');const search=document.getElementById('equipment-search');search.value='';search.dispatchEvent(new Event('input'));const card=equipmentCatalog.querySelector(`[data-template="${type}"]`);card?.scrollIntoView({block:'center',behavior:'instant'});await new Promise(resolve=>setTimeout(resolve,320));return card;
+                mobilePanel('catalog');equipmentCatalog.querySelector('[data-setup-all]')?.click();const search=document.getElementById('equipment-search');search.value='';search.dispatchEvent(new Event('input'));const card=equipmentCatalog.querySelector(`[data-template="${type}"]`);card?.scrollIntoView({block:'center',behavior:'instant'});await new Promise(resolve=>setTimeout(resolve,320));return card;
             }
             selectDevice(dev.id,true);mobilePanel('properties');
             const selector={permission:'#ai-authorize-inputs',device:'#ai-input-device',capture:'#ai-capture-toggle',file:'#source-load-audio',level:dev.type==='audioInterface2'?'#ai-line':'#ai-gain-L',spotify:'[data-sp-action="connect"]'}[action];

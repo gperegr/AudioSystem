@@ -236,3 +236,114 @@
 }
 .app-settings-content .room-preset-buttons button{background:var(--ui-control)!important;color:var(--ui-secondary)!important;}
 .app-settings-content .room-preset-buttons button[aria-pressed="true"]{background:var(--ui-active)!important;color:var(--ui-accent)!important;}
+
+/* A single proportional drawing; category hit regions follow its geometry. */
+.catalog-setup{margin:0 -4px 18px;color:var(--ui-secondary);}
+.catalog-setup-scene{position:relative;aspect-ratio:320/300;isolation:isolate;}
+.setup-room{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:var(--ui-muted);stroke-width:1;opacity:.42;}
+.setup-room .setup-ground{fill:var(--ui-shadow);stroke:none;opacity:.3;}
+#equipment-catalog .setup-object{position:absolute;padding:0;min-width:0;background:transparent;color:var(--ui-secondary);border:0;border-radius:4px;cursor:pointer;transition:color .18s,filter .18s;}
+.setup-object svg{display:block;width:100%;height:100%;overflow:visible;fill:var(--ui-panel);stroke:currentColor;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round;}
+.setup-object svg .setup-top{fill:var(--ui-control);}
+.setup-object svg .setup-detail{fill:none;stroke-width:.8;opacity:.65;}
+#equipment-catalog .setup-object:hover,#equipment-catalog .setup-object[aria-pressed="true"]{color:var(--ui-accent);filter:drop-shadow(0 2px 4px var(--ui-shadow));background:transparent;}
+#equipment-catalog .setup-object[aria-pressed="true"] svg>rect:first-of-type{fill:var(--ui-active);}
+#equipment-catalog .setup-all{position:absolute;left:3%;top:4%;width:30px;height:30px;padding:7px;background:transparent;color:var(--ui-muted);border:0;border-radius:6px;cursor:pointer;}
+.setup-all svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.3;}
+#equipment-catalog .setup-all:hover,#equipment-catalog .setup-all[aria-pressed="true"]{color:var(--ui-accent);background:var(--ui-control);}
+#equipment-catalog .mobile-category-nav{display:none;}
+@media(max-width:700px){.catalog-setup{margin:0 -6px 12px;}.setup-object svg{stroke-width:2;}.setup-object svg .setup-detail{stroke-width:1.2;}#equipment-catalog .setup-all{width:26px;height:26px;padding:6px;top:0;}}
+@media(prefers-reduced-motion:reduce){#equipment-catalog .setup-object{transition:none;}}
+
+/* Bottom catalog: the setup stays anchored while equipment scrolls sideways. */
+#workspace-shell{--catalog-width:0px;--catalog-dock-height:224px;--setup-dock-width:200px;}
+#workspace-shell #equipment-catalog{position:absolute!important;top:auto!important;bottom:var(--phone-nav-height,0px)!important;left:0;right:0;width:100%!important;height:var(--catalog-dock-height)!important;display:block;border-right:0;border-top:1px solid var(--ui-border);overflow:hidden;}
+#workspace-shell #canvas{margin-left:0;margin-bottom:var(--catalog-dock-height);}
+#inspector-layer{left:0;bottom:calc(var(--catalog-dock-height) + var(--phone-nav-height,0px));}
+#equipment-catalog .catalog-panel-header{position:absolute;top:0;left:0;right:auto;width:var(--setup-dock-width);height:48px;padding:8px!important;}
+#equipment-catalog .catalog-search{min-height:32px;height:32px;}
+#equipment-catalog>.catalog-setup{position:absolute;left:8px;bottom:4px;width:calc(var(--setup-dock-width) - 16px);margin:0;}
+#equipment-catalog>.overflow-y-auto{position:absolute;left:var(--setup-dock-width);right:0;top:0;bottom:0;display:flex;align-items:flex-start;gap:20px;padding:16px!important;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:thin;}
+#equipment-catalog .catalog-category,#equipment-catalog .catalog-quick-access,#equipment-catalog .catalog-quick-access>.mb-6{flex:0 0 auto;margin:0;}
+#equipment-catalog .catalog-quick-access{display:flex;gap:20px;}
+#equipment-catalog .catalog-category[hidden],#equipment-catalog .catalog-quick-access[hidden]{display:none;}
+#equipment-catalog .grid{display:flex;flex-wrap:nowrap;gap:12px;}
+#equipment-catalog .catalog-item{width:128px;min-width:128px;height:156px;box-sizing:border-box;}
+#equipment-catalog .catalog-category>h3{white-space:nowrap;}
+@media(max-width:700px){#workspace-shell{--catalog-dock-height:188px;--setup-dock-width:144px;}#equipment-catalog>.overflow-y-auto{gap:14px;padding:12px!important;}#equipment-catalog .catalog-item{width:110px;min-width:110px;height:132px;min-height:132px!important;}#equipment-catalog .catalog-panel-header{height:42px;}#equipment-catalog input[type=search]{min-height:30px;}#equipment-catalog .catalog-search{min-height:30px;}}
+
+/* A raised setup bay flows into the lower equipment tray. */
+#workspace-shell{--catalog-dock-height:248px;}
+#workspace-shell #equipment-catalog{background:transparent!important;border:0!important;box-shadow:none!important;isolation:isolate;}
+.catalog-dock-silhouette{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;filter:drop-shadow(0 -3px 8px var(--ui-shadow));z-index:-1;}
+.catalog-dock-silhouette path{fill:var(--ui-side);stroke:color-mix(in srgb,var(--ui-secondary) 24%,var(--ui-side));stroke-width:1;vector-effect:non-scaling-stroke;}
+#equipment-catalog .catalog-panel-header{top:12px;padding:8px 16px!important;}
+#equipment-catalog>.catalog-setup{bottom:10px;}
+#equipment-catalog>.overflow-y-auto{top:25px;border-radius:0 30px 0 0;}
+@media(max-width:700px){#workspace-shell{--catalog-dock-height:212px;}#equipment-catalog .catalog-panel-header{padding:8px 12px!important;}}
+
+/* Inset equipment tiles leave breathing room inside the curved tray. */
+#equipment-catalog>.overflow-y-auto{padding:18px 24px 20px!important;gap:24px;}
+#equipment-catalog .catalog-category>h3,#equipment-catalog .catalog-quick-access h3{margin:0 0 12px;padding-left:4px;}
+#equipment-catalog .grid{gap:12px;}
+#equipment-catalog .catalog-item{flex:0 0 136px;width:136px;min-width:136px;height:144px;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:24px 16px 16px!important;border:0;border-radius:18px;background:var(--ui-panel);box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ui-secondary) 9%,transparent),0 3px 8px var(--ui-shadow);touch-action:pan-x;}
+#equipment-catalog .catalog-item:hover{background:var(--ui-hover);box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ui-accent) 20%,transparent),0 4px 10px var(--ui-shadow);}
+#equipment-catalog .catalog-item>svg{flex:0 0 44px;width:56px;height:44px;}
+#equipment-catalog .catalog-item>span{display:flex;align-items:center;justify-content:center;min-height:34px;line-height:1.4;font-size:12px;overflow-wrap:anywhere;}
+#equipment-catalog .catalog-favorite{top:7px;right:7px;}
+@media(max-width:700px){#equipment-catalog>.overflow-y-auto{padding:14px 16px 18px!important;gap:18px;}#equipment-catalog .catalog-item{flex-basis:116px;width:116px;min-width:116px;height:124px;min-height:124px!important;padding:20px 12px 12px!important;gap:8px;border-radius:15px;}#equipment-catalog .catalog-item>svg{flex-basis:36px;height:36px;width:48px;}#equipment-catalog .catalog-item>span{font-size:11px;}}
+#equipment-catalog .catalog-category{padding-top:0;border-top:0;}
+
+/* Shared spacing applies to interface chrome, never the equipment on the canvas. */
+:root{
+  --ui-space-xs:4px;--ui-space-sm:8px;--ui-space-md:12px;
+  --ui-space-lg:16px;--ui-space-xl:24px;
+  --ui-control-height:40px;--ui-icon-size:40px;
+}
+.app-settings-content{padding:var(--ui-space-lg);gap:var(--ui-space-md);scroll-padding-block:var(--ui-space-lg);}
+.app-settings-content .settings-group>summary{min-height:48px;padding:var(--ui-space-md) var(--ui-space-lg);gap:var(--ui-space-md);}
+.app-settings-content .settings-group-content{padding:var(--ui-space-lg);gap:var(--ui-space-lg);}
+.app-settings-content .settings-group-content :is(.settings-theme-section,.settings-icon-control){gap:var(--ui-space-md);}
+.app-settings-content :is(.language-options,.settings-icon-options){gap:var(--ui-space-sm);flex-wrap:wrap;}
+.app-settings-content button:not(.app-select-trigger):not(#room-rain-enabled):not(#room-particle-enabled){box-sizing:border-box;height:auto;min-height:var(--ui-control-height);padding:10px var(--ui-space-md);line-height:1.4;white-space:normal;}
+.app-select-trigger,.app-settings-content .app-select-trigger{height:auto;min-height:var(--ui-control-height);padding:10px var(--ui-space-md);gap:var(--ui-space-md);}
+.app-select-trigger>span:first-child{min-width:0;overflow-wrap:anywhere;}
+.app-select-popup{padding:var(--ui-space-sm);scroll-padding-block:var(--ui-space-sm);}
+.app-select-option{min-height:var(--ui-control-height);padding:10px var(--ui-space-md);gap:var(--ui-space-md);}
+#inspector-content{padding:var(--ui-space-lg);scroll-padding-block:var(--ui-space-lg);}
+#inspector .inspector-panel-header{padding:var(--ui-space-md) var(--ui-space-lg);gap:var(--ui-space-md);}
+#inspector-content .tt-insp-btn{box-sizing:border-box;height:auto;min-height:var(--ui-control-height);padding:10px var(--ui-space-md);line-height:1.4;white-space:normal;}
+#inspector-content :is(.model-specs,.sonic-signature-panel,.spotify-track-panel){padding:var(--ui-space-lg);}
+#app-topbar .canvas-tools button,#app-topbar .movement-history-tools button{box-sizing:border-box;width:var(--ui-icon-size);height:var(--ui-icon-size);min-width:var(--ui-icon-size);min-height:var(--ui-icon-size);padding:10px;flex-shrink:0;}
+#app-topbar .canvas-tools{gap:var(--ui-space-xs);}
+.app-settings>summary{box-sizing:border-box;min-width:var(--ui-icon-size);min-height:var(--ui-icon-size);padding:10px;}
+.app-confirm-card{padding:var(--ui-space-xl);gap:var(--ui-space-lg);}
+.app-confirm-actions,.headphone-calibration-actions{flex-wrap:wrap;gap:var(--ui-space-sm);}
+.app-confirm-actions button,.headphone-calibration-actions button,.tutorial-dialog button{box-sizing:border-box;min-height:44px;padding:var(--ui-space-md) var(--ui-space-lg);line-height:1.4;white-space:normal;}
+.tutorial-dialog{padding:var(--ui-space-xl);}
+.tutorial-dialog .tutorial-example-card{padding:var(--ui-space-lg);gap:var(--ui-space-lg);}
+@media(pointer:coarse){
+  :root{--ui-control-height:44px;--ui-icon-size:44px;}
+  #equipment-catalog .catalog-favorite{width:36px;height:36px;top:4px;right:4px;}
+}
+@media(max-width:700px){
+  :root{--ui-control-height:44px;--ui-icon-size:44px;}
+  .app-settings-content{padding:var(--ui-space-md);}
+  .app-settings-content .settings-group-content{padding:var(--ui-space-md);}
+  .app-confirm-card,.headphone-calibration-card,.tutorial-dialog{padding:var(--ui-space-lg);}
+  .app-confirm-actions button{flex:1 1 96px;}
+}
+/* Inspector hardware adapters must follow menu sizing, not chassis sizing. */
+#inspector-content[data-hardware-panel] .hw-button{min-height:var(--ui-control-height)!important;padding:10px var(--ui-space-md)!important;}
+#inspector-content[data-hardware-panel] .app-select-trigger{min-height:var(--ui-control-height);}
+#inspector #inspector-content :is(.tt-insp-btn,.app-select-trigger,input[type="text"],input[type="number"]){min-height:var(--ui-control-height)!important;padding-block:10px!important;}
+/* Short windows retain usable canvas space without cropping the dock tiles. */
+@media(max-height:500px){
+  #workspace-shell{--catalog-dock-height:132px;--setup-dock-width:140px;}
+  #equipment-catalog>.catalog-setup{width:88px;left:26px;bottom:4px;}
+  #equipment-catalog>.overflow-y-auto{padding:8px 16px!important;}
+  #equipment-catalog .catalog-category>h3,#equipment-catalog .catalog-quick-access h3{font-size:11px;line-height:14px;margin-bottom:6px;}
+  #equipment-catalog .catalog-item{height:70px;min-height:70px!important;gap:4px;padding:8px 12px!important;}
+  #equipment-catalog .catalog-item>svg{height:22px;flex-basis:22px;width:40px;}
+  #equipment-catalog .catalog-item>span{font-size:10px;min-height:28px;line-height:1.3;}
+}

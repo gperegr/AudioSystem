@@ -180,7 +180,7 @@
             const anchor=inspectorAnchorDevice.getBoundingClientRect(),gap=16,margin=12;
             const area=inspectorLayer.getBoundingClientRect(),catalog=equipmentCatalog.getBoundingClientRect();
             const toolbar=document.getElementById('app-topbar').getBoundingClientRect();
-            const minLeft=Math.max(0,area.left,catalog.right)+margin;
+            const minLeft=Math.max(0,area.left)+margin;
             const minTop=Math.max(0,area.top,toolbar.bottom)+margin;
             const maxRight=Math.min(innerWidth,area.right)-margin;
             const maxBottom=Math.min(innerHeight,area.bottom)-margin;

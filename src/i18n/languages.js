@@ -3,6 +3,14 @@
     'use strict';
 
     const translations = Object.freeze({
+        'Explore seu setup':'Explore your setup',
+        'Clique em uma parte para ver os itens.':'Click a part to browse items.',
+        'Escolha uma categoria':'Choose a category',
+        'Ver todos':'View all',
+        'Todos os equipamentos':'All equipment',
+        'Processamento':'Processing',
+        'Caixas & Subwoofers':'Speakers & Subwoofers',
+        'Medição & Conexões':'Measurement & Connections',
         'Cabos em ângulos retos':'Right-angle cables',
         'Traça cabos com segmentos horizontais e verticais.':'Draws cables with horizontal and vertical segments.',
         'Chuva nas janelas':'Rain on windows',

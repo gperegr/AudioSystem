@@ -40,7 +40,7 @@ Interface brightness follows the image interior: the studio stays dark even at d
 
 ## Typography and layout
 
-Use `var(--font-ui, "Inter", sans-serif)`. Existing styles use section headings around 16 px at weight 700, labels at 12–13 px and weight 600, and helper text at 11–12 px with about 1.4 line height. Keep hierarchy legible without relying on uppercase or color alone. Use consistent alignment, 8–14 px spacing between elements, and cards with a 1 px edge and 7–10 px radius where surrounding components use them. These measurements describe the existing style; they are not implemented CSS classes or tokens.
+Use `var(--font-ui, "Inter", sans-serif)`. Existing styles use section headings around 16 px at weight 700, labels at 12–13 px and weight 600, and helper text at 11–12 px with about 1.4 line height. Keep hierarchy legible without relying on uppercase or color alone. Use consistent alignment, 8–14 px spacing between elements, and cards with a 1 px edge and 7–10 px radius where surrounding components use them. Shared spacing tokens in `interface-palettes.css` are `--ui-space-xs/sm/md/lg/xl` (4/8/12/16/24 px). Use 12–16 px inside groups, 24 px inside desktop dialogs, and 8–12 px between controls. Text controls are at least 40 px high on desktop and 44 px on phones or coarse pointers (`--ui-control-height`); icon controls use `--ui-icon-size`. These tokens apply to interface chrome, not hardware geometry or schematic category hit regions. Below 500 px viewport height, the dock uses a compact layout with 70 px tiles to preserve canvas space. Text buttons may grow vertically when translations wrap.
 
 ## Components
 
@@ -75,9 +75,13 @@ Include normal, hover, visible focus, selected, disabled, and error states where
 
 ## Permanent catalog and floating panels
 
-The left catalog stays visible; it has no collapse arrow, pin, automatic hiding, or pin preference. The canvas reserves space for it. At widths up to 700 px, the catalog is 136 px wide and uses one equipment column. Search, favorites, and drag-to-discard remain available. The search header floats above the scrolling list, with space reserved at the top so the first items start below it. Only the search control has a surface, and it blurs items scrolling behind it; the search field remains expanded at all times.
+The catalog opens with a schematic listening setup (`.catalog-setup`): semantic buttons on a single proportional illustration select groups of equipment below it. Category names are accessible labels and native tooltips; no explanatory text or category chips surround the illustration. Search spans every category; clearing it restores the selected group. The small grid icon exposes the full inventory. Favorites remain available on the initial view. The illustration uses interface tokens and does not reuse or change canvas equipment artwork.
 
-Floating properties panels are confined to the canvas, below the top bar and to the right of the catalog. Their position, size, animation, and shadow respect those boundaries. When space is limited, panels shrink and scroll internally. Their position updates when the panel, catalog, or top bar changes size.
+The catalog is a permanent bottom dock with the setup anchored at its lower left, search above the setup, and equipment groups in a horizontally scrolling strip. The canvas and floating inspector layer reserve the dock height. A responsive SVG silhouette raises the setup bay and curves down into the equipment tray; its fill and subtle rim follow interface palette tokens.
+
+The catalog stays visible; it has no collapse arrow, pin, automatic hiding, or pin preference. The canvas reserves space for it. At widths up to 700 px, the setup bay is 144 px wide and the equipment strip still scrolls horizontally. Search, favorites, and drag-to-discard remain available. The search header floats above the scrolling list, with space reserved at the top so the first items start below it. Only the search control has a surface, and it blurs items scrolling behind it; the search field remains expanded at all times.
+
+Floating properties panels are confined to the canvas, below the top bar and above the catalog dock. Their position, size, animation, and shadow respect those boundaries. When space is limited, panels shrink and scroll internally. Their position updates when the panel, catalog, or top bar changes size.
 
 ## Window rain
 

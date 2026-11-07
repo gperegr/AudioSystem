@@ -4977,6 +4977,7 @@ const Hardware = (() => {
         searchEmpty.hidden = true;
         catalogSections[0]?.parentElement.appendChild(searchEmpty);
         const normalizeSearch = text => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        let selectedSetupCategory = null;
         equipmentSearch.addEventListener('input', () => {
             const terms = normalizeSearch(equipmentSearch.value).split(/\s+/).filter(Boolean);
             let total = 0;
@@ -4988,7 +4989,7 @@ const Hardware = (() => {
                     item.hidden = !terms.every(term => [term,...(catalogSearchSynonyms[term]||[])].some(candidate=>text.includes(normalizeSearch(candidate))));
                     if (!item.hidden) visible++;
                 });
-                section.hidden = visible === 0;
+                section.hidden = visible === 0 || (!terms.length && selectedSetupCategory !== 'all' && !selectedSetupCategory?.matches(section.querySelector('.catalog-item').dataset.catalogCategory));
                 total += visible;
             });
             searchEmpty.hidden = total > 0;
@@ -5113,6 +5114,51 @@ const Hardware = (() => {
         catalogItems.forEach(item=>{const button=document.createElement('button');button.type='button';button.className='catalog-favorite';button.title='Favoritar equipamento';button.setAttribute('aria-label','Favoritar equipamento');button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.9 6.5.9-4.7 4.6 1.1 6.5-5.7-3.1-5.7 3.1 1.1-6.5L2.7 9.8l6.5-.9Z"/></svg>';button.addEventListener('pointerdown',event=>event.stopPropagation());button.addEventListener('click',event=>{event.stopPropagation();const type=item.dataset.template;quickData.favorites=quickData.favorites.includes(type)?quickData.favorites.filter(t=>t!==type):[type,...quickData.favorites].slice(0,12);saveQuick();renderQuick();});item.appendChild(button);});
         equipmentSearch.addEventListener('input',()=>{quickCatalog.hidden=!!equipmentSearch.value.trim();});
         renderQuick();
+
+        // All artwork shares one coordinate system: no stretched icons or floating chassis.
+        const setupCategories = [
+            {id:'sources',label:'Fontes de áudio',matches:name=>['Fontes de áudio','Bluetooth'].includes(name),box:[97,111,126,45],art:'<path class="setup-top" d="M5 23 14 5h98l9 18Z"/><rect x="5" y="23" width="116" height="14" rx="2"/><ellipse cx="48" cy="14" rx="25" ry="6.5"/><ellipse class="setup-detail" cx="48" cy="14" rx="18" ry="4.3"/><ellipse cx="48" cy="14" rx="3" ry="1.2"/><path class="setup-detail" d="M48 11v3"/><ellipse cx="101" cy="10" rx="4" ry="2"/><path d="M101 10v7l-17 5-5-1M16 37v5m94-5v5"/><circle cx="15" cy="30" r="1.5"/><path class="setup-detail" d="M24 30h7m73 0h7"/>'},
+            {id:'amps',label:'Amplificadores',matches:name=>/amplificador|Amplificador|Receivers/.test(name),box:[91,164,138,39],art:'<rect x="4" y="4" width="130" height="29" rx="3"/><path class="setup-detail" d="M15 14h42m-42 5h42M17 33v3m105-3v3"/><rect class="setup-detail" x="68" y="12" width="17" height="9" rx="1"/><circle cx="111" cy="18" r="9"/><path class="setup-detail" d="M111 12v3"/><circle cx="94" cy="19" r="1.5"/>'},
+            {id:'processing',label:'Processamento',matches:name=>['Equalizadores','Crossovers','Mixers','Seletores'].includes(name),box:[91,211,138,36],art:'<rect x="4" y="3" width="130" height="26" rx="3"/><path class="setup-detail" d="M17 29v3m105-3v3M20 10v12m17-12v12m17-12v12m17-12v12m17-12v12m17-12v12"/><path d="M16 14h8m9 4h8m9-6h8m9 4h8m9 4h8m9-6h8"/><circle class="setup-detail" cx="120" cy="16" r="2"/>'},
+            {id:'speakers',label:'Caixas & Subwoofers',matches:name=>name.startsWith('Caixas')||name==='Subwoofers',box:[15,134,57,137],art:'<path class="setup-top" d="M5 10 12 4h38l3 6v119l-7 5H5Z"/><rect x="5" y="10" width="41" height="124" rx="3"/><path class="setup-detail" d="M11 17h29v110H11Z"/><circle cx="25.5" cy="37" r="6"/><circle class="setup-detail" cx="25.5" cy="37" r="2"/><circle cx="25.5" cy="88" r="15"/><circle class="setup-detail" cx="25.5" cy="88" r="11"/><circle cx="25.5" cy="88" r="4"/><path d="M13 134v3m25-3v3"/>'},
+            {id:'phones',label:'Fones de ouvido',matches:name=>name==='Fones de ouvido',box:[249,127,57,74],art:'<path class="setup-detail" d="M28.5 14v54m-13 0q13-4 26 0"/><path class="setup-top" d="M8 38V29C8 2 49 2 49 29v9h-4v-9c0-21-33-21-33 0v9Z"/><path class="setup-detail" d="M9 30v9m39-9v9M22 17q6.5-3 13 0"/><g transform="rotate(-8 12 48)"><rect x="5" y="35" width="14" height="26" rx="6"/><path class="setup-detail" d="M14 39v18"/></g><g transform="rotate(8 45 48)"><rect x="38" y="35" width="14" height="26" rx="6"/><path class="setup-detail" d="M43 39v18"/></g>'},
+            {id:'lab',label:'Medição & Conexões',matches:name=>['Medição & Análise','Adaptadores & Conversores','DEBUG'].includes(name),box:[245,216,64,45],art:'<path class="setup-top" d="m4 9 5-5h47l4 5"/><rect x="4" y="9" width="56" height="30" rx="3"/><rect class="setup-detail" x="10" y="15" width="32" height="17" rx="1"/><path d="M13 25h5l4-6 5 10 5-7h7"/><circle cx="51" cy="19" r="3"/><circle class="setup-detail" cx="51" cy="30" r="2"/><path d="M12 39v3m39-3v3"/>'},
+            {id:'furniture',label:'Móveis',matches:name=>name==='Móveis',box:[79,252,162,33],art:'<path class="setup-top" d="M4 5h154v7H4Z"/><path d="M13 12v17m132-17v17"/><path class="setup-detail" d="M21 12v11m116-11v11"/>'},
+            {id:'lights',label:'Iluminação',matches:name=>name==='Iluminação',box:[248,12,58,91],art:'<path class="setup-detail" d="M29 2v35"/><path class="setup-top" d="M17 37h24l12 32H5Z"/><path d="M5 69q24 6 48 0"/><path class="setup-detail" d="M24 77h10"/>'}
+        ];
+        const setupNav=document.createElement('section');setupNav.className='catalog-setup';
+        setupNav.innerHTML='<div class="catalog-setup-scene" role="group" aria-label="Categorias de equipamentos"><svg class="setup-room" viewBox="0 0 320 300" aria-hidden="true"><ellipse class="setup-ground" cx="160" cy="279" rx="148" ry="8"/><path d="M85 256V153h150v103M85 160h150M85 207h150M85 251h150"/></svg><button type="button" class="setup-all" data-setup-all aria-label="Todos os equipamentos" title="Todos os equipamentos"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="5" height="5" rx="1"/><rect x="15" y="4" width="5" height="5" rx="1"/><rect x="4" y="15" width="5" height="5" rx="1"/><rect x="15" y="15" width="5" height="5" rx="1"/></svg></button></div>';
+        const setupScene=setupNav.querySelector('.catalog-setup-scene');
+        setupCategories.forEach(category=>{
+            const button=document.createElement('button');button.type='button';button.className='setup-object';
+            button.dataset.setupCategory=category.id;button.setAttribute('aria-label',category.label);button.title=category.label;button.setAttribute('aria-pressed','false');
+            const [x,y,w,h]=category.box;
+            button.style.cssText=`left:${x/3.2}%;top:${y/3}%;width:${w/3.2}%;height:${h/3}%`;
+            button.innerHTML=`<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">${category.art}</svg>`;
+            button.addEventListener('click',()=>selectSetupCategory(category));setupScene.appendChild(button);
+        });
+        function selectSetupCategory(category){
+            selectedSetupCategory=category;equipmentSearch.value='';
+            setupNav.querySelectorAll('[data-setup-category]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.setupCategory===category?.id)));
+            setupNav.querySelector('[data-setup-all]').setAttribute('aria-pressed',String(category==='all'));
+            equipmentSearch.dispatchEvent(new Event('input'));
+        }
+        setupNav.querySelector('[data-setup-all]').addEventListener('click',()=>selectSetupCategory('all'));
+        equipmentCatalog.appendChild(setupNav);
+        const dockSilhouette=document.createElementNS('http://www.w3.org/2000/svg','svg');
+        dockSilhouette.classList.add('catalog-dock-silhouette');dockSilhouette.setAttribute('aria-hidden','true');
+        const dockContour=document.createElementNS('http://www.w3.org/2000/svg','path');dockSilhouette.appendChild(dockContour);
+        equipmentCatalog.prepend(dockSilhouette);
+        const sizeDockContour=()=>{
+            const w=equipmentCatalog.clientWidth,h=equipmentCatalog.clientHeight;
+            const neck=parseFloat(getComputedStyle(equipmentCatalog).getPropertyValue('--setup-dock-width'))||200;
+            dockSilhouette.setAttribute('viewBox',`0 0 ${w} ${h}`);
+            dockContour.setAttribute('d',`M0 32 Q0 1 32 1 H${neck-40} C${neck-16} 1 ${neck-16} 25 ${neck+12} 25 H${w-40} Q${w-1} 25 ${w-1} 64 V${h} H0 Z`);
+        };
+        new ResizeObserver(sizeDockContour).observe(equipmentCatalog);sizeDockContour();
+
+        equipmentSearch.addEventListener('input',()=>{quickCatalog.hidden=!!equipmentSearch.value.trim()||selectedSetupCategory!==null;});
+        equipmentSearch.dispatchEvent(new Event('input'));
 
         function standardizeStereoPorts(root) {
             const channelOf = port => port?.dataset.channel || (/L$/.test(port?.dataset.node || '') ? 'L' : /R$/.test(port?.dataset.node || '') ? 'R' : '');
@@ -8338,7 +8384,7 @@ const Hardware = (() => {
             const anchor=inspectorAnchorDevice.getBoundingClientRect(),gap=16,margin=12;
             const area=inspectorLayer.getBoundingClientRect(),catalog=equipmentCatalog.getBoundingClientRect();
             const toolbar=document.getElementById('app-topbar').getBoundingClientRect();
-            const minLeft=Math.max(0,area.left,catalog.right)+margin;
+            const minLeft=Math.max(0,area.left)+margin;
             const minTop=Math.max(0,area.top,toolbar.bottom)+margin;
             const maxRight=Math.min(innerWidth,area.right)-margin;
             const maxBottom=Math.min(innerHeight,area.bottom)-margin;
@@ -10494,7 +10540,7 @@ const Hardware = (() => {
             if(topic==='basic'&&step==='output'&&dev&&!tutorialListeningPath(tutorialDevice(topic)))requestedType='headphone';
             if(!dev||requestedType){
                 const type=requestedType||(topic==='spotify'?(step==='account'||step==='cover'?'furnitureCoverflow':'turntable'):topic==='capture'?'audioInterface1':'cdPlayer');
-                mobilePanel('catalog');const search=document.getElementById('equipment-search');search.value='';search.dispatchEvent(new Event('input'));const card=equipmentCatalog.querySelector(`[data-template="${type}"]`);card?.scrollIntoView({block:'center',behavior:'instant'});await new Promise(resolve=>setTimeout(resolve,320));return card;
+                mobilePanel('catalog');equipmentCatalog.querySelector('[data-setup-all]')?.click();const search=document.getElementById('equipment-search');search.value='';search.dispatchEvent(new Event('input'));const card=equipmentCatalog.querySelector(`[data-template="${type}"]`);card?.scrollIntoView({block:'center',behavior:'instant'});await new Promise(resolve=>setTimeout(resolve,320));return card;
             }
             selectDevice(dev.id,true);mobilePanel('properties');
             const selector={permission:'#ai-authorize-inputs',device:'#ai-input-device',capture:'#ai-capture-toggle',file:'#source-load-audio',level:dev.type==='audioInterface2'?'#ai-line':'#ai-gain-L',spotify:'[data-sp-action="connect"]'}[action];
