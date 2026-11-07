@@ -1046,6 +1046,46 @@ const Hardware = (() => {
             });
         });
     }
+    let roomFixtureLightKey='';
+    function paintRoomFixtureLights(world,sources){
+        const backdrop=world.querySelector('#room-backdrop'),canvas=document.getElementById('canvas');
+        if(!backdrop)return;
+        let layer=backdrop.querySelector('.room-fixture-light');
+        if(!layer){layer=document.createElement('canvas');layer.className='room-fixture-light';layer.setAttribute('aria-hidden','true');backdrop.appendChild(layer);}
+        if(canvas.dataset.theme!=='scene'||!sources.length){layer.hidden=true;roomFixtureLightKey='';return;}
+        const viewport=canvas.getBoundingClientRect(),wr=world.getBoundingClientRect(),zoom=wr.width/world.offsetWidth;
+        if(!zoom)return;
+        const image=backdrop.querySelector('.room-scene-image.is-visible'),scene=RoomScenes.scenes[canvas.dataset.backdrop];
+        if(!image||!scene)return;
+        const ir=image.getBoundingClientRect(),floor=ir.top+ir.height*scene.horizon.dusk/scene.height-viewport.top;
+        const width=canvas.clientWidth,height=canvas.clientHeight+64,resolution=Math.min(.6,1400/width);
+        const key=[width,height,wr.left,wr.top,zoom,floor,canvas.dataset.time,...sources.map(l=>[l.id,Math.round(l.x/3),Math.round(l.y/3),l.strength])].join('|');
+        if(key===roomFixtureLightKey)return;roomFixtureLightKey=key;layer.hidden=false;
+        Object.assign(layer.style,{left:(viewport.left-wr.left)/zoom+'px',top:(viewport.top-wr.top)/zoom+'px',width:width/zoom+'px',height:height/zoom+'px'});
+        const pw=Math.ceil(width*resolution),ph=Math.ceil(height*resolution);
+        if(layer.width!==pw||layer.height!==ph){layer.width=pw;layer.height=ph;}
+        const ctx=layer.getContext('2d');ctx.setTransform(resolution,0,0,resolution,0,0);ctx.clearRect(0,0,width,height);
+        const pool=(x,y,rx,ry,rgb,alpha)=>{
+            if(rx<1||ry<1||alpha<=0||x+rx<0||x-rx>width||y+ry<0||y-ry>height)return;
+            ctx.save();ctx.translate(x,y);ctx.scale(rx,ry);
+            const g=ctx.createRadialGradient(0,0,0,0,0,1);
+            g.addColorStop(0,`rgba(${rgb},${alpha})`);g.addColorStop(.35,`rgba(${rgb},${alpha*.55})`);g.addColorStop(1,`rgba(${rgb},0)`);
+            ctx.fillStyle=g;ctx.fillRect(-1,-1,2,2);ctx.restore();
+        };
+        sources.forEach(light=>{
+            const x=wr.left-viewport.left+light.x*zoom,y=wr.top-viewport.top+light.y*zoom;
+            const reach=(light.reach||1300)*zoom,rgb=light.rgb.join(','),strength=Math.min(.8,light.strength*(canvas.dataset.time==='night'?.40:.25));
+            // Shade-directed light washes the wall below a pendant; bare bulbs spread in both directions.
+            ctx.save();ctx.beginPath();ctx.rect(0,0,width,Math.max(0,floor));ctx.clip();
+            const wallY=light.shade?y+reach*.30:y;
+            pool(x,wallY,reach*(light.shade?.45:.55),reach*.48,rgb,strength);
+            ctx.restore();
+            const floorDistance=Math.max(0,floor-y),falloff=Math.max(0,1-floorDistance/Math.max(1,reach));
+            ctx.save();ctx.beginPath();ctx.rect(0,Math.max(0,floor),width,height);ctx.clip();
+            pool(x,floor+reach*.10,reach*.5,reach*.23,rgb,strength*falloff*.9);
+            ctx.restore();
+        });
+    }
     function paintLightingDemo(){
         const world=document.getElementById('audio-world');
         const clamp=(value,limit)=>Math.max(-limit,Math.min(limit,value));
@@ -1055,6 +1095,7 @@ const Hardware = (() => {
         const sceneName=viewport&&document.getElementById('canvas').dataset.theme==='scene'?document.getElementById('canvas').dataset.backdrop:'';
         const sceneTime=document.getElementById('canvas').dataset.time;
         const fixtureEmitters=positionedObjectLights(world);
+        paintRoomFixtureLights(world,fixtureEmitters);
         const sceneEmitters=[...positionedSceneLights(sceneName,sceneTime,world),...fixtureEmitters];
         const lightKeyAt=(x,y,width,height)=>sceneTime+':'+sceneEmitters.filter(source=>{
             const dx=Math.max(0,Math.abs(source.x-x)-(source.width+width)/2);

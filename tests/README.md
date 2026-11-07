@@ -54,3 +54,5 @@ The two turntable browser tests share `turntable-geometry.helpers.cjs`: they com
 `node tests/keyboard-delete.browser.cjs` checks Delete and Backspace for single/multiple selection, connected cable cleanup, batch undo/redo with restored settings, editable-field and modal guards, and deletion/cancellation during cursor placement. It accepts `TAILWIND_SCRIPT_FILE` for offline styling.
 
 `node tests/room-atmosphere.browser.cjs` verifies that time changes reuse the same image and rain elements, particle origins stay in the windows, depth blur survives all nine combinations, and reduced-motion/disabled particles stop their animation loop. It bounds particle and shadow buffers at 4K and saves nine previews to `/tmp/room-ultrawide-{studio|listening|loft}-{dawn|dusk|night}.png`. It accepts `TAILWIND_SCRIPT_FILE`.
+
+`node tests/room-fixture-light.browser.cjs` checks background illumination from both wall lamps and the pendant, removal cleanup, solid-theme exclusion and the 1400-pixel buffer limit. It accepts `TAILWIND_SCRIPT_FILE`.

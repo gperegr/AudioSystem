@@ -4843,3 +4843,6 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 .room-rain[data-soaked="true"] .room-rain-glass::after {content:"";position:absolute;inset:0;pointer-events:none;background-image:var(--soaked-glass-texture);background-size:calc(256px * var(--canvas-inverse-zoom,1)) calc(384px * var(--canvas-inverse-zoom,1));background-position:37% 19%;opacity:.95;}
 .room-rain[data-soaked="true"] .room-rain-glass:nth-child(2n)::after {background-position:81% 63%;}
 #canvas[data-theme="scene"] .room-rain[data-soaked="true"] {filter:blur(calc(.65px * var(--canvas-inverse-zoom,1))) var(--room-light-filter,brightness(1));}
+
+.room-fixture-light{position:absolute;z-index:2;pointer-events:none;mix-blend-mode:screen;}
+.room-fixture-light[hidden]{display:none!important;}
