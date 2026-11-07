@@ -50,6 +50,7 @@
             world.style.setProperty('--room-far-x',farX.toFixed(1)+'px');world.style.setProperty('--room-far-y',farY.toFixed(1)+'px');
             world.style.setProperty('--room-far-scale',farScale.toFixed(3));
             world.style.setProperty('--room-horizon-shift',horizonShift.toFixed(1)+'px');
+            roomCoverageReady=true;
             roomBackdrop.querySelectorAll('.room-scene-image').forEach(image=>positionRoomImage(image));
             world.style.setProperty('--floor-parallax-x',(farX*.28).toFixed(1)+'px');
             world.style.setProperty('--floor-parallax-scale',floorScale.toFixed(3));

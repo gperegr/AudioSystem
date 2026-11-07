@@ -32,6 +32,7 @@ const root=path.resolve(__dirname,'..');
             for(const scene of scenes)for(const time of times){
                 await page.evaluate(({theme,scene,time})=>{__signal.setCanvasTheme(theme);__signal.setCanvasBackdrop(scene);__signal.setCanvasTime(time);},{theme,scene,time});
                 await page.mouse.move(1570,1060);await page.waitForTimeout(500);
+                await page.locator('#app-topbar').evaluate(el=>Promise.all(el.getAnimations().map(animation=>animation.finished.catch(()=>{}))));
                 const sample=await page.evaluate(()=>{
                     const rgb=s=>s.startsWith('#')?s.slice(1).match(/../g).map(value=>parseInt(value,16)):s.match(/\d+(?:\.\d+)?/g).slice(0,3).map(Number),lum=c=>{const values=rgb(c).map(x=>{x/=255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4;});return .2126*values[0]+.7152*values[1]+.0722*values[2];};
                     const contrast=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);};

@@ -44,3 +44,7 @@ The two turntable browser tests share `turntable-geometry.helpers.cjs`: they com
 ## Click placement
 
 `TAILWIND_SCRIPT_FILE=/path/to/tailwind.js node tests/click-placement.browser.cjs` checks mouse pickup without a held button, live grid snapping, confirmation and invalid catalog drops, Escape/blur cleanup, undo/redo, hardware controls, connected groups, furniture supports, zoom changes, reduced motion and touch tap/hold gestures. It serves local assets through Playwright routing and also supports loading Tailwind from the CDN when the environment variable is omitted.
+
+## Room coverage behind the dock
+
+`node tests/room-coverage.browser.cjs` checks minimum-zoom image coverage over the transparent dock silhouette at both pan limits, across 14 phone/tablet/desktop/ultrawide/4K/tall viewport and device configurations, including iPhone portrait and landscape and all nine room/time combinations. It also checks that rain retains the image transform and accepts `TAILWIND_SCRIPT_FILE` for offline styling.

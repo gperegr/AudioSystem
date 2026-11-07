@@ -1611,7 +1611,7 @@ const Hardware = (() => {
         const roomBackdrop=document.createElement('div');roomBackdrop.id='room-backdrop';roomBackdrop.setAttribute('aria-hidden','true');
         roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far is-visible" alt="" decoding="async" draggable="false"><i class="room-grid-overlay"></i>';
         const roomRain=document.createElement('div');roomRain.className='room-rain';roomRain.setAttribute('aria-hidden','true');roomBackdrop.appendChild(roomRain);
-        let roomRainAudio=null;
+        let roomRainAudio=null,roomCoverageReady=false;
         function randomizeRainDrop(drop,height,first=false){
             const duration=drop.classList.contains('is-bead')?9+Math.random()*23:4+Math.random()*17;
             drop.style.left=(3+Math.random()*92)+'%';drop.style.top=(Math.random()*92)+'%';
@@ -1725,6 +1725,32 @@ const Hardware = (() => {
             const farScale=parseFloat(world.style.getPropertyValue('--room-far-scale'))||1;
             const shift=((ROOM_HORIZON_IMAGE_Y-imageHorizon)*world.offsetHeight*1.1/720*farScale).toFixed(1)+'px';
             image.style.setProperty('--room-horizon-shift',shift);roomRain.style.setProperty('--room-horizon-shift',shift);
+            if(roomCoverageReady)updateRoomImageCoverage(image);
+        }
+        // Keep the authored image proportions, adding only the translation/scale needed
+        // to cover the visible viewport and the transparent corners of the dock.
+        function updateRoomImageCoverage(image){
+            const style=getComputedStyle(canvas),width=world.offsetWidth,height=world.offsetHeight,zoom=view.zoom;
+            if(!width||!height||!zoom)return;
+            const cutout=(parseFloat(style.getPropertyValue('--catalog-tray-inset'))||25)+(parseFloat(style.getPropertyValue('--catalog-rim-radius'))||39);
+            const bleed=Math.max(2/zoom,(parseFloat(style.getPropertyValue('--room-depth-blur'))||2)*3),left=(-view.x)/zoom-bleed,top=(-view.y)/zoom-bleed;
+            const right=(canvas.clientWidth-view.x)/zoom+bleed,bottom=(canvas.clientHeight+cutout-view.y)/zoom+bleed;
+            const farScale=parseFloat(world.style.getPropertyValue('--room-far-scale'))||1;
+            const cover=Math.max(1,(right-left)/(width*1.12*farScale),(bottom-top)/(height*1.1*farScale));
+            const farX=parseFloat(world.style.getPropertyValue('--room-far-x'))||0;
+            const farY=parseFloat(world.style.getPropertyValue('--room-far-y'))||0;
+            const drop=parseFloat(world.style.getPropertyValue('--room-image-drop'))||0;
+            const horizon=parseFloat(image.style.getPropertyValue('--room-horizon-shift'))||0;
+            const imageLeft=width/2-width*.56*farScale*cover+farX;
+            const imageRight=width/2+width*.56*farScale*cover+farX;
+            const imageTop=height-height*1.1*farScale*cover+farY+drop+horizon;
+            const imageBottom=height+farY+drop+horizon;
+            const x=Math.min(left-imageLeft,Math.max(0,right-imageRight));
+            const y=Math.min(top-imageTop,Math.max(0,bottom-imageBottom));
+            for(const element of [image,roomRain]){
+                element.style.setProperty('--room-cover-x',x+'px');element.style.setProperty('--room-cover-y',y+'px');
+                element.style.setProperty('--room-cover-scale',String(cover));
+            }
         }
         function showRoomImage(src,horizon=ROOM_HORIZON_IMAGE_Y){
             if(src===roomImageTarget){roomBackdrop.querySelectorAll('.room-scene-image').forEach(image=>positionRoomImage(image,horizon));return;}
@@ -1786,26 +1812,25 @@ const Hardware = (() => {
                 const pixelWidth=Math.round(width*resolution),pixelHeight=Math.round(height*resolution);
                 if(roomMoteCanvas.width!==pixelWidth||roomMoteCanvas.height!==pixelHeight){roomMoteCanvas.width=pixelWidth;roomMoteCanvas.height=pixelHeight;}
                 const ctx=roomMoteContext;ctx.setTransform(resolution,0,0,resolution,0,0);ctx.clearRect(0,0,width,height);
-                const moteBounds=roomMotes.getBoundingClientRect(),canvasBounds=canvas.getBoundingClientRect();
-                const sceneWidth=roomMotes.clientWidth,sceneHeight=roomMotes.clientHeight,sceneZoom=moteBounds.width/sceneWidth;
-                const offsetX=moteBounds.left-canvasBounds.left,offsetY=moteBounds.top-canvasBounds.top;
-                const read=name=>parseFloat(world.style.getPropertyValue(name))||0;
-                const farX=read('--room-far-x'),farY=read('--room-far-y'),drop=read('--room-image-drop'),horizon=read('--room-horizon-shift'),scale=read('--room-far-scale')||1;
+                const image=roomBackdrop.querySelector('.room-scene-image.is-visible:last-of-type')||roomBackdrop.querySelector('.room-scene-image');
+                const imageBounds=image.getBoundingClientRect(),canvasBounds=canvas.getBoundingClientRect();
+                const sceneZoom=imageBounds.width/Math.max(1,image.offsetWidth);
+                const offsetX=imageBounds.left-canvasBounds.left,offsetY=imageBounds.top-canvasBounds.top;
                 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
                 roomMoteBeams.forEach(beam=>{
-                    const beamWidth=sceneWidth*beam.width*scale,beamHeight=sceneHeight*.30*scale;
-                    const left=offsetX+(sceneWidth*beam.x+farX-beamWidth/2)*sceneZoom,top=offsetY+(sceneHeight*beam.y+farY+drop+horizon)*sceneZoom;
+                    const beamWidth=imageBounds.width*beam.width,beamHeight=imageBounds.height*.30;
+                    const left=offsetX+imageBounds.width*beam.x-beamWidth/2,top=offsetY+imageBounds.height*beam.y;
                     ctx.fillStyle=`rgb(${beam.rgb.replaceAll(' ', ',')})`;
                     beam.particles.forEach(particle=>{
                         const phase=reduced?.5:(now+particle.delay)%(particle.duration*2)/particle.duration;
                         const progress=reduced?.5:phase<=1?phase:2-phase;
                         const eased=(1-Math.cos(Math.PI*progress))/2;
                         const alpha=reduced?.38:progress<.24?progress/.24*.72:progress<.78?.72-(progress-.24)/.54*.26:(1-progress)/.22*.46;
-                        const localX=particle.x+particle.drift*eased/beamWidth,localY=particle.y+(15-60*eased)/beamHeight;
+                        const localX=particle.x+particle.drift*eased*sceneZoom/beamWidth,localY=particle.y+(15-60*eased)*sceneZoom/beamHeight;
                         const falloff=Math.max(0,1-Math.hypot((localX-.5)/.65,(localY-.25)/.95));
                         if(!falloff)return;
                         ctx.globalAlpha=beam.strength*.7*alpha*falloff;
-                        const x=left+beamWidth*localX*sceneZoom,y=top+beamHeight*localY*sceneZoom,radius=particle.size*scale*sceneZoom/2;
+                        const x=left+beamWidth*localX,y=top+beamHeight*localY,radius=particle.size*sceneZoom/2;
                         if(x+radius<0||x-radius>width||y+radius<0||y-radius>height)return;
                         ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();
                     });
@@ -1985,6 +2010,7 @@ const Hardware = (() => {
             world.style.setProperty('--room-far-x',farX.toFixed(1)+'px');world.style.setProperty('--room-far-y',farY.toFixed(1)+'px');
             world.style.setProperty('--room-far-scale',farScale.toFixed(3));
             world.style.setProperty('--room-horizon-shift',horizonShift.toFixed(1)+'px');
+            roomCoverageReady=true;
             roomBackdrop.querySelectorAll('.room-scene-image').forEach(image=>positionRoomImage(image));
             world.style.setProperty('--floor-parallax-x',(farX*.28).toFixed(1)+'px');
             world.style.setProperty('--floor-parallax-scale',floorScale.toFixed(3));
@@ -5214,8 +5240,9 @@ const Hardware = (() => {
             const shoulder=searchBounds.right-dockBounds.left-searchRadius;
             const outerRight=searchBounds.right-dockBounds.left+padding;
             const trayTop=equipmentCatalog.querySelector(':scope > .overflow-y-auto').offsetTop;
+            const rim=parseFloat(getComputedStyle(equipmentCatalog).getPropertyValue('--catalog-rim-radius'))||39;
             dockSilhouette.setAttribute('viewBox',`0 0 ${w} ${h}`);
-            dockContour.setAttribute('d',`M${left} ${h} V${top+radius} Q${left} ${top} ${left+radius} ${top} H${shoulder} C${outerRight} ${top} ${outerRight} ${trayTop} ${outerRight+padding} ${trayTop} H${w-40} Q${w-1} ${trayTop} ${w-1} ${trayTop+39} V${h} Z`);
+            dockContour.setAttribute('d',`M${left} ${h} V${top+radius} Q${left} ${top} ${left+radius} ${top} H${shoulder} C${outerRight} ${top} ${outerRight} ${trayTop} ${outerRight+padding} ${trayTop} H${w-rim} Q${w} ${trayTop} ${w} ${trayTop+rim} V${h} Z`);
         };
         const dockContourObserver=new ResizeObserver(sizeDockContour);
         dockContourObserver.observe(equipmentCatalog);

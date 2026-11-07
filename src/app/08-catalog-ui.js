@@ -556,8 +556,9 @@
             const shoulder=searchBounds.right-dockBounds.left-searchRadius;
             const outerRight=searchBounds.right-dockBounds.left+padding;
             const trayTop=equipmentCatalog.querySelector(':scope > .overflow-y-auto').offsetTop;
+            const rim=parseFloat(getComputedStyle(equipmentCatalog).getPropertyValue('--catalog-rim-radius'))||39;
             dockSilhouette.setAttribute('viewBox',`0 0 ${w} ${h}`);
-            dockContour.setAttribute('d',`M${left} ${h} V${top+radius} Q${left} ${top} ${left+radius} ${top} H${shoulder} C${outerRight} ${top} ${outerRight} ${trayTop} ${outerRight+padding} ${trayTop} H${w-40} Q${w-1} ${trayTop} ${w-1} ${trayTop+39} V${h} Z`);
+            dockContour.setAttribute('d',`M${left} ${h} V${top+radius} Q${left} ${top} ${left+radius} ${top} H${shoulder} C${outerRight} ${top} ${outerRight} ${trayTop} ${outerRight+padding} ${trayTop} H${w-rim} Q${w} ${trayTop} ${w} ${trayTop+rim} V${h} Z`);
         };
         const dockContourObserver=new ResizeObserver(sizeDockContour);
         dockContourObserver.observe(equipmentCatalog);
