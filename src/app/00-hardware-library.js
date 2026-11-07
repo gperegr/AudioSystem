@@ -904,18 +904,20 @@ const Hardware = (() => {
     let floorShadowKey='';
     function elementWorldPosition(element){const position=appState.project.devices[element.id]?.dragVisualPosition;return position||{x:element.offsetLeft,y:element.offsetTop};}
     function positionedSceneLights(scene,time,world){
-        const imageDrop=parseFloat(world.style.getPropertyValue('--room-image-drop'))||0;
-        const horizonShift=parseFloat(world.style.getPropertyValue('--room-horizon-shift'))||0;
-        return RoomScenes.lights(scene,time).map(source=>{
-            const depth=source.layer==='near'?'near':source.layer==='mid'?'mid':'far';
-            const farX=parseFloat(world.style.getPropertyValue(`--room-${depth}-x`))||0;
-            const farY=parseFloat(world.style.getPropertyValue(`--room-${depth}-y`))||0;
-            const scale=parseFloat(world.style.getPropertyValue(`--room-${depth}-scale`))||1;
-            const rawX=world.offsetWidth*(-.06+1.12*(240+source.cx*.8)/2400);
-            const rawY=world.offsetHeight*(-.1+1.1*(268+source.cy*.8)/1600);
-            return {...source,x:world.offsetWidth/2+(rawX-world.offsetWidth/2)*scale+farX,y:world.offsetHeight+(rawY-world.offsetHeight)*scale+farY+imageDrop+horizonShift,width:source.w*.8*1.12*world.offsetWidth/2400*scale,height:source.h*.8*1.1*world.offsetHeight/1600*scale,reach:2100*world.offsetWidth/2736};
-        });
+        const definition=RoomScenes.scenes[scene];
+        const image=world.querySelector('.room-scene-image.is-visible:last-of-type')||world.querySelector('.room-scene-image');
+        if(!definition||!image)return [];
+        const worldRect=world.getBoundingClientRect(),rect=image.getBoundingClientRect(),zoom=worldRect.width/world.offsetWidth;
+        if(!zoom)return [];
+        // Use the displayed image transform, including coverage, horizon and parallax.
+        return RoomScenes.lights(scene,time).map(source=>({
+            ...source,x:(rect.left-worldRect.left+rect.width*source.cx/definition.width)/zoom,
+            y:(rect.top-worldRect.top+rect.height*source.cy/definition.height)/zoom,
+            width:rect.width*source.w/definition.width/zoom,height:rect.height*source.h/definition.height/zoom,
+            reach:2100*world.offsetHeight/2800
+        }));
     }
+
     function positionedObjectLights(world){
         const worldRect=world.getBoundingClientRect(),scale=worldRect.width/world.offsetWidth;
         if(!scale)return [];
@@ -985,8 +987,10 @@ const Hardware = (() => {
         const key=[world.offsetWidth,world.offsetHeight,canvas.dataset.floor,floorShift.toFixed(1),floorScale.toFixed(3),Math.round(minX/30),Math.round(maxX/30),...lights.map(light=>[Math.round(light.x/3),Math.round(light.y/3),light.strength.toFixed(2)]),...allCasters.map(box=>[box.el.id,Math.round(box.x),Math.round(box.y),box.width,box.height,box.el.style.visibility])].join('|');
         if(key===floorShadowKey)return;
         floorShadowKey=key;
-        const width=world.offsetWidth*1.16,height=560,resolution=.5;
-        if(layer.width!==Math.round(width*resolution)||layer.height!==height*resolution){layer.width=Math.round(width*resolution);layer.height=height*resolution;}
+        // Keep the wider world from increasing the shadow buffer without a bound.
+        const width=world.offsetWidth*1.16,height=560,resolution=Math.min(.5,2560/width);
+        const pixelWidth=Math.round(width*resolution),pixelHeight=Math.round(height*resolution);
+        if(layer.width!==pixelWidth||layer.height!==pixelHeight){layer.width=pixelWidth;layer.height=pixelHeight;}
         const ctx=layer.getContext('2d');ctx.setTransform(resolution,0,0,resolution,0,0);ctx.clearRect(0,0,width,height);
         if(!casters.length)return;
         const point=(x,y)=>{

@@ -46,7 +46,7 @@
             const farScale=Math.max(.9,Math.min(1.08,1-(view.zoom-1)*.08));
             const floorScale=Math.max(.94,Math.min(1.04,1-(view.zoom-1)*.04));
             const scene=RoomScenes.scenes[appState.canvas.backdrop];
-            const horizonShift=(ROOM_HORIZON_IMAGE_Y-(scene?.horizon?.[appState.canvas.time]??ROOM_HORIZON_IMAGE_Y))*world.offsetHeight*1.1/720*farScale;
+            const horizonShift=(ROOM_HORIZON_IMAGE_Y-(scene?.horizon?.[appState.canvas.time]??ROOM_HORIZON_IMAGE_Y))*world.offsetHeight*1.12/720*farScale;
             world.style.setProperty('--room-far-x',farX.toFixed(1)+'px');world.style.setProperty('--room-far-y',farY.toFixed(1)+'px');
             world.style.setProperty('--room-far-scale',farScale.toFixed(3));
             world.style.setProperty('--room-horizon-shift',horizonShift.toFixed(1)+'px');
@@ -58,6 +58,7 @@
             document.getElementById('zoom-label').textContent = `${Math.round(view.zoom * 100)}%`;
             // Os cabos pertencem ao mundo transformado e acompanham o zoom sem redesenho.
             scheduleViewLighting();
+            if(matchMedia('(prefers-reduced-motion: reduce)').matches)startRoomMotes();
             scheduleAppPreferencesSave();
         }
         new ResizeObserver(() => {stopViewMotion();applyView();}).observe(canvas);

@@ -31,8 +31,10 @@
             const type=scene.startsWith('studio')?'studio':scene.startsWith('listening')?'listening':'loft';
             roomRain.dataset.scene=type;
             roomRain.hidden=canvas.dataset.theme!=='scene'||!appState.preferences.rainEnabled||!appState.preferences.rainIntensity;
+            if(roomRain.hidden){roomRain.replaceChildren();roomRain.dataset.count='';return;}
+            const definition=RoomScenes.scenes[scene];
             const count=Math.round(appState.preferences.rainIntensity*.9);
-            const key=scene+':'+appState.canvas.time+':'+count;
+            const key=scene+':'+count;
             if(roomRain.dataset.count===key)return;
             roomRain.dataset.count=key;roomRain.replaceChildren();
             RoomScenes.rainGlass(scene).forEach((glass,w)=>{
@@ -43,12 +45,12 @@
                     const xs=polygon.map(p=>p[0]),ys=polygon.map(p=>p[1]);
                     const left=Math.min(...xs),top=Math.min(...ys),width=Math.max(...xs)-left,height=Math.max(...ys)-top;
                     const sheet=document.createElement('div');sheet.className='room-rain-glass';
-                    Object.assign(sheet.style,{left:left/1672*100+'%',top:top/941*100+'%',width:width/1672*100+'%',height:height/941*100+'%',clipPath:'polygon('+polygon.map(([x,y])=>`${(x-left)/width*100}% ${(y-top)/height*100}%`).join(',')+')'});
+                    Object.assign(sheet.style,{left:left/definition.width*100+'%',top:top/definition.height*100+'%',width:width/definition.width*100+'%',height:height/definition.height*100+'%',clipPath:'polygon('+polygon.map(([x,y])=>`${(x-left)/width*100}% ${(y-top)/height*100}%`).join(',')+')'});
                     const cumulative=areas.slice(0,cell+1).reduce((sum,area)=>sum+area,0);
                     const number=Math.round(count*cumulative/total)-assigned;assigned+=number;
                     for(let i=0;i<number;i++){
                         const drop=document.createElement('i');drop.className='room-rain-drop'+(Math.random()<.35?' is-bead':'');
-                        randomizeRainDrop(drop,height/941*world.offsetHeight*1.1,true);
+                        randomizeRainDrop(drop,height/definition.height*world.offsetHeight*1.12,true);
                         sheet.appendChild(drop);
                     }
                     pane.appendChild(sheet);
@@ -120,7 +122,7 @@
             if(!Number.isFinite(imageHorizon))return;
             image.dataset.roomHorizon=String(imageHorizon);
             const farScale=parseFloat(world.style.getPropertyValue('--room-far-scale'))||1;
-            const shift=((ROOM_HORIZON_IMAGE_Y-imageHorizon)*world.offsetHeight*1.1/720*farScale).toFixed(1)+'px';
+            const shift=((ROOM_HORIZON_IMAGE_Y-imageHorizon)*world.offsetHeight*1.12/720*farScale).toFixed(1)+'px';
             image.style.setProperty('--room-horizon-shift',shift);roomRain.style.setProperty('--room-horizon-shift',shift);
             if(roomCoverageReady)updateRoomImageCoverage(image);
         }
@@ -130,17 +132,17 @@
             const style=getComputedStyle(canvas),width=world.offsetWidth,height=world.offsetHeight,zoom=view.zoom;
             if(!width||!height||!zoom)return;
             const cutout=Math.max(40,parseFloat(style.getPropertyValue('--catalog-tray-inset'))||25);
-            const bleed=Math.max(2/zoom,(parseFloat(style.getPropertyValue('--room-depth-blur'))||2)*3),left=(-view.x)/zoom-bleed,top=(-view.y)/zoom-bleed;
+            const bleed=Math.max(2/zoom,(parseFloat(style.getPropertyValue('--room-depth-blur'))||2)*3/zoom),left=(-view.x)/zoom-bleed,top=(-view.y)/zoom-bleed;
             const right=(canvas.clientWidth-view.x)/zoom+bleed,bottom=(canvas.clientHeight+cutout-view.y)/zoom+bleed;
             const farScale=parseFloat(world.style.getPropertyValue('--room-far-scale'))||1;
-            const cover=Math.max(1,(right-left)/(width*1.12*farScale),(bottom-top)/(height*1.1*farScale));
+            const cover=Math.max(1,(right-left)/(width*1.12*farScale),(bottom-top)/(height*1.12*farScale));
             const farX=parseFloat(world.style.getPropertyValue('--room-far-x'))||0;
             const farY=parseFloat(world.style.getPropertyValue('--room-far-y'))||0;
             const drop=parseFloat(world.style.getPropertyValue('--room-image-drop'))||0;
             const horizon=parseFloat(image.style.getPropertyValue('--room-horizon-shift'))||0;
             const imageLeft=width/2-width*.56*farScale*cover+farX;
             const imageRight=width/2+width*.56*farScale*cover+farX;
-            const imageTop=height-height*1.1*farScale*cover+farY+drop+horizon;
+            const imageTop=height-height*1.12*farScale*cover+farY+drop+horizon;
             const imageBottom=height+farY+drop+horizon;
             const x=Math.min(left-imageLeft,Math.max(0,right-imageRight));
             const y=Math.min(top-imageTop,Math.max(0,bottom-imageBottom));
@@ -184,8 +186,10 @@
             const dusk=time==='dusk';
             roomMoteBeams=RoomScenes.lights(mode,time).map((light,index)=>{
                 const count=Math.round((dusk?28:daylight?24:12)*appState.preferences.roomParticleAmount/25);
-                const x=(240+light.cx*.8)/24,y=mode.startsWith('listening')?36:mode.startsWith('studio')?34:33;
-                const width=Math.min(32,Math.max(15,light.w*.8/24));
+                const scene=RoomScenes.scenes[mode];
+                const x=light.cx/scene.width,y=(light.cy+light.h*.05)/scene.height;
+                const width=Math.min(.32,Math.max(.10,light.w/scene.width));
+                const height=Math.max(.08,Math.min(.32,scene.horizon.dusk/scene.height-y));
                 const color=light.rgb.join(' ');
                 const strength=Math.min(1,light.strength*(daylight?1.15:time==='night'?.28:.8));
                 const particles=Array.from({length:count},(_,particle)=>{
@@ -195,16 +199,22 @@
                     const duration=(11+seed%9)*(dusk?.75:1);
                     return {x:px/100,y:py/100,size,duration:duration*1000,delay:(seed%41)*430,drift:(seed%2?-1:1)*(13+seed%19)};
                 });
-                return {x:x/100,y:y/100,width:width/100,rgb:color,strength,particles};
+                return {x,y,width,height,rgb:color,strength,particles};
             });
-            startRoomMotes();
+            stopRoomMotes();
+            if(appState.preferences.roomParticleAmount>0)startRoomMotes();
+            else {
+                roomMoteContext.setTransform(1,0,0,1,0,0);
+                roomMoteContext.clearRect(0,0,roomMoteCanvas.width,roomMoteCanvas.height);
+            }
         }
         function stopRoomMotes(){cancelAnimationFrame(roomMoteFrame);clearTimeout(roomMoteTimer);roomMoteFrame=0;roomMoteTimer=0;}
-        function startRoomMotes(){if(!roomMoteFrame&&!roomMoteTimer&&document.visibilityState==='visible'&&canvas.dataset.theme==='scene')roomMoteFrame=requestAnimationFrame(drawRoomMotes);}
+        function startRoomMotes(){if(!roomMoteFrame&&!roomMoteTimer&&document.visibilityState==='visible'&&canvas.dataset.theme==='scene'&&appState.preferences.roomParticleAmount>0)roomMoteFrame=requestAnimationFrame(drawRoomMotes);}
         function drawRoomMotes(now){
             roomMoteFrame=0;
             if(document.visibilityState!=='visible'||canvas.dataset.theme!=='scene')return;
-            const width=canvas.clientWidth,height=canvas.clientHeight,resolution=.8;
+            // Bound the effect buffer even on 4K/ultrawide displays.
+            const width=canvas.clientWidth,height=canvas.clientHeight,resolution=Math.min(.8,1600/Math.max(1,width));
             if(width&&height){
                 const pixelWidth=Math.round(width*resolution),pixelHeight=Math.round(height*resolution);
                 if(roomMoteCanvas.width!==pixelWidth||roomMoteCanvas.height!==pixelHeight){roomMoteCanvas.width=pixelWidth;roomMoteCanvas.height=pixelHeight;}
@@ -215,7 +225,7 @@
                 const offsetX=imageBounds.left-canvasBounds.left,offsetY=imageBounds.top-canvasBounds.top;
                 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
                 roomMoteBeams.forEach(beam=>{
-                    const beamWidth=imageBounds.width*beam.width,beamHeight=imageBounds.height*.30;
+                    const beamWidth=imageBounds.width*beam.width,beamHeight=imageBounds.height*beam.height;
                     const left=offsetX+imageBounds.width*beam.x-beamWidth/2,top=offsetY+imageBounds.height*beam.y;
                     ctx.fillStyle=`rgb(${beam.rgb.replaceAll(' ', ',')})`;
                     beam.particles.forEach(particle=>{
@@ -248,16 +258,20 @@
                 }
                 ctx.globalAlpha=1;
             }
-            roomMoteTimer=setTimeout(()=>{roomMoteTimer=0;startRoomMotes();},42);
+            if(!matchMedia('(prefers-reduced-motion: reduce)').matches)roomMoteTimer=setTimeout(()=>{roomMoteTimer=0;startRoomMotes();},42);
         }
-        document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')startRoomMotes();else stopRoomMotes();});
+        document.addEventListener('visibilitychange',()=>{
+            roomBackdrop.classList.toggle('room-effects-paused',document.visibilityState!=='visible');
+            if(document.visibilityState==='visible')startRoomMotes();else stopRoomMotes();
+        });
+        matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',()=>{stopRoomMotes();startRoomMotes();});
         function setCanvasBackdrop(mode){
             mode=legacyBackdrops[mode]||mode;
             mode=Object.hasOwn(canvasBackdropModes,mode)?mode:'studioIllustrated';appStateStore.actions.setCanvasBackdrop(mode);canvas.dataset.backdrop=mode;syncInterfacePalette();canvasBackdropControl.querySelector('select').value=mode;
             const scene=RoomScenes.scenes[mode];
-            roomRain.dataset.count='';updateRoomRain();
+            updateRoomRain();
             const imageName=RoomScenes.imageForTime(scene,appState.canvas.time);
-            const src=`./assets/rooms/${imageName}.webp?v=aligned-floor`;
+            const src=`./assets/rooms/${imageName}.webp?v=ultrawide-1`;
             showRoomImage(src,scene.horizon?.[appState.canvas.time]);
             requestAnimationFrame(applyView);
             appStateStore.actions.setCanvasOption('floor',scene.floor);canvas.dataset.floor=appState.canvas.floor;

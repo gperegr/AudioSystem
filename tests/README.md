@@ -47,8 +47,10 @@ The two turntable browser tests share `turntable-geometry.helpers.cjs`: they com
 
 ## Room coverage behind the dock
 
-`node tests/room-coverage.browser.cjs` checks minimum-zoom image coverage over the transparent dock silhouette at both pan limits, across 14 phone/tablet/desktop/ultrawide/4K/tall viewport and device configurations, including iPhone portrait and landscape and all nine room/time combinations. It also checks that rain retains the image transform and accepts `TAILWIND_SCRIPT_FILE` for offline styling.
+`node tests/room-coverage.browser.cjs` checks minimum-zoom image coverage over the transparent dock silhouette at both pan limits, across 14 phone/tablet/desktop/ultrawide/4K/tall viewport and device configurations, including iPhone portrait and landscape and all nine room/time combinations. It also checks the 3.2:1 aspect ratio, a shared floor line across all nine combinations, and that rain retains the image transform. It accepts `TAILWIND_SCRIPT_FILE` for offline styling.
 
 ## Keyboard deletion
 
 `node tests/keyboard-delete.browser.cjs` checks Delete and Backspace for single/multiple selection, connected cable cleanup, batch undo/redo with restored settings, editable-field and modal guards, and deletion/cancellation during cursor placement. It accepts `TAILWIND_SCRIPT_FILE` for offline styling.
+
+`node tests/room-atmosphere.browser.cjs` verifies that time changes reuse the same image and rain elements, particle origins stay in the windows, depth blur survives all nine combinations, and reduced-motion/disabled particles stop their animation loop. It bounds particle and shadow buffers at 4K and saves nine previews to `/tmp/room-ultrawide-{studio|listening|loft}-{dawn|dusk|night}.png`. It accepts `TAILWIND_SCRIPT_FILE`.

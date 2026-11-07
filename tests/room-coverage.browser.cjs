@@ -30,6 +30,7 @@ const root=path.resolve(__dirname,'..');
         await page.evaluate(()=>{__signal.setCanvasTheme('scene');document.getElementById('room-rain-enabled').click();});
         const viewports=[{width:320,height:568},{width:390,height:844},{width:430,height:932},{width:700,height:280},{width:844,height:390},{width:768,height:1024},{width:1024,height:768},{width:1280,height:720},{width:1600,height:900},{width:2560,height:1080},{width:3840,height:2160},{width:480,height:1400},{width:390,height:844,iphone:true},{width:844,height:390,iphone:true}];
         let cases=0,iphone=false;
+        const floorLines=new Map();
         for(const viewport of viewports){
             if(viewport.iphone&&!iphone){
                 const cdp=await page.context().newCDPSession(page);
@@ -38,6 +39,7 @@ const root=path.resolve(__dirname,'..');
                 iphone=true;
             }
             await page.setViewportSize({width:viewport.width,height:viewport.height});
+            await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
             for(const scene of ['studioIllustrated','listeningIllustrated','loftIllustrated'])for(const time of ['dawn','dusk','night']){
                 await page.evaluate(({scene,time})=>{__signal.setCanvasBackdrop(scene);__signal.setCanvasTime(time);}, {scene,time});
                 await page.waitForFunction(()=>[...document.querySelectorAll('.room-scene-image.is-visible')].some(img=>img.complete&&img.naturalWidth>0));
@@ -56,10 +58,14 @@ const root=path.resolve(__dirname,'..');
                         const paintBottom=b.bottom-(clipValues[2]||0)*__signal.view.zoom;
                         const failures=visible.filter(p=>p.x<b.left||p.x>b.right||p.y<b.top||p.y>paintBottom||!images.some(({rect:r})=>p.x>=r.left&&p.x<=r.right&&p.y>=r.top&&p.y<=r.bottom));
                         const rain=document.querySelector('.room-rain'),r=rain.getBoundingClientRect(),image=images.at(-1).rect;
-                        return {failures,zoom:__signal.view.zoom,images,canvas:{top:c.top,bottom:c.bottom},dockTop:d.top,clip:getComputedStyle(document.getElementById('room-backdrop')).clipPath,rainMatches:rain.hidden||Math.abs(r.left-image.left)+Math.abs(r.top-image.top)+Math.abs(r.width-image.width)+Math.abs(r.height-image.height)<1};
+                        return {failures,floorLine:image.top+image.height*530/720,aspect:image.width/image.height,zoom:__signal.view.zoom,images,canvas:{top:c.top,bottom:c.bottom},dockTop:d.top,clip:getComputedStyle(document.getElementById('room-backdrop')).clipPath,rainMatches:rain.hidden||Math.abs(r.left-image.left)+Math.abs(r.top-image.top)+Math.abs(r.width-image.width)+Math.abs(r.height-image.height)<1};
                     });
                     assert.deepEqual(result.failures,[],JSON.stringify({viewport,scene,time,pan,result}));
                     assert(result.clip.startsWith('inset('));assert(result.rainMatches);
+                    assert(Math.abs(result.aspect-3.2)<.001,'panorama keeps its authored aspect ratio');
+                    const floorKey=JSON.stringify(viewport)+pan;
+                    if(!floorLines.has(floorKey))floorLines.set(floorKey,result.floorLine);
+                    assert(Math.abs(floorLines.get(floorKey)-result.floorLine)<1,'floor stays aligned across all rooms and times');
                     cases++;
                 }
             }
