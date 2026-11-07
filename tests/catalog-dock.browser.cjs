@@ -46,12 +46,16 @@ const root=path.resolve(__dirname,'..');
                 const dock=document.getElementById('equipment-catalog'),path=dock.querySelector('.catalog-dock-silhouette path'),search=dock.querySelector('.catalog-search');
                 const d=dock.getBoundingClientRect(),s=search.getBoundingClientRect(),canvas=document.getElementById('canvas'),c=canvas.getBoundingClientRect();
                 const x=s.left-d.left,y=s.top-d.top,r=parseFloat(getComputedStyle(search).borderRadius),clearance=12;
+                const tray=dock.querySelector(':scope > .overflow-y-auto'),trayTop=tray.offsetTop;
+                const squareRight=path.isPointInFill(new DOMPoint(d.width-1,trayTop+1));
                 const points=[[x+s.width/2,y-clearance],[x-clearance,y+s.height/2],[x+s.width+clearance,y+s.height/2]];
                 for(const right of [false,true])for(let angle=0;angle<=Math.PI/2;angle+=Math.PI/12){
                     points.push([(right?x+s.width-r:x+r)+(right?1:-1)*(r+clearance)*Math.sin(angle),y+r-(r+clearance)*Math.cos(angle)]);
                 }
-                return {fits:points.every(([x,y])=>path.isPointInFill(new DOMPoint(x,y))),overflow:getComputedStyle(canvas).overflow,clip:getComputedStyle(canvas).clipPath,paintBottom:parseFloat(getComputedStyle(canvas,'::before').bottom),canvasBottom:c.bottom,dockTop:d.top};
+                return {squareRight,rightRadius:getComputedStyle(tray).borderTopRightRadius,fits:points.every(([x,y])=>path.isPointInFill(new DOMPoint(x,y))),overflow:getComputedStyle(canvas).overflow,clip:getComputedStyle(canvas).clipPath,paintBottom:parseFloat(getComputedStyle(canvas,'::before').bottom),canvasBottom:c.bottom,dockTop:d.top};
             });
+            assert(geometry.squareRight,'the silhouette meets the right edge squarely');
+            assert.equal(geometry.rightRadius,'0px','scroll clipping retains the square right edge');
             assert(geometry.fits,JSON.stringify({viewport,geometry}));
             assert.equal(geometry.overflow,'visible');assert(geometry.clip.startsWith('inset('));assert(geometry.paintBottom<0);
             assert(Math.abs(geometry.canvasBottom-geometry.dockTop)<=1,'usable canvas ends at dock');

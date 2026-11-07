@@ -129,7 +129,7 @@
         function updateRoomImageCoverage(image){
             const style=getComputedStyle(canvas),width=world.offsetWidth,height=world.offsetHeight,zoom=view.zoom;
             if(!width||!height||!zoom)return;
-            const cutout=(parseFloat(style.getPropertyValue('--catalog-tray-inset'))||25)+(parseFloat(style.getPropertyValue('--catalog-rim-radius'))||39);
+            const cutout=Math.max(40,parseFloat(style.getPropertyValue('--catalog-tray-inset'))||25);
             const bleed=Math.max(2/zoom,(parseFloat(style.getPropertyValue('--room-depth-blur'))||2)*3),left=(-view.x)/zoom-bleed,top=(-view.y)/zoom-bleed;
             const right=(canvas.clientWidth-view.x)/zoom+bleed,bottom=(canvas.clientHeight+cutout-view.y)/zoom+bleed;
             const farScale=parseFloat(world.style.getPropertyValue('--room-far-scale'))||1;
