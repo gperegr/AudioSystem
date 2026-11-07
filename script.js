@@ -1676,8 +1676,8 @@ const Hardware = (() => {
             const duration=drop.classList.contains('is-bead')?9+Math.random()*23:4+Math.random()*17;
             drop.style.left=(3+Math.random()*92)+'%';drop.style.top=(Math.random()*92)+'%';
             if(first){drop.style.setProperty('--rain-duration',duration+'s');drop.style.setProperty('--rain-delay',-Math.random()*duration+'s');}
-            drop.style.setProperty('--rain-size',(4+Math.random()**1.5*11)+'px');
-            drop.style.setProperty('--rain-trail',(15+Math.random()**1.2*150)+'px');
+            drop.style.setProperty('--rain-size',(4+Math.random()**1.5*5)+'px');
+            drop.style.setProperty('--rain-trail',(15+Math.random()**1.2*100)+'px');
             drop.style.setProperty('--rain-drift',((Math.random()-.5)*14)+'px');
             drop.style.setProperty('--rain-mid-y',(5+Math.random()*45)+'px');
             drop.style.setProperty('--rain-travel',Math.max(70,height*(.4+Math.random()*.9))+'px');
@@ -1719,7 +1719,7 @@ const Hardware = (() => {
             definition.glass.flat().forEach(polygon=>{
                 const [left,top]=polygon[0],[right,bottom]=polygon[2],width=right-left,height=bottom-top;
                 // Smaller water features, with independent offsets for each pane.
-                const scale=.23+random()*.04;
+                const scale=.16+random()*.02;
                 const sourceX=random()*material.width,sourceY=random()*material.height;
                 ctx.save();ctx.beginPath();polygon.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.clip();
                 ctx.translate(left-sourceX*scale,top-sourceY*scale);
