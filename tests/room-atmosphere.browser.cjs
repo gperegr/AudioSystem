@@ -40,10 +40,11 @@ const root=path.resolve(__dirname,'..');
                 const state=await page.evaluate(()=>{
                     const image=document.querySelector('.room-scene-image'),r=image.getBoundingClientRect(),definition=RoomScenes.scenes[document.getElementById('canvas').dataset.backdrop],effects=__signal.getEffects();
                     return {sameImage:image===window.__lastImage,sameRain:document.querySelector('.room-rain-drop')===window.__lastDrop,
-                        count:document.querySelectorAll('.room-scene-image').length,floor:r.top+r.height*definition.horizon.dusk/definition.height,
+                        mask:getComputedStyle(document.querySelector('.room-rain')).clipPath,origins:effects.beams.flatMap(b=>b.particles.map(p=>{const point=RoomScenes.particlePoint(b.scene,b.windowIndex,p.paneIndex,p.u,p.v,0),pane=definition.glass[b.windowIndex][p.paneIndex];return point.x>pane[0][0]&&point.x<pane[2][0]&&point.y>pane[0][1]&&point.y<pane[2][1];})),count:document.querySelectorAll('.room-scene-image').length,floor:r.top+r.height*definition.horizon.dusk/definition.height,
                         blur:getComputedStyle(image).filter,zoom:__signal.view.zoom,frame:effects.frame,timer:effects.timer,
                         beams:effects.beams.map(b=>({x:b.x,y:b.y})),windows:definition.windows.map(w=>({left:(w.x-w.w/2)/definition.width,right:(w.x+w.w/2)/definition.width,top:(w.y-w.h/2)/definition.height,bottom:(w.y+w.h/2)/definition.height}))};
                 });
+                assert(state.origins.every(Boolean),'all dust origins belong to individual glass panes');assert.match(state.mask,/room-window-glass-clip/,'the final rain blur is clipped to the glass');
                 assert(state.sameImage,'time reuses the same image element and decoded texture');assert(state.sameRain,'time changes retain existing rain drops');assert.equal(state.count,1);
                 const blur=parseFloat(state.blur.match(/blur\(([\d.]+)px\)/)?.[1]);
                 assert(Math.abs(blur*state.zoom-2)<.01,'depth blur stays at 2 screen pixels in every time setting');

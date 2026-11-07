@@ -50,3 +50,21 @@ test('rain leaves the new loft mullions and horizontal bars dry',()=>{
     for(const y of [159,265])for(const x of [180,280,400,500,600,950,1050,1150,1250,1400,1700,1800,1900,2000,2150])assert(!wet([x,y]),`horizontal bar at ${x},${y}`);
     assert(wet([180,200]),'the interior of a glass pane receives rain');
 });
+
+
+test('dust projects from each individual glass opening, with no origin on frames or walls',()=>{
+    const {particlePoint}=context.window.RoomScenes;
+    for(const name of names){
+        const scene=scenes[name];
+        scene.glass.forEach((group,windowIndex)=>group.forEach((pane,paneIndex)=>{
+            for(const u of [.08,.5,.92])for(const v of [.08,.5,.92]){
+                const origin=particlePoint(name,windowIndex,paneIndex,u,v,0);
+                assert(origin.x>pane[0][0]&&origin.x<pane[2][0]&&origin.y>pane[0][1]&&origin.y<pane[2][1]);
+                const projected=particlePoint(name,windowIndex,paneIndex,u,v,1);
+                assert(Math.abs(projected.x-origin.x-scene.projection.x)<1e-9);
+                assert(Math.abs(projected.y-origin.y-scene.projection.y)<1e-9);
+                assert(projected.y<scene.height,'dust remains within the photographed interior');
+            }
+        }));
+    }
+});

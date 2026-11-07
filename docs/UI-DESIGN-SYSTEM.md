@@ -36,7 +36,7 @@ The nine palettes follow the materials and lighting in `assets/rooms`, as mapped
 | Listening room | Limestone, wood, and subtle olive | Golden sand and honey | Soft slate and moonlit blue |
 | Industrial loft | Light concrete and terracotta | Burnt brick and copper | Blue steel and warm city reflections |
 
-Rooms use 2304 × 720 panoramas (3.2:1), with the floor at source y=530 in every room. All three time settings reuse the same image with color grading and depth blur. Rain glass masks, particle origins, and equipment light emitters use the same source-image geometry from `assets/rooms/scenes.js`; avoid separate viewport offsets for these effects. Particle and floor-shadow buffers are capped at 1600 and 2560 pixels wide respectively.
+Rooms use 2304 × 720 panoramas (3.2:1), with the floor at source y=530 in every room. All three time settings reuse the same image with color grading and depth blur. Rain glass masks, particle origins, and equipment light emitters use the same source-image geometry from `assets/rooms/scenes.js`; avoid separate viewport offsets for these effects. Glass rectangles exclude the painted frames and mullions. Rain is clipped again after its blur; dust samples are allocated by glass area and projected from individual panes toward the floor, without a separate screen-wide particle layer. Particle and floor-shadow buffers are capped at 1600 and 2560 pixels wide respectively.
 
 Interface brightness follows the image interior: the studio stays dark even at dawn, while the listening room retains the wall's brightness in late afternoon. Active states and favorites use each palette's accent while maintaining contrast against the background.
 

@@ -8,6 +8,13 @@
         const roomBackdrop=document.createElement('div');roomBackdrop.id='room-backdrop';roomBackdrop.setAttribute('aria-hidden','true');
         roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far is-visible" alt="" decoding="async" draggable="false"><i class="room-grid-overlay"></i>';
         const roomRain=document.createElement('div');roomRain.className='room-rain';roomRain.setAttribute('aria-hidden','true');roomBackdrop.appendChild(roomRain);
+        // Clip after the rain filter as well, so blur cannot bleed onto the frames.
+        const rainMaskSvg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+        rainMaskSvg.setAttribute('width','0');rainMaskSvg.setAttribute('height','0');
+        rainMaskSvg.style.position='absolute';rainMaskSvg.innerHTML='<defs><clipPath id="room-window-glass-clip" clipPathUnits="objectBoundingBox"><path/></clipPath></defs>';
+        roomBackdrop.appendChild(rainMaskSvg);
+        const rainMaskPath=rainMaskSvg.querySelector('path');
+        roomRain.style.clipPath='url(#room-window-glass-clip)';
         let roomRainAudio=null,roomCoverageReady=false;
         function randomizeRainDrop(drop,height,first=false){
             const duration=drop.classList.contains('is-bead')?9+Math.random()*23:4+Math.random()*17;
@@ -37,6 +44,7 @@
             const key=scene+':'+count;
             if(roomRain.dataset.count===key)return;
             roomRain.dataset.count=key;roomRain.replaceChildren();
+            rainMaskPath.setAttribute('d',RoomScenes.rainGlass(scene).flat().map(polygon=>polygon.map(([x,y],index)=>(index?'L':'M')+(x/definition.width)+' '+(y/definition.height)).join(' ')+'Z').join(' '));
             RoomScenes.rainGlass(scene).forEach((glass,w)=>{
                 const pane=document.createElement('div');pane.className='room-rain-pane';pane.dataset.pane=String(w);
                 const areas=glass.map(polygon=>{const xs=polygon.map(p=>p[0]),ys=polygon.map(p=>p[1]);return (Math.max(...xs)-Math.min(...xs))*(Math.max(...ys)-Math.min(...ys));});
@@ -188,18 +196,23 @@
                 const count=Math.round((dusk?28:daylight?24:12)*appState.preferences.roomParticleAmount/25);
                 const scene=RoomScenes.scenes[mode];
                 const x=light.cx/scene.width,y=(light.cy+light.h*.05)/scene.height;
-                const width=Math.min(.32,Math.max(.10,light.w/scene.width));
-                const height=Math.max(.08,Math.min(.32,scene.horizon.dusk/scene.height-y));
                 const color=light.rgb.join(' ');
                 const strength=Math.min(1,light.strength*(daylight?1.15:time==='night'?.28:.8));
+                const panes=scene.glass[index];
+                const areas=panes.map(p=>(p[2][0]-p[0][0])*(p[2][1]-p[0][1]));
+                const area=areas.reduce((sum,value)=>sum+value,0);
                 const particles=Array.from({length:count},(_,particle)=>{
                     const seed=index*37+particle*17;
-                    const px=12+(seed*43)%76,py=9+(seed*29)%82;
+                    // Stratify samples by glass area, keeping the existing per-window budget.
+                    const sample=(particle+.5)/Math.max(1,count)*area;
+                    let paneIndex=0,cumulative=areas[0];
+                    while(cumulative<sample&&paneIndex<panes.length-1)cumulative+=areas[++paneIndex];
+                    const u=.08+((seed*43)%101)/100*.84,v=.08+((seed*29)%103)/102*.84;
                     const size=dusk?(particle%7===0?7:particle%3===0?5:3.5):daylight?(particle%7===0?5:particle%3===0?3.5:2.5):(particle%7===0?3.5:2);
                     const duration=(11+seed%9)*(dusk?.75:1);
-                    return {x:px/100,y:py/100,size,duration:duration*1000,delay:(seed%41)*430,drift:(seed%2?-1:1)*(13+seed%19)};
+                    return {paneIndex,u,v,depth:(seed%97)/96,size,duration:duration*1000,delay:(seed%41)*430};
                 });
-                return {x,y,width,height,rgb:color,strength,particles};
+                return {x,y,scene:mode,windowIndex:index,rgb:color,strength,particles};
             });
             stopRoomMotes();
             if(appState.preferences.roomParticleAmount>0)startRoomMotes();
@@ -225,37 +238,32 @@
                 const offsetX=imageBounds.left-canvasBounds.left,offsetY=imageBounds.top-canvasBounds.top;
                 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
                 roomMoteBeams.forEach(beam=>{
-                    const beamWidth=imageBounds.width*beam.width,beamHeight=imageBounds.height*beam.height;
-                    const left=offsetX+imageBounds.width*beam.x-beamWidth/2,top=offsetY+imageBounds.height*beam.y;
+                    const scene=RoomScenes.scenes[beam.scene],glass=scene.glass[beam.windowIndex];
+                    const window=scene.windows[beam.windowIndex];
                     ctx.fillStyle=`rgb(${beam.rgb.replaceAll(' ', ',')})`;
-                    beam.particles.forEach(particle=>{
+                    beam.particles.forEach((particle,index)=>{
                         const phase=reduced?.5:(now+particle.delay)%(particle.duration*2)/particle.duration;
                         const progress=reduced?.5:phase<=1?phase:2-phase;
                         const eased=(1-Math.cos(Math.PI*progress))/2;
-                        const alpha=reduced?.38:progress<.24?progress/.24*.72:progress<.78?.72-(progress-.24)/.54*.26:(1-progress)/.22*.46;
-                        const localX=particle.x+particle.drift*eased*sceneZoom/beamWidth,localY=particle.y+(15-60*eased)*sceneZoom/beamHeight;
-                        const falloff=Math.max(0,1-Math.hypot((localX-.5)/.65,(localY-.25)/.95));
-                        if(!falloff)return;
-                        ctx.globalAlpha=beam.strength*.7*alpha*falloff;
-                        const x=left+beamWidth*localX,y=top+beamHeight*localY,radius=particle.size*sceneZoom/2;
+                        const alpha=reduced?.38:Math.sin(Math.PI*progress)*.65;
+                        const depth=Math.max(0,Math.min(1,particle.depth+(eased-.5)*.12));
+                        const point=RoomScenes.particlePoint(beam.scene,beam.windowIndex,particle.paneIndex,particle.u,particle.v,depth);
+                        // Before entering the interior, opaque mullions block the light.
+                        if(point.x>=window.x-window.w/2&&point.x<=window.x+window.w/2&&point.y>=window.y-window.h/2&&point.y<=window.y+window.h/2&&
+                            !glass.some(p=>point.x>p[0][0]&&point.x<p[2][0]&&point.y>p[0][1]&&point.y<p[2][1]))return;
+                        const x=offsetX+imageBounds.width*point.x/scene.width,y=offsetY+imageBounds.height*point.y/scene.height;
+                        const radius=particle.size*sceneZoom/2;
                         if(x+radius<0||x-radius>width||y+radius<0||y-radius>height)return;
+                        ctx.globalAlpha=beam.strength*.7*alpha*(1-depth*.55);
+                        if(index%9===0){
+                            const glowRadius=Math.max(2,radius*4),glow=ctx.createRadialGradient(x,y,0,x,y,glowRadius);
+                            glow.addColorStop(0,`rgb(${beam.rgb.replaceAll(' ', ',')})`);glow.addColorStop(1,`rgba(${beam.rgb.replaceAll(' ', ',')},0)`);
+                            ctx.fillStyle=glow;ctx.beginPath();ctx.arc(x,y,glowRadius,0,Math.PI*2);ctx.fill();
+                            ctx.fillStyle=`rgb(${beam.rgb.replaceAll(' ', ',')})`;
+                        }
                         ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();
                     });
                 });
-                const count=Math.round((appState.canvas.time==='night'?5:10)*appState.preferences.roomParticleAmount/25);
-                const color=appState.canvas.time==='night'?'198,217,229':'255,224,177';
-                for(let i=0;i<count;i++){
-                    const phase=reduced?.5:(now/(9500+i%6*1100)+i*.317)%1;
-                    const fade=Math.sin(Math.PI*phase),size=9+i%4*3;
-                    const x=((i*73+19)%101)/101*width+Math.sin(now/6200+i*2.7)*12;
-                    const y=((i*47+13)%89)/89*height-phase*42;
-                    if(x+size<0||x-size>width||y+size<0||y-size>height)continue;
-                    const strength=(appState.canvas.time==='night'?.13:.28)*fade;
-                    const glow=ctx.createRadialGradient(x,y,0,x,y,size);
-                    glow.addColorStop(0,`rgba(${color},${strength})`);glow.addColorStop(.32,`rgba(${color},${strength*.5})`);glow.addColorStop(1,`rgba(${color},0)`);
-                    ctx.globalAlpha=1;ctx.fillStyle=glow;ctx.beginPath();ctx.arc(x,y,size,0,Math.PI*2);ctx.fill();
-                    ctx.fillStyle=`rgba(${color},${strength*.65})`;ctx.beginPath();ctx.arc(x,y,Math.max(1.5,size*.1),0,Math.PI*2);ctx.fill();
-                }
                 ctx.globalAlpha=1;
             }
             if(!matchMedia('(prefers-reduced-motion: reduce)').matches)roomMoteTimer=setTimeout(()=>{roomMoteTimer=0;startRoomMotes();},42);
