@@ -1657,6 +1657,8 @@ const Hardware = (() => {
         const roomBackdrop=document.createElement('div');roomBackdrop.id='room-backdrop';roomBackdrop.setAttribute('aria-hidden','true');
         roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far is-visible" alt="" decoding="async" draggable="false"><i class="room-grid-overlay"></i>';
         const roomRain=document.createElement('div');roomRain.className='room-rain';roomRain.setAttribute('aria-hidden','true');roomBackdrop.appendChild(roomRain);
+        const roomRainStatic=document.createElement('img');roomRainStatic.className='room-rain-static';roomRainStatic.hidden=true;roomRainStatic.alt='';roomRainStatic.draggable=false;roomBackdrop.insertBefore(roomRainStatic,roomRain);
+        const staticRainCache=new Map();let staticRainRequest=0;
         // Clip after the rain filter as well, so blur cannot bleed onto the frames.
         const rainMaskSvg=document.createElementNS('http://www.w3.org/2000/svg','svg');
         rainMaskSvg.setAttribute('width','0');rainMaskSvg.setAttribute('height','0');
@@ -1664,6 +1666,7 @@ const Hardware = (() => {
         roomBackdrop.appendChild(rainMaskSvg);
         const rainMaskPath=rainMaskSvg.querySelector('path');
         roomRain.style.clipPath='url(#room-window-glass-clip)';
+        roomRainStatic.style.clipPath='url(#room-window-glass-clip)';
         // Stop offscreen glass animations without polling during pan/zoom.
         const rainVisibilityObserver=new IntersectionObserver(entries=>{
             entries.forEach(entry=>entry.target.classList.toggle('rain-offscreen',!entry.isIntersecting));
@@ -1707,21 +1710,39 @@ const Hardware = (() => {
             }
             soakedGlassTexture=texture.toDataURL('image/png');return soakedGlassTexture;
         }
+        function updateStaticRain(scene){
+            const request=++staticRainRequest;
+            roomRainStatic.hidden=roomRain.hidden;
+            if(roomRain.hidden)return;
+            roomRainStatic.style.opacity=appState.preferences.rainIntensity===100?'1':String(appState.preferences.rainIntensity/160);
+            if(staticRainCache.has(scene)){roomRainStatic.src=staticRainCache.get(scene);return;}
+            const texture=new Image();texture.src=getSoakedGlassTexture();
+            texture.decode().then(()=>{
+                const definition=RoomScenes.scenes[scene],surface=document.createElement('canvas');surface.width=definition.width;surface.height=definition.height;
+                const ctx=surface.getContext('2d');ctx.fillStyle=ctx.createPattern(texture,'repeat');
+                definition.glass.flat().forEach(polygon=>{
+                    ctx.save();ctx.beginPath();polygon.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.clip();
+                    ctx.fillRect(polygon[0][0],polygon[0][1],polygon[2][0]-polygon[0][0],polygon[2][1]-polygon[0][1]);ctx.restore();
+                });
+                const url=surface.toDataURL('image/png');staticRainCache.set(scene,url);
+                if(request===staticRainRequest)roomRainStatic.src=url;
+            }).catch(()=>{});
+        }
         function updateRoomRain(){
             syncRoomRainAudio();
             roomRain.style.setProperty('--rain-visibility',(.8+appState.preferences.rainIntensity/100*.6).toFixed(2));
             roomRain.style.setProperty('--rain-speed',(.7+1.8*appState.preferences.rainIntensity/100).toFixed(3));
             roomRain.dataset.soaked=String(appState.preferences.rainIntensity===100);
-            if(appState.preferences.rainEnabled&&appState.preferences.rainIntensity===100)roomRain.style.setProperty('--soaked-glass-texture',`url("${getSoakedGlassTexture()}")`);
             const scene=appState.canvas.backdrop||'studioIllustrated';
             const type=scene.startsWith('studio')?'studio':scene.startsWith('listening')?'listening':'loft';
             roomRain.dataset.scene=type;
             roomRain.hidden=canvas.dataset.theme!=='scene'||!appState.preferences.rainEnabled||!appState.preferences.rainIntensity;
+            updateStaticRain(scene);
             if(roomRain.hidden){rainVisibilityObserver.disconnect();roomRain.replaceChildren();roomRain.dataset.count='';return;}
             const definition=RoomScenes.scenes[scene];
             // The cached wet-glass texture supplies density; bound moving drops independently.
             const intensity=appState.preferences.rainIntensity/100;
-            const count=Math.round(90*intensity*(1-.2*intensity**4));
+            const count=Math.round(3+3*intensity);
             const key=scene+':'+count;
             if(roomRain.dataset.count===key)return;
             roomRain.dataset.count=key;rainVisibilityObserver.disconnect();roomRain.replaceChildren();
@@ -1812,7 +1833,7 @@ const Hardware = (() => {
             image.dataset.roomHorizon=String(imageHorizon);
             const farScale=parseFloat(world.style.getPropertyValue('--room-far-scale'))||1;
             const shift=((ROOM_HORIZON_IMAGE_Y-imageHorizon)*world.offsetHeight*1.12/720*farScale).toFixed(1)+'px';
-            image.style.setProperty('--room-horizon-shift',shift);roomRain.style.setProperty('--room-horizon-shift',shift);
+            image.style.setProperty('--room-horizon-shift',shift);roomRain.style.setProperty('--room-horizon-shift',shift);roomRainStatic.style.setProperty('--room-horizon-shift',shift);
             if(roomCoverageReady)updateRoomImageCoverage(image);
         }
         // Keep the authored image proportions, adding only the translation/scale needed
@@ -1835,7 +1856,7 @@ const Hardware = (() => {
             const imageBottom=height+farY+drop+horizon;
             const x=Math.min(left-imageLeft,Math.max(0,right-imageRight));
             const y=Math.min(top-imageTop,Math.max(0,bottom-imageBottom));
-            for(const element of [image,roomRain]){
+            for(const element of [image,roomRain,roomRainStatic]){
                 element.style.setProperty('--room-cover-x',x+'px');element.style.setProperty('--room-cover-y',y+'px');
                 element.style.setProperty('--room-cover-scale',String(cover));
             }

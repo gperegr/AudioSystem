@@ -4803,8 +4803,8 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 #equipment-catalog .catalog-panel-header { flex-wrap:wrap; }
 #equipment-catalog .catalog-search { flex:1 0 100%; width:100%; }
 /* Rain is clipped to image-space window openings and shares room parallax. */
-.room-rain {position:absolute;inset:-12% -6% 0;width:112%;height:112%;z-index:3;overflow:hidden;pointer-events:none;transform-origin:50% 100%;transform:translate(calc(var(--room-far-x,0px) + var(--room-cover-x,0px)),calc(var(--room-far-y,0px) + var(--room-image-drop,0px) + var(--room-horizon-shift,0px) + var(--room-cover-y,0px))) scale(calc(var(--room-far-scale,1) * var(--room-cover-scale,1)));}
-.room-rain[hidden] {display:none!important;}
+.room-rain,.room-rain-static {position:absolute;inset:-12% -6% 0;width:112%;height:112%;z-index:3;overflow:hidden;pointer-events:none;transform-origin:50% 100%;transform:translate(calc(var(--room-far-x,0px) + var(--room-cover-x,0px)),calc(var(--room-far-y,0px) + var(--room-image-drop,0px) + var(--room-horizon-shift,0px) + var(--room-cover-y,0px))) scale(calc(var(--room-far-scale,1) * var(--room-cover-scale,1)));}
+.room-rain[hidden],.room-rain-static[hidden] {display:none!important;}
 .room-rain-pane {position:absolute;inset:0;pointer-events:none;}
 .room-rain-glass {position:absolute;overflow:hidden;pointer-events:none;contain:paint;}
 .room-rain-drop {position:absolute;display:block;width:calc(var(--rain-size) * var(--canvas-inverse-zoom,1) * .45 * var(--rain-visibility,1));height:calc(var(--rain-size) * var(--canvas-inverse-zoom,1) * .74 * var(--rain-visibility,1));border-radius:48% 52% 45% 55%;background:radial-gradient(ellipse at 30% 25%,#f0f8ff9c,transparent 44%),radial-gradient(ellipse at 65% 72%,transparent 35%,#14202a55 70%,#e5f3ff70 94%);box-shadow:inset .5px .5px .7px #fff8,inset -.5px -.5px .7px #12212d55;opacity:var(--rain-opacity,.65);animation:room-rain-slide calc(var(--rain-duration) / var(--rain-speed,1)) cubic-bezier(.45,.05,.65,.95) var(--rain-delay) infinite;}
@@ -4840,11 +4840,13 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 .app-settings-content .atmosphere-heading[hidden] {display:none!important;}
 
 /* Adhered water and rivulets become a dense wet-glass layer only at maximum rain. */
-.room-rain[data-soaked="true"] .room-rain-glass::after {content:"";position:absolute;inset:0;pointer-events:none;background-image:var(--soaked-glass-texture);background-size:calc(256px * var(--canvas-inverse-zoom,1)) calc(384px * var(--canvas-inverse-zoom,1));background-position:37% 19%;opacity:.95;}
-.room-rain[data-soaked="true"] .room-rain-glass:nth-child(2n)::after {background-position:81% 63%;}
-#canvas[data-theme="scene"] .room-rain[data-soaked="true"] {filter:blur(calc(.65px * var(--canvas-inverse-zoom,1))) var(--room-light-filter,brightness(1));}
 
 .room-fixture-light{position:absolute;z-index:2;pointer-events:none;mix-blend-mode:screen;}
 .room-fixture-light[hidden]{display:none!important;}
 
 .room-rain-glass.rain-offscreen .room-rain-drop{animation-play-state:paused;}
+
+/* Wet glass is a single cached raster; only a handful of foreground drops animate.
+   Avoid a filtered, animated, world-sized surface during parallax and zoom. */
+#canvas[data-theme="scene"] .room-rain[data-soaked] {filter:none;}
+#canvas[data-theme="scene"] .room-rain-static {object-fit:fill;max-width:none;filter:var(--room-light-filter,brightness(1));}

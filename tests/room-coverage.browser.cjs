@@ -58,6 +58,8 @@ const root=path.resolve(__dirname,'..');
                         const paintBottom=b.bottom-(clipValues[2]||0)*__signal.view.zoom;
                         const failures=visible.filter(p=>p.x<b.left||p.x>b.right||p.y<b.top||p.y>paintBottom||!images.some(({rect:r})=>p.x>=r.left&&p.x<=r.right&&p.y>=r.top&&p.y<=r.bottom));
                         const rain=document.querySelector('.room-rain'),r=rain.getBoundingClientRect(),image=images.at(-1).rect;
+                        const wet=document.querySelector('.room-rain-static'),wetRect=wet.getBoundingClientRect();
+                        if(!wet.hidden&&Math.abs(wetRect.left-image.left)+Math.abs(wetRect.top-image.top)+Math.abs(wetRect.width-image.width)+Math.abs(wetRect.height-image.height)>1)failures.push({staticRainDrift:true});
                         return {failures,floorLine:image.top+image.height*530/720,aspect:image.width/image.height,zoom:__signal.view.zoom,images,canvas:{top:c.top,bottom:c.bottom},dockTop:d.top,clip:getComputedStyle(document.getElementById('room-backdrop')).clipPath,rainMatches:rain.hidden||Math.abs(r.left-image.left)+Math.abs(r.top-image.top)+Math.abs(r.width-image.width)+Math.abs(r.height-image.height)<1};
                     });
                     assert.deepEqual(result.failures,[],JSON.stringify({viewport,scene,time,pan,result}));
