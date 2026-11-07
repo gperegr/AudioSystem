@@ -69,13 +69,14 @@
             const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
             definition.glass.flat().forEach(polygon=>{
                 const [left,top]=polygon[0],[right,bottom]=polygon[2],width=right-left,height=bottom-top;
-                // A unique photographic crop per pane; no repeated square tiles or stamped circles.
-                const scale=Math.max(.36+random()*.08,width/material.width,height/material.height);
-                const cropWidth=width/scale,cropHeight=height/scale;
-                const sourceX=random()*(material.width-cropWidth),sourceY=random()*(material.height-cropHeight);
+                // Smaller water features, with independent offsets for each pane.
+                const scale=.23+random()*.04;
+                const sourceX=random()*material.width,sourceY=random()*material.height;
                 ctx.save();ctx.beginPath();polygon.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.clip();
-                if(random()>.5){ctx.translate(left+right,0);ctx.scale(-1,1);}
-                ctx.drawImage(material,sourceX,sourceY,cropWidth,cropHeight,left,top,width,height);
+                ctx.translate(left-sourceX*scale,top-sourceY*scale);
+                ctx.scale(scale,scale);
+                ctx.fillStyle=ctx.createPattern(material,'repeat');
+                ctx.fillRect(-material.width,-material.height,material.width*6,material.height*6);
                 ctx.restore();
             });
             return surface.toDataURL('image/png');
