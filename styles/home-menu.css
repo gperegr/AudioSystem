@@ -71,3 +71,11 @@
 .home-color-preview[data-color="sepia"]{background:#e4dac5;}
 
 .home-footer{justify-content:flex-end;}
+
+.home-settings [data-studio-only]{display:none!important;}
+
+.home-environment-layer{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;}
+.home-environment-layer>img,.home-environment-scrim{position:absolute;inset:0;width:100%;height:100%;}
+.home-environment-layer>img{object-fit:cover;object-position:65% center;}
+.home-menu,.home-menu button,.home-menu .app-settings-content,.home-menu .settings-group{transition:background-color .5s ease,color .5s ease,border-color .5s ease,box-shadow .5s ease;}
+@media(prefers-reduced-motion:reduce){.home-menu,.home-menu *{transition:none!important;}}

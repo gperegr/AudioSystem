@@ -64,6 +64,30 @@
             homeMenu.querySelectorAll('[data-home-theme]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.homeTheme===appState.canvas.theme)));
             homeMenu.querySelectorAll('[data-home-language]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.homeLanguage===AudioSystemLanguage.language)));
         }
+        const homePaletteTokens=['top','side','panel','control','hover','border','text','secondary','muted','active','accent','shadow','scheme'];
+        let homePreviewGeneration=0;
+        async function previewHomeEnvironment(){
+            const request=++homePreviewGeneration,theme=appState.canvas.theme;
+            const palette=getComputedStyle(document.documentElement);
+            const colors=Object.fromEntries(homePaletteTokens.map(key=>[key,palette.getPropertyValue('--ui-'+key).trim()]));
+            const layer=document.createElement('div');layer.className='home-environment-layer';layer.setAttribute('aria-hidden','true');layer.style.backgroundColor=colors.side;
+            if(theme==='scene'){
+                const image=new Image();image.alt='';image.src=`./assets/rooms/${RoomScenes.scenes[appState.canvas.backdrop].image}.webp?v=ultrawide-1`;
+                try{await image.decode();}catch{return;}
+                if(request!==homePreviewGeneration)return;
+                image.style.filter=getComputedStyle(canvas).getPropertyValue('--room-light-filter').trim()||'none';
+                const scrim=document.createElement('div');scrim.className='home-environment-scrim';scrim.style.background=`linear-gradient(90deg,${colors.side} 0%,${colors.side}e6 25%,${colors.side}80 65%,${colors.side}33 100%)`;
+                layer.append(image,scrim);
+            }
+            if(request!==homePreviewGeneration)return;
+            const previous=[...homeMenu.querySelectorAll('.home-environment-layer')];
+            homePaletteTokens.forEach(key=>homeMenu.style.setProperty('--ui-'+key,colors[key]));
+            homeMenu.insertBefore(layer,homeMenu.querySelector('.home-shell'));
+            const duration=matchMedia('(prefers-reduced-motion: reduce)').matches?0:500;
+            const fade=layer.animate([{opacity:0},{opacity:1}],{duration,easing:'ease-in-out'});
+            await fade.finished.catch(()=>{});
+            previous.forEach(old=>old.remove());
+        }
         function showHomeSettings(show){
             homeMenu.querySelector('.home-main').hidden=show;
             homeMenu.querySelector('.home-settings').hidden=!show;
@@ -108,8 +132,8 @@
         window.addEventListener('audio-project-import',event=>{homeImporting=false;homeMenu.querySelectorAll('button').forEach(button=>button.disabled=false);if(!homeMenu.open)return;if(event.detail.ok)enterHomeStudio();else homeMenu.querySelector('.home-status').textContent='Não foi possível abrir o projeto.';});
         homeMenu.querySelector('[data-home="settings"]').addEventListener('click',event=>{showHomeSettings(true);playHomeMusic(event.isTrusted);});
         homeMenu.querySelector('[data-home="guide"]').addEventListener('click',()=>{enterHomeStudio(false);guidedAccess.open();});
-        homeMenu.querySelectorAll('[data-home-theme]').forEach(button=>button.addEventListener('click',()=>{setCanvasTheme(button.dataset.homeTheme);scheduleAppPreferencesSave();syncHomeMenu();}));
-        homeMenu.querySelectorAll('[data-home-scene]').forEach(button=>button.addEventListener('click',()=>{setCanvasTheme('scene');setCanvasBackdrop(button.dataset.homeScene);scheduleAppPreferencesSave();syncHomeMenu();stopRoomMotes();roomBackdrop.classList.add('room-effects-paused');}));
+        homeMenu.querySelectorAll('[data-home-theme]').forEach(button=>button.addEventListener('click',()=>{setCanvasTheme(button.dataset.homeTheme);scheduleAppPreferencesSave();syncHomeMenu();previewHomeEnvironment();}));
+        homeMenu.querySelectorAll('[data-home-scene]').forEach(button=>button.addEventListener('click',()=>{setCanvasTheme('scene');setCanvasBackdrop(button.dataset.homeScene);scheduleAppPreferencesSave();syncHomeMenu();previewHomeEnvironment();stopRoomMotes();roomBackdrop.classList.add('room-effects-paused');}));
         homeMenu.querySelectorAll('[data-home-language]').forEach(button=>button.addEventListener('click',()=>{AudioSystemLanguage.set(button.dataset.homeLanguage);syncHomeMenu();}));
         AudioSystemLanguage.subscribe(()=>{homeMenu.querySelectorAll('[data-home-language]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.homeLanguage===AudioSystemLanguage.language)));});
         const homeReturn=document.createElement('button');homeReturn.type='button';homeReturn.className=homeBrand.className;homeReturn.innerHTML=homeBrand.innerHTML;homeReturn.setAttribute('aria-label','Menu inicial');homeReturn.dataset.tooltip='Menu inicial';homeBrand.replaceWith(homeReturn);homeReturn.addEventListener('click',openHomeMenu);

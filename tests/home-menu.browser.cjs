@@ -35,11 +35,16 @@ const root=path.resolve(__dirname,'..');
         for(const theme of ['light','graphite','midnight','sepia']){
             await page.locator(`[data-home-theme="${theme}"]`).click();
             assert.equal(await page.evaluate(()=>__signal.appState.canvas.theme),theme);
+            await page.waitForTimeout(550);
+            assert.equal(await home.evaluate(el=>el.style.getPropertyValue('--ui-side')),await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--ui-side').trim()),'preview adopts chosen palette');
             assert.equal(await page.locator('[data-home-theme][aria-pressed="true"]').count(),1);
             assert.equal(await page.locator('[data-home-scene][aria-pressed="true"]').count(),0);
         }
         await page.locator('[data-home-scene="listeningIllustrated"]').click();
         assert.equal(await page.locator('[data-home-theme][aria-pressed="true"]').count(),0);
+        await page.waitForFunction(()=>!!document.querySelector('.home-environment-layer img'));
+        await page.waitForFunction(()=>document.querySelectorAll('.home-environment-layer').length===1);
+        assert.equal(await page.locator('.home-environment-layer').count(),1,'old background layers released after fade');
         assert.equal(await page.locator('[data-home-scene="listeningIllustrated"]').getAttribute('aria-pressed'),'true');
         await page.locator('[data-home="continue"]').click();
         await assertCentered();
@@ -56,7 +61,7 @@ const root=path.resolve(__dirname,'..');
         assert.equal(await page.evaluate(()=>Object.keys(__signal.appState.project.devices).length),1,'restore completes before home');
         await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.getElementById('home-menu').open);
         await page.locator('#app-topbar .app-brand').click();
-        await page.locator('[data-home="settings"]').click();assert(await home.evaluate(el=>el.open));assert(await page.locator('.home-settings').isVisible());assert.equal(await page.locator('.app-settings').evaluate(el=>el.open),false);assert(await page.locator('.home-settings #orthogonal-cables').count());await page.screenshot({path:'/tmp/audio-lab-home-settings.png'});await page.locator('[data-home="back"]').click();assert(await page.locator('.home-main').isVisible());
+        await page.locator('[data-home="settings"]').click();assert(await home.evaluate(el=>el.open));assert(await page.locator('.home-settings').isVisible());assert.equal(await page.locator('.app-settings').evaluate(el=>el.open),false);assert(await page.locator('.home-settings #orthogonal-cables').count());assert.equal(await page.locator('.home-settings [data-studio-only]:visible').count(),0,'studio-only controls hidden on home settings');assert.equal(await page.locator('.home-settings [data-studio-only]').count(),4);await page.screenshot({path:'/tmp/audio-lab-home-settings.png'});await page.locator('[data-home="back"]').click();assert(await page.locator('.home-main').isVisible());
         await page.locator('[data-home-language="en"]').click();await page.waitForFunction(()=>document.querySelector('[data-home="continue"] span')?.textContent==='Continue setup');
         await page.locator('[data-home-language="pt"]').click();await page.waitForFunction(()=>document.querySelector('[data-home="continue"] span')?.textContent==='Continuar montagem');
         for(const viewport of [{width:1280,height:720},{width:1440,height:900},{width:1920,height:1080}]){
@@ -81,6 +86,8 @@ const root=path.resolve(__dirname,'..');
         await page.locator('[data-home="new"]').click();await page.locator('[data-dialog-accept]').click();
         await page.waitForFunction(()=>!document.getElementById('home-menu').open);
         assert.equal(await page.evaluate(()=>Object.keys(__signal.appState.project.devices).length),0);
+        await page.locator('.app-settings > summary').click();
+        assert.equal(await page.locator('.app-settings [data-studio-only]:visible').count(),4,'studio controls restored outside home');
         assert.deepEqual(errors,[]);console.log('Home menu: startup order, resume, restore, scene/language selection, settings, responsive layout, cancelled new project valid/invalid imports and keyboard return passed.');
     }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

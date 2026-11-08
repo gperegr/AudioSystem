@@ -134,6 +134,8 @@
             clearButton
         );
 
+        themeSection.closest('.settings-group').dataset.studioOnly='';
+        clearButton.dataset.studioOnly='';
         settingsMenu.appendChild(clearCatalogFooter);
         MenuSlider.mount(settingsMenu);
         const topbarControls=document.getElementById('app-topbar').lastElementChild;
