@@ -8,7 +8,6 @@
 .home-brand svg{color:var(--ui-accent);width:36px;height:36px;}
 .home-main{flex:1;display:grid;grid-template-columns:minmax(320px,1fr) minmax(380px,1fr);align-items:center;gap:56px;padding:32px 0 48px;}
 .home-intro{max-width:520px;}
-.home-eyebrow{margin:0 0 22px;font-size:10px;letter-spacing:.26em;font-weight:700;color:var(--ui-accent);}
 .home-intro h1{margin:0 0 46px;font-size:clamp(56px,6.5vw,100px);line-height:1.02;font-weight:800;letter-spacing:-.065em;}
 .home-actions{display:flex;flex-direction:column;gap:14px;max-width:368px;}
 .home-menu button{font:inherit;cursor:pointer;border:0;}
@@ -34,8 +33,6 @@
 .home-environments i{position:absolute;top:12px;right:12px;width:7px;height:7px;border-radius:50%;background:var(--ui-accent);box-shadow:0 0 0 3px var(--ui-side);opacity:0;}
 .home-environments [aria-pressed="true"] i{opacity:1;}
 .home-footer{padding-top:24px;border-top:1px solid color-mix(in srgb,var(--ui-border) 60%,transparent);font-size:11px;color:var(--ui-secondary);}
-.home-local{display:flex;align-items:center;gap:8px;}
-.home-local i{width:5px;height:5px;border-radius:50%;background:var(--ui-accent);}
 .home-languages{display:flex;gap:4px;}
 .home-languages button{min-width:40px;min-height:40px;border-radius:6px;background:transparent;color:var(--ui-secondary);font-size:11px;font-weight:600;}
 .home-languages button[aria-pressed="true"]{background:var(--ui-control);color:var(--ui-text);}
@@ -72,3 +69,5 @@
 .home-color-preview[data-color="graphite"]{background:#24272b;}
 .home-color-preview[data-color="midnight"]{background:#141e2e;}
 .home-color-preview[data-color="sepia"]{background:#e4dac5;}
+
+.home-footer{justify-content:flex-end;}
