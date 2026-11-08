@@ -1058,8 +1058,8 @@ const Hardware = (() => {
         const image=backdrop.querySelector('.room-scene-image.is-visible'),scene=RoomScenes.scenes[canvas.dataset.backdrop];
         if(!image||!scene)return;
         const ir=image.getBoundingClientRect(),floor=ir.top+ir.height*scene.horizon.dusk/scene.height-viewport.top;
-        const width=canvas.clientWidth,height=canvas.clientHeight+64,resolution=Math.min(.6,1400/width);
-        const key=[width,height,wr.left,wr.top,zoom,floor,canvas.dataset.time,...sources.map(l=>[l.id,Math.round(l.x/3),Math.round(l.y/3),l.strength])].join('|');
+        const width=canvas.clientWidth,height=canvas.clientHeight+64,resolution=Math.min(.6,.6*(window.visualViewport?.scale||1),1400/width);
+        const key=[width,height,resolution,wr.left,wr.top,zoom,floor,canvas.dataset.time,...sources.map(l=>[l.id,Math.round(l.x/3),Math.round(l.y/3),l.strength])].join('|');
         if(key===roomFixtureLightKey)return;roomFixtureLightKey=key;layer.hidden=false;
         Object.assign(layer.style,{left:(viewport.left-wr.left)/zoom+'px',top:(viewport.top-wr.top)/zoom+'px',width:width/zoom+'px',height:height/zoom+'px'});
         const pw=Math.ceil(width*resolution),ph=Math.ceil(height*resolution);

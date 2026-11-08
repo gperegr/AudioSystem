@@ -180,6 +180,6 @@
         headphoneCalibrationDialog.addEventListener('close',()=>{requestAnimationFrame(guidedAccess.offer);});
 
         SpotifyCoverflow.initialize().catch(()=>{});
-        initializeProjectPersistence().finally(()=>{requestAnimationFrame(()=>{document.documentElement.classList.remove('app-starting');document.getElementById('app-startup')?.remove();if(!appState.preferences.headphonePromptSeen)openHeadphoneCalibration();else{guidedAccess.restore();guidedAccess.offer();}});});
+        initializeProjectPersistence().finally(()=>{requestAnimationFrame(()=>{document.documentElement.classList.remove('app-starting');document.getElementById('app-startup')?.remove();openHomeMenu();});});
 
         renderVisuals();

@@ -3,6 +3,18 @@
     'use strict';
 
     const translations = Object.freeze({
+        'Entrar no estúdio':'Enter the studio',
+        'Continuar montagem':'Continue setup',
+        'Nova montagem':'New setup',
+        'Menu inicial':'Main menu',
+        'Como funciona':'How it works',
+        'Escolha seu ambiente':'Choose your room',
+        'Neste dispositivo':'On this device',
+        'Substituir a montagem atual? Exporte uma cópia se quiser guardá-la.':'Replace the current setup? Export a copy if you want to keep it.',
+        'Começar nova montagem':'Start new setup',
+        'Não foi possível abrir o projeto.':'Could not open the project.',
+        'Abrindo projeto…':'Opening project…',
+
         'Nenhum favorito ainda.':'No favorites yet.',
         'Móveis & Iluminação':'Furniture & Lighting',
         'Clique aqui para descartar':'Click here to discard',

@@ -208,8 +208,8 @@
                     if(typeof data!=='string'||!/^data:[^,]*;base64,/.test(data))throw new Error('Áudio incorporado inválido.');
                     const base64=data.slice(data.indexOf(',')+1),binary=atob(base64),bytes=new Uint8Array(binary.length);for(let i=0;i<bytes.length;i++)bytes[i]=binary.charCodeAt(i);audio.set(key,new Blob([bytes]));
                 }
-                replacing=true;const warnings=await restoreLocalProject(snapshot,key=>Promise.resolve(audio.get(key)));projectPersistenceBlocked=false;await saveLocalProject(true);if(warnings.length)projectStatus('Projeto aberto; alguns áudios ou cabos precisam de revisão.',true);
-            }catch(error){if(replacing){try{await restoreLocalProject(previous,key=>Promise.resolve(previousAudio.get(key)));}catch{projectPersistenceBlocked=true;}}projectStatus('Não foi possível abrir: '+error.message,true);}finally{event.target.value='';}
+                replacing=true;const warnings=await restoreLocalProject(snapshot,key=>Promise.resolve(audio.get(key)));projectPersistenceBlocked=false;await saveLocalProject(true);window.dispatchEvent(new CustomEvent('audio-project-import',{detail:{ok:true}}));if(warnings.length)projectStatus('Projeto aberto; alguns áudios ou cabos precisam de revisão.',true);
+            }catch(error){if(replacing){try{await restoreLocalProject(previous,key=>Promise.resolve(previousAudio.get(key)));}catch{projectPersistenceBlocked=true;}}projectStatus('Não foi possível abrir: '+error.message,true);window.dispatchEvent(new CustomEvent('audio-project-import',{detail:{ok:false}}));}finally{event.target.value='';}
         };
         let projectSaveTimer;
         function scheduleProjectSave(){if(projectRestoring)return;clearTimeout(projectSaveTimer);projectSaveTimer=setTimeout(()=>saveLocalProject(),350);}

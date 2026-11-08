@@ -39,7 +39,7 @@ The two turntable browser tests share `turntable-geometry.helpers.cjs`: they com
 `node tests/right-angle-cable-lengths.browser.cjs` constructs a direct-drive turntable → studio EQ → bench meter → RCA matrix → two compact active speakers over a table. It requires ten real compatible connections, local route lengths, and invariance when the table's bounding box extends farther down. It saves `/tmp/right-angle-cable-lengths.png`; `CABLE_SCREENSHOT` changes the output path. The existing `right-angle-cables.browser.cjs` covers the setting, stereo lanes, tight stacks, unrelated equipment below, persistence, and return to sagging cables. Both browser tests accept `CHROMIUM_PATH` and `TAILWIND_SCRIPT_FILE`; Playwright must be available to Node.
 
 
-`node tests/apple-layout.browser.cjs` simulates iPad, narrow iPad split view, iPhone portrait/landscape and Android tablet. It checks navigation mode, catalog visibility, touch capability and the Apple Home Screen icon link. It requires Playwright and a local Tailwind copy via `TAILWIND_SCRIPT_FILE`; these emulations do not replace verification in Safari on a physical device.
+`node tests/apple-layout.browser.cjs` simulates iPad, narrow iPad split view, iPhone portrait/landscape and Android tablet. It checks the scaled desktop viewport, two-column home menu, desktop floating inspector, actual touch hit targets, phone rotation, catalog visibility and the Apple Home Screen icon link. It requires Playwright and a local Tailwind copy via `TAILWIND_SCRIPT_FILE`; these emulations do not replace verification in Safari on a physical device.
 
 ## Click placement
 
@@ -58,3 +58,7 @@ The two turntable browser tests share `turntable-geometry.helpers.cjs`: they com
 `node tests/room-fixture-light.browser.cjs` checks background illumination from both wall lamps and the pendant, removal cleanup, solid-theme exclusion and the 1400-pixel buffer limit. It accepts `TAILWIND_SCRIPT_FILE`.
 
 `node tests/static-rain.browser.cjs` verifies the shared photographic rain material in all three rooms at dusk/night, 2× Retina output, transparent frames, stable cached PNGs across lighting changes, one material download, and at most 18 moving drops. It saves `/tmp/rain-quality-{studio|listening|loft}-{dusk|night}.png` and accepts `TAILWIND_SCRIPT_FILE`.
+
+## Home menu
+
+`node tests/home-menu.browser.cjs` verifies initial entry before calibration, resume after local restore, room and language choices, settings, responsive bounds, cancellation of a new setup, and invalid/valid file imports. It saves `/tmp/audio-lab-home-desktop.png` and `/tmp/audio-lab-home-mobile.png`. It accepts `TAILWIND_SCRIPT_FILE`. Existing studio suites enter the menu through `tests/helpers/studio-entry.cjs`.

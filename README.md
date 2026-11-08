@@ -74,6 +74,10 @@ Warnings explain incompatible levels, loads, and simulated damage. Turning off c
 
 Adjustment controls use discrete steps; input selectors and tuning have their own scales. **Restore Settings** appears on devices with restorable adjustments. Power amplifiers start at gain **5/10**; projects with saved gains preserve those values. This control position does not mean half of the rated wattage.
 
+### Home menu
+
+The app opens with a menu after restoring the local project. Choose **Continue setup** (or **Enter the studio** for an empty project), **New setup**, **Open project**, **Settings**, or **How it works**. Select a room before entering, or switch between Portuguese and English. Click the Audio Lab brand in the toolbar to return to the menu. New setups require confirmation when a project has content. Calibration and the tutorial invitation follow entry into the studio.
+
 ### Scene, floor, and lighting
 
 In **Settings → Appearance → Background**, choose **Room** to show **Studio**, **Listening Room**, or **Industrial Loft**. These empty rooms use 2304 × 720 ultra-wide panoramas (3.2:1), with a shared floor line. Only the three active ultra-wide WebP backgrounds remain in `assets/rooms`; obsolete room images and time variants have been removed. **Time of day** offers **Dawn**, **Late afternoon**, and **Night**. Time changes equipment lighting and applies a lightweight color grade to the same panorama, keeping the room geometry and window positions fixed. Each scene has its own floor. Other backgrounds (**Light**, **Graphite**, **Midnight Blue**, and **Sepia**) remain available.
@@ -98,7 +102,7 @@ Each item saves its position, sort order, and selected album. The Client ID rema
 
 ### Phones and tablets
 
-On iPhone, the mobile layout offers touch navigation in portrait and landscape. On iPad, the desktop workspace remains visible with touch controls, including two-finger canvas navigation and Touch Mode. In a narrow iPad split view, the desktop layout uses a minimum viewport width of 768 CSS pixels and may appear smaller to fit.
+Every device uses the desktop interface, including the home menu, catalog and floating inspector. Phones and tablets use a minimum 1280 CSS-pixel layout scaled down by the browser to fit the screen. There is no separate mobile navigation, stacked menu, bottom action bar or enlarged touch layout. Touch input, press-and-hold movement and two-finger canvas navigation remain available.
 
 To add Audio Lab to the iPhone or iPad Home Screen, open it in Safari and choose **Share → Add to Home Screen**. The installed shortcut uses the Audio Lab icon. If a previously saved shortcut retains an older icon, remove that shortcut and add it again. The Home Screen shortcut and its browser storage depend on the address used to open the app.
 

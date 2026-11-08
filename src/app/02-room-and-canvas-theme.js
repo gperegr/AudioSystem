@@ -296,12 +296,12 @@
             }
         }
         function stopRoomMotes(){cancelAnimationFrame(roomMoteFrame);clearTimeout(roomMoteTimer);roomMoteFrame=0;roomMoteTimer=0;}
-        function startRoomMotes(){if(!roomMoteFrame&&!roomMoteTimer&&document.visibilityState==='visible'&&canvas.dataset.theme==='scene'&&appState.preferences.roomParticleAmount>0)roomMoteFrame=requestAnimationFrame(drawRoomMotes);}
+        function startRoomMotes(){if(!roomMoteFrame&&!roomMoteTimer&&document.visibilityState==='visible'&&canvas.dataset.theme==='scene'&&appState.preferences.roomParticleAmount>0&&!document.getElementById('home-menu')?.open)roomMoteFrame=requestAnimationFrame(drawRoomMotes);}
         function drawRoomMotes(now){
             roomMoteFrame=0;
             if(document.visibilityState!=='visible'||canvas.dataset.theme!=='scene')return;
             // Bound the effect buffer even on 4K/ultrawide displays.
-            const width=canvas.clientWidth,height=canvas.clientHeight,resolution=Math.min(.8,1600/Math.max(1,width));
+            const width=canvas.clientWidth,height=canvas.clientHeight,resolution=Math.min(.8,.8*(window.visualViewport?.scale||1),1600/Math.max(1,width));
             if(width&&height){
                 const pixelWidth=Math.round(width*resolution),pixelHeight=Math.round(height*resolution);
                 if(roomMoteCanvas.width!==pixelWidth||roomMoteCanvas.height!==pixelHeight){roomMoteCanvas.width=pixelWidth;roomMoteCanvas.height=pixelHeight;}
@@ -343,7 +343,7 @@
             if(!matchMedia('(prefers-reduced-motion: reduce)').matches)roomMoteTimer=setTimeout(()=>{roomMoteTimer=0;startRoomMotes();},42);
         }
         document.addEventListener('visibilitychange',()=>{
-            roomBackdrop.classList.toggle('room-effects-paused',document.visibilityState!=='visible');
+            roomBackdrop.classList.toggle('room-effects-paused',document.visibilityState!=='visible'||!!document.getElementById('home-menu')?.open);
             if(document.visibilityState==='visible')startRoomMotes();else stopRoomMotes();
         });
         matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',()=>{stopRoomMotes();startRoomMotes();});

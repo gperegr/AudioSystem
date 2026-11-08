@@ -27,7 +27,7 @@ flowchart TD
 ### Startup and source organization
 
 - `index.html` loads room data, the support modules and `src/i18n/languages.js` before `script.js`. The order in the HTML is significant.
-- `tools/build-script.cjs` concatenates the 23 ordered files in `src/app/` into the committed root `script.js`. These sections share a classic-script lexical scope and declaration hoisting; they are not independent ES modules. The section list in the build script is authoritative.
+- `tools/build-script.cjs` concatenates the 24 ordered files in `src/app/` into the committed root `script.js`. These sections share a classic-script lexical scope and declaration hoisting; they are not independent ES modules. The section list in the build script is authoritative.
 - `src/app/00-hardware-library.js` defines shared hardware controls; subsequent sections cover state, canvas, catalog, audio routing, sources, device creation and disposal, inspectors, cables, connection validation, Spotify objects, persistence, settings, and startup.
 - `src/modules/` contains focused classic scripts, including application state, audio interfaces, Spotify coverflow, signal history, equipment acoustics, adapter rendering, and guided access. See [the modules guide](../../src/modules/README.md).
 - `styles/app.css` and `styles/equipment/` style the application and equipment; `styles/interface-palettes.css` supplies interface palette tokens. Room images and mapping are under `assets/rooms/`. See the [interface design system](../UI-DESIGN-SYSTEM.md).

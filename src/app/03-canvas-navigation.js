@@ -132,7 +132,8 @@
         mobileControls.innerHTML='<button type="button" data-mobile-panel="properties" aria-label="Propriedades" data-tooltip="Propriedades" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="18" r="2"/></svg><small>Ajustes</small></button><button type="button" data-mobile-action="fit-selection" aria-label="Ajustar seleção" data-tooltip="Ajustar seleção à área visível"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M8 8h8v8H8z"/></svg><small>Ajustar</small></button><button type="button" data-mobile-action="undo" aria-label="Desfazer" data-tooltip="Desfazer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h9a7 7 0 0 1 0 14h-2"/></svg><small>Desfazer</small></button><button type="button" data-mobile-action="redo" aria-label="Refazer" data-tooltip="Refazer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5m5 5h-9a7 7 0 0 0 0 14h2"/></svg><small>Refazer</small></button><button type="button" data-mobile-action="settings" aria-label="Configurações" data-tooltip="Configurações"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3m14 0h3"/></svg><small>Ajustes</small></button>';
         document.getElementById('app-topbar').lastElementChild.prepend(mobileControls);
         // Fixed phone navigation must escape the topbar's scrolling container.
-        const phoneNavigationLayout=matchMedia(applePhone?'(min-width:0px)':'(max-width:700px)');
+        const desktopOnlyLayout=Object.freeze({matches:false,addEventListener(){},removeEventListener(){}});
+        const phoneNavigationLayout=desktopOnlyLayout;
         const placePhoneNavigation=()=>{if(phoneNavigationLayout.matches)document.body.append(mobileControls);else document.querySelector('#app-topbar>.topbar-controls').prepend(mobileControls);};
         phoneNavigationLayout.addEventListener('change',placePhoneNavigation);placePhoneNavigation();
         const mobileContextActions=document.createElement('div');mobileContextActions.className='mobile-context-actions';mobileContextActions.hidden=true;mobileContextActions.setAttribute('aria-label','Ações do equipamento selecionado');
@@ -152,9 +153,9 @@
             if(button.dataset.contextAction==='fit-selection')fitDeviceSet([dev]);
             if(button.dataset.contextAction==='remove'){deleteDevice(dev,true);scheduleProjectSave();}
         });
-        const compactLayout=matchMedia(applePhone?'(min-width:0px)':'(max-width:700px)');
+        const compactLayout=desktopOnlyLayout;
         compactLayout.addEventListener('change',syncMobileContextActions);
-        const compactTouchLayout=matchMedia('(max-width:700px), (hover:none) and (pointer:coarse)');
+        const compactTouchLayout=desktopOnlyLayout;
         compactTouchLayout.addEventListener('change',syncMobileContextActions);
         function syncCompactViewport(){
             if(compactLayout.matches)document.body.style.setProperty('--compact-viewport-height',(window.visualViewport?.height||innerHeight)+'px');

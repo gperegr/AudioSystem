@@ -3,15 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <script>
-        // iPadOS can report itself as a Mac; touch capability distinguishes it from macOS.
-        const appleTablet=/iPad/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-        const applePhone=/iPhone|iPod/.test(navigator.userAgent);
-        if(appleTablet){
-            const scale=Math.min(1,window.innerWidth/768);
-            document.querySelector('meta[name="viewport"]').content='width=768, initial-scale='+scale+', viewport-fit=cover';
-        }
-    </script>
+    <script src="./src/modules/desktop-layout.js"></script>
     <title>Audio Lab</title>
     <meta name="application-name" content="Audio Lab">
     <meta name="description" content="Monte um sistema de áudio virtual, conecte equipamentos e ouça no navegador.">
@@ -35,7 +27,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./styles/app.css?v=dock-flat-right-edge-v1">
+    <link rel="stylesheet" href="./styles/app.css?v=desktop-home-v1">
+    <link rel="stylesheet" href="./styles/home-menu.css?v=1">
     <link rel="stylesheet" href="./styles/signal-history.css?v=signal-history-v1">
     <link rel="stylesheet" href="./styles/equipment/adapters.css?v=physical-adapters-v1">
     <link rel="stylesheet" href="./styles/equipment/electrostatic-speaker.css?v=1">
@@ -51,13 +44,9 @@
     <link rel="stylesheet" href="./styles/equipment/speakers-bookshelf.css?v=bookshelf-details-v1">
     <link rel="stylesheet" href="./styles/equipment/subwoofers.css?v=subwoofer-details-v1">
     <link rel="stylesheet" href="./styles/equipment/visual-refinements.css?v=visual-refinements-v5">
-    <link rel="stylesheet" href="./styles/interface-palettes.css?v=uniform-setup-feet-v2">
-    <script>
-        if(applePhone){
-            const link=document.createElement('link');link.rel='stylesheet';link.href='./styles/phone-landscape.css?v=1';
-            link.media='(orientation: landscape) and (min-width: 701px)';document.head.appendChild(link);
-        }
-    </script>
+    <link rel="stylesheet" href="./styles/interface-palettes.css?v=desktop-home-v1">
+    <link rel="stylesheet" href="./styles/desktop-layout.css?v=1">
+
 </head>
 <body class="flex flex-col h-screen bg-black text-white">
     <div id="app-startup" role="status">Preparando seu sistema…<noscript>Ative o JavaScript para abrir o programa.</noscript></div>
@@ -1543,8 +1532,8 @@
     <script src="./src/modules/application-state.js?v=remove-gravity-v1"></script>
     <script src="./src/modules/equipment-acoustics.js?v=1"></script>
     <script src="./src/modules/signal-history.js?v=signal-history-v1"></script>
-    <script src="./src/i18n/languages.js?v=uniform-setup-feet-v2"></script>
+    <script src="./src/i18n/languages.js?v=desktop-home-v1"></script>
     <script src="./src/modules/orthogonal-cables.js?v=short-local-routes-v1"></script>
-    <script src="./script.js?v=setup-equal-deck-width-v1"></script>
+    <script src="./script.js?v=desktop-home-v1"></script>
 </body>
 </html>

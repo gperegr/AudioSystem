@@ -11,6 +11,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
             body=body.slice(0,index)+'window.__tape={state,view,world,createDevice,selectDevice,centerDeviceSet,updateTapeReels,tapePosition,saveLocalProject};\n'+body.slice(index);
             return route.fulfill({contentType:'application/javascript',body});
         });
+        require('./helpers/studio-entry.cjs')(page);
         await page.goto(process.env.TEST_BASE_URL||'http://127.0.0.1:8000/');
         await page.locator('#headphone-calibration-skip').click();await page.getByRole('button',{name:'Agora não',exact:true}).click();
         await page.evaluate(()=>{__tape.createDevice('tapeDeck',1000,900);__tape.view.zoom=1.3;__tape.centerDeviceSet(Object.values(__tape.state.devices));});

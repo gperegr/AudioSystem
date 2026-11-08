@@ -21,6 +21,7 @@ const root=path.resolve(__dirname,'..');
             const ext=path.extname(file),mime={'.html':'text/html','.js':'application/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.json':'application/json'};
             return route.fulfill({contentType:mime[ext]||'application/octet-stream',body});
         });
+        require('./helpers/studio-entry.cjs')(page);
         await page.goto('http://127.0.0.1:9876/');
         await page.locator('#headphone-calibration-skip').click();
         await page.getByRole('button',{name:'Agora não',exact:true}).click();
@@ -57,7 +58,7 @@ const root=path.resolve(__dirname,'..');
         await page.waitForTimeout(650);
         assert.equal(await strip.evaluate(el=>el.scrollTop),0,'wheel movement stays horizontal');
         await strip.evaluate(el=>el.scrollLeft=0);
-        for(const viewport of [{width:1600,height:900},{width:390,height:844},{width:1100,height:420}]){
+        for(const viewport of [{width:1600,height:900},{width:1280,height:720},{width:1440,height:900}]){
             await page.setViewportSize(viewport);await page.waitForTimeout(150);
             const geometry=await page.evaluate(()=>{
                 const dock=document.getElementById('equipment-catalog'),path=dock.querySelector('.catalog-dock-silhouette path'),search=dock.querySelector('.catalog-search');

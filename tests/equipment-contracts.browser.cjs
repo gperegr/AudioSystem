@@ -17,6 +17,7 @@ const root=path.join(__dirname,'..');
             const hook=`window.__equipmentContract={names:DEVICE_NAMES,createDevice,deleteDevice,appState,devices:appState.project.devices,compatibility:getPortCompatibility,amps:FIXED_AMP_SPECS,passive:FIXED_PASSIVE_SPECS,active:ACTIVE_SPEAKER_RATINGS,activeSubs:ACTIVE_SUB_RATINGS,bookshelf:BOOKSHELF_SPEAKERS,floor:FLOOR_SPEAKERS,headphones:HEADPHONE_SPECS,furniture:FURNITURE_TYPES,adapters:INTERFACE_DEVICES};\n`;
             return route.fulfill({contentType:'application/javascript',body:source.slice(0,index)+hook+source.slice(index)});
         });
+        require('./helpers/studio-entry.cjs')(page);
         await page.goto(process.env.TEST_BASE_URL||'http://127.0.0.1:8765/');
         await page.locator('#headphone-calibration-skip').click();
         await page.getByRole('button',{name:'Agora não',exact:true}).click();

@@ -1,0 +1,4 @@
+/* Phones use the same desktop workspace, reduced by the browser's viewport scale. */
+html,body{min-width:1280px;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+.mobile-panel-controls,.mobile-context-actions,.mobile-category-nav,.mobile-panel-backdrop,.touch-catalog-hint{display:none!important;}

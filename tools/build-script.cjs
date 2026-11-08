@@ -30,6 +30,7 @@ const sections = [
     '17-spotify-objects.js',
     '18-project-storage.js',
     '19-settings-ui.js',
+    '20-home-menu.js',
     '20-guided-access-and-startup.js',
 ];
 

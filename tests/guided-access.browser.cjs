@@ -10,7 +10,7 @@ function wav(){const b=Buffer.alloc(44+16000);b.write('RIFF');b.writeUInt32LE(b.
         const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
         await page.route('**/guided-access.js?*',route=>{const body=fs.readFileSync(path.join(root,'src/modules/guided-access.js'),'utf8')+'\nconst originalMount=GuidedAccess.mount;GuidedAccess.mount=a=>{window.__adapter=a;return originalMount(a)};';return route.fulfill({contentType:'application/javascript',body});});
         await page.route('**/script.js?*',route=>{let body=fs.readFileSync(path.join(root,'script.js'),'utf8');const i=body.lastIndexOf('        renderVisuals();');body=body.slice(0,i)+'window.__test={state,world,createDevice,deleteDevice,selectDevice,updateCableFlows,guidedAccess,maxEquipmentBottom,tutorialInspect,projectCapture,saveLocalProject};\n'+body.slice(i);return route.fulfill({contentType:'application/javascript',body});});
-        const url=process.env.TEST_BASE_URL||'http://127.0.0.1:8000/';await page.goto(url);
+        const url=process.env.TEST_BASE_URL||'http://127.0.0.1:8000/';require('./helpers/studio-entry.cjs')(page);await page.goto(url);
         await page.locator('#headphone-calibration-skip').click();await page.getByRole('button',{name:'Começar tutorial',exact:true}).click();
         await page.waitForTimeout(150);assert(await page.locator('[data-tutorial-next]').isDisabled());
         await page.evaluate(()=>__test.createDevice('cdPlayer',500,200));await page.waitForTimeout(150);assert(await page.locator('[data-tutorial-next]').isEnabled());
@@ -57,7 +57,7 @@ function wav(){const b=Buffer.alloc(44+16000);b.write('RIFF');b.writeUInt32LE(b.
             const originalHeight=rects.bar.height;await page.getByRole('combobox',{name:'Tema do tutorial'}).click();await page.getByRole('option',{name:'Spotify'}).click();await page.waitForTimeout(80);assert.equal(await page.locator('.tutorial-bar').evaluate(n=>n.getBoundingClientRect().height),originalHeight);
         }
         const tabletContext=await browser.newContext({viewport:{width:1024,height:768},hasTouch:true,isMobile:true});
-        const tablet=await tabletContext.newPage();tablet.on('pageerror',e=>errors.push(e.message));await tablet.goto(url);
+        const tablet=await tabletContext.newPage();tablet.on('pageerror',e=>errors.push(e.message));require('./helpers/studio-entry.cjs')(tablet);await tablet.goto(url);
         await tablet.locator('#headphone-calibration-skip').tap();await tablet.getByRole('button',{name:'Começar tutorial',exact:true}).tap();
         await tablet.getByRole('button',{name:'Localizar controle deste passo'}).tap();
         await tablet.locator('.catalog-item[data-template="cdPlayer"] span').last().tap();

@@ -254,7 +254,7 @@
 .setup-all svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.3;}
 #equipment-catalog .setup-all:hover,#equipment-catalog .setup-all[aria-pressed="true"]{color:var(--ui-accent);background:var(--ui-control);}
 #equipment-catalog .mobile-category-nav{display:none;}
-@media(max-width:700px){.catalog-setup{margin:0 -6px 12px;}.setup-object svg{stroke-width:2;}.setup-object svg .setup-detail{stroke-width:1.2;}}
+
 @media(prefers-reduced-motion:reduce){#equipment-catalog .setup-object{transition:none;}}
 
 /* Bottom catalog: the setup stays anchored while equipment scrolls sideways. */
@@ -274,7 +274,7 @@
 #equipment-catalog .grid{display:flex;flex-wrap:nowrap;gap:12px;}
 #equipment-catalog .catalog-item{width:128px;min-width:128px;height:156px;box-sizing:border-box;}
 #equipment-catalog .catalog-category>h3{white-space:nowrap;}
-@media(max-width:700px){#workspace-shell{--catalog-dock-height:188px;--setup-dock-width:144px;}#equipment-catalog>.overflow-y-auto{gap:14px;padding:12px!important;}#equipment-catalog .catalog-item{width:110px;min-width:110px;height:132px;min-height:132px!important;}#equipment-catalog .catalog-panel-header{height:42px;}#equipment-catalog input[type=search]{min-height:30px;}#equipment-catalog .catalog-search{min-height:30px;}}
+
 
 /* A raised setup bay flows into the lower equipment tray. */
 #workspace-shell{--catalog-dock-height:248px;--catalog-tray-inset:25px;--catalog-cutout-height:max(40px,var(--catalog-tray-inset));}
@@ -284,7 +284,7 @@
 #equipment-catalog .catalog-panel-header{top:12px;padding:8px 16px!important;}
 #equipment-catalog>.catalog-setup{bottom:10px;}
 #equipment-catalog>.overflow-y-auto{top:var(--catalog-tray-inset);border-radius:0;}
-@media(max-width:700px){#workspace-shell{--catalog-dock-height:212px;}#equipment-catalog .catalog-panel-header{padding:8px 12px!important;}}
+
 
 /* Inset equipment tiles leave breathing room inside the curved tray. */
 #equipment-catalog>.overflow-y-auto{padding:18px 24px 20px!important;gap:24px;}
@@ -295,7 +295,7 @@
 #equipment-catalog .catalog-item>svg{flex:0 0 44px;width:56px;height:44px;}
 #equipment-catalog .catalog-item>span{display:flex;align-items:center;justify-content:center;min-height:34px;line-height:1.4;font-size:12px;overflow-wrap:anywhere;}
 #equipment-catalog .catalog-favorite{top:7px;right:7px;}
-@media(max-width:700px){#equipment-catalog>.overflow-y-auto{padding:14px 16px 18px!important;gap:18px;}#equipment-catalog .catalog-item{flex-basis:116px;width:116px;min-width:116px;height:124px;min-height:124px!important;padding:20px 12px 12px!important;gap:8px;border-radius:15px;}#equipment-catalog .catalog-item>svg{flex-basis:36px;height:36px;width:48px;}#equipment-catalog .catalog-item>span{font-size:11px;}}
+
 #equipment-catalog .catalog-category{padding-top:0;border-top:0;}
 
 /* Shared spacing applies to interface chrome, never the equipment on the canvas. */
@@ -326,17 +326,8 @@
 .app-confirm-actions button,.headphone-calibration-actions button,.tutorial-dialog button{box-sizing:border-box;min-height:44px;padding:var(--ui-space-md) var(--ui-space-lg);line-height:1.4;white-space:normal;}
 .tutorial-dialog{padding:var(--ui-space-xl);}
 .tutorial-dialog .tutorial-example-card{padding:var(--ui-space-lg);gap:var(--ui-space-lg);}
-@media(pointer:coarse){
-  :root{--ui-control-height:44px;--ui-icon-size:44px;}
-  #equipment-catalog .catalog-favorite{width:36px;height:36px;top:4px;right:4px;}
-}
-@media(max-width:700px){
-  :root{--ui-control-height:44px;--ui-icon-size:44px;}
-  .app-settings-content{padding:var(--ui-space-md);}
-  .app-settings-content .settings-group-content{padding:var(--ui-space-md);}
-  .app-confirm-card,.headphone-calibration-card,.tutorial-dialog{padding:var(--ui-space-lg);}
-  .app-confirm-actions button{flex:1 1 96px;}
-}
+
+
 /* Inspector hardware adapters must follow menu sizing, not chassis sizing. */
 #inspector-content[data-hardware-panel] .hw-button{min-height:var(--ui-control-height)!important;padding:10px var(--ui-space-md)!important;}
 #inspector-content[data-hardware-panel] .app-select-trigger{min-height:var(--ui-control-height);}

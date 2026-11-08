@@ -8,6 +8,7 @@ const assert = require('node:assert/strict');
         const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage(),errors=[];
         page.on('pageerror',error=>errors.push(error.message));
         if(process.env.TAILWIND_SCRIPT_FILE)await page.route('https://cdn.tailwindcss.com/**',route=>route.fulfill({contentType:'application/javascript',body:require('node:fs').readFileSync(process.env.TAILWIND_SCRIPT_FILE)}));
+        require('./helpers/studio-entry.cjs')(page);
         await page.goto(process.env.TEST_BASE_URL||'http://127.0.0.1:8765/');
         assert.equal(await page.evaluate(()=>AudioSystemLanguage.translate('Power')),'Power');
         await page.locator('#headphone-calibration-skip').click();

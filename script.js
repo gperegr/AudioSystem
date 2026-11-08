@@ -1058,8 +1058,8 @@ const Hardware = (() => {
         const image=backdrop.querySelector('.room-scene-image.is-visible'),scene=RoomScenes.scenes[canvas.dataset.backdrop];
         if(!image||!scene)return;
         const ir=image.getBoundingClientRect(),floor=ir.top+ir.height*scene.horizon.dusk/scene.height-viewport.top;
-        const width=canvas.clientWidth,height=canvas.clientHeight+64,resolution=Math.min(.6,1400/width);
-        const key=[width,height,wr.left,wr.top,zoom,floor,canvas.dataset.time,...sources.map(l=>[l.id,Math.round(l.x/3),Math.round(l.y/3),l.strength])].join('|');
+        const width=canvas.clientWidth,height=canvas.clientHeight+64,resolution=Math.min(.6,.6*(window.visualViewport?.scale||1),1400/width);
+        const key=[width,height,resolution,wr.left,wr.top,zoom,floor,canvas.dataset.time,...sources.map(l=>[l.id,Math.round(l.x/3),Math.round(l.y/3),l.strength])].join('|');
         if(key===roomFixtureLightKey)return;roomFixtureLightKey=key;layer.hidden=false;
         Object.assign(layer.style,{left:(viewport.left-wr.left)/zoom+'px',top:(viewport.top-wr.top)/zoom+'px',width:width/zoom+'px',height:height/zoom+'px'});
         const pw=Math.ceil(width*resolution),ph=Math.ceil(height*resolution);
@@ -1945,12 +1945,12 @@ const Hardware = (() => {
             }
         }
         function stopRoomMotes(){cancelAnimationFrame(roomMoteFrame);clearTimeout(roomMoteTimer);roomMoteFrame=0;roomMoteTimer=0;}
-        function startRoomMotes(){if(!roomMoteFrame&&!roomMoteTimer&&document.visibilityState==='visible'&&canvas.dataset.theme==='scene'&&appState.preferences.roomParticleAmount>0)roomMoteFrame=requestAnimationFrame(drawRoomMotes);}
+        function startRoomMotes(){if(!roomMoteFrame&&!roomMoteTimer&&document.visibilityState==='visible'&&canvas.dataset.theme==='scene'&&appState.preferences.roomParticleAmount>0&&!document.getElementById('home-menu')?.open)roomMoteFrame=requestAnimationFrame(drawRoomMotes);}
         function drawRoomMotes(now){
             roomMoteFrame=0;
             if(document.visibilityState!=='visible'||canvas.dataset.theme!=='scene')return;
             // Bound the effect buffer even on 4K/ultrawide displays.
-            const width=canvas.clientWidth,height=canvas.clientHeight,resolution=Math.min(.8,1600/Math.max(1,width));
+            const width=canvas.clientWidth,height=canvas.clientHeight,resolution=Math.min(.8,.8*(window.visualViewport?.scale||1),1600/Math.max(1,width));
             if(width&&height){
                 const pixelWidth=Math.round(width*resolution),pixelHeight=Math.round(height*resolution);
                 if(roomMoteCanvas.width!==pixelWidth||roomMoteCanvas.height!==pixelHeight){roomMoteCanvas.width=pixelWidth;roomMoteCanvas.height=pixelHeight;}
@@ -1992,7 +1992,7 @@ const Hardware = (() => {
             if(!matchMedia('(prefers-reduced-motion: reduce)').matches)roomMoteTimer=setTimeout(()=>{roomMoteTimer=0;startRoomMotes();},42);
         }
         document.addEventListener('visibilitychange',()=>{
-            roomBackdrop.classList.toggle('room-effects-paused',document.visibilityState!=='visible');
+            roomBackdrop.classList.toggle('room-effects-paused',document.visibilityState!=='visible'||!!document.getElementById('home-menu')?.open);
             if(document.visibilityState==='visible')startRoomMotes();else stopRoomMotes();
         });
         matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',()=>{stopRoomMotes();startRoomMotes();});
@@ -2234,7 +2234,8 @@ const Hardware = (() => {
         mobileControls.innerHTML='<button type="button" data-mobile-panel="properties" aria-label="Propriedades" data-tooltip="Propriedades" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="18" r="2"/></svg><small>Ajustes</small></button><button type="button" data-mobile-action="fit-selection" aria-label="Ajustar seleção" data-tooltip="Ajustar seleção à área visível"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M8 8h8v8H8z"/></svg><small>Ajustar</small></button><button type="button" data-mobile-action="undo" aria-label="Desfazer" data-tooltip="Desfazer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h9a7 7 0 0 1 0 14h-2"/></svg><small>Desfazer</small></button><button type="button" data-mobile-action="redo" aria-label="Refazer" data-tooltip="Refazer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5m5 5h-9a7 7 0 0 0 0 14h2"/></svg><small>Refazer</small></button><button type="button" data-mobile-action="settings" aria-label="Configurações" data-tooltip="Configurações"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3m14 0h3"/></svg><small>Ajustes</small></button>';
         document.getElementById('app-topbar').lastElementChild.prepend(mobileControls);
         // Fixed phone navigation must escape the topbar's scrolling container.
-        const phoneNavigationLayout=matchMedia(applePhone?'(min-width:0px)':'(max-width:700px)');
+        const desktopOnlyLayout=Object.freeze({matches:false,addEventListener(){},removeEventListener(){}});
+        const phoneNavigationLayout=desktopOnlyLayout;
         const placePhoneNavigation=()=>{if(phoneNavigationLayout.matches)document.body.append(mobileControls);else document.querySelector('#app-topbar>.topbar-controls').prepend(mobileControls);};
         phoneNavigationLayout.addEventListener('change',placePhoneNavigation);placePhoneNavigation();
         const mobileContextActions=document.createElement('div');mobileContextActions.className='mobile-context-actions';mobileContextActions.hidden=true;mobileContextActions.setAttribute('aria-label','Ações do equipamento selecionado');
@@ -2254,9 +2255,9 @@ const Hardware = (() => {
             if(button.dataset.contextAction==='fit-selection')fitDeviceSet([dev]);
             if(button.dataset.contextAction==='remove'){deleteDevice(dev,true);scheduleProjectSave();}
         });
-        const compactLayout=matchMedia(applePhone?'(min-width:0px)':'(max-width:700px)');
+        const compactLayout=desktopOnlyLayout;
         compactLayout.addEventListener('change',syncMobileContextActions);
-        const compactTouchLayout=matchMedia('(max-width:700px), (hover:none) and (pointer:coarse)');
+        const compactTouchLayout=desktopOnlyLayout;
         compactTouchLayout.addEventListener('change',syncMobileContextActions);
         function syncCompactViewport(){
             if(compactLayout.matches)document.body.style.setProperty('--compact-viewport-height',(window.visualViewport?.height||innerHeight)+'px');
@@ -8673,7 +8674,7 @@ const Hardware = (() => {
         function positionInspectorWindow(){
             inspectorPositionFrame=0;
             if(!inspectorAnchorDevice?.isConnected)return;
-            const floating=!applePhone&&matchMedia('(min-width:701px)').matches;
+            const floating=true;
             if((inspectorWindow.dataset.floating==='true')!==floating){
                 inspectorWindow.dataset.floating=String(floating);
                 document.body.classList.toggle('inspector-floating',floating);
@@ -8714,7 +8715,7 @@ const Hardware = (() => {
             if(preserveSelection&&appState.interface.selectedDeviceIds.size>1)id=null;
             const dev=id?appState.project.devices[id]:null;
             const hasParameters=!!dev&&!parameterlessDeviceTypes.has(dev.type);
-            const floating=hasParameters&&!applePhone&&matchMedia('(min-width:701px)').matches;
+            const floating=hasParameters;
             inspectorWindow.dataset.floating=String(!!floating);
             document.body.classList.toggle('inspector-floating',!!floating);
             if(!id||!hasParameters)document.body.classList.remove('mobile-properties-open');
@@ -10495,8 +10496,8 @@ const Hardware = (() => {
                     if(typeof data!=='string'||!/^data:[^,]*;base64,/.test(data))throw new Error('Áudio incorporado inválido.');
                     const base64=data.slice(data.indexOf(',')+1),binary=atob(base64),bytes=new Uint8Array(binary.length);for(let i=0;i<bytes.length;i++)bytes[i]=binary.charCodeAt(i);audio.set(key,new Blob([bytes]));
                 }
-                replacing=true;const warnings=await restoreLocalProject(snapshot,key=>Promise.resolve(audio.get(key)));projectPersistenceBlocked=false;await saveLocalProject(true);if(warnings.length)projectStatus('Projeto aberto; alguns áudios ou cabos precisam de revisão.',true);
-            }catch(error){if(replacing){try{await restoreLocalProject(previous,key=>Promise.resolve(previousAudio.get(key)));}catch{projectPersistenceBlocked=true;}}projectStatus('Não foi possível abrir: '+error.message,true);}finally{event.target.value='';}
+                replacing=true;const warnings=await restoreLocalProject(snapshot,key=>Promise.resolve(audio.get(key)));projectPersistenceBlocked=false;await saveLocalProject(true);window.dispatchEvent(new CustomEvent('audio-project-import',{detail:{ok:true}}));if(warnings.length)projectStatus('Projeto aberto; alguns áudios ou cabos precisam de revisão.',true);
+            }catch(error){if(replacing){try{await restoreLocalProject(previous,key=>Promise.resolve(previousAudio.get(key)));}catch{projectPersistenceBlocked=true;}}projectStatus('Não foi possível abrir: '+error.message,true);window.dispatchEvent(new CustomEvent('audio-project-import',{detail:{ok:false}}));}finally{event.target.value='';}
         };
         let projectSaveTimer;
         function scheduleProjectSave(){if(projectRestoring)return;clearTimeout(projectSaveTimer);projectSaveTimer=setTimeout(()=>saveLocalProject(),350);}
@@ -10750,6 +10751,67 @@ const Hardware = (() => {
         setupAppDropdowns();
 
 
+        const homeMenu=document.createElement('dialog');homeMenu.id='home-menu';homeMenu.className='home-menu';homeMenu.setAttribute('aria-labelledby','home-title');
+        const homeArrow='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg>';
+        const homeBrand=document.querySelector('.app-brand');
+        const homeMark=homeBrand.querySelector('svg').outerHTML;
+        homeMenu.innerHTML=`<img class="home-backdrop" alt="" aria-hidden="true"><div class="home-scrim" aria-hidden="true"></div><div class="home-shell">
+            <header class="home-header"><span class="home-brand">${homeMark}<span>Audio Lab</span></span></header>
+            <main class="home-main"><section class="home-intro"><p class="home-eyebrow">Menu inicial</p><h1 id="home-title">Audio Lab</h1>
+                <nav class="home-actions" aria-label="Menu inicial"><button type="button" class="home-continue" data-home="continue" autofocus><span>Entrar no estúdio</span>${homeArrow}</button>
+                <div class="home-project-actions"><button type="button" data-home="new"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Nova montagem</span></button><button type="button" data-home="open"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h6l2 3h10l-2 10H3ZM3 7V4h7l2 3h7v3"/></svg><span>Abrir projeto</span></button></div>
+                <div class="home-secondary"><button type="button" data-home="settings">Configurações</button><button type="button" data-home="guide">Como funciona</button></div></nav>
+                <p class="home-status" role="status" aria-live="polite"></p></section>
+                <fieldset class="home-environments"><legend>Escolha seu ambiente</legend><div>${Object.entries(canvasBackdropModes).map(([scene,label])=>`<button type="button" data-home-scene="${scene}" aria-pressed="false"><img src="./assets/rooms/${RoomScenes.scenes[scene].image}.webp?v=ultrawide-1" alt="" loading="lazy"><span>${label}</span><i aria-hidden="true"></i></button>`).join('')}</div></fieldset>
+            </main><footer class="home-footer"><span class="home-local"><i aria-hidden="true"></i><span>Neste dispositivo</span></span><div class="home-languages" role="group" aria-label="Idioma"><button type="button" data-home-language="pt" aria-label="Português">PT</button><button type="button" data-home-language="en" aria-label="English">EN</button></div></footer></div>`;
+        document.body.appendChild(homeMenu);
+        let homeWorkspaceStarted=false,homeImporting=false;
+        const homeHasProject=()=>Object.keys(appState.project.devices).length>0||spotifyVinyls.size>0||spotifyAlbums.size>0;
+        function syncHomeMenu(){
+            const scene=appState.canvas.backdrop||DEFAULT_BACKDROP,definition=RoomScenes.scenes[scene];
+            const backdrop=homeMenu.querySelector('.home-backdrop'),src=`./assets/rooms/${definition.image}.webp?v=ultrawide-1`;
+            if(backdrop.getAttribute('src')!==src)backdrop.src=src;
+            homeMenu.style.setProperty('--home-scene-filter',getComputedStyle(canvas).getPropertyValue('--room-light-filter').trim()||'none');
+            homeMenu.querySelector('[data-home="continue"] span').textContent=homeHasProject()?'Continuar montagem':'Entrar no estúdio';
+            homeMenu.querySelectorAll('[data-home-scene]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.homeScene===scene)));
+            homeMenu.querySelectorAll('[data-home-language]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.homeLanguage===AudioSystemLanguage.language)));
+        }
+        function openHomeMenu(){
+            if(homeImporting)return;
+            activeCatalogPreviewCleanup?.();activeEquipmentMoveCleanup?.();
+            settingsMenu.open=false;hideContextHelp();hideToolbarTooltip();stopViewMotion();
+            syncHomeMenu();homeMenu.querySelector('.home-status').textContent='';
+            if(!homeMenu.open)homeMenu.showModal();
+            stopRoomMotes();roomBackdrop.classList.add('room-effects-paused');
+            homeMenu.querySelector('[data-home="continue"]').focus({preventScroll:true});
+        }
+        function enterHomeStudio(onboard=true){
+            if(homeMenu.open)homeMenu.close();
+            roomBackdrop.classList.toggle('room-effects-paused',document.visibilityState!=='visible');startRoomMotes();
+            if(onboard&&!homeWorkspaceStarted){homeWorkspaceStarted=true;if(!appState.preferences.headphonePromptSeen)openHeadphoneCalibration();else{guidedAccess.restore();guidedAccess.offer();}}
+        }
+        homeMenu.addEventListener('cancel',event=>{event.preventDefault();if(!homeImporting)enterHomeStudio();});
+        homeMenu.addEventListener('keydown',event=>{if(event.key!=='Escape')event.stopPropagation();});
+        homeMenu.querySelector('[data-home="continue"]').addEventListener('click',()=>enterHomeStudio());
+        homeMenu.querySelector('[data-home="new"]').addEventListener('click',async()=>{
+            if(homeHasProject()&&!await showAppDialog({title:'Nova montagem',message:'Substituir a montagem atual? Exporte uma cópia se quiser guardá-la.',acceptLabel:'Começar nova montagem',requireChoice:true}))return;
+            const devices=Object.values(appState.project.devices);if(devices.length)recordDeletedDevices(devices);
+            [...spotifyVinyls.values()].forEach(removeSpotifyVinyl);[...spotifyAlbums.values()].forEach(removeSpotifyAlbum);devices.forEach(dev=>deleteDevice(dev));
+            selectDevice(null);selectCable(null);updateCables();updateCableFlows();setOpeningView();applyView();scheduleProjectSave();enterHomeStudio();
+        });
+        homeMenu.querySelector('[data-home="open"]').addEventListener('click',()=>{homeMenu.querySelector('.home-status').textContent='';document.getElementById('project-file').click();});
+        document.getElementById('project-file').addEventListener('change',event=>{
+            if(!homeMenu.open||!event.target.files.length)return;
+            homeImporting=true;homeMenu.querySelectorAll('button').forEach(button=>button.disabled=true);
+            homeMenu.querySelector('.home-status').textContent='Abrindo projeto…';
+        },true);
+        window.addEventListener('audio-project-import',event=>{homeImporting=false;homeMenu.querySelectorAll('button').forEach(button=>button.disabled=false);if(!homeMenu.open)return;if(event.detail.ok)enterHomeStudio();else homeMenu.querySelector('.home-status').textContent='Não foi possível abrir o projeto.';});
+        homeMenu.querySelector('[data-home="settings"]').addEventListener('click',()=>{enterHomeStudio(false);settingsMenu.open=true;settingsMenu.querySelector('summary').focus();});
+        homeMenu.querySelector('[data-home="guide"]').addEventListener('click',()=>{enterHomeStudio(false);guidedAccess.open();});
+        homeMenu.querySelectorAll('[data-home-scene]').forEach(button=>button.addEventListener('click',()=>{setCanvasTheme('scene');setCanvasBackdrop(button.dataset.homeScene);scheduleAppPreferencesSave();syncHomeMenu();stopRoomMotes();roomBackdrop.classList.add('room-effects-paused');}));
+        homeMenu.querySelectorAll('[data-home-language]').forEach(button=>button.addEventListener('click',()=>{AudioSystemLanguage.set(button.dataset.homeLanguage);syncHomeMenu();}));
+        AudioSystemLanguage.subscribe(()=>{homeMenu.querySelectorAll('[data-home-language]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.homeLanguage===AudioSystemLanguage.language)));});
+        const homeReturn=document.createElement('button');homeReturn.type='button';homeReturn.className=homeBrand.className;homeReturn.innerHTML=homeBrand.innerHTML;homeReturn.setAttribute('aria-label','Menu inicial');homeReturn.dataset.tooltip='Menu inicial';homeBrand.replaceWith(homeReturn);homeReturn.addEventListener('click',openHomeMenu);
         const tutorialBindings={};
         const tutorialFileSources=new Set(['cdPlayer','tapeDeck','streamer']);
         function tutorialDevice(topic){
@@ -10931,6 +10993,6 @@ const Hardware = (() => {
         headphoneCalibrationDialog.addEventListener('close',()=>{requestAnimationFrame(guidedAccess.offer);});
 
         SpotifyCoverflow.initialize().catch(()=>{});
-        initializeProjectPersistence().finally(()=>{requestAnimationFrame(()=>{document.documentElement.classList.remove('app-starting');document.getElementById('app-startup')?.remove();if(!appState.preferences.headphonePromptSeen)openHeadphoneCalibration();else{guidedAccess.restore();guidedAccess.offer();}});});
+        initializeProjectPersistence().finally(()=>{requestAnimationFrame(()=>{document.documentElement.classList.remove('app-starting');document.getElementById('app-startup')?.remove();openHomeMenu();});});
 
         renderVisuals();
