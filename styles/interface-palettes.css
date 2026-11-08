@@ -250,7 +250,7 @@
 .setup-object svg .setup-detail{fill:none;stroke-width:.8;opacity:.65;}
 #equipment-catalog .setup-object:hover,#equipment-catalog .setup-object[aria-pressed="true"]{color:var(--ui-accent);filter:drop-shadow(0 2px 4px var(--ui-shadow));background:transparent;}
 #equipment-catalog .setup-object[aria-pressed="true"] svg .setup-face{fill:var(--ui-active);}
-#equipment-catalog .setup-all{position:absolute;left:45%;top:11.25%;width:15%;height:auto;aspect-ratio:1;padding:2.5%;background:transparent;color:var(--ui-muted);border:0;border-radius:6px;cursor:pointer;}
+#equipment-catalog .setup-all{position:absolute;left:45%;top:8.5%;box-sizing:border-box;width:15%;height:15%;min-height:0;aspect-ratio:1;padding:2.5%;background:transparent;color:var(--ui-muted);border:0;border-radius:6px;cursor:pointer;}
 .setup-all svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.3;}
 #equipment-catalog .setup-all:hover,#equipment-catalog .setup-all[aria-pressed="true"]{color:var(--ui-accent);background:var(--ui-control);}
 #equipment-catalog .mobile-category-nav{display:none;}
