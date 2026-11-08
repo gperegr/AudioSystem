@@ -62,3 +62,7 @@ The two turntable browser tests share `turntable-geometry.helpers.cjs`: they com
 ## Home menu
 
 `node tests/home-menu.browser.cjs` verifies initial entry before calibration, resume after local restore, room and language choices, settings, responsive bounds, cancellation of a new setup, and invalid/valid file imports. It saves `/tmp/audio-lab-home-desktop.png` and `/tmp/audio-lab-home-mobile.png`. It accepts `TAILWIND_SCRIPT_FILE`. Existing studio suites enter the menu through `tests/helpers/studio-entry.cjs`.
+
+## Menu music
+
+`node tests/menu-music.browser.cjs` checks gesture-only activation, actual decoded audio output, native looping, cancellation while loading, shared decoding across menu entries, volume/mute persistence and hidden-tab cleanup. It also checks the CC0 dedication and the soundtrack size budget. It accepts `TAILWIND_SCRIPT_FILE`.

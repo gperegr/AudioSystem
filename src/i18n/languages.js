@@ -3,6 +3,11 @@
     'use strict';
 
     const translations = Object.freeze({
+        'Ativar música do menu':'Enable menu music',
+        'Pausar música do menu':'Pause menu music',
+        'Volume da música do menu':'Menu music volume',
+        'Não foi possível carregar a música.':'Could not load the music.',
+
         'Entrar no estúdio':'Enter the studio',
         'Continuar montagem':'Continue setup',
         'Nova montagem':'New setup',

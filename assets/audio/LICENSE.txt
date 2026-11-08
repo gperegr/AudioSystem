@@ -1,0 +1,21 @@
+Menu Blues — original Audio Lab menu soundtrack
+SPDX-License-Identifier: CC0-1.0
+
+This dedication covers menu-blues.mp3 and its original composition, arrangement,
+and synthesis score in tools/render-menu-blues.py. It does not change the license
+of the rest of the application or of any development dependency.
+
+To the extent possible under law, the authors dedicate this soundtrack and score
+to the public domain under CC0 1.0 Universal, waiving copyright and related rights.
+You may copy, modify, perform, distribute and use them for any purpose, including
+commercially, without royalties or required attribution.
+
+The soundtrack is an original instrumental composition synthesized entirely from
+mathematical oscillators and seeded noise. It contains no recordings, third-party
+samples, soundfonts, vocals, or copied third-party melodies.
+
+Full CC0 1.0 Universal legal terms:
+https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+CC0 includes a fallback public license where a public-domain waiver is not legally
+effective. The work is supplied without warranties, as stated in those terms.

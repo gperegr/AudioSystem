@@ -78,6 +78,10 @@ Adjustment controls use discrete steps; input selectors and tuning have their ow
 
 The app opens with a menu after restoring the local project. Choose **Continue setup** (or **Enter the studio** for an empty project), **New setup**, **Open project**, **Settings**, or **How it works**. Select a room before entering, or switch between Portuguese and English. Click the Audio Lab brand in the toolbar to return to the menu. New setups require confirmation when a project has content. Calibration and the tutorial invitation follow entry into the studio.
 
+The menu has a quiet original 38-second blues loop. Use **Music** and its volume slider in the footer. Playback starts only after interaction, fades out on entering the studio, and stops while the tab is hidden. Mute and volume are saved locally. The MP3 is downloaded and decoded once per page; it uses one native looping source rather than live synthesis.
+
+The recording and original composition are dedicated under **CC0 1.0**, including commercial use without royalties or required attribution: see `assets/audio/LICENSE.txt`. No third-party recordings, samples, soundfonts or melodies were copied. `tools/render-menu-blues.py` reproduces the 12-bar, 76 BPM composition using offline synthesis (NumPy, SciPy and FFmpeg). The audio file also carries the CC0 license in its metadata.
+
 ### Scene, floor, and lighting
 
 In **Settings → Appearance → Background**, choose **Room** to show **Studio**, **Listening Room**, or **Industrial Loft**. These empty rooms use 2304 × 720 ultra-wide panoramas (3.2:1), with a shared floor line. Only the three active ultra-wide WebP backgrounds remain in `assets/rooms`; obsolete room images and time variants have been removed. **Time of day** offers **Dawn**, **Late afternoon**, and **Night**. Time changes equipment lighting and applies a lightweight color grade to the same panorama, keeping the room geometry and window positions fixed. Each scene has its own floor. Other backgrounds (**Light**, **Graphite**, **Midnight Blue**, and **Sepia**) remain available.
