@@ -1,10 +1,7 @@
-/* The home menu follows the active interface palette and reuses the room assets. */
+/* The home menu uses the shared sepia palette independently of the canvas. */
 .home-menu{position:fixed;inset:0;box-sizing:border-box;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:0;border:0;background:var(--ui-side);color:var(--ui-text);overflow:auto;font-family:var(--font-ui,Inter,sans-serif);isolation:isolate;}
 .home-menu:not([open]){display:none!important;}
 .home-menu::backdrop{background:var(--ui-side);}
-.home-backdrop,.home-scrim{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:-1;}
-.home-backdrop{object-fit:cover;object-position:65% center;filter:var(--home-scene-filter,none);}
-.home-scrim{background:linear-gradient(90deg,var(--ui-side) 0%,color-mix(in srgb,var(--ui-side) 94%,transparent) 20%,color-mix(in srgb,var(--ui-side) 65%,transparent) 49%,color-mix(in srgb,var(--ui-side) 12%,transparent) 100%),linear-gradient(0deg,color-mix(in srgb,var(--ui-side) 92%,transparent),transparent 48%);}
 .home-shell{box-sizing:border-box;min-height:100%;min-height:100svh;max-width:1720px;margin:auto;--home-pad-y:clamp(24px,4vw,64px);--home-pad-x:clamp(24px,5vw,88px);padding:max(var(--home-pad-y),calc(env(safe-area-inset-top,0px) + 16px)) max(var(--home-pad-x),calc(env(safe-area-inset-right,0px) + 16px)) max(var(--home-pad-y),calc(env(safe-area-inset-bottom,0px) + 16px)) max(var(--home-pad-x),calc(env(safe-area-inset-left,0px) + 16px));display:flex;flex-direction:column;gap:40px;}
 .home-header,.home-footer{display:flex;align-items:center;justify-content:space-between;gap:20px;}
 .home-brand{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:700;letter-spacing:-.4px;}
@@ -57,3 +54,21 @@
 .home-music-controls svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
 .home-music-controls [aria-pressed="true"] .home-music-muted{display:none;}
 .home-music-controls input[type="range"]{width:88px;min-width:0;accent-color:var(--ui-accent);cursor:pointer;}
+
+/* Settings are a full page of the home menu; the original controls keep their state. */
+.home-menu [hidden]{display:none!important;}
+.home-settings{flex:1;width:min(100%,1000px);align-self:center;padding:24px 0 48px;}
+.home-settings-heading{display:flex;align-items:center;gap:28px;margin-bottom:32px;}
+.home-settings-heading h1{margin:0;font-size:36px;font-weight:700;letter-spacing:-.04em;}
+.home-settings-heading button{min-height:40px;padding:8px 18px;border-radius:8px;background:var(--ui-control);color:var(--ui-text);}
+.home-settings .app-settings-content{position:static;width:100%;max-height:none;overflow:visible;padding:24px;border:0;border-radius:12px;background:var(--ui-panel);box-shadow:none;gap:18px;}
+.home-settings .settings-group{width:100%;}
+.home-settings .settings-theme-section{gap:16px;}
+.home-menu{color-scheme:var(--ui-scheme);}
+
+.home-environments>.home-solid-environments{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:14px;}
+.home-solid-environments .home-color-preview{display:block;height:44px;padding:0;border-radius:6px;}
+.home-color-preview[data-color="light"]{background:#f1f5f9;}
+.home-color-preview[data-color="graphite"]{background:#24272b;}
+.home-color-preview[data-color="midnight"]{background:#141e2e;}
+.home-color-preview[data-color="sepia"]{background:#e4dac5;}

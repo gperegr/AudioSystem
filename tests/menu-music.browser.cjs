@@ -18,7 +18,7 @@ const root=path.resolve(__dirname,'..');
             let body=fs.readFileSync(file);
             if(file===path.join(root,'script.js')){
                 const source=body.toString(),marker='        renderVisuals();',index=source.lastIndexOf(marker);
-                assert(index>0);body=source.slice(0,index)+'window.__signal={setCanvasTheme,createDevice,selectDevice,setDeviceSelection,connectProjectPorts,appState,view,applyView,projectCapture,showAppDialog,showContextHelp,openHomeMenu,menuMusic};\n'+source.slice(index);
+                assert(index>0);body=source.slice(0,index)+'window.__signal={setCanvasTheme,createDevice,selectDevice,setDeviceSelection,connectProjectPorts,appState,view,applyView,projectCapture,showAppDialog,showContextHelp,openHomeMenu,menuMusic,syncRoomRainAudio,get rainAudioActive(){return !!roomRainAudio;}};\n'+source.slice(index);
             }
             const ext=path.extname(file),mime={'.html':'text/html','.js':'application/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.json':'application/json'};
             return route.fulfill({contentType:mime[ext]||'application/octet-stream',body});
@@ -28,10 +28,13 @@ const root=path.resolve(__dirname,'..');
             localStorage.setItem('audio-system-guide-v1','true');
         });
         await page.goto('http://127.0.0.1:9876/');await page.waitForFunction(()=>document.getElementById('home-menu')?.open);
+        assert.equal(await page.evaluate(()=>{__signal.appState.preferences.rainEnabled=true;__signal.syncRoomRainAudio();return __signal.rainAudioActive;}),false,'home blocks saved rain audio');
         assert.equal(musicRequests,0,'menu does not download or play music before a gesture');
         assert.equal(await page.evaluate(()=>__signal.menuMusic.state.playing),false);
         await page.getByRole('button',{name:'Ativar música do menu',exact:true}).click();
         await page.waitForFunction(()=>__signal.menuMusic.state.loading);
+        assert.equal(await page.evaluate(()=>{__signal.syncRoomRainAudio();return __signal.rainAudioActive;}),false,'home blocks rain with running audio context');
+        await page.evaluate(()=>__signal.appState.preferences.rainEnabled=false);
         await page.locator('[data-home="continue"]').click();
         await page.waitForFunction(()=>__signal.menuMusic.state.loaded);
         assert.equal(await page.evaluate(()=>__signal.menuMusic.state.playing),false,'a pending decode must not start after leaving home');

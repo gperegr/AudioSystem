@@ -21,7 +21,7 @@
         appStateStore.actions.setPreference('rainEnabled',savedAppPreferences.rainEnabled===true);
         const rainIntensityLevels=[20,50,100];
         appStateStore.actions.setPreference('rainIntensity',rainIntensityLevels.reduce((best,level)=>Math.abs(level-(savedAppPreferences.rainIntensity??50))<Math.abs(best-(savedAppPreferences.rainIntensity??50))?level:best,50));
-        appStateStore.actions.setPreference('roomParticleAmount',Number.isFinite(savedAppPreferences.roomParticleAmount)?Math.max(0,Math.min(100,savedAppPreferences.roomParticleAmount/(savedAppPreferences.particleScaleVersion===2?1:2))):25);
+        appStateStore.actions.setPreference('roomParticleAmount',Number.isFinite(savedAppPreferences.roomParticleAmount)?Math.max(0,Math.min(100,savedAppPreferences.roomParticleAmount/(savedAppPreferences.particleScaleVersion===2?1:2))):0);
         if(Number.isFinite(savedAppPreferences.roomParticleAmount)&&savedAppPreferences.particleScaleVersion!==2){
             try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({...savedAppPreferences,roomParticleAmount:appState.preferences.roomParticleAmount,particleLastLevel:appState.preferences.particleLastLevel,particleScaleVersion:2}));}catch{}
         }

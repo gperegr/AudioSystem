@@ -176,7 +176,7 @@
         guideSetting.innerHTML='<strong>Acesso guiado</strong><p>Pratique no seu projeto: conexões, Spotify, entrada externa e MP3.</p><button type="button">Abrir tutorial</button>';
         const examplesSetting=document.createElement('section');examplesSetting.className='headphone-calibration-setting';
         examplesSetting.innerHTML='<strong>Montagens de exemplo</strong><p>Cinco sistemas em móveis. Substitui a montagem atual.</p><button type="button">Escolher montagem</button>';
-        clearCatalogFooter.prepend(guideSetting,examplesSetting);guideSetting.querySelector('button').addEventListener('click',guidedAccess.open);examplesSetting.querySelector('button').addEventListener('click',guidedAccess.openExamples);
+        clearCatalogFooter.prepend(guideSetting,examplesSetting);guideSetting.querySelector('button').addEventListener('click',()=>{if(homeMenu.open)enterHomeStudio(false);guidedAccess.open();});examplesSetting.querySelector('button').addEventListener('click',()=>{if(homeMenu.open)enterHomeStudio(false);guidedAccess.openExamples();});
         headphoneCalibrationDialog.addEventListener('close',()=>{requestAnimationFrame(guidedAccess.offer);});
 
         SpotifyCoverflow.initialize().catch(()=>{});

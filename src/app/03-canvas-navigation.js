@@ -8,7 +8,7 @@
         function setOpeningView(){
             view.zoom=clampZoom(MIN_CANVAS_ZOOM);
             view.x=Math.min(0,(canvas.clientWidth-world.offsetWidth*view.zoom)/2);
-            view.y=Math.min(0,canvas.clientHeight-world.offsetHeight*view.zoom);
+            view.y=Math.min(0,(canvas.clientHeight-world.offsetHeight*view.zoom)/2);
         }
         setOpeningView();
         const snapCoordinate = value => Math.round(value / Hardware.sizes.grid) * Hardware.sizes.grid;

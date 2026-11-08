@@ -5,7 +5,7 @@
   --bg-panel:var(--ui-panel);
 }
 :root[data-ui-palette="light"]{--ui-top:#f4f5f5;--ui-side:#ebeeee;--ui-panel:#f8f9f9;--ui-control:#e2e8e9;--ui-hover:#d1dddf;--ui-border:#98aeb2;--ui-text:#203239;--ui-secondary:#3c555e;--ui-muted:#546f77;--ui-active:#c4dfe3;--ui-accent:#226c80;--ui-shadow:#243f482b;--ui-scheme:light;}
-:root[data-ui-palette="sepia"]{--ui-top:#eee4d1;--ui-side:#e6d9c1;--ui-panel:#f4ead7;--ui-control:#e1d2b9;--ui-hover:#d4c0a1;--ui-border:#a79375;--ui-text:#3c3024;--ui-secondary:#594634;--ui-muted:#705b42;--ui-active:#d7c3a2;--ui-accent:#865a2b;--ui-shadow:#54351e33;--ui-scheme:light;}
+:root[data-ui-palette="sepia"],.home-menu{--ui-top:#eee4d1;--ui-side:#e6d9c1;--ui-panel:#f4ead7;--ui-control:#e1d2b9;--ui-hover:#d4c0a1;--ui-border:#a79375;--ui-text:#3c3024;--ui-secondary:#594634;--ui-muted:#705b42;--ui-active:#d7c3a2;--ui-accent:#865a2b;--ui-shadow:#54351e33;--ui-scheme:light;}
 :root[data-ui-palette="graphite"]{--ui-top:#242729;--ui-side:#1c1f21;--ui-panel:#2b3032;--ui-control:#373e40;--ui-hover:#485052;--ui-border:#657174;--ui-text:#f0f3f2;--ui-secondary:#c2ceca;--ui-muted:#a1b0ab;--ui-active:#4c625d;--ui-accent:#a8d2bf;}
 :root[data-ui-palette="midnight"]{--ui-top:#162338;--ui-side:#111c2c;--ui-panel:#1c2d43;--ui-control:#273f59;--ui-hover:#36536f;--ui-border:#526e8b;--ui-text:#eef5ff;--ui-secondary:#c1d2e4;--ui-muted:#9cb4cc;--ui-active:#355d7d;--ui-accent:#9dcdf1;}
 /* Room materials and lighting: charcoal/walnut studio, limestone listening room, brick/concrete loft. */

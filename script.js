@@ -1434,7 +1434,7 @@ const Hardware = (() => {
         appStateStore.actions.setPreference('rainEnabled',savedAppPreferences.rainEnabled===true);
         const rainIntensityLevels=[20,50,100];
         appStateStore.actions.setPreference('rainIntensity',rainIntensityLevels.reduce((best,level)=>Math.abs(level-(savedAppPreferences.rainIntensity??50))<Math.abs(best-(savedAppPreferences.rainIntensity??50))?level:best,50));
-        appStateStore.actions.setPreference('roomParticleAmount',Number.isFinite(savedAppPreferences.roomParticleAmount)?Math.max(0,Math.min(100,savedAppPreferences.roomParticleAmount/(savedAppPreferences.particleScaleVersion===2?1:2))):25);
+        appStateStore.actions.setPreference('roomParticleAmount',Number.isFinite(savedAppPreferences.roomParticleAmount)?Math.max(0,Math.min(100,savedAppPreferences.roomParticleAmount/(savedAppPreferences.particleScaleVersion===2?1:2))):0);
         if(Number.isFinite(savedAppPreferences.roomParticleAmount)&&savedAppPreferences.particleScaleVersion!==2){
             try{localStorage.setItem(APP_PREFERENCES_KEY,JSON.stringify({...savedAppPreferences,roomParticleAmount:appState.preferences.roomParticleAmount,particleLastLevel:appState.preferences.particleLastLevel,particleScaleVersion:2}));}catch{}
         }
@@ -2112,7 +2112,7 @@ const Hardware = (() => {
         function setOpeningView(){
             view.zoom=clampZoom(MIN_CANVAS_ZOOM);
             view.x=Math.min(0,(canvas.clientWidth-world.offsetWidth*view.zoom)/2);
-            view.y=Math.min(0,canvas.clientHeight-world.offsetHeight*view.zoom);
+            view.y=Math.min(0,(canvas.clientHeight-world.offsetHeight*view.zoom)/2);
         }
         setOpeningView();
         const snapCoordinate = value => Math.round(value / Hardware.sizes.grid) * Hardware.sizes.grid;
@@ -3678,7 +3678,7 @@ const Hardware = (() => {
         function syncRoomRainAudio(){
             const context=appState.audio.context;
             const intensity=appState.preferences.rainIntensity/100;
-            const enabled=!!context&&!!appState.audio.listeningToneInput&&canvas.dataset.theme==='scene'&&appState.preferences.rainEnabled&&intensity>0&&!document.hidden;
+            const enabled=!!context&&!!appState.audio.listeningToneInput&&canvas.dataset.theme==='scene'&&appState.preferences.rainEnabled&&intensity>0&&!document.hidden&&!document.getElementById('home-menu')?.open;
             if(!enabled){
                 if(roomRainAudio&&!roomRainAudio.stopTimer){
                     roomRainAudio.gain.gain.setTargetAtTime(0,context.currentTime,.12);
@@ -10700,7 +10700,7 @@ const Hardware = (() => {
             function open(widget){
                 if(widget.select.disabled||!widget.select.options.length)return;
                 close();const popup=document.createElement('div');popup.className='app-select-popup';popup.id=widget.popupId;popup.setAttribute('role','listbox');popup.setAttribute('aria-label',widget.button.getAttribute('aria-label')||'Opções');
-                active={...widget,popup,index:widget.select.selectedIndex,choices:[]};document.body.appendChild(popup);widget.button.setAttribute('aria-expanded','true');buildOptions();widget.button.focus();
+                active={...widget,popup,index:widget.select.selectedIndex,choices:[]};(widget.button.closest('dialog[open]')||document.body).appendChild(popup);widget.button.setAttribute('aria-expanded','true');buildOptions();widget.button.focus();
             }
             function enabledIndex(start,direction){
                 const count=active.select.options.length;for(let n=0,index=start;n<count;n++,index=(index+direction+count)%count){const option=active.select.options[index];if(option&&!option.disabled&&!option.parentElement.disabled)return index;}return active.index;
@@ -10757,15 +10757,15 @@ const Hardware = (() => {
         const homeArrow='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg>';
         const homeBrand=document.querySelector('.app-brand');
         const homeMark=homeBrand.querySelector('svg').outerHTML;
-        homeMenu.innerHTML=`<img class="home-backdrop" alt="" aria-hidden="true"><div class="home-scrim" aria-hidden="true"></div><div class="home-shell">
+        homeMenu.innerHTML=`<div class="home-shell">
             <header class="home-header"><span class="home-brand">${homeMark}<span>Audio Lab</span></span></header>
             <main class="home-main"><section class="home-intro"><p class="home-eyebrow">Menu inicial</p><h1 id="home-title">Audio Lab</h1>
                 <nav class="home-actions" aria-label="Menu inicial"><button type="button" class="home-continue" data-home="continue" autofocus><span>Entrar no estúdio</span>${homeArrow}</button>
                 <div class="home-project-actions"><button type="button" data-home="new"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Nova montagem</span></button><button type="button" data-home="open"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h6l2 3h10l-2 10H3ZM3 7V4h7l2 3h7v3"/></svg><span>Abrir projeto</span></button></div>
                 <div class="home-secondary"><button type="button" data-home="settings">Configurações</button><button type="button" data-home="guide">Como funciona</button></div></nav>
                 <p class="home-status" role="status" aria-live="polite"></p></section>
-                <fieldset class="home-environments"><legend>Escolha seu ambiente</legend><div>${Object.entries(canvasBackdropModes).map(([scene,label])=>`<button type="button" data-home-scene="${scene}" aria-pressed="false"><img src="./assets/rooms/${RoomScenes.scenes[scene].image}.webp?v=ultrawide-1" alt="" loading="lazy"><span>${label}</span><i aria-hidden="true"></i></button>`).join('')}</div></fieldset>
-            </main><footer class="home-footer"><span class="home-local"><i aria-hidden="true"></i><span>Neste dispositivo</span></span><div class="home-footer-controls"><div class="home-music-controls"><button type="button" data-home="music" aria-label="Ativar música do menu" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4Z M17 8a6 6 0 0 1 0 8"/><path class="home-music-muted" d="m3 3 18 18"/></svg><span>Música</span></button><input type="range" min="0" max="100" step="1" aria-label="Volume da música do menu"></div><div class="home-languages" role="group" aria-label="Idioma"><button type="button" data-home-language="pt" aria-label="Português">PT</button><button type="button" data-home-language="en" aria-label="English">EN</button></div></div></footer></div>`;
+                <fieldset class="home-environments"><legend>Escolha seu ambiente</legend><div>${Object.entries(canvasBackdropModes).map(([scene,label])=>`<button type="button" data-home-scene="${scene}" aria-pressed="false"><img src="./assets/rooms/${RoomScenes.scenes[scene].image}.webp?v=ultrawide-1" alt="" loading="lazy"><span>${label}</span><i aria-hidden="true"></i></button>`).join('')}</div><div class="home-solid-environments">${Object.entries(canvasThemes).filter(([theme])=>theme!=='scene').map(([theme,label])=>`<button type="button" data-home-theme="${theme}" aria-pressed="false"><span class="home-color-preview" data-color="${theme}" aria-hidden="true"></span><span>${label}</span><i aria-hidden="true"></i></button>`).join('')}</div></fieldset>
+            </main><section class="home-settings" aria-labelledby="home-settings-title" hidden><div class="home-settings-heading"><button type="button" data-home="back">Voltar</button><h1 id="home-settings-title">Configurações</h1></div><div class="home-settings-body"></div></section><footer class="home-footer"><span class="home-local"><i aria-hidden="true"></i><span>Neste dispositivo</span></span><div class="home-footer-controls"><div class="home-music-controls"><button type="button" data-home="music" aria-label="Ativar música do menu" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4Z M17 8a6 6 0 0 1 0 8"/><path class="home-music-muted" d="m3 3 18 18"/></svg><span>Música</span></button><input type="range" min="0" max="100" step="1" aria-label="Volume da música do menu"></div><div class="home-languages" role="group" aria-label="Idioma"><button type="button" data-home-language="pt" aria-label="Português">PT</button><button type="button" data-home-language="en" aria-label="English">EN</button></div></div></footer></div>`;
         document.body.appendChild(homeMenu);
         let homeWorkspaceStarted=false,homeImporting=false,homeMusicInteracted=false;
         const homeMusicButton=homeMenu.querySelector('[data-home="music"]'),homeMusicSlider=homeMenu.querySelector('.home-music-controls input');
@@ -10812,31 +10812,39 @@ const Hardware = (() => {
         AudioSystemLanguage.subscribe(syncHomeMusicButton);syncHomeMusicButton();
         const homeHasProject=()=>Object.keys(appState.project.devices).length>0||spotifyVinyls.size>0||spotifyAlbums.size>0;
         function syncHomeMenu(){
-            const scene=appState.canvas.backdrop||DEFAULT_BACKDROP,definition=RoomScenes.scenes[scene];
-            const backdrop=homeMenu.querySelector('.home-backdrop'),src=`./assets/rooms/${definition.image}.webp?v=ultrawide-1`;
-            if(backdrop.getAttribute('src')!==src)backdrop.src=src;
-            homeMenu.style.setProperty('--home-scene-filter',getComputedStyle(canvas).getPropertyValue('--room-light-filter').trim()||'none');
+            const scene=appState.canvas.backdrop||DEFAULT_BACKDROP;
             homeMenu.querySelector('[data-home="continue"] span').textContent=homeHasProject()?'Continuar montagem':'Entrar no estúdio';
-            homeMenu.querySelectorAll('[data-home-scene]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.homeScene===scene)));
+            homeMenu.querySelectorAll('[data-home-scene]').forEach(button=>button.setAttribute('aria-pressed',String(appState.canvas.theme==='scene'&&button.dataset.homeScene===scene)));
+            homeMenu.querySelectorAll('[data-home-theme]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.homeTheme===appState.canvas.theme)));
             homeMenu.querySelectorAll('[data-home-language]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.homeLanguage===AudioSystemLanguage.language)));
         }
+        function showHomeSettings(show){
+            homeMenu.querySelector('.home-main').hidden=show;
+            homeMenu.querySelector('.home-settings').hidden=!show;
+            if(show)homeMenu.querySelector('.home-settings-body').appendChild(clearCatalogFooter);
+            else settingsMenu.appendChild(clearCatalogFooter);
+            homeMenu.setAttribute('aria-labelledby',show?'home-settings-title':'home-title');
+            homeMenu.querySelector(show?'[data-home="back"]':'[data-home="continue"]').focus({preventScroll:true});
+        }
+        homeMenu.querySelector('[data-home="back"]').addEventListener('click',()=>showHomeSettings(false));
         function openHomeMenu(event){
             if(homeImporting)return;
             activeCatalogPreviewCleanup?.();activeEquipmentMoveCleanup?.();
             settingsMenu.open=false;hideContextHelp();hideToolbarTooltip();stopViewMotion();
-            syncHomeMenu();homeMenu.querySelector('.home-status').textContent='';
+            showHomeSettings(false);syncHomeMenu();homeMenu.querySelector('.home-status').textContent='';
             if(!homeMenu.open)homeMenu.showModal();
-            stopRoomMotes();roomBackdrop.classList.add('room-effects-paused');
+            disposeRoomRainAudio();stopCableHum();stopRoomMotes();roomBackdrop.classList.add('room-effects-paused');
             homeMenu.querySelector('[data-home="continue"]').focus({preventScroll:true});
             playHomeMusic(!!event?.isTrusted);
         }
         function enterHomeStudio(onboard=true){
-            menuMusic.stop();
+            menuMusic.stop();showHomeSettings(false);
             if(homeMenu.open)homeMenu.close();
-            roomBackdrop.classList.toggle('room-effects-paused',document.visibilityState!=='visible');startRoomMotes();
+            stopViewMotion();setOpeningView();applyView();
+            roomBackdrop.classList.toggle('room-effects-paused',document.visibilityState!=='visible');startRoomMotes();syncRoomRainAudio();
             if(onboard&&!homeWorkspaceStarted){homeWorkspaceStarted=true;if(!appState.preferences.headphonePromptSeen)openHeadphoneCalibration();else{guidedAccess.restore();guidedAccess.offer();}}
         }
-        homeMenu.addEventListener('cancel',event=>{event.preventDefault();if(!homeImporting)enterHomeStudio();});
+        homeMenu.addEventListener('cancel',event=>{event.preventDefault();if(!homeImporting){if(!homeMenu.querySelector('.home-settings').hidden)showHomeSettings(false);else enterHomeStudio();}});
         homeMenu.addEventListener('keydown',event=>{if(event.key!=='Escape')event.stopPropagation();});
         homeMenu.querySelector('[data-home="continue"]').addEventListener('click',()=>enterHomeStudio());
         homeMenu.querySelector('[data-home="new"]').addEventListener('click',async()=>{
@@ -10852,8 +10860,9 @@ const Hardware = (() => {
             homeMenu.querySelector('.home-status').textContent='Abrindo projeto…';
         },true);
         window.addEventListener('audio-project-import',event=>{homeImporting=false;homeMenu.querySelectorAll('button').forEach(button=>button.disabled=false);if(!homeMenu.open)return;if(event.detail.ok)enterHomeStudio();else homeMenu.querySelector('.home-status').textContent='Não foi possível abrir o projeto.';});
-        homeMenu.querySelector('[data-home="settings"]').addEventListener('click',()=>{enterHomeStudio(false);settingsMenu.open=true;settingsMenu.querySelector('summary').focus();});
+        homeMenu.querySelector('[data-home="settings"]').addEventListener('click',event=>{showHomeSettings(true);playHomeMusic(event.isTrusted);});
         homeMenu.querySelector('[data-home="guide"]').addEventListener('click',()=>{enterHomeStudio(false);guidedAccess.open();});
+        homeMenu.querySelectorAll('[data-home-theme]').forEach(button=>button.addEventListener('click',()=>{setCanvasTheme(button.dataset.homeTheme);scheduleAppPreferencesSave();syncHomeMenu();}));
         homeMenu.querySelectorAll('[data-home-scene]').forEach(button=>button.addEventListener('click',()=>{setCanvasTheme('scene');setCanvasBackdrop(button.dataset.homeScene);scheduleAppPreferencesSave();syncHomeMenu();stopRoomMotes();roomBackdrop.classList.add('room-effects-paused');}));
         homeMenu.querySelectorAll('[data-home-language]').forEach(button=>button.addEventListener('click',()=>{AudioSystemLanguage.set(button.dataset.homeLanguage);syncHomeMenu();}));
         AudioSystemLanguage.subscribe(()=>{homeMenu.querySelectorAll('[data-home-language]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.homeLanguage===AudioSystemLanguage.language)));});
@@ -11035,7 +11044,7 @@ const Hardware = (() => {
         guideSetting.innerHTML='<strong>Acesso guiado</strong><p>Pratique no seu projeto: conexões, Spotify, entrada externa e MP3.</p><button type="button">Abrir tutorial</button>';
         const examplesSetting=document.createElement('section');examplesSetting.className='headphone-calibration-setting';
         examplesSetting.innerHTML='<strong>Montagens de exemplo</strong><p>Cinco sistemas em móveis. Substitui a montagem atual.</p><button type="button">Escolher montagem</button>';
-        clearCatalogFooter.prepend(guideSetting,examplesSetting);guideSetting.querySelector('button').addEventListener('click',guidedAccess.open);examplesSetting.querySelector('button').addEventListener('click',guidedAccess.openExamples);
+        clearCatalogFooter.prepend(guideSetting,examplesSetting);guideSetting.querySelector('button').addEventListener('click',()=>{if(homeMenu.open)enterHomeStudio(false);guidedAccess.open();});examplesSetting.querySelector('button').addEventListener('click',()=>{if(homeMenu.open)enterHomeStudio(false);guidedAccess.openExamples();});
         headphoneCalibrationDialog.addEventListener('close',()=>{requestAnimationFrame(guidedAccess.offer);});
 
         SpotifyCoverflow.initialize().catch(()=>{});

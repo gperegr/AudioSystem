@@ -179,7 +179,7 @@
             function open(widget){
                 if(widget.select.disabled||!widget.select.options.length)return;
                 close();const popup=document.createElement('div');popup.className='app-select-popup';popup.id=widget.popupId;popup.setAttribute('role','listbox');popup.setAttribute('aria-label',widget.button.getAttribute('aria-label')||'Opções');
-                active={...widget,popup,index:widget.select.selectedIndex,choices:[]};document.body.appendChild(popup);widget.button.setAttribute('aria-expanded','true');buildOptions();widget.button.focus();
+                active={...widget,popup,index:widget.select.selectedIndex,choices:[]};(widget.button.closest('dialog[open]')||document.body).appendChild(popup);widget.button.setAttribute('aria-expanded','true');buildOptions();widget.button.focus();
             }
             function enabledIndex(start,direction){
                 const count=active.select.options.length;for(let n=0,index=start;n<count;n++,index=(index+direction+count)%count){const option=active.select.options[index];if(option&&!option.disabled&&!option.parentElement.disabled)return index;}return active.index;

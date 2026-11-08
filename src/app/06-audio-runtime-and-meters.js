@@ -34,7 +34,7 @@
         function syncRoomRainAudio(){
             const context=appState.audio.context;
             const intensity=appState.preferences.rainIntensity/100;
-            const enabled=!!context&&!!appState.audio.listeningToneInput&&canvas.dataset.theme==='scene'&&appState.preferences.rainEnabled&&intensity>0&&!document.hidden;
+            const enabled=!!context&&!!appState.audio.listeningToneInput&&canvas.dataset.theme==='scene'&&appState.preferences.rainEnabled&&intensity>0&&!document.hidden&&!document.getElementById('home-menu')?.open;
             if(!enabled){
                 if(roomRainAudio&&!roomRainAudio.stopTimer){
                     roomRainAudio.gain.gain.setTargetAtTime(0,context.currentTime,.12);

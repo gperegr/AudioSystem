@@ -22,25 +22,41 @@ const root=path.resolve(__dirname,'..');
             return route.fulfill({contentType:mime[ext]||'application/octet-stream',body});
         });
         await page.goto('http://127.0.0.1:9876/');
+        async function assertCentered(){
+            const centered=await page.evaluate(()=>{const canvas=document.getElementById('canvas'),world=document.getElementById('audio-world'),v=__signal.view;return {x:v.x,y:v.y,expectedX:Math.min(0,(canvas.clientWidth-world.offsetWidth*v.zoom)/2),expectedY:Math.min(0,(canvas.clientHeight-world.offsetHeight*v.zoom)/2)};});
+            assert(Math.abs(centered.x-centered.expectedX)<1,'canvas centered horizontally');
+            assert(Math.abs(centered.y-centered.expectedY)<1,'canvas centered vertically');
+        }
         const home=page.locator('#home-menu');await page.waitForFunction(()=>document.getElementById('home-menu')?.open);
+        assert.deepEqual(await page.evaluate(()=>{const p=__signal.appState.preferences;return [p.orthogonalCables,p.rainEnabled,p.roomParticleAmount];}),[false,false,0],'effects disabled by default');
+        assert.equal(await home.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(230, 217, 193)','solid sepia home');assert.equal(await page.locator('.home-backdrop').count(),0);
         assert.equal(await page.locator('#headphone-calibration-dialog').evaluate(el=>el.open),false,'home precedes calibration');
         await page.screenshot({path:'/tmp/audio-lab-home-desktop.png'});
+        for(const theme of ['light','graphite','midnight','sepia']){
+            await page.locator(`[data-home-theme="${theme}"]`).click();
+            assert.equal(await page.evaluate(()=>__signal.appState.canvas.theme),theme);
+            assert.equal(await page.locator('[data-home-theme][aria-pressed="true"]').count(),1);
+            assert.equal(await page.locator('[data-home-scene][aria-pressed="true"]').count(),0);
+        }
         await page.locator('[data-home-scene="listeningIllustrated"]').click();
+        assert.equal(await page.locator('[data-home-theme][aria-pressed="true"]').count(),0);
         assert.equal(await page.locator('[data-home-scene="listeningIllustrated"]').getAttribute('aria-pressed'),'true');
         await page.locator('[data-home="continue"]').click();
+        await assertCentered();
         await page.locator('#headphone-calibration-skip').click();await page.getByRole('button',{name:'Agora não',exact:true}).click();
         await page.evaluate(()=>__signal.createDevice('cdPlayer',800,1000,'saved'));
+        await page.evaluate(()=>{__signal.view.zoom=1;__signal.view.x=-400;__signal.view.y=-700;__signal.applyView();});
         await page.locator('#app-topbar .app-brand').click();
         assert.equal(await page.locator('[data-home="continue"] span').textContent(),'Continuar montagem');
         await page.locator('[data-home="new"]').click();await page.locator('[data-dialog-cancel]').click();
         assert(await page.evaluate(()=>!!__signal.appState.project.devices.saved),'cancel preserves the current project');assert(await home.evaluate(el=>el.open));
         await page.locator('[data-home="continue"]').click();
+        await assertCentered();
         await page.waitForTimeout(700);await page.reload();await page.waitForFunction(()=>document.getElementById('home-menu')?.open);
         assert.equal(await page.evaluate(()=>Object.keys(__signal.appState.project.devices).length),1,'restore completes before home');
         await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.getElementById('home-menu').open);
         await page.locator('#app-topbar .app-brand').click();
-        await page.locator('[data-home="settings"]').click();assert(await page.locator('.app-settings').evaluate(el=>el.open));
-        await page.locator('#app-topbar .app-brand').click();
+        await page.locator('[data-home="settings"]').click();assert(await home.evaluate(el=>el.open));assert(await page.locator('.home-settings').isVisible());assert.equal(await page.locator('.app-settings').evaluate(el=>el.open),false);assert(await page.locator('.home-settings #orthogonal-cables').count());await page.screenshot({path:'/tmp/audio-lab-home-settings.png'});await page.locator('[data-home="back"]').click();assert(await page.locator('.home-main').isVisible());
         await page.locator('[data-home-language="en"]').click();await page.waitForFunction(()=>document.querySelector('[data-home="continue"] span')?.textContent==='Continue setup');
         await page.locator('[data-home-language="pt"]').click();await page.waitForFunction(()=>document.querySelector('[data-home="continue"] span')?.textContent==='Continuar montagem');
         for(const viewport of [{width:1280,height:720},{width:1440,height:900},{width:1920,height:1080}]){

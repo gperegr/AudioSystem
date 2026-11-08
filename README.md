@@ -76,7 +76,7 @@ Adjustment controls use discrete steps; input selectors and tuning have their ow
 
 ### Home menu
 
-The app opens with a menu after restoring the local project. Choose **Continue setup** (or **Enter the studio** for an empty project), **New setup**, **Open project**, **Settings**, or **How it works**. Select a room before entering, or switch between Portuguese and English. Click the Audio Lab brand in the toolbar to return to the menu. New setups require confirmation when a project has content. Calibration and the tutorial invitation follow entry into the studio.
+The app opens with a menu after restoring the local project. Choose **Continue setup** (or **Enter the studio** for an empty project), **New setup**, **Open project**, **Settings**, or **How it works**. The home menu uses a solid sepia background and mutes rain audio. Settings opens its own page with a Back button. Select a room before entering, or switch between Portuguese and English. Click the Audio Lab brand in the toolbar to return to the menu. New setups require confirmation when a project has content. Calibration and the tutorial invitation follow entry into the studio.
 
 The menu has a quiet original 38-second blues loop. Use **Music** and its volume slider in the footer. Playback starts only after interaction, fades out on entering the studio, and stops while the tab is hidden. Mute and volume are saved locally. The MP3 is downloaded and decoded once per page; it uses one native looping source rather than live synthesis.
 
