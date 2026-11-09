@@ -1,7 +1,11 @@
 /* Static, shared textures: decoded once and reused across equipment and previews. */
 :root {
     --material-wood-grain:url('../../assets/textures/wood-grain.svg');
-    --material-brushed-steel:url('../../assets/textures/brushed-steel.svg');
+    --material-brushed-steel:url('../../assets/textures/machined-aluminium.png');
+    --material-powder-coat:url('../../assets/textures/powder-coat.png');
+    --material-walnut:url('../../assets/textures/walnut-veneer.png');
+    --material-linen:url('../../assets/textures/woven-linen.png');
+    --material-leather:url('../../assets/textures/cabinet-leather.png');
 }
 .device-type-tapeDeck [data-tape-counter] {position:relative;}
 :is(#audio-world,.equipment-preview-world) .device-node.audio-interface.ai-art-v3.wood-interface {

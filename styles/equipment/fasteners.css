@@ -1,0 +1,42 @@
+/* Reusable seated fasteners. Only the recessed drive rotates; the head's light
+   stays fixed. Shared SVG definitions avoid repeated gradients and cloned IDs. */
+.hw-screw-object {
+    display:block;
+    flex:none;
+    overflow:visible;
+    pointer-events:none;
+}
+:is(#audio-world,.equipment-preview-world) .device-node .hw-screw-mount {
+    box-sizing:border-box;
+    width:var(--screw-mount-size,8px)!important;
+    height:var(--screw-mount-size,8px)!important;
+    border:0!important;
+    background:none!important;
+    box-shadow:none!important;
+    pointer-events:none;
+}
+:is(#audio-world,.equipment-preview-world) .hw-screw-mount::before,
+:is(#audio-world,.equipment-preview-world) .hw-screw-mount::after {
+    content:none!important;
+}
+:is(#audio-world,.equipment-preview-world) .hw-screw-mount>.hw-screw-object {
+    width:100%;
+    height:100%;
+}
+:is(#audio-world,.equipment-preview-world) :is(.tape-screw,.glass-pre-end>i).hw-screw-mount {--screw-mount-size:7px;}
+:is(#audio-world,.equipment-preview-world) :is(.driver-fastener,.tower-driver-screws>i,.phone-housing-screws>i).hw-screw-mount {--screw-mount-size:6px;}
+:is(#audio-world,.equipment-preview-world) .device-node .hw-knob-fastener.hw-screw-mount {
+    --screw-mount-size:7px;
+    inset:auto!important;
+    top:50%!important;
+    left:50%!important;
+    transform:translate(-50%,-50%);
+}
+:is(#audio-world,.equipment-preview-world) .speaker-driver-screws {background:none;}
+.driver-fastener {position:absolute;translate:-50% -50%;}
+.driver-fastener--top {left:50%;top:3.8%;}
+.driver-fastener--right {left:96.2%;top:50%;}
+.driver-fastener--bottom {left:50%;top:96.2%;}
+.driver-fastener--left {left:3.8%;top:50%;}
+/* The generator's four raster-background screws are now shared SVG objects. */
+:is(#audio-world,.equipment-preview-world) .device-type-signalGeneratorVintage .signal-face::after {content:none;}

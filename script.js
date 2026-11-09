@@ -785,6 +785,60 @@ const Hardware = (() => {
     function setLed(el,on,clipping=false){
         el.classList.toggle('is-signal',!!on);el.classList.toggle('is-lit',!!on);el.classList.toggle('is-clipping',!!on&&!!clipping);el.dataset.lit=String(!!on);
     }
+    const screws=freeze({
+        gold:{name:'Latão dourado',light:'#fff3c1',face:'#d9b369',mid:'#b78a40',dark:'#725122',edge:'#f4d990',slot:'#30230e'},
+        silver:{name:'Aço prateado',light:'#ffffff',face:'#cbd0cf',mid:'#8d979b',dark:'#4d585e',edge:'#e7eeed',slot:'#172026'}
+    });
+    function ensureScrewDefinitions(){
+        if(document.getElementById('hw-screw-definitions'))return;
+        const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+        svg.id='hw-screw-definitions';svg.setAttribute('aria-hidden','true');svg.setAttribute('focusable','false');svg.setAttribute('width','0');svg.setAttribute('height','0');
+        svg.style.cssText='position:absolute;overflow:hidden;pointer-events:none';
+        svg.innerHTML='<defs>'+Object.entries(screws).map(([finish,m])=>{
+            const id='hw-screw-'+finish;
+            return `<linearGradient id="${id}-rim" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${m.light}"/><stop offset=".26" stop-color="${m.mid}"/><stop offset=".5" stop-color="${m.dark}"/><stop offset=".76" stop-color="${m.edge}"/><stop offset="1" stop-color="${m.dark}"/></linearGradient>
+                <radialGradient id="${id}-face" cx=".3" cy=".22" r=".86"><stop stop-color="${m.light}"/><stop offset=".32" stop-color="${m.face}"/><stop offset=".72" stop-color="${m.mid}"/><stop offset="1" stop-color="${m.dark}"/></radialGradient>
+                <symbol id="${id}-head" viewBox="0 0 100 100"><circle cx="50" cy="51" r="48" fill="#05090b" fill-opacity=".65"/><circle cx="50" cy="49" r="44" fill="url(#${id}-rim)" stroke="${m.dark}" stroke-width="2"/><circle cx="50" cy="49" r="38" fill="url(#${id}-face)" stroke="${m.edge}" stroke-width="1.2"/><circle cx="50" cy="49" r="34" fill="none" stroke="${m.light}" stroke-opacity=".22" stroke-width=".7"/><circle cx="50" cy="49" r="36" fill="none" stroke="${m.dark}" stroke-opacity=".3" stroke-width=".65"/><path d="M17 35a35 35 0 0 1 61-12" fill="none" stroke="${m.light}" stroke-opacity=".65" stroke-width="1.5"/><path d="M20 72a38 38 0 0 0 61-2" fill="none" stroke="${m.dark}" stroke-opacity=".7" stroke-width="1.6"/></symbol>
+                <symbol id="${id}-slot" viewBox="0 0 100 100"><path d="M19 40h62v20H19z" fill="${m.dark}"/><path d="M21 43h58v13H21z" fill="${m.slot}"/><path d="M21 56h58v3H21z" fill="${m.edge}"/><path d="M21 43h58" stroke="#000" stroke-opacity=".65" stroke-width="2"/><path d="M23 46h54" stroke="#000" stroke-opacity=".3" stroke-width="1"/></symbol>
+                <symbol id="${id}-cross" viewBox="0 0 100 100"><path d="M41 22h18v19h19v18H59v19H41V59H22V41h19z" fill="${m.dark}" stroke="${m.edge}" stroke-width="2"/><path d="M45 27h10v18h18v10H55v18H45V55H27V45h18z" fill="${m.slot}"/><path d="M28 55h17v18m10-18h18M55 28v17" fill="none" stroke="${m.edge}" stroke-width="1.2" stroke-opacity=".7"/></symbol>`;
+        }).join('')+'</defs>';
+        document.body.appendChild(svg);
+    }
+    function screwMarkup({finish='silver',rotation=0,size=8,drive='slot'}={}){
+        ensureScrewDefinitions();
+        finish=Object.hasOwn(screws,finish)?finish:'silver';drive=drive==='cross'?'cross':'slot';
+        const angle=Number.isFinite(rotation)?rotation:0,diameter=Number.isFinite(size)?Math.max(3,Math.min(128,size)):8;
+        return `<svg class="hw-screw-object" viewBox="0 0 100 100" width="${diameter}" height="${diameter}" data-screw-finish="${finish}" data-screw-rotation="${angle}" data-screw-drive="${drive}" aria-hidden="true" focusable="false"><use href="#hw-screw-${finish}-head"/><g transform="rotate(${angle} 50 49)"><use href="#hw-screw-${finish}-${drive}"/></g></svg>`;
+    }
+    function mountScrews(root){
+        root.querySelectorAll('.speaker-driver-screws').forEach(group=>{
+            if(group.querySelector('.driver-fastener'))return;
+            group.innerHTML=['top','right','bottom','left'].map(side=>`<i class="driver-fastener driver-fastener--${side}"></i>`).join('');
+        });
+        const seed=[...(root.dataset.equipmentType||'')].reduce((sum,c)=>sum+c.charCodeAt(0),0);
+        root.querySelectorAll('.assembly-fastener,.classic-screw,.precision-screw,.tape-screw,.electrostatic-fastener,.phone-housing-screws>i,.tower-driver-screws>i,.driver-fastener,.glass-pre-end>i,[data-knob-finish="ivory"] .hw-knob-fastener').forEach((host,i)=>{
+            if(host.classList.contains('hw-screw-mount'))return;
+            const driver=host.matches('.driver-fastener,.tower-driver-screws>i');
+            const gold=!driver&&(host.matches('.classic-screw,.electrostatic-fastener,.hw-knob-fastener')||root.classList.contains('device-family-vintage'));
+            host.classList.add('hw-screw-mount');host.setAttribute('aria-hidden','true');
+            host.innerHTML=screwMarkup({finish:gold?'gold':'silver',rotation:(seed+i*47)%160-80,drive:driver?'cross':'slot'});
+        });
+    }
+    // Artwork layers live beneath controls in an isolated surface. They have no
+    // layout, hit target, runtime state, or dependency on the interface palette.
+    function mountMaterials(dev){
+        const surfaces=[
+            ['alloy','.classic-preamp-panel,.classic-preamp-connections,.tape-face,.precision-face,.utility-front,.glass-pre-switch-row,.glass-pre-end,.pre-finish-reference,.pre-finish-control,.power-finish-bias,.power-finish-valve .custom-power-connections,.finish-silver'],
+            [dev.el.classList.contains('device-family-vintage')?'alloy':'coated','.rack-face,.graphic-eq-face,.stereo-power-face,.phone-amp-face,.matrix-face,.selector-face,.signal-face,.bench-face,.streamer-face,.cd-face,.interface-face,.xover-panel,.amp4-rack-face,.mixer-rack-panel,.extra-rack,.ai-panel,.integrated-face,.custom-pre-face,.custom-power-face'],
+            ['walnut','.classic-preamp-case,.classic-box-cab,.shelf-finish-wood .bookshelf-cabinet,.device-type-spkPassiveWood .sp-cab'],
+            ['coated','.sp-modern,.sp-active,.power-finish-dual,.finish-minimal,.headphone-controls']
+        ];
+        surfaces.forEach(([material,selector])=>dev.el.querySelectorAll(selector).forEach(surface=>{
+            if(surface.querySelector(':scope > .equipment-material'))return;
+            surface.classList.add('equipment-material-surface');
+            const layer=document.createElement('span');layer.className=`equipment-material equipment-material--${material}`;layer.setAttribute('aria-hidden','true');surface.appendChild(layer);
+        }));
+    }
     function mount(dev){
         dev.el.style.setProperty('--hw-motion',physics.settleMs+'ms');dev.el.style.setProperty('--hw-press',physics.pressMs+'ms');dev.el.style.setProperty('--hw-led-clip',leds.clip.color);
         dev.el.querySelectorAll('[data-hardware-knob]').forEach(el=>{
@@ -798,6 +852,7 @@ const Hardware = (() => {
             el.dataset.ledModel=model;el.classList.add('hw-led');el.style.setProperty('--hw-led-color',spec.color);el.style.setProperty('--hw-led-size',spec.size+'px');
         });
         dev.el.querySelectorAll('.port').forEach(el=>{el.dataset.socketModel=el.dataset.type;});
+        mountScrews(dev.el);
         if(dev.type!=='hardwareDemo')mountLightingDemo(dev.el);
         sync(dev);
     }
@@ -1325,10 +1380,10 @@ const Hardware = (() => {
                 const start=.55,tip={...shadow,x:shadow.x+shadow.sx*start,y:shadow.y+shadow.sy*start,sx:shadow.sx*(1-start),sy:shadow.sy*(1-start)};
                 drawSweptShadow(ctx,tip,Math.min(shadow.plug?2:8,1+travel*.24+(shadow.softness||0)*.4),shadowAlpha(shadow.plug?.035:.075));
             }
-            drawSweptShadow(ctx,{...shadow,sx:0,sy:0},shadow.plug?1.1:shadow.slider?1.3:2.2,shadowAlpha(shadow.plug?.18:.28));
+            drawSweptShadow(ctx,{...shadow,sx:0,sy:0},shadow.plug?1.1:shadow.slider?1.3:2.2,shadowAlpha(shadow.plug?.21:.34));
             const {x,y,sx,sy}=shadow,gradient=ctx.createLinearGradient(x,y,x+sx+.01,y+sy+.01);
-            gradient.addColorStop(0,shadowAlpha(shadow.plug?.20:.4));
-            gradient.addColorStop(1,shadowAlpha(shadow.plug?.055:.11));
+            gradient.addColorStop(0,shadowAlpha(shadow.plug?.24:.46));
+            gradient.addColorStop(1,shadowAlpha(shadow.plug?.065:.13));
             drawSweptShadow(ctx,shadow,0,gradient);
         }
         ctx.globalAlpha=1;
@@ -1410,7 +1465,7 @@ const Hardware = (() => {
         if(spec.kind==='jack')return `<g transform="scale(${spec.scale})"><path d="M0 0 3 -2h12v4H3Z" fill="#ddbc77" stroke="#887044" stroke-width=".7"/><path d="M6 -2v4M11 -2v4" stroke="#20252a" stroke-width="1.1"/><rect x="15" y="-4" width="13" height="8" rx="2" fill="#363f45" stroke="#85949c" stroke-width="1"/><path d="M18 -3v6m3-6v6" stroke="#5d6c74"/></g>`;
         return `<path d="M0 0h7" stroke="#e2c283" stroke-width="2.5" stroke-linecap="round"/><rect x="5" y="-4" width="7" height="8" rx="1" fill="#bac2c5" stroke="#677780" stroke-width=".8"/><rect x="12" y="-5" width="13" height="10" rx="2" fill="#262e33" stroke="#788790" stroke-width=".8"/><rect x="14" y="-5" width="4" height="10" rx=".6" fill="${spec.color||'#cf4545'}"/>`;
     }
-    return Object.freeze({knobs,buttons,controlSizes,setControlSize,buttonSounds,movementSounds,movementSound,sliders,leds,plugs,accents,sizes,physics,updateAccents,updateLightingDemo,renderLightingDemo,sceneLightAt,demoMarkup,bindDemo,sourceTransport,setButtonLabel,button:skinButton,bindKnob,bindLinear,slider,setLed,layout,mount,sync,dispose,inspector,plugMarkup});
+    return Object.freeze({knobs,buttons,screws,screw:screwMarkup,fasteners:mountScrews,controlSizes,setControlSize,buttonSounds,movementSounds,movementSound,sliders,leds,plugs,accents,sizes,physics,updateAccents,updateLightingDemo,renderLightingDemo,sceneLightAt,demoMarkup,bindDemo,sourceTransport,setButtonLabel,button:skinButton,bindKnob,bindLinear,slider,setLed,layout,materials:mountMaterials,mount,sync,dispose,inspector,plugMarkup});
 })();
 
         // Code-only switch: set true and rebuild script.js to expose DEBUG equipment.
@@ -6743,10 +6798,11 @@ const Hardware = (() => {
                 el.querySelector('.phone-amp-face,.amp4-rack-face').prepend(detail);
             }
             const assemblySurface=type==='powerValve'?el.querySelector('.custom-power-connections'):el.querySelector([
-                '.audio-interface-face','.integrated-face','.receiver-front','.poweramp-body',
+                '.audio-interface-face','.integrated-face','.device-type-receiver>.p-4','.receiver-front','.poweramp-body',
                 '.eq-studio-face','.eq-vintage-face','.mixer-rack-panel','.xover-panel',
                 '.selector-face','.signal-face','.bench-face','.streamer-face','.cd-face',
-                '.interface-face','.custom-pre-face','.custom-power-face'
+                '.interface-face','.custom-pre-face','.custom-power-face',
+                '.stereo-power-face','.phone-amp-face','.graphic-eq-face','.rack-face'
             ].join(','));
             if(assemblySurface&&!assemblySurface.querySelector('.assembly-details')){
                 assemblySurface.classList.add('assembly-detail-surface');
@@ -6767,6 +6823,8 @@ const Hardware = (() => {
                 if (!p.dataset.channel && /L$/.test(p.dataset.node || '')) p.dataset.channel = 'L';
             });
             Hardware.layout({type,el});
+            Hardware.materials({el});
+            Hardware.fasteners(el);
             world.appendChild(el);
             if(previewOnly){el.classList.add('catalog-placement-preview');el.hidden=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type,el};}
 

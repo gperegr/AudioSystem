@@ -1,5 +1,9 @@
 # Equipment contracts
 
+`node tests/tape-deck.browser.cjs` checks the tape deck's layout, real transport, ten-second seek, keyboard level control, reel inertia, reduced motion, directional lighting, shadow cache, and saved-project reload. It serves local assets through Playwright and accepts `TAILWIND_SCRIPT_FILE` for offline styling.
+
+`node tests/equipment-materials.browser.cjs` checks all registered models with the material and depth stylesheets enabled and disabled: device/control geometry, connector guidance colors and halos, inert artwork layers, matching placement previews, and local texture decoding. It also verifies gold and silver screws, varied drive angles, resolved SVG references, one shared definition set, and clearance from controls, meters, tuner scales, and text. Speaker grilles intentionally cover the driver fasteners. It uses Playwright routing and accepts `TAILWIND_SCRIPT_FILE` for offline styling.
+
 ## Signal history
 
 `signal-history.test.cjs` covers RMS/peak measurements, level states, the bounded 12-second window, gaps and retained overload events. `node tests/signal-history.browser.cjs` exercises actual Web Audio readings, a connected chain, power changes, English labels, narrow layout, panel closure and device deletion. It also mounts and disposes the shared meter adapter across all catalog types. This browser test serves local assets through Playwright, without requiring an HTTP server. It needs the app's Tailwind CDN; optionally set `TAILWIND_SCRIPT_FILE` to a local copy of that script. Set `SIGNAL_HISTORY_SCREENSHOT` to save a preview.

@@ -19,11 +19,13 @@
 .tape-screw::after {content:'';position:absolute;left:1px;right:1px;top:1.5px;height:.6px;background:#37413a;transform:rotate(-28deg);}
 .tape-screw-tl {left:5px;top:5px;}.tape-screw-tr {right:5px;top:5px;}.tape-screw-bl {left:5px;bottom:5px;}.tape-screw-br {right:5px;bottom:5px;}
 .tape-reels {position:absolute;left:20px;right:20px;top:44px;z-index:2;display:flex;justify-content:space-between;}
-.tape-reel {position:relative;width:178px;height:178px;box-sizing:border-box;border:1px solid #5f6861;border-radius:50%;background:radial-gradient(circle,#252a27 0 68%,#59645d 69% 97%,#c5ccc1 98%);box-shadow:0 1px 2px #0005,inset 0 0 0 2px #b9c0b6;}
+.tape-reel {position:relative;width:178px;height:178px;box-sizing:border-box;border:1px solid #5f6861;border-radius:50%;background:radial-gradient(circle,#252a27 0 68%,#59645d 69% 97%,#c5ccc1 98%);box-shadow:0 1px 2px #0005,inset 0 0 0 2px #b9c0b6;filter:drop-shadow(0 1.5px 1.25px #0007);}
 .tape-winding {position:absolute;left:calc(50% - 79px);top:calc(50% - 79px);width:158px;height:158px;border-radius:50%;background:repeating-radial-gradient(circle,#38251b 0 .7px,#644735 .8px 1.4px,#4a3224 1.5px 2.2px);box-shadow:0 0 0 1px #1c1915;transform-origin:center;}
 .tape-reel::after {content:'';position:absolute;inset:0;border-radius:50%;pointer-events:none;background:radial-gradient(ellipse at var(--demo-highlight-x,35%) var(--demo-highlight-y,25%),#ffffe92e,transparent 70%);box-shadow:inset 0 0 0 .7px #f1f1e980;}
 .reel-metal {position:absolute;inset:0;border-radius:50%;transform-origin:center;}
-.reel-metal>svg {display:block;width:100%;height:100%;}
+/* The metal flange slightly overhangs its stationary backing; the hub and
+   tape path retain their shared center and the transport keeps its clearance. */
+.reel-metal>svg {position:absolute;left:-6px;top:-6px;display:block;width:calc(100% + 12px);height:calc(100% + 12px);}
 .reel-metal>b {position:absolute;inset:66px;border-radius:50%;background:conic-gradient(from 30deg,#222827,#66706a 18%,#1e2522 35%,#414b45 55%,#171e1b 80%,#222827);border:2px solid #aab2aa;box-shadow:inset 0 0 0 3px #303a33,inset 0 0 0 4px #828f83,0 1px 2px #0007;}
 .reel-metal>b::before {content:'';position:absolute;inset:13px;border:1px solid #566359;border-radius:50%;background:#141c17;}
 .reel-metal>b::after {content:'';position:absolute;left:calc(50% - 2px);top:3px;width:4px;height:7px;border-radius:1px;background:#d2d8cd;box-shadow:0 .5px .7px #0008;}

@@ -1,0 +1,138 @@
+/* Physical materials inspired by studio hardware: static textures, soft grazing
+   light, machined edges, and contact shadows. Canvas and catalog share artwork.
+   These rules deliberately use equipment finishes rather than UI palette tokens. */
+
+/* Isolated, negative stacking keeps texture above the housing background and
+   below every control, label, socket, meter, and scene-light overlay. */
+:where(.equipment-material-surface) {
+    position:relative;
+    isolation:isolate;
+}
+:is(#audio-world,.equipment-preview-world) .device-node .equipment-material {
+    position:absolute;
+    inset:0;
+    z-index:-1;
+    display:block;
+    border-radius:inherit;
+    pointer-events:none;
+    background-repeat:repeat;
+}
+.equipment-material--alloy {
+    background-image:linear-gradient(105deg,#fff2,transparent 28% 65%,#0000000d),var(--material-brushed-steel);
+    background-size:100% 100%,256px 128px;
+    box-shadow:inset 0 1px #ffffff80,inset 1px 0 #ffffff2e,inset 0 -2px 2px #00000030;
+}
+.equipment-material--coated {
+    background-image:linear-gradient(115deg,#ffffff0c,transparent 45% 75%,#0002),var(--material-powder-coat);
+    background-size:100% 100%,128px 128px;
+    box-shadow:inset 0 1px #ffffff30,inset 1px 0 #ffffff12,inset 0 -2px 2px #0006;
+}
+.equipment-material--walnut {
+    background-image:linear-gradient(90deg,#140c0866,transparent 2% 98%,#140c0877),var(--material-walnut);
+    background-size:100% 100%,384px 256px;
+    box-shadow:inset 0 1px #f7d7aa77,inset 1px 0 #e9bc8b44,inset -1px -2px 2px #25170d88;
+}
+
+/* Richer veneer and milled front edges; retain every model's footprint. */
+:is(#audio-world,.equipment-preview-world) .classic-preamp-case {
+    background:linear-gradient(100deg,#654329,#a9794d 24%,#71472d 60%,#a57347 85%,#54361f);
+    box-shadow:inset 0 2px #dfb58099,inset 2px 0 #bd905d66,inset -2px -3px #2d1c13bb,0 3px 5px #0007;
+}
+:is(#audio-world,.equipment-preview-world) .classic-preamp-case::before,
+:is(#audio-world,.equipment-preview-world) .classic-preamp-case::after {
+    background:var(--material-walnut) center/128px 384px,linear-gradient(90deg,#0002,transparent 45%,#ffd6a111);
+}
+:is(#audio-world,.equipment-preview-world) .classic-preamp-panel {
+    background:linear-gradient(105deg,#c6c2b0,#e2deca 30%,#c7c6b7 68%,#dbd8c5);
+    box-shadow:inset 0 1px #fff9,inset 1px 0 #fffc,inset 0 -1px #686553,0 2px 3px #211c1499;
+}
+:is(#audio-world,.equipment-preview-world) .device-type-spkPassiveWood .sp-cab.sp-vintage {
+    background:linear-gradient(100deg,#65452b,#9a7049 18%,#6e4c30 78%,#493120);
+}
+:is(#audio-world,.equipment-preview-world) .classic-box-cab:is(.classic-box-orange,.classic-box-black) {
+    background:linear-gradient(105deg,#a17850,#745033 52%,#98704a);
+}
+
+/* Dark anodized racks stay dark. The fine substrate catches light at the edge. */
+:is(#audio-world,.equipment-preview-world) .device-node.device-family-studio :is(.graphic-eq-face,.stereo-power-face,.rack-face,.mixer-rack-panel,.xover-panel,.amp4-rack-face) {
+    background:linear-gradient(110deg,#303639,#202528 42%,#191e21 84%,#252b2e)!important;
+    box-shadow:inset 0 1px #82909655,inset 0 -2px #080d10,inset 1px 0 #ffffff18,0 2px 3px #0005;
+}
+:is(#audio-world,.equipment-preview-world) .integrated-face.finish-blue {
+    background:linear-gradient(110deg,#18272e,#080e12 55%,#0c151a);
+    box-shadow:inset 0 1px #a3bbc577,inset 0 -2px #000c,0 3px 5px #0007;
+}
+:is(#audio-world,.equipment-preview-world) .integrated-face.finish-silver {
+    box-shadow:inset 0 1px #fff9,inset 0 -2px #737a7288,0 3px 4px #0007;
+}
+:is(#audio-world,.equipment-preview-world) .assembly-details::before {
+    border-color:#e7eeea1c;
+    box-shadow:inset 0 1px #ffffff14,inset 0 -1px #00000030;
+}
+:is(#audio-world,.equipment-preview-world) .assembly-fastener {
+    background:conic-gradient(from 30deg,#b2bbb9,#596261 60deg,#d5dbd5 150deg,#454d4d 230deg,#9da7a4);
+    box-shadow:inset 0 0 0 .5px #ffffff66,0 1px 1px #000b,0 0 0 1px #0003;
+}
+
+/* Fine turning marks and restrained reflections replace the flat knob faces.
+   Existing dimensions, indicators, scales, focus rings, and rotations remain. */
+:is(#audio-world,.equipment-preview-world) .hw-knob:is([data-knob-finish="machined"],[data-knob-finish="fluted"],[data-knob-finish="skirted"]) {
+    box-shadow:0 1px 0 #626963,0 3px 2px #0008,0 5px 5px #0004,inset 0 1px #ffffffe0!important;
+}
+:is(#audio-world,.equipment-preview-world) .hw-knob:is([data-knob-finish="machined"],[data-knob-finish="fluted"],[data-knob-finish="skirted"])>.hw-knob-face {
+    background:repeating-radial-gradient(circle at center,#fff2 0 .35px,#0000000c .45px .7px,transparent .8px 1.4px),conic-gradient(from 24deg,#c2c6bd,#f5f3e8 45deg,#b0b9b2 100deg,#e3e6dc 160deg,#98a59e 230deg,#e8e9df 290deg,#c2c6bd)!important;
+    box-shadow:inset 0 0 0 1px #f4f3e2aa,inset 0 1px 2px #fff8,inset 0 -2px 2px #37433c66!important;
+}
+:is(#audio-world,.equipment-preview-world) .hw-knob .hw-knob-cap::after {
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    pointer-events:none;
+    background:var(--material-powder-coat) center/96px 96px;
+    opacity:.5;
+}
+:is(#audio-world,.equipment-preview-world) .hw-knob:is([data-knob-finish="machined"],[data-knob-finish="fluted"]) .hw-knob-cap::after {
+    background:var(--material-brushed-steel) center/128px 64px;
+    opacity:.65;
+}
+:is(#audio-world,.equipment-preview-world) .hw-knob[data-knob-finish="bakelite"] .hw-knob-cap {
+    background:radial-gradient(ellipse at 33% 24%,#64533d,#332c22 60%,#1c1c17)!important;
+    box-shadow:inset 0 1px #ba9d6855,inset 0 -2px 3px #080b09aa,0 1px 2px #0008;
+}
+:is(#audio-world,.equipment-preview-world) .hw-knob .hw-knob-indicator {
+    box-shadow:inset .5px 0 #ffffff44,.5px 1px 1px #0007;
+}
+
+/* Glass has thickness and a broad, faint reflection, without masking readings. */
+:is(#audio-world,.equipment-preview-world) :is(.integrated-gauge,.extra-vu,.bias-meter,.bench-lcd,.cd-lcd,.signal-screen,.custom-pre-screen) {
+    position:relative;
+}
+:is(#audio-world,.equipment-preview-world) :is(.integrated-gauge,.extra-vu,.bias-meter,.bench-lcd,.cd-lcd,.signal-screen,.custom-pre-screen)::after {
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:3;
+    border-radius:inherit;
+    pointer-events:none;
+    background:linear-gradient(118deg,#ffffff1c,transparent 34% 68%,#ffffff05 84%,transparent);
+    box-shadow:inset 0 1px #ffffff55,inset 1px 0 #ffffff1c,inset 0 -2px 3px #0003;
+}
+
+/* Woven cloth has alternating threads instead of a hard grid. Keep foam and
+   model-specific perforated grilles in their original construction. */
+:is(#audio-world,.equipment-preview-world) .device-type-spkPassiveWood .speaker-grille {
+    background:var(--material-linen) center/20px 20px,linear-gradient(110deg,#85785c,#5f5946 65%,#71664f);
+    box-shadow:inset 0 0 0 2px #302b20,inset 2px 3px 6px #17160ec0,inset -1px -1px #cab99455,0 1px 3px #0008;
+}
+:is(#audio-world,.equipment-preview-world) .headphone-equipment:is(.device-type-headphone,.device-type-hpStudio,.device-type-hpClassic) .headphone-cup::after {
+    background-image:var(--material-leather),radial-gradient(ellipse at 38% 28%,#424344,#14181b 70%);
+    background-size:96px 96px,100% 100%;
+}
+
+/* Port colors still identify the signal/channel; metal collars and a recessed
+   center add depth without changing connector sizes, endpoints, or hit areas. */
+:is(#audio-world,.equipment-preview-world) .port:not([data-type="wire"]):not(.port-compatible,.port-source,.port-incompatible) {
+    background-image:radial-gradient(circle at 45% 40%,#030608 0 38%,#171d1f 48%,#000 62%);
+    box-shadow:inset 0 1px 2px #000c,0 1px 1px #000b,0 -1px .5px #fff5;
+}

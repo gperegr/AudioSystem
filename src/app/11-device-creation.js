@@ -203,10 +203,11 @@
                 el.querySelector('.phone-amp-face,.amp4-rack-face').prepend(detail);
             }
             const assemblySurface=type==='powerValve'?el.querySelector('.custom-power-connections'):el.querySelector([
-                '.audio-interface-face','.integrated-face','.receiver-front','.poweramp-body',
+                '.audio-interface-face','.integrated-face','.device-type-receiver>.p-4','.receiver-front','.poweramp-body',
                 '.eq-studio-face','.eq-vintage-face','.mixer-rack-panel','.xover-panel',
                 '.selector-face','.signal-face','.bench-face','.streamer-face','.cd-face',
-                '.interface-face','.custom-pre-face','.custom-power-face'
+                '.interface-face','.custom-pre-face','.custom-power-face',
+                '.stereo-power-face','.phone-amp-face','.graphic-eq-face','.rack-face'
             ].join(','));
             if(assemblySurface&&!assemblySurface.querySelector('.assembly-details')){
                 assemblySurface.classList.add('assembly-detail-surface');
@@ -227,6 +228,8 @@
                 if (!p.dataset.channel && /L$/.test(p.dataset.node || '')) p.dataset.channel = 'L';
             });
             Hardware.layout({type,el});
+            Hardware.materials({el});
+            Hardware.fasteners(el);
             world.appendChild(el);
             if(previewOnly){el.classList.add('catalog-placement-preview');el.hidden=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type,el};}
 

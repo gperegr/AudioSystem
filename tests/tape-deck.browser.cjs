@@ -1,35 +1,46 @@
-// Optional: serve the repository on localhost:8000, then node tests/tape-deck.browser.cjs.
+// Real transport, geometry, and lighting; local assets are served by Playwright.
 const {chromium}=require('playwright');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const root=path.resolve(__dirname,'..');
 (async()=>{
     const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox']});
     try{
         const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];
         page.on('pageerror',error=>errors.push(error.message));
-        await page.route('**/script.js?*',route=>{
-            let body=fs.readFileSync(path.join(__dirname,'../script.js'),'utf8');const index=body.lastIndexOf('        renderVisuals();');
-            body=body.slice(0,index)+'window.__tape={state,view,world,createDevice,selectDevice,centerDeviceSet,updateTapeReels,tapePosition,saveLocalProject};\n'+body.slice(index);
-            return route.fulfill({contentType:'application/javascript',body});
+        await page.route('**/*',async route=>{
+            const url=new URL(route.request().url());
+            if(url.hostname==='cdn.tailwindcss.com')return process.env.TAILWIND_SCRIPT_FILE?route.fulfill({contentType:'application/javascript',body:fs.readFileSync(process.env.TAILWIND_SCRIPT_FILE)}):route.continue();
+            if(url.hostname!=='127.0.0.1')return route.abort();
+            const file=path.resolve(root,'.'+decodeURIComponent(url.pathname==='/'?'/index.html':url.pathname));
+            if(!file.startsWith(root+path.sep)||!fs.existsSync(file))return route.fulfill({status:404,body:''});
+            let body=fs.readFileSync(file);
+            if(file===path.join(root,'script.js')){
+                const source=body.toString(),index=source.lastIndexOf('        renderVisuals();');assert(index>=0);
+                body=source.slice(0,index)+'window.__tape={appState,view,world,createDevice,selectDevice,centerDeviceSet,updateTapeReels,tapePosition,saveLocalProject};\n'+source.slice(index);
+            }
+            return route.fulfill({contentType:({'.html':'text/html','.js':'application/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2'})[path.extname(file)]||'application/octet-stream',body});
         });
         require('./helpers/studio-entry.cjs')(page);
         await page.goto(process.env.TEST_BASE_URL||'http://127.0.0.1:8000/');
         await page.locator('#headphone-calibration-skip').click();await page.getByRole('button',{name:'Agora não',exact:true}).click();
-        await page.evaluate(()=>{__tape.createDevice('tapeDeck',1000,900);__tape.view.zoom=1.3;__tape.centerDeviceSet(Object.values(__tape.state.devices));});
+        await page.evaluate(()=>{__tape.createDevice('tapeDeck',1000,900);__tape.view.zoom=1.3;__tape.centerDeviceSet(Object.values(__tape.appState.project.devices));});
         await page.waitForTimeout(1100);
         const deck=page.locator('#audio-world>.device-type-tapeDeck');
         const geometry=await deck.evaluate(el=>{const rect=el.getBoundingClientRect(),parts=[...el.querySelectorAll('button,.extra-vu')].map(n=>n.getBoundingClientRect());return {width:el.offsetWidth,height:el.offsetHeight,contained:parts.every(r=>r.left>=rect.left&&r.right<=rect.right&&r.top>=rect.top&&r.bottom<=rect.bottom),ports:[...el.querySelectorAll('.port')].map(n=>[n.dataset.io,n.dataset.node]),reliefs:el.querySelectorAll('[data-lighting-relief]').length};});
         assert.deepEqual(geometry,{width:480,height:440,contained:true,ports:[['out','outL'],['out','outR']],reliefs:5});
         // Use real source controls and real AudioNodes, without routing sound to the system output.
-        await page.evaluate(()=>{const d=Object.values(__tape.state.devices).find(d=>d.type==='tapeDeck');d.audioBuffer=__tape.state.audioCtx.createBuffer(2,30*8000,8000);d.fileOffset=0;});
-        await deck.locator('[data-source-play]').click();await page.waitForFunction(()=>Object.values(__tape.state.devices).find(d=>d.type==='tapeDeck').state.playing);
+        await page.evaluate(()=>{const d=Object.values(__tape.appState.project.devices).find(d=>d.type==='tapeDeck');d.audioBuffer=__tape.appState.audio.context.createBuffer(2,30*8000,8000);d.fileOffset=0;});
+        await deck.locator('[data-source-play]').click();await page.waitForFunction(()=>Object.values(__tape.appState.project.devices).find(d=>d.type==='tapeDeck').state.playing);
         await page.waitForTimeout(250);assert.equal(await deck.locator('[data-source-play]').getAttribute('aria-pressed'),'true');
         await deck.locator('[data-tape-forward]').click();await page.waitForTimeout(100);
-        assert(await page.evaluate(()=>__tape.tapePosition(Object.values(__tape.state.devices).find(d=>d.type==='tapeDeck'))>=10));
-        await deck.locator('[data-source-play]').click();assert(!await page.evaluate(()=>Object.values(__tape.state.devices).find(d=>d.type==='tapeDeck').state.playing));
+        assert(await page.evaluate(()=>__tape.tapePosition(Object.values(__tape.appState.project.devices).find(d=>d.type==='tapeDeck'))>=10));
+        await deck.locator('[data-source-play]').click();assert(!await page.evaluate(()=>Object.values(__tape.appState.project.devices).find(d=>d.type==='tapeDeck').state.playing));
+        const pausedPosition=await page.evaluate(()=>__tape.tapePosition(Object.values(__tape.appState.project.devices).find(d=>d.type==='tapeDeck')));
         await deck.locator('[data-tape-back]').click();await page.waitForTimeout(80);
-        assert(await page.evaluate(()=>__tape.tapePosition(Object.values(__tape.state.devices).find(d=>d.type==='tapeDeck'))<2));
+        const rewoundPosition=await page.evaluate(()=>__tape.tapePosition(Object.values(__tape.appState.project.devices).find(d=>d.type==='tapeDeck')));
+        assert(Math.abs(rewoundPosition-Math.max(0,pausedPosition-10))<.01,'rewind subtracts ten seconds from the actual paused position');
         const knob=deck.locator('[data-tape-level]');await knob.focus();await knob.press('ArrowDown');
-        assert(await page.evaluate(()=>Object.values(__tape.state.devices).find(d=>d.type==='tapeDeck').state.tapeVolume<.8));
+        assert(await page.evaluate(()=>Object.values(__tape.appState.project.devices).find(d=>d.type==='tapeDeck').state.tapeVolume<.8));
         await deck.locator('[data-tape-stop]').click();await page.waitForTimeout(250);assert.equal(await deck.locator('[data-tape-counter]').textContent(),'00:00');
         // Deterministic visual state: accelerate, coast down, exchange winding sizes, honor reduced motion.
         const motion=await page.evaluate(()=>{
@@ -49,16 +60,16 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
         await page.evaluate(()=>{RoomScenes.lights=()=>[];document.querySelector('#canvas').dataset.theme='dark';__tape.createDevice('wallLampCage',700,650);Hardware.updateLightingDemo();});await page.waitForTimeout(180);
         const lightSample=()=>page.evaluate(()=>{const d=document.querySelector('.device-type-tapeDeck');return {highlight:parseFloat(d.querySelector('.tape-reel').style.getPropertyValue('--demo-highlight-x')),shadow:d.querySelector('.lighting-control-shadow').toDataURL()};});
         const left=await lightSample();
-        await page.evaluate(()=>{const lamp=Object.values(__tape.state.devices).find(d=>d.type==='wallLampCage');lamp.el.style.left='1600px';Hardware.updateLightingDemo();});await page.waitForTimeout(180);
+        await page.evaluate(()=>{const lamp=Object.values(__tape.appState.project.devices).find(d=>d.type==='wallLampCage');lamp.el.style.left='1600px';Hardware.updateLightingDemo();});await page.waitForTimeout(180);
         const right=await lightSample();assert(left.highlight<50&&right.highlight>50);assert.notEqual(left.shadow,right.shadow);
-        await page.evaluate(()=>{const d=Object.values(__tape.state.devices).find(d=>d.type==='tapeDeck');__tape.updateTapeReels(d,20,.05,true);});await page.waitForTimeout(100);assert.equal((await lightSample()).shadow,right.shadow);
-        await page.evaluate(()=>{const d=Object.values(__tape.state.devices).find(d=>d.type==='tapeDeck');__tape.selectDevice(d.id);document.documentElement.classList.remove('lighting-demo-enabled');});
+        await page.evaluate(()=>{const d=Object.values(__tape.appState.project.devices).find(d=>d.type==='tapeDeck');__tape.updateTapeReels(d,20,.05,true);});await page.waitForTimeout(100);assert.equal((await lightSample()).shadow,right.shadow);
+        await page.evaluate(()=>{const d=Object.values(__tape.appState.project.devices).find(d=>d.type==='tapeDeck');__tape.selectDevice(d.id);document.documentElement.classList.remove('lighting-demo-enabled');});
         await deck.screenshot({path:'/tmp/tape-deck-neutral.png'});
         await page.evaluate(()=>document.documentElement.classList.add('lighting-demo-enabled'));
-        await deck.locator('.power-btn').click();assert(!await page.evaluate(()=>Object.values(__tape.state.devices).find(d=>d.type==='tapeDeck').powered));
+        await deck.locator('.power-btn').click();assert(!await page.evaluate(()=>Object.values(__tape.appState.project.devices).find(d=>d.type==='tapeDeck').powered));
         await deck.locator('.power-btn').click();
-        await page.evaluate(()=>__tape.saveLocalProject(true));await page.reload();await page.waitForFunction(()=>window.__tape&&Object.values(__tape.state.devices).some(d=>d.type==='tapeDeck'));
-        assert(!await page.evaluate(()=>Object.values(__tape.state.devices).find(d=>d.type==='tapeDeck').state.playing));
+        await page.evaluate(()=>__tape.saveLocalProject(true));await page.reload();await page.waitForFunction(()=>window.__tape&&Object.values(__tape.appState.project.devices).some(d=>d.type==='tapeDeck'));
+        assert(!await page.evaluate(()=>Object.values(__tape.appState.project.devices).find(d=>d.type==='tapeDeck').state.playing));
         assert.deepEqual(errors,[]);
         console.log('Tape Deck: layout, real transport controls, knob, inertia, reduced motion, lighting direction/cache and reload passed.');
     }finally{await browser.close();}

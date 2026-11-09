@@ -1,0 +1,144 @@
+/* Physical depth complements the moving scene light: short ambient contact
+   shadows, recessed cavities, and fixed construction edges. No layout changes,
+   new hit targets, or extra animation loops; all artwork stays frontal. */
+
+/* A tight contact edge and a softer ambient shadow ground every silhouette.
+   Selection/hover contours remain owned by the interface palette stylesheet. */
+:is(#audio-world,.equipment-preview-world) .device-node:where(:not(.furniture-node):not(.wall-lamp-node):not(.device-type-pendantLamp):not(.equipment-dragging)) {
+    filter:drop-shadow(0 1px .75px #0007) drop-shadow(0 4px 4px #0004);
+}
+
+/* Housing edge occlusion sits under labels and controls, with separate values
+   for light metal, dark paint, and the thicker wooden cabinet surround. */
+.equipment-material--alloy {--depth-edge:.24;--depth-rim:.42;--depth-radius:3px;}
+.equipment-material--coated {--depth-edge:.46;--depth-rim:.17;--depth-radius:4px;}
+.equipment-material--walnut {--depth-edge:.38;--depth-rim:.3;--depth-radius:5px;}
+.equipment-material::after {
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    pointer-events:none;
+    box-shadow:inset 0 1px 1px rgb(255 255 255 / var(--depth-rim,.2)),
+        inset 1px 0 1px #ffffff18,
+        inset -2px 0 var(--depth-radius,3px) rgb(0 0 0 / var(--depth-edge,.3)),
+        inset 0 -4px 4px rgb(0 0 0 / var(--depth-edge,.3)),
+        inset 0 5px 7px -6px #0009;
+}
+:is(#audio-world,.equipment-preview-world) :is(.classic-preamp-panel,.precision-front,.utility-front) {
+    box-shadow:inset 0 1px #ffffffe0,inset 1px 0 #ffffff66,inset 0 -1px #484c4488,
+        0 1px 1px #0008,0 3px 4px #0005;
+}
+:is(#audio-world,.equipment-preview-world) :is(.integrated-connections,.custom-power-connections,.classic-box-connection,.tower-terminal) {
+    box-shadow:inset 0 2px 3px #0003,inset 0 -1px #ffffff24,0 -1px #0003;
+}
+
+/* Knobs rise off the plate; recessed models keep a deep, dark mounting well.
+   Existing finishes, diameters, scale marks and indicator angles are retained. */
+:is(#audio-world,.equipment-preview-world) .device-node .hw-knob[data-knob-finish] {
+    box-shadow:0 1px 1px #000b,0 3px 2px #0008,0 5px 6px #0005,
+        inset 0 1px 1px #ffffff70!important;
+    --depth-specular:.13;
+}
+:is(#audio-world,.equipment-preview-world) .device-node .hw-knob[data-knob-finish="recessed"] {
+    box-shadow:inset 0 2px 4px #000d,0 1px #ffffff55,0 2px 3px #0007!important;
+    --depth-specular:.09;
+}
+:is(#audio-world,.equipment-preview-world) .device-node .hw-knob:is([data-knob-finish="rubber"],[data-knob-finish="plain"],[data-knob-finish="interface"]) {--depth-specular:.055;}
+:is(#audio-world,.equipment-preview-world) .device-node .hw-knob:is([data-knob-finish="machined"],[data-knob-finish="fluted"],[data-knob-finish="skirted"]) {--depth-specular:.21;}
+/* The reflection stays on the stationary body while the dial face rotates.
+   Blue Meters already has this construction; the streamer has a linear roller. */
+:is(#audio-world,.equipment-preview-world) .device-node:not(.device-type-integratedBlue) .hw-knob:not([data-stream-volume])::after {
+    content:""!important;
+    position:absolute;
+    inset:1px;
+    z-index:2;
+    border-radius:50%;
+    pointer-events:none;
+    background:radial-gradient(ellipse at var(--demo-highlight-x,35%) var(--demo-highlight-y,28%),
+        rgb(255 255 255 / var(--depth-specular,.13)),transparent 58%);
+    box-shadow:inset 0 1px 1px #ffffff33,inset 0 -2px 3px #0005;
+}
+
+/* Raised key caps and their pressed state have different contact shadows.
+   The shared hardware library still controls their travel and timing. */
+:is(#audio-world,.equipment-preview-world) .device-node .hw-button:not(.headphone-bt-button):not([data-button-model="ui"]):not([data-button-model="membrane"]):not([aria-pressed="true"]):not(.hw-pressing):not(:active) :is(.hw-mechanical-key-face,.hw-plunger-face) {
+    box-shadow:inset 0 1px 1px #ffffff75,inset 0 -2px 2px #0005,
+        0 1px 0 #1b252acc,0 3px 3px #0007;
+}
+:is(#audio-world,.equipment-preview-world) .device-node .hw-button:not(.headphone-bt-button):not([data-button-model="ui"]):is([aria-pressed="true"],.hw-pressing,:active) :is(.hw-mechanical-key-face,.hw-plunger-face) {
+    box-shadow:inset 0 2px 3px #0007,0 1px 1px #0007,inset 0 -1px #ffffff25;
+}
+:is(#audio-world,.equipment-preview-world) .device-node .power-rocker-well {
+    box-shadow:inset 0 2px 3px #000d,inset 1px 0 2px #0008,0 1px #ffffff24;
+}
+:is(#audio-world,.equipment-preview-world) .device-node .power-rocker-face {
+    box-shadow:inset 0 1px 1px #ffffff55,inset 0 -2px 2px #0006,0 2px 2px #000a;
+}
+:is(#audio-world,.equipment-preview-world) :is(.pre-handle,.dual-handle,.bench-handle,.graphic-eq-handle,.mixer-rack-handle) {
+    box-shadow:inset 1px 0 #ffffff55,inset -1px 0 #0009,2px 2px 2px #0008,4px 3px 5px #0004;
+}
+
+/* Meter glass sits behind its bezel, with dark upper seating and a lit lip.
+   Power-off filters and their existing fade transitions remain authoritative. */
+:is(#audio-world,.equipment-preview-world) .device-node :is(.integrated-gauge,.extra-vu,.bias-meter,.bench-lcd,.bench-screen,.signal-screen,.cd-lcd,.custom-pre-screen,.receiver-radio,.stream-screen) {
+    box-shadow:inset 0 2px 5px #0007,inset 1px 0 2px #0005,
+        0 1px 0 #ffffff55,0 -1px 1px #0008,0 2px 3px #0004;
+}
+:is(#audio-world,.equipment-preview-world) :is(.integrated-gauge,.extra-vu,.bias-meter,.bench-lcd,.cd-lcd,.signal-screen,.custom-pre-screen)::after {
+    box-shadow:inset 0 2px 3px #0005,inset 0 1px #ffffff66,
+        inset 1px 0 #ffffff24,inset 0 -2px 3px #0004;
+}
+
+/* Driver baskets cast tight shadows onto the baffle, while cones recede into
+   their surrounds. Cabinet shadows follow the actual cabinet, not its bounds. */
+:is(#audio-world,.equipment-preview-world) .device-node :is(.sp-cab,.classic-box-cab,.tower-cabinet,.bookshelf-cabinet) {
+    box-shadow:inset 1px 1px 2px #ffffff55,inset -3px 0 5px #0006,
+        inset 0 -3px 4px #0005,0 2px 2px #0009,0 7px 10px #0005;
+}
+:is(#audio-world,.equipment-preview-world) .device-node :is(.sp-woofer,.sp-tweeter,.classic-box-driver,.tower-driver) {
+    box-shadow:inset 0 1px 2px #ffffff30,inset 0 -2px 3px #000a,
+        0 0 0 1px #080d0c,0 2px 2px #000b,0 4px 5px #0005;
+}
+:is(#audio-world,.equipment-preview-world) .device-node :is(.sp-cone,.tower-cone) {
+    box-shadow:inset 0 4px 8px #0008,inset 0 -1px 2px #ffffff20,0 0 0 1px #0007;
+}
+:is(#audio-world,.equipment-preview-world) .tower-cone>b {
+    box-shadow:inset 0 1px 2px #ffffff25,inset 0 -1px 2px #0005,0 2px 4px #0007;
+}
+:is(#audio-world,.equipment-preview-world) .device-node :is(.classic-box-baffle,.sp-panel,.tower-terminal,.electrostatic-panel) {
+    box-shadow:inset 0 3px 5px #0008,inset 1px 0 2px #0004,0 1px #ffffff20;
+}
+:is(#audio-world,.equipment-preview-world) .speaker-grille {
+    filter:drop-shadow(0 1px 1px #0008);
+}
+
+/* Vents and fader channels are cut into the plate. Native thumb geometry is
+   unchanged, including the separate Firefox and Chromium control drawings. */
+:is(#audio-world,.equipment-preview-world) :is(.stereo-power-vent,.dual-top-vents,.bias-vent,.tower-front-vent,.mixer-rack-fader) {
+    box-shadow:inset 0 2px 3px #000b,inset 1px 0 1px #0008,0 1px #ffffff24;
+}
+:is(#audio-world,.equipment-preview-world) .graphic-eq-fader::-webkit-slider-thumb {
+    box-shadow:inset 0 1px #ffffff99,inset 0 -1px #0006,1px 2px 2px #000b,0 4px 4px #0005;
+}
+:is(#audio-world,.equipment-preview-world) .graphic-eq-fader::-moz-range-thumb {
+    box-shadow:inset 0 1px #ffffff99,inset 0 -1px #0006,1px 2px 2px #000b,0 4px 4px #0005;
+}
+
+/* Raised platter rims and tape flanges sit above their mechanical bed.
+   Transparent lids, glass plinths, and rotating assemblies keep their geometry. */
+:is(#audio-world,.equipment-preview-world) .device-node :is(.at-platter,.tt-platter,.tape-reel) {
+    box-shadow:inset 0 1px 1px #ffffff88,inset 0 -2px 2px #0008,
+        0 1px 1px #000c,0 3px 4px #0007,0 6px 7px #0003;
+}
+:is(#audio-world,.equipment-preview-world) :is(.adapter-object>svg,.headphone-artwork,.kuba-art) {
+    filter:drop-shadow(0 1px 1px #0008) drop-shadow(0 4px 4px #0004);
+}
+
+/* Recessed sockets retain channel colors and all connection guidance states. */
+:is(#audio-world,.equipment-preview-world) .device-node .port:not([data-type="wire"]):not(.port-compatible,.port-source,.port-incompatible) {
+    box-shadow:inset 0 1px 2px #000e,0 1px 1px #000c,0 2px 3px #0006,0 -1px .5px #ffffff66;
+}
+:is(#audio-world,.equipment-preview-world) .device-node .hw-screw-object {
+    filter:drop-shadow(0 .5px .35px #0007);
+}
