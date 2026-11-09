@@ -175,7 +175,7 @@
                 dev.el.dataset.connection = isConnected ? 'connected' : 'disconnected';
                 dev.el.dataset.signal = hasSignal ? 'ativo' : 'sem sinal';
                 updateStereoPowerMeters(dev);
-                const deviceName = DEVICE_NAMES[dev.type] || dev.type;
+                const deviceName = EquipmentBrands.name(dev.type,DEVICE_NAMES[dev.type] || dev.type);
                 const powerLabel = dev.el.dataset.power === 'n/a' ? 'energia não aplicável' : (dev.powered ? 'ligado' : 'sem energia');
                 dev.el.setAttribute('aria-label', `${deviceName}, ${powerLabel}, ${isConnected ? 'conectado' : 'desconectado'}, ${hasSignal ? 'com sinal' : 'sem sinal'}`);
             });

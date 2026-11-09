@@ -810,7 +810,27 @@ const Hardware = (() => {
         const angle=Number.isFinite(rotation)?rotation:0,diameter=Number.isFinite(size)?Math.max(3,Math.min(128,size)):8;
         return `<svg class="hw-screw-object" viewBox="0 0 100 100" width="${diameter}" height="${diameter}" data-screw-finish="${finish}" data-screw-rotation="${angle}" data-screw-drive="${drive}" aria-hidden="true" focusable="false"><use href="#hw-screw-${finish}-head"/><g transform="rotate(${angle} 50 49)"><use href="#hw-screw-${finish}-${drive}"/></g></svg>`;
     }
+    // Exposed fasteners belong to removable service panels, not every front.
+    // Domestic hi-fi fronts and compact enclosures attach from behind/below.
+    const frontFastenerTypes=new Set([
+        'preClassic','prePrecision','preReference','tapeDeck','spkElectrostatic',
+        'eqStudio','eqVintage','mixer','mixerVintage','crossover','crossoverVintage',
+        'powerStereo','powerVintage','powerDual','headphoneAmp4',
+        'benchMeter','benchMeterVintage','signalGenerator','signalGeneratorVintage'
+    ]);
+    // Trim rings hide basket hardware on modern domestic speakers. Classic
+    // baffles and working monitors keep their serviceable driver fixings.
+    const driverFastenerTypes=new Set([
+        'spkPassiveWood','spkPassiveGridBlack','spkPassiveGridOrange','shelfWood',
+        'spkActiveBookshelf','spkActiveMonitor','subwooferPro','subwooferPassiveVintage'
+    ]);
+    const frontFasteners=type=>frontFastenerTypes.has(type);
     function mountScrews(root){
+        const type=root.dataset.equipmentType,front=frontFasteners(type),drivers=driverFastenerTypes.has(type);
+        root.dataset.frontAttachment=front?'exposed':'concealed';
+        root.dataset.driverAttachment=drivers?'exposed':'trimmed';
+        if(!front)root.querySelectorAll('.assembly-details,.classic-screw,.precision-screw,.tape-screw,.electrostatic-fastener,.phone-housing-screws,.glass-pre-end>i').forEach(host=>host.remove());
+        if(!drivers)root.querySelectorAll('.speaker-driver-screws,.tower-driver-screws').forEach(group=>group.remove());
         root.querySelectorAll('.speaker-driver-screws').forEach(group=>{
             if(group.querySelector('.driver-fastener'))return;
             group.innerHTML=['top','right','bottom','left'].map(side=>`<i class="driver-fastener driver-fastener--${side}"></i>`).join('');
@@ -1465,7 +1485,7 @@ const Hardware = (() => {
         if(spec.kind==='jack')return `<g transform="scale(${spec.scale})"><path d="M0 0 3 -2h12v4H3Z" fill="#ddbc77" stroke="#887044" stroke-width=".7"/><path d="M6 -2v4M11 -2v4" stroke="#20252a" stroke-width="1.1"/><rect x="15" y="-4" width="13" height="8" rx="2" fill="#363f45" stroke="#85949c" stroke-width="1"/><path d="M18 -3v6m3-6v6" stroke="#5d6c74"/></g>`;
         return `<path d="M0 0h7" stroke="#e2c283" stroke-width="2.5" stroke-linecap="round"/><rect x="5" y="-4" width="7" height="8" rx="1" fill="#bac2c5" stroke="#677780" stroke-width=".8"/><rect x="12" y="-5" width="13" height="10" rx="2" fill="#262e33" stroke="#788790" stroke-width=".8"/><rect x="14" y="-5" width="4" height="10" rx=".6" fill="${spec.color||'#cf4545'}"/>`;
     }
-    return Object.freeze({knobs,buttons,screws,screw:screwMarkup,fasteners:mountScrews,controlSizes,setControlSize,buttonSounds,movementSounds,movementSound,sliders,leds,plugs,accents,sizes,physics,updateAccents,updateLightingDemo,renderLightingDemo,sceneLightAt,demoMarkup,bindDemo,sourceTransport,setButtonLabel,button:skinButton,bindKnob,bindLinear,slider,setLed,layout,materials:mountMaterials,mount,sync,dispose,inspector,plugMarkup});
+    return Object.freeze({knobs,buttons,screws,screw:screwMarkup,fasteners:mountScrews,frontFasteners,controlSizes,setControlSize,buttonSounds,movementSounds,movementSound,sliders,leds,plugs,accents,sizes,physics,updateAccents,updateLightingDemo,renderLightingDemo,sceneLightAt,demoMarkup,bindDemo,sourceTransport,setButtonLabel,button:skinButton,bindKnob,bindLinear,slider,setLed,layout,materials:mountMaterials,mount,sync,dispose,inspector,plugMarkup});
 })();
 
         // Code-only switch: set true and rebuild script.js to expose DEBUG equipment.
@@ -2622,7 +2642,7 @@ const Hardware = (() => {
             headphone: 'Fones Over-Ear',
             hpStudio: 'Fone Over-Ear Studio',
             hpClassic: 'Fone Vinyl Classic',
-            hpKubaDisco2: 'Kuba Disco 2',
+            hpKubaDisco2: 'Fone Modular de Madeira',
             hpOpenRing:'Fone Aberto · Anelar',hpOpenDome:'Fone Aberto · Cúpula',hpPlanar:'Fone Planar',hpMonitor:'Fone Monitor',hpMax:'Fone Max',
             eqStudio: 'Equalizador Studio',
             eqVintage: 'Equalizador Vintage',
@@ -2941,7 +2961,7 @@ const Hardware = (() => {
         const ACTIVE_SPEAKER_RATINGS=Object.freeze({spkActiveRounded:{watts:100,inputOhms:10000},spkActiveMonitor:{watts:60,inputOhms:10000},spkActiveBookshelf:{watts:80,inputOhms:10000},spkActiveCompact:{watts:36,inputOhms:10000}});
         const ACTIVE_SUB_RATINGS=Object.freeze({subwoofer:{watts:150,inputOhms:10000},subwooferCube:{watts:80,inputOhms:10000},subwooferPro:{watts:300,inputOhms:10000}});
         const REFERENCE_HEADPHONES={
-            hpKubaDisco2:{ohms:32,powerMw:300,enclosure:'Fechado',description:'Kuba Disco 2 com arco clássico de madeira laminada, almofadas XL costuradas e conchas com relevos concêntricos. Acabamentos Tauari, Nogueira e Ébano; conexão P2 no cabo.'},
+            hpKubaDisco2:{ohms:32,powerMw:300,enclosure:'Fechado',description:'Fone modular com arco de madeira laminada, almofadas XL costuradas e conchas com relevos concêntricos. Acabamentos Tauari, Nogueira e Ébano; conexão P2 no cabo.'},
             hpOpenRing:{ohms:300,powerMw:500,description:'Fone aberto com conchas ovais, aros metálicos, grade vazada e arco com almofadas segmentadas. Suporte padrão e entrada P2 estéreo na ponta do cabo.'},
             hpOpenDome:{ohms:80,powerMw:500,description:'Fone aberto com conchas arredondadas, grade em colmeia, hastes de carbono e faixa de suspensão. Suporte padrão e entrada P2 estéreo na ponta do cabo.'},
             hpPlanar:{ohms:20,powerMw:1000,description:'Fone planar aberto com conchas amplas, grades horizontais, hastes metálicas e arco acolchoado. Suporte padrão e entrada P2 estéreo na ponta do cabo.'}
@@ -3019,7 +3039,7 @@ const Hardware = (() => {
             // Approximation of a classic dipole panel, not an anechoic measurement.
             // -6 dB shared headroom plus a relative -6 dB sensitivity trim (84 vs 90 dB).
             spkElectrostatic:{label:'Eletrostática · médios naturais e graves contidos',highpass:55,headroomDb:-12,curveMinDb:-36,filterSpecs:[{type:'highpass',frequency:55,Q:Math.SQRT1_2},{type:'highpass',frequency:55,Q:Math.SQRT1_2},{type:'peaking',frequency:1200,Q:.65,gain:.6},{type:'highshelf',frequency:7500,gain:-1.5},{type:'lowpass',frequency:18000,Q:Math.SQRT1_2}]},
-            hpKubaDisco2:{label:'Disco 2 · escuta sem coloração adicional',bands:[0,0,0]},
+            hpKubaDisco2:{label:'Modular de madeira · escuta sem coloração adicional',bands:[0,0,0]},
             headphone:{label:'Moderno · graves presentes',bands:[3,-.5,.5]},
             hpStudio:{label:'Studio · graves definidos',bands:[2,0,1]},
             // Perceptual tonal approximations, not raw ear-simulator transfer curves or corrective EQ presets.
@@ -5131,6 +5151,7 @@ const Hardware = (() => {
         document.querySelectorAll('.catalog-item[data-template]').forEach(item => {
             const oldIcon = item.firstElementChild;
             if (oldIcon) oldIcon.outerHTML = catalogIcon(item.dataset.template);
+            EquipmentBrands.catalog(item,item.dataset.template);
         });
         const catalogAmpTip=document.createElement('aside');catalogAmpTip.id='catalog-amp-tooltip';catalogAmpTip.setAttribute('role','tooltip');document.body.appendChild(catalogAmpTip);
         const isCatalogListeningType=type=>PASSIVE_SPK.has(type)||ACTIVE_SPK.has(type)||HP_TYPES.has(type)||SUB_TYPES.has(type)||PASSIVE_SUB_TYPES.has(type);
@@ -5229,14 +5250,15 @@ const Hardware = (() => {
         const normalizeSearch = text => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
         let selectedSetupCategory = null;
         equipmentSearch.addEventListener('input', () => {
-            const terms = normalizeSearch(equipmentSearch.value).split(/\s+/).filter(Boolean);
+            const query=normalizeSearch(equipmentSearch.value),terms=query.split(/\s+/).filter(Boolean);
+            const exactModels=new Set(catalogItems.filter(item=>item.dataset.model&&[item.dataset.model,`${item.dataset.brand} ${item.dataset.model}`].some(label=>normalizeSearch(label)===query)));
             let total = 0;
             catalogSections.forEach(section => {
                 if(section===debugCatalogSection&&!DEBUG_CATALOG_ENABLED){section.hidden=true;return;}
                 let visible = 0;
                 section.querySelectorAll('.catalog-item').forEach(item => {
                     const text = catalogSearchText(item);
-                    item.hidden = !terms.every(term => [term,...(catalogSearchSynonyms[term]||[])].some(candidate=>text.includes(normalizeSearch(candidate))));
+                    item.hidden = exactModels.size ? !exactModels.has(item) : !terms.every(term => [term,...(catalogSearchSynonyms[term]||[])].some(candidate=>text.includes(normalizeSearch(candidate))));
                     if (!item.hidden) visible++;
                 });
                 section.hidden = visible === 0 || (!terms.length && selectedSetupCategory !== null && !selectedSetupCategory.matches(section.querySelector('.catalog-item').dataset.catalogCategory));
@@ -6804,7 +6826,7 @@ const Hardware = (() => {
                 '.interface-face','.custom-pre-face','.custom-power-face',
                 '.stereo-power-face','.phone-amp-face','.graphic-eq-face','.rack-face'
             ].join(','));
-            if(assemblySurface&&!assemblySurface.querySelector('.assembly-details')){
+            if(Hardware.frontFasteners(type)&&assemblySurface&&!assemblySurface.querySelector('.assembly-details')){
                 assemblySurface.classList.add('assembly-detail-surface');
                 const assembly=document.createElement('span');
                 assembly.className=`assembly-details assembly-details--${el.classList.contains('device-family-vintage')?'warm':el.classList.contains('device-family-studio')?'steel':'dark'}`;
@@ -6826,7 +6848,7 @@ const Hardware = (() => {
             Hardware.materials({el});
             Hardware.fasteners(el);
             world.appendChild(el);
-            if(previewOnly){el.classList.add('catalog-placement-preview');el.hidden=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type,el};}
+            if(previewOnly){EquipmentBrands.mount(el,type,DEVICE_NAMES[type]);el.classList.add('catalog-placement-preview');el.hidden=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type,el};}
 
             const dev = { id, type, el, nodes: {}, state: { volume: 0.8, bass: 0, treble: 0, eq: [0, 0, 0, 0, 0] }, powered: true };
             const placement = appState.project.restoringProject?{
@@ -7350,6 +7372,7 @@ const Hardware = (() => {
             if(EXTRA_AUDIO_TYPES.has(type))bindExtraDevice(dev);
             if(type==='hardwareDemo')Hardware.bindDemo(dev);
             Hardware.mount(dev);
+            EquipmentBrands.mount(el,type,DEVICE_NAMES[type]);
             if(!FURNITURE_TYPES[type]) setupAudioMeters(dev);
             animateDevicePower(dev);
             selectDevice(id);
@@ -8814,7 +8837,7 @@ const Hardware = (() => {
             
             const names = DEVICE_NAMES;
             const equipmentName=names[dev.type]||dev.el.querySelector('.device-header > span')?.textContent.trim()||dev.type;
-            document.getElementById('inspector-title').textContent=equipmentName;
+            document.getElementById('inspector-title').textContent=EquipmentBrands.name(dev.type,equipmentName);
 
             const hasPowerControl = !!dev.el.querySelector('.power-btn');
             let html='';
@@ -10040,7 +10063,7 @@ const Hardware = (() => {
                 dev.el.dataset.connection = isConnected ? 'connected' : 'disconnected';
                 dev.el.dataset.signal = hasSignal ? 'ativo' : 'sem sinal';
                 updateStereoPowerMeters(dev);
-                const deviceName = DEVICE_NAMES[dev.type] || dev.type;
+                const deviceName = EquipmentBrands.name(dev.type,DEVICE_NAMES[dev.type] || dev.type);
                 const powerLabel = dev.el.dataset.power === 'n/a' ? 'energia não aplicável' : (dev.powered ? 'ligado' : 'sem energia');
                 dev.el.setAttribute('aria-label', `${deviceName}, ${powerLabel}, ${isConnected ? 'conectado' : 'desconectado'}, ${hasSignal ? 'com sinal' : 'sem sinal'}`);
             });

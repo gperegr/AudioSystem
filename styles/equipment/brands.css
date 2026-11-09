@@ -1,0 +1,50 @@
+/* Maker's printing belongs to the equipment material, never the UI palette. */
+.equipment-brand-badge {
+    position:absolute;
+    z-index:6;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:1px;
+    box-sizing:border-box;
+    color:var(--equipment-brand-ink,#ced7d1);
+    pointer-events:none;
+    user-select:none;
+    line-height:1;
+    text-shadow:none!important;
+}
+.equipment-brand-logo {display:block;width:100%;height:calc(100% - 7px);overflow:visible;flex:none;}
+.equipment-brand-logo .brand-accent {color:var(--equipment-brand-accent,currentColor);}
+.equipment-brand-model {display:block;white-space:nowrap;font:500 5.5px/1.1 "Equipment Digital",Consolas,monospace!important;letter-spacing:.12em;}
+.equipment-brand-badge[data-mode="strip"] {flex-direction:row;gap:5px;}
+.equipment-brand-badge[data-mode="strip"] .equipment-brand-logo {height:100%;width:65%;min-width:0;flex:1 1 auto;}
+.equipment-brand-badge[data-mode="strip"] .equipment-brand-model {font-size:5px!important;letter-spacing:.04em;}
+.equipment-brand-badge[data-mode="mark"] .equipment-brand-logo {width:100%;height:100%;}
+.equipment-brand-badge[data-placement="heading"] {inset:auto;margin:0 auto;}
+.classic-preamp-heading>.equipment-brand-badge {margin:0 auto 3px;}
+.glass-pre-heading>.equipment-brand-badge {margin:0 auto;}
+.tape-face>header>strong:has(>.equipment-brand-badge) {min-height:12px;}
+.device-node[data-brand] .compact-name {top:302px;}
+.device-node[data-brand="bravora"]:is([data-kuba-wood="walnut"],[data-kuba-wood="ebony"]) .equipment-brand-badge {color:var(--equipment-brand-light-ink);}
+/* Old three-bar grille patches give way to each manufacturer's own identity. */
+.device-node[data-brand] .speaker-grille.classic-box-grille::after {content:none;}
+
+/* Catalog identity supplements the translated function and searchable type.
+   Its typography and color follow shared UI tokens, including the short dock. */
+#equipment-catalog .catalog-item:has(>.catalog-product-identity) {gap:5px;}
+#equipment-catalog .catalog-item>.catalog-product-identity {
+    display:block;
+    width:100%;
+    color:var(--ui-secondary);
+    font:600 9px/1.2 var(--font-ui,"Inter",sans-serif);
+    letter-spacing:.01em;
+    text-align:center;
+    overflow-wrap:anywhere;
+}
+@media(max-height:500px) {
+    #equipment-catalog .catalog-item>.catalog-product-identity {font-size:8px;line-height:1.1;}
+    #equipment-catalog .catalog-item:has(>.catalog-product-identity) {gap:2px;padding:6px 9px!important;}
+    #equipment-catalog .catalog-item:has(>.catalog-product-identity)>span {min-height:0;font-size:9px;line-height:1.2;}
+    #equipment-catalog .catalog-item:has(>.catalog-product-identity)>svg {height:16px;flex-basis:16px;}
+}

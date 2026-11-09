@@ -3,7 +3,7 @@
             // Approximation of a classic dipole panel, not an anechoic measurement.
             // -6 dB shared headroom plus a relative -6 dB sensitivity trim (84 vs 90 dB).
             spkElectrostatic:{label:'Eletrostática · médios naturais e graves contidos',highpass:55,headroomDb:-12,curveMinDb:-36,filterSpecs:[{type:'highpass',frequency:55,Q:Math.SQRT1_2},{type:'highpass',frequency:55,Q:Math.SQRT1_2},{type:'peaking',frequency:1200,Q:.65,gain:.6},{type:'highshelf',frequency:7500,gain:-1.5},{type:'lowpass',frequency:18000,Q:Math.SQRT1_2}]},
-            hpKubaDisco2:{label:'Disco 2 · escuta sem coloração adicional',bands:[0,0,0]},
+            hpKubaDisco2:{label:'Modular de madeira · escuta sem coloração adicional',bands:[0,0,0]},
             headphone:{label:'Moderno · graves presentes',bands:[3,-.5,.5]},
             hpStudio:{label:'Studio · graves definidos',bands:[2,0,1]},
             // Perceptual tonal approximations, not raw ear-simulator transfer curves or corrective EQ presets.

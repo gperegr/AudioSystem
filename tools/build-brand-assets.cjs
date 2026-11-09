@@ -1,0 +1,27 @@
+#!/usr/bin/env node
+// Reproducible SVG identities, a visual brand book, and the complete model map.
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const root=path.resolve(__dirname,'..'),api=require('../src/modules/equipment-brands.js');
+const source=fs.readFileSync(path.join(root,'src/app/04-device-catalog-model.js'),'utf8');
+const from=source.indexOf('const DEVICE_NAMES ='),to=source.indexOf('const DEVICE_FAMILIES',from);
+const names=vm.runInNewContext(source.slice(from,to)+';DEVICE_NAMES');
+const write=(file,content)=>{
+    const target=path.join(root,file);
+    if(process.argv.includes('--check')){if(!fs.existsSync(target)||fs.readFileSync(target,'utf8')!==content)throw Error('Brand asset is stale: '+file);}
+    else {fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,content);}
+};
+let doc='# Marcas e modelos fictícios\n\nDez identidades criadas para o universo Audio Lab: cinco para eletrônica e cinco para caixas, subwoofers e fones. A distribuição considera o desenho, a construção e o perfil já existente de cada aparelho. As marcas não alteram os valores elétricos, conexões, controles ou curvas de áudio.\n\nOs códigos internos permanecem estáveis para abrir projetos antigos. Marca e modelo são derivados desse código; os nomes funcionais continuam traduzidos e pesquisáveis. As peças muito pequenas levam apenas o símbolo gravado, com o modelo completo no catálogo e nas propriedades.\n\n';
+const cards=[];
+for(const b of Object.values(api.brands)){
+    const entries=Object.entries(api.products).filter(([,p])=>p.brand===b.id);
+    const svg=api.logo(b.id).replace('<svg ',`<svg style="color:${b.darkInk};--equipment-brand-accent:${b.accent}" `).replace('aria-hidden="true"','role="img" aria-label="'+b.name+'"').replace('</svg>','<style>.brand-accent{color:var(--equipment-brand-accent)}</style></svg>');
+    write(`assets/brands/${b.id}.svg`,svg+'\n');
+    doc+=`## ${b.name}\n\n${b.group==='electronics'?'Eletrônica':'Caixas e fones'} · ${b.tier}. ${b.style}\n\nLogo vetorial: [${b.id}.svg](../assets/brands/${b.id}.svg). Paleta: ${b.accent}, ${b.darkInk}, ${b.lightInk}.\n\nNomenclatura: ${b.rule}\n\n| Equipamento | Modelo | Código compatível |\n| --- | --- | --- |\n`+entries.map(([type,p])=>`| ${names[type]} | ${b.name} ${p.model} | \`${type}\` |`).join('\n')+'\n\n';
+    cards.push(`<article style="--accent:${b.accent};--ink:${b.lightInk}"><header>${api.logo(b.id)}</header><div class="sector">${b.group==='electronics'?'ELETRÔNICA':'CAIXAS & FONES'} · ${b.tier}</div><p>${b.style}</p><div class="palette">${[b.darkInk,b.accent,b.lightInk].map(color=>`<span><i style="background:${color}"></i>${color}</span>`).join('')}</div><p class="rule">${b.rule}</p><div class="models">${entries.slice(0,4).map(([type,p])=>`<span><b>${p.model}</b><small>${names[type]}</small></span>`).join('')}</div><details><summary>${entries.length} modelos</summary>${entries.map(([type,p])=>`<p><b>${p.model}</b> · ${names[type]}</p>`).join('')}</details></article>`);
+}
+write('docs/EQUIPMENT-BRANDS.md',doc);
+write('assets/brands/index.html',`<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Audio Lab · Marcas e modelos</title><style>
+@font-face{font-family:'Equipment Vintage';src:url('../fonts/barlowcondensed/BarlowCondensed-SemiBold.ttf')}@font-face{font-family:'Equipment Digital';src:url('../fonts/ibmplexmono/IBMPlexMono-Medium.ttf')}
+*{box-sizing:border-box}body{margin:0;background:#151b1e;color:#e8e6de;font:15px/1.5 Arial,sans-serif;padding:48px;max-width:1500px;margin:auto}h1{font-size:40px;margin:8px 0 10px;letter-spacing:-1px}.intro{max-width:800px;color:#a8b5b8;margin-bottom:40px}.eyebrow,.sector{font-size:10px;letter-spacing:2px;color:#98a8aa}main{display:grid;grid-template-columns:1fr 1fr;gap:22px}article{padding:28px;background:#20292d;border:1px solid #3c474a;border-top:3px solid var(--accent);border-radius:6px}header{height:65px;display:flex;align-items:center;color:var(--ink)}header svg{width:245px;height:50px}.brand-accent{color:var(--accent)}.sector{letter-spacing:1px;margin:14px 0}.palette{display:flex;gap:18px;font:10px monospace}.palette span{display:grid;gap:6px}.palette i{width:44px;height:16px;border:1px solid #ffffff33}.rule{font-size:12px;color:#b1bdbe}.models{display:grid;grid-template-columns:1fr 1fr;gap:10px}.models span{padding:10px;background:#151d21;border-radius:3px}.models b{display:block;color:var(--ink);font:13px 'Equipment Digital',monospace}.models small{font-size:10px;color:#a0adaf}details{margin-top:18px;border-top:1px solid #3b4749;padding-top:12px}summary{cursor:pointer;font-size:12px;color:#c0cbc8}details p{font-size:12px;margin:9px 0}@media(max-width:700px){body{padding:24px}main{grid-template-columns:1fr}h1{font-size:30px}}
+</style><div class="eyebrow">AUDIO LAB · IDENTIDADE DOS EQUIPAMENTOS</div><h1>Dez marcas. Noventa modelos.</h1><p class="intro">Um universo de fabricantes fictícios com símbolos, tipografias, paletas e famílias de modelos próprias. As identidades acompanham a construção dos aparelhos: clássicos analógicos, hi-fi contemporâneo, instrumentos de bancada, racks e transdutores.</p><main>${cards.join('')}</main></html>\n`);
+console.log(`${process.argv.includes('--check')?'Checked':'Built'} 10 SVG logos, the visual brand book, and 90 model assignments.`);

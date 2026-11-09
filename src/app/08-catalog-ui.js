@@ -233,6 +233,7 @@
         document.querySelectorAll('.catalog-item[data-template]').forEach(item => {
             const oldIcon = item.firstElementChild;
             if (oldIcon) oldIcon.outerHTML = catalogIcon(item.dataset.template);
+            EquipmentBrands.catalog(item,item.dataset.template);
         });
         const catalogAmpTip=document.createElement('aside');catalogAmpTip.id='catalog-amp-tooltip';catalogAmpTip.setAttribute('role','tooltip');document.body.appendChild(catalogAmpTip);
         const isCatalogListeningType=type=>PASSIVE_SPK.has(type)||ACTIVE_SPK.has(type)||HP_TYPES.has(type)||SUB_TYPES.has(type)||PASSIVE_SUB_TYPES.has(type);
@@ -331,14 +332,15 @@
         const normalizeSearch = text => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
         let selectedSetupCategory = null;
         equipmentSearch.addEventListener('input', () => {
-            const terms = normalizeSearch(equipmentSearch.value).split(/\s+/).filter(Boolean);
+            const query=normalizeSearch(equipmentSearch.value),terms=query.split(/\s+/).filter(Boolean);
+            const exactModels=new Set(catalogItems.filter(item=>item.dataset.model&&[item.dataset.model,`${item.dataset.brand} ${item.dataset.model}`].some(label=>normalizeSearch(label)===query)));
             let total = 0;
             catalogSections.forEach(section => {
                 if(section===debugCatalogSection&&!DEBUG_CATALOG_ENABLED){section.hidden=true;return;}
                 let visible = 0;
                 section.querySelectorAll('.catalog-item').forEach(item => {
                     const text = catalogSearchText(item);
-                    item.hidden = !terms.every(term => [term,...(catalogSearchSynonyms[term]||[])].some(candidate=>text.includes(normalizeSearch(candidate))));
+                    item.hidden = exactModels.size ? !exactModels.has(item) : !terms.every(term => [term,...(catalogSearchSynonyms[term]||[])].some(candidate=>text.includes(normalizeSearch(candidate))));
                     if (!item.hidden) visible++;
                 });
                 section.hidden = visible === 0 || (!terms.length && selectedSetupCategory !== null && !selectedSetupCategory.matches(section.querySelector('.catalog-item').dataset.catalogCategory));

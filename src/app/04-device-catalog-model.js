@@ -31,7 +31,7 @@
             headphone: 'Fones Over-Ear',
             hpStudio: 'Fone Over-Ear Studio',
             hpClassic: 'Fone Vinyl Classic',
-            hpKubaDisco2: 'Kuba Disco 2',
+            hpKubaDisco2: 'Fone Modular de Madeira',
             hpOpenRing:'Fone Aberto · Anelar',hpOpenDome:'Fone Aberto · Cúpula',hpPlanar:'Fone Planar',hpMonitor:'Fone Monitor',hpMax:'Fone Max',
             eqStudio: 'Equalizador Studio',
             eqVintage: 'Equalizador Vintage',
@@ -350,7 +350,7 @@
         const ACTIVE_SPEAKER_RATINGS=Object.freeze({spkActiveRounded:{watts:100,inputOhms:10000},spkActiveMonitor:{watts:60,inputOhms:10000},spkActiveBookshelf:{watts:80,inputOhms:10000},spkActiveCompact:{watts:36,inputOhms:10000}});
         const ACTIVE_SUB_RATINGS=Object.freeze({subwoofer:{watts:150,inputOhms:10000},subwooferCube:{watts:80,inputOhms:10000},subwooferPro:{watts:300,inputOhms:10000}});
         const REFERENCE_HEADPHONES={
-            hpKubaDisco2:{ohms:32,powerMw:300,enclosure:'Fechado',description:'Kuba Disco 2 com arco clássico de madeira laminada, almofadas XL costuradas e conchas com relevos concêntricos. Acabamentos Tauari, Nogueira e Ébano; conexão P2 no cabo.'},
+            hpKubaDisco2:{ohms:32,powerMw:300,enclosure:'Fechado',description:'Fone modular com arco de madeira laminada, almofadas XL costuradas e conchas com relevos concêntricos. Acabamentos Tauari, Nogueira e Ébano; conexão P2 no cabo.'},
             hpOpenRing:{ohms:300,powerMw:500,description:'Fone aberto com conchas ovais, aros metálicos, grade vazada e arco com almofadas segmentadas. Suporte padrão e entrada P2 estéreo na ponta do cabo.'},
             hpOpenDome:{ohms:80,powerMw:500,description:'Fone aberto com conchas arredondadas, grade em colmeia, hastes de carbono e faixa de suspensão. Suporte padrão e entrada P2 estéreo na ponta do cabo.'},
             hpPlanar:{ohms:20,powerMw:1000,description:'Fone planar aberto com conchas amplas, grades horizontais, hastes metálicas e arco acolchoado. Suporte padrão e entrada P2 estéreo na ponta do cabo.'}

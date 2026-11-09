@@ -7,6 +7,8 @@
 
 Build a virtual audio system, connect its components, and listen in your browser. Explore sources, amplifiers, equalizers, speakers, and headphones in vintage, studio, and modern styles.
 
+The audio equipment library includes 90 models from ten fictional manufacturers, with original logos and naming conventions: **Aurenne, Veltron, Nexora, Korden and Linholt** for electronics; **Bravora, Soryn, Terevon, Axiomer and Dovara** for speakers and headphones. Search by maker, model or function. [Visual brand book](assets/brands/index.html) · [Complete manufacturer and model reference](docs/EQUIPMENT-BRANDS.md).
+
 ![Audio Lab with its permanent catalog and a connected stereo system: CD player, integrated amplifier, and speakers](docs/images/visao-geral.png)
 
 The symbol and light and dark wordmarks are editable SVGs in [`assets/brand`](assets/brand/README.md).

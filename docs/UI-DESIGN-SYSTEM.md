@@ -4,6 +4,8 @@ This guide covers the Audio Lab menus, catalog, settings, panels, dialogs, and c
 
 The brand combines an A with a sound wave. The original vectors are in `assets/brand/`. The top bar uses the symbol in `--ui-accent` beside the Audio Lab name in Inter Bold. On small screens, only the symbol appears while its accessible name remains available.
 
+Equipment manufacturer identities are separate from the Audio Lab application brand. Catalog tiles retain their translated functional label and add a compact manufacturer/model line in `--ui-secondary`; both remain searchable. An exact model code or full manufacturer/model query selects matching products before falling back to the existing term search. Properties and accessible equipment names include manufacturer, model and translated function. The short dock reduces icon and text spacing to retain both lines inside each tile. Physical logos use the manufacturer's ink and material contrast instead of UI palette tokens. See `EQUIPMENT-BRANDS.md` for the ten fictional manufacturers and model conventions.
+
 ## Palettes and tokens
 
 `document.documentElement.dataset.uiPalette` stays in sync with the background, room, and time in `src/app/02-room-and-canvas-theme.js`. The definitions and actual values are in `styles/interface-palettes.css`; treat that file as the source of truth. Available palettes are `light`, `sepia`, `graphite`, `midnight`, and `scene-{studioIllustrated|listeningIllustrated|loftIllustrated}-{dawn|dusk|night}`. The `:root` selector supplies fallback values. Do not set this attribute manually from a component.

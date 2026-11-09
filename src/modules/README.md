@@ -4,6 +4,7 @@ These standalone classic scripts provide focused features used by the applicatio
 
 - `adapter-design.js`: adapter rendering and rotation behavior.
 - `audio-interfaces.js`: audio-interface device behavior.
+- `equipment-brands.js`: ten fictional manufacturers, original SVG logos, model assignments for all audio devices, accessible/catalog identities, and one-time placement of maker printing on clear physical surfaces. Type IDs, electrical ratings, audio behavior, and saved-project data remain independent of branding. Rebuild its SVG assets, visual brand book, and full model reference with `node tools/build-brand-assets.cjs`; use `--check` to verify them.
 - `application-state.js`: project, canvas, audio, preferences, and interface state domains, with named actions and a compatibility facade for tests and gradual migration.
 - `guided-access.js`: guided tutorial and example setups.
 - `spotify-coverflow.js`: Spotify authorization, albums, and playback.

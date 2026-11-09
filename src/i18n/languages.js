@@ -3,6 +3,14 @@
     'use strict';
 
     const translations = Object.freeze({
+        'sem energia':'powered off',
+        'conectado':'connected',
+        'desconectado':'disconnected',
+        'com sinal':'signal present',
+        'Fone Modular de Madeira':'Modular wood headphones',
+        'Fone Modular de Madeira · entrada P2 estéreo no cabo':'Modular wood headphones · 3.5 mm stereo cable input',
+        'Fone modular com arco de madeira laminada, almofadas XL costuradas e conchas com relevos concêntricos. Acabamentos Tauari, Nogueira e Ébano; conexão P2 no cabo.':'Modular headphones with a laminated wood headband, stitched XL cushions and concentric earcup reliefs. Tauari, walnut and ebony finishes; 3.5 mm cable input.',
+        'Modular de madeira · escuta sem coloração adicional':'Modular wood · no added coloration',
         'Ativar música do menu':'Enable menu music',
         'Pausar música do menu':'Pause menu music',
         'Volume da música do menu':'Menu music volume',
@@ -1059,10 +1067,13 @@
         const trailing = value.match(/\s*$/)?.[0] || '';
         const core = value.slice(leading.length, value.length - trailing.length || undefined);
         let result = language === 'en' ? english.get(normalized(core)) : undefined;
+        const branded=language==='en'&&result===undefined?globalThis.EquipmentBrands?.splitName(core):null;
+        if(branded)result=branded.product+' · '+translate(branded.role);
         if (language === 'en' && result === undefined) {
             const paragraphs=core.split(/(\n{2,})/);
             if(paragraphs.length>1)result=paragraphs.map(part=>/^\n+$/.test(part)?part:translate(part)).join('');
             const dynamic = [
+                [/^(.+), (ligado|sem energia|energia não aplicável), (conectado|desconectado), (com sinal|sem sinal)$/,(_,label,power,connection,signal)=>`${translate(label)}, ${translate(power)}, ${translate(connection)}, ${translate(signal)}`],
                 [/^(Graves|Agudos|Saturação|Harmônicos pares): posição (\d+) de 7, de (.+?) a (.+?)\.( Centro neutro\.)?$/,(_,label,position,low,high,neutral='')=>`${translate(label)}: position ${position} of 7, from ${translate(low)} to ${translate(high)}.${neutral?' Neutral center.':''}`],
                 [/^(Entrada|Saída): ([^,]+), (.+?)( · L\/R| · [LR])?\. (.*)$/,(_,direction,name,format,channels='',detail='')=>`${translate(direction)}: ${translate(name)}, ${translate(format)}${channels||''}. ${translate(detail)}`],
                 [/^(Entrada|Saída) · (.+)$/,(_,direction,detail)=>`${translate(direction)} · ${translate(detail)}`],

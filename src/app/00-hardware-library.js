@@ -810,7 +810,27 @@ const Hardware = (() => {
         const angle=Number.isFinite(rotation)?rotation:0,diameter=Number.isFinite(size)?Math.max(3,Math.min(128,size)):8;
         return `<svg class="hw-screw-object" viewBox="0 0 100 100" width="${diameter}" height="${diameter}" data-screw-finish="${finish}" data-screw-rotation="${angle}" data-screw-drive="${drive}" aria-hidden="true" focusable="false"><use href="#hw-screw-${finish}-head"/><g transform="rotate(${angle} 50 49)"><use href="#hw-screw-${finish}-${drive}"/></g></svg>`;
     }
+    // Exposed fasteners belong to removable service panels, not every front.
+    // Domestic hi-fi fronts and compact enclosures attach from behind/below.
+    const frontFastenerTypes=new Set([
+        'preClassic','prePrecision','preReference','tapeDeck','spkElectrostatic',
+        'eqStudio','eqVintage','mixer','mixerVintage','crossover','crossoverVintage',
+        'powerStereo','powerVintage','powerDual','headphoneAmp4',
+        'benchMeter','benchMeterVintage','signalGenerator','signalGeneratorVintage'
+    ]);
+    // Trim rings hide basket hardware on modern domestic speakers. Classic
+    // baffles and working monitors keep their serviceable driver fixings.
+    const driverFastenerTypes=new Set([
+        'spkPassiveWood','spkPassiveGridBlack','spkPassiveGridOrange','shelfWood',
+        'spkActiveBookshelf','spkActiveMonitor','subwooferPro','subwooferPassiveVintage'
+    ]);
+    const frontFasteners=type=>frontFastenerTypes.has(type);
     function mountScrews(root){
+        const type=root.dataset.equipmentType,front=frontFasteners(type),drivers=driverFastenerTypes.has(type);
+        root.dataset.frontAttachment=front?'exposed':'concealed';
+        root.dataset.driverAttachment=drivers?'exposed':'trimmed';
+        if(!front)root.querySelectorAll('.assembly-details,.classic-screw,.precision-screw,.tape-screw,.electrostatic-fastener,.phone-housing-screws,.glass-pre-end>i').forEach(host=>host.remove());
+        if(!drivers)root.querySelectorAll('.speaker-driver-screws,.tower-driver-screws').forEach(group=>group.remove());
         root.querySelectorAll('.speaker-driver-screws').forEach(group=>{
             if(group.querySelector('.driver-fastener'))return;
             group.innerHTML=['top','right','bottom','left'].map(side=>`<i class="driver-fastener driver-fastener--${side}"></i>`).join('');
@@ -1465,5 +1485,5 @@ const Hardware = (() => {
         if(spec.kind==='jack')return `<g transform="scale(${spec.scale})"><path d="M0 0 3 -2h12v4H3Z" fill="#ddbc77" stroke="#887044" stroke-width=".7"/><path d="M6 -2v4M11 -2v4" stroke="#20252a" stroke-width="1.1"/><rect x="15" y="-4" width="13" height="8" rx="2" fill="#363f45" stroke="#85949c" stroke-width="1"/><path d="M18 -3v6m3-6v6" stroke="#5d6c74"/></g>`;
         return `<path d="M0 0h7" stroke="#e2c283" stroke-width="2.5" stroke-linecap="round"/><rect x="5" y="-4" width="7" height="8" rx="1" fill="#bac2c5" stroke="#677780" stroke-width=".8"/><rect x="12" y="-5" width="13" height="10" rx="2" fill="#262e33" stroke="#788790" stroke-width=".8"/><rect x="14" y="-5" width="4" height="10" rx=".6" fill="${spec.color||'#cf4545'}"/>`;
     }
-    return Object.freeze({knobs,buttons,screws,screw:screwMarkup,fasteners:mountScrews,controlSizes,setControlSize,buttonSounds,movementSounds,movementSound,sliders,leds,plugs,accents,sizes,physics,updateAccents,updateLightingDemo,renderLightingDemo,sceneLightAt,demoMarkup,bindDemo,sourceTransport,setButtonLabel,button:skinButton,bindKnob,bindLinear,slider,setLed,layout,materials:mountMaterials,mount,sync,dispose,inspector,plugMarkup});
+    return Object.freeze({knobs,buttons,screws,screw:screwMarkup,fasteners:mountScrews,frontFasteners,controlSizes,setControlSize,buttonSounds,movementSounds,movementSound,sliders,leds,plugs,accents,sizes,physics,updateAccents,updateLightingDemo,renderLightingDemo,sceneLightAt,demoMarkup,bindDemo,sourceTransport,setButtonLabel,button:skinButton,bindKnob,bindLinear,slider,setLed,layout,materials:mountMaterials,mount,sync,dispose,inspector,plugMarkup});
 })();

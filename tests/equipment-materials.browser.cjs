@@ -29,7 +29,13 @@ const root=path.resolve(__dirname,'..');
             const api=__materials,sheets=[...document.styleSheets].filter(s=>/\/(tactile-finishes|depth)\.css/.test(s.href||''));
             if(sheets.length!==2)throw Error('Material and depth stylesheets must both load');
             const enableFinishes=value=>sheets.forEach(sheet=>sheet.disabled=!value);
-            const moved=[],interactive=[],guidance=[],previewDifferences=[],missingScrewParts=[],screwOverlaps=[];
+            const moved=[],interactive=[],guidance=[],previewDifferences=[],missingScrewParts=[],screwOverlaps=[],constructionIssues=[];
+            const frontSelector='.assembly-fastener,.classic-screw,.precision-screw,.tape-screw,.electrostatic-fastener,.phone-housing-screws>i,.glass-pre-end>i';
+            const driverSelector='.driver-fastener,.tower-driver-screws>i';
+            const cleanFronts=new Set(['receiver','integratedBlue','integratedSilver','integratedMinimal','preGlass','cdPlayer','streamer','audioInterface1','audioInterface4','headphoneAmp','headphoneAmpModern','powerBias','rcaSwitch']);
+            const servicePanels=new Set(['preClassic','prePrecision','tapeDeck','eqStudio','mixer','powerDual','signalGenerator','spkElectrostatic']);
+            const coveredDrivers=new Set(['floorCoax','floorDiamond','shelfCoax','shelfTop','spkActiveCompact','spkActiveRounded','spkPassiveCarbon','subwooferCube']);
+            const serviceDrivers=new Set(['spkActiveBookshelf','spkPassiveGridOrange','shelfWood','subwooferPro']);
             const screwFinishes=new Set(),screwAngles=new Set();let screwCount=0;
             const bounds=el=>{
                 const origin=el.getBoundingClientRect();
@@ -42,6 +48,11 @@ const root=path.resolve(__dirname,'..');
                 const id='material-test-'+type;api.createDevice(type,120,120,id);
                 const dev=api.devices[id];if(!dev)throw new Error('Factory did not register '+type);
                 const layers=[...dev.el.querySelectorAll('.equipment-material')];
+                const frontCount=dev.el.querySelectorAll(frontSelector).length,driverCount=dev.el.querySelectorAll(driverSelector).length;
+                if(cleanFronts.has(type)&&frontCount)constructionIssues.push(type+': front fixings should be concealed');
+                if(servicePanels.has(type)&&!frontCount)constructionIssues.push(type+': removable panel lost its fasteners');
+                if(coveredDrivers.has(type)&&driverCount)constructionIssues.push(type+': trim ring should hide basket fasteners');
+                if(serviceDrivers.has(type)&&!driverCount)constructionIssues.push(type+': exposed basket lost its fasteners');
                 const finished=bounds(dev.el);
                 layers.forEach(layer=>{if(getComputedStyle(layer).pointerEvents!=='none'||layer.getAttribute('aria-hidden')!=='true')interactive.push(type);layer.style.display='none';});
                 enableFinishes(false);
@@ -71,11 +82,12 @@ const root=path.resolve(__dirname,'..');
                 if(layers.length){
                     const preview=api.createDevice(type,0,0,null,true);
                     if(preview.el.querySelectorAll('.equipment-material').length!==layers.length)previewDifferences.push(type);
+                    if(preview.el.querySelectorAll(frontSelector).length!==frontCount||preview.el.querySelectorAll(driverSelector).length!==driverCount)previewDifferences.push(type+': fastener construction');
                     preview.el.remove();
                 }
                 api.deleteDevice(dev,false);
             }
-            return {count:Object.keys(api.names).length,moved,interactive,guidance,previewDifferences,missingScrewParts,screwOverlaps,screwCount,screwFinishes:[...screwFinishes].sort(),screwAngles:screwAngles.size,screwDefinitions:document.querySelectorAll('#hw-screw-definitions').length};
+            return {count:Object.keys(api.names).length,moved,interactive,guidance,previewDifferences,missingScrewParts,screwOverlaps,constructionIssues,screwCount,screwFinishes:[...screwFinishes].sort(),screwAngles:screwAngles.size,screwDefinitions:document.querySelectorAll('#hw-screw-definitions').length};
         });
         assert.deepEqual(result.moved,[],'finishes preserve equipment and control geometry');
         assert.deepEqual(result.interactive,[],'texture layers are hidden from assistive technology and pointer input');
@@ -83,9 +95,10 @@ const root=path.resolve(__dirname,'..');
         assert.deepEqual(result.previewDifferences,[],'placement previews receive the same finishes');
         assert.deepEqual(result.missingScrewParts,[],'mounted screws resolve their head and drive artwork');
         assert.deepEqual(result.screwFinishes,['gold','silver']);
-        assert(result.screwCount>100&&result.screwAngles>4,'real equipment uses varied screw orientations');
+        assert(result.screwCount>0&&result.screwAngles>4,'retained mechanical fixings use varied screw orientations');
         assert.equal(result.screwDefinitions,1,'equipment and previews share one SVG definition set');
         assert.deepEqual(result.screwOverlaps,[],'seated screws clear controls, displays, and labels');
+        assert.deepEqual(result.constructionIssues,[],'front panels and driver trim respect their model construction');
         const textures=await page.evaluate(async()=>{
             const names=['machined-aluminium','powder-coat','walnut-veneer','woven-linen','cabinet-leather'];
             return Promise.all(names.map(async name=>{const image=new Image();image.src='/assets/textures/'+name+'.png';await image.decode();return image.naturalWidth>0;}));

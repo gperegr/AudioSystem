@@ -1,8 +1,12 @@
 # Equipment contracts
 
+`equipment-brands.test.cjs` verifies the five electronics and five listening manufacturers, coverage of all audio type IDs, unique model names, each naming convention and independent local SVG logos. `node tests/equipment-brands.browser.cjs` checks real equipment, catalog cards, properties, accessible names, live model-preserving translation, branding clearance, and placement previews for every branded model. It also checks manufacturer/model search and identity containment in the short dock. It accepts `TAILWIND_SCRIPT_FILE` and writes `/tmp/audio-brand-validation.json` (or `BRAND_REPORT`) with the placements and any issues.
+
 `node tests/tape-deck.browser.cjs` checks the tape deck's layout, real transport, ten-second seek, keyboard level control, reel inertia, reduced motion, directional lighting, shadow cache, and saved-project reload. It serves local assets through Playwright and accepts `TAILWIND_SCRIPT_FILE` for offline styling.
 
 `node tests/equipment-materials.browser.cjs` checks all registered models with the material and depth stylesheets enabled and disabled: device/control geometry, connector guidance colors and halos, inert artwork layers, matching placement previews, and local texture decoding. It also verifies gold and silver screws, varied drive angles, resolved SVG references, one shared definition set, and clearance from controls, meters, tuner scales, and text. Speaker grilles intentionally cover the driver fasteners. It uses Playwright routing and accepts `TAILWIND_SCRIPT_FILE` for offline styling.
+
+The same browser suite checks construction choices: domestic fronts and smooth driver trims conceal their fasteners, removable service panels and exposed baskets retain them, and placement previews match the finished equipment.
 
 ## Signal history
 

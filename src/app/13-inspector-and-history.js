@@ -248,7 +248,7 @@
             
             const names = DEVICE_NAMES;
             const equipmentName=names[dev.type]||dev.el.querySelector('.device-header > span')?.textContent.trim()||dev.type;
-            document.getElementById('inspector-title').textContent=equipmentName;
+            document.getElementById('inspector-title').textContent=EquipmentBrands.name(dev.type,equipmentName);
 
             const hasPowerControl = !!dev.el.querySelector('.power-btn');
             let html='';

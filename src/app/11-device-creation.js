@@ -209,7 +209,7 @@
                 '.interface-face','.custom-pre-face','.custom-power-face',
                 '.stereo-power-face','.phone-amp-face','.graphic-eq-face','.rack-face'
             ].join(','));
-            if(assemblySurface&&!assemblySurface.querySelector('.assembly-details')){
+            if(Hardware.frontFasteners(type)&&assemblySurface&&!assemblySurface.querySelector('.assembly-details')){
                 assemblySurface.classList.add('assembly-detail-surface');
                 const assembly=document.createElement('span');
                 assembly.className=`assembly-details assembly-details--${el.classList.contains('device-family-vintage')?'warm':el.classList.contains('device-family-studio')?'steel':'dark'}`;
@@ -231,7 +231,7 @@
             Hardware.materials({el});
             Hardware.fasteners(el);
             world.appendChild(el);
-            if(previewOnly){el.classList.add('catalog-placement-preview');el.hidden=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type,el};}
+            if(previewOnly){EquipmentBrands.mount(el,type,DEVICE_NAMES[type]);el.classList.add('catalog-placement-preview');el.hidden=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type,el};}
 
             const dev = { id, type, el, nodes: {}, state: { volume: 0.8, bass: 0, treble: 0, eq: [0, 0, 0, 0, 0] }, powered: true };
             const placement = appState.project.restoringProject?{
@@ -755,6 +755,7 @@
             if(EXTRA_AUDIO_TYPES.has(type))bindExtraDevice(dev);
             if(type==='hardwareDemo')Hardware.bindDemo(dev);
             Hardware.mount(dev);
+            EquipmentBrands.mount(el,type,DEVICE_NAMES[type]);
             if(!FURNITURE_TYPES[type]) setupAudioMeters(dev);
             animateDevicePower(dev);
             selectDevice(id);
