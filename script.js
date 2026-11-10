@@ -847,11 +847,13 @@ const Hardware = (() => {
     // Artwork layers live beneath controls in an isolated surface. They have no
     // layout, hit target, runtime state, or dependency on the interface palette.
     function mountMaterials(dev){
+        const type=dev.el.dataset.equipmentType;
+        if(EquipmentBrands.get(type))dev.el.dataset.analogFinish='true';
         const surfaces=[
             ['alloy','.classic-preamp-panel,.classic-preamp-connections,.tape-face,.precision-face,.utility-front,.glass-pre-switch-row,.glass-pre-end,.pre-finish-reference,.pre-finish-control,.power-finish-bias,.power-finish-valve .custom-power-connections,.finish-silver'],
             [dev.el.classList.contains('device-family-vintage')?'alloy':'coated','.rack-face,.graphic-eq-face,.stereo-power-face,.phone-amp-face,.matrix-face,.selector-face,.signal-face,.bench-face,.streamer-face,.cd-face,.interface-face,.xover-panel,.amp4-rack-face,.mixer-rack-panel,.extra-rack,.ai-panel,.integrated-face,.custom-pre-face,.custom-power-face'],
             ['walnut','.classic-preamp-case,.classic-box-cab,.shelf-finish-wood .bookshelf-cabinet,.device-type-spkPassiveWood .sp-cab'],
-            ['coated','.sp-modern,.sp-active,.power-finish-dual,.finish-minimal,.headphone-controls']
+            ['coated','.sp-modern,.sp-active,.power-finish-dual,.finish-minimal,.headphone-controls,.compact-white,.sp-sub,.tower-cabinet,.bookshelf-cabinet,.electrostatic-frame,.stream-glass,.at-plinth,.tt-plinth,.linear-plinth,.converter-body,.bt-body']
         ];
         surfaces.forEach(([material,selector])=>dev.el.querySelectorAll(selector).forEach(surface=>{
             if(surface.querySelector(':scope > .equipment-material'))return;

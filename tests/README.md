@@ -4,7 +4,7 @@
 
 `node tests/tape-deck.browser.cjs` checks the tape deck's layout, real transport, ten-second seek, keyboard level control, reel inertia, reduced motion, directional lighting, shadow cache, and saved-project reload. It serves local assets through Playwright and accepts `TAILWIND_SCRIPT_FILE` for offline styling.
 
-`node tests/equipment-materials.browser.cjs` checks all registered models with the material and depth stylesheets enabled and disabled: device/control geometry, connector guidance colors and halos, inert artwork layers, matching placement previews, and local texture decoding. It also verifies gold and silver screws, varied drive angles, resolved SVG references, one shared definition set, and clearance from controls, meters, tuner scales, and text. Speaker grilles intentionally cover the driver fasteners. It uses Playwright routing and accepts `TAILWIND_SCRIPT_FILE` for offline styling.
+`node tests/equipment-materials.browser.cjs` checks all registered models with the material, depth and analog-finish stylesheets enabled and disabled: device/control geometry, connector guidance colors and halos, inert artwork layers, matching placement previews, and local texture decoding. It also verifies gold and silver screws, varied drive angles, resolved SVG references, one shared definition set, and clearance from controls, meters, tuner scales, and text. Speaker grilles intentionally cover the driver fasteners. It uses Playwright routing and accepts `TAILWIND_SCRIPT_FILE` for offline styling.
 
 The same browser suite checks construction choices: domestic fronts and smooth driver trims conceal their fasteners, removable service panels and exposed baskets retain them, and placement previews match the finished equipment.
 

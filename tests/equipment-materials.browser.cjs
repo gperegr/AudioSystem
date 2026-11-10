@@ -26,8 +26,8 @@ const root=path.resolve(__dirname,'..');
         await page.locator('#headphone-calibration-skip').click();
         await page.getByRole('button',{name:'Agora não',exact:true}).click();
         const result=await page.evaluate(()=>{
-            const api=__materials,sheets=[...document.styleSheets].filter(s=>/\/(tactile-finishes|depth)\.css/.test(s.href||''));
-            if(sheets.length!==2)throw Error('Material and depth stylesheets must both load');
+            const api=__materials,sheets=[...document.styleSheets].filter(s=>/\/(tactile-finishes|depth|analog-finishes)\.css/.test(s.href||''));
+            if(sheets.length!==3)throw Error('Material, depth and analog finish stylesheets must load');
             const enableFinishes=value=>sheets.forEach(sheet=>sheet.disabled=!value);
             const moved=[],interactive=[],guidance=[],previewDifferences=[],missingScrewParts=[],screwOverlaps=[],constructionIssues=[];
             const frontSelector='.assembly-fastener,.classic-screw,.precision-screw,.tape-screw,.electrostatic-fastener,.phone-housing-screws>i,.glass-pre-end>i';

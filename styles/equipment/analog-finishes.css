@@ -1,0 +1,91 @@
+/* Aurenne Studio materials translated to the existing equipment geometry.
+   No layout, border widths, hit targets, transforms or electrical state change.
+   Fine grain, specular sweeps and wear are procedural CSS, without new assets. */
+:is(#audio-world,.equipment-preview-world) .device-node[data-analog-finish] {
+    --analog-brush:repeating-linear-gradient(0deg,#ffffff13 0 .5px,#00000009 .5px 1px,transparent 1px 3px);
+    --analog-grain:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%3E%3Cfilter%20id%3D%22grain%22%3E%3CfeTurbulence%20type%3D%22fractalNoise%22%20baseFrequency%3D%22.82%22%20numOctaves%3D%223%22%20seed%3D%2213%22%20stitchTiles%3D%22stitch%22%2F%3E%3CfeColorMatrix%20type%3D%22saturate%22%20values%3D%220%22%2F%3E%3CfeComponentTransfer%3E%3CfeFuncA%20type%3D%22linear%22%20slope%3D%22.1%22%2F%3E%3C%2FfeComponentTransfer%3E%3C%2Ffilter%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20filter%3D%22url%28%23grain%29%22%2F%3E%3C%2Fsvg%3E");
+    --analog-wear:linear-gradient(173deg,transparent 12%,#ffffff0a 12.1%,transparent 12.3% 87%,#0000000c 87.2%,transparent 87.5%);
+    --analog-brass:linear-gradient(110deg,#94713a,#dac58a 30%,#c4a15d 68%,#9a783f);
+    --analog-silver:linear-gradient(112deg,#a9b2ad,#e2e5dc 31%,#c0c8c1 68%,#9da9a3);
+}
+/* The same fine substrate and edge lighting as the stand-alone front plate. */
+.device-node[data-analog-finish] .equipment-material--alloy {
+    background-image:var(--analog-wear),var(--analog-brush),linear-gradient(112deg,#ffffff18,transparent 40% 75%,#00000015);
+    background-size:100% 100%;
+    box-shadow:inset 0 1px 1px #ffffffe0,inset 1px 0 1px #ffffff55,inset 0 -3px 4px #0005;
+}
+.device-node[data-analog-finish] .equipment-material--coated {
+    background-image:var(--analog-wear),var(--analog-grain),radial-gradient(ellipse at 35% 5%,#ffffff12,transparent 75%);
+    background-size:100% 100%,83px 67px,100% 100%;
+    box-shadow:inset 0 1px 2px #ffffff45,inset 2px 0 2px #ffffff0c,inset -3px -3px 4px #0005;
+}
+.device-node[data-analog-finish] .equipment-material--walnut {
+    background-image:repeating-linear-gradient(88deg,#140b040a 0 1px,transparent 1px 7px,#e8b4780e 8px,transparent 9px 15px),repeating-linear-gradient(91deg,transparent 0 23px,#1e10080f 24px 25px,transparent 26px 43px),linear-gradient(110deg,#ffffff15,transparent 45%,#0002);
+    background-size:100% 100%;
+    box-shadow:inset 1px 2px 2px #f3ce9980,inset -3px -4px 5px #28160999;
+}
+/* Warm analog plates keep dark ink. White/lacquer and glass products keep
+   their own material: a gold face belongs to the classic analog family. */
+:is(#audio-world,.equipment-preview-world) .device-node[data-brand="aurenne"] :is(.classic-preamp-panel,.utility-front,.integrated-face.finish-silver,.graphic-eq-face,.mixer-rack-panel,.xover-panel,.selector-face,.matrix-face,.phone-amp-face,.stereo-power-face) {
+    background:var(--analog-brush),var(--analog-brass)!important;
+    color:#302817;
+    box-shadow:inset 0 1px 1px #fff9,inset 1px 0 #fff4,inset 0 -3px 3px #49361599,0 2px 3px #0007;
+}
+:is(#audio-world,.equipment-preview-world) .device-node[data-brand="aurenne"] :is(.classic-dial-label,.classic-preamp-heading,.hw-knob-caption) {
+    text-shadow:0 .5px .35px #fff8;
+}
+/* Grained studio coatings stay neutral so the manufacturer's colored accents
+   and signal lamps retain their meaning. These highlights sit inside the case. */
+:is(#audio-world,.equipment-preview-world) .device-node[data-analog-finish].device-family-studio :is(.rack-face,.graphic-eq-face,.stereo-power-face,.mixer-rack-panel,.amp4-rack-face) {
+    background:var(--analog-grain),linear-gradient(105deg,#333a39,#202625 45%,#141a19 85%,#292f2b)!important;
+    background-size:83px 67px,100% 100%!important;
+    box-shadow:inset 0 2px 2px #c8d5c44d,inset 2px 0 3px #0004,inset -3px -4px 5px #000a,0 3px 5px #0006;
+}
+/* Each physical knob model keeps its rim, marker and exact angular travel. */
+:is(#audio-world,.equipment-preview-world) .device-node[data-analog-finish] .hw-knob:is([data-knob-finish="machined"],[data-knob-finish="fluted"],[data-knob-finish="skirted"])>.hw-knob-face {
+    background:repeating-radial-gradient(circle,#fff2 0 .3px,#0000000a .4px .7px,transparent .9px 1.6px),conic-gradient(from 15deg,#b6b9a9,#ffffed 38deg,#838d7e 91deg,#d9decd 149deg,#64735f 220deg,#f4f5df 285deg,#b6b9a9)!important;
+    box-shadow:inset 0 0 0 1px #f2efd9bb,inset 0 1px 2px #fff9,inset 0 -2px 3px #303e3477!important;
+}
+:is(#audio-world,.equipment-preview-world) .device-node[data-analog-finish] .hw-knob:is([data-knob-finish="rubber"],[data-knob-finish="plain"],[data-knob-finish="interface"])>.hw-knob-face {
+    background:repeating-radial-gradient(circle,#ffffff06 0 .5px,transparent .8px 2px),conic-gradient(from 20deg,#3f4946,#75817b 40deg,#202824 115deg,#3f4a43 185deg,#101b15 245deg,#627267 310deg,#3f4946)!important;
+    box-shadow:inset 0 1px #ffffff50,inset 0 -2px 3px #0009!important;
+}
+:is(#audio-world,.equipment-preview-world) .device-node[data-analog-finish] .hw-knob .hw-knob-indicator {
+    filter:drop-shadow(.4px .6px .3px #0007);
+}
+/* Raised chrome and Bakelite caps; pressed key travel remains in Hardware. */
+:is(#audio-world,.equipment-preview-world) .device-node[data-analog-finish] .hw-plunger-face {
+    background:conic-gradient(from 25deg,#a7b3ad,#f4f4e5 48deg,#64746b 122deg,#c6d4c5 186deg,#4d5f53 245deg,#edf0dc 309deg,#a7b3ad);
+    box-shadow:inset 0 1px #ffffffe0,inset 0 -2px 2px #24372c88,0 2px 3px #0008;
+}
+:is(#audio-world,.equipment-preview-world) .device-node[data-analog-finish] .hw-mechanical-key-face {
+    background-image:linear-gradient(110deg,#ffffff16,transparent 45% 75%,#0003);
+    box-shadow:inset 0 1px #ffffff60,inset 0 -2px 2px #0008,0 2px 3px #0006;
+}
+/* Glass reflections and thick bezels stay clear of meter data and displays. */
+:is(#audio-world,.equipment-preview-world) .device-node[data-analog-finish] :is(.integrated-gauge,.extra-vu,.bias-meter,.bench-lcd,.signal-screen,.custom-pre-screen,.stream-screen,.cd-lcd) {
+    box-shadow:inset 0 3px 5px #0008,inset 0 -1px #ffffff45,0 1px #ffffff55,0 2px 3px #0007;
+}
+/* Soft speaker surrounds, machined baskets and textured dust caps. */
+:is(#audio-world,.equipment-preview-world) .device-node[data-analog-finish] :is(.sp-woofer,.sp-tweeter,.tower-driver,.classic-box-driver) {
+    box-shadow:inset 0 1px #ffffff40,inset 0 -3px 5px #000c,0 1px 1px #000b,0 3px 5px #0007;
+}
+:is(#audio-world,.equipment-preview-world) .device-node[data-analog-finish] :is(.sp-cone,.tower-cone) {
+    box-shadow:inset 0 5px 9px #0006,inset 0 -2px 3px #ffffff24,0 0 0 1px #0007;
+}
+:is(#audio-world,.equipment-preview-world) .device-node[data-analog-finish] :is(.headphone-artwork,.kuba-art) {
+    filter:contrast(1.035) drop-shadow(0 1px 1px #0009) drop-shadow(0 4px 4px #0005);
+}
+/* Pads receive leather grain only; open meshes and wooden earcups retain
+   their own illustrations and all connector/stand positions. */
+:is(#audio-world,.equipment-preview-world) .device-node[data-analog-finish] .headphone-cup::after {
+    background-image:var(--analog-grain),radial-gradient(ellipse at 35% 25%,#434942,#1c251e 65%,#0d1610);
+    background-size:37px 29px,100% 100%;
+}
+:is(#audio-world,.equipment-preview-world) .device-node[data-analog-finish] :is(.at-platter,.tt-platter,.tape-reel) {
+    box-shadow:inset 0 1px #ffffffbb,inset 0 -2px 3px #0008,0 1px 1px #000c,0 3px 4px #0008;
+}
+/* Fine stamped maker lettering, without increasing its physical footprint. */
+.device-node[data-analog-finish] .equipment-brand-logo text {
+    text-shadow:0 .5px .3px #0007,0 -.4px .3px #fff6;
+}
