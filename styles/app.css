@@ -4679,3 +4679,10 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 :is(#audio-world,.equipment-preview-world) .device-node:is(.device-type-shelfCoax,.device-type-shelfTop) .tower-terminal::before,
 :is(#audio-world,.equipment-preview-world) .device-node:is(.device-type-shelfCoax,.device-type-shelfTop) .tower-terminal::after {content:none!important;}
 :is(#audio-world,.equipment-preview-world) .device-node:is(.device-type-shelfCoax,.device-type-shelfTop) .tower-terminal>.equipment-material {display:none;}
+/* B-20 and D-B40: expose the speaker socket without a surrounding plate. */
+:is(#audio-world,.equipment-preview-world) .device-node:is(.device-type-spkPassiveWood,.device-type-spkPassiveCarbon) :is(.sp-panel,.sp-terminal) {
+    border-color:transparent!important;outline:0!important;background:transparent!important;box-shadow:none!important;
+}
+:is(#audio-world,.equipment-preview-world) .device-node:is(.device-type-spkPassiveWood,.device-type-spkPassiveCarbon) :is(.sp-panel,.sp-terminal)::before,
+:is(#audio-world,.equipment-preview-world) .device-node:is(.device-type-spkPassiveWood,.device-type-spkPassiveCarbon) :is(.sp-panel,.sp-terminal)::after {content:none!important;}
+:is(#audio-world,.equipment-preview-world) .device-node:is(.device-type-spkPassiveWood,.device-type-spkPassiveCarbon) :is(.sp-panel,.sp-terminal)>.equipment-material {display:none;}
