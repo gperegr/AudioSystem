@@ -53,11 +53,15 @@ const root=path.resolve(__dirname,'..');
                     if(w>.5&&h>.5)collisions.push({type,part:part.className||part.tagName,placement:badge.dataset.placement,mode:badge.dataset.mode});
                 });
                 if(dev.el.dataset.productFamily!==product.brand||!badge.dataset.zone)issues.push(type+': missing product family / print rail');
+                if(!dev.el.dataset.brandPrint)issues.push(type+': missing receiving material for maker ink');
                 const cap=dev.el.querySelector('.hw-mechanical-key-face');
                 if(cap&&parseFloat(getComputedStyle(cap).borderTopLeftRadius)!==EquipmentBrands.families[product.brand].keyRadius)issues.push(type+': inconsistent shared key profile');
                 placements[type]={mode:badge.dataset.mode,placement:badge.dataset.placement,zone:badge.dataset.zone,left:badge.style.left,top:badge.style.top,width:badge.style.width,height:badge.style.height};
                 const preview=api.createDevice(type,0,0,null,true);
-                if(preview.el.dataset.manufacturer!==dev.el.dataset.manufacturer||preview.el.dataset.model!==dev.el.dataset.model||preview.el.querySelectorAll('[data-brand-badge]').length!==1)issues.push(type+': preview identity');
+                if(preview.el.dataset.manufacturer!==dev.el.dataset.manufacturer||preview.el.dataset.model!==dev.el.dataset.model||!preview.el.dataset.brandPrint||preview.el.querySelectorAll('[data-brand-badge]').length!==1)issues.push(type+': preview identity');
+                // Some previews show the bare cabinet before the removable
+                // grille is fitted. Equal receiving surfaces must use equal ink.
+                if(preview.el.querySelector('[data-brand-badge]')?.dataset.placement===badge.dataset.placement&&preview.el.dataset.brandPrint!==dev.el.dataset.brandPrint)issues.push(type+': preview material ink');
                 preview.el.remove();api.deleteDevice(dev,false);
             }
             const items=[...document.querySelectorAll('.catalog-item[data-template]')].filter(item=>EquipmentBrands.get(item.dataset.template)&&!EquipmentBrands.unprinted(item.dataset.template));

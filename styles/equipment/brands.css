@@ -8,7 +8,15 @@
     justify-content:center;
     gap:1px;
     box-sizing:border-box;
-    color:var(--equipment-brand-ink,#ced7d1);
+    color:var(--brand-print-ink,var(--equipment-brand-ink,#ced7d1));
+    opacity:var(--brand-print-opacity,1);
+    mix-blend-mode:var(--brand-print-blend,normal);
+    filter:var(--brand-print-relief,none);
+    /* Physical printing uses a single material ink. The brand book keeps the
+       multicolour artwork; even its flourishes belong to the faceplate here. */
+    --brand-color-1:currentColor;
+    --brand-color-2:currentColor;
+    --brand-shadow:currentColor;
     pointer-events:none;
     user-select:none;
     line-height:1;
@@ -29,6 +37,46 @@
 .device-node[data-brand="bravora"]:is([data-kuba-wood="walnut"],[data-kuba-wood="ebony"]) .equipment-brand-badge {color:var(--equipment-brand-light-ink);}
 /* Old three-bar grille patches give way to each manufacturer's own identity. */
 .device-node[data-brand] .speaker-grille.classic-box-grille::after {content:none;}
+
+/* Ink recipes follow the receiving surface, independently of UI palettes.
+   Subpixel relief suggests an etch, not a raised UI label. Screen printing lets
+   the underlying coating/wood tone show through the light manufacturer ink. */
+.device-node[data-brand-print="brass"] {
+    --brand-print-ink:#4a3925;--brand-print-opacity:.88;
+    --brand-print-relief:drop-shadow(0 .45px .2px #fff0c480);
+}
+.device-node[data-brand-print="alloy"] {
+    --brand-print-ink:#3e4c4d;--brand-print-opacity:.87;
+    --brand-print-relief:drop-shadow(0 .45px .2px #f6fff394);
+}
+.device-node[data-brand="aurenne"][data-brand-print="alloy"] {--brand-print-ink:#494a3a;}
+.device-node[data-brand-print="anodized"] {
+    --brand-print-ink:color-mix(in srgb,var(--family-trim,#b5c2c0) 24%,#bbc5c3);
+    --brand-print-opacity:.82;--brand-print-blend:screen;
+}
+.device-node[data-brand-print="glass"] {
+    --brand-print-ink:#b3c7c4;--brand-print-opacity:.85;--brand-print-blend:screen;
+}
+.device-node[data-brand-print="lacquer-light"] {
+    --brand-print-ink:#4b554e;--brand-print-opacity:.86;--brand-print-blend:multiply;
+}
+.device-node[data-brand-print="lacquer-dark"] {
+    --brand-print-ink:color-mix(in srgb,var(--family-trim,#c2c8ba) 20%,#c1c8bc);
+    --brand-print-opacity:.83;--brand-print-blend:screen;
+}
+.device-node[data-brand-print="wood"] {
+    --brand-print-ink:#d8c295;--brand-print-opacity:.85;--brand-print-blend:screen;
+}
+.device-node[data-brand-print="wood-etched"] {
+    --brand-print-ink:#51402c;--brand-print-opacity:.87;--brand-print-blend:multiply;
+}
+.device-node[data-brand-print="woven"] {
+    --brand-print-ink:#cdbb96;--brand-print-opacity:.91;--brand-print-blend:screen;
+}
+.device-node[data-brand-print="woven"] .equipment-brand-logo {
+    mask-image:repeating-linear-gradient(0deg,#000 0 1.5px,#000b 1.5px 2px);
+}
+.device-node[data-brand-print] .equipment-brand-model {opacity:.85;}
 
 /* Catalog identity supplements the translated function and searchable type.
    Its typography and color follow shared UI tokens, including the short dock. */

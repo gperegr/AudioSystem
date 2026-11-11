@@ -56,6 +56,18 @@ da tecla de energia. Não são acrescentadas extensões traseiras.
   parafusos ficam encobertos enquanto ela está colocada.
 - Fones de ouvido e adaptadores não recebem marca visível.
 
+A tinta física acompanha o material receptor: gravação castanha no latão,
+gravação cinza no alumínio, impressão mineral em anodizado e vidro, tinta fosca
+na laca e assinatura quente em madeira e tecido. Transparência e composição
+com a superfície deixam seus tons aparecerem no lettering; nas grades, uma
+microtrama reduz a uniformidade da impressão. O relevo dos metais é inferior a
+um pixel. O livro de marcas conserva as versões coloridas das identidades.
+
+Os conjuntos transparentes dos toca-discos não recebem a camada genérica de
+revestimento: o acabamento do pedestal já pertence à arte original. A caixa
+de acrílico com cinco faces é o único contorno acima dele e acompanha sua
+animação de abertura.
+
 ## Manutenção e verificação
 
 `src/modules/equipment-brands.js` define as famílias e faixas de impressão;

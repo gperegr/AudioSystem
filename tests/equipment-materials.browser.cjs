@@ -49,6 +49,18 @@ const root=path.resolve(__dirname,'..');
             for(const type of Object.keys(api.names)){
                 const id='material-test-'+type;api.createDevice(type,120,120,id);
                 const dev=api.devices[id];if(!dev)throw new Error('Factory did not register '+type);
+                if(type.startsWith('turntable')){
+                    const assembly=dev.el.querySelector('.at-plinth,.tt-plinth,.linear-plinth'),cover=dev.el.querySelector('.at-dust-cover,.linear-lid');
+                    if(assembly?.querySelector(':scope>.equipment-material'))constructionIssues.push(type+': coating spans transparent cover space');
+                    if(!cover||cover.children.length!==5)constructionIssues.push(type+': original acrylic box missing');
+                    else {
+                        const closed=getComputedStyle(cover).transform;
+                        dev.setLidOpen(true);
+                        if(!dev.state.lidOpen||getComputedStyle(cover).transform===closed)constructionIssues.push(type+': acrylic cover no longer pivots');
+                        dev.setLidOpen(false);
+                        if(getComputedStyle(cover).transform!==closed)constructionIssues.push(type+': acrylic cover no longer closes');
+                    }
+                }
                 const layers=[...dev.el.querySelectorAll('.equipment-material')];
                 const frontCount=dev.el.querySelectorAll(frontSelector).length,driverCount=dev.el.querySelectorAll(driverSelector).length;
                 if(cleanFronts.has(type)&&frontCount)constructionIssues.push(type+': front fixings should be concealed');

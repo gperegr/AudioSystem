@@ -69,6 +69,17 @@
         return `<svg class="equipment-brand-logo" data-wordmark="${b.name.toUpperCase()}" viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">${content}</svg>`;
     }
     const paleFronts=new Set(['headphoneAmp','powerValve','turntableVintage','turntableLinear','receiver','integratedSilver','integratedUtility','preClassic','tapeDeck','eqVintage','mixerVintage','crossoverVintage','powerVintage','rcaSwitchVintage','rcaMatrixVintage','speakerSwitchVintage','signalGeneratorVintage','benchMeterVintage','preReference','preControl','prePrecision','powerBias','audioInterface4','turntableDirect','turntableBelt','spkActiveCompact','floorCoax','shelfTop','hpKubaDisco2']);
+    const brassFronts=new Set(['integratedSilver','integratedUtility','preClassic','headphoneAmp','eqVintage','mixerVintage','crossoverVintage','powerVintage','rcaSwitchVintage','rcaMatrixVintage','speakerSwitchVintage']);
+    function printFinish(root,type){
+        const grille=root.querySelector('.speaker-grille');
+        if(grille&&!root.classList.contains('grille-off')&&getComputedStyle(grille).display!=='none')return 'woven';
+        if(brassFronts.has(type))return 'brass';
+        if(type==='preGlass'||type==='streamIntegrated')return 'glass';
+        const listening=get(type).manufacturer.group==='listening';
+        if(paleFronts.has(type))return listening?'lacquer-light':type==='turntableBelt'?'wood-etched':'alloy';
+        if(listening)return get(type).brand==='bravora'||type==='speaker'?'wood':'lacquer-dark';
+        return 'anodized';
+    }
     const obstacleSelector='.mixer-rack-handle,.speaker-basic-tweeter,.speaker-basic-woofer,.speaker-basic-terminal,.precision-meter,.ai-output-pair,.linear-io,.sub-oblong-duct,.sub-air-ducts>i,.tower-front-vent,.sp-panel,.sp-terminal,.classic-box-connection,.tower-terminal,[role=slider],.poweramp-screen,.poweramp-meter,.linear-readout,.bias-heatsink,.bias-vent,.stereo-power-vent,.dual-top-vents,.at-pitch,.tt-pitch,button:not(.speaker-grille),input,select,output,.port,.hw-knob,.hw-screw-mount,.integrated-gauge,.extra-vu,.bias-meter,.receiver-radio,.device-display,.custom-pre-screen,.signal-screen,.bench-lcd,.bench-screen,.cd-lcd,.stream-screen,.sp-woofer,.sp-tweeter,.tower-driver,.classic-box-driver,.tower-top-tweeter,.shelf-top-tweeter,.tape-reel,.tape-head-cover,.at-platter,.at-record,.tt-platter,.tt-record,[data-lighting-relief]';
     function badgeElement(type){
         const p=get(type),badge=document.createElement('span');badge.className='equipment-brand-badge';badge.dataset.brandBadge=p.brand;badge.setAttribute('aria-hidden','true');badge.setAttribute('translate','no');
@@ -154,6 +165,7 @@
         const p=get(type);if(!p||unprinted(type))return;
         root.dataset.productFamily=p.brand;
         root.dataset.manufacturer=p.manufacturer.name;root.dataset.brand=p.brand;root.dataset.model=p.model;
+        root.dataset.brandPrint=printFinish(root,type);
         root.style.setProperty('--equipment-brand-ink',paleFronts.has(type)?p.manufacturer.darkInk:p.manufacturer.lightInk);
         root.style.setProperty('--equipment-brand-light-ink',p.manufacturer.lightInk);
         root.style.setProperty('--equipment-brand-accent',p.manufacturer.accent);
