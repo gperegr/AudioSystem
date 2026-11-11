@@ -356,6 +356,7 @@
             const supported=Math.abs(bottom-maxEquipmentBottom())<=2||Object.values(appState.project.devices).some(other=>placementShapes(other,parseFloat(other.el.style.left)||0,parseFloat(other.el.style.top)||0).some(shape=>Math.abs(bottom-shape.y)<=2&&Math.min(target.x+w,shape.x+shape.width)-Math.max(target.x,shape.x)>0));
             el.style.left=target.x+'px';el.style.top=target.y+'px';el.classList.toggle('is-invalid',!valid);el.classList.toggle('is-supported',valid&&supported);
             const label=!valid?'Espaço indisponível':wall?'Fixado à parede':pendant?'Suspenso':supported?'Apoiado':'Espaço livre';el.dataset.previewLabel=`${AudioSystemLanguage.translate(label)} · ${w} × ${h}`;
+            Hardware.updateLightingDemo();
         }
         let activeCatalogPreviewCleanup=null;
         let activeEquipmentMoveCleanup=null;

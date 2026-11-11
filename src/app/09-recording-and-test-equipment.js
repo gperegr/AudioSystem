@@ -244,6 +244,16 @@
             }
         }
         let lastExtraDisplay=0;
+        // The idle preview and live analyzer share the same grid and traces.
+        function drawBenchSpectrum(canvas,signals=[],sampleRate=48000,active=false){
+            const ctx=canvas.getContext('2d');ctx.fillStyle='#071316';ctx.fillRect(0,0,360,72);
+            ctx.strokeStyle='#213b42';ctx.lineWidth=1;for(let y=12;y<72;y+=20){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(360,y);ctx.stroke();}
+            [0,1].forEach(index=>{
+                const data=signals[index];ctx.beginPath();ctx.strokeStyle=index?'#f2bd65':'#65cbe1';
+                for(let x=0;x<=360;x+=3){const hz=20*1000**(x/360),bin=data?Math.min(data.length-1,Math.floor(hz*2/sampleRate*data.length)):0,db=active&&data?data[bin]:-100,y=68-Math.max(0,Math.min(1,(db+90)/90))*64;if(x)ctx.lineTo(x,y);else ctx.moveTo(x,y);}ctx.stroke();
+            });
+        }
+
         function updateExtraDisplays(now){
             if(now-lastExtraDisplay<75)return;
             const elapsed=Math.min(.3,(now-lastExtraDisplay)/1000);lastExtraDisplay=now;
@@ -275,13 +285,8 @@
                 dev.el.querySelector('[data-correlation-value]').textContent='CORR · '+label;
                 const dot=dev.el.querySelector('[data-correlation-dot]');dot.style.left=`${((correlation??0)+1)*50}%`;dot.style.opacity=correlation===null?'.2':'1';dot.style.background=correlation!==null&&correlation<0?'#f87171':'#6ee7b7';
                 if(appState.interface.selectedDeviceId===dev.id){const output=document.getElementById('bench-inspector-correlation');if(output)output.textContent=label;}
-                const canvas=dev.el.querySelector('[data-bench-spectrum]'),ctx=canvas.getContext('2d');ctx.fillStyle='#071316';ctx.fillRect(0,0,360,72);
-                ctx.strokeStyle='#213b42';ctx.lineWidth=1;for(let y=12;y<72;y+=20){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(360,y);ctx.stroke();}
-                [l,r].forEach((tap,index)=>{
-                    const data=tap.frequencyData||=(new Float32Array(tap.analyzer.frequencyBinCount));tap.analyzer.getFloatFrequencyData(data);
-                    ctx.beginPath();ctx.strokeStyle=index?'#f2bd65':'#65cbe1';
-                    for(let x=0;x<=360;x+=3){const hz=20*1000**(x/360),bin=Math.min(data.length-1,Math.floor(hz*2/appState.audio.context.sampleRate*data.length));const db=dev.powered&&appState.audio.context.state==='running'?data[bin]:-100,y=68-Math.max(0,Math.min(1,(db+90)/90))*64;if(x)ctx.lineTo(x,y);else ctx.moveTo(x,y);}ctx.stroke();
-                });
+                const signals=[l,r].map(tap=>{const data=tap.frequencyData||=(new Float32Array(tap.analyzer.frequencyBinCount));tap.analyzer.getFloatFrequencyData(data);return data;});
+                drawBenchSpectrum(dev.el.querySelector('[data-bench-spectrum]'),signals,appState.audio.context.sampleRate,dev.powered&&appState.audio.context.state==='running');
             });
         }
 

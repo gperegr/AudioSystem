@@ -213,7 +213,7 @@ const SpotifyCoverflow=(()=>{
         root.querySelector('[data-spotify-position]').addEventListener('input',event=>{const source=host.querySelector('.spotify-flow-position');source.value=event.target.value;source.dispatchEvent(new Event('input',{bubbles:true}));});
         syncInspector(host);
     }
-    function mount(host,state,onChange){
+    function mount(host,state,onChange,{preview=false}={}){
         const stage=host.querySelector('.spotify-flow-stage'),flow=host.querySelector('.spotify-flow-cards'),message=host.querySelector('.spotify-flow-message');
         const hitLayer=document.createElement('div');hitLayer.className='spotify-flow-hits';stage.append(hitLayer);
         const title=host.querySelector('.spotify-flow-title'),subtitle=host.querySelector('.spotify-flow-subtitle'),count=host.querySelector('.spotify-flow-count');
@@ -336,7 +336,7 @@ const SpotifyCoverflow=(()=>{
             if(card&&['Enter',' '].includes(event.key)){event.preventDefault();event.stopPropagation();activate(Number(card.dataset.index));return;}
             if(!['ArrowLeft','ArrowRight','Home','End','Enter',' '].includes(event.key))return;if(event.target!==stage&&['Enter',' '].includes(event.key))return;event.preventDefault();event.stopPropagation();if(event.key==='ArrowLeft')shift(-1);else if(event.key==='ArrowRight')shift(1);else if(event.key==='Home')select(0);else if(event.key==='End')select(ordered.length-1);else activate(current()>=0?current():Math.round(active().position));
         });
-        const view={refresh};views.add(view);if(tokenData())status='';refresh();if(tokenData()){loadCollection(state.coverflowMode);ensurePlayer().catch(error=>setStatus(error.message));}
+        const view={refresh};if(!preview)views.add(view);if(!preview&&tokenData())status='';refresh();if(!preview&&tokenData()){loadCollection(state.coverflowMode);ensurePlayer().catch(error=>setStatus(error.message));}
         return {refresh(){if(disposed)return;refresh();if(tokenData())loadCollection(state.coverflowMode);},dispose(){if(disposed)return;disposed=true;views.delete(view);if(dragFrame){cancelAnimationFrame(dragFrame);dragFrame=0;}drag=null;pendingPosition=null;host.classList.remove('is-dragging');nodes.forEach(node=>node.remove());nodes.clear();hitLayer.remove();hits.forEach(hit=>hit.remove());hits.clear();}};
     }
     async function initialize(){

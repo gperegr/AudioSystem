@@ -864,6 +864,34 @@ const Hardware = (() => {
             const layer=document.createElement('span');layer.className=`equipment-material equipment-material--${material}`;layer.setAttribute('aria-hidden','true');surface.appendChild(layer);
         }));
     }
+    // Preview controls use the production skinning/painting pipeline without
+    // binding their values to audio or registering a project device.
+    function preview(dev){
+        dev.powered=true;
+        const selector='[data-classic-knob],[data-pre-rotary],[data-integrated-knob],[data-receiver-control],[data-radio-knob],.phone-volume,.graphic-eq-level,[data-channel-knob],[data-power-channel],[data-bias-gain],[data-tape-level],[data-pre-knob],[data-sp="vol"],[data-signal-level-knob],[data-ai-gain],[data-ai-line],[data-ai-phones],[data-linear-trim],[data-stream-volume],.poweramp-level';
+        dev.el.querySelectorAll(selector).forEach(el=>{
+            const key=el.dataset.integratedKnob||el.dataset.receiverControl||el.dataset.preKnob||el.dataset.classicKnob||'';
+            const tone=/bass|treble|balance|trim/i.test(key)||el.hasAttribute('data-linear-trim');
+            let min=tone?-10:0,max=tone?10:1,value=tone?0:.8,model;
+            if(/balance/i.test(key)){min=-1;max=1;}
+            if(el.hasAttribute('data-receiver-control')&&tone&&!/balance/i.test(key)){min=-15;max=15;}
+            if(el.hasAttribute('data-pre-knob')&&tone){min=-12;max=12;}
+            if(el.hasAttribute('data-pre-rotary')){max=3;value=0;}
+            if(el.hasAttribute('data-classic-knob')){min=key==='classicMode'?0:-10;max=key==='classicMode'?4:10;value=key==='classicMode'?CLASSIC_PREAMP_DEFAULTS.classicMode:0;}
+            if(el.hasAttribute('data-radio-knob')){min=87.5;max=108;value=88;}
+            if(el.hasAttribute('data-linear-trim')){min=-3;max=3;value=0;model='recessed';setControlSize(el,{width:18,height:18});}
+            if(el.hasAttribute('data-signal-level-knob')){max=10;value=2;}
+            if(el.hasAttribute('data-stream-volume')){max=100;value=80;model='haloDisc';setControlSize(el,{width:144,height:28});}
+            if(el.matches('.poweramp-level'))value=1;
+            if(el.matches('.graphic-eq-level'))value=1;
+            if(el.matches('[data-power-channel],[data-bias-gain]'))value=DEFAULT_POWER_GAIN;
+            if(el.hasAttribute('data-ai-phones'))value=.75;
+            el.style.setProperty('--knob-angle',(-135+(value-min)/(max-min)*270)+'deg');
+            if(el.matches('[data-pre-rotary],[data-classic-knob]'))el.style.setProperty('--integrated-angle',(-120+(value-min)/(max-min)*240)+'deg');
+            bindings.set(el,{get:()=>value,min,max,kind:'knob',model});el.dataset.hardwareKnob='';
+        });
+        mount(dev);
+    }
     function mount(dev){
         dev.el.style.setProperty('--hw-motion',physics.settleMs+'ms');dev.el.style.setProperty('--hw-press',physics.pressMs+'ms');dev.el.style.setProperty('--hw-led-clip',leds.clip.color);
         dev.el.querySelectorAll('[data-hardware-knob]').forEach(el=>{
@@ -1490,5 +1518,5 @@ const Hardware = (() => {
         if(spec.kind==='jack')return `<g transform="scale(${spec.scale})"><path d="M0 0 3 -2h12v4H3Z" fill="#ddbc77" stroke="#887044" stroke-width=".7"/><path d="M6 -2v4M11 -2v4" stroke="#20252a" stroke-width="1.1"/><rect x="15" y="-4" width="13" height="8" rx="2" fill="#363f45" stroke="#85949c" stroke-width="1"/><path d="M18 -3v6m3-6v6" stroke="#5d6c74"/></g>`;
         return `<path d="M0 0h7" stroke="#e2c283" stroke-width="2.5" stroke-linecap="round"/><rect x="5" y="-4" width="7" height="8" rx="1" fill="#bac2c5" stroke="#677780" stroke-width=".8"/><rect x="12" y="-5" width="13" height="10" rx="2" fill="#262e33" stroke="#788790" stroke-width=".8"/><rect x="14" y="-5" width="4" height="10" rx=".6" fill="${spec.color||'#cf4545'}"/>`;
     }
-    return Object.freeze({knobs,buttons,screws,screw:screwMarkup,fasteners:mountScrews,frontFasteners,controlSizes,setControlSize,buttonSounds,movementSounds,movementSound,sliders,leds,plugs,accents,sizes,physics,updateAccents,updateLightingDemo,renderLightingDemo,sceneLightAt,demoMarkup,bindDemo,sourceTransport,setButtonLabel,button:skinButton,bindKnob,bindLinear,slider,setLed,layout,materials:mountMaterials,mount,sync,dispose,inspector,plugMarkup});
+    return Object.freeze({knobs,buttons,screws,screw:screwMarkup,fasteners:mountScrews,frontFasteners,controlSizes,setControlSize,buttonSounds,movementSounds,movementSound,sliders,leds,plugs,accents,sizes,physics,updateAccents,updateLightingDemo,renderLightingDemo,sceneLightAt,demoMarkup,bindDemo,sourceTransport,setButtonLabel,button:skinButton,bindKnob,bindLinear,slider,setLed,layout,materials:mountMaterials,preview,mount,sync,dispose,inspector,plugMarkup});
 })();

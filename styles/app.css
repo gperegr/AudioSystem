@@ -4490,8 +4490,8 @@ body.tutorial-open .app-settings-content {max-height:calc(100dvh - 90px - var(--
 
 .catalog-item{position:relative}.catalog-favorite{position:absolute;top:4px;right:4px;width:28px;height:28px;border:0;background:transparent;color:#151c21;font-size:14px;line-height:1;cursor:pointer}.catalog-favorite[aria-pressed="true"]{color:#f1be6e}.catalog-favorite:focus-visible{outline:2px solid #8dc8f1;border-radius:4px}
 
-#audio-world .catalog-placement-preview{pointer-events:none!important;opacity:.5;filter:grayscale(1) brightness(1.4);outline:3px solid #7ce5b9;outline-offset:2px;z-index:1000!important;}
-#audio-world .catalog-placement-preview.is-invalid{outline-color:#ff6c71;filter:grayscale(1) sepia(.7) hue-rotate(310deg);}
+#audio-world .catalog-placement-preview{pointer-events:none!important;opacity:1;outline:3px solid #7ce5b9;outline-offset:2px;z-index:1000!important;}
+#audio-world .catalog-placement-preview.is-invalid{outline-color:#ff6c71;}
 #audio-world .catalog-placement-preview.is-supported{outline-color:#80c5ff;}
 #audio-world .catalog-placement-preview[hidden]{display:none!important;}
 

@@ -492,6 +492,23 @@
             const distance=Math.abs(frequency-station);
             return Math.exp(-((distance/.24)**2));
         }
+        function prepareReceiverArtwork(el){
+            const display=el.querySelector('.receiver-radio,.poweramp-screen');
+            if(display?.classList.contains('receiver-radio')&&!display.querySelector('.radio-tuning-needle')){
+                // The ruler and needle share one frequency-to-position conversion.
+                const scale=display.querySelector('i');scale.className='fm-calibrated-scale';scale.replaceChildren();
+                for(let frequency=FM_SCALE.min;frequency<=FM_SCALE.max;frequency+=FM_SCALE.step){
+                    const tick=document.createElement('em');tick.className='fm-scale-tick';tick.style.left=fmScalePosition(frequency)+'%';
+                    if(Number.isInteger(frequency))tick.classList.add('is-major');
+                    scale.appendChild(tick);
+                }
+                const labels=display.querySelector('span');labels.className='fm-calibrated-labels';labels.replaceChildren();
+                for(const frequency of [88,92,96,100,104,108]){const label=document.createElement('small');label.textContent=String(frequency);label.style.left=fmScalePosition(frequency)+'%';labels.appendChild(label);}
+                const needle=document.createElement('em');needle.className='radio-tuning-needle';needle.setAttribute('aria-hidden','true');display.appendChild(needle);
+            }
+            const text=el.querySelector('.receiver-radio b,.poweramp-screen strong');if(text)text.textContent='STEREO · LINHA 1';
+            const needle=el.querySelector('.radio-tuning-needle');if(needle)needle.style.left=fmScalePosition(88)+'%';
+        }
         function setupReceiverRadio(dev){
             const ctx=appState.audio.context;
             Object.assign(dev.state,{receiverInput:'line1',radioOn:false,radioFrequency:88,radioStation:randomFmStation()});
@@ -560,18 +577,7 @@
             const activateTuner=()=>{if(!dev.state.radioOn)dev.selectReceiverInput('fm');ctx.resume().then(()=>{if(appState.project.devices[dev.id]){dev.syncRadio();updateCableFlows();}}).catch(()=>{});};
             Hardware.bindKnob(tuningKnob,{get:()=>dev.state.radioFrequency,set:dev.tuneRadio,min:87.5,max:108,step:.1,activate:activateTuner,format:value=>value.toFixed(1)+' MHz'});
             const display=dev.el.querySelector('.receiver-radio,.poweramp-screen');
-            if(display?.classList.contains('receiver-radio')){
-                // The ruler and needle share one frequency-to-position conversion.
-                const scale=display.querySelector('i');scale.className='fm-calibrated-scale';scale.replaceChildren();
-                for(let frequency=FM_SCALE.min;frequency<=FM_SCALE.max;frequency+=FM_SCALE.step){
-                    const tick=document.createElement('em');tick.className='fm-scale-tick';tick.style.left=fmScalePosition(frequency)+'%';
-                    if(Number.isInteger(frequency))tick.classList.add('is-major');
-                    scale.appendChild(tick);
-                }
-                const labels=display.querySelector('span');labels.className='fm-calibrated-labels';labels.replaceChildren();
-                for(const frequency of [88,92,96,100,104,108]){const label=document.createElement('small');label.textContent=String(frequency);label.style.left=fmScalePosition(frequency)+'%';labels.appendChild(label);}
-                const needle=document.createElement('em');needle.className='radio-tuning-needle';needle.setAttribute('aria-hidden','true');display.appendChild(needle);
-            }
+            prepareReceiverArtwork(dev.el);
             if(display){
                 display.tabIndex=0;display.setAttribute('role','group');display.setAttribute('aria-label','Sintonia FM: arraste horizontalmente ou use as setas');display.title='Sintonia FM · arraste horizontalmente ou use as setas';
                 display.addEventListener('pointerdown',e=>{if(e.button!==0||!dev.state.radioOn)return;e.preventDefault();e.stopPropagation();display.setPointerCapture(e.pointerId);const x=e.clientX,frequency=dev.state.radioFrequency;

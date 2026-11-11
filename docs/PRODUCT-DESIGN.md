@@ -70,6 +70,20 @@ animação de abertura.
 
 ## Manutenção e verificação
 
+A prévia de posicionamento monta a mesma arte física usada no canvas antes de
+seguir para sua inicialização de áudio: caixas dos botões de energia, escalas
+de sintonia, tampas, grades, peças dos knobs e estado inicial dos visores. O
+indicador de espaço livre altera apenas o contorno e a legenda de posicionamento;
+não desbota o aparelho nem muda suas cores. A iluminação acompanha sua posição.
+Previews são inertes, não entram no projeto e não criam nós de áudio. O
+Coverflow usa os dados já disponíveis sem iniciar carregamento ou reprodução.
+
+`tests/equipment-preview.browser.cjs` compara os 102 modelos com suas versões
+colocadas: medidas, posições, modelos dos controles, reflexos, cores, indicadores,
+visores e conteúdo inicial dos canvases. Também percorre confirmação e
+cancelamento pelo cursor e confirmação por toque. Alterações em novos controles precisam manter
+seus valores iniciais no renderizador visual da prévia.
+
 `src/modules/equipment-brands.js` define as famílias e faixas de impressão;
 `styles/equipment/product-families.css` define as peças e acabamentos comuns.
 As regras de material não alteram estados elétricos, LEDs de sinal ou feedback

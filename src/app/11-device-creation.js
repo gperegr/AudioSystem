@@ -231,7 +231,8 @@
             Hardware.materials({el});
             Hardware.fasteners(el);
             world.appendChild(el);
-            if(previewOnly){EquipmentBrands.mount(el,type,DEVICE_NAMES[type]);el.classList.add('catalog-placement-preview');el.hidden=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type,el};}
+            prepareDeviceArtwork({type,el});
+            if(previewOnly){renderDevicePreview({type,el});EquipmentBrands.mount(el,type,DEVICE_NAMES[type]);el.classList.add('catalog-placement-preview');el.hidden=true;el.inert=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type,el};}
 
             const dev = { id, type, el, nodes: {}, state: { volume: 0.8, bass: 0, treble: 0, eq: [0, 0, 0, 0, 0] }, powered: true };
             const placement = appState.project.restoringProject?{
@@ -484,13 +485,7 @@
             } else if (EQ_TYPES.has(type)) {
                 dev.state.eq = GRAPHIC_EQ_FREQUENCIES.map(() => 0);
                 dev.state.eqLevel = 1;
-                const levelDial = document.createElement('button');
-                levelDial.className = 'graphic-eq-level receiver-dial';
-                levelDial.setAttribute('role', 'slider');
-                levelDial.setAttribute('aria-label', 'Nível de saída');
-                levelDial.setAttribute('aria-valuemin', '0');
-                levelDial.setAttribute('aria-valuemax', '100');
-                dev.el.querySelector('.graphic-eq-level').replaceWith(levelDial);
+                const levelDial=el.querySelector('.graphic-eq-level');
                 const freqs = EQ_BANDS[type] || EQ_BANDS.eqStudio;
                 dev.nodes.inR = appState.audio.context.createGain();
                 dev.nodes.inL = appState.audio.context.createGain();

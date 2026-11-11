@@ -864,6 +864,34 @@ const Hardware = (() => {
             const layer=document.createElement('span');layer.className=`equipment-material equipment-material--${material}`;layer.setAttribute('aria-hidden','true');surface.appendChild(layer);
         }));
     }
+    // Preview controls use the production skinning/painting pipeline without
+    // binding their values to audio or registering a project device.
+    function preview(dev){
+        dev.powered=true;
+        const selector='[data-classic-knob],[data-pre-rotary],[data-integrated-knob],[data-receiver-control],[data-radio-knob],.phone-volume,.graphic-eq-level,[data-channel-knob],[data-power-channel],[data-bias-gain],[data-tape-level],[data-pre-knob],[data-sp="vol"],[data-signal-level-knob],[data-ai-gain],[data-ai-line],[data-ai-phones],[data-linear-trim],[data-stream-volume],.poweramp-level';
+        dev.el.querySelectorAll(selector).forEach(el=>{
+            const key=el.dataset.integratedKnob||el.dataset.receiverControl||el.dataset.preKnob||el.dataset.classicKnob||'';
+            const tone=/bass|treble|balance|trim/i.test(key)||el.hasAttribute('data-linear-trim');
+            let min=tone?-10:0,max=tone?10:1,value=tone?0:.8,model;
+            if(/balance/i.test(key)){min=-1;max=1;}
+            if(el.hasAttribute('data-receiver-control')&&tone&&!/balance/i.test(key)){min=-15;max=15;}
+            if(el.hasAttribute('data-pre-knob')&&tone){min=-12;max=12;}
+            if(el.hasAttribute('data-pre-rotary')){max=3;value=0;}
+            if(el.hasAttribute('data-classic-knob')){min=key==='classicMode'?0:-10;max=key==='classicMode'?4:10;value=key==='classicMode'?CLASSIC_PREAMP_DEFAULTS.classicMode:0;}
+            if(el.hasAttribute('data-radio-knob')){min=87.5;max=108;value=88;}
+            if(el.hasAttribute('data-linear-trim')){min=-3;max=3;value=0;model='recessed';setControlSize(el,{width:18,height:18});}
+            if(el.hasAttribute('data-signal-level-knob')){max=10;value=2;}
+            if(el.hasAttribute('data-stream-volume')){max=100;value=80;model='haloDisc';setControlSize(el,{width:144,height:28});}
+            if(el.matches('.poweramp-level'))value=1;
+            if(el.matches('.graphic-eq-level'))value=1;
+            if(el.matches('[data-power-channel],[data-bias-gain]'))value=DEFAULT_POWER_GAIN;
+            if(el.hasAttribute('data-ai-phones'))value=.75;
+            el.style.setProperty('--knob-angle',(-135+(value-min)/(max-min)*270)+'deg');
+            if(el.matches('[data-pre-rotary],[data-classic-knob]'))el.style.setProperty('--integrated-angle',(-120+(value-min)/(max-min)*240)+'deg');
+            bindings.set(el,{get:()=>value,min,max,kind:'knob',model});el.dataset.hardwareKnob='';
+        });
+        mount(dev);
+    }
     function mount(dev){
         dev.el.style.setProperty('--hw-motion',physics.settleMs+'ms');dev.el.style.setProperty('--hw-press',physics.pressMs+'ms');dev.el.style.setProperty('--hw-led-clip',leds.clip.color);
         dev.el.querySelectorAll('[data-hardware-knob]').forEach(el=>{
@@ -1490,7 +1518,7 @@ const Hardware = (() => {
         if(spec.kind==='jack')return `<g transform="scale(${spec.scale})"><path d="M0 0 3 -2h12v4H3Z" fill="#ddbc77" stroke="#887044" stroke-width=".7"/><path d="M6 -2v4M11 -2v4" stroke="#20252a" stroke-width="1.1"/><rect x="15" y="-4" width="13" height="8" rx="2" fill="#363f45" stroke="#85949c" stroke-width="1"/><path d="M18 -3v6m3-6v6" stroke="#5d6c74"/></g>`;
         return `<path d="M0 0h7" stroke="#e2c283" stroke-width="2.5" stroke-linecap="round"/><rect x="5" y="-4" width="7" height="8" rx="1" fill="#bac2c5" stroke="#677780" stroke-width=".8"/><rect x="12" y="-5" width="13" height="10" rx="2" fill="#262e33" stroke="#788790" stroke-width=".8"/><rect x="14" y="-5" width="4" height="10" rx=".6" fill="${spec.color||'#cf4545'}"/>`;
     }
-    return Object.freeze({knobs,buttons,screws,screw:screwMarkup,fasteners:mountScrews,frontFasteners,controlSizes,setControlSize,buttonSounds,movementSounds,movementSound,sliders,leds,plugs,accents,sizes,physics,updateAccents,updateLightingDemo,renderLightingDemo,sceneLightAt,demoMarkup,bindDemo,sourceTransport,setButtonLabel,button:skinButton,bindKnob,bindLinear,slider,setLed,layout,materials:mountMaterials,mount,sync,dispose,inspector,plugMarkup});
+    return Object.freeze({knobs,buttons,screws,screw:screwMarkup,fasteners:mountScrews,frontFasteners,controlSizes,setControlSize,buttonSounds,movementSounds,movementSound,sliders,leds,plugs,accents,sizes,physics,updateAccents,updateLightingDemo,renderLightingDemo,sceneLightAt,demoMarkup,bindDemo,sourceTransport,setButtonLabel,button:skinButton,bindKnob,bindLinear,slider,setLed,layout,materials:mountMaterials,preview,mount,sync,dispose,inspector,plugMarkup});
 })();
 
         // Code-only switch: set true and rebuild script.js to expose DEBUG equipment.
@@ -4216,6 +4244,23 @@ const Hardware = (() => {
             const distance=Math.abs(frequency-station);
             return Math.exp(-((distance/.24)**2));
         }
+        function prepareReceiverArtwork(el){
+            const display=el.querySelector('.receiver-radio,.poweramp-screen');
+            if(display?.classList.contains('receiver-radio')&&!display.querySelector('.radio-tuning-needle')){
+                // The ruler and needle share one frequency-to-position conversion.
+                const scale=display.querySelector('i');scale.className='fm-calibrated-scale';scale.replaceChildren();
+                for(let frequency=FM_SCALE.min;frequency<=FM_SCALE.max;frequency+=FM_SCALE.step){
+                    const tick=document.createElement('em');tick.className='fm-scale-tick';tick.style.left=fmScalePosition(frequency)+'%';
+                    if(Number.isInteger(frequency))tick.classList.add('is-major');
+                    scale.appendChild(tick);
+                }
+                const labels=display.querySelector('span');labels.className='fm-calibrated-labels';labels.replaceChildren();
+                for(const frequency of [88,92,96,100,104,108]){const label=document.createElement('small');label.textContent=String(frequency);label.style.left=fmScalePosition(frequency)+'%';labels.appendChild(label);}
+                const needle=document.createElement('em');needle.className='radio-tuning-needle';needle.setAttribute('aria-hidden','true');display.appendChild(needle);
+            }
+            const text=el.querySelector('.receiver-radio b,.poweramp-screen strong');if(text)text.textContent='STEREO · LINHA 1';
+            const needle=el.querySelector('.radio-tuning-needle');if(needle)needle.style.left=fmScalePosition(88)+'%';
+        }
         function setupReceiverRadio(dev){
             const ctx=appState.audio.context;
             Object.assign(dev.state,{receiverInput:'line1',radioOn:false,radioFrequency:88,radioStation:randomFmStation()});
@@ -4284,18 +4329,7 @@ const Hardware = (() => {
             const activateTuner=()=>{if(!dev.state.radioOn)dev.selectReceiverInput('fm');ctx.resume().then(()=>{if(appState.project.devices[dev.id]){dev.syncRadio();updateCableFlows();}}).catch(()=>{});};
             Hardware.bindKnob(tuningKnob,{get:()=>dev.state.radioFrequency,set:dev.tuneRadio,min:87.5,max:108,step:.1,activate:activateTuner,format:value=>value.toFixed(1)+' MHz'});
             const display=dev.el.querySelector('.receiver-radio,.poweramp-screen');
-            if(display?.classList.contains('receiver-radio')){
-                // The ruler and needle share one frequency-to-position conversion.
-                const scale=display.querySelector('i');scale.className='fm-calibrated-scale';scale.replaceChildren();
-                for(let frequency=FM_SCALE.min;frequency<=FM_SCALE.max;frequency+=FM_SCALE.step){
-                    const tick=document.createElement('em');tick.className='fm-scale-tick';tick.style.left=fmScalePosition(frequency)+'%';
-                    if(Number.isInteger(frequency))tick.classList.add('is-major');
-                    scale.appendChild(tick);
-                }
-                const labels=display.querySelector('span');labels.className='fm-calibrated-labels';labels.replaceChildren();
-                for(const frequency of [88,92,96,100,104,108]){const label=document.createElement('small');label.textContent=String(frequency);label.style.left=fmScalePosition(frequency)+'%';labels.appendChild(label);}
-                const needle=document.createElement('em');needle.className='radio-tuning-needle';needle.setAttribute('aria-hidden','true');display.appendChild(needle);
-            }
+            prepareReceiverArtwork(dev.el);
             if(display){
                 display.tabIndex=0;display.setAttribute('role','group');display.setAttribute('aria-label','Sintonia FM: arraste horizontalmente ou use as setas');display.title='Sintonia FM · arraste horizontalmente ou use as setas';
                 display.addEventListener('pointerdown',e=>{if(e.button!==0||!dev.state.radioOn)return;e.preventDefault();e.stopPropagation();display.setPointerCapture(e.pointerId);const x=e.clientX,frequency=dev.state.radioFrequency;
@@ -5279,6 +5313,7 @@ const Hardware = (() => {
             const supported=Math.abs(bottom-maxEquipmentBottom())<=2||Object.values(appState.project.devices).some(other=>placementShapes(other,parseFloat(other.el.style.left)||0,parseFloat(other.el.style.top)||0).some(shape=>Math.abs(bottom-shape.y)<=2&&Math.min(target.x+w,shape.x+shape.width)-Math.max(target.x,shape.x)>0));
             el.style.left=target.x+'px';el.style.top=target.y+'px';el.classList.toggle('is-invalid',!valid);el.classList.toggle('is-supported',valid&&supported);
             const label=!valid?'Espaço indisponível':wall?'Fixado à parede':pendant?'Suspenso':supported?'Apoiado':'Espaço livre';el.dataset.previewLabel=`${AudioSystemLanguage.translate(label)} · ${w} × ${h}`;
+            Hardware.updateLightingDemo();
         }
         let activeCatalogPreviewCleanup=null;
         let activeEquipmentMoveCleanup=null;
@@ -5777,6 +5812,16 @@ const Hardware = (() => {
             }
         }
         let lastExtraDisplay=0;
+        // The idle preview and live analyzer share the same grid and traces.
+        function drawBenchSpectrum(canvas,signals=[],sampleRate=48000,active=false){
+            const ctx=canvas.getContext('2d');ctx.fillStyle='#071316';ctx.fillRect(0,0,360,72);
+            ctx.strokeStyle='#213b42';ctx.lineWidth=1;for(let y=12;y<72;y+=20){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(360,y);ctx.stroke();}
+            [0,1].forEach(index=>{
+                const data=signals[index];ctx.beginPath();ctx.strokeStyle=index?'#f2bd65':'#65cbe1';
+                for(let x=0;x<=360;x+=3){const hz=20*1000**(x/360),bin=data?Math.min(data.length-1,Math.floor(hz*2/sampleRate*data.length)):0,db=active&&data?data[bin]:-100,y=68-Math.max(0,Math.min(1,(db+90)/90))*64;if(x)ctx.lineTo(x,y);else ctx.moveTo(x,y);}ctx.stroke();
+            });
+        }
+
         function updateExtraDisplays(now){
             if(now-lastExtraDisplay<75)return;
             const elapsed=Math.min(.3,(now-lastExtraDisplay)/1000);lastExtraDisplay=now;
@@ -5808,13 +5853,8 @@ const Hardware = (() => {
                 dev.el.querySelector('[data-correlation-value]').textContent='CORR · '+label;
                 const dot=dev.el.querySelector('[data-correlation-dot]');dot.style.left=`${((correlation??0)+1)*50}%`;dot.style.opacity=correlation===null?'.2':'1';dot.style.background=correlation!==null&&correlation<0?'#f87171':'#6ee7b7';
                 if(appState.interface.selectedDeviceId===dev.id){const output=document.getElementById('bench-inspector-correlation');if(output)output.textContent=label;}
-                const canvas=dev.el.querySelector('[data-bench-spectrum]'),ctx=canvas.getContext('2d');ctx.fillStyle='#071316';ctx.fillRect(0,0,360,72);
-                ctx.strokeStyle='#213b42';ctx.lineWidth=1;for(let y=12;y<72;y+=20){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(360,y);ctx.stroke();}
-                [l,r].forEach((tap,index)=>{
-                    const data=tap.frequencyData||=(new Float32Array(tap.analyzer.frequencyBinCount));tap.analyzer.getFloatFrequencyData(data);
-                    ctx.beginPath();ctx.strokeStyle=index?'#f2bd65':'#65cbe1';
-                    for(let x=0;x<=360;x+=3){const hz=20*1000**(x/360),bin=Math.min(data.length-1,Math.floor(hz*2/appState.audio.context.sampleRate*data.length));const db=dev.powered&&appState.audio.context.state==='running'?data[bin]:-100,y=68-Math.max(0,Math.min(1,(db+90)/90))*64;if(x)ctx.lineTo(x,y);else ctx.moveTo(x,y);}ctx.stroke();
-                });
+                const signals=[l,r].map(tap=>{const data=tap.frequencyData||=(new Float32Array(tap.analyzer.frequencyBinCount));tap.analyzer.getFloatFrequencyData(data);return data;});
+                drawBenchSpectrum(dev.el.querySelector('[data-bench-spectrum]'),signals,appState.audio.context.sampleRate,dev.powered&&appState.audio.context.state==='running');
             });
         }
 
@@ -6853,7 +6893,8 @@ const Hardware = (() => {
             Hardware.materials({el});
             Hardware.fasteners(el);
             world.appendChild(el);
-            if(previewOnly){EquipmentBrands.mount(el,type,DEVICE_NAMES[type]);el.classList.add('catalog-placement-preview');el.hidden=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type,el};}
+            prepareDeviceArtwork({type,el});
+            if(previewOnly){renderDevicePreview({type,el});EquipmentBrands.mount(el,type,DEVICE_NAMES[type]);el.classList.add('catalog-placement-preview');el.hidden=true;el.inert=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type,el};}
 
             const dev = { id, type, el, nodes: {}, state: { volume: 0.8, bass: 0, treble: 0, eq: [0, 0, 0, 0, 0] }, powered: true };
             const placement = appState.project.restoringProject?{
@@ -7106,13 +7147,7 @@ const Hardware = (() => {
             } else if (EQ_TYPES.has(type)) {
                 dev.state.eq = GRAPHIC_EQ_FREQUENCIES.map(() => 0);
                 dev.state.eqLevel = 1;
-                const levelDial = document.createElement('button');
-                levelDial.className = 'graphic-eq-level receiver-dial';
-                levelDial.setAttribute('role', 'slider');
-                levelDial.setAttribute('aria-label', 'Nível de saída');
-                levelDial.setAttribute('aria-valuemin', '0');
-                levelDial.setAttribute('aria-valuemax', '100');
-                dev.el.querySelector('.graphic-eq-level').replaceWith(levelDial);
+                const levelDial=el.querySelector('.graphic-eq-level');
                 const freqs = EQ_BANDS[type] || EQ_BANDS.eqStudio;
                 dev.nodes.inR = appState.audio.context.createGain();
                 dev.nodes.inL = appState.audio.context.createGain();
@@ -7878,6 +7913,90 @@ const Hardware = (() => {
             }finally{permissionStream?.getTracks().forEach(track=>track.stop());dev.authorizingCapture=false;configurePlaybackSession();if(button.isConnected)button.disabled=false;}
         }
 
+        // Shared artwork is built before the lightweight preview/live split.
+        // Event handlers and audio graphs remain part of live initialization.
+        function prepareDeviceArtwork(dev){
+            if(SOURCE_TYPES.has(dev.type)&&!TURNTABLE_TYPES.has(dev.type)&&!dev.el.querySelector('[data-source-play]')){
+                const button=document.createElement('button');button.type='button';button.className='source-play-button';button.dataset.sourcePlay='';button.textContent='▶ / Ⅱ';button.setAttribute('aria-pressed','false');dev.el.appendChild(button);
+            }
+            if(TURNTABLE_TYPES.has(dev.type)){
+                dev.el.classList.add('tt-stopped');
+                dev.el.querySelector('[data-linear-carriage]')?.setAttribute('transform','translate(0 0)');
+                const lidButton=document.createElement('button');lidButton.type='button';lidButton.className='tt-lid-button';lidButton.title='Abrir tampa';lidButton.setAttribute('aria-label','Abrir tampa');lidButton.setAttribute('aria-expanded','false');
+                lidButton.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 17h18M4 14l3-9h14l-3 9Z"/></svg>';
+                const deck=dev.el.querySelector('.at-deck');deck.appendChild(lidButton);deck.style.setProperty('--lid-depth',Math.round(deck.clientWidth*.84)+'px');
+            }
+            if((ACTIVE_SPK.has(dev.type)||PASSIVE_SPK.has(dev.type))&&!['spkActiveRounded','spkActiveCompact','spkActiveBookshelf','spkPassiveCarbon','shelfWood','shelfCoax','shelfTop','floorCoax','floorFlax','floorDiamond'].includes(dev.type)&&!dev.el.querySelector('.speaker-grille')){
+                const face=dev.el.querySelector('.sp-face'),woofer=face?.querySelector('.spk-woofer');
+                if(face&&woofer){
+                    const grille=document.createElement('button');grille.type='button';grille.className='speaker-grille fabric-grille';grille.setAttribute('aria-label','Remover grade da caixa');grille.title='Remover grade';
+                    const restore=document.createElement('button');restore.type='button';restore.className='grille-restore';restore.textContent='RECOLOCAR GRADE';
+                    face.append(grille,restore);
+                    const fit=()=>{grille.style.height=Math.min(face.clientHeight-12,woofer.offsetTop+woofer.offsetHeight+8)-8+'px';};
+                    fit();requestAnimationFrame(fit);
+                }
+            }
+            if(EQ_TYPES.has(dev.type)){
+                const levelDial = document.createElement('button');
+                levelDial.className = 'graphic-eq-level receiver-dial';
+                levelDial.setAttribute('role', 'slider');
+                levelDial.setAttribute('aria-label', 'Nível de saída');
+                levelDial.setAttribute('aria-valuemin', '0');
+                levelDial.setAttribute('aria-valuemax', '100');
+                dev.el.querySelector('.graphic-eq-level').replaceWith(levelDial);
+            }
+            const pBtn = dev.el.querySelector('.power-btn');
+            if(pBtn&&!pBtn.closest('.power-control-panel')){
+                const panel = document.createElement('div');
+                panel.className='power-control-panel power-rocker-housing';
+                panel.setAttribute('aria-label','Controle de energia integrado ao equipamento');
+                pBtn.setAttribute('role','switch');pBtn.setAttribute('aria-checked','true');
+                pBtn.setAttribute('aria-label', 'Ligar ou desligar equipamento');
+                pBtn.setAttribute('aria-pressed', 'true');
+                pBtn.title = 'Ligado (Clique para desligar)';
+                const oldButtonGroup = pBtn.parentElement;
+                dev.el.querySelector('.device-header .device-led')?.remove();
+                pBtn.remove();
+                if (oldButtonGroup && !oldButtonGroup.matches('[data-power-slot]') && oldButtonGroup !== dev.el.querySelector('.device-header') && !oldButtonGroup.children.length) oldButtonGroup.remove();
+                panel.appendChild(pBtn);
+                const powerSlot = dev.el.querySelector('[data-power-slot]');
+                if (powerSlot) {
+                    panel.classList.add('power-panel-embedded');
+                    powerSlot.appendChild(panel);
+                } else {
+                    const deviceBody = dev.el.querySelector('.device-header')?.nextElementSibling;
+                    (deviceBody || dev.el).appendChild(panel);
+                }
+                pBtn.dataset.rockerAxis='vertical';
+            }
+            if(RADIO_RECEIVERS.has(dev.type))prepareReceiverArtwork(dev.el);
+            if(FURNITURE_TYPES[dev.type]?.back)dev.el.dataset.back='true';
+            if(CUSTOM_PREAMPS[dev.type]){const source=dev.el.querySelector('.pre-source-text');if(source)source.textContent=controlAmpSources(dev.type)[0].toUpperCase();}
+            const restore=dev.el.querySelector('.grille-restore');
+            if(restore){
+                const label=restore.title||'Recolocar grade';
+                restore.setAttribute('aria-label',label);
+                restore.innerHTML='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 4v16M12 4v16M16 4v16"/></svg>';
+            }
+        }
+
+        function renderDevicePreview(dev){
+            dev.state={volume:.8,integratedSource:0};dev.powered=true;
+            if(SIGNAL_GENERATOR_TYPES.has(dev.type))configureSignalGenerator(dev);
+            if(dev.type==='hardwareDemo')Hardware.bindDemo(dev);
+            if(dev.type==='furnitureTable')updateBenchAppearance(dev);
+            if(dev.type==='furnitureCoverflow')SpotifyCoverflow.mount(dev.el.querySelector('.spotify-coverflow-host'),dev.state,()=>{},{preview:true});
+            if(dev.type==='tapeDeck')updateTapeReels(dev,0,0,false);
+            if(BENCH_METER_TYPES.has(dev.type)){
+                drawBenchSpectrum(dev.el.querySelector('[data-bench-spectrum]'));
+                const label=dev.el.querySelector('[data-correlation-value]');if(label)label.textContent='CORR · SEM SINAL';
+                const dot=dev.el.querySelector('[data-correlation-dot]');if(dot){dot.style.left='50%';dot.style.opacity='.2';}
+            }
+            Hardware.preview(dev);
+            drawReferencePreampDisplay(dev);
+            if(RADIO_RECEIVERS.has(dev.type))updateReceiverRadioDisplay(dev,0);
+        }
+
         function bindDeviceEvents(dev) {
             if(dev.type==='cdPlayer'){
                 const tray=dev.el.querySelector('.cd-tray');
@@ -7890,33 +8009,17 @@ const Hardware = (() => {
                 tray.addEventListener('click',()=>{dev.setTrayOpen(!dev.state.trayOpen);scheduleProjectSave();});
             }
 
-            if (SOURCE_TYPES.has(dev.type) && !TURNTABLE_TYPES.has(dev.type)) {
-                const integrated = dev.el.querySelector('[data-source-play]');
-                const button = integrated || document.createElement('button');
-                if(!integrated){button.type = 'button'; button.className = 'source-play-button';button.dataset.sourcePlay = ''; button.textContent = '▶ / Ⅱ';}
-                button.setAttribute('aria-pressed', 'false');
-                button.addEventListener('pointerdown', event => event.stopPropagation());
-                button.addEventListener('click', event => { event.stopPropagation(); if (dev.powered) setSourcePlaying(dev, !dev.state.playing); });
-                if(!integrated) dev.el.appendChild(button);
+            if(SOURCE_TYPES.has(dev.type)&&!TURNTABLE_TYPES.has(dev.type)){
+                const button=dev.el.querySelector('[data-source-play]');
+                button.addEventListener('pointerdown',event=>event.stopPropagation());
+                button.addEventListener('click',event=>{event.stopPropagation();if(dev.powered)setSourcePlaying(dev,!dev.state.playing);});
             }
             if (TURNTABLE_TYPES.has(dev.type)) setupTurntable(dev);
             if (ACTIVE_SPK.has(dev.type) || SUB_TYPES.has(dev.type)) setupActiveSpeaker(dev);
             if(TURNTABLE_TYPES.has(dev.type)){
-                const lidButton=document.createElement('button');lidButton.type='button';lidButton.className='tt-lid-button';lidButton.title='Abrir tampa';lidButton.setAttribute('aria-label','Abrir tampa');lidButton.setAttribute('aria-expanded','false');
-                lidButton.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 17h18M4 14l3-9h14l-3 9Z"/></svg>';
-                const deck=dev.el.querySelector('.at-deck');deck.appendChild(lidButton);deck.style.setProperty('--lid-depth',Math.round(deck.clientWidth*.84)+'px');
+                const lidButton=dev.el.querySelector('.tt-lid-button');
                 dev.setLidOpen=open=>{dev.state.lidOpen=!!open;dev.el.classList.toggle('lid-open',!!open);lidButton.setAttribute('aria-expanded',String(!!open));lidButton.title=open?'Fechar tampa':'Abrir tampa';lidButton.setAttribute('aria-label',lidButton.title);};
                 lidButton.addEventListener('click',()=>{dev.setLidOpen(!dev.state.lidOpen);playUiSound('click');scheduleProjectSave();});
-            }
-            if((ACTIVE_SPK.has(dev.type)||PASSIVE_SPK.has(dev.type))&&!['spkActiveRounded','spkActiveCompact','spkActiveBookshelf','spkPassiveCarbon','shelfWood','shelfCoax','shelfTop','floorCoax','floorFlax','floorDiamond'].includes(dev.type)&&!dev.el.querySelector('.speaker-grille')){
-                const face=dev.el.querySelector('.sp-face'),woofer=face?.querySelector('.spk-woofer');
-                if(face&&woofer){
-                    const grille=document.createElement('button');grille.type='button';grille.className='speaker-grille fabric-grille';grille.setAttribute('aria-label','Remover grade da caixa');grille.title='Remover grade';
-                    const restore=document.createElement('button');restore.type='button';restore.className='grille-restore';restore.textContent='RECOLOCAR GRADE';
-                    face.append(grille,restore);
-                    const fit=()=>{grille.style.height=Math.min(face.clientHeight-12,woofer.offsetTop+woofer.offsetHeight+8)-8+'px';};
-                    fit();requestAnimationFrame(fit);
-                }
             }
             const grille = dev.el.querySelector('.speaker-grille');
             if (grille) {
@@ -7926,11 +8029,6 @@ const Hardware = (() => {
                     grille.setAttribute('aria-label', removed ? 'Recolocar grade da caixa' : 'Remover grade da caixa');scheduleProjectSave();
                 };
                 const restore = dev.el.querySelector('.grille-restore');
-                if(restore){
-                    const label=restore.title||'Recolocar grade';
-                    restore.setAttribute('aria-label',label);
-                    restore.innerHTML='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 4v16M12 4v16M16 4v16"/></svg>';
-                }
                 restore.addEventListener('pointerdown', e => e.stopPropagation());
                 restore.addEventListener('click', toggleGrille);
                 grille.addEventListener('pointerdown', e => e.stopPropagation());
@@ -7984,30 +8082,8 @@ const Hardware = (() => {
                 dev.state.channelVolumes.forEach((value, channel) => setMixerVolume(dev, channel, value));
             }
 
-            // Power Button físico
-            const pBtn = dev.el.querySelector('.power-btn');
-            if (pBtn) {
-                const panel = document.createElement('div');
-                panel.className='power-control-panel power-rocker-housing';
-                panel.setAttribute('aria-label','Controle de energia integrado ao equipamento');
-                pBtn.setAttribute('role','switch');pBtn.setAttribute('aria-checked','true');
-                pBtn.setAttribute('aria-label', 'Ligar ou desligar equipamento');
-                pBtn.setAttribute('aria-pressed', 'true');
-                pBtn.title = 'Ligado (Clique para desligar)';
-                const oldButtonGroup = pBtn.parentElement;
-                dev.el.querySelector('.device-header .device-led')?.remove();
-                pBtn.remove();
-                if (oldButtonGroup && !oldButtonGroup.matches('[data-power-slot]') && oldButtonGroup !== dev.el.querySelector('.device-header') && !oldButtonGroup.children.length) oldButtonGroup.remove();
-                panel.appendChild(pBtn);
-                const powerSlot = dev.el.querySelector('[data-power-slot]');
-                if (powerSlot) {
-                    panel.classList.add('power-panel-embedded');
-                    powerSlot.appendChild(panel);
-                } else {
-                    const deviceBody = dev.el.querySelector('.device-header')?.nextElementSibling;
-                    (deviceBody || dev.el).appendChild(panel);
-                }
-                pBtn.dataset.rockerAxis='vertical';
+            const pBtn=dev.el.querySelector('.power-btn');
+            if(pBtn){
                 pBtn.addEventListener('pointerdown', e => e.stopPropagation());
                 pBtn.addEventListener('click', e => {
                     e.stopPropagation();

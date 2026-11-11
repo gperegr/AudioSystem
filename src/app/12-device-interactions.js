@@ -493,6 +493,90 @@
             }finally{permissionStream?.getTracks().forEach(track=>track.stop());dev.authorizingCapture=false;configurePlaybackSession();if(button.isConnected)button.disabled=false;}
         }
 
+        // Shared artwork is built before the lightweight preview/live split.
+        // Event handlers and audio graphs remain part of live initialization.
+        function prepareDeviceArtwork(dev){
+            if(SOURCE_TYPES.has(dev.type)&&!TURNTABLE_TYPES.has(dev.type)&&!dev.el.querySelector('[data-source-play]')){
+                const button=document.createElement('button');button.type='button';button.className='source-play-button';button.dataset.sourcePlay='';button.textContent='▶ / Ⅱ';button.setAttribute('aria-pressed','false');dev.el.appendChild(button);
+            }
+            if(TURNTABLE_TYPES.has(dev.type)){
+                dev.el.classList.add('tt-stopped');
+                dev.el.querySelector('[data-linear-carriage]')?.setAttribute('transform','translate(0 0)');
+                const lidButton=document.createElement('button');lidButton.type='button';lidButton.className='tt-lid-button';lidButton.title='Abrir tampa';lidButton.setAttribute('aria-label','Abrir tampa');lidButton.setAttribute('aria-expanded','false');
+                lidButton.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 17h18M4 14l3-9h14l-3 9Z"/></svg>';
+                const deck=dev.el.querySelector('.at-deck');deck.appendChild(lidButton);deck.style.setProperty('--lid-depth',Math.round(deck.clientWidth*.84)+'px');
+            }
+            if((ACTIVE_SPK.has(dev.type)||PASSIVE_SPK.has(dev.type))&&!['spkActiveRounded','spkActiveCompact','spkActiveBookshelf','spkPassiveCarbon','shelfWood','shelfCoax','shelfTop','floorCoax','floorFlax','floorDiamond'].includes(dev.type)&&!dev.el.querySelector('.speaker-grille')){
+                const face=dev.el.querySelector('.sp-face'),woofer=face?.querySelector('.spk-woofer');
+                if(face&&woofer){
+                    const grille=document.createElement('button');grille.type='button';grille.className='speaker-grille fabric-grille';grille.setAttribute('aria-label','Remover grade da caixa');grille.title='Remover grade';
+                    const restore=document.createElement('button');restore.type='button';restore.className='grille-restore';restore.textContent='RECOLOCAR GRADE';
+                    face.append(grille,restore);
+                    const fit=()=>{grille.style.height=Math.min(face.clientHeight-12,woofer.offsetTop+woofer.offsetHeight+8)-8+'px';};
+                    fit();requestAnimationFrame(fit);
+                }
+            }
+            if(EQ_TYPES.has(dev.type)){
+                const levelDial = document.createElement('button');
+                levelDial.className = 'graphic-eq-level receiver-dial';
+                levelDial.setAttribute('role', 'slider');
+                levelDial.setAttribute('aria-label', 'Nível de saída');
+                levelDial.setAttribute('aria-valuemin', '0');
+                levelDial.setAttribute('aria-valuemax', '100');
+                dev.el.querySelector('.graphic-eq-level').replaceWith(levelDial);
+            }
+            const pBtn = dev.el.querySelector('.power-btn');
+            if(pBtn&&!pBtn.closest('.power-control-panel')){
+                const panel = document.createElement('div');
+                panel.className='power-control-panel power-rocker-housing';
+                panel.setAttribute('aria-label','Controle de energia integrado ao equipamento');
+                pBtn.setAttribute('role','switch');pBtn.setAttribute('aria-checked','true');
+                pBtn.setAttribute('aria-label', 'Ligar ou desligar equipamento');
+                pBtn.setAttribute('aria-pressed', 'true');
+                pBtn.title = 'Ligado (Clique para desligar)';
+                const oldButtonGroup = pBtn.parentElement;
+                dev.el.querySelector('.device-header .device-led')?.remove();
+                pBtn.remove();
+                if (oldButtonGroup && !oldButtonGroup.matches('[data-power-slot]') && oldButtonGroup !== dev.el.querySelector('.device-header') && !oldButtonGroup.children.length) oldButtonGroup.remove();
+                panel.appendChild(pBtn);
+                const powerSlot = dev.el.querySelector('[data-power-slot]');
+                if (powerSlot) {
+                    panel.classList.add('power-panel-embedded');
+                    powerSlot.appendChild(panel);
+                } else {
+                    const deviceBody = dev.el.querySelector('.device-header')?.nextElementSibling;
+                    (deviceBody || dev.el).appendChild(panel);
+                }
+                pBtn.dataset.rockerAxis='vertical';
+            }
+            if(RADIO_RECEIVERS.has(dev.type))prepareReceiverArtwork(dev.el);
+            if(FURNITURE_TYPES[dev.type]?.back)dev.el.dataset.back='true';
+            if(CUSTOM_PREAMPS[dev.type]){const source=dev.el.querySelector('.pre-source-text');if(source)source.textContent=controlAmpSources(dev.type)[0].toUpperCase();}
+            const restore=dev.el.querySelector('.grille-restore');
+            if(restore){
+                const label=restore.title||'Recolocar grade';
+                restore.setAttribute('aria-label',label);
+                restore.innerHTML='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 4v16M12 4v16M16 4v16"/></svg>';
+            }
+        }
+
+        function renderDevicePreview(dev){
+            dev.state={volume:.8,integratedSource:0};dev.powered=true;
+            if(SIGNAL_GENERATOR_TYPES.has(dev.type))configureSignalGenerator(dev);
+            if(dev.type==='hardwareDemo')Hardware.bindDemo(dev);
+            if(dev.type==='furnitureTable')updateBenchAppearance(dev);
+            if(dev.type==='furnitureCoverflow')SpotifyCoverflow.mount(dev.el.querySelector('.spotify-coverflow-host'),dev.state,()=>{},{preview:true});
+            if(dev.type==='tapeDeck')updateTapeReels(dev,0,0,false);
+            if(BENCH_METER_TYPES.has(dev.type)){
+                drawBenchSpectrum(dev.el.querySelector('[data-bench-spectrum]'));
+                const label=dev.el.querySelector('[data-correlation-value]');if(label)label.textContent='CORR · SEM SINAL';
+                const dot=dev.el.querySelector('[data-correlation-dot]');if(dot){dot.style.left='50%';dot.style.opacity='.2';}
+            }
+            Hardware.preview(dev);
+            drawReferencePreampDisplay(dev);
+            if(RADIO_RECEIVERS.has(dev.type))updateReceiverRadioDisplay(dev,0);
+        }
+
         function bindDeviceEvents(dev) {
             if(dev.type==='cdPlayer'){
                 const tray=dev.el.querySelector('.cd-tray');
@@ -505,33 +589,17 @@
                 tray.addEventListener('click',()=>{dev.setTrayOpen(!dev.state.trayOpen);scheduleProjectSave();});
             }
 
-            if (SOURCE_TYPES.has(dev.type) && !TURNTABLE_TYPES.has(dev.type)) {
-                const integrated = dev.el.querySelector('[data-source-play]');
-                const button = integrated || document.createElement('button');
-                if(!integrated){button.type = 'button'; button.className = 'source-play-button';button.dataset.sourcePlay = ''; button.textContent = '▶ / Ⅱ';}
-                button.setAttribute('aria-pressed', 'false');
-                button.addEventListener('pointerdown', event => event.stopPropagation());
-                button.addEventListener('click', event => { event.stopPropagation(); if (dev.powered) setSourcePlaying(dev, !dev.state.playing); });
-                if(!integrated) dev.el.appendChild(button);
+            if(SOURCE_TYPES.has(dev.type)&&!TURNTABLE_TYPES.has(dev.type)){
+                const button=dev.el.querySelector('[data-source-play]');
+                button.addEventListener('pointerdown',event=>event.stopPropagation());
+                button.addEventListener('click',event=>{event.stopPropagation();if(dev.powered)setSourcePlaying(dev,!dev.state.playing);});
             }
             if (TURNTABLE_TYPES.has(dev.type)) setupTurntable(dev);
             if (ACTIVE_SPK.has(dev.type) || SUB_TYPES.has(dev.type)) setupActiveSpeaker(dev);
             if(TURNTABLE_TYPES.has(dev.type)){
-                const lidButton=document.createElement('button');lidButton.type='button';lidButton.className='tt-lid-button';lidButton.title='Abrir tampa';lidButton.setAttribute('aria-label','Abrir tampa');lidButton.setAttribute('aria-expanded','false');
-                lidButton.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 17h18M4 14l3-9h14l-3 9Z"/></svg>';
-                const deck=dev.el.querySelector('.at-deck');deck.appendChild(lidButton);deck.style.setProperty('--lid-depth',Math.round(deck.clientWidth*.84)+'px');
+                const lidButton=dev.el.querySelector('.tt-lid-button');
                 dev.setLidOpen=open=>{dev.state.lidOpen=!!open;dev.el.classList.toggle('lid-open',!!open);lidButton.setAttribute('aria-expanded',String(!!open));lidButton.title=open?'Fechar tampa':'Abrir tampa';lidButton.setAttribute('aria-label',lidButton.title);};
                 lidButton.addEventListener('click',()=>{dev.setLidOpen(!dev.state.lidOpen);playUiSound('click');scheduleProjectSave();});
-            }
-            if((ACTIVE_SPK.has(dev.type)||PASSIVE_SPK.has(dev.type))&&!['spkActiveRounded','spkActiveCompact','spkActiveBookshelf','spkPassiveCarbon','shelfWood','shelfCoax','shelfTop','floorCoax','floorFlax','floorDiamond'].includes(dev.type)&&!dev.el.querySelector('.speaker-grille')){
-                const face=dev.el.querySelector('.sp-face'),woofer=face?.querySelector('.spk-woofer');
-                if(face&&woofer){
-                    const grille=document.createElement('button');grille.type='button';grille.className='speaker-grille fabric-grille';grille.setAttribute('aria-label','Remover grade da caixa');grille.title='Remover grade';
-                    const restore=document.createElement('button');restore.type='button';restore.className='grille-restore';restore.textContent='RECOLOCAR GRADE';
-                    face.append(grille,restore);
-                    const fit=()=>{grille.style.height=Math.min(face.clientHeight-12,woofer.offsetTop+woofer.offsetHeight+8)-8+'px';};
-                    fit();requestAnimationFrame(fit);
-                }
             }
             const grille = dev.el.querySelector('.speaker-grille');
             if (grille) {
@@ -541,11 +609,6 @@
                     grille.setAttribute('aria-label', removed ? 'Recolocar grade da caixa' : 'Remover grade da caixa');scheduleProjectSave();
                 };
                 const restore = dev.el.querySelector('.grille-restore');
-                if(restore){
-                    const label=restore.title||'Recolocar grade';
-                    restore.setAttribute('aria-label',label);
-                    restore.innerHTML='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 4v16M12 4v16M16 4v16"/></svg>';
-                }
                 restore.addEventListener('pointerdown', e => e.stopPropagation());
                 restore.addEventListener('click', toggleGrille);
                 grille.addEventListener('pointerdown', e => e.stopPropagation());
@@ -599,30 +662,8 @@
                 dev.state.channelVolumes.forEach((value, channel) => setMixerVolume(dev, channel, value));
             }
 
-            // Power Button físico
-            const pBtn = dev.el.querySelector('.power-btn');
-            if (pBtn) {
-                const panel = document.createElement('div');
-                panel.className='power-control-panel power-rocker-housing';
-                panel.setAttribute('aria-label','Controle de energia integrado ao equipamento');
-                pBtn.setAttribute('role','switch');pBtn.setAttribute('aria-checked','true');
-                pBtn.setAttribute('aria-label', 'Ligar ou desligar equipamento');
-                pBtn.setAttribute('aria-pressed', 'true');
-                pBtn.title = 'Ligado (Clique para desligar)';
-                const oldButtonGroup = pBtn.parentElement;
-                dev.el.querySelector('.device-header .device-led')?.remove();
-                pBtn.remove();
-                if (oldButtonGroup && !oldButtonGroup.matches('[data-power-slot]') && oldButtonGroup !== dev.el.querySelector('.device-header') && !oldButtonGroup.children.length) oldButtonGroup.remove();
-                panel.appendChild(pBtn);
-                const powerSlot = dev.el.querySelector('[data-power-slot]');
-                if (powerSlot) {
-                    panel.classList.add('power-panel-embedded');
-                    powerSlot.appendChild(panel);
-                } else {
-                    const deviceBody = dev.el.querySelector('.device-header')?.nextElementSibling;
-                    (deviceBody || dev.el).appendChild(panel);
-                }
-                pBtn.dataset.rockerAxis='vertical';
+            const pBtn=dev.el.querySelector('.power-btn');
+            if(pBtn){
                 pBtn.addEventListener('pointerdown', e => e.stopPropagation());
                 pBtn.addEventListener('click', e => {
                     e.stopPropagation();
