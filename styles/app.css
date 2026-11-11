@@ -4646,3 +4646,8 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 /* V 520i: allow room for the complete RCA and speaker-terminal housings. */
 :is(#audio-world,.equipment-preview-world) .device-type-integratedBlue .integrated-connections {padding-inline:10px;}
 :is(#audio-world,.equipment-preview-world) .device-type-integratedBlue .integrated-connections>div {position:relative;top:-8px;left:4px;}
+
+/* KR-P40: power key shares the centered manufacturer signature axis. */
+:is(#audio-world,.equipment-preview-world) .device-type-powerDual .custom-power-energy {
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+}
