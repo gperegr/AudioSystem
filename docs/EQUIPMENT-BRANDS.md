@@ -2,6 +2,8 @@
 
 Dez identidades criadas para o universo Audio Lab: cinco para eletrônica e cinco para caixas, subwoofers e fones. A distribuição considera o desenho, a construção e o perfil já existente de cada aparelho. As marcas não alteram os valores elétricos, conexões, controles ou curvas de áudio.
 
+A linguagem compartilhada de peças, acabamentos e posições está documentada em [PRODUCT-DESIGN.md](PRODUCT-DESIGN.md).
+
 Os códigos internos permanecem estáveis para abrir projetos antigos. Marca e modelo são derivados desse código; os nomes funcionais continuam traduzidos e pesquisáveis. Fones e adaptadores não exibem marca no objeto, catálogo ou propriedades; suas associações de modelos são apenas metadados internos. As identidades partem das artes fornecidas: Newstar, Verona, Microgramma, Avant Garde, New Zelek, Made Mirage, Star Avenue e Harlow Solid. As letras foram redesenhadas em vetores a partir de fontes OFL de estrutura semelhante, sem distribuir as fontes comerciais de referência.
 
 ## Aurenne
@@ -11,6 +13,8 @@ Eletrônica · Clássico / hi-fi. Assinatura cursiva cremosa com sublinhado long
 Referência visual: **Harlow Solid**. Base vetorial OFL: **Pacifico**; letras convertidas em curvas, sem fontes remotas.
 
 Logo completo: [aurenne.svg](../assets/brands/aurenne.svg) · [Lettering](../assets/brands/aurenne-wordmark.svg) · [Assinatura compacta](../assets/brands/aurenne-compact.svg). Paleta: #de7b52, #292a25, #eee9d6.
+
+Projeto da linha: Assinatura central, latão champagne, madeira e comandos com aro marfim.
 
 Nomenclatura: Letra da função + três algarismos de série: R receiver, I integrado, P pré, T toca-discos, D tape deck, H fones, E EQ, M mixer, X crossover, S seletor, A potência.
 
@@ -40,6 +44,8 @@ Referência visual: **Microgramma**. Base vetorial OFL: **Audiowide**; letras co
 
 Logo completo: [veltron.svg](../assets/brands/veltron.svg) · [Lettering](../assets/brands/veltron-wordmark.svg) · [Assinatura compacta](../assets/brands/veltron-compact.svg). Paleta: #e9a62d, #292a25, #eee9d6.
 
+Projeto da linha: Marca à esquerda, vidro fumê, alumínio usinado e comandos cromados.
+
 Nomenclatura: V + plataforma de três algarismos + função: i integrado, p pré, s potência de estado sólido, v válvulas, t toca-discos.
 
 | Equipamento | Modelo | Código compatível |
@@ -58,6 +64,8 @@ Eletrônica · Hi-fi moderno. Geometria circular em caixa baixa e cinco linhas p
 Referência visual: **Avant Garde**. Base vetorial OFL: **Righteous**; letras convertidas em curvas, sem fontes remotas.
 
 Logo completo: [nexora.svg](../assets/brands/nexora.svg) · [Lettering](../assets/brands/nexora-wordmark.svg) · [Assinatura compacta](../assets/brands/nexora-compact.svg). Paleta: #d55b2b, #292a25, #eee9d6.
+
+Projeto da linha: Masthead à esquerda, grafite com filete cobre e teclas baixas arredondadas.
 
 Nomenclatura: NX + função + patamar da plataforma: I integrado, P pré, R receiver, S streaming, D disco, H fones, L link, X seletor.
 
@@ -83,6 +91,8 @@ Referência visual: **New Zelek**. Base vetorial OFL: **Bungee**; letras convert
 
 Logo completo: [korden.svg](../assets/brands/korden.svg) · [Lettering](../assets/brands/korden-wordmark.svg) · [Assinatura compacta](../assets/brands/korden-compact.svg). Paleta: #d85a35, #292a25, #eee9d6.
 
+Projeto da linha: Faixa de identificação superior esquerda, rack de cantos retos e teclas técnicas.
+
 Nomenclatura: KR + família: E equalização, M mixagem/matriz, X crossover, P potência/pré, H fones, T toca-discos, L link. Sufixos identificam função ou plataforma, sem alterar especificações.
 
 | Equipamento | Modelo | Código compatível |
@@ -107,6 +117,8 @@ Eletrônica · Precisão / utilitário. Geometria técnica quadrada com índices
 Referência visual: **Microgramma**. Base vetorial OFL: **Audiowide**; letras convertidas em curvas, sem fontes remotas.
 
 Logo completo: [linholt.svg](../assets/brands/linholt.svg) · [Lettering](../assets/brands/linholt-wordmark.svg) · [Assinatura compacta](../assets/brands/linholt-compact.svg). Paleta: #68a6b6, #292a25, #eee9d6.
+
+Projeto da linha: Instrumentos com masthead esquerdo; interfaces com assinatura inferior esquerda e índice ciano.
 
 Nomenclatura: M medição, G gerador, U interface USB, C conversor, A adaptador. Na linha A, 35 e 63 identificam P2/P10 e R identifica RCA.
 
@@ -137,6 +149,8 @@ Referência visual: **Verona**. Base vetorial OFL: **DM Serif Display**; letras 
 
 Logo completo: [bravora.svg](../assets/brands/bravora.svg) · [Lettering](../assets/brands/bravora-wordmark.svg) · [Assinatura compacta](../assets/brands/bravora-compact.svg). Paleta: #da963a, #292a25, #eee9d6.
 
+Projeto da linha: Assinatura no eixo central, moldura de madeira reta e detalhes em cobre.
+
 Nomenclatura: B bookshelf/passiva, A caixa ativa, S subwoofer e H fones. B/O distinguem as grades preta e laranja da mesma série B-30.
 
 | Equipamento | Modelo | Código compatível |
@@ -157,6 +171,8 @@ Referência visual: **Star Avenue**. Base vetorial OFL: **Righteous**; letras co
 
 Logo completo: [soryn.svg](../assets/brands/soryn.svg) · [Lettering](../assets/brands/soryn-wordmark.svg) · [Assinatura compacta](../assets/brands/soryn-compact.svg). Paleta: #dca637, #292a25, #eee9d6.
 
+Projeto da linha: Assinatura centrada, cantos suaves e controles de acabamento acetinado.
+
 Nomenclatura: Form + plataforma. A identifica ativa, C coaxial, S subwoofer e H fone; números distinguem tamanho e posição na linha.
 
 | Equipamento | Modelo | Código compatível |
@@ -175,6 +191,8 @@ Caixas e fones · Referência / premium. Serifa de alto contraste com moldura de
 Referência visual: **Made Mirage**. Base vetorial OFL: **DM Serif Display**; letras convertidas em curvas, sem fontes remotas.
 
 Logo completo: [terevon.svg](../assets/brands/terevon.svg) · [Lettering](../assets/brands/terevon-wordmark.svg) · [Assinatura compacta](../assets/brands/terevon-compact.svg). Paleta: #d3b744, #292a25, #eee9d6.
+
+Projeto da linha: Assinatura central de pequeno porte, aros prateados e painéis de linhas sóbrias.
 
 Nomenclatura: Reference + plataforma; H identifica fones dinâmicos, P planar e E eletrostática. A numeração ordena plataformas sem representar watts ou preço.
 
@@ -196,6 +214,8 @@ Referência visual: **New Zelek**. Base vetorial OFL: **Bungee**; letras convert
 
 Logo completo: [axiomer.svg](../assets/brands/axiomer.svg) · [Lettering](../assets/brands/axiomer-wordmark.svg) · [Assinatura compacta](../assets/brands/axiomer-compact.svg). Paleta: #d4663c, #292a25, #eee9d6.
 
+Projeto da linha: Marca central acima dos controles, baffle grafite e pequenos índices em cobre.
+
 Nomenclatura: M monitor, S subwoofer, H fones; o número de dois algarismos identifica o patamar da plataforma.
 
 | Equipamento | Modelo | Código compatível |
@@ -213,6 +233,8 @@ Caixas e fones · Essencial / acessível. Letras compactas e robustas com ecos c
 Referência visual: **Newstar**. Base vetorial OFL: **Changa One**; letras convertidas em curvas, sem fontes remotas.
 
 Logo completo: [dovara.svg](../assets/brands/dovara.svg) · [Lettering](../assets/brands/dovara-wordmark.svg) · [Assinatura compacta](../assets/brands/dovara-compact.svg). Paleta: #e7a238, #292a25, #eee9d6.
+
+Projeto da linha: Assinatura no lado esquerdo, contornos simples e comandos de borracha escura.
 
 Nomenclatura: D + B caixa, S subwoofer ou H fone + plataforma. A linha 10 é essencial; 20–40 ampliam construção e acabamento.
 

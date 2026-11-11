@@ -14,6 +14,18 @@
         axiomer:{name:'Axiomer',reference:'New Zelek',letteringSource:'Bungee',art:'signal',secondary:'#58a2bf',group:'listening',style:'Letras industriais angulares e três pistas de sinal inclinadas; referência New Zelek.',tier:'Profissional / monitoramento',accent:'#d4663c',lightInk:'#eee9d6',darkInk:'#292a25',rule:'M monitor, S subwoofer, H fones; o número de dois algarismos identifica o patamar da plataforma.'},
         dovara:{name:'Dovara',reference:'Newstar',letteringSource:'Changa One',art:'echo',secondary:'#cf4b6b',group:'listening',style:'Letras compactas e robustas com ecos coloridos em coral e verde; referência Newstar.',tier:'Essencial / acessível',accent:'#e7a238',lightInk:'#eee9d6',darkInk:'#292a25',rule:'D + B caixa, S subwoofer ou H fone + plataforma. A linha 10 é essencial; 20–40 ampliam construção e acabamento.'},
     }).map(([id,brand])=>[id,Object.freeze({...brand,id,mark:lettering[id].compactPath})])));
+    const families=Object.freeze({
+        aurenne:{axis:'center',zones:['header-center','footer-center'],margin:24,keyRadius:2,description:'Assinatura central, latão champagne, madeira e comandos com aro marfim.'},
+        veltron:{axis:'left',zones:['header-left','footer-left'],margin:26,keyRadius:3,description:'Marca à esquerda, vidro fumê, alumínio usinado e comandos cromados.'},
+        nexora:{axis:'left',zones:['header-left','footer-left'],margin:24,keyRadius:5,description:'Masthead à esquerda, grafite com filete cobre e teclas baixas arredondadas.'},
+        korden:{axis:'left',zones:['header-left','footer-left'],margin:30,keyRadius:1,description:'Faixa de identificação superior esquerda, rack de cantos retos e teclas técnicas.'},
+        linholt:{axis:'left',zones:['header-left','footer-left'],margin:24,keyRadius:3,description:'Instrumentos com masthead esquerdo; interfaces com assinatura inferior esquerda e índice ciano.'},
+        bravora:{axis:'center',zones:['footer-center','header-center'],margin:18,keyRadius:2,description:'Assinatura no eixo central, moldura de madeira reta e detalhes em cobre.'},
+        soryn:{axis:'center',zones:['header-center','footer-center'],margin:18,keyRadius:8,description:'Assinatura centrada, cantos suaves e controles de acabamento acetinado.'},
+        terevon:{axis:'center',zones:['header-center','footer-center'],margin:22,keyRadius:4,description:'Assinatura central de pequeno porte, aros prateados e painéis de linhas sóbrias.'},
+        axiomer:{axis:'center',zones:['header-center','footer-center'],margin:18,keyRadius:3,description:'Marca central acima dos controles, baffle grafite e pequenos índices em cobre.'},
+        dovara:{axis:'left',zones:['header-left','footer-left'],margin:18,keyRadius:5,description:'Assinatura no lado esquerdo, contornos simples e comandos de borracha escura.'},
+    });
     const products={};
     const line=(brand,models)=>Object.entries(models).forEach(([type,model])=>products[type]=Object.freeze({brand,model}));
     line('aurenne',{receiver:'R-780',integratedSilver:'I-740',integratedUtility:'I-420',preClassic:'P-260',headphoneAmp:'H-120',turntableVintage:'T-240',turntableLinear:'T-360',tapeDeck:'D-340',eqVintage:'E-270',mixerVintage:'M-330',crossoverVintage:'X-310',powerVintage:'A-640',rcaSwitchVintage:'S-210',rcaMatrixVintage:'S-340',speakerSwitchVintage:'S-220'});
@@ -57,46 +69,90 @@
         return `<svg class="equipment-brand-logo" data-wordmark="${b.name.toUpperCase()}" viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">${content}</svg>`;
     }
     const paleFronts=new Set(['headphoneAmp','powerValve','turntableVintage','turntableLinear','receiver','integratedSilver','integratedUtility','preClassic','tapeDeck','eqVintage','mixerVintage','crossoverVintage','powerVintage','rcaSwitchVintage','rcaMatrixVintage','speakerSwitchVintage','signalGeneratorVintage','benchMeterVintage','preReference','preControl','prePrecision','powerBias','audioInterface4','turntableDirect','turntableBelt','spkActiveCompact','floorCoax','shelfTop','hpKubaDisco2']);
-    const obstacleSelector='.sub-oblong-duct,.sub-air-ducts>i,.tower-front-vent,.sp-panel,.classic-box-connection,.tower-terminal,[role=slider],.poweramp-screen,.poweramp-meter,.linear-readout,.bias-heatsink,.bias-vent,.stereo-power-vent,.dual-top-vents,.at-pitch,.tt-pitch,button:not(.speaker-grille),input,select,output,.port,.hw-knob,.hw-screw-mount,.integrated-gauge,.extra-vu,.bias-meter,.receiver-radio,.device-display,.custom-pre-screen,.signal-screen,.bench-lcd,.bench-screen,.cd-lcd,.stream-screen,.sp-woofer,.sp-tweeter,.tower-driver,.classic-box-driver,.tower-top-tweeter,.shelf-top-tweeter,.tape-reel,.tape-head-cover,.at-platter,.at-record,.tt-platter,.tt-record,[data-lighting-relief]';
+    const obstacleSelector='.mixer-rack-handle,.speaker-basic-tweeter,.speaker-basic-woofer,.speaker-basic-terminal,.precision-meter,.ai-output-pair,.linear-io,.sub-oblong-duct,.sub-air-ducts>i,.tower-front-vent,.sp-panel,.sp-terminal,.classic-box-connection,.tower-terminal,[role=slider],.poweramp-screen,.poweramp-meter,.linear-readout,.bias-heatsink,.bias-vent,.stereo-power-vent,.dual-top-vents,.at-pitch,.tt-pitch,button:not(.speaker-grille),input,select,output,.port,.hw-knob,.hw-screw-mount,.integrated-gauge,.extra-vu,.bias-meter,.receiver-radio,.device-display,.custom-pre-screen,.signal-screen,.bench-lcd,.bench-screen,.cd-lcd,.stream-screen,.sp-woofer,.sp-tweeter,.tower-driver,.classic-box-driver,.tower-top-tweeter,.shelf-top-tweeter,.tape-reel,.tape-head-cover,.at-platter,.at-record,.tt-platter,.tt-record,[data-lighting-relief]';
     function badgeElement(type){
         const p=get(type),badge=document.createElement('span');badge.className='equipment-brand-badge';badge.dataset.brandBadge=p.brand;badge.setAttribute('aria-hidden','true');badge.setAttribute('translate','no');
         badge.innerHTML=logo(p.brand,false,true)+'<span class="equipment-brand-model">'+p.model+'</span>';return badge;
     }
     function placeBadge(root,badge,type){
         const p=get(type),width=root.offsetWidth,height=root.offsetHeight,origin=root.getBoundingClientRect(),scale=origin.width/width||1;
-        const rect=el=>{const r=el.getBoundingClientRect();return {x:(r.left-origin.left)/scale,y:(r.top-origin.top)/scale,w:r.width/scale,h:r.height/scale};};
+        const rect=el=>{const r=el.getBoundingClientRect(),unit=value=>Math.round(value/scale*100)/100;return {x:unit(r.left-origin.left),y:unit(r.top-origin.top),w:unit(r.width),h:unit(r.height)};};
         const visible=el=>{const s=getComputedStyle(el);return s.display!=='none'&&s.visibility!=='hidden'&&el.getBoundingClientRect().width>0&&!el.closest('.equipment-brand-badge,.device-header');};
         const obstacles=[...root.querySelectorAll(obstacleSelector)].filter(visible).map(rect);
         root.querySelectorAll('span,small,strong,b,label,header,text').forEach(el=>{if(!el.childElementCount&&el.textContent.trim()&&visible(el))obstacles.push(rect(el));});
         const speaker=brands[p.brand].group==='listening';
         const surface=type==='streamIntegrated'?root.querySelector('.stream-glass'):type==='powerValve'?root.querySelector('.custom-power-connections'):speaker?root.querySelector('.sp-cab,.classic-box-cab,.tower-cabinet,.bookshelf-cabinet,.electrostatic-frame'):root.querySelector('.poweramp-body,.integrated-face,.custom-pre-face,.custom-power-face,.rack-face,.ai-panel,.phone-amp-face,.selector-face,.matrix-face,.signal-face,.bench-face,.cd-face,.interface-face,.amp4-rack-face,.at-plinth');
-        const area=surface?rect(surface):{x:0,y:0,w:width,h:height};
-        const minY=type.startsWith('turntable')?Math.max(area.y,height*.62):area.y;
         const shape=surface?getComputedStyle(surface):null;
+        const area=surface?rect(surface):{x:0,y:0,w:width,h:height};
         const radii=shape?[shape.borderTopLeftRadius,shape.borderTopRightRadius,shape.borderBottomRightRadius,shape.borderBottomLeftRadius].map(value=>Math.min(parseFloat(value)||0,area.w/2,area.h/2)): [0,0,0,0];
+        // Printing is on the face, inside its frame, not across a wooden or
+        // rounded cabinet rim. Coordinates below are outer-border coordinates.
+        const frame=Object.fromEntries(['Left','Top','Right','Bottom'].map(side=>[side.toLowerCase(),shape?parseFloat(shape['border'+side+'Width'])||0:0]));
+        const minY=type.startsWith('turntable')?Math.max(area.y,height*.62):area.y+frame.top;
         const insideCurve=(px,py)=>{
             const corners=[[area.x,area.y,1,1],[area.x+area.w,area.y,-1,1],[area.x+area.w,area.y+area.h,-1,-1],[area.x,area.y+area.h,1,-1]];
             return corners.every(([cx,cy,sx,sy],index)=>{const r=radii[index];if(!r||(px-cx)*sx>=r||(py-cy)*sy>=r)return true;return Math.hypot(px-(cx+sx*r),py-(cy+sy*r))<=r-3;});
         };
 
         const bottomInset=type==='turntableDirect'?14:type.startsWith('turntable')?7:3;
-        const free=(x,y,w,h)=>x>=Math.max(3,area.x+3)&&y>=Math.max(3,minY+3)&&x+w<=Math.min(width-3,area.x+area.w-3)&&y+h<=Math.min(height-3,area.y+area.h-bottomInset)&&[[x,y],[x+w,y],[x,y+h],[x+w,y+h]].every(([px,py])=>insideCurve(px,py))&&!obstacles.some(o=>x<o.x+o.w+2&&x+w>o.x-2&&y<o.y+o.h+2&&y+h>o.y-2);
-        const sizes=width<=260&&height<=115?[[28,18,'mark'],[18,14,'mark']]:[[144,32,'art'],[108,23,'full'],[86,17,'full'],[96,10,'strip'],[65,8,'strip'],[28,18,'mark'],[18,14,'mark']];
-        for(const [w,h,mode]of sizes){
-            if(w>width-6||h>height-6)continue;
-            const ys=speaker?[area.y+area.h-h-12,area.y+area.h-h-40,height*.8,height*.65,8]:[area.y+6,area.y+area.h-h-6,height*.65,height*.4];
-            const xs=[(width-w)/2,12,width-w-12];
-            for(const y of ys)for(const x of xs)if(free(x,y,w,h)){Object.assign(badge.style,{left:x+'px',top:y+'px',width:w+'px',height:h+'px'});badge.dataset.mode=mode;if(mode==='art')badge.innerHTML=logo(p.brand)+'<span class="equipment-brand-model">'+p.model+'</span>';else if(mode==='mark')badge.innerHTML=logo(p.brand,true);else if(mode==='strip')badge.innerHTML=logo(p.brand,false,true)+'<span class="equipment-brand-model">'+p.model+'</span>';return;}
-            for(let y=5;y<=height-h-5;y+=5)for(let x=8;x<=width-w-8;x+=8)if(free(x,y,w,h)){Object.assign(badge.style,{left:x+'px',top:y+'px',width:w+'px',height:h+'px'});badge.dataset.mode=mode;if(mode==='art')badge.innerHTML=logo(p.brand)+'<span class="equipment-brand-model">'+p.model+'</span>';else if(mode==='mark')badge.innerHTML=logo(p.brand,true);else if(mode==='strip')badge.innerHTML=logo(p.brand,false,true)+'<span class="equipment-brand-model">'+p.model+'</span>';return;}
+        const free=(x,y,w,h)=>x>=Math.max(5,area.x+frame.left+4)&&y>=Math.max(5,minY+4)&&x+w<=Math.min(width-5,area.x+area.w-frame.right-4)&&y+h<=Math.min(height-5,area.y+area.h-frame.bottom-bottomInset-2)&&[[x,y],[x+w,y],[x,y+h],[x+w,y+h]].every(([px,py])=>insideCurve(px,py))&&!obstacles.some(o=>x<o.x+o.w+4&&x+w>o.x-4&&y<o.y+o.h+4&&y+h>o.y-4);
+        const family=families[p.brand];
+        // A family has a small set of named print rails. We reduce the lettering
+        // before moving to the alternate rail; no search through the panel centre.
+        let zones=family.zones;
+        if(type.startsWith('audioInterface'))zones=['footer-left','header-left'];
+        if(type==='spkElectrostatic')zones=['footer-center','header-center'];
+        if(type.startsWith('turntable'))zones=['footer-left','footer-center','footer-right'];
+        const variants=width<=260&&height<=115?[[68,12,'word'],[36,16,'mark'],[26,12,'mark']]:[[100,22,'full'],[88,18,'full'],[85,12,'word'],[90,10,'strip'],[70,9,'word'],[36,16,'mark'],[26,12,'mark'],[20,10,'mark']];
+        const candidates=[];
+        zones.forEach((zone,zoneIndex)=>variants.forEach(([w,h,mode],variantIndex)=>{
+            const left=area.x+family.margin,right=area.x+area.w-family.margin-w;
+            const targetX=zone.endsWith('left')?left:zone.endsWith('right')?right:area.x+(area.w-w)/2;
+            const targetY=zone.startsWith('header')?Math.max(minY,area.y)+8:area.y+area.h-frame.bottom-bottomInset-h-10;
+            const xs=[0,-8,8,-16,16,-24,24,-32,32];
+            const ys=zone.startsWith('header')?[0,4,8,12,16,20,24,28,32]:[0,-4,-8,-12,-16,-20,-24,-28,-32];
+            xs.forEach(dx=>ys.forEach(dy=>{
+                const x=targetX+dx,y=targetY+dy;
+                if(free(x,y,w,h))candidates.push({x,y,w,h,mode,zone,score:zoneIndex*1000+variantIndex*80+Math.abs(dx)+Math.abs(dy)*1.3});
+            }));
+        }));
+        // Reserved signature areas for models whose functional front layout
+        // interrupts the normal rail. These are deliberate, reviewed exceptions.
+        const slots={
+            receiver:{x:(width-100)/2,y:112,w:100,h:18,mode:'full',zone:'connector-center'},
+            turntableLinear:{x:185,y:207,w:100,h:18,mode:'full',zone:'footer-left'},
+            powerValve:{x:130,y:height-43,w:100,h:22,mode:'full',zone:'header-left'},
+            powerAmp:{x:30,y:65,w:46,h:10,mode:'word',zone:'power-left'},
+            spkActiveRounded:{x:(width-70)/2,y:6,w:70,h:8,mode:'word',zone:'header-center'},
+            floorFlax:{x:(width-70)/2,y:9,w:70,h:9,mode:'word',zone:'header-center'},
+        };
+        if(type==='audioInterface1'||type==='audioInterface3')slots[type]={x:24,y:height-25,w:70,h:12,mode:'word',zone:'footer-left'};
+        const slot=slots[type];if(slot&&free(slot.x,slot.y,slot.w,slot.h))candidates.push({...slot,score:-1});
+        // Compact decks have controls across the entire front: a small signature
+        // beside the power key is their explicitly reserved manufacturing mark.
+        if(type==='turntableDirect'){
+            const x=area.x+48,y=Math.max(minY,area.y)+5;
+            if(free(x,y,28,14))candidates.push({x,y,w:28,h:14,mode:'mark',zone:'deck-power-signature',score:-1});
         }
-        // Very small parts carry a maker's stamp; the full model remains in the
-        // catalog, accessible equipment name, and properties panel.
-        badge.dataset.mode='mark';badge.innerHTML=logo(p.brand,true);
-        for(let y=5;y<=height-12;y+=3)for(let x=5;x<=width-12;x+=3)if(free(x,y,7,7)){Object.assign(badge.style,{left:x+'px',top:y+'px',width:'7px',height:'7px'});return;}
-        badge.dataset.placement='unplaced';Object.assign(badge.style,{left:'6px',top:'5px',width:'7px',height:'7px'});
+        if(!candidates.length){
+            zones.forEach((zone,zoneIndex)=>{
+                const w=24,h=12,target=zone.endsWith('left')?area.x+family.margin:area.x+(area.w-w)/2;
+                const ys=zone.startsWith('header')?Array.from({length:12},(_,i)=>Math.max(minY,area.y)+5+i*3):Array.from({length:18},(_,i)=>area.y+area.h-bottomInset-h-5-i*3);
+                for(const y of ys)for(let x=area.x+8;x<area.x+area.w-w-8;x+=6)if(free(x,y,w,h))candidates.push({x,y,w,h,mode:'mark',zone,score:3000+zoneIndex*1000+Math.abs(x-target)+Math.abs(y-(zone.startsWith('header')?minY:area.y+area.h))*2});
+            });
+        }
+        const choice=candidates.sort((a,b)=>a.score-b.score)[0];
+        if(!choice){badge.dataset.placement='unplaced';badge.hidden=true;return;}
+        const {x,y,w,h,mode,zone}=choice;
+        Object.assign(badge.style,{left:(x-root.clientLeft)+'px',top:(y-root.clientTop)+'px',width:w+'px',height:h+'px'});
+        badge.dataset.mode=mode;badge.dataset.zone=zone;
+        badge.innerHTML=mode==='mark'?logo(p.brand,true):logo(p.brand,false,true)+(mode==='word'?'':'<span class="equipment-brand-model">'+p.model+'</span>');
+        badge.querySelector('svg').setAttribute('preserveAspectRatio',zone.endsWith('left')?'xMinYMid meet':zone.endsWith('right')?'xMaxYMid meet':'xMidYMid meet');
     }
+
     function mount(root,type,role){
         const p=get(type);if(!p||unprinted(type))return;
+        root.dataset.productFamily=p.brand;
         root.dataset.manufacturer=p.manufacturer.name;root.dataset.brand=p.brand;root.dataset.model=p.model;
         root.style.setProperty('--equipment-brand-ink',paleFronts.has(type)?p.manufacturer.darkInk:p.manufacturer.lightInk);
         root.style.setProperty('--equipment-brand-light-ink',p.manufacturer.lightInk);
@@ -109,12 +165,15 @@
         const badge=badgeElement(type);
         const heading=type==='preClassic'?root.querySelector('.classic-preamp-heading'):type==='preGlass'?root.querySelector('.glass-pre-heading'):type==='tapeDeck'?root.querySelector('.tape-face>header>strong'):type==='spkActiveCompact'?root.querySelector('.compact-name'):null;
         if(heading){
-            const led=heading.querySelector('.device-led');heading.replaceChildren(badge);if(type==='preClassic')badge.innerHTML=logo(p.brand)+'<span class="equipment-brand-model">'+p.model+'</span>';if(led)heading.appendChild(led);badge.dataset.mode=type==='preClassic'||type==='spkActiveCompact'?'full':'strip';badge.dataset.placement='heading';
-            Object.assign(badge.style,{position:'relative',width:type==='preClassic'?'190px':type==='spkActiveCompact'?'108px':'126px',height:type==='preClassic'?'40px':type==='spkActiveCompact'?'23px':'12px'});return;
+            if(type==='preGlass')Object.assign(heading.style,{left:'42px',right:'auto',width:'144px'});
+            if(type==='tapeDeck')Object.assign(heading.style,{position:'absolute',left:'50%',transform:'translateX(-50%)',top:'10px',width:'140px'});
+            const led=heading.querySelector('.device-led');heading.replaceChildren(badge);if(type==='preClassic')badge.innerHTML=logo(p.brand)+'<span class="equipment-brand-model">'+p.model+'</span>';if(led)heading.appendChild(led);badge.dataset.mode=type==='preClassic'||type==='spkActiveCompact'?'full':'strip';badge.dataset.placement='heading';badge.dataset.zone=type==='preClassic'?'header-center':type==='spkActiveCompact'?'footer-center':'header-left';
+            if(type==='tapeDeck'){badge.dataset.mode='full';badge.dataset.zone='header-center';}
+            Object.assign(badge.style,{position:'relative',width:type==='preClassic'?'160px':type==='spkActiveCompact'?'96px':type==='tapeDeck'?'140px':'112px',height:type==='preClassic'?'32px':type==='spkActiveCompact'?'20px':type==='tapeDeck'?'22px':'12px'});badge.querySelector('svg').setAttribute('preserveAspectRatio',badge.dataset.zone.endsWith('left')?'xMinYMid meet':'xMidYMid meet');return;
         }
         const grille=root.querySelector('.speaker-grille');
         if(grille&&!root.classList.contains('grille-off')&&getComputedStyle(grille).display!=='none'){
-            badge.dataset.mode='full';badge.dataset.placement='grille';Object.assign(badge.style,{right:'12px',bottom:'12px',width:'96px',height:'21px'});grille.appendChild(badge);return;
+            badge.dataset.mode='full';badge.dataset.placement='grille';badge.dataset.zone='footer-center';Object.assign(badge.style,{left:'calc(50% - 46px)',bottom:'6px',width:'92px',height:'20px'});grille.appendChild(badge);return;
         }
         badge.dataset.placement='face';placeBadge(root,badge,type);root.appendChild(badge);
     }
@@ -124,5 +183,5 @@
         const line=document.createElement('small');line.className='catalog-product-identity';line.setAttribute('translate','no');line.textContent=name(type);item.appendChild(line);
         item.setAttribute('aria-label',name(type,item.querySelector(':scope>span')?.textContent.trim()));
     }
-    return Object.freeze({brands,products,get,name,splitName,logo,mount,catalog,unprinted});
+    return Object.freeze({brands,products,get,name,splitName,logo,mount,catalog,unprinted,families});
 });

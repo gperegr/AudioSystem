@@ -20,7 +20,7 @@
 .equipment-brand-badge[data-mode="strip"] {flex-direction:row;gap:5px;}
 .equipment-brand-badge[data-mode="strip"] .equipment-brand-logo {height:100%;width:65%;min-width:0;flex:1 1 auto;}
 .equipment-brand-badge[data-mode="strip"] .equipment-brand-model {font-size:5px!important;letter-spacing:.04em;}
-.equipment-brand-badge[data-mode="mark"] .equipment-brand-logo {width:100%;height:100%;}
+.equipment-brand-badge:is([data-mode="mark"],[data-mode="word"]) .equipment-brand-logo {width:100%;height:100%;}
 .equipment-brand-badge[data-placement="heading"] {inset:auto;margin:0 auto;}
 .classic-preamp-heading>.equipment-brand-badge {margin:0 auto 3px;}
 .glass-pre-heading>.equipment-brand-badge {margin:0 auto;}

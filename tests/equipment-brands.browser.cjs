@@ -42,15 +42,20 @@ const root=path.resolve(__dirname,'..');
                 const box=badge.getBoundingClientRect(),outer=dev.el.getBoundingClientRect();
                 if(box.left<outer.left-.5||box.top<outer.top-.5||box.right>outer.right+.5||box.bottom>outer.bottom+.5)issues.push(type+': print outside enclosure');
                 const printedLabels=[...dev.el.querySelectorAll('span,small,strong,b,label,header,text')].filter(part=>!part.childElementCount&&part.textContent.trim());
-                const obstacles=[...dev.el.querySelectorAll('.sub-oblong-duct,.sub-air-ducts>i,.tower-front-vent,.sp-panel,.classic-box-connection,.tower-terminal,.sp-woofer,.sp-tweeter,.tower-driver,.classic-box-driver,.tower-top-tweeter,.shelf-top-tweeter,.tape-reel,.tape-head-cover,.at-platter,.at-record,.tt-platter,.tt-record,[role=slider],.poweramp-screen,.poweramp-meter,.linear-readout,.bias-heatsink,.bias-vent,.stereo-power-vent,.dual-top-vents,.at-pitch,.tt-pitch,button:not(.speaker-grille),input,select,output,.port,.hw-knob,.hw-screw-mount,.integrated-gauge,.extra-vu,.bias-meter,.receiver-radio,.device-display,.custom-pre-screen,.signal-screen,.bench-lcd,.bench-screen,.cd-lcd,.stream-screen,[data-lighting-relief]'),...printedLabels];
+                const obstacles=[...dev.el.querySelectorAll('.mixer-rack-handle,.speaker-basic-tweeter,.speaker-basic-woofer,.speaker-basic-terminal,.precision-meter,.ai-output-pair,.linear-io,.sub-oblong-duct,.sub-air-ducts>i,.tower-front-vent,.sp-panel,.sp-terminal,.classic-box-connection,.tower-terminal,.sp-woofer,.sp-tweeter,.tower-driver,.classic-box-driver,.tower-top-tweeter,.shelf-top-tweeter,.tape-reel,.tape-head-cover,.at-platter,.at-record,.tt-platter,.tt-record,[role=slider],.poweramp-screen,.poweramp-meter,.linear-readout,.bias-heatsink,.bias-vent,.stereo-power-vent,.dual-top-vents,.at-pitch,.tt-pitch,button:not(.speaker-grille),input,select,output,.port,.hw-knob,.hw-screw-mount,.integrated-gauge,.extra-vu,.bias-meter,.receiver-radio,.device-display,.custom-pre-screen,.signal-screen,.bench-lcd,.bench-screen,.cd-lcd,.stream-screen,[data-lighting-relief]'),...printedLabels];
                 obstacles.forEach(part=>{
                     if(part.contains(badge)||badge.contains(part))return;
-                    if(badge.closest('.speaker-grille')&&part.matches('.sp-woofer,.sp-tweeter,.tower-driver,.classic-box-driver'))return;
+                    // Opaque removable grilles conceal both cones and their
+                    // basket fasteners. Only visible front parts can collide.
+                    if(badge.closest('.speaker-grille')&&part.closest('.sp-woofer,.sp-tweeter,.tower-driver,.classic-box-driver'))return;
                     const r=part.getBoundingClientRect(),s=getComputedStyle(part);if(!r.width||!r.height||s.visibility==='hidden'||s.display==='none')return;
                     const w=Math.min(box.right,r.right)-Math.max(box.left,r.left),h=Math.min(box.bottom,r.bottom)-Math.max(box.top,r.top);
                     if(w>.5&&h>.5)collisions.push({type,part:part.className||part.tagName,placement:badge.dataset.placement,mode:badge.dataset.mode});
                 });
-                placements[type]={mode:badge.dataset.mode,placement:badge.dataset.placement};
+                if(dev.el.dataset.productFamily!==product.brand||!badge.dataset.zone)issues.push(type+': missing product family / print rail');
+                const cap=dev.el.querySelector('.hw-mechanical-key-face');
+                if(cap&&parseFloat(getComputedStyle(cap).borderTopLeftRadius)!==EquipmentBrands.families[product.brand].keyRadius)issues.push(type+': inconsistent shared key profile');
+                placements[type]={mode:badge.dataset.mode,placement:badge.dataset.placement,zone:badge.dataset.zone,left:badge.style.left,top:badge.style.top,width:badge.style.width,height:badge.style.height};
                 const preview=api.createDevice(type,0,0,null,true);
                 if(preview.el.dataset.manufacturer!==dev.el.dataset.manufacturer||preview.el.dataset.model!==dev.el.dataset.model||preview.el.querySelectorAll('[data-brand-badge]').length!==1)issues.push(type+': preview identity');
                 preview.el.remove();api.deleteDevice(dev,false);
@@ -68,6 +73,27 @@ const root=path.resolve(__dirname,'..');
         fs.writeFileSync(process.env.BRAND_REPORT||'/tmp/audio-brand-validation.json',JSON.stringify(result,null,2));
         assert.deepEqual(result.issues,[],'complete manufacturer/model identity');
         assert.deepEqual(result.collisions,[],'maker printing must clear controls, sockets and meters');
+        // Exercise actual pointer hit areas on the layouts with reserved print
+        // regions and moved USB outputs, at full display size.
+        const targets=await page.evaluate(()=>{
+            const issues=[];let count=0;
+            for(const type of ['audioInterface1','audioInterface2','audioInterface3','audioInterface4','powerAmp','mixer','speaker','spkActiveRounded']){
+                const id='family-target-'+type;__brands.createDevice(type,120,120,id);const dev=__brands.devices[id];
+                const host=document.createElement('div');host.className='equipment-preview-world';host.style.cssText='position:fixed;left:310px;top:150px;width:800px;height:650px;z-index:100000;pointer-events:auto';document.body.appendChild(host);
+                host.appendChild(dev.el);Object.assign(dev.el.style,{left:'20px',top:'20px',transform:'none'});
+                const face=dev.el.getBoundingClientRect();
+                dev.el.querySelectorAll('.port,button,input,[role=slider]').forEach(control=>{
+                    const r=control.getBoundingClientRect(),s=getComputedStyle(control);if(!r.width||!r.height||s.display==='none'||s.visibility==='hidden')return;
+                    count++;const hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
+                    if(!hit||!control.contains(hit))issues.push(type+': covered target '+control.className);
+                    if(r.left<face.left-.5||r.top<face.top-.5||r.right>face.right+.5||r.bottom>face.bottom+.5)issues.push(type+': target outside face');
+                    if(control.matches('.port')&&!Object.hasOwn(dev.nodes,control.dataset.node))issues.push(type+': unroutable socket');
+                });
+                __brands.deleteDevice(dev,false);host.remove();
+            }
+            return {issues,count};
+        });
+        assert.deepEqual(targets.issues,[],'family printing preserves usable controls and routable sockets');
         const search=page.locator('#equipment-search');
         const lines=await page.evaluate(()=>Object.values(EquipmentBrands.brands).map(brand=>({name:brand.name,types:[...document.querySelectorAll('.catalog-item[data-template]')].filter(item=>EquipmentBrands.get(item.dataset.template)?.brand===brand.id&&!EquipmentBrands.unprinted(item.dataset.template)).map(item=>item.dataset.template)})));
         for(const brand of lines){
@@ -83,6 +109,6 @@ const root=path.resolve(__dirname,'..');
         const overflow=await page.locator('.catalog-item:visible>.catalog-product-identity').evaluateAll(labels=>labels.filter(label=>{const a=label.getBoundingClientRect(),b=label.parentElement.getBoundingClientRect();return a.top<b.top||a.bottom>b.bottom+.5;}).map(label=>label.textContent));
         assert.deepEqual(overflow,[],'brand and model fit the short catalog dock');
         assert.deepEqual(errors,[],'no application errors');
-        console.log(`Equipment brands: ${result.count} products, ${result.catalogCount} catalog cards, identities, printing clearance, previews, model search, short dock and live translations passed.`);
+        console.log(`Equipment brands: ${result.count} products, ${result.catalogCount} catalog cards, identities, printing clearance, previews, ${targets.count} pointer targets, model search, short dock and live translations passed.`);
     }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

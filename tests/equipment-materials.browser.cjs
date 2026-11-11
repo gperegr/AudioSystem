@@ -26,8 +26,8 @@ const root=path.resolve(__dirname,'..');
         await page.locator('#headphone-calibration-skip').click();
         await page.getByRole('button',{name:'Agora não',exact:true}).click();
         const result=await page.evaluate(()=>{
-            const api=__materials,sheets=[...document.styleSheets].filter(s=>/\/(tactile-finishes|depth|analog-finishes)\.css/.test(s.href||''));
-            if(sheets.length!==3)throw Error('Material, depth and analog finish stylesheets must load');
+            const api=__materials,sheets=[...document.styleSheets].filter(s=>/\/(tactile-finishes|depth|analog-finishes|product-families)\.css/.test(s.href||''));
+            if(sheets.length!==4)throw Error('Material, depth, analog and product family stylesheets must load');
             const enableFinishes=value=>sheets.forEach(sheet=>sheet.disabled=!value);
             const moved=[],interactive=[],guidance=[],previewDifferences=[],missingScrewParts=[],screwOverlaps=[],constructionIssues=[];
             const frontSelector='.assembly-fastener,.classic-screw,.precision-screw,.tape-screw,.electrostatic-fastener,.phone-housing-screws>i,.glass-pre-end>i';
@@ -37,9 +37,11 @@ const root=path.resolve(__dirname,'..');
             const coveredDrivers=new Set(['floorCoax','floorDiamond','shelfCoax','shelfTop','spkActiveCompact','spkActiveRounded','spkPassiveCarbon','subwooferCube']);
             const serviceDrivers=new Set(['spkActiveBookshelf','spkPassiveGridOrange','shelfWood','subwooferPro']);
             const screwFinishes=new Set(),screwAngles=new Set();let screwCount=0;
+            // Two interface output groups deliberately move to free a common logo rail.
+            // All chassis, other controls and sockets retain their original bounds.
             const bounds=el=>{
                 const origin=el.getBoundingClientRect();
-                return [el,...el.querySelectorAll('button,.port,input,small,svg')].map(node=>{
+                return [el,...el.querySelectorAll('button,.port,input,small,svg')].filter(node=>!node.closest('.ai-interface-one-outputs,.ai-interface-three-outputs')).map(node=>{
                     const r=node.getBoundingClientRect();return [r.x-origin.x,r.y-origin.y,r.width,r.height];
                 });
             };

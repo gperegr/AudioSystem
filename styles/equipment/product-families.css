@@ -1,0 +1,116 @@
+/* Shared industrial design, applied after the individual model artwork.
+   Silhouettes, dimensions, control travel, sockets and electrical state stay
+   with each model. Family parts share tooling, finish and printing rails. */
+.device-node[data-product-family="aurenne"] {
+    --family-key-radius:2px;--family-trim:#d3bb7d;--family-edge:#e3d2a088;
+    --family-metal:conic-gradient(from 18deg,#baa875,#fff1c5 42deg,#948354 110deg,#e5d6aa 175deg,#87734b 240deg,#f9eac4 310deg,#baa875);
+    --family-dark:conic-gradient(from 20deg,#463f30,#72694c 44deg,#28271e 125deg,#45422f 190deg,#1b2119 252deg,#666345 314deg,#463f30);
+}
+.device-node[data-product-family="veltron"] {
+    --family-key-radius:3px;--family-trim:#bdcbd2;--family-edge:#d7e6ef80;
+    --family-metal:conic-gradient(from 12deg,#aeb9c0,#f9fbff 40deg,#7f8e9a 108deg,#dbe5ea 170deg,#687c8a 242deg,#eef4fa 307deg,#aeb9c0);
+    --family-dark:conic-gradient(from 18deg,#353e47,#6c7984 44deg,#161e27 122deg,#3f4c57 189deg,#111b24 248deg,#566572 310deg,#353e47);
+}
+.device-node[data-product-family="nexora"] {
+    --family-key-radius:5px;--family-trim:#c98c60;--family-edge:#d4a27a70;
+    --family-metal:conic-gradient(from 20deg,#b7b5ae,#f5eee2 42deg,#8d908f 110deg,#ddd8cb 175deg,#6e7474 240deg,#efeadc 310deg,#b7b5ae);
+    --family-dark:conic-gradient(from 20deg,#3a3b3d,#626265 42deg,#202124 120deg,#373a3d 188deg,#12191d 250deg,#565759 310deg,#3a3b3d);
+}
+.device-node[data-product-family="korden"] {
+    --family-key-radius:1px;--family-trim:#aabdc5;--family-edge:#a4c6d45c;
+    --family-metal:conic-gradient(from 10deg,#9aa8af,#e7eff2 38deg,#71818a 104deg,#c4d2d8 172deg,#526a77 240deg,#d4e2e9 308deg,#9aa8af);
+    --family-dark:conic-gradient(from 15deg,#303c43,#536873 44deg,#121e25 122deg,#293d48 187deg,#0d1921 248deg,#455963 312deg,#303c43);
+}
+.device-node[data-product-family="linholt"] {
+    --family-key-radius:3px;--family-trim:#83b4bf;--family-edge:#b0d9df6b;
+    --family-metal:conic-gradient(from 18deg,#a4b7bd,#e5f3f4 40deg,#718d97 111deg,#c3d8db 174deg,#526e7a 242deg,#d9e8ed 310deg,#a4b7bd);
+    --family-dark:conic-gradient(from 20deg,#35454c,#5d737a 42deg,#17262e 120deg,#30434c 188deg,#10232b 250deg,#4b626a 310deg,#35454c);
+}
+.device-node[data-product-family="bravora"] {
+    --family-key-radius:2px;--family-trim:#b99665;--family-edge:#e9c6926b;
+    --family-metal:conic-gradient(from 20deg,#baa584,#f5e9d0 44deg,#8e7c60 115deg,#deccaa 180deg,#796b52 244deg,#e5d5b5 310deg,#baa584);
+    --family-dark:linear-gradient(125deg,#535347,#262b23 68%,#3b4031);
+}
+.device-node[data-product-family="soryn"] {
+    --family-key-radius:8px;--family-trim:#c4b580;--family-edge:#f1e8cb77;
+    --family-metal:conic-gradient(from 22deg,#c0bcad,#f6f2df 42deg,#93998a 112deg,#dedec9 174deg,#778577 240deg,#eeefdc 309deg,#c0bcad);
+    --family-dark:linear-gradient(125deg,#666f66,#303e35 68%,#49594b);
+}
+.device-node[data-product-family="terevon"] {
+    --family-key-radius:4px;--family-trim:#bec9c8;--family-edge:#e1e9e66b;
+    --family-metal:conic-gradient(from 15deg,#b4bfc0,#f1f5f2 42deg,#899a9b 110deg,#d8e2df 174deg,#6b8183 240deg,#e8efeb 310deg,#b4bfc0);
+    --family-dark:linear-gradient(125deg,#4b5654,#23312d 68%,#3a4a42);
+}
+.device-node[data-product-family="axiomer"] {
+    --family-key-radius:3px;--family-trim:#b58c72;--family-edge:#a6b4bc66;
+    --family-metal:conic-gradient(from 15deg,#9aabb2,#dce8eb 42deg,#738791 110deg,#c3d1d6 174deg,#506d7b 240deg,#cbdce3 310deg,#9aabb2);
+    --family-dark:linear-gradient(125deg,#48545e,#202e39 68%,#344855);
+}
+.device-node[data-product-family="dovara"] {
+    --family-key-radius:5px;--family-trim:#a2ac9c;--family-edge:#c8d3bb4d;
+    --family-metal:conic-gradient(from 20deg,#9fa998,#dce0ce 42deg,#7e8e78 110deg,#c2cfb9 174deg,#62765e 240deg,#d9dfc8 310deg,#9fa998);
+    --family-dark:linear-gradient(125deg,#424c3b,#1e2e20 68%,#35442d);
+}
+
+/* A repeatable cap profile and metal temperature for each manufacturer's
+   shared parts. Special ivory, Bakelite, touch and flywheel models keep theirs. */
+:is(#audio-world,.equipment-preview-world) .device-node[data-product-family][data-analog-finish] .hw-knob:is([data-knob-finish="machined"],[data-knob-finish="fluted"],[data-knob-finish="skirted"])>.hw-knob-face {
+    background:repeating-radial-gradient(circle,#fff2 0 .3px,#0000000a .4px .7px,transparent .9px 1.6px),var(--family-metal)!important;
+    box-shadow:inset 0 0 0 1px var(--family-edge),inset 0 1px 2px #fffa,inset 0 -2px 3px #1b242977!important;
+}
+:is(#audio-world,.equipment-preview-world) .device-node[data-product-family][data-analog-finish] .hw-knob:is([data-knob-finish="rubber"],[data-knob-finish="plain"],[data-knob-finish="interface"])>.hw-knob-face {
+    background:repeating-radial-gradient(circle,#ffffff06 0 .5px,transparent .8px 2px),var(--family-dark)!important;
+}
+:is(#audio-world,.equipment-preview-world) .device-node[data-product-family] .hw-mechanical-key .hw-mechanical-key-face {
+    border-radius:var(--family-key-radius);
+    border-color:var(--family-edge);
+    background:linear-gradient(110deg,#ffffff12,transparent 45% 75%,#0002),var(--hw-key-finish);
+}
+:is(#audio-world,.equipment-preview-world) .device-node[data-product-family] .hw-plunger-face {
+    background:var(--family-metal);
+}
+/* Matching bezel tooling within each line; no enlarged controls or new holes. */
+:is(#audio-world,.equipment-preview-world) .device-node[data-product-family="aurenne"] :is(.classic-preamp-panel,.utility-front,.integrated-face,.graphic-eq-face,.mixer-rack-panel,.xover-panel,.selector-face,.matrix-face,.phone-amp-face,.stereo-power-face,.tape-face) {
+    border-radius:2px;
+    outline:1px solid #eed7a54d;outline-offset:-3px;
+}
+:is(#audio-world,.equipment-preview-world) .device-node[data-product-family="veltron"] :is(.integrated-face,.custom-pre-face,.custom-power-face,.bias-face) {
+    border-radius:4px;
+    outline:1px solid #d7e2e733;outline-offset:-3px;
+}
+:is(#audio-world,.equipment-preview-world) .device-node[data-product-family="nexora"] :is(.integrated-face,.custom-pre-face,.poweramp-body,.phone-amp-face,.selector-face,.cd-face) {
+    border-radius:7px;
+    outline:1px solid #bc8a665c;outline-offset:-3px;
+}
+:is(#audio-world,.equipment-preview-world) .device-node[data-product-family="korden"] :is(.rack-face,.graphic-eq-face,.stereo-power-face,.mixer-rack-panel,.xover-panel,.amp4-rack-face,.matrix-face,.custom-pre-face) {
+    border-radius:1px;
+    outline:1px solid #9eb9c733;outline-offset:-4px;
+}
+:is(#audio-world,.equipment-preview-world) .device-node[data-product-family="korden"] .mixer-rack-inputs header strong {
+    margin-left:110px;
+}
+:is(#audio-world,.equipment-preview-world) .device-node[data-product-family="linholt"] :is(.signal-face,.bench-face,.ai-panel,.interface-face) {
+    outline:1px solid #93bfc44d;outline-offset:-4px;
+}
+/* A shared lower identity rail frees the stereo interface's output pair to
+   sit beside it. Cable sockets remain in the same logical L/R order. */
+:is(#audio-world,.equipment-preview-world) .device-node[data-product-family="linholt"] :is(.ai-interface-one-outputs,.ai-interface-three-outputs) {
+    justify-self:end;
+}
+:is(#audio-world,.equipment-preview-world) .device-node.audio-interface[data-product-family="linholt"] .ai-panel .ai-dial.hw-knob>.hw-knob-face {
+    background:repeating-radial-gradient(circle,#ffffff09 0 .5px,transparent .8px 2px),var(--family-dark)!important;
+}
+/* Shared driver trim, terminal-panel finish and stamp position connect small,
+   floorstanding and active speakers without changing their acoustic shapes. */
+:is(#audio-world,.equipment-preview-world) .device-node[data-product-family] :is(.sp-panel,.tower-terminal,.classic-box-connection) {
+    border-radius:var(--family-key-radius);
+    box-shadow:inset 0 1px var(--family-edge),inset 0 -1px #0007,0 1px 2px #0006;
+}
+:is(#audio-world,.equipment-preview-world) .device-node:is([data-product-family="bravora"],[data-product-family="terevon"],[data-product-family="axiomer"]) :is(.sp-woofer,.tower-driver,.classic-box-driver) {
+    outline:1px solid var(--family-edge);outline-offset:-2px;
+}
+/* Fixed print rails use their own edge alignment, including model codes.
+   Small products can use the same lettering alone or a compact letter stamp. */
+.device-node[data-product-family] .equipment-brand-badge[data-zone$="left"] {align-items:flex-start;}
+.device-node[data-product-family] .equipment-brand-badge[data-zone$="right"] {align-items:flex-end;}
+.device-node[data-product-family] .equipment-brand-badge[data-zone$="center"] {align-items:center;}
