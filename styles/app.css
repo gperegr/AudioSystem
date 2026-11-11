@@ -4601,3 +4601,8 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
    Avoid a filtered, animated, world-sized surface during parallax and zoom. */
 #canvas[data-theme="scene"] .room-rain[data-soaked] {filter:none;}
 #canvas[data-theme="scene"] .room-rain-static {object-fit:fill;max-width:none;filter:var(--room-light-filter,brightness(1));}
+
+/* KR-M3: keep the complete fader travel inside the recessed channel. */
+.device-node.device-type-mixer .mixer-rack-fader input.mixer-level-control[type=range] {
+    width:32px!important;height:22px!important;min-height:22px;left:20px;top:10px;
+}
