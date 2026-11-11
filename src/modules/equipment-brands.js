@@ -154,7 +154,7 @@
         }
         const choice=candidates.sort((a,b)=>a.score-b.score)[0];
         if(!choice){badge.dataset.placement='unplaced';badge.hidden=true;return;}
-        if(['prePrecision','preamp','benchMeter','benchMeterVintage','signalGenerator','signalGeneratorVintage'].includes(type)){
+        if(['powerDual','prePrecision','preamp','benchMeter','benchMeterVintage','signalGenerator','signalGeneratorVintage'].includes(type)){
             choice.x=(width-choice.w)/2;choice.zone='header-center';
         }
         if(['speakerConverter','phonoConverter'].includes(type)){
@@ -164,6 +164,7 @@
             Object.assign(choice,{x:24,y:height-34,w:88,h:18,mode:'full',zone:'footer-left'});
         }
         if(type==='rcaSwitch')Object.assign(choice,{w:68,h:12,y:height-25,mode:'word'});
+        if(['powerValve','powerBias'].includes(type))Object.assign(choice,{x:160,y:height-40,w:100,h:22,mode:'full',zone:'footer-left'});
         const {x,y,w,h,mode,zone}=choice;
         Object.assign(badge.style,{left:(x-root.clientLeft)+'px',top:(y-root.clientTop)+'px',width:w+'px',height:h+'px'});
         badge.dataset.mode=mode;badge.dataset.zone=zone;
