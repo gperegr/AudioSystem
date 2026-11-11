@@ -166,6 +166,7 @@
         if(type==='rcaSwitch')Object.assign(choice,{w:68,h:12,y:height-25,mode:'word'});
         if(type==='powerDual')choice.y=28;
         if(['powerValve','powerBias'].includes(type))Object.assign(choice,{x:160,y:height-40,w:100,h:22,mode:'full',zone:'footer-left'});
+        if(type==='turntableBelt'){choice.x+=18;choice.y+=8;}
         const {x,y,w,h,mode,zone}=choice;
         Object.assign(badge.style,{left:(x-root.clientLeft)+'px',top:(y-root.clientTop)+'px',width:w+'px',height:h+'px'});
         badge.dataset.mode=mode;badge.dataset.zone=zone;
