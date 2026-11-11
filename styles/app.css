@@ -4638,3 +4638,7 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 :is(#audio-world,.equipment-preview-world) .device-type-preDisplay .integrated-connections>div:not(.preamp-output-power) {
     top:-8px;left:4px;
 }
+
+/* NX-I60: keep the full connector rings inside the recessed lower panel. */
+:is(#audio-world,.equipment-preview-world) .device-type-integratedMinimal .integrated-connections {padding-inline:10px;}
+:is(#audio-world,.equipment-preview-world) .device-type-integratedMinimal .integrated-connections>div {position:relative;top:-8px;left:4px;}
