@@ -32,7 +32,7 @@ const root=path.resolve(__dirname,'..');
                     return r.width&&r.height&&s.visibility!=='hidden'&&!n.closest('.lighting-control-shadow,.lighting-furniture-interior,.lighting-furniture-shadow,.lighting-control-mask');
                 }).map(n=>{
                     const r=n.getBoundingClientRect(),s=getComputedStyle(n);
-                    return {part:n.getAttribute('class')||n.tagName,model:n.dataset.knobModel||n.dataset.buttonModel||'',text:n.textContent.trim(),bounds:[r.left-base.left,r.top-base.top,r.width,r.height].map(v=>v*unit),background:s.backgroundImage,color:s.color,shadow:s.boxShadow,transform:s.transform,opacity:s.opacity,children:n.children.length,pixels:n.tagName==='CANVAS'?n.toDataURL():''};
+                    return {part:n.getAttribute('class')||n.tagName,model:n.dataset.knobModel||n.dataset.buttonModel||'',text:n.textContent.trim(),bounds:[r.left-base.left,r.top-base.top,r.width,r.height].map(v=>v*unit),background:s.backgroundImage,color:s.color,shadow:s.boxShadow,transform:s.transform,opacity:s.opacity,reflection:JSON.stringify(['transform','width','height','left','top','backgroundImage'].map(key=>getComputedStyle(n,'::after')[key])),children:n.children.length,pixels:n.tagName==='CANVAS'?n.toDataURL():''};
                 })};
             };
             window.comparePreview=(type,a,b)=>{
@@ -40,7 +40,7 @@ const root=path.resolve(__dirname,'..');
                 if(JSON.stringify(a.size)!==JSON.stringify(b.size))issues.push(type+': enclosure dimensions');
                 if(a.parts.length!==b.parts.length)return [...issues,type+': visual parts '+a.parts.length+' / '+b.parts.length];
                 a.parts.forEach((part,i)=>{
-                    for(const key of ['model','text','bounds','background','color','shadow','transform','opacity','children','pixels']){
+                    for(const key of ['model','text','bounds','background','color','shadow','transform','opacity','reflection','children','pixels']){
                         const changed=key==='bounds'?part.bounds.some((v,j)=>Math.abs(v-b.parts[i].bounds[j])>.25):part[key]!==b.parts[i][key];
                         if(changed)issues.push(type+': '+part.part+' / '+key);
                     }
@@ -67,9 +67,19 @@ const root=path.resolve(__dirname,'..');
         }
         fs.writeFileSync(process.env.PREVIEW_REPORT||'/tmp/audio-preview-parity.json',JSON.stringify({count:types.length,issues},null,2));
         assert.deepEqual(issues,[],'catalog preview and live equipment use identical default artwork');
+        const reflectionIssues=await page.evaluate(()=>{
+            const dev=__previews.createDevice('receiver',120,120,null,true);dev.el.hidden=false;
+            const knob=dev.el.querySelector('[data-receiver-control="volume"]'),issues=[];
+            for(const angle of [-135,0,81,135]){
+                knob.style.setProperty('--knob-angle',angle+'deg');const reflection=getComputedStyle(knob,'::after');
+                if(reflection.transform!=='none'||Math.abs(parseFloat(reflection.width)-(knob.clientWidth-2))>2||Math.abs(parseFloat(reflection.height)-(knob.clientHeight-2))>2)issues.push(angle);
+            }
+            dev.el.remove();return issues;
+        });
+        assert.deepEqual(reflectionIssues,[],'receiver reflection stays stationary and inside the knob at every angle');
         // The actual desktop placement path must keep the same geometry and ink,
         // including the ghost's CSS, cancellation and the click that confirms it.
-        for(const type of ['turntableDirect','preClassic','spkActiveMonitor']){
+        for(const type of ['turntableDirect','receiver','preClassic','spkActiveMonitor']){
             await page.evaluate(type=>__previews.startCatalogCursorPlacement(document.querySelector('.catalog-item[data-template="'+type+'"]')),type);
             const canvas=await page.locator('#canvas').boundingBox();let point;
             for(const [fx,fy]of [[.5,.5],[.4,.65],[.65,.6],[.55,.4]]){
@@ -106,6 +116,6 @@ const root=path.resolve(__dirname,'..');
         assert.deepEqual(touchResult,[],'touch confirmation preserves the preview artwork');
         assert.equal(await page.locator('.catalog-placement-preview').count(),0);
         assert.deepEqual(errors,[],'no application errors');
-        console.log(`Preview parity: ${types.length} models, skins, geometry, displays, idle canvases, no audio/registration, three cursor placements, touch confirmation and cancellation passed.`);
+        console.log(`Preview parity: ${types.length} models, skins, geometry, displays, idle canvases, no audio/registration, four cursor placements, touch confirmation and cancellation passed.`);
     }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

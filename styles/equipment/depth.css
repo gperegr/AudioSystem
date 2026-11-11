@@ -52,6 +52,11 @@
     content:""!important;
     position:absolute;
     inset:1px;
+    width:auto;
+    height:auto;
+    transform:none;
+    transform-origin:center;
+    transition:none;
     z-index:2;
     border-radius:50%;
     pointer-events:none;
