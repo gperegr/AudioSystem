@@ -4634,3 +4634,7 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 :is(#audio-world,.equipment-preview-world) :is(.device-type-preDisplay,.device-type-preReference) .integrated-connections>.preamp-output-power {top:-2px;}
 .device-type-preReference .pre-handle {top:10%;height:80%;}
 .device-type-prePrecision .precision-switches>label:last-child {margin-left:44px;}
+/* NX-P60: clear the lower and left edges with the complete socket rings. */
+:is(#audio-world,.equipment-preview-world) .device-type-preDisplay .integrated-connections>div:not(.preamp-output-power) {
+    top:-8px;left:4px;
+}
