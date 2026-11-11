@@ -4658,3 +4658,8 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
     border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;
 }
 :is(#audio-world,.equipment-preview-world) .device-type-spkActiveCompact .sp-panel>.equipment-material {display:none;}
+/* Axiomer: controls sit directly on the cabinet face. */
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-spkActiveRounded .sp-panel {
+    border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;
+}
+:is(#audio-world,.equipment-preview-world) .device-type-spkActiveRounded .sp-panel>.equipment-material {display:none;}
