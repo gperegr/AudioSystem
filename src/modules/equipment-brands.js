@@ -154,7 +154,7 @@
         }
         const choice=candidates.sort((a,b)=>a.score-b.score)[0];
         if(!choice){badge.dataset.placement='unplaced';badge.hidden=true;return;}
-        if(['preamp','benchMeter','benchMeterVintage','signalGenerator','signalGeneratorVintage'].includes(type)){
+        if(['prePrecision','preamp','benchMeter','benchMeterVintage','signalGenerator','signalGeneratorVintage'].includes(type)){
             choice.x=(width-choice.w)/2;choice.zone='header-center';
         }
         if(['speakerConverter','phonoConverter'].includes(type)){
