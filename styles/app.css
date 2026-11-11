@@ -4616,3 +4616,21 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 :is(#audio-world,.equipment-preview-world) .device-type-preControl .integrated-connections>.preamp-output-power {
     top:-2px;
 }
+/* Precision preamp: common dial/label baselines and evenly spaced switch columns. */
+.device-type-prePrecision :is(.precision-source,.precision-gain,.precision-volume,.precision-balance) {
+    top:16px;width:64px;height:80px;display:grid;grid-template-rows:64px 7px 7px;gap:1px;justify-items:center;align-items:center;
+}
+.device-type-prePrecision .precision-source {left:164px;}
+.device-type-prePrecision .precision-gain {left:232px;}
+.device-type-prePrecision .precision-volume {left:344px;}
+.device-type-prePrecision .precision-balance {left:420px;}
+.device-type-prePrecision .precision-switches {left:164px;top:98px;gap:8px;}
+.device-type-prePrecision .precision-switches>label {width:60px;flex-direction:column;gap:3px;}
+.device-type-prePrecision .precision-switches button {height:26px!important;min-height:26px!important;}
+.device-type-prePrecision .precision-power {top:35px;}
+/* Match the connector inset used on the companion NX-P40. */
+:is(#audio-world,.equipment-preview-world) :is(.device-type-preDisplay,.device-type-preReference) .integrated-connections {padding-inline:10px;}
+:is(#audio-world,.equipment-preview-world) :is(.device-type-preDisplay,.device-type-preReference) .integrated-connections>div {position:relative;top:-4px;}
+:is(#audio-world,.equipment-preview-world) :is(.device-type-preDisplay,.device-type-preReference) .integrated-connections>.preamp-output-power {top:-2px;}
+.device-type-preReference .pre-handle {top:10%;height:80%;}
+.device-type-prePrecision .precision-switches>label:last-child {margin-left:44px;}
