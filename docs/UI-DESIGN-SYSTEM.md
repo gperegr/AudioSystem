@@ -105,3 +105,5 @@ The home footer contains a music toggle and a labeled volume slider. `src/module
 Home settings hides controls marked `data-studio-only` (Visual, clear all, guided access and example setups). These remain available in the canvas settings.
 
 Selecting an environment on the home screen previews its palette and background with a 500 ms crossfade. Scene images decode before the fade; stale requests are ignored and old layers are removed. The first opening remains solid sepia. Respect reduced motion and keep rain audio muted.
+
+Manufacturer logos are outlined lettering with retro stripes and shadow variants. Headphones and connector adapters suppress maker names in the physical artwork, catalog, inspector title and accessible labels; model associations remain internal for compatibility. No separate pictogram is placed beside a wordmark. Compact surfaces use a short typographic signature in the same lettering. Physical logo clearance includes complete slider wells, display backgrounds, heat sinks and rounded cabinet corners.

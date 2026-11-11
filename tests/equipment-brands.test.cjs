@@ -19,13 +19,13 @@ test('model syntax follows each manufacturer and names retain translated functio
     const syntax={aurenne:/^[A-Z]-\d{3}$/,veltron:/^V \d{3}[ipstv]$/,nexora:/^NX-[A-Z]\d{2}$/,korden:/^KR-[A-Z]\d+$/,linholt:/^[MGUCA]-[A-Z0-9]+$/,bravora:/^[BASH]-\d{2}[BO]?$/,soryn:/^Form (?:\d[ACS]|H\d)$/,terevon:/^Reference [HPE]?\d$/,axiomer:/^[MSH]-\d{2}$/,dovara:/^D-[BSH]\d{2}$/};
     for(const [type,p]of Object.entries(api.products)){
         assert.match(p.model,syntax[p.brand],type);
-        const role='Entrada · RCA estéreo';assert.deepEqual(api.splitName(api.name(type,role)),{product:api.name(type),role});
+        const role='Entrada · RCA estéreo';if(api.unprinted(type)){assert.equal(api.name(type,role),role);continue;}assert.deepEqual(api.splitName(api.name(type,role)),{product:api.name(type),role});
     }
     assert.equal(api.name('furnitureRack','Rack de Áudio'),'Rack de Áudio');assert.equal(api.splitName('Unknown · Item'),null);
 });
 test('logos are independent local SVG identities with no remote resources',()=>{
     const marks=new Set();for(const b of Object.values(api.brands)){
         const svg=fs.readFileSync(path.join(__dirname,'../assets/brands',b.id+'.svg'),'utf8');
-        assert(svg.includes(b.name.toUpperCase()));assert(svg.includes('<svg'));assert.doesNotMatch(svg,/<image|<script|https?:\/\/(?!www\.w3\.org)/);marks.add(b.mark);
+        assert(svg.includes(b.name.toUpperCase()));assert(svg.includes('<svg'));assert(svg.includes('class="brand-wordmark"'));assert.doesNotMatch(svg,/<text[ >]/,'wordmarks must render outlined lettering rather than substituted fonts');assert.doesNotMatch(svg,/<image|<script|https?:\/\/(?!www\.w3\.org)/);marks.add(b.mark);
     }assert.equal(marks.size,10);
 });

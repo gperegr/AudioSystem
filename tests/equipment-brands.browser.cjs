@@ -29,6 +29,11 @@ const root=path.resolve(__dirname,'..');
                 const product=EquipmentBrands.get(type),id='identity-'+type;api.createDevice(type,120,120,id);const dev=api.devices[id];
                 if(!dev){issues.push(type+': factory');continue;}
                 const badge=dev.el.querySelector('[data-brand-badge]');
+                if(EquipmentBrands.unprinted(type)){
+                    if(badge||dev.el.dataset.brand||dev.el.querySelector('.device-header')?.textContent.includes(product.manufacturer.name)||document.getElementById('inspector-title').textContent.includes(product.manufacturer.name))issues.push(type+': visible manufacturer must be suppressed');
+                    const preview=api.createDevice(type,0,0,null,true);if(preview.el.querySelector('[data-brand-badge]'))issues.push(type+': branded preview');
+                    preview.el.remove();api.deleteDevice(dev,false);continue;
+                }
                 if(!badge||dev.el.querySelectorAll('[data-brand-badge]').length!==1){issues.push(type+': maker print');api.deleteDevice(dev,false);continue;}
                 if(dev.el.dataset.manufacturer!==product.manufacturer.name||dev.el.dataset.model!==product.model)issues.push(type+': manufacturer/model');
                 if(!dev.el.getAttribute('aria-label').includes(EquipmentBrands.name(type)))issues.push(type+': accessible identity');
@@ -36,10 +41,11 @@ const root=path.resolve(__dirname,'..');
                 if(badge.dataset.placement==='unplaced')issues.push(type+': no safe print area');
                 const box=badge.getBoundingClientRect(),outer=dev.el.getBoundingClientRect();
                 if(box.left<outer.left-.5||box.top<outer.top-.5||box.right>outer.right+.5||box.bottom>outer.bottom+.5)issues.push(type+': print outside enclosure');
-                const printedLabels=[...dev.el.querySelectorAll('span,small,strong,b,label,header')].filter(part=>!part.childElementCount&&part.textContent.trim());
-                const obstacles=[...dev.el.querySelectorAll('button:not(.speaker-grille),input,select,output,.port,.hw-knob,.hw-screw-mount,.integrated-gauge,.extra-vu,.bias-meter,.receiver-radio,.device-display,.custom-pre-screen,.signal-screen,.bench-lcd,.bench-screen,.cd-lcd,.stream-screen,[data-lighting-relief]'),...printedLabels];
+                const printedLabels=[...dev.el.querySelectorAll('span,small,strong,b,label,header,text')].filter(part=>!part.childElementCount&&part.textContent.trim());
+                const obstacles=[...dev.el.querySelectorAll('.sub-oblong-duct,.sub-air-ducts>i,.tower-front-vent,.sp-panel,.classic-box-connection,.tower-terminal,.sp-woofer,.sp-tweeter,.tower-driver,.classic-box-driver,.tower-top-tweeter,.shelf-top-tweeter,.tape-reel,.tape-head-cover,.at-platter,.at-record,.tt-platter,.tt-record,[role=slider],.poweramp-screen,.poweramp-meter,.linear-readout,.bias-heatsink,.bias-vent,.stereo-power-vent,.dual-top-vents,.at-pitch,.tt-pitch,button:not(.speaker-grille),input,select,output,.port,.hw-knob,.hw-screw-mount,.integrated-gauge,.extra-vu,.bias-meter,.receiver-radio,.device-display,.custom-pre-screen,.signal-screen,.bench-lcd,.bench-screen,.cd-lcd,.stream-screen,[data-lighting-relief]'),...printedLabels];
                 obstacles.forEach(part=>{
                     if(part.contains(badge)||badge.contains(part))return;
+                    if(badge.closest('.speaker-grille')&&part.matches('.sp-woofer,.sp-tweeter,.tower-driver,.classic-box-driver'))return;
                     const r=part.getBoundingClientRect(),s=getComputedStyle(part);if(!r.width||!r.height||s.visibility==='hidden'||s.display==='none')return;
                     const w=Math.min(box.right,r.right)-Math.max(box.left,r.left),h=Math.min(box.bottom,r.bottom)-Math.max(box.top,r.top);
                     if(w>.5&&h>.5)collisions.push({type,part:part.className||part.tagName,placement:badge.dataset.placement,mode:badge.dataset.mode});
@@ -49,8 +55,9 @@ const root=path.resolve(__dirname,'..');
                 if(preview.el.dataset.manufacturer!==dev.el.dataset.manufacturer||preview.el.dataset.model!==dev.el.dataset.model||preview.el.querySelectorAll('[data-brand-badge]').length!==1)issues.push(type+': preview identity');
                 preview.el.remove();api.deleteDevice(dev,false);
             }
-            const items=[...document.querySelectorAll('.catalog-item[data-template]')].filter(item=>EquipmentBrands.get(item.dataset.template));
+            const items=[...document.querySelectorAll('.catalog-item[data-template]')].filter(item=>EquipmentBrands.get(item.dataset.template)&&!EquipmentBrands.unprinted(item.dataset.template));
             for(const item of items)if(!item.querySelector('.catalog-product-identity')?.textContent.includes(EquipmentBrands.name(item.dataset.template)))issues.push(item.dataset.template+': catalog identity');
+            for(const item of document.querySelectorAll('.catalog-item[data-template]'))if(EquipmentBrands.unprinted(item.dataset.template)&&item.querySelector('.catalog-product-identity'))issues.push(item.dataset.template+': catalog brand must be suppressed');
             AudioSystemLanguage.set('en');
             for(const type of ['receiver','preClassic','hpKubaDisco2','spkActiveCompact']){
                 const role=api.names[type],full=EquipmentBrands.name(type,role),translated=AudioSystemLanguage.translate(full);
@@ -62,7 +69,7 @@ const root=path.resolve(__dirname,'..');
         assert.deepEqual(result.issues,[],'complete manufacturer/model identity');
         assert.deepEqual(result.collisions,[],'maker printing must clear controls, sockets and meters');
         const search=page.locator('#equipment-search');
-        const lines=await page.evaluate(()=>Object.values(EquipmentBrands.brands).map(brand=>({name:brand.name,types:[...document.querySelectorAll('.catalog-item[data-template]')].filter(item=>EquipmentBrands.get(item.dataset.template)?.brand===brand.id).map(item=>item.dataset.template)})));
+        const lines=await page.evaluate(()=>Object.values(EquipmentBrands.brands).map(brand=>({name:brand.name,types:[...document.querySelectorAll('.catalog-item[data-template]')].filter(item=>EquipmentBrands.get(item.dataset.template)?.brand===brand.id&&!EquipmentBrands.unprinted(item.dataset.template)).map(item=>item.dataset.template)})));
         for(const brand of lines){
             await search.fill(brand.name);
             assert.deepEqual((await page.locator('.catalog-item:visible').evaluateAll(items=>items.map(item=>item.dataset.template))).sort(),brand.types.sort(),'search by '+brand.name);

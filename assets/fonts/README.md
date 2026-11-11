@@ -10,3 +10,5 @@ These fonts are distributed under the **SIL Open Font License 1.1**, which permi
 | Digital displays and numeric readouts | IBM Plex Mono Medium | https://github.com/google/fonts/tree/main/ofl/ibmplexmono |
 
 The original, unmodified files come from Google Fonts. They load locally through `@font-face` in [`styles/app.css`](../../styles/app.css), so these four families do not depend on an external font service. The general application interface uses a separate typeface.
+
+See `brand-identities/README.md` for the six OFL lettering sources used to generate the outlined manufacturer identities. They are build inputs and are not loaded as browser fonts.
