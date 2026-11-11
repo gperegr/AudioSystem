@@ -14,10 +14,10 @@
 .classic-dial{position:absolute;display:flex;flex-direction:column;align-items:center;gap:7px;width:84px;box-sizing:border-box;color:#383d32;}
 .classic-dial-scale{position:absolute;bottom:calc(100% + 6px);width:126px;text-align:center;white-space:nowrap;font:500 5.8px/1 Arial,sans-serif;letter-spacing:.04em;}
 .classic-dial-label{font:600 7px/1 Georgia,serif;letter-spacing:.04em;white-space:nowrap;}
-.classic-dial-source{left:27px;top:30px;}.classic-dial-volume{left:139px;top:30px;}
-.classic-dial-classicMode{left:27px;top:110px;}.classic-dial-balance{left:139px;top:110px;}
-.classic-dial-classicTrebleL{left:492px;top:30px;}.classic-dial-classicTrebleR{left:594px;top:30px;}
-.classic-dial-classicBassL{left:492px;top:110px;}.classic-dial-classicBassR{left:594px;top:110px;}
+.classic-dial-source{left:27px;top:26px;}.classic-dial-volume{left:139px;top:26px;}
+.classic-dial-classicMode{left:27px;top:106px;}.classic-dial-balance{left:139px;top:106px;}
+.classic-dial-classicTrebleL{left:492px;top:26px;}.classic-dial-classicTrebleR{left:594px;top:26px;}
+.classic-dial-classicBassL{left:492px;top:106px;}.classic-dial-classicBassR{left:594px;top:106px;}
 .classic-tone-caption{position:absolute;left:541px;width:96px;text-align:center;font:600 7px Georgia,serif;letter-spacing:.12em;}
 .classic-treble-caption{top:8px;}.classic-bass-caption{top:88px;}
 .classic-switches{position:absolute;left:250px;top:83px;display:flex;gap:4px;}
@@ -39,3 +39,6 @@
 .classic-lever .hw-chrome-lever .hw-chrome-stem,
 .classic-lever .hw-chrome-lever[aria-pressed="true"] .hw-chrome-stem{transform:none;}
 @media(prefers-reduced-motion:reduce){.classic-lever .hw-chrome-collar{transition:none;}}
+
+/* Seat the RCA sockets a little higher inside the metal connection strip. */
+.classic-preamp-connections .integrated-port-pair{transform:translateY(-3px);}

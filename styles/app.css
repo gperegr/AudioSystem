@@ -4606,3 +4606,13 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 .device-node.device-type-mixer .mixer-rack-fader input.mixer-level-control[type=range] {
     width:32px!important;height:22px!important;min-height:22px;left:20px;top:10px;
 }
+/* NX-P40: inset sockets from the metal rim and balance the power key. */
+:is(#audio-world,.equipment-preview-world) .device-type-preControl .integrated-connections {
+    padding-inline:10px;
+}
+:is(#audio-world,.equipment-preview-world) .device-type-preControl .integrated-connections>div {
+    position:relative;top:-4px;
+}
+:is(#audio-world,.equipment-preview-world) .device-type-preControl .integrated-connections>.preamp-output-power {
+    top:-2px;
+}
