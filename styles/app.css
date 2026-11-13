@@ -4784,3 +4784,5 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 :is(#audio-world,.equipment-preview-world) .device-node:is(.device-type-mixer,.device-type-mixerVintage) .mixer-rack-fader {
     border:0!important;outline:0!important;background:transparent!important;box-shadow:none!important;
 }
+/* Physical mixer faders have a printed scale, not a changing percentage display. */
+:is(#audio-world,.equipment-preview-world) .device-node:is(.device-type-mixer,.device-type-mixerVintage) .mixer-rack-fader output {display:none;}
