@@ -4786,3 +4786,10 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 }
 /* Physical mixer faders have a printed scale, not a changing percentage display. */
 :is(#audio-world,.equipment-preview-world) .device-node:is(.device-type-mixer,.device-type-mixerVintage) .mixer-rack-fader output {display:none;}
+/* Four subwoofers: sockets and controls mount directly on the cabinet finish. */
+:is(#audio-world,.equipment-preview-world) .device-node:is(.device-type-subwoofer,.device-type-subwooferPro,.device-type-subwooferPassive,.device-type-subwooferPassiveVintage) :is(.sp-panel,.sp-terminal) {
+    border-color:transparent!important;outline:0!important;background:transparent!important;box-shadow:none!important;
+}
+:is(#audio-world,.equipment-preview-world) .device-node:is(.device-type-subwoofer,.device-type-subwooferPro,.device-type-subwooferPassive,.device-type-subwooferPassiveVintage) :is(.sp-panel,.sp-terminal)::before,
+:is(#audio-world,.equipment-preview-world) .device-node:is(.device-type-subwoofer,.device-type-subwooferPro,.device-type-subwooferPassive,.device-type-subwooferPassiveVintage) :is(.sp-panel,.sp-terminal)::after {content:none!important;}
+:is(#audio-world,.equipment-preview-world) .device-node:is(.device-type-subwoofer,.device-type-subwooferPro,.device-type-subwooferPassive,.device-type-subwooferPassiveVintage) :is(.sp-panel,.sp-terminal)>.equipment-material {display:none;}
