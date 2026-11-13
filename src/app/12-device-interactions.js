@@ -682,6 +682,9 @@
                     const clickToPlace=e.pointerType!=='touch';
                     if(clickToPlace&&(e.shiftKey||e.metaKey||e.ctrlKey)){e.preventDefault();toggleDeviceSelection(dev.id);return;}
                     activeCatalogPreviewCleanup?.();activeEquipmentMoveCleanup?.();
+                    if(clickToPlace&&!appState.interface.selectedDeviceIds.has(dev.id)){
+                        e.preventDefault();selectDevice(dev.id);return;
+                    }
                     const touchHold = e.pointerType === 'touch';
                     // On touch screens a tap must remain available for wiring and selection.
                     // Movement starts only after a short deliberate press, so passing a cable

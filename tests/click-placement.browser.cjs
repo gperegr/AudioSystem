@@ -47,6 +47,15 @@ const root=path.resolve(__dirname,'..');
         await page.mouse.click(547,327);await clean();
         let [dev]=await devices();assert.equal(dev.x,desired.x);assert.equal(dev.y,desired.y);grid(dev);
         const original={x:dev.x,y:dev.y};
+        // First click selects only; a subsequent click on the selected body picks it up.
+        await page.evaluate(()=>__signal.selectDevice(null));
+        const unselectedBounds=await page.locator('#'+dev.id).boundingBox();
+        await page.mouse.click(unselectedBounds.x+12,unselectedBounds.y+8);await clean();
+        assert(await page.evaluate(id=>__signal.appState.interface.selectedDeviceIds.has(id),dev.id));
+        await page.mouse.move(unselectedBounds.x+110,unselectedBounds.y+40);await page.waitForTimeout(70);
+        const selectedOnly=(await devices())[0];assert(!selectedOnly.visual);
+        assert.equal(selectedOnly.x,original.x);assert.equal(selectedOnly.y,original.y);
+        assert.equal(await page.locator('.equipment-dragging').count(),0);
         await grab(dev.id);await page.mouse.move(647,367);await page.waitForTimeout(80);
         let moving=(await devices())[0];assert(moving.visual);grid({...moving,...moving.visual});
         await page.mouse.click(647,367);await page.waitForTimeout(700);await clean();
