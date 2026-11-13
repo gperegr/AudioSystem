@@ -4700,3 +4700,7 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
     border-radius:0!important;
 }
 :is(#audio-world,.equipment-preview-world) .device-node.device-type-audioInterface4 .ai-panel>.equipment-material {border-radius:0!important;}
+/* U-30: stereo output pair shares the USB sync column. */
+:is(#audio-world,.equipment-preview-world) .device-type-audioInterface3 .ai-interface-three-outputs {
+    grid-column:2!important;justify-self:center!important;width:max-content;
+}
