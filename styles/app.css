@@ -4695,3 +4695,8 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 :is(#audio-world,.equipment-preview-world) .device-node:is(.device-type-rcaMatrix,.device-type-speakerSwitch) .selector-key .hw-plunger-face::before {
     border-color:#7783821a;background:linear-gradient(120deg,#ffffff05,transparent 55%);
 }
+/* U-40: square metal face where it meets the separate wooden cheeks. */
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-audioInterface4 .ai-panel {
+    border-radius:0!important;
+}
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-audioInterface4 .ai-panel>.equipment-material {border-radius:0!important;}
