@@ -4780,3 +4780,7 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
     background:#ffffff1a;pointer-events:none;
 }
 .device-type-crossoverVintage .xover-group+.xover-group::before {background:#0002;}
+/* Both mixers: fader slots and scales sit directly on the front panel. */
+:is(#audio-world,.equipment-preview-world) .device-node:is(.device-type-mixer,.device-type-mixerVintage) .mixer-rack-fader {
+    border:0!important;outline:0!important;background:transparent!important;box-shadow:none!important;
+}
