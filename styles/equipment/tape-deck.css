@@ -74,3 +74,13 @@
 /* Larger exposed reels; the flange, winding and hub scale as one assembly. */
 .device-type-tapeDeck .tape-reel {transform:scale(1.07);transform-origin:center;}
 .device-type-tapeDeck .tape-head-cover {top:234px;}
+/* The control fascia stands proud of the reel plate, without an outer surround. */
+.device-type-tapeDeck .tape-control-panel {
+    z-index:3;isolation:isolate;border-top:1px solid #adb7b0;
+    box-shadow:0 -4px 7px #09110e66,0 -1px 2px #0009,inset 0 1px #e7f0e04d,inset 0 -2px 2px #0007;
+}
+.device-type-tapeDeck .tape-control-panel::before {
+    content:'';position:absolute;left:0;right:0;top:-5px;height:4px;pointer-events:none;
+    background:linear-gradient(#82918a,#56635c 35%,#313e37 85%,#202a25);
+    border-top:1px solid #d2ddd166;box-shadow:0 -2px 4px #0b140e55;
+}
