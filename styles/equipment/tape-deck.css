@@ -2,9 +2,9 @@
 .device-node.device-type-tapeDeck {
     --tape-metal:#c4c9c6;--tape-panel:#252b2c;--tape-ink:#353b3b;--tape-amber:#e4bc73;
     width:480px;height:440px;box-sizing:border-box;padding:8px!important;
-    border:1px solid #33251e!important;border-radius:6px;
-    background:var(--material-wood-grain),linear-gradient(90deg,#4c2e1f,#8b6042 1.5%,#5d3b29 3%,#2c2520 4% 96%,#805336 97%,#482b1d 99%)!important;
-    box-shadow:inset 0 1px #e4bc7355,inset 0 -2px #160e0a88,0 2px 3px #0005;
+    border:1px solid #434c49!important;border-radius:6px;
+    background:linear-gradient(105deg,#707c77,#343e3a 4% 96%,#63716b)!important;
+    box-shadow:inset 0 1px #d7e2dc77,inset 0 -2px #17221c88,0 2px 3px #0005;
 }
 .device-type-tapeDeck .tape-face {
     position:relative;height:100%;box-sizing:border-box;border:1px solid #858c87;border-radius:2px;
@@ -70,3 +70,7 @@
 @media(prefers-reduced-motion:reduce){.device-type-tapeDeck .reel-metal {transition:none;}}
 
 .device-type-tapeDeck>:is(.lighting-incident-overlay,.lighting-control-shadow) {border-radius:5px;}
+
+/* Larger exposed reels; the flange, winding and hub scale as one assembly. */
+.device-type-tapeDeck .tape-reel {transform:scale(1.07);transform-origin:center;}
+.device-type-tapeDeck .tape-head-cover {top:234px;}
