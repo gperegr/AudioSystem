@@ -1,13 +1,13 @@
 /* Open reel deck: static materials; only the flanges and needles move. */
 .device-node.device-type-tapeDeck {
     --tape-metal:#c4c9c6;--tape-panel:#252b2c;--tape-ink:#353b3b;--tape-amber:#e4bc73;
-    width:480px;height:440px;box-sizing:border-box;padding:8px!important;
-    border:1px solid #434c49!important;border-radius:6px;
-    background:linear-gradient(105deg,#707c77,#343e3a 4% 96%,#63716b)!important;
-    box-shadow:inset 0 1px #d7e2dc77,inset 0 -2px #17221c88,0 2px 3px #0005;
+    width:480px;height:440px;box-sizing:border-box;padding:0!important;
+    border:0!important;border-radius:2px;
+    background:transparent!important;
+    box-shadow:0 2px 3px #0005;
 }
 .device-type-tapeDeck .tape-face {
-    position:relative;height:100%;box-sizing:border-box;border:1px solid #858c87;border-radius:2px;
+    position:relative;height:100%;box-sizing:border-box;border:0;border-radius:2px;
     background:var(--material-brushed-steel),linear-gradient(112deg,#d8dcd5,#bac2bd 58%,#cbd0c8);
     color:var(--tape-ink);box-shadow:inset 0 1px #fff9,inset 1px 0 #fff3;
 }
