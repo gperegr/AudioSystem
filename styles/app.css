@@ -4704,3 +4704,13 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 :is(#audio-world,.equipment-preview-world) .device-type-audioInterface3 .ai-interface-three-outputs {
     grid-column:2!important;justify-self:center!important;width:max-content;
 }
+/* NX-S40: dark molded transport caps matching the graphite chassis. */
+:is(#audio-world,.equipment-preview-world) .device-type-streamer .hw-button:not(.power-btn) :is(.hw-plunger-face,.hw-mechanical-key-face) {
+    background:linear-gradient(155deg,#454b4d,#252b2d 60%,#1c2224)!important;
+    border-color:#11181b!important;color:#d8e0df;
+    box-shadow:inset 0 1px #929b9b38,inset 0 -1px 2px #0009,0 1px 2px #0008;
+}
+:is(#audio-world,.equipment-preview-world) .device-type-streamer .hw-button:not(.power-btn) {
+    --hw-legend-ink:#d8e0df;color:#d8e0df!important;
+}
+:is(#audio-world,.equipment-preview-world) .device-type-streamer .hw-source-transport svg {color:#d8e0df;}
