@@ -167,6 +167,7 @@
         if(type==='powerDual')choice.y=28;
         if(['powerValve','powerBias'].includes(type))Object.assign(choice,{x:160,y:height-40,w:100,h:22,mode:'full',zone:'footer-left'});
         if(type==='turntableBelt'){choice.x+=34;choice.y+=11;}
+        if(type==='spkElectrostatic'){const grille=rect(root.querySelector('.electrostatic-grille'));Object.assign(choice,{x:grille.x+(grille.w-choice.w)/2,y:grille.y+(grille.h-choice.h)/2,zone:'grille-center'});}
         const {x,y,w,h,mode,zone}=choice;
         Object.assign(badge.style,{left:(x-root.clientLeft)+'px',top:(y-root.clientTop)+'px',width:w+'px',height:h+'px'});
         badge.dataset.mode=mode;badge.dataset.zone=zone;
