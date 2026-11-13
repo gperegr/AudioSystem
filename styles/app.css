@@ -4763,3 +4763,7 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 :is(#audio-world,.equipment-preview-world) .device-type-powerStereo .power-btn[data-rocker-axis="horizontal"] {
     width:30px!important;min-width:30px!important;height:18px!important;min-height:18px!important;
 }
+/* Lower the KR-P20 operating row without moving its signature or power key. */
+.device-type-powerStereo .stereo-power-face>:is(.stereo-power-inputs,.stereo-power-outputs,.stereo-power-vent,.stereo-power-gain,.stereo-power-meters) {
+    position:relative;top:6px;
+}
