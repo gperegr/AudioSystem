@@ -4753,3 +4753,13 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
     position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
 }
 :is(#audio-world,.equipment-preview-world) .device-type-powerValve .power-finish-valve>.equipment-material {display:none;}
+/* KR-P20: mirrored input/output banks, vents and gain controls around the center. */
+:is(#audio-world,.equipment-preview-world) .device-type-powerStereo>.stereo-power-face {
+    position:relative;grid-template-columns:80px minmax(48px,1fr) 58px 32px 58px minmax(48px,1fr) 80px;
+    gap:12px;padding:24px 20px 32px;
+}
+.device-type-powerStereo :is(.stereo-power-inputs,.stereo-power-outputs) {gap:4px;}
+.device-type-powerStereo .stereo-power-energy {position:absolute;left:50%;bottom:7px;transform:translateX(-50%);}
+:is(#audio-world,.equipment-preview-world) .device-type-powerStereo .power-btn[data-rocker-axis="horizontal"] {
+    width:30px!important;min-width:30px!important;height:18px!important;min-height:18px!important;
+}

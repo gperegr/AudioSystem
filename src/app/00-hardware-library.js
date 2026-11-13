@@ -187,7 +187,7 @@ const Hardware = (() => {
             "[data-receiver-input]": {width:64, height:24},
         },
         powerStereo: {
-            ".power-btn": {width:20, height:30},
+            ".power-btn": {width:30, height:18},
             "[data-power-channel]": {width:38, height:38},
         },
         powerVintage: {
@@ -638,7 +638,7 @@ const Hardware = (() => {
         if(['btReceiverA','btTransmitterPro'].includes(dev.type))return 'illuminatedBar';
         if(el.classList.contains('power-btn')){
             if(dev.type==='preClassic')return 'powerSmall';
-            if(dev.type==='headphoneAmpModern')return 'powerHorizontal';
+            if(['headphoneAmpModern','powerStereo'].includes(dev.type))return 'powerHorizontal';
             if(['preControl','turntableVintage'].includes(dev.type))return 'slidePower';
             if(RADIO_RECEIVERS.has(dev.type))return 'powerLarge';
             if(el.closest('.sp-power-slot'))return 'powerSmall';
