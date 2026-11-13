@@ -4773,3 +4773,10 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 }
 :is(.device-type-crossover,.device-type-crossoverVintage) .xover-group {position:relative;top:6px;}
 :is(.device-type-crossover,.device-type-crossoverVintage) .xover-panel>.rack-power-slot {position:absolute;left:50%;bottom:7px;transform:translateX(-50%);}
+/* Crossovers: separators bisect the gaps between equal-width connection banks. */
+:is(.device-type-crossover,.device-type-crossoverVintage) .xover-group+.xover-group {border-left:0;}
+:is(.device-type-crossover,.device-type-crossoverVintage) .xover-group+.xover-group::before {
+    content:'';position:absolute;left:-8.5px;top:0;bottom:0;width:1px;
+    background:#ffffff1a;pointer-events:none;
+}
+.device-type-crossoverVintage .xover-group+.xover-group::before {background:#0002;}
