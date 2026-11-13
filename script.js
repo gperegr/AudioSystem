@@ -231,10 +231,10 @@ const Hardware = (() => {
             ".power-btn": {width:20, height:30},
         },
         crossover: {
-            ".power-btn": {width:20, height:30},
+            ".power-btn": {width:30, height:18},
         },
         crossoverVintage: {
-            ".power-btn": {width:20, height:30},
+            ".power-btn": {width:30, height:18},
         },
         rcaSwitch: {
             ".selector-key": {width:40, height:24},
@@ -638,7 +638,7 @@ const Hardware = (() => {
         if(['btReceiverA','btTransmitterPro'].includes(dev.type))return 'illuminatedBar';
         if(el.classList.contains('power-btn')){
             if(dev.type==='preClassic')return 'powerSmall';
-            if(['headphoneAmpModern','powerStereo','powerVintage'].includes(dev.type))return 'powerHorizontal';
+            if(['headphoneAmpModern','powerStereo','powerVintage','crossover','crossoverVintage'].includes(dev.type))return 'powerHorizontal';
             if(['preControl','turntableVintage'].includes(dev.type))return 'slidePower';
             if(RADIO_RECEIVERS.has(dev.type))return 'powerLarge';
             if(el.closest('.sp-power-slot'))return 'powerSmall';
