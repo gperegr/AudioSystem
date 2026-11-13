@@ -4745,3 +4745,11 @@ body.equipment-drag-active #inspector{visibility:hidden!important;pointer-events
 :is(#audio-world,.equipment-preview-world) .device-type-preDisplay .custom-pre-switches .hw-plunger-face::before {
     border-color:#7783821a;background:linear-gradient(120deg,#ffffff05,transparent 55%);
 }
+/* V 620v is open above the metal base, without a surrounding glass cover. */
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-powerValve .power-finish-valve {
+    outline:0!important;border:0!important;box-shadow:none!important;background:transparent!important;
+}
+:is(#audio-world,.equipment-preview-world) .device-type-powerValve .custom-power-energy {
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+}
+:is(#audio-world,.equipment-preview-world) .device-type-powerValve .power-finish-valve>.equipment-material {display:none;}
