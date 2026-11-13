@@ -79,7 +79,7 @@ const root=path.resolve(__dirname,'..');
         assert.deepEqual(reflectionIssues,[],'receiver reflection stays stationary and inside the knob at every angle');
         // The actual desktop placement path must keep the same geometry and ink,
         // including the ghost's CSS, cancellation and the click that confirms it.
-        for(const type of ['turntableDirect','receiver','preClassic','spkActiveMonitor']){
+        for(const type of ['turntableDirect','receiver','powerAmp','preClassic','spkActiveMonitor']){
             await page.evaluate(type=>__previews.startCatalogCursorPlacement(document.querySelector('.catalog-item[data-template="'+type+'"]')),type);
             const canvas=await page.locator('#canvas').boundingBox();let point;
             for(const [fx,fy]of [[.5,.5],[.4,.65],[.65,.6],[.55,.4]]){
@@ -88,6 +88,9 @@ const root=path.resolve(__dirname,'..');
             }
             const preview=page.locator('.catalog-placement-preview:visible');assert.equal(await preview.count(),1);
             assert.equal(await preview.evaluate(el=>getComputedStyle(el).opacity),'1','placement does not wash out equipment colours');
+            const label=await preview.locator('.catalog-placement-label').evaluate(el=>({height:el.offsetHeight,width:el.offsetWidth}));
+            assert(label&&label.height<32&&label.width>100,'placement label stays a compact horizontal badge');
+            if(type==='powerAmp')assert.equal(await preview.evaluate(el=>getComputedStyle(el,'::after').width),'25px','preview preserves the receiver rack ear');
             const before=await preview.evaluate(el=>previewSnapshot(el));
             await page.mouse.click(point.x,point.y);
             await page.mouse.move(5,5); // Compare resting artwork, outside the live hover state.
@@ -116,6 +119,6 @@ const root=path.resolve(__dirname,'..');
         assert.deepEqual(touchResult,[],'touch confirmation preserves the preview artwork');
         assert.equal(await page.locator('.catalog-placement-preview').count(),0);
         assert.deepEqual(errors,[],'no application errors');
-        console.log(`Preview parity: ${types.length} models, skins, geometry, displays, idle canvases, no audio/registration, four cursor placements, touch confirmation and cancellation passed.`);
+        console.log(`Preview parity: ${types.length} models, skins, geometry, displays, idle canvases, no audio/registration, five cursor placements, touch confirmation and cancellation passed.`);
     }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

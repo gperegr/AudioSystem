@@ -5313,6 +5313,7 @@ const Hardware = (() => {
             const supported=Math.abs(bottom-maxEquipmentBottom())<=2||Object.values(appState.project.devices).some(other=>placementShapes(other,parseFloat(other.el.style.left)||0,parseFloat(other.el.style.top)||0).some(shape=>Math.abs(bottom-shape.y)<=2&&Math.min(target.x+w,shape.x+shape.width)-Math.max(target.x,shape.x)>0));
             el.style.left=target.x+'px';el.style.top=target.y+'px';el.classList.toggle('is-invalid',!valid);el.classList.toggle('is-supported',valid&&supported);
             const label=!valid?'Espaço indisponível':wall?'Fixado à parede':pendant?'Suspenso':supported?'Apoiado':'Espaço livre';el.dataset.previewLabel=`${AudioSystemLanguage.translate(label)} · ${w} × ${h}`;
+            el.querySelector('.catalog-placement-label').textContent=el.dataset.previewLabel;
             Hardware.updateLightingDemo();
         }
         let activeCatalogPreviewCleanup=null;
@@ -6894,7 +6895,7 @@ const Hardware = (() => {
             Hardware.fasteners(el);
             world.appendChild(el);
             prepareDeviceArtwork({type,el});
-            if(previewOnly){renderDevicePreview({type,el});EquipmentBrands.mount(el,type,DEVICE_NAMES[type]);el.classList.add('catalog-placement-preview');el.hidden=true;el.inert=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type,el};}
+            if(previewOnly){renderDevicePreview({type,el});EquipmentBrands.mount(el,type,DEVICE_NAMES[type]);el.classList.add('catalog-placement-preview');const placementLabel=document.createElement('span');placementLabel.className='catalog-placement-label';el.appendChild(placementLabel);el.hidden=true;el.inert=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type,el};}
 
             const dev = { id, type, el, nodes: {}, state: { volume: 0.8, bass: 0, treble: 0, eq: [0, 0, 0, 0, 0] }, powered: true };
             const placement = appState.project.restoringProject?{

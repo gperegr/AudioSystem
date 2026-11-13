@@ -232,7 +232,7 @@
             Hardware.fasteners(el);
             world.appendChild(el);
             prepareDeviceArtwork({type,el});
-            if(previewOnly){renderDevicePreview({type,el});EquipmentBrands.mount(el,type,DEVICE_NAMES[type]);el.classList.add('catalog-placement-preview');el.hidden=true;el.inert=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type,el};}
+            if(previewOnly){renderDevicePreview({type,el});EquipmentBrands.mount(el,type,DEVICE_NAMES[type]);el.classList.add('catalog-placement-preview');const placementLabel=document.createElement('span');placementLabel.className='catalog-placement-label';el.appendChild(placementLabel);el.hidden=true;el.inert=true;el.removeAttribute('id');el.setAttribute('aria-hidden','true');return {id:'catalog-preview',type,el};}
 
             const dev = { id, type, el, nodes: {}, state: { volume: 0.8, bass: 0, treble: 0, eq: [0, 0, 0, 0, 0] }, powered: true };
             const placement = appState.project.restoringProject?{
