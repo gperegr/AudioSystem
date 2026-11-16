@@ -80,9 +80,7 @@ const Hardware = (() => {
             ".tt-lid-button": {width:24, height:20},
         },
         turntableAutomatic: {
-            '[data-auto-start],[data-auto-stop],[data-auto-lift]':{width:48,height:18},
-            '[data-auto-speed]':{width:42,height:18},
-            '[data-auto-size]':{width:55,height:20},
+            '[data-auto-start],[data-auto-stop],[data-auto-lift],[data-auto-speed],[data-auto-size]':{width:48,height:18},
             '[data-tt="output"]':{width:112,height:22},
             '.tt-lid-button':{width:22,height:18},
         },

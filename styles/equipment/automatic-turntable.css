@@ -34,16 +34,15 @@
 .device-node.device-type-turntableAutomatic .auto-size-control,
 .device-node.device-type-turntableAutomatic .auto-speed-control,
 .device-node.device-type-turntableAutomatic .auto-transport>div {display:flex;flex-direction:column;align-items:center;gap:4px;}
-.device-node.device-type-turntableAutomatic .auto-transport {display:flex;gap:9px;}
+.device-node.device-type-turntableAutomatic .auto-transport {display:flex;gap:14px;}
 .device-node.device-type-turntableAutomatic .at-controls span {font:500 7px/1.2 Inter,sans-serif;letter-spacing:.09em;color:#b5b8b7;}
-.device-node.device-type-turntableAutomatic .auto-drive-caption {position:absolute;left:205px;bottom:3px;font-size:5px;letter-spacing:.17em;color:#777b7a;}
 .device-node.device-type-turntableAutomatic .at-controls button {cursor:pointer;}
 /* Hardware still supplies key travel, sounds and keyboard behavior. */
 :is(#audio-world,.equipment-preview-world) .device-node.device-type-turntableAutomatic .hw-plunger-key .hw-plunger-face {
     border-radius:3px;background:linear-gradient(#44474a,#222527 45%,#171a1b);border-color:#0b0e0f;
     box-shadow:inset 0 1px #a3aaab66,0 1px 2px #000a;
 }
-:is(#audio-world,.equipment-preview-world) .device-node.device-type-turntableAutomatic .at-controls .hw-plunger-legend {font-size:0;}
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-turntableAutomatic .at-controls .hw-plunger-legend {font:500 7px/1 Inter,sans-serif;letter-spacing:.03em;}
 :is(#audio-world,.equipment-preview-world) .device-node.device-type-turntableAutomatic .at-controls .auto-size .hw-plunger-legend {font-size:7px;}
 :is(#audio-world,.equipment-preview-world) .device-node.device-type-turntableAutomatic button.auto-size.hw-plunger-key {position:relative!important;left:auto;right:auto;bottom:auto;}
 .device-node.device-type-turntableAutomatic .at-io {
@@ -86,4 +85,4 @@
     clip-path:inset(-1200px -1200px 0 -1200px);
 }
 
-.device-node.device-type-turntableAutomatic .auto-format-controls {display:flex;align-items:flex-start;gap:16px;}
+.device-node.device-type-turntableAutomatic .auto-format-controls {display:flex;align-items:flex-start;gap:14px;}

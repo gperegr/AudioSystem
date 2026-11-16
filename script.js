@@ -80,9 +80,7 @@ const Hardware = (() => {
             ".tt-lid-button": {width:24, height:20},
         },
         turntableAutomatic: {
-            '[data-auto-start],[data-auto-stop],[data-auto-lift]':{width:48,height:18},
-            '[data-auto-speed]':{width:42,height:18},
-            '[data-auto-size]':{width:55,height:20},
+            '[data-auto-start],[data-auto-stop],[data-auto-lift],[data-auto-speed],[data-auto-size]':{width:48,height:18},
             '[data-tt="output"]':{width:112,height:22},
             '.tt-lid-button':{width:22,height:18},
         },
@@ -7848,7 +7846,7 @@ const Hardware = (() => {
                     });
                     root.querySelectorAll('[data-auto-size]').forEach(button=>{
                         const size=Number(button.dataset.autoSize);button.setAttribute('aria-pressed',String(size?size===tt.size:tt.size===7));
-                        if(!size){button.title=tt.size===7?'Disco de 7 polegadas':'Disco de 12 polegadas';button.setAttribute('aria-label',button.title);}
+                        if(!size){button.title=tt.size===7?'Disco de 7 polegadas':'Disco de 12 polegadas';button.setAttribute('aria-label',button.title);const legend=button.querySelector('.hw-plunger-legend')||button;legend.textContent=tt.size+'″';}
                     });
                     root.querySelectorAll('[data-auto-status]').forEach(status=>status.textContent=!dev.powered?'Desligado':phases[motion.phase]);
                     root.querySelectorAll('[data-auto-output]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.autoOutput===tt.output)));

@@ -338,7 +338,7 @@
                     });
                     root.querySelectorAll('[data-auto-size]').forEach(button=>{
                         const size=Number(button.dataset.autoSize);button.setAttribute('aria-pressed',String(size?size===tt.size:tt.size===7));
-                        if(!size){button.title=tt.size===7?'Disco de 7 polegadas':'Disco de 12 polegadas';button.setAttribute('aria-label',button.title);}
+                        if(!size){button.title=tt.size===7?'Disco de 7 polegadas':'Disco de 12 polegadas';button.setAttribute('aria-label',button.title);const legend=button.querySelector('.hw-plunger-legend')||button;legend.textContent=tt.size+'″';}
                     });
                     root.querySelectorAll('[data-auto-status]').forEach(status=>status.textContent=!dev.powered?'Desligado':phases[motion.phase]);
                     root.querySelectorAll('[data-auto-output]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.autoOutput===tt.output)));
