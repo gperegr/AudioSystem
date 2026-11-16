@@ -8,7 +8,7 @@
         if(!dev.powered||dev.state?.damage||dev.runtimeDisposed)return null;
         if(['powerValve','powerBias','receiver','integratedSilver','preClassic'].includes(dev.type))return 'hum';
         if(dev.type==='powerDual')return 'fan';
-        if((dev.state?.tt?.running||dev.state?.playing)&&['turntable','turntableVintage','turntableLinear','turntableBelt','turntableDirect','tapeDeck','cdPlayer'].includes(dev.type))return 'motor';
+        if((dev.state?.tt?.running||dev.state?.playing)&&['turntable','turntableVintage','turntableLinear','turntableBelt','turntableDirect','turntableAutomatic','tapeDeck','cdPlayer'].includes(dev.type))return 'motor';
         return null;
     }
     function create(context,destination){

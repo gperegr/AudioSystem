@@ -10,6 +10,7 @@ const root=path.join(__dirname,'..');
     try{
         const page=await browser.newPage({viewport:{width:1600,height:1100}}),errors=[];
         page.on('pageerror',error=>errors.push(error.message));
+        if(process.env.TAILWIND_SCRIPT_FILE)await page.route('https://cdn.tailwindcss.com/**',route=>route.fulfill({contentType:'application/javascript',body:fs.readFileSync(process.env.TAILWIND_SCRIPT_FILE)}));
         await page.route('**/script.js?*',route=>{
             const source=fs.readFileSync(path.join(root,'script.js'),'utf8');
             const marker='        renderVisuals();',index=source.lastIndexOf(marker);
@@ -25,7 +26,10 @@ const root=path.join(__dirname,'..');
         assert.deepEqual(types.slice().sort(),require('./fixtures/equipment-contract-types.json').types,'inventory must be reviewed when a model is added or removed');
         assert(types.length>=90,`expected broad catalog coverage, got ${types.length}`);
         const catalog=await page.locator('.catalog-item[data-template]').evaluateAll(items=>items.map(item=>({type:item.dataset.template,category:item.dataset.catalogCategory||''})));
-        assert.deepEqual(catalog.map(item=>item.type).sort(),types.slice().sort(),'every registered model must appear exactly once in the visible catalog');
+        // The three original generic models retain factories/templates for old
+        // projects; their catalog cards were replaced by the named families.
+        const compatibilityOnly=require('./fixtures/equipment-contract-types.json').compatibilityOnlyTypes;
+        assert.deepEqual(catalog.map(item=>item.type).sort(),types.filter(type=>!compatibilityOnly.includes(type)).sort(),'every catalog model must appear exactly once; legacy models remain covered by the factory checks below');
         assert(catalog.every(item=>item.category&&item.category!=='Outros equipamentos'),'every model must be assigned an explicit catalog category');
         await page.evaluate(()=>AudioSystemLanguage.set('en'));
 

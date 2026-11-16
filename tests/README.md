@@ -14,9 +14,15 @@ The same browser suite checks construction choices: domestic fronts and smooth d
 
 ## Catalog
 
+`node tests/automatic-turntable.browser.cjs` covers the NX-T60's staged arm movement, real local audio, lift with the motor running, independent speed/size presets, end-of-track return, cancellation, power gating, LINE/PHONO, paused restoration, Spotify record placement, cover geometry and reduced motion. Preview: `/tmp/automatic-deck.png`.
+
+`node tests/radiator-speaker.browser.cjs` checks the B-70's 70 W RMS / 6 Ω model, real bass-forward filters, passive wire input, removable grille and project persistence, translated inspector and cleanup. Previews: `/tmp/radiator-speaker-open.png` and `/tmp/radiator-speaker-grille.png`. Both suites accept `TAILWIND_SCRIPT_FILE`.
+
 `node tests/glass-turntable.browser.cjs` checks the glass-platter turntable's motor/power behavior, local audio playback, LINE/PHONO switching, pitch, dust cover, Spotify record placement, ports and cleanup. Like the signal-history browser test, it accepts `TAILWIND_SCRIPT_FILE` for offline styling. Its preview is written to `/tmp/glass-deck.png`.
 
 `equipment-contracts.test.cjs` runs with the normal Node suite. Its explicit inventory at `fixtures/equipment-contract-types.json` is the reviewed list of catalog equipment. Adding or removing a type requires updating this inventory and satisfying the numeric, translation, and model-table checks.
+
+The inventory also identifies three compatibility-only generic models (`headphone`, `speaker`, `subwoofer`): they still open in older projects and receive factory checks, but their tiles have been replaced by named families. The browser suite checks every current catalog tile and every inventory factory. It accepts `TAILWIND_SCRIPT_FILE` for an offline Tailwind script.
 
 Run the full browser contract suite against the real app after starting a local server:
 

@@ -7,7 +7,7 @@
 
 Build a virtual audio system, connect its components, and listen in your browser. Explore sources, amplifiers, equalizers, speakers, and headphones in vintage, studio, and modern styles.
 
-The audio equipment library includes 90 models from ten fictional manufacturers, with original logos and naming conventions: **Aurenne, Veltron, Nexora, Korden and Linholt** for electronics; **Bravora, Soryn, Terevon, Axiomer and Dovara** for speakers and headphones. Search by maker, model or function. Headphones and connector adapters display functional names without visible manufacturer markings. [Visual brand book](assets/brands/index.html) · [Complete manufacturer and model reference](docs/EQUIPMENT-BRANDS.md).
+The audio equipment library includes 92 models from ten fictional manufacturers, with original logos and naming conventions: **Aurenne, Veltron, Nexora, Korden and Linholt** for electronics; **Bravora, Soryn, Terevon, Axiomer and Dovara** for speakers and headphones. Search by maker, model or function. Headphones and connector adapters display functional names without visible manufacturer markings. [Visual brand book](assets/brands/index.html) · [Complete manufacturer and model reference](docs/EQUIPMENT-BRANDS.md).
 
 ![Audio Lab with its permanent catalog and a connected stereo system: CD player, integrated amplifier, and speakers](docs/images/visao-geral.png)
 
@@ -43,6 +43,10 @@ flowchart LR
 4. Raise the integrated amp's volume gradually.
 
 Music sources provide a demo when no personal audio is loaded. To play a local file, select a source and choose **My music → LOAD AUDIO**. MP3 and WAV are common options; support depends on the browser. The Integrated Streamer also reads available MP3/FLAC metadata and cover art.
+
+**Nexora NX-T60 · Automatic turntable** is a black belt-drive deck with a smoked cover, independent 33⅓/45 rpm and 7″/12″ selectors, START, STOP and tonearm lift. START positions and lowers the arm; STOP and the end of a track return it to rest. Raising the arm pauses audio while the platter keeps spinning. The properties panel also supports cue position and LINE/PHONO output. There is no physical power key or pitch control. Local audio, the demo and Spotify record placement use the existing source system; saved projects reopen paused.
+
+**Bravora B-70 · Top passive radiator** is a compact two-way passive speaker, rated at **70 W RMS / 6 Ω** in the simulation. It has pale wood, a silver baffle and metal woofer, a top passive radiator, and a removable front grille. Click the grille to remove it, use the small grille icon to replace it, or switch it in Properties. Its bass-forward response is an approximation rather than a measurement of the reference speaker; the same curve drives playback and the sound-signature graph.
 
 USB audio interfaces can select a computer input, adjust its level, and route the unprocessed signal to connected line and headphone outputs. Some share their output control; others adjust line and headphones separately. Select an interface, choose **Start capture**, and grant browser permission. Capture requires HTTPS or localhost and does not resume automatically when a project is opened.
 

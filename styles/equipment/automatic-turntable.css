@@ -1,0 +1,64 @@
+/* NX-T60: molded black plinth, smoked cover, straight fixed-weight arm and
+   the four low front keys of a compact automatic belt-drive deck. */
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-turntableAutomatic {
+    --tt-deck-height:112px;--tt-cover-height:106px;width:590px;padding:0!important;
+    border:0!important;background:transparent!important;box-shadow:none!important;
+}
+.device-node.device-type-turntableAutomatic .at-plinth {
+    position:relative;padding:0 12px 8px!important;grid-template-columns:1fr;
+    grid-template-rows:112px 56px 29px;gap:0;border:0;border-radius:5px;
+    background:transparent;box-shadow:none;
+}
+.device-node.device-type-turntableAutomatic .at-plinth::before {
+    top:106px;bottom:7px;border:1px solid #37393b;border-radius:3px 3px 7px 7px;
+    background:linear-gradient(#343638 0,#1b1d1e 4px,#252628 7px,#191b1d 60%,#101213 97%,#333638);
+    box-shadow:inset 0 1px #a6a8aa55,inset 0 -5px #090b0c,0 4px 5px #0007;
+}
+.device-node.device-type-turntableAutomatic .at-deck {border:0;border-radius:4px;background:transparent;}
+.device-node.device-type-turntableAutomatic .at-deck::before {height:6px;background:linear-gradient(#4a4b4b,#181a1b);border-radius:2px;box-shadow:0 1px #070909;}
+.device-node.device-type-turntableAutomatic .at-front-mechanism .at-platter {
+    left:26px;top:87px;width:350px;height:16px;border:1px solid #6a6b6b;border-radius:1px;
+    background:linear-gradient(#d3d4d0 0,#939691 2px,#babbb6 5px,#70746f 9px,#aeb0ab 12px,#656963);
+    box-shadow:0 4px 3px #0009;
+}
+.device-node.device-type-turntableAutomatic .at-front-mechanism .at-platter::before {top:-4px;height:4px;left:0;right:0;border-radius:0;background:linear-gradient(#30302e,#0c0e0d);box-shadow:none;}
+.device-node.device-type-turntableAutomatic .at-front-mechanism .at-platter::after {display:none;}
+.device-node.device-type-turntableAutomatic .at-front-mechanism .at-record {left:3px;right:3px;top:-7px;height:3px;background:linear-gradient(#696b64,#090b09 60%,#262b23);}
+.device-node.device-type-turntableAutomatic[data-auto-size="7"] .at-record {left:74px;right:74px;}
+.device-node.device-type-turntableAutomatic .auto-adapter {position:absolute;left:24px;top:71px;width:24px;height:4px;border:1px solid #2f3332;border-radius:50%;background:#0a0e0c;box-shadow:0 2px 1px #0008;}
+.device-node.device-type-turntableAutomatic .auto-size {position:absolute;right:37px;bottom:7px;z-index:4;color:#bfc1bc;}
+.device-node.device-type-turntableAutomatic .at-controls {
+    grid-column:1;grid-row:2;position:relative;justify-content:space-between;align-items:flex-start;
+    margin:0;padding:8px 8px 0;gap:0;border:0;border-radius:0;background:transparent;box-shadow:none;
+}
+.device-node.device-type-turntableAutomatic .auto-speed-control,
+.device-node.device-type-turntableAutomatic .auto-transport>div {display:flex;flex-direction:column;align-items:center;gap:4px;}
+.device-node.device-type-turntableAutomatic .auto-transport {display:flex;gap:9px;}
+.device-node.device-type-turntableAutomatic .at-controls span {font:500 7px/1.2 Inter,sans-serif;letter-spacing:.09em;color:#b5b8b7;}
+.device-node.device-type-turntableAutomatic .auto-drive-caption {position:absolute;left:205px;bottom:3px;font-size:5px;letter-spacing:.17em;color:#777b7a;}
+.device-node.device-type-turntableAutomatic .at-controls button {cursor:pointer;}
+/* Hardware still supplies key travel, sounds and keyboard behavior. */
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-turntableAutomatic .hw-plunger-key .hw-plunger-face {
+    border-radius:3px;background:linear-gradient(#44474a,#222527 45%,#171a1b);border-color:#0b0e0f;
+    box-shadow:inset 0 1px #a3aaab66,0 1px 2px #000a;
+}
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-turntableAutomatic .at-controls .hw-plunger-legend {font-size:0;}
+.device-node.device-type-turntableAutomatic .auto-size .hw-plunger-legend {font-size:7px;}
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-turntableAutomatic button.auto-size.hw-plunger-key {position:absolute!important;left:auto;right:37px;bottom:7px;}
+.device-node.device-type-turntableAutomatic .at-io {
+    grid-column:1;grid-row:3;flex-direction:row;justify-content:space-between;align-items:center;
+    margin:0;padding:2px 8px 0;border:0;border-top:1px solid #3b3f3d55;border-radius:0;background:transparent;box-shadow:none;
+}
+.device-node.device-type-turntableAutomatic .at-io-ports {display:flex;gap:17px;}
+.device-node.device-type-turntableAutomatic .at-io-ch {display:flex;flex-direction:row;align-items:center;gap:5px;}
+.device-node.device-type-turntableAutomatic .at-io-ch>span {font-size:6px;color:#8f9691;}
+.device-node.device-type-turntableAutomatic .at-sw {min-width:112px;color:#c8cdc7;background:transparent;box-shadow:none;border:0;}
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-turntableAutomatic button.at-sw.hw-slide-selector {background:#1a1e1c!important;border-color:#535b5366!important;box-shadow:inset 0 1px #87917d33!important;}
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-turntableAutomatic button.at-sw.hw-slide-selector>[data-m] {color:#bdc8b7!important;text-shadow:none;}
+.device-node.device-type-turntableAutomatic .at-lid-scene {bottom:6px;}
+.device-node.device-type-turntableAutomatic .at-dust-cover>span {
+    border-color:#a0a4a260;background:linear-gradient(114deg,transparent 8%,#b9bbb91c 8.3%,transparent 9% 70%,#d3d7d212 70.4%,transparent 73%),linear-gradient(100deg,#282d2b30,#3b413c3b);
+}
+.device-node.device-type-turntableAutomatic .tt-lid-button {opacity:.55;}
+.device-node.device-type-turntableAutomatic:is(:hover,:focus-within) .tt-lid-button {opacity:1;}
+.device-node.device-type-turntableAutomatic button:focus-visible {outline:2px solid #e6c9a0;outline-offset:2px;}

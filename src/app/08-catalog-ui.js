@@ -16,6 +16,10 @@
                 drawing = AudioAdapterDesign.models[type]?AudioAdapterDesign.icon(type):'<rect x="6" y="11" width="44" height="24" rx="3"/><circle cx="14" cy="23" r="3"/><circle cx="42" cy="23" r="3"/><path d="M21 23h14m-4-4 4 4-4 4"/><path d="m26 13-3 6h6l-3 6"/>';
             } else if(type==='streamIntegrated'){
                 drawing='<path d="M5 12h46v27H5ZM19 12V8h18v4M5 34h46M8 15v17m40-17v17"/><rect x="17" y="17" width="23" height="14" rx="1"/><path d="m20 27 5-5 5 3 6-5m9-3v2m0 4v2M10 38h4m28 0h4"/><circle cx="11" cy="28" r="2"/>';
+            } else if(type==='shelfRadiator'){
+                drawing='<path d="M14 7h28v35H14zM17 7V4h22v3"/><ellipse cx="28" cy="4" rx="8" ry="2"/><circle cx="28" cy="17" r="5"/><circle cx="28" cy="31" r="9"/>';
+            } else if(type==='turntableAutomatic'){
+                drawing='<path d="M5 10h46v27H5zM5 29h46"/><ellipse cx="23" cy="22" rx="13" ry="4"/><path d="M43 16v7l-8 4M9 33h4m23 0h3m3 0h3m3 0h1"/>';
             } else if(type==='turntableBelt'){
                 drawing='<path d="M3 34h50v5H3zM6 32V9h44v23M10 29h29v3H10zm26-8h10v10m-3-10H23l-7 6M7 37h3"/>';
             } else if(type==='turntableDirect'){

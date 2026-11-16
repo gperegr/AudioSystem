@@ -1,0 +1,54 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict');
+(async()=>{
+    const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox','--autoplay-policy=no-user-gesture-required']});
+    try{
+        const {page,errors}=await require('./helpers/equipment-page.cjs')(browser);
+        await page.evaluate(()=>{
+            const api=__equipment;api.createDevice('turntableAutomatic',200,200,'auto-deck');const dev=api.appState.project.devices['auto-deck'];
+            const preview=document.createElement('div');preview.className='equipment-preview-world';preview.style.cssText='position:fixed;left:350px;top:300px;width:650px;height:300px;z-index:100000;pointer-events:auto;background:#263133';document.body.appendChild(preview);preview.appendChild(dev.el);dev.el.style.left='30px';dev.el.style.top='30px';dev.el.style.transform='none';
+            const ctx=api.appState.audio.context;dev.audioBuffer=ctx.createBuffer(2,ctx.sampleRate*8,ctx.sampleRate);
+            for(let ch=0;ch<2;ch++){const data=dev.audioBuffer.getChannelData(ch);for(let i=0;i<data.length;i++)data[i]=.1*Math.sin(i/ctx.sampleRate*440*Math.PI*2);}
+        });
+        const deck=page.locator('#auto-deck');
+        assert.equal(await deck.locator('.power-btn,[data-tt="pitch"]').count(),0,'no invented power or pitch controls');
+        assert.equal(await deck.locator('.port[data-io="out"]').count(),2);
+        assert.equal(await deck.getAttribute('data-model'),'NX-T60');
+        assert(await deck.locator('[data-auto-size]').evaluate(button=>{const a=button.getBoundingClientRect(),b=button.closest('.device-node').getBoundingClientRect();return a.left>=b.left&&a.right<=b.right&&a.top>=b.top&&a.bottom<=b.bottom;}),'size selector stays on the chassis after hardware skinning');
+        await deck.locator('[data-auto-start]').click();
+        await page.waitForFunction(()=>__equipment.appState.project.devices['auto-deck'].state.playing);
+        assert(await page.evaluate(()=>!!__equipment.appState.project.devices['auto-deck'].filePlayback),'real local audio starts after arm travel');
+        await deck.locator('[data-auto-speed]').click();
+        assert.equal(await page.evaluate(()=>__equipment.appState.project.devices['auto-deck'].filePlayback.rate),1.35);
+        await deck.locator('[data-auto-lift]').click();
+        assert.deepEqual(await page.evaluate(()=>{const d=__equipment.appState.project.devices['auto-deck'];return [d.state.playing,d.state.tt.running,!!d.filePlayback];}),[false,true,false],'cue lift mutes playback but keeps the motor running');
+        await deck.locator('[data-auto-lift]').click();
+        await page.waitForFunction(()=>__equipment.appState.project.devices['auto-deck'].state.playing);
+        await deck.locator('[data-auto-stop]').click();
+        await page.waitForFunction(()=>__equipment.appState.project.devices['auto-deck'].automatic.phase==='idle');
+        assert.deepEqual(await page.evaluate(()=>{const d=__equipment.appState.project.devices['auto-deck'];return [d.state.tt.running,d.fileOffset,d.automatic.arm];}),[false,0,0]);
+        await deck.locator('[data-auto-size]').click();
+        assert.deepEqual(await page.evaluate(()=>{const t=__equipment.appState.project.devices['auto-deck'].state.tt;return [t.size,t.speed];}),[7,45],'size and speed are independent selectors');
+        await page.evaluate(()=>{const d=__equipment.appState.project.devices['auto-deck'];d.ttSetOutput('phono');if(d.state.tt.output!=='phono')throw Error('PHONO');d.ttSetOutput('line');d.autoSetSpeed(33);d.fileOffset=d.audioBuffer.duration-.2;d.automatic.phase='raised';d.autoStart();});
+        await page.waitForFunction(()=>__equipment.appState.project.devices['auto-deck'].state.playing);
+        await page.waitForFunction(()=>__equipment.appState.project.devices['auto-deck'].automatic.phase==='idle');
+        assert.equal(await page.evaluate(()=>__equipment.appState.project.devices['auto-deck'].state.playing),false,'track end returns the arm and stops');
+        await page.evaluate(async()=>{
+            const api=__equipment,d=api.appState.project.devices['auto-deck'];
+            await d.autoStart();d.autoStop();
+            api.toggleDevicePower(d);await d.autoStart();if(d.state.playing)throw Error('power off');api.toggleDevicePower(d);
+            api.applySavedDevice(d,{settings:{tt:{speed:45,size:7,pitch:.8,output:'phono',running:true},lidOpen:true}});
+            if(d.state.playing||d.state.tt.running||d.state.tt.pitch!==0||d.state.tt.speed!==45||d.state.tt.size!==7||d.state.tt.output!=='phono'||!d.state.lidOpen)throw Error('restore');
+            const vinyl=api.createSpotifyVinyl({uri:'spotify:album:AutomaticTest',name:'Test record'});
+            if(!api.placeSpotifyVinyl(vinyl,d,false))throw Error('record placement');api.removeSpotifyVinyl(vinyl,false);
+            d.autoSetSize(12);d.ttSetOutput('line');d.setLidOpen(false);AudioSystemLanguage.set('en');api.selectDevice(d.id);
+        });
+        await deck.screenshot({path:'/tmp/automatic-deck.png'});
+        await require('./turntable-geometry.helpers.cjs')(page,deck,'automatic');
+        await page.emulateMedia({reducedMotion:'reduce'});
+        await deck.locator('[data-auto-start]').click();
+        await page.waitForFunction(()=>__equipment.appState.project.devices['auto-deck'].state.playing);
+        await page.evaluate(()=>__equipment.deleteDevice(__equipment.appState.project.devices['auto-deck'],false));
+        assert.deepEqual(errors,[]);
+        console.log('Automatic turntable: local audio, cue lift, speed/size, auto-return, cancellation, power, output, saved settings, Spotify placement, cover geometry, reduced motion and cleanup passed.');
+    }finally{await browser.close();}
+})().catch(error=>{console.error(error);process.exitCode=1;});

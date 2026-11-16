@@ -170,6 +170,8 @@
             if(CAPTURE_INTERFACE_TYPES.has(dev.type))return playing?dev.startMicCapture():dev.stopMicCapture();
             if(dev.type==='streamIntegrated'&&playing&&dev.state.streamInput!=='library')dev.selectStreamInput('library');
             if(dev.linearSetPlaying&&!mechanism){if(playing&&Number.isInteger(trackIndex))dev.pendingSpotifyTrack=trackIndex;return dev.linearSetPlaying(playing);}
+            if(dev.automaticSetPlaying&&!mechanism){if(playing&&Number.isInteger(trackIndex))dev.pendingSpotifyTrack=trackIndex;return dev.automaticSetPlaying(playing);}
+            const automaticOperation=dev.automatic?.operation;
             if(dev.state.damage&&playing)return;
             if(playing&&dev.type==='cdPlayer')dev.setTrayOpen?.(false);
             if (!SOURCE_TYPES.has(dev.type)) return;
@@ -191,7 +193,7 @@
                     return;
                 }
             }
-            if(playing&&(dev.state.damage||!appState.project.devices[dev.id]))return;
+            if(playing&&(dev.state.damage||!appState.project.devices[dev.id]||automaticOperation!==dev.automatic?.operation))return;
             if(dev.spotifyVinyl){
                 if(playing){
                     if(spotifyPlayingTurntable&&spotifyPlayingTurntable!==dev.id){spotifyVinylNotice('Pare o outro toca-discos do Spotify antes de reproduzir este.');return;}
@@ -210,6 +212,7 @@
                     try{await SpotifyCoverflow.setPlaybackVolume(0);await SpotifyCoverflow.pauseAlbum();}catch{}
                 }
             }
+            if(automaticOperation!==dev.automatic?.operation||dev.runtimeDisposed)return;
             stopFilePlayback(dev);
             if(!dev.audioBuffer){
                 if(dev.state.playing && dev.demoStartedAt != null) dev.demoOffset=(dev.demoOffset||0)+appState.audio.context.currentTime-dev.demoStartedAt;
@@ -282,6 +285,7 @@
             wallLampDome:'Arandela com prato metálico e lâmpada de filamento. A cúpula direciona a luz para baixo.',
             ...Object.fromEntries(Object.entries(INTERFACE_DEVICES).map(([key,config])=>[key,config.description])),
             turntableVintage: 'Toca-discos vintage com madeira e aço escovado, ajuste de pitch e saída RCA LINE ou PHONO.',
+            turntableAutomatic:'Toca-discos automático por correia, com acabamento preto, tampa fumê, 33⅓/45 rpm, seletor de 7 ou 12 polegadas, elevação da agulha e retorno automático. Saída RCA LINE/PHONO.',
             turntableLinear:'Toca-discos tangencial automático com dois braços paralelos, detecção simulada de diâmetro, velocidades de 33⅓ e 45 rpm, cue e retorno automático.',
             streamIntegrated:'Streamer com amplificador estéreo de 40 W por canal, fonte interna, entrada de linha, fones e pré-out. Tela colorida funcional e volume superior com halo luminoso.',
             turntable: 'Toca discos de vinil. Ajuste o pitch e escolha a SAÍDA: LINE (pré interno) ou PHONO (cápsula MM, sem pré/RIAA de reprodução).',
