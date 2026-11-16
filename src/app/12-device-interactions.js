@@ -334,11 +334,10 @@
                     root.querySelectorAll('[data-auto-speed]').forEach(button=>{
                         const speed=Number(button.dataset.autoSpeed),active=speed?speed===tt.speed:tt.speed===45;
                         button.setAttribute('aria-pressed',String(active));
-                        if(!speed){const legend=button.querySelector('.hw-plunger-legend')||button;legend.textContent=tt.speed===45?'45':'33⅓';}
                     });
                     root.querySelectorAll('[data-auto-size]').forEach(button=>{
                         const size=Number(button.dataset.autoSize);button.setAttribute('aria-pressed',String(size?size===tt.size:tt.size===7));
-                        if(!size){button.title=tt.size===7?'Disco de 7 polegadas':'Disco de 12 polegadas';button.setAttribute('aria-label',button.title);const legend=button.querySelector('.hw-plunger-legend')||button;legend.textContent=tt.size+'″';}
+                        if(!size){button.title=tt.size===7?'Disco de 7 polegadas':'Disco de 12 polegadas';button.setAttribute('aria-label',button.title);}
                     });
                     root.querySelectorAll('[data-auto-status]').forEach(status=>status.textContent=!dev.powered?'Desligado':phases[motion.phase]);
                     root.querySelectorAll('[data-auto-output]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.autoOutput===tt.output)));
