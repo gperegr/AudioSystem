@@ -8963,6 +8963,57 @@ const Hardware = (() => {
         document.addEventListener('pointercancel',()=>{touchTooltipTarget=null;hideToolbarTooltip();});
         document.addEventListener('focusin',event=>{const target=event.target instanceof Element?event.target.closest('#app-topbar [data-tooltip]'):null;if(target)scheduleToolbarTooltip(target);});
         document.addEventListener('focusout',event=>{if(event.target instanceof Element&&event.target.matches('#app-topbar [data-tooltip]')&&!event.target.matches(':hover'))hideToolbarTooltip();});
+
+        // Keep native browser title popups off the equipment controls. They appear
+        // right under the pointer and get in the way of knobs, ports and sliders.
+        // A single delayed canvas hint preserves the information without blocking work.
+        const equipmentHint=document.createElement('div');equipmentHint.id='equipment-hint';equipmentHint.setAttribute('role','tooltip');document.body.appendChild(equipmentHint);
+        let equipmentHintTimer=0,equipmentHintTarget=null,equipmentHintBlockedDevice=null;
+        function hideEquipmentHint(){clearTimeout(equipmentHintTimer);equipmentHint.classList.remove('is-visible');if(equipmentHintTarget){const ids=(equipmentHintTarget.getAttribute('aria-describedby')||'').split(/\s+/).filter(id=>id&&id!=='equipment-hint');if(ids.length)equipmentHintTarget.setAttribute('aria-describedby',ids.join(' '));else equipmentHintTarget.removeAttribute('aria-describedby');}equipmentHintTarget=null;}
+        function prepareEquipmentHint(element){
+            if(!(element instanceof Element)||!element.matches('.device-node *'))return;
+            const title=element.getAttribute('title');if(!title)return;
+            element.dataset.canvasHint=title;element.removeAttribute('title');
+            if(!element.hasAttribute('aria-label')||element.dataset.canvasHintLabel==='generated'){element.setAttribute('aria-label',title);element.dataset.canvasHintLabel='generated';}
+        }
+        function prepareEquipmentHints(root){if(root instanceof Element){prepareEquipmentHint(root);root.querySelectorAll('[title]').forEach(prepareEquipmentHint);}}
+        prepareEquipmentHints(document.querySelector('#audio-world'));
+        new MutationObserver(records=>records.forEach(record=>{
+            if(record.type==='attributes')prepareEquipmentHint(record.target);
+            else record.addedNodes.forEach(prepareEquipmentHints);
+        })).observe(document.querySelector('#audio-world'),{subtree:true,childList:true,attributes:true,attributeFilter:['title']});
+        function scheduleEquipmentHint(target){
+            hideEquipmentHint();if(!target?.dataset.canvasHint)return;
+            const device=target.closest('.device-node');if(!device||equipmentHintBlockedDevice===device)return;
+            equipmentHintTarget=target;equipmentHint.textContent=target.dataset.canvasHint;
+            equipmentHintTimer=setTimeout(()=>{
+                if(!target.isConnected||equipmentHintBlockedDevice===device||(!(target.matches(':hover'))&&document.activeElement!==target))return;
+                const rect=target.getBoundingClientRect();equipmentHint.classList.add('is-visible');
+                const tip=equipmentHint.getBoundingClientRect(),gap=9;
+                const left=Math.max(8,Math.min(innerWidth-tip.width-8,rect.left+(rect.width-tip.width)/2));
+                const top=rect.top-tip.height-gap>=8?rect.top-tip.height-gap:Math.min(innerHeight-tip.height-8,rect.bottom+gap);
+                equipmentHint.style.left=`${left}px`;equipmentHint.style.top=`${top}px`;
+                const ids=new Set((target.getAttribute('aria-describedby')||'').split(/\s+/).filter(Boolean));ids.add('equipment-hint');target.setAttribute('aria-describedby',[...ids].join(' '));
+            },850);
+        }
+        document.addEventListener('pointerover',event=>{
+            if(event.pointerType==='touch'||!(event.target instanceof Element))return;
+            const target=event.target.closest('.device-node [data-canvas-hint]');if(!target)return;
+            if(event.relatedTarget instanceof Node&&target.contains(event.relatedTarget))return;
+            scheduleEquipmentHint(target);
+        });
+        document.addEventListener('pointerout',event=>{
+            if(!(event.target instanceof Element))return;
+            const device=event.target.closest('.device-node');if(device&&event.relatedTarget instanceof Node&&!device.contains(event.relatedTarget)&&equipmentHintBlockedDevice===device)equipmentHintBlockedDevice=null;
+            const target=event.target.closest('.device-node [data-canvas-hint]');if(target&&!(event.relatedTarget instanceof Node&&target.contains(event.relatedTarget)))hideEquipmentHint();
+        });
+        document.addEventListener('pointerdown',event=>{
+            if(!(event.target instanceof Element))return;
+            const device=event.target.closest('.device-node');if(!device)return;
+            equipmentHintBlockedDevice=device;hideEquipmentHint();
+        },true);
+        document.addEventListener('focusin',event=>{const target=event.target instanceof Element?event.target.closest('.device-node [data-canvas-hint]'):null;if(target)scheduleEquipmentHint(target);});
+        document.addEventListener('focusout',event=>{if(event.target instanceof Element&&event.target.matches('.device-node [data-canvas-hint]'))hideEquipmentHint();});
         function updateMovementHistoryButtons(){
             const valid=entry=>entry.kind!=='move'||entry.before.every(p=>appState.project.devices[p.id]);
             for(const stack of [movementUndo,movementRedo])for(let i=stack.length-1;i>=0;i--)if(!valid(stack[i]))stack.splice(i,1);
