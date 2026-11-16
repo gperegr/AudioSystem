@@ -72,6 +72,20 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
         await require('./turntable-geometry.helpers.cjs')(page,deck,'automatic');
         await page.evaluate(()=>__equipment.appState.project.devices['auto-deck'].setLidOpen(true));
         assert(await deck.evaluate(el=>Number(getComputedStyle(el.querySelector('.at-lid-scene')).zIndex)<Number(getComputedStyle(el.querySelector('.at-plinth'),'::before').zIndex)),'open cover stays behind the chassis and controls');
+        await page.emulateMedia({reducedMotion:'reduce'});
+        const freezeLighting=await page.addStyleTag({content:'#auto-deck{filter:none!important}'});
+        const panelWithCover=await deck.locator('.at-controls').screenshot();
+        await deck.locator('.at-lid-scene').evaluate(el=>el.style.visibility='hidden');
+        const panelWithoutCover=await deck.locator('.at-controls').screenshot();
+        const maxPixelDifference=await page.evaluate(async images=>{
+            const pixels=await Promise.all(images.map(async data=>{const bytes=Uint8Array.from(atob(data),c=>c.charCodeAt(0)),bitmap=await createImageBitmap(new Blob([bytes],{type:'image/png'})),canvas=new OffscreenCanvas(bitmap.width,bitmap.height),ctx=canvas.getContext('2d');ctx.drawImage(bitmap,0,0);const result=ctx.getImageData(0,0,bitmap.width,bitmap.height).data;bitmap.close();return result;}));
+            let max=0;for(let i=0;i<pixels[0].length;i++)max=Math.max(max,Math.abs(pixels[0][i]-pixels[1][i]));return max;
+        },[panelWithCover.toString('base64'),panelWithoutCover.toString('base64')]);
+        // Permit only subpixel rasterization rounding, never acrylic borders or tint.
+        assert(maxPixelDifference<=2,'open cover must not paint over the front panel');
+        await freezeLighting.evaluate(el=>el.remove());
+        await deck.locator('.at-lid-scene').evaluate(el=>el.style.removeProperty('visibility'));
+        assert(await deck.locator('.auto-adapter').evaluate(el=>{const base=el.closest('.at-deck').getBoundingClientRect(),r=el.getBoundingClientRect();return Math.abs(r.bottom-(base.bottom-6))<1;}),'45 rpm adapter rests on the deck surface');
         await page.evaluate(()=>__equipment.appState.project.devices['auto-deck'].setLidOpen(false));
         await page.emulateMedia({reducedMotion:'reduce'});
         await deck.locator('[data-auto-start]').click();

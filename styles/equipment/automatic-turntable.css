@@ -25,7 +25,7 @@
 .device-node.device-type-turntableAutomatic .at-front-mechanism .at-platter::after {display:none;}
 .device-node.device-type-turntableAutomatic .at-front-mechanism .at-record {left:3px;right:3px;top:-7px;height:3px;background:linear-gradient(#696b64,#090b09 60%,#262b23);}
 .device-node.device-type-turntableAutomatic[data-auto-size="7"] .at-record {left:74px;right:74px;}
-.device-node.device-type-turntableAutomatic .auto-adapter {position:absolute;left:24px;top:71px;width:24px;height:4px;border:1px solid #2f3332;border-radius:50%;background:#0a0e0c;box-shadow:0 2px 1px #0008;}
+.device-node.device-type-turntableAutomatic .auto-adapter {position:absolute;left:8px;top:103px;width:16px;height:3px;box-sizing:border-box;border:1px solid #2f3332;border-radius:50%;background:#0a0e0c;box-shadow:0 2px 1px #0008;}
 .device-node.device-type-turntableAutomatic .auto-size {position:absolute;right:37px;bottom:7px;z-index:4;color:#bfc1bc;}
 .device-node.device-type-turntableAutomatic .at-controls {
     grid-column:1;grid-row:2;position:relative;justify-content:space-between;align-items:flex-start;
@@ -78,3 +78,9 @@
 .device-node.device-type-turntableAutomatic .at-plinth {isolation:isolate;}
 .device-node.device-type-turntableAutomatic.lid-open .at-deck {z-index:auto;}
 .device-node.device-type-turntableAutomatic.lid-open .at-lid-scene {z-index:-2;}
+
+/* Clip the opened cover at its hinge plane as well as layering it behind the
+   body. Projected 3D faces must never extend over the operating fascia. */
+.device-node.device-type-turntableAutomatic.lid-open .at-lid-scene {
+    clip-path:inset(-1200px -1200px 0 -1200px);
+}
