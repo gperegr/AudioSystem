@@ -15,6 +15,8 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
         assert.equal(await deck.locator('.port[data-type="p2"][data-node="outStereo"]').count(),1);
         assert.equal(await deck.getAttribute('data-model'),'NX-T60');
         assert(await deck.locator('[data-auto-size]').evaluate(button=>{const a=button.getBoundingClientRect(),b=button.closest('.device-node').getBoundingClientRect();return a.left>=b.left&&a.right<=b.right&&a.top>=b.top&&a.bottom<=b.bottom;}),'size selector stays on the chassis after hardware skinning');
+        assert(await deck.locator('[data-auto-size]').evaluate(button=>{const size=button.getBoundingClientRect(),rpm=button.closest('.at-controls')?.querySelector('[data-auto-speed]').getBoundingClientRect();return !!rpm&&size.left>rpm.right&&size.left-rpm.right<=20&&Math.abs(size.top-rpm.top)<1;}),'record-size selector sits beside RPM on the front fascia');
+        assert(await deck.locator('.auto-format-controls button').evaluateAll(buttons=>buttons.length===2&&buttons.every(button=>{const s=getComputedStyle(button);return s.backgroundColor==='rgba(0, 0, 0, 0)'&&s.borderTopWidth==='0px'&&s.boxShadow==='none';})),'both left keys have no surrounding background or frame');
         assert.equal(await deck.locator('[data-auto-start]').getAttribute('data-button-action'),'momentary');
         assert.equal(await deck.locator('[data-auto-stop]').getAttribute('data-button-action'),'momentary');
         assert.deepEqual(await deck.locator('[data-tt="output"]').evaluate(button=>{const s=getComputedStyle(button);return [s.backgroundColor,s.borderTopWidth,s.boxShadow];}),['rgba(0, 0, 0, 0)','0px','none']);
