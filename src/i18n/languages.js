@@ -110,6 +110,7 @@
         'Velocidade':'Speed',
         'Posição da agulha':'Tonearm position',
         'Posicionando o braço':'Positioning tonearm',
+        'Elevando a agulha':'Raising tonearm',
         'Disco de 7 polegadas':'7-inch record',
         'Disco de 12 polegadas':'12-inch record',
         'ELEVAR / BAIXAR':'RAISE / LOWER',

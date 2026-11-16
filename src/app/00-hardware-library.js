@@ -645,7 +645,8 @@ const Hardware = (() => {
     }
     function buttonModel(dev,el){
         if(dev.type==='integratedCompact')return el.matches('.power-btn')?'chromeLever':'plainKey';
-        if(dev.type==='turntableAutomatic'&&el.matches('[data-auto-start],[data-auto-stop],[data-auto-lift],[data-auto-speed],[data-auto-size]'))return 'plainKey';
+        if(dev.type==='turntableAutomatic'&&el.matches('[data-auto-start],[data-auto-stop]'))return 'key';
+        if(dev.type==='turntableAutomatic'&&el.matches('[data-auto-lift],[data-auto-speed],[data-auto-size]'))return 'plainKey';
         if(el.dataset.buttonModel&&Object.hasOwn(buttons,el.dataset.buttonModel))return el.dataset.buttonModel;
         if(['btReceiverA','btTransmitterPro'].includes(dev.type))return 'illuminatedBar';
         if(el.classList.contains('power-btn')){

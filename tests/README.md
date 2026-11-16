@@ -16,7 +16,7 @@ The same browser suite checks construction choices: domestic fronts and smooth d
 
 `node tests/compact-amplifier.browser.cjs` checks the NX-I20's 760 × 120 px chassis, all front pointer targets, actual stereo RCA and Bluetooth audio at the speaker outputs, all three knobs, power gating, Bluetooth priority/cancellation/disconnect, propagation to wired speakers, saved knobs/power/pairing, English controls, sender removal, headphone-pairing regression and cleanup. It accepts `TAILWIND_SCRIPT_FILE` and saves `/tmp/nx-i20-amplifier.png`.
 
-`node tests/automatic-turntable.browser.cjs` covers the NX-T60's staged arm movement, real local audio, lift with the motor running, independent speed/size presets, end-of-track return, cancellation, power gating, LINE/PHONO, paused restoration, Spotify record placement, cover geometry and reduced motion. Preview: `/tmp/automatic-deck.png`.
+`node tests/automatic-turntable.browser.cjs` covers the NX-T60's staged arm movement, real local audio, lift with the motor running, independent speed/size presets, end-of-track return, cancellation, power gating, LINE/PHONO, paused restoration, Spotify record placement, cover geometry and reduced motion. It also checks momentary START/STOP keys, a transparent selector surround, smooth idle cue lift, cancelled audio activation, cueing during arm travel, interrupted lowering, and repeated STOP commands. Preview: `/tmp/automatic-deck.png`.
 
 `node tests/radiator-speaker.browser.cjs` checks the B-70's 70 W RMS / 6 Ω model, real bass-forward filters, passive wire input, removable grille and project persistence, translated inspector and cleanup. Previews: `/tmp/radiator-speaker-open.png` and `/tmp/radiator-speaker-grille.png`. Both suites accept `TAILWIND_SCRIPT_FILE`.
 

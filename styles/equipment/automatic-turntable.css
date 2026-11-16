@@ -53,7 +53,7 @@
 .device-node.device-type-turntableAutomatic .at-io-ch {display:flex;flex-direction:row;align-items:center;gap:5px;}
 .device-node.device-type-turntableAutomatic .at-io-ch>span {font-size:6px;color:#8f9691;}
 .device-node.device-type-turntableAutomatic .at-sw {min-width:112px;color:#c8cdc7;background:transparent;box-shadow:none;border:0;}
-:is(#audio-world,.equipment-preview-world) .device-node.device-type-turntableAutomatic button.at-sw.hw-slide-selector {background:#1a1e1c!important;border-color:#535b5366!important;box-shadow:inset 0 1px #87917d33!important;}
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-turntableAutomatic button.at-sw.hw-slide-selector {background:transparent!important;border:0!important;box-shadow:none!important;}
 :is(#audio-world,.equipment-preview-world) .device-node.device-type-turntableAutomatic button.at-sw.hw-slide-selector>[data-m] {color:#bdc8b7!important;text-shadow:none;}
 .device-node.device-type-turntableAutomatic .at-lid-scene {bottom:6px;}
 .device-node.device-type-turntableAutomatic .at-dust-cover>span {
@@ -62,3 +62,5 @@
 .device-node.device-type-turntableAutomatic .tt-lid-button {opacity:.55;}
 .device-node.device-type-turntableAutomatic:is(:hover,:focus-within) .tt-lid-button {opacity:1;}
 .device-node.device-type-turntableAutomatic button:focus-visible {outline:2px solid #e6c9a0;outline-offset:2px;}
+
+.device-type-turntableAutomatic [data-auto-start]:disabled,.device-type-turntableAutomatic [data-auto-lift]:disabled {cursor:default;opacity:.55;}

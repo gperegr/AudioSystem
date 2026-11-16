@@ -41,6 +41,7 @@
             }
             if(type==='turntableLinear')el.innerHTML=tpl.innerHTML.replaceAll('linear-art-',`${id}-art-`);
             if(type==='turntableDirect')el.innerHTML=tpl.innerHTML.replaceAll('direct-arm-steel',`${id}-arm-steel`);
+            if(type==='turntableAutomatic')el.innerHTML=tpl.innerHTML.replaceAll('auto-arm-metal',`${id}-arm-metal`);
             
             if(type==='hardwareDemo')el.innerHTML=Hardware.demoMarkup();
             if(type==='streamIntegrated')el.innerHTML=streamIntegratedMarkup();

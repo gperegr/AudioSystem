@@ -305,14 +305,17 @@
         function setupAutomaticTurntable(dev) {
             const tt=dev.state.tt={running:false,pitch:0,output:'line',speed:33,size:12};
             const el=dev.el;
-            const motion=dev.automatic={phase:'idle',arm:0,target:0,lifted:false,deadline:0,operation:0,disposed:false};
-            const phases={idle:'Em repouso',starting:'Posicionando o braço',lowering:'Descendo a agulha',playing:'Em reprodução',raised:'Agulha elevada',returning:'Retornando ao repouso'};
+            const motion=dev.automatic={phase:'idle',arm:0,target:0,lift:0,lifted:false,holdRaised:false,pendingStart:false,deadline:0,operation:0,disposed:false};
+            const phases={idle:'Em repouso',preparing:'Elevando a agulha',starting:'Posicionando o braço',lowering:'Descendo a agulha',playing:'Em reprodução',raised:'Agulha elevada',lifting:'Elevando a agulha',returning:'Retornando ao repouso',resting:'Descendo a agulha'};
             const duration=()=>dev.audioBuffer?.duration||180;
             const position=()=>dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?(appState.audio.context.currentTime-dev.demoStartedAt)*dev.ttRate():0);
             const leadIn=()=>tt.size===7?1.35:.85;
             const pause=()=>{
                 const seconds=position();
                 const pending=setSourcePlaying(dev,false,true);
+                stopFilePlayback(dev);dev.state.playing=false;stopVinylNoise(dev);
+                ['genL','genR'].forEach(key=>dev.nodes[key]?.gain.setTargetAtTime(0,appState.audio.context.currentTime,.015));
+                syncSourceSequencer();updateCableFlows();
                 if(!dev.audioBuffer){dev.demoOffset=seconds;dev.demoStartedAt=null;}
                 return pending;
             };
@@ -325,8 +328,9 @@
                 el.classList.toggle('tt-motor',tt.running);el.classList.toggle('tt-stopped',!tt.running);
                 const roots=[el,...(appState.interface.selectedDeviceId===dev.id?[inspectorContent]:[])];
                 roots.forEach(root=>{
-                    root.querySelectorAll('[data-auto-start]').forEach(button=>button.setAttribute('aria-pressed',String(['starting','lowering','playing'].includes(motion.phase))));
-                    root.querySelectorAll('[data-auto-lift]').forEach(button=>button.setAttribute('aria-pressed',String(motion.lifted)));
+                    root.querySelectorAll('[data-auto-start]').forEach(button=>{button.removeAttribute('aria-pressed');button.disabled=!dev.powered||motion.pendingStart||['preparing','starting','lowering','lifting','returning','resting'].includes(motion.phase);});
+                    root.querySelectorAll('[data-auto-lift]').forEach(button=>button.disabled=!dev.powered||['lifting','returning','resting'].includes(motion.phase));
+                    root.querySelectorAll('[data-auto-lift]').forEach(button=>button.setAttribute('aria-pressed',String(['preparing','starting'].includes(motion.phase)?motion.holdRaised:motion.lifted)));
                     root.querySelectorAll('[data-auto-speed]').forEach(button=>{
                         const speed=Number(button.dataset.autoSpeed),active=speed?speed===tt.speed:tt.speed===45;
                         button.setAttribute('aria-pressed',String(active));
@@ -345,37 +349,44 @@
                 output.querySelectorAll('[data-m]').forEach(label=>label.classList.toggle('is-on',label.dataset.m===tt.output));
             };
             dev.autoStop=()=>{
-                motion.operation++;
-                const pending=pause();
-                dev.fileOffset=0;dev.demoOffset=0;motion.lifted=true;
-                motion.phase=motion.phase==='idle'?'idle':'returning';motion.target=0;motion.deadline=performance.now()+700;
-                dev.refreshTurntable();scheduleProjectSave();
-                return pending;
+                if(motion.disposed)return;
+                if(['lifting','returning','resting'].includes(motion.phase))return;
+                motion.operation++;motion.pendingStart=false;motion.holdRaised=false;
+                const pending=pause();dev.fileOffset=0;dev.demoOffset=0;
+                if(motion.phase==='idle'){motion.lifted=false;motion.target=0;}
+                else{motion.phase='lifting';motion.lifted=true;motion.target=motion.arm;motion.deadline=performance.now()+340;}
+                dev.refreshTurntable();scheduleProjectSave();return pending;
             };
             dev.autoStart=async()=>{
-                if(!dev.powered||dev.state.damage||motion.disposed||['starting','lowering','playing','returning'].includes(motion.phase))return;
-                const operation=++motion.operation;
-                // Activate audio during the user's gesture, before arm travel begins.
+                if(!dev.powered||dev.state.damage||motion.disposed||motion.pendingStart||!['idle','raised'].includes(motion.phase))return;
+                const operation=++motion.operation;motion.pendingStart=true;dev.refreshTurntable();
                 const activation=dev.spotifyVinyl?SpotifyCoverflow.activatePlayback():null;
-                try{await appState.audio.context.resume();if(activation&&!await activation)return;}catch{return;}
+                try{await appState.audio.context.resume();if(activation&&!await activation)return;}
+                catch{return;}
+                finally{if(operation===motion.operation){motion.pendingStart=false;dev.refreshTurntable();}}
                 if(operation!==motion.operation||motion.disposed||!dev.powered||appState.audio.context.state!=='running')return;
-                if(motion.phase==='raised')motion.phase='lowering';
-                else{motion.phase='starting';motion.target=leadIn();dev.fileOffset=0;dev.demoOffset=0;}
-                motion.lifted=true;motion.deadline=performance.now()+(motion.phase==='starting'?700:300);
+                motion.holdRaised=false;
+                if(motion.phase==='raised'){motion.phase='lowering';motion.lifted=false;motion.deadline=performance.now()+420;}
+                else{motion.phase='preparing';motion.lifted=true;motion.target=0;motion.deadline=performance.now()+340;dev.fileOffset=0;dev.demoOffset=0;}
                 dev.refreshTurntable();scheduleProjectSave();
             };
             dev.automaticSetPlaying=playing=>playing?dev.autoStart():dev.autoStop();
             dev.ttToggleRun=()=>['idle','raised'].includes(motion.phase)?dev.autoStart():dev.autoStop();
             dev.autoLift=()=>{
-                if(!dev.powered||motion.disposed)return;
-                if(motion.phase==='playing'){
-                    motion.operation++;pause();motion.phase='raised';motion.lifted=true;
-                }else if(motion.phase==='raised')return dev.autoStart();
-                else if(motion.phase==='idle')motion.lifted=!motion.lifted;
+                if(!dev.powered||motion.disposed||['lifting','returning','resting'].includes(motion.phase))return;
+                if(['preparing','starting'].includes(motion.phase))motion.holdRaised=!motion.holdRaised;
+                else if(motion.phase==='playing'||motion.phase==='lowering'){
+                    motion.operation++;motion.pendingStart=false;pause();motion.phase='raised';motion.lifted=true;
+                }else if(motion.phase==='raised'){
+                    if(motion.pendingStart){motion.operation++;motion.pendingStart=false;dev.refreshTurntable();}
+                    else return dev.autoStart();
+                }else if(motion.phase==='idle'){
+                    motion.operation++;motion.pendingStart=false;motion.lifted=!motion.lifted;
+                }
                 dev.refreshTurntable();scheduleProjectSave();
             };
             dev.autoCue=value=>{
-                if(!dev.powered||motion.disposed||['starting','lowering','returning'].includes(motion.phase))return;
+                if(!dev.powered||motion.disposed||['preparing','starting','lowering','lifting','returning','resting'].includes(motion.phase))return;
                 motion.operation++;pause();motion.phase='raised';motion.lifted=true;
                 const progress=Math.max(0,Math.min(.995,Number(value)||0));
                 dev.fileOffset=dev.demoOffset=progress*duration();motion.target=leadIn()+(1.85-leadIn())*progress;
@@ -396,7 +407,7 @@
                 revalidateSignalConnections();dev.refreshTurntable();updateCableFlows();scheduleProjectSave();
             };
             dev.restoreAutomatic=()=>{
-                motion.operation++;motion.phase='idle';motion.arm=motion.target=0;motion.lifted=false;
+                motion.operation++;motion.pendingStart=false;motion.phase='idle';motion.arm=motion.target=motion.lift=0;motion.lifted=motion.holdRaised=false;
                 tt.speed=tt.speed===45?45:33;tt.size=tt.size===7?7:12;tt.pitch=0;tt.running=false;
                 dev.refreshTurntable();
             };
@@ -404,25 +415,28 @@
             dev.disposeAutomatic=()=>{motion.operation++;motion.disposed=true;tt.running=false;};
             dev.updateAutomaticMotion=(now,elapsed,reduced)=>{
                 if(motion.disposed)return;
-                if(motion.phase==='starting'&&now>=motion.deadline){motion.phase='lowering';motion.deadline=now+300;dev.refreshTurntable();}
+                if(motion.phase==='preparing'&&now>=motion.deadline){motion.phase='starting';motion.target=leadIn();motion.deadline=now+720;dev.refreshTurntable();}
+                else if(motion.phase==='starting'&&now>=motion.deadline){motion.phase=motion.holdRaised?'raised':'lowering';motion.lifted=motion.holdRaised;motion.deadline=now+420;dev.refreshTurntable();}
                 else if(motion.phase==='lowering'&&now>=motion.deadline){
-                    const operation=motion.operation;
-                    motion.phase='playing';motion.lifted=false;
+                    const operation=motion.operation;motion.phase='playing';motion.lifted=false;
                     setSourcePlaying(dev,true,true).then(()=>{
                         if(motion.disposed||operation!==motion.operation)return;
                         if(!dev.state.playing){motion.phase='raised';motion.lifted=true;dev.refreshTurntable();}
-                    });
-                    dev.refreshTurntable();
-                }else if(motion.phase==='returning'&&now>=motion.deadline){motion.phase='idle';motion.arm=motion.target=0;motion.lifted=false;dev.refreshTurntable();}
+                    });dev.refreshTurntable();
+                }else if(motion.phase==='lifting'&&now>=motion.deadline){motion.phase='returning';motion.target=0;motion.deadline=now+820;dev.refreshTurntable();}
+                else if(motion.phase==='returning'&&now>=motion.deadline){motion.phase='resting';motion.arm=motion.target=0;motion.lifted=false;motion.deadline=now+420;dev.refreshTurntable();}
+                else if(motion.phase==='resting'&&now>=motion.deadline){motion.phase='idle';motion.arm=motion.target=motion.lift=0;dev.refreshTurntable();}
                 if(motion.phase==='playing'){
                     const seconds=position();
                     if(!dev.spotifyVinyl&&seconds>=duration()&&!dev.state.repeat)dev.autoStop();
                     else motion.target=leadIn()+(1.85-leadIn())*Math.min(1,(seconds%duration())/duration());
                 }
                 motion.arm=reduced?motion.target:motion.arm+(motion.target-motion.arm)*(1-Math.exp(-elapsed/.15));
-                const x=(448-motion.arm*100).toFixed(2),y=motion.lifted?62:76;
-                el.querySelectorAll('[data-auto-tube]').forEach(path=>path.setAttribute('d',`M454 39L${x} ${y}`));
-                el.querySelector('[data-auto-head]').setAttribute('transform',`translate(${(Number(x)-16).toFixed(2)} ${y-1})`);
+                motion.lift=reduced?Number(motion.lifted):motion.lift+(Number(motion.lifted)-motion.lift)*(1-Math.exp(-elapsed/.085));
+                // Project a fixed-length arm rotating about its stationary bearing.
+                const angle=.04+motion.arm*.48,x=454-210*Math.sin(angle),y=64-motion.lift*12;
+                el.querySelectorAll('[data-auto-tube]').forEach(path=>path.setAttribute('d',`M454 39L${x.toFixed(3)} ${y.toFixed(3)}`));
+                el.querySelector('[data-auto-head]').setAttribute('transform',`translate(${(x-16).toFixed(3)} ${(y-1).toFixed(3)})`);
                 if(appState.interface.selectedDeviceId===dev.id){
                     const cue=inspectorContent.querySelector('[data-auto-cue]');
                     if(cue&&document.activeElement!==cue)cue.value=Math.min(100,position()/duration()*100);

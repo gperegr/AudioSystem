@@ -14,6 +14,28 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
         assert.equal(await deck.locator('.port[data-io="out"]').count(),2);
         assert.equal(await deck.getAttribute('data-model'),'NX-T60');
         assert(await deck.locator('[data-auto-size]').evaluate(button=>{const a=button.getBoundingClientRect(),b=button.closest('.device-node').getBoundingClientRect();return a.left>=b.left&&a.right<=b.right&&a.top>=b.top&&a.bottom<=b.bottom;}),'size selector stays on the chassis after hardware skinning');
+        assert.equal(await deck.locator('[data-auto-start]').getAttribute('data-button-action'),'momentary');
+        assert.equal(await deck.locator('[data-auto-stop]').getAttribute('data-button-action'),'momentary');
+        assert.deepEqual(await deck.locator('[data-tt="output"]').evaluate(button=>{const s=getComputedStyle(button);return [s.backgroundColor,s.borderTopWidth,s.boxShadow];}),['rgba(0, 0, 0, 0)','0px','none']);
+        // Idle cueing never starts the motor, and moves vertically without a jump.
+        await deck.locator('[data-auto-lift]').click();await page.waitForTimeout(100);
+        assert(await page.evaluate(()=>{const d=__equipment.appState.project.devices['auto-deck'];return d.automatic.lift>0&&d.automatic.lift<1&&!d.state.playing&&!d.state.tt.running;}));
+        await deck.locator('[data-auto-lift]').click();
+        // STOP invalidates an asynchronous START before browser activation resolves.
+        await page.evaluate(async()=>{const d=__equipment.appState.project.devices['auto-deck'],ctx=__equipment.appState.audio.context,resume=ctx.resume.bind(ctx);let release;ctx.resume=()=>new Promise(resolve=>release=resolve);try{const pending=d.autoStart();d.autoStop();release();await pending;if(d.automatic.phase!=='idle'||d.state.playing)throw Error('Cancelled START resumed');}finally{ctx.resume=resume;}});
+        await deck.locator('[data-auto-start]').click();
+        await page.waitForFunction(()=>__equipment.appState.project.devices['auto-deck'].automatic.phase==='preparing');
+        await deck.locator('[data-auto-lift]').click();
+        await page.waitForFunction(()=>__equipment.appState.project.devices['auto-deck'].automatic.phase==='raised');
+        assert.equal(await page.evaluate(()=>__equipment.appState.project.devices['auto-deck'].state.playing),false,'cue during automatic travel holds the needle raised');
+        await deck.locator('[data-auto-lift]').click();await page.waitForTimeout(100);
+        await deck.locator('[data-auto-lift]').click();await page.waitForTimeout(500);
+        assert.equal(await page.evaluate(()=>__equipment.appState.project.devices['auto-deck'].state.playing),false,'interrupting descent cannot start delayed audio');
+        await deck.locator('[data-auto-lift]').click();
+        await page.waitForFunction(()=>__equipment.appState.project.devices['auto-deck'].state.playing);
+        await deck.locator('[data-auto-stop]').click();
+        await page.evaluate(()=>{const d=__equipment.appState.project.devices['auto-deck'],deadline=d.automatic.deadline;d.autoStop();d.autoStop();if(deadline!==d.automatic.deadline)throw Error('Repeated STOP restarted the return');if(d.state.playing||d.filePlayback)throw Error('STOP did not mute immediately');});
+        await page.waitForFunction(()=>__equipment.appState.project.devices['auto-deck'].automatic.phase==='idle');
         await deck.locator('[data-auto-start]').click();
         await page.waitForFunction(()=>__equipment.appState.project.devices['auto-deck'].state.playing);
         assert(await page.evaluate(()=>!!__equipment.appState.project.devices['auto-deck'].filePlayback),'real local audio starts after arm travel');
