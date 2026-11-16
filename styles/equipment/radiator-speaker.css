@@ -16,14 +16,14 @@
 .device-type-shelfRadiator .mc-metal-cone {position:absolute;inset:17%;border-radius:50%;background:conic-gradient(from -20deg,#d2d8cb,#7c897c 60deg,#d8dfce 135deg,#9ca996 200deg,#e7ebde 282deg,#a6afa1 330deg,#d2d8cb);box-shadow:inset 0 0 5px #314030aa;}
 .device-type-shelfRadiator .mc-metal-cone>b {position:absolute;inset:36%;border-radius:50%;background:radial-gradient(circle at 35% 25%,#e5e8de,#a6b19f 70%,#748570);box-shadow:0 1px 3px #182e1d66;}
 .device-type-shelfRadiator .mc-radiator {position:absolute;left:28px;right:28px;top:0;height:25px;border:1px solid #757d79;background:linear-gradient(#d7dcd5,#9ba49b 55%,#e1e4da 64%,#7f8c7e);box-shadow:inset 1px 1px #eef1e5,0 2px 3px #0008;pointer-events:none;}
-.device-type-shelfRadiator .mc-radiator-surround {position:absolute;left:23px;right:23px;top:-2px;height:17px;border:4px solid #26382d;border-radius:50%;background:#101e15;box-shadow:0 0 0 2px #879587,inset 0 2px 2px #000c;}
-.device-type-shelfRadiator .mc-radiator-surround>i {position:absolute;inset:2px 24px;border-radius:50%;background:linear-gradient(#798879,#aeb8a7,#5c6f5a);}
-.device-type-shelfRadiator .mc-radiator-bridge {position:absolute;left:calc(50% - 17px);top:-2px;width:34px;height:17px;border:1px solid #d4e0d255;background:linear-gradient(100deg,#e2ecdf55,#e7f2df0d,#e9f6e555);clip-path:polygon(0 0,100% 0,87% 100%,13% 100%);}
+.device-type-shelfRadiator .mc-radiator-surround {position:absolute;left:23px;right:23px;top:0;height:3px;border:0;border-radius:0;background:linear-gradient(#17221b,#465348,#18231b);box-shadow:none;}
+.device-type-shelfRadiator .mc-radiator-surround>i {display:none;}
+.device-type-shelfRadiator .mc-radiator-bridge {position:absolute;left:calc(50% - 17px);top:0;width:34px;height:5px;border:1px solid #d4e0d244;border-radius:0;background:linear-gradient(90deg,#c6d2c333,#e6ede255,#c6d2c333);clip-path:none;}
 .device-type-shelfRadiator .mc-radiator small {position:absolute;left:0;right:0;bottom:1px;text-align:center;color:#425744;font:600 4px/1 Inter,sans-serif;letter-spacing:.12em;}
 .device-type-shelfRadiator .mc-grille {inset:2px 2px 34px;border:2px solid #a1aaa0;border-radius:1px;background:repeating-linear-gradient(0deg,#dce3d429 0 .7px,transparent .7px 2px),repeating-linear-gradient(90deg,#1b2d204d 0 .7px,transparent .7px 2px),linear-gradient(105deg,#a2ac9f,#788775 65%,#a4afa0);box-shadow:inset 0 0 2px #f1f2e4,1px 2px 4px #172b1acc;}
 .device-type-shelfRadiator .mc-grille::before {content:'';position:absolute;left:0;right:0;top:30%;bottom:0;background:#152b1712;pointer-events:none;}
-.device-type-shelfRadiator .bookshelf-cabinet>.tower-terminal {left:calc(50% - 67px);bottom:1px;width:134px;height:26px;padding:0 6px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:7px;border:0;background:transparent;box-shadow:none;}
-.device-type-shelfRadiator .tower-terminal::before {display:none;}
+.device-type-shelfRadiator .bookshelf-cabinet>.tower-terminal {left:calc(50% - 67px);bottom:1px;width:134px;height:26px;padding:0 6px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:7px;border:0!important;background:transparent!important;box-shadow:none!important;}
+.device-type-shelfRadiator .tower-terminal::before,.device-type-shelfRadiator .tower-terminal::after {content:none!important;display:none!important;}
 .device-type-shelfRadiator .tower-terminal small {position:static;white-space:nowrap;font:600 6px Inter,sans-serif;color:#2b3e29;}
 .device-node.device-type-shelfRadiator .grille-restore {top:3px;right:3px;z-index:6;}
 .device-node.device-type-shelfRadiator:not(.grille-off)>.equipment-brand-badge {top:74px!important;color:#eef1e4;}

@@ -157,7 +157,7 @@ Nomenclatura: B bookshelf/passiva, A caixa ativa, S subwoofer e H fones. B/O dis
 
 | Equipamento | Modelo | Código compatível |
 | --- | --- | --- |
-| Bookshelf · Radiador Superior | Bravora B-70 | `shelfRadiator` |
+| Bookshelf · Radiador | Bravora B-70 | `shelfRadiator` |
 | Caixa Passiva Vintage | Bravora B-20 | `spkPassiveWood` |
 | Caixa Passiva · 3 Vias Preta | Bravora B-30B | `spkPassiveGridBlack` |
 | Caixa Passiva · 3 Vias Laranja | Bravora B-30O | `spkPassiveGridOrange` |

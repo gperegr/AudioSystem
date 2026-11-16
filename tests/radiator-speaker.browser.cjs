@@ -18,6 +18,11 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
         assert.equal(await speaker.locator('.port[data-type="wire"][data-io="in"][data-signal="amplified"]').count(),1);
         assert.equal(await speaker.locator('.power-btn,.port[data-io="out"]').count(),0,'passive mono speaker has no power or output');
         assert.equal(await speaker.getAttribute('data-model'),'B-70');
+        assert.equal(await page.locator('.catalog-item[data-template="shelfRadiator"] .text-xs').first().textContent(),'Bookshelf · Radiador');
+        assert(await speaker.locator('.mc-radiator-surround').evaluate(el=>{const r=el.getBoundingClientRect(),s=getComputedStyle(el);return r.height<=3&&s.borderRadius==='0px'&&getComputedStyle(el.querySelector('i')).display==='none';}),'top radiator shows only its frontal edge, without an oval top view');
+        assert(await speaker.locator('.mc-radiator-bridge').evaluate(el=>getComputedStyle(el).clipPath==='none'),'front bridge has no perspective taper');
+        assert.deepEqual(await speaker.locator('.tower-terminal').evaluate(el=>{const s=getComputedStyle(el);return [s.backgroundColor,s.backgroundImage,s.borderTopWidth,s.boxShadow,getComputedStyle(el,'::after').content];}),['rgba(0, 0, 0, 0)','none','0px','none','none'],'input plug has no surrounding panel');
+
         await speaker.screenshot({path:'/tmp/radiator-speaker-open.png'});
         await speaker.locator('.grille-restore').click();
         assert(!await speaker.evaluate(el=>el.classList.contains('grille-off')));

@@ -99,7 +99,7 @@
         'Saída amplificada para caixa passiva · R':'Amplified output for passive speaker · R',
         'Transmissor Bluetooth: recebe áudio pela entrada RCA estéreo e envia sem fio para fones ou amplificadores compatíveis.':'Bluetooth transmitter: accepts stereo RCA audio and sends it wirelessly to compatible headphones or amplifiers.',
         'Clique em Parear nos dois aparelhos.':'Click Pair on both devices.',
-        'Bookshelf · Radiador Superior':'Bookshelf · Top passive radiator',
+        'Bookshelf · Radiador':'Bookshelf · Passive radiator',
         'Compacta · graves destacados':'Compact · Prominent bass',
         'Caixa passiva de duas vias, 70 W RMS e 6 Ω, com madeira clara, woofer metálico, radiador passivo superior e grade frontal removível. Assinatura simulada com graves destacados.':'Two-way passive speaker, 70 W RMS and 6 Ω, with light wood, a metal-cone woofer, top passive radiator, and removable front grille. Simulated sound signature with prominent bass.',
         'Toca-discos automático por correia, com acabamento preto, tampa fumê, 33⅓/45 rpm, seletor de 7 ou 12 polegadas, elevação da agulha e retorno automático. Saída P2 estéreo LINE/PHONO.':'Automatic belt-drive turntable with black finish, smoked cover, 33⅓/45 rpm, 7- or 12-inch record selector, tonearm lift, and auto-return. Stereo 3.5 mm LINE/PHONO output.',

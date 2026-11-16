@@ -2675,7 +2675,7 @@ const Hardware = (() => {
             crossover: 'Crossover 3 Vias', crossoverVintage: 'Crossover Vintage',
             powerAmp: 'Receiver Moderno', powerStereo: 'Amplificador de Potência Tradicional', powerVintage: 'Amplificador de Potência Vintage',
             speaker: 'Caixa Passiva',
-            shelfRadiator:'Bookshelf · Radiador Superior',shelfCoax:'Bookshelf · Coaxial',shelfWood:'Bookshelf · Madeira',shelfTop:'Bookshelf · Tweeter Superior',spkPassiveWood: 'Caixa Passiva Vintage',floorDiamond:'Caixa de Piso · Tweeter Superior',floorCoax:'Caixa de Piso · Coaxial',floorFlax:'Caixa de Piso · Cones Naturais',
+            shelfRadiator:'Bookshelf · Radiador',shelfCoax:'Bookshelf · Coaxial',shelfWood:'Bookshelf · Madeira',shelfTop:'Bookshelf · Tweeter Superior',spkPassiveWood: 'Caixa Passiva Vintage',floorDiamond:'Caixa de Piso · Tweeter Superior',floorCoax:'Caixa de Piso · Coaxial',floorFlax:'Caixa de Piso · Cones Naturais',
             spkPassiveCarbon: 'Caixa Passiva Moderna',
             spkPassiveGridBlack: 'Caixa Passiva · 3 Vias Preta',
             spkPassiveGridOrange: 'Caixa Passiva · 3 Vias Laranja',
