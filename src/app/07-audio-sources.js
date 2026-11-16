@@ -285,7 +285,7 @@
             wallLampDome:'Arandela com prato metálico e lâmpada de filamento. A cúpula direciona a luz para baixo.',
             ...Object.fromEntries(Object.entries(INTERFACE_DEVICES).map(([key,config])=>[key,config.description])),
             turntableVintage: 'Toca-discos vintage com madeira e aço escovado, ajuste de pitch e saída RCA LINE ou PHONO.',
-            turntableAutomatic:'Toca-discos automático por correia, com acabamento preto, tampa fumê, 33⅓/45 rpm, seletor de 7 ou 12 polegadas, elevação da agulha e retorno automático. Saída RCA LINE/PHONO.',
+            turntableAutomatic:'Toca-discos automático por correia, com acabamento preto, tampa fumê, 33⅓/45 rpm, seletor de 7 ou 12 polegadas, elevação da agulha e retorno automático. Saída P2 estéreo LINE/PHONO.',
             turntableLinear:'Toca-discos tangencial automático com dois braços paralelos, detecção simulada de diâmetro, velocidades de 33⅓ e 45 rpm, cue e retorno automático.',
             streamIntegrated:'Streamer com amplificador estéreo de 40 W por canal, fonte interna, entrada de linha, fones e pré-out. Tela colorida funcional e volume superior com halo luminoso.',
             turntable: 'Toca discos de vinil. Ajuste o pitch e escolha a SAÍDA: LINE (pré interno) ou PHONO (cápsula MM, sem pré/RIAA de reprodução).',

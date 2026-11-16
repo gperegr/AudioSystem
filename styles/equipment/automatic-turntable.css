@@ -64,3 +64,17 @@
 .device-node.device-type-turntableAutomatic button:focus-visible {outline:2px solid #e6c9a0;outline-offset:2px;}
 
 .device-type-turntableAutomatic [data-auto-start]:disabled,.device-type-turntableAutomatic [data-auto-lift]:disabled {cursor:default;opacity:.55;}
+
+/* Transport keys sit directly on the front panel, without recessed wells. */
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-turntableAutomatic .auto-transport button.hw-plunger-key {
+    background:transparent!important;border:0!important;box-shadow:none!important;
+}
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-turntableAutomatic .auto-transport button.hw-plunger-key::before,
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-turntableAutomatic .auto-transport button.hw-plunger-key::after {
+    content:none!important;
+}
+
+/* Keep the open acrylic cover behind the entire deck and its controls. */
+.device-node.device-type-turntableAutomatic .at-plinth {isolation:isolate;}
+.device-node.device-type-turntableAutomatic.lid-open .at-deck {z-index:auto;}
+.device-node.device-type-turntableAutomatic.lid-open .at-lid-scene {z-index:-2;}

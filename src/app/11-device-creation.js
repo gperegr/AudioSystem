@@ -310,6 +310,7 @@
                         });
                     };
                     dev.setOutputMode('line');
+                    if(type==='turntableAutomatic'){const merge=dev.nodes.outStereo=appState.audio.context.createChannelMerger(2);dev.nodes.outL.connect(merge,0,0);dev.nodes.outR.connect(merge,0,1);}
                 } else {
                     powerR.connect(dev.nodes.outR);
                     powerL.connect(dev.nodes.outL);

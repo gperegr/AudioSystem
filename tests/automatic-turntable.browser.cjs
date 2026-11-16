@@ -7,11 +7,12 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
             const api=__equipment;api.createDevice('turntableAutomatic',200,200,'auto-deck');const dev=api.appState.project.devices['auto-deck'];
             const preview=document.createElement('div');preview.className='equipment-preview-world';preview.style.cssText='position:fixed;left:350px;top:300px;width:650px;height:300px;z-index:100000;pointer-events:auto;background:#263133';document.body.appendChild(preview);preview.appendChild(dev.el);dev.el.style.left='30px';dev.el.style.top='30px';dev.el.style.transform='none';
             const ctx=api.appState.audio.context;dev.audioBuffer=ctx.createBuffer(2,ctx.sampleRate*8,ctx.sampleRate);
-            for(let ch=0;ch<2;ch++){const data=dev.audioBuffer.getChannelData(ch);for(let i=0;i<data.length;i++)data[i]=.1*Math.sin(i/ctx.sampleRate*440*Math.PI*2);}
+            for(let ch=0;ch<2;ch++){const data=dev.audioBuffer.getChannelData(ch);for(let i=0;i<data.length;i++)data[i]=(ch===0?.1:.05)*Math.sin(i/ctx.sampleRate*(ch===0?440:880)*Math.PI*2);}
         });
         const deck=page.locator('#auto-deck');
         assert.equal(await deck.locator('.power-btn,[data-tt="pitch"]').count(),0,'no invented power or pitch controls');
-        assert.equal(await deck.locator('.port[data-io="out"]').count(),2);
+        assert.equal(await deck.locator('.port[data-io="out"]').count(),1);
+        assert.equal(await deck.locator('.port[data-type="p2"][data-node="outStereo"]').count(),1);
         assert.equal(await deck.getAttribute('data-model'),'NX-T60');
         assert(await deck.locator('[data-auto-size]').evaluate(button=>{const a=button.getBoundingClientRect(),b=button.closest('.device-node').getBoundingClientRect();return a.left>=b.left&&a.right<=b.right&&a.top>=b.top&&a.bottom<=b.bottom;}),'size selector stays on the chassis after hardware skinning');
         assert.equal(await deck.locator('[data-auto-start]').getAttribute('data-button-action'),'momentary');
@@ -39,6 +40,9 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
         await deck.locator('[data-auto-start]').click();
         await page.waitForFunction(()=>__equipment.appState.project.devices['auto-deck'].state.playing);
         assert(await page.evaluate(()=>!!__equipment.appState.project.devices['auto-deck'].filePlayback),'real local audio starts after arm travel');
+        const stereo=await page.evaluate(async()=>{const d=__equipment.appState.project.devices['auto-deck'],ctx=__equipment.appState.audio.context,split=ctx.createChannelSplitter(2),sink=ctx.createGain();sink.gain.value=0;sink.connect(ctx.destination);d.nodes.outStereo.connect(split);const probes=[0,1].map(ch=>{const a=ctx.createAnalyser();split.connect(a,ch);a.connect(sink);return a;});await new Promise(resolve=>setTimeout(resolve,150));const rms=probes.map(a=>{const data=new Float32Array(a.fftSize);a.getFloatTimeDomainData(data);return Math.sqrt(data.reduce((sum,v)=>sum+v*v,0)/data.length);});split.disconnect();probes.forEach(a=>a.disconnect());sink.disconnect();return rms;});
+        assert(stereo[0]>1e-4&&stereo[0]>stereo[1]*1.8,'P2 preserves independent left and right audio channels');
+
         await deck.locator('[data-auto-speed]').click();
         assert.equal(await page.evaluate(()=>__equipment.appState.project.devices['auto-deck'].filePlayback.rate),1.35);
         await deck.locator('[data-auto-lift]').click();
@@ -66,6 +70,9 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
         });
         await deck.screenshot({path:'/tmp/automatic-deck.png'});
         await require('./turntable-geometry.helpers.cjs')(page,deck,'automatic');
+        await page.evaluate(()=>__equipment.appState.project.devices['auto-deck'].setLidOpen(true));
+        assert(await deck.evaluate(el=>Number(getComputedStyle(el.querySelector('.at-lid-scene')).zIndex)<Number(getComputedStyle(el.querySelector('.at-plinth'),'::before').zIndex)),'open cover stays behind the chassis and controls');
+        await page.evaluate(()=>__equipment.appState.project.devices['auto-deck'].setLidOpen(false));
         await page.emulateMedia({reducedMotion:'reduce'});
         await deck.locator('[data-auto-start]').click();
         await page.waitForFunction(()=>__equipment.appState.project.devices['auto-deck'].state.playing);
