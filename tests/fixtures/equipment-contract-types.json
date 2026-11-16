@@ -1,5 +1,6 @@
 {
   "description": "Explicit inventory. New catalog equipment requires a reviewed contract update and the browser suite.",
+  "compatibilityOnlyTypes": ["headphone", "speaker", "subwoofer"],
   "types": [
     "adapterP10P2",
     "adapterP10Rca",
@@ -71,6 +72,7 @@
     "rcaSwitchVintage",
     "receiver",
     "shelfCoax",
+    "shelfRadiator",
     "shelfTop",
     "shelfWood",
     "signalGenerator",
@@ -97,6 +99,7 @@
     "subwooferPro",
     "tapeDeck",
     "turntable",
+    "turntableAutomatic",
     "turntableBelt",
     "turntableDirect",
     "turntableLinear",

@@ -67,10 +67,11 @@ Logo completo: [nexora.svg](../assets/brands/nexora.svg) · [Lettering](../asset
 
 Projeto da linha: Masthead à esquerda, grafite com filete cobre e teclas baixas arredondadas.
 
-Nomenclatura: NX + função + patamar da plataforma: I integrado, P pré, R receiver, S streaming, D disco, H fones, L link, X seletor.
+Nomenclatura: NX + função + patamar da plataforma: I integrado, P pré, R receiver, S streaming, D disco, T toca-discos, H fones, L link, X seletor.
 
 | Equipamento | Modelo | Código compatível |
 | --- | --- | --- |
+| Toca-discos · Automático | Nexora NX-T60 | `turntableAutomatic` |
 | Integrado · Minimalista | Nexora NX-I60 | `integratedMinimal` |
 | Pré · Controle 2.1 | Nexora NX-P40 | `preControl` |
 | Pré · Tela Central | Nexora NX-P60 | `preDisplay` |
@@ -155,6 +156,7 @@ Nomenclatura: B bookshelf/passiva, A caixa ativa, S subwoofer e H fones. B/O dis
 
 | Equipamento | Modelo | Código compatível |
 | --- | --- | --- |
+| Bookshelf · Radiador Superior | Bravora B-70 | `shelfRadiator` |
 | Caixa Passiva Vintage | Bravora B-20 | `spkPassiveWood` |
 | Caixa Passiva · 3 Vias Preta | Bravora B-30B | `spkPassiveGridBlack` |
 | Caixa Passiva · 3 Vias Laranja | Bravora B-30O | `spkPassiveGridOrange` |

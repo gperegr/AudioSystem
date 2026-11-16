@@ -516,8 +516,22 @@
 
         function bookshelfSpeakerMarkup(type){
             const config=BOOKSHELF_SPEAKERS[type];
+            if(type==='shelfRadiator')return radiatorSpeakerMarkup();
             const driver=(kind,size,top)=>`<div class="tower-driver shelf-${kind} ${kind==='woofer'?'spk-woofer':''}" style="--driver-size:${size}px;top:${top}px" aria-hidden="true"><i class="tower-cone"><b></b>${type==='shelfCoax'?'<em class="shelf-coax-dome"></em>':''}</i><span class="tower-driver-screws"><i></i><i></i><i></i><i></i></span></div>`;
             return `<div class="device-header"><span>${DEVICE_NAMES[type]}</span></div><section class="bookshelf-body shelf-finish-${config.finish}">${type==='shelfTop'?'<div class="shelf-top-tweeter" aria-hidden="true"><i></i></div>':''}<div class="bookshelf-cabinet">${type==='shelfCoax'?driver('woofer',214,92):type==='shelfWood'?driver('tweeter',94,35)+driver('woofer',224,195):driver('woofer',222,90)}${['shelfWood','shelfCoax','shelfTop'].includes(type)?'':'<button class="speaker-grille bookshelf-grille" type="button" aria-label="Remover grade da caixa" title="Remover grade"></button><button class="grille-restore" type="button" title="Recolocar grade">RECOLOCAR GRADE</button>'}<div class="tower-terminal"><div class="port" data-type="wire" data-io="in" data-node="in" data-signal="amplified" title="Entrada amplificada para caixa passiva"></div><small>SPEAKER IN</small></div></div></section>`;
+        }
+        function radiatorSpeakerMarkup(){
+            return `<div class="device-header"><span>${DEVICE_NAMES.shelfRadiator}</span></div><section class="bookshelf-body shelf-finish-radiator">
+                <div class="mc-radiator" aria-hidden="true"><span class="mc-radiator-surround"><i></i></span><span class="mc-radiator-bridge"></span><small>PASSIVE BASS RADIATOR</small></div>
+                <div class="bookshelf-cabinet"><div class="mc-baffle" aria-hidden="true">
+                    <span class="mc-grille-socket mc-socket-tl"></span><span class="mc-grille-socket mc-socket-tr"></span><span class="mc-grille-socket mc-socket-bl"></span><span class="mc-grille-socket mc-socket-br"></span>
+                    <div class="mc-tweeter-panel"><div class="mc-tweeter"><i><b></b></i></div></div>
+                    <div class="mc-woofer spk-woofer"><i class="mc-metal-cone"><b></b></i></div>
+                </div>
+                <button class="speaker-grille bookshelf-grille mc-grille" type="button" aria-label="Remover grade da caixa" title="Remover grade"></button>
+                <button class="grille-restore" type="button" title="Recolocar grade">RECOLOCAR GRADE</button>
+                <div class="tower-terminal"><div class="port" data-type="wire" data-io="in" data-node="in" data-signal="amplified" title="Entrada amplificada para caixa passiva"></div><small>70 W RMS · 6 Ω</small></div>
+                </div></section>`;
         }
         function floorSpeakerMarkup(type){
             if(type==='spkElectrostatic')return document.getElementById('tpl-spkElectrostatic').innerHTML;

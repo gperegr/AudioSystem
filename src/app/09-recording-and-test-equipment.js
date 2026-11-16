@@ -194,6 +194,7 @@
                 dev.platterSpeed=next;dev.platterAngle=((dev.platterAngle||0)+travel)%360;
                 dev.el.style.setProperty('--tt-strobe-offset',(dev.platterAngle/360*80).toFixed(3)+'px');
                 dev.updateLinearMotion?.(now,elapsed,reduced);
+                dev.updateAutomaticMotion?.(now,elapsed,reduced);
             });
         }
         function updateTapeReels(dev,seconds,elapsed,running){

@@ -50,6 +50,8 @@
     <link rel="stylesheet" href="./styles/equipment/brands.css?v=material-print-v1">
     <link rel="stylesheet" href="./styles/equipment/analog-finishes.css?v=1">
     <link rel="stylesheet" href="./styles/equipment/product-families.css?v=1">
+    <link rel="stylesheet" href="./styles/equipment/automatic-turntable.css?v=1">
+    <link rel="stylesheet" href="./styles/equipment/radiator-speaker.css?v=1">
     <link rel="stylesheet" href="./styles/interface-palettes.css?v=home-preview-v1">
     <link rel="stylesheet" href="./styles/desktop-layout.css?v=1">
 </head>
@@ -114,6 +116,7 @@
 <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="turntableLinear"><div aria-hidden="true"></div><span class="text-xs text-center text-gray-300">Toca-discos Tangencial</span></div>
                         <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="turntableBelt"><div aria-hidden="true"></div><span class="text-xs text-center text-gray-300">Toca-discos · Prato de Vidro</span></div>
                         <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="turntableDirect"><div aria-hidden="true"></div><span class="text-xs text-center text-gray-300">Toca-discos · Tração Direta</span></div>
+                        <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="turntableAutomatic"><div aria-hidden="true"></div><span class="text-xs text-center text-gray-300">Toca-discos · Automático</span></div>
                         <div class="catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2" data-template="turntableVintage">
                             <div aria-hidden="true"></div><span class="text-xs text-center text-gray-300">Toca-discos Vintage</span>
                         </div>
@@ -599,6 +602,53 @@
                         <div class="port" data-type="rca-l" data-io="out" data-node="outL" title="Saída RCA esquerdo L"></div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-turntableAutomatic">
+        <div class="device-header"><span>Toca-discos · Automático</span></div>
+        <div class="at-plinth">
+            <div class="at-deck">
+                <div class="at-front-mechanism">
+                    <span class="auto-adapter" aria-hidden="true"></span>
+                    <div class="at-platter"><div class="at-record" data-tt="record"><div class="at-label"></div><div class="at-spindle"></div></div></div>
+                    <svg class="at-arm-svg" viewBox="0 0 566 112" preserveAspectRatio="none" aria-hidden="true">
+                        <path d="M433 84h43v19h-43z" fill="#17191a" stroke="#46494a"/>
+                        <path d="M443 42h23v46h-23z" fill="#292c2e" stroke="#5b5d5f"/>
+                        <rect x="437" y="30" width="35" height="17" rx="6" fill="#1e2022" stroke="#56595b"/>
+                        <path data-auto-tube d="M454 39L448 76" fill="none" stroke="#151718" stroke-width="7" stroke-linecap="round"/>
+                        <path data-auto-tube d="M454 39L448 76" fill="none" stroke="#a9abad" stroke-width="4" stroke-linecap="round"/>
+                        <path data-auto-tube d="M454 39L448 76" fill="none" stroke="#ecece7" stroke-width="1" stroke-linecap="round"/>
+                        <g data-auto-head transform="translate(432 75)">
+                            <path d="M0 0h23l-2 10H2z" fill="#303234" stroke="#85878a"/>
+                            <path d="M4 2h13M20 0l6-8h4" fill="none" stroke="#a8a9a7" stroke-width="1.5"/>
+                            <rect x="4" y="10" width="13" height="6" rx="1" fill="#e3dfd3" stroke="#aaa99e"/>
+                            <path d="m10 16-1 4" stroke="#e8dbc3" stroke-width="1.2"/>
+                        </g>
+                        <circle cx="454" cy="39" r="6" fill="#333638" stroke="#818485"/>
+                        <circle cx="454" cy="39" r="2" fill="#121415"/>
+                        <path d="M447 88h12v-8h-12" fill="#121415" stroke="#676a6c"/>
+                    </svg>
+                </div>
+                <button type="button" class="auto-size" data-auto-size aria-label="Tamanho do disco" aria-pressed="false">12″ / 7″</button>
+                <div class="at-lid-scene" aria-hidden="true">
+                    <span class="at-lid-hinge at-lid-hinge-left"></span><span class="at-lid-hinge at-lid-hinge-right"></span>
+                    <div class="at-dust-cover"><span class="at-cover-roof"></span><span class="at-cover-front"></span><span class="at-cover-back"></span><span class="at-cover-side at-cover-side-left"></span><span class="at-cover-side at-cover-side-right"></span></div>
+                </div>
+            </div>
+            <div class="at-controls">
+                <div class="auto-speed-control"><span>33⅓ · 45</span><button type="button" data-auto-speed aria-label="Velocidade do prato" aria-pressed="false">33⅓</button></div>
+                <span class="auto-drive-caption" aria-hidden="true">AUTOMATIC BELT DRIVE</span>
+                <div class="auto-transport">
+                    <div><span>START</span><button type="button" class="at-startstop" data-auto-start aria-label="Iniciar reprodução automática" aria-pressed="false">START</button></div>
+                    <div><span>STOP</span><button type="button" data-auto-stop aria-label="Parar e retornar o braço">STOP</button></div>
+                    <div><span>▲ / ▼</span><button type="button" data-auto-lift aria-label="Elevar ou baixar a agulha" aria-pressed="false">▲ / ▼</button></div>
+                </div>
+            </div>
+            <div class="at-io">
+                <button type="button" class="at-sw" data-tt="output" role="switch" aria-checked="false" aria-label="Saída: LINE ou PHONO"><span data-m="line" class="is-on">LINE</span><i class="tt-output-switch-rail" aria-hidden="true"><i class="tt-output-switch-thumb"></i></i><span data-m="phono">PHONO</span></button>
+                <div class="at-io-ports"><div class="at-io-ch"><span>L</span><div class="port" data-type="rca-l" data-io="out" data-node="outL" title="Saída RCA esquerdo L"></div></div><div class="at-io-ch"><span>R</span><div class="port" data-type="rca-r" data-io="out" data-node="outR" title="Saída RCA direito R"></div></div></div>
             </div>
         </div>
     </template>
@@ -1533,15 +1583,15 @@
     <script src="./src/modules/spotify-coverflow.js?v=preview-parity-v1"></script>
     <script src="./src/modules/audio-interfaces.js?v=interfaces-standard-io-20261025"></script>
     <script src="./src/modules/brand-lettering.js?v=retro-identities-v1"></script>
-    <script src="./src/modules/equipment-brands.js?v=v240t-wood-signature-v1"></script>
+    <script src="./src/modules/equipment-brands.js?v=nx-t60-b70-v1"></script>
     <script src="./src/modules/guided-access.js?v=grid-startup-v3"></script>
     <script src="./src/modules/adapter-design.js?v=physical-adapters-v3"></script>
     <script src="./src/modules/application-state.js?v=centered-entry-v1"></script>
-    <script src="./src/modules/equipment-acoustics.js?v=1"></script>
+    <script src="./src/modules/equipment-acoustics.js?v=nx-t60-v1"></script>
     <script src="./src/modules/menu-music.js?v=1"></script>
     <script src="./src/modules/signal-history.js?v=signal-history-v1"></script>
-    <script src="./src/i18n/languages.js?v=equipment-brands-v1"></script>
+    <script src="./src/i18n/languages.js?v=nx-t60-b70-v1"></script>
     <script src="./src/modules/orthogonal-cables.js?v=short-local-routes-v1"></script>
-    <script src="./script.js?v=preview-parity-v1"></script>
+    <script src="./script.js?v=nx-t60-b70-v1"></script>
 </body>
 </html>

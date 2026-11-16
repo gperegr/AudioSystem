@@ -77,6 +77,13 @@ const Hardware = (() => {
             "[data-tt=\"output\"]": {width:112, height:26},
             ".tt-lid-button": {width:24, height:20},
         },
+        turntableAutomatic: {
+            '[data-auto-start],[data-auto-stop],[data-auto-lift]':{width:48,height:18},
+            '[data-auto-speed]':{width:42,height:18},
+            '[data-auto-size]':{width:55,height:20},
+            '[data-tt="output"]':{width:112,height:22},
+            '.tt-lid-button':{width:22,height:18},
+        },
         turntableDirect: {
             ".power-btn": {width:24,height:24},
             ".at-startstop": {width:48,height:26},
@@ -634,6 +641,7 @@ const Hardware = (() => {
         el.innerHTML='<span class="power-rocker-well" aria-hidden="true"></span><span class="power-rocker-face" aria-hidden="true"><i class="rocker-mark-on"><svg viewBox="0 0 10 12"><path d="M5 2v8"/></svg></i><i class="rocker-mark-off"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="3.5"/></svg></i></span>';
     }
     function buttonModel(dev,el){
+        if(dev.type==='turntableAutomatic'&&el.matches('[data-auto-start],[data-auto-stop],[data-auto-lift],[data-auto-speed],[data-auto-size]'))return 'plainKey';
         if(el.dataset.buttonModel&&Object.hasOwn(buttons,el.dataset.buttonModel))return el.dataset.buttonModel;
         if(['btReceiverA','btTransmitterPro'].includes(dev.type))return 'illuminatedBar';
         if(el.classList.contains('power-btn')){

@@ -1,0 +1,31 @@
+/* B-70: pale veneer, silver baffle, metal cone and a top passive diaphragm. */
+.device-node.device-type-shelfRadiator .bookshelf-cabinet {
+    top:24px;border:12px solid transparent;border-radius:1px;background-origin:border-box;background-clip:border-box;
+    background:linear-gradient(90deg,#745c3544,transparent 8% 92%,#72543055),var(--material-wood-grain) center/256px 192px,linear-gradient(100deg,#d9c396,#ac8d59 65%,#c8ae7b);
+    box-shadow:inset 1px 1px #ead4ab,0 4px 7px #0007;
+}
+.device-type-shelfRadiator .mc-baffle {position:absolute;inset:0;border:1px solid #5e6160;background:var(--material-brushed-steel) center/256px 128px,linear-gradient(105deg,#a2a4a0,#797d7a 62%,#9d9f9b);box-shadow:inset 0 1px #e5e6df99,inset 0 -2px #454b48;pointer-events:none;}
+.device-type-shelfRadiator .mc-grille-socket {position:absolute;width:10px;height:10px;border:1px solid #494e4c;border-radius:50%;background:radial-gradient(circle,#111916 40%,#3c4540 45%,#777d76 62%,#303a34 70%);box-shadow:0 1px #cad0c180;}
+.device-type-shelfRadiator .mc-socket-tl {top:14px;left:14px;}.device-type-shelfRadiator .mc-socket-tr {top:14px;right:14px;}
+.device-type-shelfRadiator .mc-socket-bl {bottom:43px;left:14px;}.device-type-shelfRadiator .mc-socket-br {bottom:43px;right:14px;}
+.device-type-shelfRadiator .mc-tweeter-panel {position:absolute;left:calc(50% - 60px);top:10px;width:120px;height:116px;border:1px solid #696e6b;border-radius:2px;box-shadow:inset 1px 1px #d3d4cd88,1px 1px #b1b4ab55;}
+.device-type-shelfRadiator .mc-tweeter {position:absolute;left:18px;top:14px;width:82px;height:82px;border:2px solid #6b716b;border-radius:50%;background:linear-gradient(125deg,#d8dad3,#9a9f97);box-shadow:inset 0 0 0 3px #c0c3ba,0 1px #e7e7dc;}
+.device-type-shelfRadiator .mc-tweeter>i {position:absolute;inset:24%;border:3px solid #cbd0c4;border-radius:50%;background:repeating-conic-gradient(#b1b8af 0deg 38deg,#26332d 40deg 61deg,#d9ddd4 63deg 96deg);box-shadow:0 0 0 1px #5b665d,inset 0 0 6px #14251b;}
+.device-type-shelfRadiator .mc-tweeter b {position:absolute;inset:22%;border-radius:50%;background:radial-gradient(circle at 35% 25%,#edf2e5,#9ba79a 45%,#3b4f40 80%);}
+.device-type-shelfRadiator .mc-woofer {position:absolute;left:calc(50% - 105px);top:142px;width:210px;height:210px;border:2px solid #a7ada2;border-radius:50%;background:radial-gradient(circle,#151e18 58%,#050b07 60%,#354237 67%,#080e0a 70%,#b9bdb3 71%,#8b9486 74%);box-shadow:inset 0 0 0 2px #cbd0c4,0 2px 4px #0009;}
+.device-type-shelfRadiator .mc-metal-cone {position:absolute;inset:17%;border-radius:50%;background:conic-gradient(from -20deg,#d2d8cb,#7c897c 60deg,#d8dfce 135deg,#9ca996 200deg,#e7ebde 282deg,#a6afa1 330deg,#d2d8cb);box-shadow:inset 0 0 5px #314030aa;}
+.device-type-shelfRadiator .mc-metal-cone>b {position:absolute;inset:36%;border-radius:50%;background:radial-gradient(circle at 35% 25%,#e5e8de,#a6b19f 70%,#748570);box-shadow:0 1px 3px #182e1d66;}
+.device-type-shelfRadiator .mc-radiator {position:absolute;left:28px;right:28px;top:0;height:25px;border:1px solid #757d79;background:linear-gradient(#d7dcd5,#9ba49b 55%,#e1e4da 64%,#7f8c7e);box-shadow:inset 1px 1px #eef1e5,0 2px 3px #0008;pointer-events:none;}
+.device-type-shelfRadiator .mc-radiator-surround {position:absolute;left:23px;right:23px;top:-2px;height:17px;border:4px solid #26382d;border-radius:50%;background:#101e15;box-shadow:0 0 0 2px #879587,inset 0 2px 2px #000c;}
+.device-type-shelfRadiator .mc-radiator-surround>i {position:absolute;inset:2px 24px;border-radius:50%;background:linear-gradient(#798879,#aeb8a7,#5c6f5a);}
+.device-type-shelfRadiator .mc-radiator-bridge {position:absolute;left:calc(50% - 17px);top:-2px;width:34px;height:17px;border:1px solid #d4e0d255;background:linear-gradient(100deg,#e2ecdf55,#e7f2df0d,#e9f6e555);clip-path:polygon(0 0,100% 0,87% 100%,13% 100%);}
+.device-type-shelfRadiator .mc-radiator small {position:absolute;left:0;right:0;bottom:1px;text-align:center;color:#425744;font:600 4px/1 Inter,sans-serif;letter-spacing:.12em;}
+.device-type-shelfRadiator .mc-grille {inset:2px 2px 34px;border:2px solid #a1aaa0;border-radius:1px;background:repeating-linear-gradient(0deg,#dce3d429 0 .7px,transparent .7px 2px),repeating-linear-gradient(90deg,#1b2d204d 0 .7px,transparent .7px 2px),linear-gradient(105deg,#a2ac9f,#788775 65%,#a4afa0);box-shadow:inset 0 0 2px #f1f2e4,1px 2px 4px #172b1acc;}
+.device-type-shelfRadiator .mc-grille::before {content:'';position:absolute;left:0;right:0;top:30%;bottom:0;background:#152b1712;pointer-events:none;}
+.device-type-shelfRadiator .bookshelf-cabinet>.tower-terminal {left:calc(50% - 67px);bottom:1px;width:134px;height:26px;padding:0 6px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:7px;border:0;background:transparent;box-shadow:none;}
+.device-type-shelfRadiator .tower-terminal::before {display:none;}
+.device-type-shelfRadiator .tower-terminal small {position:static;white-space:nowrap;font:600 6px Inter,sans-serif;color:#2b3e29;}
+.device-node.device-type-shelfRadiator .grille-restore {top:3px;right:3px;z-index:6;}
+.device-node.device-type-shelfRadiator:not(.grille-off)>.equipment-brand-badge {top:74px!important;color:#eef1e4;}
+.device-node.device-type-shelfRadiator.grille-off>.equipment-brand-badge {color:#293a28;--brand-print-ink:#293a28;--brand-print-blend:normal;--brand-print-opacity:1;}
+@media(prefers-reduced-motion:reduce){.device-type-shelfRadiator .mc-grille {transition:none;}}

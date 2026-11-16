@@ -2,7 +2,7 @@
         const DEVICE_NAMES = {
             furnitureRack:'Rack de Áudio', furnitureCoverflow:'Coleção de Discos · Spotify', furnitureRackTall:'Rack com Vãos Altos', furnitureRackSix:'Rack com 6 Prateleiras', furnitureRackSixTall:'Rack com Vãos Altos · 6 Prateleiras', furnitureTable:'Mesa de Áudio', furnitureNiche:'Nicho de Áudio', cdCollection:'Conjunto de CDs', pendantLamp:'Luminária pendente', wallLampCage:'Arandela industrial', wallLampDome:'Arandela de prato',
             adapterRcaP2:'Adaptador RCA → P2', adapterP2Rca:'Adaptador P2 → RCA', adapterP10P2:'Adaptador P10 → P2', adapterP2P10:'Adaptador P2 → P10', adapterRcaP10:'Adaptador RCA → P10', adapterP10Rca:'Adaptador P10 → RCA', phonoConverter:'Conversor Phono → Linha', speakerConverter:'Conversor Amplificado → Linha',
-            turntableDirect: 'Toca-discos · Tração Direta', turntableBelt: 'Toca-discos · Prato de Vidro', turntable: 'Toca-discos', turntableVintage: 'Toca-discos Vintage', turntableLinear:'Toca-discos Tangencial',
+            turntableAutomatic: 'Toca-discos · Automático', turntableDirect: 'Toca-discos · Tração Direta', turntableBelt: 'Toca-discos · Prato de Vidro', turntable: 'Toca-discos', turntableVintage: 'Toca-discos Vintage', turntableLinear:'Toca-discos Tangencial',
             hardwareDemo:'Modelo · Controles',signalGeneratorVintage:'Gerador de Sinais Vintage', signalGenerator:'Gerador de Sinais', cdPlayer: 'CD Player', tapeDeck:'Tape Deck de Rolo', preamp:'Pré · Slim',preReference:'Pré · Visor Verde',preControl:'Pré · Controle 2.1',preDisplay:'Pré · Tela Central', benchMeter:'Medidor de Bancada', benchMeterVintage:'Medidor de Bancada Vintage',
             streamer: 'Streamer Hi-Fi',streamIntegrated:'Streamer Integrado',audioInterface1:'Interface USB · Compacta',audioInterface2:'Interface USB · Central',audioInterface3:'Interface USB · Estéreo',audioInterface4:'Interface USB · Dupla',
             receiver: 'Receiver Vintage',powerValve:'Potência · Valvulado',powerDual:'Potência · Duplo Canal',powerBias:'Potência · Visor Circular',
@@ -19,7 +19,7 @@
             crossover: 'Crossover 3 Vias', crossoverVintage: 'Crossover Vintage',
             powerAmp: 'Receiver Moderno', powerStereo: 'Amplificador de Potência Tradicional', powerVintage: 'Amplificador de Potência Vintage',
             speaker: 'Caixa Passiva',
-            shelfCoax:'Bookshelf · Coaxial',shelfWood:'Bookshelf · Madeira',shelfTop:'Bookshelf · Tweeter Superior',spkPassiveWood: 'Caixa Passiva Vintage',floorDiamond:'Caixa de Piso · Tweeter Superior',floorCoax:'Caixa de Piso · Coaxial',floorFlax:'Caixa de Piso · Cones Naturais',
+            shelfRadiator:'Bookshelf · Radiador Superior',shelfCoax:'Bookshelf · Coaxial',shelfWood:'Bookshelf · Madeira',shelfTop:'Bookshelf · Tweeter Superior',spkPassiveWood: 'Caixa Passiva Vintage',floorDiamond:'Caixa de Piso · Tweeter Superior',floorCoax:'Caixa de Piso · Coaxial',floorFlax:'Caixa de Piso · Cones Naturais',
             spkPassiveCarbon: 'Caixa Passiva Moderna',
             spkPassiveGridBlack: 'Caixa Passiva · 3 Vias Preta',
             spkPassiveGridOrange: 'Caixa Passiva · 3 Vias Laranja',
@@ -297,7 +297,7 @@
             phonoConverter:{name:'PHONO → LINHA',input:'rca',output:'rca',inputSignal:'phono',outputSignal:'line',description:'Pré de phono: aplica ganho e equalização RIAA ao sinal phono e entrega nível de linha por RCA R/L.'},
             speakerConverter:{name:'AMPLIFICADO → LINHA',input:'wire',output:'rca',inputSignal:'amplified',outputSignal:'line',description:'Conversor de nível alto para baixo: atenua uma saída SPEAKER amplificada para uma entrada de linha RCA. Não serve para saída de fones.'}
         };
-        const TURNTABLE_TYPES = new Set(['turntable', 'turntableVintage','turntableLinear','turntableBelt','turntableDirect']);
+        const TURNTABLE_TYPES = new Set(['turntable', 'turntableVintage','turntableLinear','turntableBelt','turntableDirect','turntableAutomatic']);
         function rotateAudioAdapter(dev,delta){
             if(!AudioAdapterDesign.models[dev.type])return;
             dev.adapterErrorMotion?.cancel();
@@ -335,6 +335,7 @@
         const RCA_SWITCH_TYPES = new Set(['rcaSwitch', 'rcaSwitchVintage']);
         const SELECTOR_TYPES = new Set([...RCA_SWITCH_TYPES, ...SPEAKER_SWITCH_TYPES]);
         const BOOKSHELF_SPEAKERS={
+            shelfRadiator:{height:434,width:296,watts:70,ohms:6,finish:'radiator',description:'Caixa passiva de duas vias, 70 W RMS e 6 Ω, com madeira clara, woofer metálico, radiador passivo superior e grade frontal removível. Assinatura simulada com graves destacados.'},
             shelfCoax:{height:424,width:280,watts:100,ohms:8,recommended:true,finish:'coax',description:'Bookshelf passiva com frente curva e conjunto coaxial cobre. Médios e agudos equilibrados.'},
             shelfWood:{height:504,width:278,watts:200,ohms:6,finish:'wood',description:'Bookshelf passiva de duas vias com madeira envernizada, tweeter de domo macio e woofer escuro.'},
             shelfTop:{height:578,width:269,watts:120,ohms:8,recommended:true,finish:'top',description:'Bookshelf passiva com tweeter separado no topo e cone prateado. Agudos destacados.'}
