@@ -71,6 +71,7 @@ Nomenclatura: NX + função + patamar da plataforma: I integrado, P pré, R rece
 
 | Equipamento | Modelo | Código compatível |
 | --- | --- | --- |
+| Integrado · Classe D | Nexora NX-I20 | `integratedCompact` |
 | Toca-discos · Automático | Nexora NX-T60 | `turntableAutomatic` |
 | Integrado · Minimalista | Nexora NX-I60 | `integratedMinimal` |
 | Pré · Controle 2.1 | Nexora NX-P40 | `preControl` |

@@ -323,7 +323,7 @@
                 html += `</div>`;
             } else if (BT_TX_TYPES.has(dev.type)) {
                 const paired = dev.btPairedId ? appState.project.devices[dev.btPairedId] : null;
-                html += `<div class="text-sm text-gray-400 mt-2">Transmissor Bluetooth: recebe áudio pela entrada RCA estéreo e envia sem fio para fones pareados. ${paired ? ('Conectado a ' + (DEVICE_NAMES[paired.type] || paired.type) + '.') : 'Clique em Parear aqui e no fone.'}</div>`;
+                html += `<div class="text-sm text-gray-400 mt-2"><span>Transmissor Bluetooth: recebe áudio pela entrada RCA estéreo e envia sem fio para fones ou amplificadores compatíveis.</span> <span>${paired ? ('Conectado a ' + (DEVICE_NAMES[paired.type] || paired.type) + '.') : 'Clique em Parear nos dois aparelhos.'}</span></div>`;
             } else if (BT_RX_TYPES.has(dev.type)) {
                 html += `<div class="text-sm text-gray-400 mt-2">Receptor Bluetooth: recebe áudio sem fio de um celular ou computador e converte para saída analógica RCA estéreo. Não transmite para fones Bluetooth.</div>`;
             } else if (HP_TYPES.has(dev.type)) {

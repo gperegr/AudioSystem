@@ -30,7 +30,7 @@
     const line=(brand,models)=>Object.entries(models).forEach(([type,model])=>products[type]=Object.freeze({brand,model}));
     line('aurenne',{receiver:'R-780',integratedSilver:'I-740',integratedUtility:'I-420',preClassic:'P-260',headphoneAmp:'H-120',turntableVintage:'T-240',turntableLinear:'T-360',tapeDeck:'D-340',eqVintage:'E-270',mixerVintage:'M-330',crossoverVintage:'X-310',powerVintage:'A-640',rcaSwitchVintage:'S-210',rcaMatrixVintage:'S-340',speakerSwitchVintage:'S-220'});
     line('veltron',{integratedBlue:'V 520i',preGlass:'V 320p',preReference:'V 420p',powerValve:'V 620v',powerBias:'V 720s',turntableBelt:'V 240t'});
-    line('nexora',{turntableAutomatic:'NX-T60',integratedMinimal:'NX-I60',preControl:'NX-P40',preDisplay:'NX-P60',powerAmp:'NX-R80',streamer:'NX-S40',streamIntegrated:'NX-S90',cdPlayer:'NX-D30',headphoneAmpModern:'NX-H20',btReceiverA:'NX-L10',rcaSwitch:'NX-X10',speakerSwitch:'NX-X20'});
+    line('nexora',{integratedCompact:'NX-I20',turntableAutomatic:'NX-T60',integratedMinimal:'NX-I60',preControl:'NX-P40',preDisplay:'NX-P60',powerAmp:'NX-R80',streamer:'NX-S40',streamIntegrated:'NX-S90',cdPlayer:'NX-D30',headphoneAmpModern:'NX-H20',btReceiverA:'NX-L10',rcaSwitch:'NX-X10',speakerSwitch:'NX-X20'});
     line('korden',{turntable:'KR-T2',turntableDirect:'KR-T4',eqStudio:'KR-E7',mixer:'KR-M3',crossover:'KR-X3',powerStereo:'KR-P20',powerDual:'KR-P40',headphoneAmp4:'KR-H4',rcaMatrix:'KR-M34',btTransmitterPro:'KR-L2',preamp:'KR-P10',prePrecision:'KR-P60'});
     line('linholt',{benchMeter:'M-20',benchMeterVintage:'M-10',signalGenerator:'G-20',signalGeneratorVintage:'G-10',audioInterface1:'U-10',audioInterface2:'U-20',audioInterface3:'U-30',audioInterface4:'U-40',phonoConverter:'C-P1',speakerConverter:'C-S1',adapterP10P2:'A-635',adapterP2P10:'A-356',adapterP2Rca:'A-35R',adapterP10Rca:'A-63R',adapterRcaP2:'A-R35',adapterRcaP10:'A-R63'});
     line('bravora',{shelfRadiator:'B-70',spkPassiveWood:'B-20',spkPassiveGridBlack:'B-30B',spkPassiveGridOrange:'B-30O',spkActiveMonitor:'A-20',shelfWood:'B-25',subwooferPassiveVintage:'S-30',hpKubaDisco2:'H-20'});
@@ -130,6 +130,7 @@
         // Reserved signature areas for models whose functional front layout
         // interrupts the normal rail. These are deliberate, reviewed exceptions.
         const slots={
+            integratedCompact:{x:33,y:12,w:104,h:20,mode:'full',zone:'header-left'},
             receiver:{x:(width-100)/2,y:112,w:100,h:18,mode:'full',zone:'connector-center'},
             turntableLinear:{x:185,y:207,w:100,h:18,mode:'full',zone:'footer-left'},
             turntableAutomatic:{x:223,y:132,w:105,h:20,mode:'full',zone:'footer-center'},

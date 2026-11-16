@@ -150,19 +150,17 @@
                         }
                     }
                 });
-            }
-
-            // 2b. Ligação sem fio Bluetooth (transmissor → fone)
-            Object.values(appState.project.devices).forEach(dev => {
-                if (BT_TX_TYPES.has(dev.type) && dev.powered && activeDevices.has(dev.id) && dev.btPairedId) {
-                    const hp = appState.project.devices[dev.btPairedId];
-                    if (hp&&!hp.state.damage&&!dev.state.damage) {
-                        connectedDevices.add(dev.id);
-                        connectedDevices.add(hp.id);
-                        activeDevices.add(hp.id);
+                // Wireless edges participate in the same traversal so a paired
+                // amplifier can forward its signal to wired speakers this pass.
+                Object.values(appState.project.devices).forEach(dev=>{
+                    const receiver=appState.project.devices[dev.btPairedId];
+                    if(!BT_TX_TYPES.has(dev.type)||!receiver)return;
+                    connectedDevices.add(dev.id);connectedDevices.add(receiver.id);
+                    if(dev.powered&&receiver.powered&&!dev.state.damage&&!receiver.state.damage&&activeDevices.has(dev.id)&&!activeDevices.has(receiver.id)){
+                        activeDevices.add(receiver.id);changed=true;
                     }
-                }
-            });
+                });
+            }
 
             Object.values(appState.project.devices).forEach(dev => {
                 const hasSignal = activeDevices.has(dev.id);

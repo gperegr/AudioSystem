@@ -288,7 +288,45 @@
             const markings=[.0001,.001,.01,.1,1].map(f=>{const a=-48+(Math.log10(f)+4)*24,p=point(a,43),q=point(a,47),t=point(a,53);return `<path d="M${p.x} ${p.y}L${q.x} ${q.y}"/><text x="${t.x}" y="${t.y}" text-anchor="middle" font-size="5.5">${Number((f*watts).toFixed(3))}</text>`;}).join('');
             return `<div class="integrated-gauges">${['L','R'].map((ch,i)=>`<div class="integrated-gauge"><svg viewBox="0 0 100 70" aria-label="Potência simulada ${ch}"><g class="integrated-scale">${markings}<text x="85" y="59" font-size="7" text-anchor="end">W · ${ch}</text></g><line data-integrated-needle="${i}" x1="50" y1="62" x2="50" y2="19" transform="rotate(-48 50 62)"/><circle cx="50" cy="62" r="2"/></svg></div>`).join('')}</div>`;
         }
+        function compactAmpMarkup(){
+            const dial=(key,label)=>`<label class="compact-dial compact-${key}"><button type="button" data-integrated-knob="${key}" aria-label="${label}" title="${label}"></button><span>${label}</span></label>`;
+            const channel=(ch,input)=>`<label><span>${ch}</span><div class="port" data-type="${input?'rca-'+ch.toLowerCase():'wire'}" data-io="${input?'in':'out'}" data-node="${input?'line0':'speaker'}${ch}" data-signal="${input?'line':'amplified'}" ${input?'':'data-role="amp-speaker-out"'} title="${input?'Entrada RCA de linha':'Saída amplificada para caixa passiva'} · ${ch}"></div></label>`;
+            return `<div class="device-header"><span>${DEVICE_NAMES.integratedCompact}</span></div><section class="integrated-face compact-amp-face">
+                <small class="compact-engraving">CLASS D STEREO AMPLIFIER</small>
+                <div class="compact-power"><span>ON</span><div data-power-slot><button type="button" class="power-btn" title="Ligar / desligar"></button></div><span>OFF</span></div>
+                <div class="compact-wireless"><span class="compact-input-status"><i class="bt-indicator compact-input-led" aria-hidden="true"></i><b data-compact-source>AUX</b></span><button type="button" class="btn-bt-pair" aria-label="Parear Bluetooth" aria-pressed="false"><svg viewBox="0 0 18 24" aria-hidden="true"><path d="M8 2v20l7-6-12-9m0 10L15 8 8 2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button><small>BT</small></div>
+                ${dial('treble','TREBLE')}${dial('bass','BASS')}${dial('volume','VOLUME')}
+                <div class="compact-io compact-line"><small>LINE IN</small><div>${['L','R'].map(ch=>channel(ch,true)).join('')}</div></div>
+                <div class="compact-io compact-speakers"><small>SPEAKERS</small><div>${['L','R'].map(ch=>channel(ch,false)).join('')}</div></div>
+            </section>`;
+        }
+        function configureCompactAmp(dev){
+            const ctx=appState.audio.context,split=ctx.createChannelSplitter(2);
+            dev.nodes.btIn=ctx.createGain();dev.nodes.btIn.connect(split);
+            split.connect(dev.nodes.line1L,0);split.connect(dev.nodes.line1R,1);
+            (dev.modelAudioNodes||=[]).push(split);
+            dev.state.volume=.3;
+            const apply=dev.applyIntegrated;
+            dev.applyIntegrated=()=>{
+                const peer=appState.project.devices[dev.btPairedId],wireless=!!peer&&peer.powered&&!peer.state.damage;
+                Object.assign(dev.state,{integratedSource:wireless?1:0,balance:0,direct:false,preMuted:false});
+                apply();dev.el.dataset.compactInput=wireless?'bt':'aux';
+                const name=wireless?'Bluetooth':'AUX';
+                dev.el.querySelectorAll('[data-compact-source]').forEach(label=>label.textContent=name);
+                if(appState.interface.selectedDeviceId===dev.id){
+                    inspectorContent.querySelectorAll('[data-compact-source]').forEach(label=>label.textContent=name);
+                    const pair=inspectorContent.querySelector('[data-compact-pair]');
+                    if(pair){pair.setAttribute('aria-pressed',String(!!dev.btPairedId));pair.textContent=dev.btPairedId?'Desconectar Bluetooth':'Parear Bluetooth';}
+                }
+            };
+            dev.syncCompactInput=dev.applyIntegrated;
+            dev.applyIntegrated();
+        }
+        function compactAmpInspector(dev){
+            return `<section class="flex flex-col gap-4"><p class="text-sm text-gray-400">Entrada RCA estéreo e saídas para caixas passivas. O Bluetooth virtual recebe um transmissor do simulador e tem prioridade sobre AUX.</p><div class="flex items-center justify-between"><span class="text-sm text-gray-300">Fonte selecionada</span><output class="text-sm" data-compact-source>${dev.state.integratedSource?'Bluetooth':'AUX'}</output></div><button type="button" class="tt-insp-btn" data-compact-pair aria-pressed="${!!dev.btPairedId}">${dev.btPairedId?'Desconectar Bluetooth':'Parear Bluetooth'}</button>${[['volume','Volume',0,1],['bass','Graves',-10,10],['treble','Agudos',-10,10]].map(([key,label,min,max])=>`<label class="flex flex-col gap-2 text-sm text-gray-300"><span>${label} <output>${integratedSettingText(key,dev.state[key])}</output></span><input type="range" data-integrated-setting="${key}" aria-label="${label}" min="${min}" max="${max}" step="${(max-min)/10}" value="${dev.state[key]}"></label>`).join('')}</section>`;
+        }
         function integratedMarkup(type){
+            if(type==='integratedCompact')return compactAmpMarkup();
             if(type==='integratedUtility')return utilityAmpMarkup();
             const config=INTEGRATED_AMPS[type];
             const knob=(key,label,big=false)=>`<label class="integrated-knob-group"><button type="button" class="integrated-knob ${big?'is-large':''}" data-integrated-knob="${key}" role="slider" tabindex="0" aria-label="${label}" title="${label} · arraste para ajustar"><i></i></button><span>${label}</span></label>`;
@@ -300,10 +338,10 @@
             const config=controlAmpConfig(dev.type),ctx=appState.audio.context;
             Object.assign(dev.state,{integratedSource:0,balance:0,direct:false});
             dev.integratedGates=[];dev.integratedFilters=[];dev.powerNodes=[];
-            dev.nodes.outPhone=ctx.createChannelMerger(2);
+            if(config.phones!==false)dev.nodes.outPhone=ctx.createChannelMerger(2);
             ['L','R'].forEach((ch,channel)=>{
                 const bus=dev.nodes['in'+ch]=ctx.createGain();
-                for(let i=0;i<4;i++){
+                for(let i=0;i<controlAmpSources(dev.type).length;i++){
                     const input=dev.nodes[(i===3&&config.phono!==false?'phono':'line'+i)+ch]=ctx.createGain(),gate=ctx.createGain();
                     dev.integratedGates.push({gate,index:i});
                     if(i===3&&config.phono!==false){
@@ -316,13 +354,14 @@
                 const bass=ctx.createBiquadFilter(),treble=ctx.createBiquadFilter(),volume=ctx.createGain(),power=ctx.createGain();
                 bass.type='lowshelf';bass.frequency.value=100;treble.type='highshelf';treble.frequency.value=3500;
                 bus.connect(bass);bass.connect(treble);treble.connect(volume);volume.connect(power);
-                const speaker=dev.nodes['speaker'+ch]=ctx.createGain(),pre=dev.nodes['pre'+ch]=ctx.createGain();
-                power.connect(speaker);power.connect(pre);power.connect(dev.nodes.outPhone,0,channel);
+                const speaker=dev.nodes['speaker'+ch]=ctx.createGain();power.connect(speaker);
+                if(config.preout!==false){const pre=dev.nodes['pre'+ch]=ctx.createGain();power.connect(pre);}
+                if(config.phones!==false)power.connect(dev.nodes.outPhone,0,channel);
                 dev.powerNodes.push(power);dev.integratedFilters.push({bass,treble,volume,ch});
             });
             dev.applyIntegrated=()=>{
                 const t=ctx.currentTime,st=dev.state;
-                st.volume=Math.max(0,Math.min(1,st.volume));st.bass=Math.max(-10,Math.min(10,st.bass||0));st.treble=Math.max(-10,Math.min(10,st.treble||0));st.balance=Math.max(-1,Math.min(1,st.balance||0));if(CUSTOM_PREAMPS[dev.type]){st.subLevel=Math.max(0,Math.min(1,st.subLevel??.8));st.subFrequency=Math.max(40,Math.min(200,st.subFrequency??80));}st.integratedSource=Math.max(0,Math.min(3,Math.round(st.integratedSource||0)));
+                st.volume=Math.max(0,Math.min(1,st.volume));st.bass=Math.max(-10,Math.min(10,st.bass||0));st.treble=Math.max(-10,Math.min(10,st.treble||0));st.balance=Math.max(-1,Math.min(1,st.balance||0));if(CUSTOM_PREAMPS[dev.type]){st.subLevel=Math.max(0,Math.min(1,st.subLevel??.8));st.subFrequency=Math.max(40,Math.min(200,st.subFrequency??80));}st.integratedSource=Math.max(0,Math.min(controlAmpSources(dev.type).length-1,Math.round(st.integratedSource||0)));
                 dev.integratedGates.forEach(({gate,index})=>gate.gain.setTargetAtTime(index===st.integratedSource?1:0,t,.02));
                 dev.integratedFilters.forEach(({bass,treble,volume,ch})=>{
                     bass.gain.setTargetAtTime(config.tone&&!st.direct?st.bass:0,t,.025);treble.gain.setTargetAtTime(config.tone&&!st.direct?st.treble:0,t,.025);
@@ -346,11 +385,13 @@
         }
         function integratedSettingText(key,value){return key==='volume'||key==='subLevel'?Math.round(value*10)+'/10':key==='balance'?value===0?'Centro':(value<0?'L ':'R ')+Math.round(Math.abs(value)*5):(value>0?'+':'')+value+' dB';}
         function integratedInspectorHtml(dev){
+            if(dev.type==='integratedCompact')return compactAmpInspector(dev);
             const config=controlAmpConfig(dev.type),keys=config.tone&&dev.type!=='preClassic'?[['volume','Volume',0,1],['bass','Graves',-10,10],['treble','Agudos',-10,10],['balance','Balanço L/R',-1,1]]:[['volume','Volume',0,1],...(config.balance?[['balance','Balanço L/R',-1,1]]:[])];
             return `<section class="flex flex-col gap-4"><span class="text-sm text-gray-300">Fonte selecionada</span><div class="grid grid-cols-2 gap-2">${controlAmpSources(dev.type).map((name,index)=>`<button class="tt-insp-btn ${dev.state.integratedSource===index?'is-on':''}" data-integrated-inspector-source="${index}" aria-pressed="${dev.state.integratedSource===index}">${name}</button>`).join('')}</div>${keys.map(([key,name,min,max])=>`<label class="flex flex-col gap-2 text-sm text-gray-300"><span>${name} <output>${integratedSettingText(key,dev.state[key])}</output></span><input type="range" data-integrated-setting="${key}" min="${min}" max="${max}" step="${(max-min)/10}" value="${dev.state[key]}"></label>`).join('')}${config.tone?`<button class="tt-insp-btn ${dev.state.direct?'is-on':''}" data-integrated-inspector-direct title="Ignora os ajustes de graves e agudos, deixando a tonalidade neutra. Volume, balanço e subwoofer continuam ativos. Ao desativar, os ajustes anteriores voltam a ser aplicados." aria-pressed="${!!dev.state.direct}">DIRECT</button>`:''}</section>`;
         }
         function bindIntegratedInspector(dev){
             if(!controlAmpConfig(dev.type))return;
+            inspectorContent.querySelector('[data-compact-pair]')?.addEventListener('click',()=>handlePairClick(dev));
             inspectorContent.querySelectorAll('[data-integrated-setting]').forEach(input=>input.addEventListener('input',()=>{const key=input.dataset.integratedSetting;dev.state[key]=Number(input.value);dev.applyIntegrated();input.previousElementSibling.querySelector('output').textContent=integratedSettingText(key,dev.state[key]);scheduleProjectSave();}));
             inspectorContent.querySelectorAll('[data-integrated-inspector-source]').forEach(button=>button.addEventListener('click',()=>dev.el.querySelector(`[data-integrated-source="${button.dataset.integratedInspectorSource}"]`).click()));
             inspectorContent.querySelector('[data-integrated-inspector-direct]')?.addEventListener('click',()=>dev.el.querySelector('[data-integrated-direct]').click());

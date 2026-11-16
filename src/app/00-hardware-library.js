@@ -18,6 +18,7 @@ const Hardware = (() => {
         plainPlastic:{name:'Plástico moldado com ponteiro',width:34,height:34,finish:'plain',face:'#30342e',rim:'#22271f',ink:'#e0e4d3'},
         silverFluted:{name:'Alumínio torneado com saia canelada',width:42,height:42,finish:'fluted',face:'#d5d9d5',rim:'#82908e',ink:'#152322'},
         machined:{name:'Alumínio usinado',width:36,height:36,finish:'machined',face:'#c7ccc7',rim:'#78817c',ink:'#29372e'},
+        blackAlloy:{name:'Alumínio preto acetinado com aro prateado',width:48,height:48,finish:'satin',face:'#424548',rim:'#15191a',ink:'#eceee7'},
         skirted:{name:'Saia cromada e miolo preto',width:52,height:52,finish:'skirted',face:'#bec5bf',rim:'#8b9690',ink:'#efe9d2'},
         bakelite:{name:'Baquelite canelada',width:36,height:36,finish:'bakelite',face:'#342a21',rim:'#544a39',ink:'#e9d7a9'},
         ivory:{name:'Marfim com parafuso de latão',width:36,height:36,finish:'ivory',face:'#ded2ae',rim:'#9c8e6c',ink:'#9d4c34'},
@@ -62,6 +63,7 @@ const Hardware = (() => {
         preGlass:{'.power-btn':{width:18,height:27},'[data-pre-toggle],[data-glass-toggle],[data-integrated-direct]':{width:18,height:27},'[data-pre-rotary]':{width:58,height:58},'[data-integrated-knob="volume"]':{width:64,height:64},'[data-integrated-knob="bass"],[data-integrated-knob="treble"],[data-integrated-knob="balance"]':{width:40,height:40}},
         streamIntegrated:{'.power-btn':{width:14,height:20},'[data-stream-action]':{width:24,height:24},'[data-stream-input]':{width:131,height:74},'[data-stream-cover]':{width:73,height:73}},
         integratedUtility:{'.power-btn':{width:18,height:27},'[data-integrated-source]':{width:28,height:17},'[data-utility-toggle],.integrated-direct':{width:33,height:17},'[data-integrated-knob="volume"]':{width:61,height:61}},
+        integratedCompact:{'[data-integrated-knob]':{width:48,height:48},'.power-btn':{width:18,height:27},'.btn-bt-pair':{width:26,height:24}},
         prePrecision:{'.power-btn':{width:16,height:25},'[data-pre-toggle],[data-precision-gain]':{width:24,height:34},'[data-pre-rotary]':{width:37,height:37},'[data-integrated-knob="volume"]':{width:64,height:64},'[data-integrated-knob="balance"]':{width:26,height:26}},
         turntableLinear: {
             '.linear-keys button':{width:130,height:28},
@@ -532,6 +534,7 @@ const Hardware = (() => {
         paintKnob(el);
     }
     function knobModel(dev,el){
+        if(dev.type==='integratedCompact')return 'blackAlloy';
         if(el.dataset.interfaceKnob)return el.dataset.interfaceKnob;
         if(dev.type==='preClassic')return 'machined';
         if(dev.type==='preGlass')return 'silverFluted';
@@ -641,6 +644,7 @@ const Hardware = (() => {
         el.innerHTML='<span class="power-rocker-well" aria-hidden="true"></span><span class="power-rocker-face" aria-hidden="true"><i class="rocker-mark-on"><svg viewBox="0 0 10 12"><path d="M5 2v8"/></svg></i><i class="rocker-mark-off"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="3.5"/></svg></i></span>';
     }
     function buttonModel(dev,el){
+        if(dev.type==='integratedCompact')return el.matches('.power-btn')?'chromeLever':'plainKey';
         if(dev.type==='turntableAutomatic'&&el.matches('[data-auto-start],[data-auto-stop],[data-auto-lift],[data-auto-speed],[data-auto-size]'))return 'plainKey';
         if(el.dataset.buttonModel&&Object.hasOwn(buttons,el.dataset.buttonModel))return el.dataset.buttonModel;
         if(['btReceiverA','btTransmitterPro'].includes(dev.type))return 'illuminatedBar';
@@ -785,7 +789,7 @@ const Hardware = (() => {
         if(['prePrecision','preGlass'].includes(type))return;
         if(type==='hardwareDemo'||FURNITURE_TYPES[type]||isListeningDevice({type})||(SOURCE_TYPES.has(type)&&!SIGNAL_GENERATOR_TYPES.has(type)&&!['btReceiverA','cdPlayer','streamer',...CAPTURE_INTERFACE_TYPES].includes(type)))return;
         const compact=!!INTERFACE_DEVICES[type]||['headphoneAmp','headphoneAmpModern','btTransmitterPro','btReceiverA',...CAPTURE_INTERFACE_TYPES].includes(type)&&type!=='audioInterface4';
-        const height=type==='powerValve'||type==='preClassic'?'high':type==='audioInterface4'||INTEGRATED_AMPS[type]||CUSTOM_PREAMPS[type]||CUSTOM_POWER_AMPS[type]||RADIO_RECEIVERS.has(type)||MIXER_TYPES.has(type)||EQ_TYPES.has(type)||BENCH_METER_TYPES.has(type)||SIGNAL_GENERATOR_TYPES.has(type)?'medium':'low';
+        const height=INTEGRATED_AMPS[type]?.chassis||(type==='powerValve'||type==='preClassic'?'high':type==='audioInterface4'||INTEGRATED_AMPS[type]||CUSTOM_PREAMPS[type]||CUSTOM_POWER_AMPS[type]||RADIO_RECEIVERS.has(type)||MIXER_TYPES.has(type)||EQ_TYPES.has(type)||BENCH_METER_TYPES.has(type)||SIGNAL_GENERATOR_TYPES.has(type)?'medium':'low');
         el.dataset.chassis=height;el.dataset.chassisWidth=compact?'compact':'full';
         const width=sizes.widths[el.dataset.chassisWidth],h=sizes.heights[height];el.style.setProperty('--chassis-height',h+'px');el.style.setProperty('--chassis-width',width+'px');
         for(const [key,value]of Object.entries({width:width+'px','min-width':width+'px','max-width':width+'px',height:h+'px','min-height':h+'px','max-height':h+'px'}))el.style.setProperty(key,value,'important');
@@ -821,6 +825,7 @@ const Hardware = (() => {
     // Exposed fasteners belong to removable service panels, not every front.
     // Domestic hi-fi fronts and compact enclosures attach from behind/below.
     const frontFastenerTypes=new Set([
+        'integratedCompact',
         'preClassic','prePrecision','preReference','tapeDeck','spkElectrostatic',
         'eqStudio','eqVintage','mixer','mixerVintage','crossover','crossoverVintage',
         'powerStereo','powerVintage','powerDual','headphoneAmp4',

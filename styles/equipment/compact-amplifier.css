@@ -1,0 +1,42 @@
+/* NX-I20: low, full-width class-D amplifier. All jacks are on the front. */
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-integratedCompact {
+    padding:0!important;border:0!important;border-radius:10px;background:transparent!important;box-shadow:none!important;
+}
+.device-node.device-type-integratedCompact .compact-amp-face {
+    position:relative;margin:0;padding:0;border:2px solid #24282a;border-radius:10px;
+    background:url('../../assets/textures/speaker-coating.svg') center/100px 100px,linear-gradient(120deg,#44484b,#35393b 55%,#2e3335);
+    box-shadow:inset 0 1px #b1b6b766,inset 0 -2px #121819,0 4px 6px #0008;overflow:visible;
+}
+.device-type-integratedCompact .compact-engraving {position:absolute;left:157px;top:15px;font:500 8px/1.2 Inter,sans-serif;letter-spacing:.1em;color:#d1d6d3;}
+.device-type-integratedCompact .compact-power {position:absolute;left:33px;top:43px;width:23px;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.device-type-integratedCompact .compact-power>span {font:500 7px/1 Inter,sans-serif;color:#c3ccc4;}
+.device-type-integratedCompact .compact-wireless {position:absolute;left:82px;top:43px;display:flex;width:35px;flex-direction:column;align-items:center;gap:4px;}
+.device-type-integratedCompact .compact-input-status {display:flex;align-items:center;gap:4px;height:9px;}
+.device-type-integratedCompact .compact-input-status b {font:500 6px/1 Inter,sans-serif;color:#c1c9bf;}
+.device-type-integratedCompact .compact-input-led {display:block;width:5px;height:5px;border-radius:50%;background:#bd493d;box-shadow:0 0 3px #e34c3466;}
+.device-type-integratedCompact[data-compact-input="bt"] .compact-input-led {background:#4b9df0;box-shadow:0 0 4px #458de9aa;}
+.device-type-integratedCompact.power-off .compact-input-led {background:#242c28;box-shadow:inset 0 0 0 1px #565e5144;}
+.device-type-integratedCompact .compact-wireless .btn-bt-pair {margin:0;padding:0;color:#d8e0d3;}
+.device-type-integratedCompact .compact-wireless svg {display:block;width:11px;height:15px;}
+.device-type-integratedCompact .compact-wireless small {font:500 6px/1 Inter,sans-serif;color:#bbc6b7;}
+.device-type-integratedCompact .compact-dial {position:absolute;top:37px;display:flex;flex-direction:column;align-items:center;gap:8px;}
+.device-type-integratedCompact .compact-dial>span {font:500 7px/1 Inter,sans-serif;letter-spacing:.09em;color:#d0d8cc;}
+.device-type-integratedCompact .compact-treble {left:146px;}.device-type-integratedCompact .compact-bass {left:236px;}.device-type-integratedCompact .compact-volume {left:326px;}
+/* Shared knob mechanics provide drag, detents, readouts, keyboard and shadows. */
+:is(#audio-world,.equipment-preview-world) [data-knob-model="blackAlloy"] {border-radius:50%;background:linear-gradient(130deg,#1d2424,#0b1011);box-shadow:inset 0 1px #8b959077,0 2px 3px #000a;}
+:is(#audio-world,.equipment-preview-world) [data-knob-model="blackAlloy"]>.hw-knob-face {inset:3px;border:1px solid #c5cdc3;border-radius:50%;background:linear-gradient(125deg,#50575a,#383f41 62%,#444b4c);box-shadow:inset 0 1px #d4dbd144,inset 0 -1px #202826,0 2px 2px #0008;}
+:is(#audio-world,.equipment-preview-world) [data-knob-model="blackAlloy"] .hw-knob-cap {display:none;}
+:is(#audio-world,.equipment-preview-world) [data-knob-model="blackAlloy"] .hw-knob-indicator {top:3px;width:2px;height:8px;background:#e2e9db;box-shadow:none;}
+.device-type-integratedCompact .compact-io {position:absolute;top:40px;display:flex;flex-direction:column;align-items:center;gap:8px;}
+.device-type-integratedCompact .compact-io>small {font:500 7px/1 Inter,sans-serif;letter-spacing:.1em;color:#d0d8cc;}
+.device-type-integratedCompact .compact-io>div {display:flex;align-items:center;gap:17px;}
+.device-type-integratedCompact .compact-io label {display:flex;flex-direction:column-reverse;align-items:center;gap:7px;}
+.device-type-integratedCompact .compact-io label>span {font:500 6px/1 Inter,sans-serif;color:#bbc6b6;}
+.device-type-integratedCompact .compact-line {left:429px;width:88px;}
+.device-type-integratedCompact .compact-speakers {left:584px;width:126px;}
+.device-type-integratedCompact .compact-speakers>div {gap:17px;}
+:is(#audio-world,.equipment-preview-world) .device-node.device-type-integratedCompact .port[data-type="wire"] {width:40px!important;min-width:40px!important;max-width:40px!important;height:24px!important;min-height:24px!important;max-height:24px!important;}
+.device-type-integratedCompact .compact-binding-art {display:block;width:100%;height:100%;overflow:visible;pointer-events:none;}
+.device-type-integratedCompact .assembly-details {z-index:1;}
+.device-type-integratedCompact .assembly-fastener {width:10px;height:10px;}
+.device-type-integratedCompact :is(button,.port):focus-visible {outline:2px solid #e1c59a;outline-offset:3px;}

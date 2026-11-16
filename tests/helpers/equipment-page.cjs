@@ -13,7 +13,7 @@ module.exports=async browser=>{
         if(file===path.join(root,'script.js')){
             const source=body.toString(),marker='        renderVisuals();',index=source.lastIndexOf(marker);
             assert(index>0);
-            const hook='window.__signal=window.__equipment={createDevice,selectDevice,deleteDevice,toggleDevicePower,setSourcePlaying,applySavedDevice,projectCapture,restoreLocalProject,createSpotifyVinyl,placeSpotifyVinyl,removeSpotifyVinyl,connectProjectPorts,appState};\n';
+            const hook='window.__signal=window.__equipment={createDevice,selectDevice,deleteDevice,toggleDevicePower,setSourcePlaying,applySavedDevice,projectCapture,restoreLocalProject,restoreDeviceSettings,createSpotifyVinyl,placeSpotifyVinyl,removeSpotifyVinyl,connectProjectPorts,handlePairClick,canPair,updateCableFlows,appState};\n';
             body=source.slice(0,index)+hook+source.slice(index);
         }
         const mime={'.html':'text/html','.js':'application/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.json':'application/json'};

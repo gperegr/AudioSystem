@@ -6,7 +6,7 @@
             hardwareDemo:'Modelo · Controles',signalGeneratorVintage:'Gerador de Sinais Vintage', signalGenerator:'Gerador de Sinais', cdPlayer: 'CD Player', tapeDeck:'Tape Deck de Rolo', preamp:'Pré · Slim',preReference:'Pré · Visor Verde',preControl:'Pré · Controle 2.1',preDisplay:'Pré · Tela Central', benchMeter:'Medidor de Bancada', benchMeterVintage:'Medidor de Bancada Vintage',
             streamer: 'Streamer Hi-Fi',streamIntegrated:'Streamer Integrado',audioInterface1:'Interface USB · Compacta',audioInterface2:'Interface USB · Central',audioInterface3:'Interface USB · Estéreo',audioInterface4:'Interface USB · Dupla',
             receiver: 'Receiver Vintage',powerValve:'Potência · Valvulado',powerDual:'Potência · Duplo Canal',powerBias:'Potência · Visor Circular',
-            integratedBlue:'Integrado · Visores Azuis',integratedMinimal:'Integrado · Minimalista',integratedSilver:'Integrado · Prateado',
+            integratedCompact:'Integrado · Classe D',integratedBlue:'Integrado · Visores Azuis',integratedMinimal:'Integrado · Minimalista',integratedSilver:'Integrado · Prateado',
             integratedUtility:'Integrado · Essencial',prePrecision:'Pré · Precisão',
             preGlass:'Pré · Vidro Clássico',preClassic:'Pré · Console de Madeira',spkElectrostatic:'Caixa Eletrostática · Painel Clássico',
             headphoneAmp: 'Amplificador de Fone Vintage', headphoneAmpModern: 'Amplificador de Fone Normal',
@@ -358,6 +358,7 @@
         };
         const HP_TYPES = new Set(['headphone', 'hpStudio', 'hpClassic','hpMonitor','hpMax',...Object.keys(REFERENCE_HEADPHONES)]);
         const BT_HP_TYPES = new Set(['headphone','hpStudio','hpMax']);
+        const BT_PAIR_RECEIVERS = new Set([...BT_HP_TYPES,'integratedCompact']);
         const KUBA_WOOD_FINISHES={tauari:'Tauari',walnut:'Nogueira',ebony:'Ébano'};
         function updateKubaAppearance(dev){
             if(dev.type!=='hpKubaDisco2')return;

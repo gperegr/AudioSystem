@@ -39,6 +39,14 @@ dos comandos de pitch e das teclas de transporte. O tangencial tem uma área
 reservada sob os ajustes; o modelo de tração direta usa lettering compacto perto
 da tecla de energia. Não são acrescentadas extensões traseiras.
 
+O Nexora NX-I20 adapta a frente de um integrado classe D para o chassi baixo
+com largura completa (760 × 120 px). Os três knobs `blackAlloy` têm face preta
+acetinada, aro prateado e indicador claro, usando as interações da biblioteca
+Hardware. A chave metálica, o pareamento Bluetooth e as conexões de áudio são
+funcionais. RCA e bornes duplos por canal ficam na frente; a assinatura ocupa a
+faixa superior esquerda. O modelo não acrescenta PHONO, fones ou pré-out. O
+Bluetooth usa o transmissor virtual existente, com prioridade sobre AUX.
+
 ## Regras para os logos
 
 - O posicionamento usa faixas nomeadas da família, com pequenos ajustes locais.

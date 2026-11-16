@@ -86,6 +86,19 @@
         'Tape Deck de Rolo':'Reel-to-reel tape deck',
         'Toca-discos':'Turntable',
         'Toca-discos · Automático':'Automatic turntable',
+        'Integrado · Classe D':'Integrated amp · Class D',
+        'Parear Bluetooth':'Pair Bluetooth',
+        'Desconectar Bluetooth':'Disconnect Bluetooth',
+        'Cancelar pareamento Bluetooth':'Cancel Bluetooth pairing',
+        'Sem carga':'No load',
+        'Integrado classe D em chassi baixo, com chave de energia, graves, agudos e volume. Entrada RCA e saídas para caixas na frente. Bluetooth virtual com prioridade sobre AUX; 30 W por canal em 8 Ω na simulação.':'Class D integrated amplifier in a low chassis, with power switch, bass, treble, and volume. Front RCA input and speaker outputs. Virtual Bluetooth takes priority over AUX; simulated 30 W per channel into 8 Ω.',
+        'Entrada RCA estéreo e saídas para caixas passivas. O Bluetooth virtual recebe um transmissor do simulador e tem prioridade sobre AUX.':'Stereo RCA input and passive speaker outputs. Virtual Bluetooth receives a simulator transmitter and takes priority over AUX.',
+        'Entrada RCA de linha · L':'RCA line input · L',
+        'Entrada RCA de linha · R':'RCA line input · R',
+        'Saída amplificada para caixa passiva · L':'Amplified output for passive speaker · L',
+        'Saída amplificada para caixa passiva · R':'Amplified output for passive speaker · R',
+        'Transmissor Bluetooth: recebe áudio pela entrada RCA estéreo e envia sem fio para fones ou amplificadores compatíveis.':'Bluetooth transmitter: accepts stereo RCA audio and sends it wirelessly to compatible headphones or amplifiers.',
+        'Clique em Parear nos dois aparelhos.':'Click Pair on both devices.',
         'Bookshelf · Radiador Superior':'Bookshelf · Top passive radiator',
         'Compacta · graves destacados':'Compact · Prominent bass',
         'Caixa passiva de duas vias, 70 W RMS e 6 Ω, com madeira clara, woofer metálico, radiador passivo superior e grade frontal removível. Assinatura simulada com graves destacados.':'Two-way passive speaker, 70 W RMS and 6 Ω, with light wood, a metal-cone woofer, top passive radiator, and removable front grille. Simulated sound signature with prominent bass.',
@@ -1089,6 +1102,7 @@
             const paragraphs=core.split(/(\n{2,})/);
             if(paragraphs.length>1)result=paragraphs.map(part=>/^\n+$/.test(part)?part:translate(part)).join('');
             const dynamic = [
+                [/^Conectado a (.+)\.$/,(_,name)=>`Connected to ${translate(name)}.`],
                 [/^Curva da assinatura sonora: (.+)\. Frequência de 20 Hz a 20 kHz; ganho relativo entre (.+) e mais (.+) decibéis\.$/,(_,label,min,max)=>`Sound signature curve: ${translate(label)}. Frequency from 20 Hz to 20 kHz; relative gain from ${min} to plus ${max} decibels.`],
                 [/^(.+), (ligado|sem energia|energia não aplicável), (conectado|desconectado), (com sinal|sem sinal)$/,(_,label,power,connection,signal)=>`${translate(label)}, ${translate(power)}, ${translate(connection)}, ${translate(signal)}`],
                 [/^(Graves|Agudos|Saturação|Harmônicos pares): posição (\d+) de 7, de (.+?) a (.+?)\.( Centro neutro\.)?$/,(_,label,position,low,high,neutral='')=>`${translate(label)}: position ${position} of 7, from ${translate(low)} to ${translate(high)}.${neutral?' Neutral center.':''}`],

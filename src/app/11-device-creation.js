@@ -222,6 +222,7 @@
                 port.innerHTML='<svg class="spring-terminal-art" viewBox="0 0 32 22" aria-hidden="true"><rect x=".5" y=".5" width="31" height="21" rx="1.8" fill="#2e3938" stroke="#66716b" stroke-width=".8"/><rect x="5.5" y="2" width="21" height="18" rx="1" fill="#16201e" stroke="#46534d" stroke-width=".6"/><circle cx="2.9" cy="11" r="1.05" fill="#aeb9ad"/><circle cx="29.1" cy="11" r="1.05" fill="#aeb9ad"/><rect x="7" y="3" width="7.5" height="7.3" rx=".6" fill="#c93237" stroke="#ed6c66" stroke-width=".4"/><path d="M7.8 5.2h6M7.8 7.1h6M7.8 9h6" stroke="#8a1e25" stroke-width=".5"/><rect x="17.5" y="3" width="7.5" height="7.3" rx=".6" fill="#171c1b" stroke="#515e55" stroke-width=".4"/><path d="M18.3 5.2h6M18.3 7.1h6M18.3 9h6" stroke="#050909" stroke-width=".6"/><path d="M7 12h7.5v6H7zM17.5 12H25v6h-7.5z" fill="#26352e" stroke="#415146" stroke-width=".5"/><ellipse class="spring-terminal-hole" cx="10.8" cy="15" rx="2" ry="1.6" fill="#0b1010"/><ellipse class="spring-terminal-hole" cx="21.3" cy="15" rx="2" ry="1.6" fill="#0b1010"/><path d="M9.5 16.6h2.6M20 16.6h2.6" stroke="#9da68c" stroke-width=".5"/></svg>';
             });
             el.querySelectorAll('.port').forEach((p, i) => {
+                if(type==='integratedCompact'&&p.dataset.type==='wire')p.innerHTML='<svg class="compact-binding-art" viewBox="0 0 44 26" aria-hidden="true"><g stroke-width="1"><circle cx="11" cy="13" r="10" fill="#752b32" stroke="#bb5656"/><circle cx="33" cy="13" r="10" fill="#1b2021" stroke="#59605a"/><circle cx="11" cy="13" r="6.5" fill="#c4a568" stroke="#e3cf8c"/><circle cx="33" cy="13" r="6.5" fill="#c4a568" stroke="#e3cf8c"/><circle cx="11" cy="13" r="4.2" fill="#101611" stroke="#706044"/><circle cx="33" cy="13" r="4.2" fill="#101611" stroke="#706044"/></g></svg>';
                 p.id = `port_${id}_${i}`;
                 p.tabIndex=0;
                 if (!p.dataset.channel && /R$/.test(p.dataset.node || '')) p.dataset.channel = 'R';
@@ -329,6 +330,7 @@
                 configureIntegratedAmp(dev);
                 if(CUSTOM_PREAMPS[type])configureCustomPreamp(dev);
                 if(type==='integratedUtility')configureUtilityAmp(dev);
+                if(type==='integratedCompact')configureCompactAmp(dev);
                 if(type==='prePrecision')configurePrecisionPreamp(dev);
                 if(type==='preGlass')configureGlassPreamp(dev);
                 if(type==='preClassic')configureClassicPreamp(dev);

@@ -18,6 +18,7 @@ const Hardware = (() => {
         plainPlastic:{name:'Plástico moldado com ponteiro',width:34,height:34,finish:'plain',face:'#30342e',rim:'#22271f',ink:'#e0e4d3'},
         silverFluted:{name:'Alumínio torneado com saia canelada',width:42,height:42,finish:'fluted',face:'#d5d9d5',rim:'#82908e',ink:'#152322'},
         machined:{name:'Alumínio usinado',width:36,height:36,finish:'machined',face:'#c7ccc7',rim:'#78817c',ink:'#29372e'},
+        blackAlloy:{name:'Alumínio preto acetinado com aro prateado',width:48,height:48,finish:'satin',face:'#424548',rim:'#15191a',ink:'#eceee7'},
         skirted:{name:'Saia cromada e miolo preto',width:52,height:52,finish:'skirted',face:'#bec5bf',rim:'#8b9690',ink:'#efe9d2'},
         bakelite:{name:'Baquelite canelada',width:36,height:36,finish:'bakelite',face:'#342a21',rim:'#544a39',ink:'#e9d7a9'},
         ivory:{name:'Marfim com parafuso de latão',width:36,height:36,finish:'ivory',face:'#ded2ae',rim:'#9c8e6c',ink:'#9d4c34'},
@@ -62,6 +63,7 @@ const Hardware = (() => {
         preGlass:{'.power-btn':{width:18,height:27},'[data-pre-toggle],[data-glass-toggle],[data-integrated-direct]':{width:18,height:27},'[data-pre-rotary]':{width:58,height:58},'[data-integrated-knob="volume"]':{width:64,height:64},'[data-integrated-knob="bass"],[data-integrated-knob="treble"],[data-integrated-knob="balance"]':{width:40,height:40}},
         streamIntegrated:{'.power-btn':{width:14,height:20},'[data-stream-action]':{width:24,height:24},'[data-stream-input]':{width:131,height:74},'[data-stream-cover]':{width:73,height:73}},
         integratedUtility:{'.power-btn':{width:18,height:27},'[data-integrated-source]':{width:28,height:17},'[data-utility-toggle],.integrated-direct':{width:33,height:17},'[data-integrated-knob="volume"]':{width:61,height:61}},
+        integratedCompact:{'[data-integrated-knob]':{width:48,height:48},'.power-btn':{width:18,height:27},'.btn-bt-pair':{width:26,height:24}},
         prePrecision:{'.power-btn':{width:16,height:25},'[data-pre-toggle],[data-precision-gain]':{width:24,height:34},'[data-pre-rotary]':{width:37,height:37},'[data-integrated-knob="volume"]':{width:64,height:64},'[data-integrated-knob="balance"]':{width:26,height:26}},
         turntableLinear: {
             '.linear-keys button':{width:130,height:28},
@@ -532,6 +534,7 @@ const Hardware = (() => {
         paintKnob(el);
     }
     function knobModel(dev,el){
+        if(dev.type==='integratedCompact')return 'blackAlloy';
         if(el.dataset.interfaceKnob)return el.dataset.interfaceKnob;
         if(dev.type==='preClassic')return 'machined';
         if(dev.type==='preGlass')return 'silverFluted';
@@ -641,6 +644,7 @@ const Hardware = (() => {
         el.innerHTML='<span class="power-rocker-well" aria-hidden="true"></span><span class="power-rocker-face" aria-hidden="true"><i class="rocker-mark-on"><svg viewBox="0 0 10 12"><path d="M5 2v8"/></svg></i><i class="rocker-mark-off"><svg viewBox="0 0 12 12"><circle cx="6" cy="6" r="3.5"/></svg></i></span>';
     }
     function buttonModel(dev,el){
+        if(dev.type==='integratedCompact')return el.matches('.power-btn')?'chromeLever':'plainKey';
         if(dev.type==='turntableAutomatic'&&el.matches('[data-auto-start],[data-auto-stop],[data-auto-lift],[data-auto-speed],[data-auto-size]'))return 'plainKey';
         if(el.dataset.buttonModel&&Object.hasOwn(buttons,el.dataset.buttonModel))return el.dataset.buttonModel;
         if(['btReceiverA','btTransmitterPro'].includes(dev.type))return 'illuminatedBar';
@@ -785,7 +789,7 @@ const Hardware = (() => {
         if(['prePrecision','preGlass'].includes(type))return;
         if(type==='hardwareDemo'||FURNITURE_TYPES[type]||isListeningDevice({type})||(SOURCE_TYPES.has(type)&&!SIGNAL_GENERATOR_TYPES.has(type)&&!['btReceiverA','cdPlayer','streamer',...CAPTURE_INTERFACE_TYPES].includes(type)))return;
         const compact=!!INTERFACE_DEVICES[type]||['headphoneAmp','headphoneAmpModern','btTransmitterPro','btReceiverA',...CAPTURE_INTERFACE_TYPES].includes(type)&&type!=='audioInterface4';
-        const height=type==='powerValve'||type==='preClassic'?'high':type==='audioInterface4'||INTEGRATED_AMPS[type]||CUSTOM_PREAMPS[type]||CUSTOM_POWER_AMPS[type]||RADIO_RECEIVERS.has(type)||MIXER_TYPES.has(type)||EQ_TYPES.has(type)||BENCH_METER_TYPES.has(type)||SIGNAL_GENERATOR_TYPES.has(type)?'medium':'low';
+        const height=INTEGRATED_AMPS[type]?.chassis||(type==='powerValve'||type==='preClassic'?'high':type==='audioInterface4'||INTEGRATED_AMPS[type]||CUSTOM_PREAMPS[type]||CUSTOM_POWER_AMPS[type]||RADIO_RECEIVERS.has(type)||MIXER_TYPES.has(type)||EQ_TYPES.has(type)||BENCH_METER_TYPES.has(type)||SIGNAL_GENERATOR_TYPES.has(type)?'medium':'low');
         el.dataset.chassis=height;el.dataset.chassisWidth=compact?'compact':'full';
         const width=sizes.widths[el.dataset.chassisWidth],h=sizes.heights[height];el.style.setProperty('--chassis-height',h+'px');el.style.setProperty('--chassis-width',width+'px');
         for(const [key,value]of Object.entries({width:width+'px','min-width':width+'px','max-width':width+'px',height:h+'px','min-height':h+'px','max-height':h+'px'}))el.style.setProperty(key,value,'important');
@@ -821,6 +825,7 @@ const Hardware = (() => {
     // Exposed fasteners belong to removable service panels, not every front.
     // Domestic hi-fi fronts and compact enclosures attach from behind/below.
     const frontFastenerTypes=new Set([
+        'integratedCompact',
         'preClassic','prePrecision','preReference','tapeDeck','spkElectrostatic',
         'eqStudio','eqVintage','mixer','mixerVintage','crossover','crossoverVintage',
         'powerStereo','powerVintage','powerDual','headphoneAmp4',
@@ -2658,7 +2663,7 @@ const Hardware = (() => {
             hardwareDemo:'Modelo · Controles',signalGeneratorVintage:'Gerador de Sinais Vintage', signalGenerator:'Gerador de Sinais', cdPlayer: 'CD Player', tapeDeck:'Tape Deck de Rolo', preamp:'Pré · Slim',preReference:'Pré · Visor Verde',preControl:'Pré · Controle 2.1',preDisplay:'Pré · Tela Central', benchMeter:'Medidor de Bancada', benchMeterVintage:'Medidor de Bancada Vintage',
             streamer: 'Streamer Hi-Fi',streamIntegrated:'Streamer Integrado',audioInterface1:'Interface USB · Compacta',audioInterface2:'Interface USB · Central',audioInterface3:'Interface USB · Estéreo',audioInterface4:'Interface USB · Dupla',
             receiver: 'Receiver Vintage',powerValve:'Potência · Valvulado',powerDual:'Potência · Duplo Canal',powerBias:'Potência · Visor Circular',
-            integratedBlue:'Integrado · Visores Azuis',integratedMinimal:'Integrado · Minimalista',integratedSilver:'Integrado · Prateado',
+            integratedCompact:'Integrado · Classe D',integratedBlue:'Integrado · Visores Azuis',integratedMinimal:'Integrado · Minimalista',integratedSilver:'Integrado · Prateado',
             integratedUtility:'Integrado · Essencial',prePrecision:'Pré · Precisão',
             preGlass:'Pré · Vidro Clássico',preClassic:'Pré · Console de Madeira',spkElectrostatic:'Caixa Eletrostática · Painel Clássico',
             headphoneAmp: 'Amplificador de Fone Vintage', headphoneAmpModern: 'Amplificador de Fone Normal',
@@ -3010,6 +3015,7 @@ const Hardware = (() => {
         };
         const HP_TYPES = new Set(['headphone', 'hpStudio', 'hpClassic','hpMonitor','hpMax',...Object.keys(REFERENCE_HEADPHONES)]);
         const BT_HP_TYPES = new Set(['headphone','hpStudio','hpMax']);
+        const BT_PAIR_RECEIVERS = new Set([...BT_HP_TYPES,'integratedCompact']);
         const KUBA_WOOD_FINISHES={tauari:'Tauari',walnut:'Nogueira',ebony:'Ébano'};
         function updateKubaAppearance(dev){
             if(dev.type!=='hpKubaDisco2')return;
@@ -3228,6 +3234,7 @@ const Hardware = (() => {
         }
 
         const INTEGRATED_AMPS={
+            integratedCompact:{watts:30,tone:true,balance:false,phono:false,phones:false,preout:false,meters:false,finish:'compact',chassis:'low',sources:['AUX','Bluetooth'],description:'Integrado classe D em chassi baixo, com chave de energia, graves, agudos e volume. Entrada RCA e saídas para caixas na frente. Bluetooth virtual com prioridade sobre AUX; 30 W por canal em 8 Ω na simulação.'},
             integratedUtility:{watts:20,tone:true,meters:false,finish:'utility',description:'Integrado cinza-oliva com controles de plástico, phono, loudness, mono e tone defeat. Amplificação estéreo nominal de 20 W por canal.'},
             integratedBlue:{watts:100,tone:true,meters:true,finish:'blue',description:'Integrado de frente preta com visores azuis e laterais metálicas. Três entradas de linha, phono, saídas para caixas e fones. '},
             integratedMinimal:{watts:70,tone:false,meters:false,finish:'minimal',description:'Integrado preto minimalista com seleção de fontes e volume. Três entradas de linha, phono, saídas para caixas e fones. '},
@@ -3251,6 +3258,7 @@ const Hardware = (() => {
         const DEFAULT_POWER_GAIN=.5;
         // Individual simulation voicings.
         const AMPLIFICATION_VOICINGS={
+            integratedCompact:{bass:0,treble:0,drive:.12,asymmetry:0},
             preClassic:{bass:.3,treble:-.4,drive:.4,asymmetry:.035},
             preGlass:{bass:.2,treble:-.35,drive:.38,asymmetry:.035},
             integratedUtility:{bass:.15,treble:-.2,drive:.2,asymmetry:0},
@@ -3369,6 +3377,7 @@ const Hardware = (() => {
             powerVintage:{watts:40,minOhms:4,powerByOhms:{4:60,8:40}},
             integratedBlue:{watts:100,minOhms:4,powerByOhms:{4:160,8:100}},
             integratedMinimal:{watts:70,minOhms:4,powerByOhms:{4:100,8:70}},
+            integratedCompact:{watts:30,minOhms:4,powerByOhms:{4:50,8:30}},
             integratedSilver:{watts:90,minOhms:4,powerByOhms:{4:150,8:90}},
             powerValve:{watts:75,minOhms:4,powerByOhms:{4:75,8:75,16:75}},
             powerDual:{watts:300,minOhms:4,powerByOhms:{4:500,8:300}},
@@ -5002,6 +5011,7 @@ const Hardware = (() => {
             } else if(type==='preClassic'){drawing='<rect x="3" y="8" width="50" height="30" rx="1"/><path d="M6 10h44v26H6z"/>'+[13,24,38,46].flatMap(x=>[17,28].map(y=>`<circle cx="${x}" cy="${y}" r="3"/>`)).join('')+'<path d="M29 24v7m4-7v7"/>';
             } else if(type==='preGlass'){drawing=rack+'<path d="M8 13v18m40-18v18M11 28h34"/><circle cx="16" cy="20" r="4"/><circle cx="28" cy="20" r="2"/><circle cx="40" cy="20" r="4"/><path d="M16 30v3m6-3v3m6-3v3m6-3v3m6-3v3"/>';
             } else if(type==='prePrecision'){drawing=rack+'<rect x="9" y="15" width="15" height="13" rx="2"/><path d="m16 25-4-6m5 6 4-7M29 17v9m4-7v7"/><circle cx="42" cy="22" r="6"/><path d="m42 22 3-3"/>';
+            } else if(type==='integratedCompact'){drawing='<rect x="4" y="15" width="48" height="17" rx="2"/><path d="M9 23v4"/><circle cx="18" cy="24" r="3"/><circle cx="27" cy="24" r="3"/><circle cx="36" cy="24" r="3"/><circle cx="44" cy="23" r="1"/><circle cx="48" cy="23" r="1"/>';
             } else if(type==='integratedUtility'){drawing=rack+'<circle cx="16" cy="23" r="3"/><circle cx="25" cy="23" r="3"/><circle cx="44" cy="23" r="6"/><path d="M31 17h3m-3 4h3m-3 4h3M10 31h36"/>';
             } else if(type==='tapeDeck'){drawing='<rect x="7" y="3" width="42" height="40" rx="2"/><circle cx="18" cy="17" r="8"/><circle cx="38" cy="17" r="8"/><circle cx="18" cy="17" r="2"/><circle cx="38" cy="17" r="2"/><path d="M13 33h14m5 0h10M13 37h7"/>';
             } else if(CUSTOM_PREAMPS[type]){drawing=rack+(type==='preReference'?'<path d="M7 13v18m42-18v18"/><rect x="20" y="15" width="16" height="12" rx="1"/><circle cx="13" cy="21" r="4"/><circle cx="43" cy="21" r="4"/>':type==='preControl'?'<rect x="20" y="15" width="14" height="7" rx="1"/><circle cx="12" cy="23" r="4"/><circle cx="43" cy="22" r="6"/><path d="M22 28h2m4 0h2m4 0h2"/>':'<circle cx="12" cy="22" r="5"/><circle cx="44" cy="22" r="5"/><rect x="22" y="14" width="12" height="16" rx="1"/><path d="M25 19h6m-6 5h4"/>');
@@ -6330,7 +6340,45 @@ const Hardware = (() => {
             const markings=[.0001,.001,.01,.1,1].map(f=>{const a=-48+(Math.log10(f)+4)*24,p=point(a,43),q=point(a,47),t=point(a,53);return `<path d="M${p.x} ${p.y}L${q.x} ${q.y}"/><text x="${t.x}" y="${t.y}" text-anchor="middle" font-size="5.5">${Number((f*watts).toFixed(3))}</text>`;}).join('');
             return `<div class="integrated-gauges">${['L','R'].map((ch,i)=>`<div class="integrated-gauge"><svg viewBox="0 0 100 70" aria-label="Potência simulada ${ch}"><g class="integrated-scale">${markings}<text x="85" y="59" font-size="7" text-anchor="end">W · ${ch}</text></g><line data-integrated-needle="${i}" x1="50" y1="62" x2="50" y2="19" transform="rotate(-48 50 62)"/><circle cx="50" cy="62" r="2"/></svg></div>`).join('')}</div>`;
         }
+        function compactAmpMarkup(){
+            const dial=(key,label)=>`<label class="compact-dial compact-${key}"><button type="button" data-integrated-knob="${key}" aria-label="${label}" title="${label}"></button><span>${label}</span></label>`;
+            const channel=(ch,input)=>`<label><span>${ch}</span><div class="port" data-type="${input?'rca-'+ch.toLowerCase():'wire'}" data-io="${input?'in':'out'}" data-node="${input?'line0':'speaker'}${ch}" data-signal="${input?'line':'amplified'}" ${input?'':'data-role="amp-speaker-out"'} title="${input?'Entrada RCA de linha':'Saída amplificada para caixa passiva'} · ${ch}"></div></label>`;
+            return `<div class="device-header"><span>${DEVICE_NAMES.integratedCompact}</span></div><section class="integrated-face compact-amp-face">
+                <small class="compact-engraving">CLASS D STEREO AMPLIFIER</small>
+                <div class="compact-power"><span>ON</span><div data-power-slot><button type="button" class="power-btn" title="Ligar / desligar"></button></div><span>OFF</span></div>
+                <div class="compact-wireless"><span class="compact-input-status"><i class="bt-indicator compact-input-led" aria-hidden="true"></i><b data-compact-source>AUX</b></span><button type="button" class="btn-bt-pair" aria-label="Parear Bluetooth" aria-pressed="false"><svg viewBox="0 0 18 24" aria-hidden="true"><path d="M8 2v20l7-6-12-9m0 10L15 8 8 2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button><small>BT</small></div>
+                ${dial('treble','TREBLE')}${dial('bass','BASS')}${dial('volume','VOLUME')}
+                <div class="compact-io compact-line"><small>LINE IN</small><div>${['L','R'].map(ch=>channel(ch,true)).join('')}</div></div>
+                <div class="compact-io compact-speakers"><small>SPEAKERS</small><div>${['L','R'].map(ch=>channel(ch,false)).join('')}</div></div>
+            </section>`;
+        }
+        function configureCompactAmp(dev){
+            const ctx=appState.audio.context,split=ctx.createChannelSplitter(2);
+            dev.nodes.btIn=ctx.createGain();dev.nodes.btIn.connect(split);
+            split.connect(dev.nodes.line1L,0);split.connect(dev.nodes.line1R,1);
+            (dev.modelAudioNodes||=[]).push(split);
+            dev.state.volume=.3;
+            const apply=dev.applyIntegrated;
+            dev.applyIntegrated=()=>{
+                const peer=appState.project.devices[dev.btPairedId],wireless=!!peer&&peer.powered&&!peer.state.damage;
+                Object.assign(dev.state,{integratedSource:wireless?1:0,balance:0,direct:false,preMuted:false});
+                apply();dev.el.dataset.compactInput=wireless?'bt':'aux';
+                const name=wireless?'Bluetooth':'AUX';
+                dev.el.querySelectorAll('[data-compact-source]').forEach(label=>label.textContent=name);
+                if(appState.interface.selectedDeviceId===dev.id){
+                    inspectorContent.querySelectorAll('[data-compact-source]').forEach(label=>label.textContent=name);
+                    const pair=inspectorContent.querySelector('[data-compact-pair]');
+                    if(pair){pair.setAttribute('aria-pressed',String(!!dev.btPairedId));pair.textContent=dev.btPairedId?'Desconectar Bluetooth':'Parear Bluetooth';}
+                }
+            };
+            dev.syncCompactInput=dev.applyIntegrated;
+            dev.applyIntegrated();
+        }
+        function compactAmpInspector(dev){
+            return `<section class="flex flex-col gap-4"><p class="text-sm text-gray-400">Entrada RCA estéreo e saídas para caixas passivas. O Bluetooth virtual recebe um transmissor do simulador e tem prioridade sobre AUX.</p><div class="flex items-center justify-between"><span class="text-sm text-gray-300">Fonte selecionada</span><output class="text-sm" data-compact-source>${dev.state.integratedSource?'Bluetooth':'AUX'}</output></div><button type="button" class="tt-insp-btn" data-compact-pair aria-pressed="${!!dev.btPairedId}">${dev.btPairedId?'Desconectar Bluetooth':'Parear Bluetooth'}</button>${[['volume','Volume',0,1],['bass','Graves',-10,10],['treble','Agudos',-10,10]].map(([key,label,min,max])=>`<label class="flex flex-col gap-2 text-sm text-gray-300"><span>${label} <output>${integratedSettingText(key,dev.state[key])}</output></span><input type="range" data-integrated-setting="${key}" aria-label="${label}" min="${min}" max="${max}" step="${(max-min)/10}" value="${dev.state[key]}"></label>`).join('')}</section>`;
+        }
         function integratedMarkup(type){
+            if(type==='integratedCompact')return compactAmpMarkup();
             if(type==='integratedUtility')return utilityAmpMarkup();
             const config=INTEGRATED_AMPS[type];
             const knob=(key,label,big=false)=>`<label class="integrated-knob-group"><button type="button" class="integrated-knob ${big?'is-large':''}" data-integrated-knob="${key}" role="slider" tabindex="0" aria-label="${label}" title="${label} · arraste para ajustar"><i></i></button><span>${label}</span></label>`;
@@ -6342,10 +6390,10 @@ const Hardware = (() => {
             const config=controlAmpConfig(dev.type),ctx=appState.audio.context;
             Object.assign(dev.state,{integratedSource:0,balance:0,direct:false});
             dev.integratedGates=[];dev.integratedFilters=[];dev.powerNodes=[];
-            dev.nodes.outPhone=ctx.createChannelMerger(2);
+            if(config.phones!==false)dev.nodes.outPhone=ctx.createChannelMerger(2);
             ['L','R'].forEach((ch,channel)=>{
                 const bus=dev.nodes['in'+ch]=ctx.createGain();
-                for(let i=0;i<4;i++){
+                for(let i=0;i<controlAmpSources(dev.type).length;i++){
                     const input=dev.nodes[(i===3&&config.phono!==false?'phono':'line'+i)+ch]=ctx.createGain(),gate=ctx.createGain();
                     dev.integratedGates.push({gate,index:i});
                     if(i===3&&config.phono!==false){
@@ -6358,13 +6406,14 @@ const Hardware = (() => {
                 const bass=ctx.createBiquadFilter(),treble=ctx.createBiquadFilter(),volume=ctx.createGain(),power=ctx.createGain();
                 bass.type='lowshelf';bass.frequency.value=100;treble.type='highshelf';treble.frequency.value=3500;
                 bus.connect(bass);bass.connect(treble);treble.connect(volume);volume.connect(power);
-                const speaker=dev.nodes['speaker'+ch]=ctx.createGain(),pre=dev.nodes['pre'+ch]=ctx.createGain();
-                power.connect(speaker);power.connect(pre);power.connect(dev.nodes.outPhone,0,channel);
+                const speaker=dev.nodes['speaker'+ch]=ctx.createGain();power.connect(speaker);
+                if(config.preout!==false){const pre=dev.nodes['pre'+ch]=ctx.createGain();power.connect(pre);}
+                if(config.phones!==false)power.connect(dev.nodes.outPhone,0,channel);
                 dev.powerNodes.push(power);dev.integratedFilters.push({bass,treble,volume,ch});
             });
             dev.applyIntegrated=()=>{
                 const t=ctx.currentTime,st=dev.state;
-                st.volume=Math.max(0,Math.min(1,st.volume));st.bass=Math.max(-10,Math.min(10,st.bass||0));st.treble=Math.max(-10,Math.min(10,st.treble||0));st.balance=Math.max(-1,Math.min(1,st.balance||0));if(CUSTOM_PREAMPS[dev.type]){st.subLevel=Math.max(0,Math.min(1,st.subLevel??.8));st.subFrequency=Math.max(40,Math.min(200,st.subFrequency??80));}st.integratedSource=Math.max(0,Math.min(3,Math.round(st.integratedSource||0)));
+                st.volume=Math.max(0,Math.min(1,st.volume));st.bass=Math.max(-10,Math.min(10,st.bass||0));st.treble=Math.max(-10,Math.min(10,st.treble||0));st.balance=Math.max(-1,Math.min(1,st.balance||0));if(CUSTOM_PREAMPS[dev.type]){st.subLevel=Math.max(0,Math.min(1,st.subLevel??.8));st.subFrequency=Math.max(40,Math.min(200,st.subFrequency??80));}st.integratedSource=Math.max(0,Math.min(controlAmpSources(dev.type).length-1,Math.round(st.integratedSource||0)));
                 dev.integratedGates.forEach(({gate,index})=>gate.gain.setTargetAtTime(index===st.integratedSource?1:0,t,.02));
                 dev.integratedFilters.forEach(({bass,treble,volume,ch})=>{
                     bass.gain.setTargetAtTime(config.tone&&!st.direct?st.bass:0,t,.025);treble.gain.setTargetAtTime(config.tone&&!st.direct?st.treble:0,t,.025);
@@ -6388,11 +6437,13 @@ const Hardware = (() => {
         }
         function integratedSettingText(key,value){return key==='volume'||key==='subLevel'?Math.round(value*10)+'/10':key==='balance'?value===0?'Centro':(value<0?'L ':'R ')+Math.round(Math.abs(value)*5):(value>0?'+':'')+value+' dB';}
         function integratedInspectorHtml(dev){
+            if(dev.type==='integratedCompact')return compactAmpInspector(dev);
             const config=controlAmpConfig(dev.type),keys=config.tone&&dev.type!=='preClassic'?[['volume','Volume',0,1],['bass','Graves',-10,10],['treble','Agudos',-10,10],['balance','Balanço L/R',-1,1]]:[['volume','Volume',0,1],...(config.balance?[['balance','Balanço L/R',-1,1]]:[])];
             return `<section class="flex flex-col gap-4"><span class="text-sm text-gray-300">Fonte selecionada</span><div class="grid grid-cols-2 gap-2">${controlAmpSources(dev.type).map((name,index)=>`<button class="tt-insp-btn ${dev.state.integratedSource===index?'is-on':''}" data-integrated-inspector-source="${index}" aria-pressed="${dev.state.integratedSource===index}">${name}</button>`).join('')}</div>${keys.map(([key,name,min,max])=>`<label class="flex flex-col gap-2 text-sm text-gray-300"><span>${name} <output>${integratedSettingText(key,dev.state[key])}</output></span><input type="range" data-integrated-setting="${key}" min="${min}" max="${max}" step="${(max-min)/10}" value="${dev.state[key]}"></label>`).join('')}${config.tone?`<button class="tt-insp-btn ${dev.state.direct?'is-on':''}" data-integrated-inspector-direct title="Ignora os ajustes de graves e agudos, deixando a tonalidade neutra. Volume, balanço e subwoofer continuam ativos. Ao desativar, os ajustes anteriores voltam a ser aplicados." aria-pressed="${!!dev.state.direct}">DIRECT</button>`:''}</section>`;
         }
         function bindIntegratedInspector(dev){
             if(!controlAmpConfig(dev.type))return;
+            inspectorContent.querySelector('[data-compact-pair]')?.addEventListener('click',()=>handlePairClick(dev));
             inspectorContent.querySelectorAll('[data-integrated-setting]').forEach(input=>input.addEventListener('input',()=>{const key=input.dataset.integratedSetting;dev.state[key]=Number(input.value);dev.applyIntegrated();input.previousElementSibling.querySelector('output').textContent=integratedSettingText(key,dev.state[key]);scheduleProjectSave();}));
             inspectorContent.querySelectorAll('[data-integrated-inspector-source]').forEach(button=>button.addEventListener('click',()=>dev.el.querySelector(`[data-integrated-source="${button.dataset.integratedInspectorSource}"]`).click()));
             inspectorContent.querySelector('[data-integrated-inspector-direct]')?.addEventListener('click',()=>dev.el.querySelector('[data-integrated-direct]').click());
@@ -6918,6 +6969,7 @@ const Hardware = (() => {
                 port.innerHTML='<svg class="spring-terminal-art" viewBox="0 0 32 22" aria-hidden="true"><rect x=".5" y=".5" width="31" height="21" rx="1.8" fill="#2e3938" stroke="#66716b" stroke-width=".8"/><rect x="5.5" y="2" width="21" height="18" rx="1" fill="#16201e" stroke="#46534d" stroke-width=".6"/><circle cx="2.9" cy="11" r="1.05" fill="#aeb9ad"/><circle cx="29.1" cy="11" r="1.05" fill="#aeb9ad"/><rect x="7" y="3" width="7.5" height="7.3" rx=".6" fill="#c93237" stroke="#ed6c66" stroke-width=".4"/><path d="M7.8 5.2h6M7.8 7.1h6M7.8 9h6" stroke="#8a1e25" stroke-width=".5"/><rect x="17.5" y="3" width="7.5" height="7.3" rx=".6" fill="#171c1b" stroke="#515e55" stroke-width=".4"/><path d="M18.3 5.2h6M18.3 7.1h6M18.3 9h6" stroke="#050909" stroke-width=".6"/><path d="M7 12h7.5v6H7zM17.5 12H25v6h-7.5z" fill="#26352e" stroke="#415146" stroke-width=".5"/><ellipse class="spring-terminal-hole" cx="10.8" cy="15" rx="2" ry="1.6" fill="#0b1010"/><ellipse class="spring-terminal-hole" cx="21.3" cy="15" rx="2" ry="1.6" fill="#0b1010"/><path d="M9.5 16.6h2.6M20 16.6h2.6" stroke="#9da68c" stroke-width=".5"/></svg>';
             });
             el.querySelectorAll('.port').forEach((p, i) => {
+                if(type==='integratedCompact'&&p.dataset.type==='wire')p.innerHTML='<svg class="compact-binding-art" viewBox="0 0 44 26" aria-hidden="true"><g stroke-width="1"><circle cx="11" cy="13" r="10" fill="#752b32" stroke="#bb5656"/><circle cx="33" cy="13" r="10" fill="#1b2021" stroke="#59605a"/><circle cx="11" cy="13" r="6.5" fill="#c4a568" stroke="#e3cf8c"/><circle cx="33" cy="13" r="6.5" fill="#c4a568" stroke="#e3cf8c"/><circle cx="11" cy="13" r="4.2" fill="#101611" stroke="#706044"/><circle cx="33" cy="13" r="4.2" fill="#101611" stroke="#706044"/></g></svg>';
                 p.id = `port_${id}_${i}`;
                 p.tabIndex=0;
                 if (!p.dataset.channel && /R$/.test(p.dataset.node || '')) p.dataset.channel = 'R';
@@ -7025,6 +7077,7 @@ const Hardware = (() => {
                 configureIntegratedAmp(dev);
                 if(CUSTOM_PREAMPS[type])configureCustomPreamp(dev);
                 if(type==='integratedUtility')configureUtilityAmp(dev);
+                if(type==='integratedCompact')configureCompactAmp(dev);
                 if(type==='prePrecision')configurePrecisionPreamp(dev);
                 if(type==='preGlass')configureGlassPreamp(dev);
                 if(type==='preClassic')configureClassicPreamp(dev);
@@ -7492,6 +7545,8 @@ const Hardware = (() => {
             dev.syncRadio?.();
             dev.syncValvePower?.();
             dev.applyStream?.();
+            dev.syncCompactInput?.();
+            appState.project.devices[dev.btPairedId]?.syncCompactInput?.();
             if (!dev.powered && SOURCE_TYPES.has(dev.type)) setSourcePlaying(dev, false);
             const powerTime = appState.audio.context ? appState.audio.context.currentTime : 0;
             if (dev.powerGain) {
@@ -8180,7 +8235,7 @@ const Hardware = (() => {
         }
 
         function renderDevicePreview(dev){
-            dev.state={volume:.8,integratedSource:0};dev.powered=true;
+            dev.state={volume:dev.type==='integratedCompact'?.3:.8,integratedSource:0};dev.powered=true;
             if(SIGNAL_GENERATOR_TYPES.has(dev.type))configureSignalGenerator(dev);
             if(dev.type==='hardwareDemo')Hardware.bindDemo(dev);
             if(dev.type==='furnitureTable')updateBenchAppearance(dev);
@@ -8701,10 +8756,12 @@ const Hardware = (() => {
                 }
                 if (nameEl && BT_TX_TYPES.has(dev.type)) nameEl.textContent = 'Sem conexão';
             }
+            dev.syncCompactInput?.();
         }
 
         function handlePairClick(dev) {
-            if(!BT_TX_TYPES.has(dev.type)&&!BT_HP_TYPES.has(dev.type))return;
+            if(!BT_TX_TYPES.has(dev.type)&&!BT_PAIR_RECEIVERS.has(dev.type))return;
+            if(dev.type==='integratedCompact'&&!dev.powered)return;
             if (dev.btPairedId) {
                 unpairDevice(dev);
                 return;
@@ -8720,7 +8777,7 @@ const Hardware = (() => {
                     return;
                 }
             }
-            if (BT_TX_TYPES.has(dev.type) || BT_HP_TYPES.has(dev.type)) {
+            if (BT_TX_TYPES.has(dev.type) || BT_PAIR_RECEIVERS.has(dev.type)) {
                 clearPairing();
                 appStateStore.actions.setPairingId(dev.id);
                 setPairingUi(dev, 'search');
@@ -8730,7 +8787,7 @@ const Hardware = (() => {
         function canPair(a, b) {
             if(a?.state.damage||b?.state.damage)return false;
             if (!a || !b || a.id === b.id) return false;
-            return (BT_TX_TYPES.has(a.type) && BT_HP_TYPES.has(b.type)) || (BT_HP_TYPES.has(a.type) && BT_TX_TYPES.has(b.type));
+            return (BT_TX_TYPES.has(a.type) && BT_PAIR_RECEIVERS.has(b.type)) || (BT_PAIR_RECEIVERS.has(a.type) && BT_TX_TYPES.has(b.type));
         }
 
         function clearPairing() {
@@ -8743,13 +8800,14 @@ const Hardware = (() => {
         function pairDevices(a, b) {
             if(!canPair(a,b))return;
             const src = BT_TX_TYPES.has(a.type) ? a : b;
-            const dest = HP_TYPES.has(a.type) ? a : b;
+            const dest = BT_TX_TYPES.has(a.type) ? b : a;
             unpairDevice(src);
             unpairDevice(dest);
             src.btPairedId = dest.id;
             dest.btPairedId = src.id;
-            if (src.nodes.btOut && dest.nodes.in) {
-                try { src.nodes.btOut.connect(dest.nodes.in); } catch (e) {}
+            const destination=dest.nodes.btIn||dest.nodes.in;
+            if (src.nodes.btOut && destination) {
+                try { src.nodes.btOut.connect(destination); } catch (e) {}
             }
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             path.setAttribute('class', 'bluetooth-link');
@@ -8778,9 +8836,10 @@ const Hardware = (() => {
             }
             const other = appState.project.devices[dev.btPairedId];
             const src = BT_TX_TYPES.has(dev.type) ? dev : other;
-            const dest = HP_TYPES.has(dev.type) ? dev : other;
-            if (src && dest && src.nodes.btOut && dest.nodes.in) {
-                try { src.nodes.btOut.disconnect(dest.nodes.in); } catch (e) {}
+            const dest = BT_TX_TYPES.has(dev.type) ? other : dev;
+            const destination=dest?.nodes.btIn||dest?.nodes.in;
+            if (src && dest && src.nodes.btOut && destination) {
+                try { src.nodes.btOut.disconnect(destination); } catch (e) {}
             }
             if (dev.btLinkEl) {
                 dev.btLinkEl.remove();
@@ -8829,7 +8888,7 @@ const Hardware = (() => {
             if(dev.type==='preGlass')Object.assign(dev.state,{glassLowCut:false,glassHighCut:false,glassLoudness:false});
             if(dev.type==='hpKubaDisco2'){dev.state.kubaWood='tauari';updateKubaAppearance(dev);}
             if(dev.syncRadio){dev.state.radioOn=false;dev.state.receiverInput='line1';dev.state.radioFrequency=88;dev.syncRadio();}
-            if(controlAmpConfig(dev.type)){Object.assign(dev.state,{integratedSource:0,volume:.8,bass:0,treble:0,balance:0,direct:false,preMuted:false,preMono:false,preInvert:false,subLevel:.8,subFrequency:80});dev.applyIntegrated();}
+            if(controlAmpConfig(dev.type)){Object.assign(dev.state,{integratedSource:0,volume:dev.type==='integratedCompact'?.3:.8,bass:0,treble:0,balance:0,direct:false,preMuted:false,preMono:false,preInvert:false,subLevel:.8,subFrequency:80});dev.applyIntegrated();}
             if(dev.type==='preamp'){Object.assign(dev.state,{preSource:1,volume:.8,bass:0,treble:0});dev.applyPreamp();}
             if(SIGNAL_GENERATOR_TYPES.has(dev.type)){stopSignalGenerator(dev);Object.assign(dev.state,{signalMode:'sine',signalFrequency:1000,signalChannel:'both',signalLevel:2,sweepSeconds:20});configureSignalGenerator(dev);}
             if(dev.type==='tapeDeck'){Object.assign(dev.state,{tapeHiss:35,tapeWow:35,tapeVolume:.8});dev.applyTapeSettings();}
@@ -9197,7 +9256,7 @@ const Hardware = (() => {
                 html += `</div>`;
             } else if (BT_TX_TYPES.has(dev.type)) {
                 const paired = dev.btPairedId ? appState.project.devices[dev.btPairedId] : null;
-                html += `<div class="text-sm text-gray-400 mt-2">Transmissor Bluetooth: recebe áudio pela entrada RCA estéreo e envia sem fio para fones pareados. ${paired ? ('Conectado a ' + (DEVICE_NAMES[paired.type] || paired.type) + '.') : 'Clique em Parear aqui e no fone.'}</div>`;
+                html += `<div class="text-sm text-gray-400 mt-2"><span>Transmissor Bluetooth: recebe áudio pela entrada RCA estéreo e envia sem fio para fones ou amplificadores compatíveis.</span> <span>${paired ? ('Conectado a ' + (DEVICE_NAMES[paired.type] || paired.type) + '.') : 'Clique em Parear nos dois aparelhos.'}</span></div>`;
             } else if (BT_RX_TYPES.has(dev.type)) {
                 html += `<div class="text-sm text-gray-400 mt-2">Receptor Bluetooth: recebe áudio sem fio de um celular ou computador e converte para saída analógica RCA estéreo. Não transmite para fones Bluetooth.</div>`;
             } else if (HP_TYPES.has(dev.type)) {
@@ -10323,19 +10382,17 @@ const Hardware = (() => {
                         }
                     }
                 });
-            }
-
-            // 2b. Ligação sem fio Bluetooth (transmissor → fone)
-            Object.values(appState.project.devices).forEach(dev => {
-                if (BT_TX_TYPES.has(dev.type) && dev.powered && activeDevices.has(dev.id) && dev.btPairedId) {
-                    const hp = appState.project.devices[dev.btPairedId];
-                    if (hp&&!hp.state.damage&&!dev.state.damage) {
-                        connectedDevices.add(dev.id);
-                        connectedDevices.add(hp.id);
-                        activeDevices.add(hp.id);
+                // Wireless edges participate in the same traversal so a paired
+                // amplifier can forward its signal to wired speakers this pass.
+                Object.values(appState.project.devices).forEach(dev=>{
+                    const receiver=appState.project.devices[dev.btPairedId];
+                    if(!BT_TX_TYPES.has(dev.type)||!receiver)return;
+                    connectedDevices.add(dev.id);connectedDevices.add(receiver.id);
+                    if(dev.powered&&receiver.powered&&!dev.state.damage&&!receiver.state.damage&&activeDevices.has(dev.id)&&!activeDevices.has(receiver.id)){
+                        activeDevices.add(receiver.id);changed=true;
                     }
-                }
-            });
+                });
+            }
 
             Object.values(appState.project.devices).forEach(dev => {
                 const hasSignal = activeDevices.has(dev.id);

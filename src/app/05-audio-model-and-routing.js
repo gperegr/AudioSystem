@@ -150,6 +150,7 @@
         }
 
         const INTEGRATED_AMPS={
+            integratedCompact:{watts:30,tone:true,balance:false,phono:false,phones:false,preout:false,meters:false,finish:'compact',chassis:'low',sources:['AUX','Bluetooth'],description:'Integrado classe D em chassi baixo, com chave de energia, graves, agudos e volume. Entrada RCA e saídas para caixas na frente. Bluetooth virtual com prioridade sobre AUX; 30 W por canal em 8 Ω na simulação.'},
             integratedUtility:{watts:20,tone:true,meters:false,finish:'utility',description:'Integrado cinza-oliva com controles de plástico, phono, loudness, mono e tone defeat. Amplificação estéreo nominal de 20 W por canal.'},
             integratedBlue:{watts:100,tone:true,meters:true,finish:'blue',description:'Integrado de frente preta com visores azuis e laterais metálicas. Três entradas de linha, phono, saídas para caixas e fones. '},
             integratedMinimal:{watts:70,tone:false,meters:false,finish:'minimal',description:'Integrado preto minimalista com seleção de fontes e volume. Três entradas de linha, phono, saídas para caixas e fones. '},
@@ -173,6 +174,7 @@
         const DEFAULT_POWER_GAIN=.5;
         // Individual simulation voicings.
         const AMPLIFICATION_VOICINGS={
+            integratedCompact:{bass:0,treble:0,drive:.12,asymmetry:0},
             preClassic:{bass:.3,treble:-.4,drive:.4,asymmetry:.035},
             preGlass:{bass:.2,treble:-.35,drive:.38,asymmetry:.035},
             integratedUtility:{bass:.15,treble:-.2,drive:.2,asymmetry:0},
@@ -291,6 +293,7 @@
             powerVintage:{watts:40,minOhms:4,powerByOhms:{4:60,8:40}},
             integratedBlue:{watts:100,minOhms:4,powerByOhms:{4:160,8:100}},
             integratedMinimal:{watts:70,minOhms:4,powerByOhms:{4:100,8:70}},
+            integratedCompact:{watts:30,minOhms:4,powerByOhms:{4:50,8:30}},
             integratedSilver:{watts:90,minOhms:4,powerByOhms:{4:150,8:90}},
             powerValve:{watts:75,minOhms:4,powerByOhms:{4:75,8:75,16:75}},
             powerDual:{watts:300,minOhms:4,powerByOhms:{4:500,8:300}},

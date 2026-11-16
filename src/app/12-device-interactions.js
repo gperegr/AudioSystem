@@ -38,6 +38,8 @@
             dev.syncRadio?.();
             dev.syncValvePower?.();
             dev.applyStream?.();
+            dev.syncCompactInput?.();
+            appState.project.devices[dev.btPairedId]?.syncCompactInput?.();
             if (!dev.powered && SOURCE_TYPES.has(dev.type)) setSourcePlaying(dev, false);
             const powerTime = appState.audio.context ? appState.audio.context.currentTime : 0;
             if (dev.powerGain) {
@@ -726,7 +728,7 @@
         }
 
         function renderDevicePreview(dev){
-            dev.state={volume:.8,integratedSource:0};dev.powered=true;
+            dev.state={volume:dev.type==='integratedCompact'?.3:.8,integratedSource:0};dev.powered=true;
             if(SIGNAL_GENERATOR_TYPES.has(dev.type))configureSignalGenerator(dev);
             if(dev.type==='hardwareDemo')Hardware.bindDemo(dev);
             if(dev.type==='furnitureTable')updateBenchAppearance(dev);
@@ -1247,10 +1249,12 @@
                 }
                 if (nameEl && BT_TX_TYPES.has(dev.type)) nameEl.textContent = 'Sem conexão';
             }
+            dev.syncCompactInput?.();
         }
 
         function handlePairClick(dev) {
-            if(!BT_TX_TYPES.has(dev.type)&&!BT_HP_TYPES.has(dev.type))return;
+            if(!BT_TX_TYPES.has(dev.type)&&!BT_PAIR_RECEIVERS.has(dev.type))return;
+            if(dev.type==='integratedCompact'&&!dev.powered)return;
             if (dev.btPairedId) {
                 unpairDevice(dev);
                 return;
@@ -1266,7 +1270,7 @@
                     return;
                 }
             }
-            if (BT_TX_TYPES.has(dev.type) || BT_HP_TYPES.has(dev.type)) {
+            if (BT_TX_TYPES.has(dev.type) || BT_PAIR_RECEIVERS.has(dev.type)) {
                 clearPairing();
                 appStateStore.actions.setPairingId(dev.id);
                 setPairingUi(dev, 'search');
@@ -1276,7 +1280,7 @@
         function canPair(a, b) {
             if(a?.state.damage||b?.state.damage)return false;
             if (!a || !b || a.id === b.id) return false;
-            return (BT_TX_TYPES.has(a.type) && BT_HP_TYPES.has(b.type)) || (BT_HP_TYPES.has(a.type) && BT_TX_TYPES.has(b.type));
+            return (BT_TX_TYPES.has(a.type) && BT_PAIR_RECEIVERS.has(b.type)) || (BT_PAIR_RECEIVERS.has(a.type) && BT_TX_TYPES.has(b.type));
         }
 
         function clearPairing() {
@@ -1289,13 +1293,14 @@
         function pairDevices(a, b) {
             if(!canPair(a,b))return;
             const src = BT_TX_TYPES.has(a.type) ? a : b;
-            const dest = HP_TYPES.has(a.type) ? a : b;
+            const dest = BT_TX_TYPES.has(a.type) ? b : a;
             unpairDevice(src);
             unpairDevice(dest);
             src.btPairedId = dest.id;
             dest.btPairedId = src.id;
-            if (src.nodes.btOut && dest.nodes.in) {
-                try { src.nodes.btOut.connect(dest.nodes.in); } catch (e) {}
+            const destination=dest.nodes.btIn||dest.nodes.in;
+            if (src.nodes.btOut && destination) {
+                try { src.nodes.btOut.connect(destination); } catch (e) {}
             }
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             path.setAttribute('class', 'bluetooth-link');
@@ -1324,9 +1329,10 @@
             }
             const other = appState.project.devices[dev.btPairedId];
             const src = BT_TX_TYPES.has(dev.type) ? dev : other;
-            const dest = HP_TYPES.has(dev.type) ? dev : other;
-            if (src && dest && src.nodes.btOut && dest.nodes.in) {
-                try { src.nodes.btOut.disconnect(dest.nodes.in); } catch (e) {}
+            const dest = BT_TX_TYPES.has(dev.type) ? other : dev;
+            const destination=dest?.nodes.btIn||dest?.nodes.in;
+            if (src && dest && src.nodes.btOut && destination) {
+                try { src.nodes.btOut.disconnect(destination); } catch (e) {}
             }
             if (dev.btLinkEl) {
                 dev.btLinkEl.remove();
@@ -1375,7 +1381,7 @@
             if(dev.type==='preGlass')Object.assign(dev.state,{glassLowCut:false,glassHighCut:false,glassLoudness:false});
             if(dev.type==='hpKubaDisco2'){dev.state.kubaWood='tauari';updateKubaAppearance(dev);}
             if(dev.syncRadio){dev.state.radioOn=false;dev.state.receiverInput='line1';dev.state.radioFrequency=88;dev.syncRadio();}
-            if(controlAmpConfig(dev.type)){Object.assign(dev.state,{integratedSource:0,volume:.8,bass:0,treble:0,balance:0,direct:false,preMuted:false,preMono:false,preInvert:false,subLevel:.8,subFrequency:80});dev.applyIntegrated();}
+            if(controlAmpConfig(dev.type)){Object.assign(dev.state,{integratedSource:0,volume:dev.type==='integratedCompact'?.3:.8,bass:0,treble:0,balance:0,direct:false,preMuted:false,preMono:false,preInvert:false,subLevel:.8,subFrequency:80});dev.applyIntegrated();}
             if(dev.type==='preamp'){Object.assign(dev.state,{preSource:1,volume:.8,bass:0,treble:0});dev.applyPreamp();}
             if(SIGNAL_GENERATOR_TYPES.has(dev.type)){stopSignalGenerator(dev);Object.assign(dev.state,{signalMode:'sine',signalFrequency:1000,signalChannel:'both',signalLevel:2,sweepSeconds:20});configureSignalGenerator(dev);}
             if(dev.type==='tapeDeck'){Object.assign(dev.state,{tapeHiss:35,tapeWow:35,tapeVolume:.8});dev.applyTapeSettings();}
