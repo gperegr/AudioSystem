@@ -738,7 +738,7 @@ const Hardware = (() => {
         else if(spec.action==='rocker')skinRocker(el,model);
         else if(model==='slidePower'){el.classList.add('power-btn');slidingPower(el);}
         else if(['slideSelector','slideSelectorModern'].includes(model))skinSlideSelector(el);
-        else {
+        else if(spec.action!=='lever') {
             el.classList.add('hw-plunger-key');
             if(model==='roundKey')el.classList.add('hw-round-key');
             const face=document.createElement('span');face.className='hw-plunger-face';face.setAttribute('aria-hidden','true');
@@ -6349,7 +6349,7 @@ const Hardware = (() => {
                 ${dial('treble','TREBLE')}${dial('bass','BASS')}${dial('volume','VOLUME')}
                 <div class="compact-io compact-line"><small>LINE IN</small><div>${['L','R'].map(ch=>channel(ch,true)).join('')}</div></div>
                 <div class="compact-io compact-speakers"><small>SPEAKERS</small><div>${['L','R'].map(ch=>channel(ch,false)).join('')}</div></div>
-            </section>`;
+            </section><span class="compact-antenna" aria-hidden="true"></span>`;
         }
         function configureCompactAmp(dev){
             const ctx=appState.audio.context,split=ctx.createChannelSplitter(2);
@@ -6362,12 +6362,13 @@ const Hardware = (() => {
                 const peer=appState.project.devices[dev.btPairedId],wireless=!!peer&&peer.powered&&!peer.state.damage;
                 Object.assign(dev.state,{integratedSource:wireless?1:0,balance:0,direct:false,preMuted:false});
                 apply();dev.el.dataset.compactInput=wireless?'bt':'aux';
+                dev.el.querySelector('.btn-bt-pair').disabled=!dev.powered;
                 const name=wireless?'Bluetooth':'AUX';
                 dev.el.querySelectorAll('[data-compact-source]').forEach(label=>label.textContent=name);
                 if(appState.interface.selectedDeviceId===dev.id){
                     inspectorContent.querySelectorAll('[data-compact-source]').forEach(label=>label.textContent=name);
                     const pair=inspectorContent.querySelector('[data-compact-pair]');
-                    if(pair){pair.setAttribute('aria-pressed',String(!!dev.btPairedId));pair.textContent=dev.btPairedId?'Desconectar Bluetooth':'Parear Bluetooth';}
+                    if(pair){pair.disabled=!dev.powered;pair.setAttribute('aria-pressed',String(!!dev.btPairedId));pair.textContent=dev.btPairedId?'Desconectar Bluetooth':'Parear Bluetooth';}
                 }
             };
             dev.syncCompactInput=dev.applyIntegrated;
@@ -7541,6 +7542,7 @@ const Hardware = (() => {
 
         function toggleDevicePower(dev) {
             dev.powered = dev.state.damage ? false : !dev.powered;
+            if(dev.type==='integratedCompact'&&!dev.powered&&appState.interface.pairingId===dev.id)clearPairing();
             (dev.outputCircuits||[]).forEach(circuit=>circuit.gate.gain.setValueAtTime(dev.powered&&!dev.state.damage?1:0,appState.audio.context.currentTime));
             dev.el.classList.toggle('device-damaged',!!dev.state.damage);
             dev.syncRadio?.();

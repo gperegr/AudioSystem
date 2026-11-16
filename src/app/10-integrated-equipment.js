@@ -298,7 +298,7 @@
                 ${dial('treble','TREBLE')}${dial('bass','BASS')}${dial('volume','VOLUME')}
                 <div class="compact-io compact-line"><small>LINE IN</small><div>${['L','R'].map(ch=>channel(ch,true)).join('')}</div></div>
                 <div class="compact-io compact-speakers"><small>SPEAKERS</small><div>${['L','R'].map(ch=>channel(ch,false)).join('')}</div></div>
-            </section>`;
+            </section><span class="compact-antenna" aria-hidden="true"></span>`;
         }
         function configureCompactAmp(dev){
             const ctx=appState.audio.context,split=ctx.createChannelSplitter(2);
@@ -311,12 +311,13 @@
                 const peer=appState.project.devices[dev.btPairedId],wireless=!!peer&&peer.powered&&!peer.state.damage;
                 Object.assign(dev.state,{integratedSource:wireless?1:0,balance:0,direct:false,preMuted:false});
                 apply();dev.el.dataset.compactInput=wireless?'bt':'aux';
+                dev.el.querySelector('.btn-bt-pair').disabled=!dev.powered;
                 const name=wireless?'Bluetooth':'AUX';
                 dev.el.querySelectorAll('[data-compact-source]').forEach(label=>label.textContent=name);
                 if(appState.interface.selectedDeviceId===dev.id){
                     inspectorContent.querySelectorAll('[data-compact-source]').forEach(label=>label.textContent=name);
                     const pair=inspectorContent.querySelector('[data-compact-pair]');
-                    if(pair){pair.setAttribute('aria-pressed',String(!!dev.btPairedId));pair.textContent=dev.btPairedId?'Desconectar Bluetooth':'Parear Bluetooth';}
+                    if(pair){pair.disabled=!dev.powered;pair.setAttribute('aria-pressed',String(!!dev.btPairedId));pair.textContent=dev.btPairedId?'Desconectar Bluetooth':'Parear Bluetooth';}
                 }
             };
             dev.syncCompactInput=dev.applyIntegrated;

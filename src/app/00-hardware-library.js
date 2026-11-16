@@ -738,7 +738,7 @@ const Hardware = (() => {
         else if(spec.action==='rocker')skinRocker(el,model);
         else if(model==='slidePower'){el.classList.add('power-btn');slidingPower(el);}
         else if(['slideSelector','slideSelectorModern'].includes(model))skinSlideSelector(el);
-        else {
+        else if(spec.action!=='lever') {
             el.classList.add('hw-plunger-key');
             if(model==='roundKey')el.classList.add('hw-round-key');
             const face=document.createElement('span');face.className='hw-plunger-face';face.setAttribute('aria-hidden','true');

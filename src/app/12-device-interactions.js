@@ -33,6 +33,7 @@
 
         function toggleDevicePower(dev) {
             dev.powered = dev.state.damage ? false : !dev.powered;
+            if(dev.type==='integratedCompact'&&!dev.powered&&appState.interface.pairingId===dev.id)clearPairing();
             (dev.outputCircuits||[]).forEach(circuit=>circuit.gate.gain.setValueAtTime(dev.powered&&!dev.state.damage?1:0,appState.audio.context.currentTime));
             dev.el.classList.toggle('device-damaged',!!dev.state.damage);
             dev.syncRadio?.();

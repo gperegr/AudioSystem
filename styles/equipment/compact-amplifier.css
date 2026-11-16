@@ -1,13 +1,13 @@
 /* NX-I20: low, full-width class-D amplifier. All jacks are on the front. */
 :is(#audio-world,.equipment-preview-world) .device-node.device-type-integratedCompact {
-    padding:0!important;border:0!important;border-radius:10px;background:transparent!important;box-shadow:none!important;
+    padding:0!important;border:0!important;border-radius:10px;background:transparent!important;box-shadow:none!important;isolation:isolate;overflow:visible;
 }
 .device-node.device-type-integratedCompact .compact-amp-face {
-    position:relative;margin:0;padding:0;border:2px solid #24282a;border-radius:10px;
+    position:relative;z-index:0;margin:0;padding:0;border:2px solid #24282a;border-radius:10px;
     background:url('../../assets/textures/speaker-coating.svg') center/100px 100px,linear-gradient(120deg,#44484b,#35393b 55%,#2e3335);
     box-shadow:inset 0 1px #b1b6b766,inset 0 -2px #121819,0 4px 6px #0008;overflow:visible;
 }
-.device-type-integratedCompact .compact-engraving {position:absolute;left:157px;top:15px;font:500 8px/1.2 Inter,sans-serif;letter-spacing:.1em;color:#d1d6d3;}
+.device-type-integratedCompact .compact-engraving {position:absolute;left:160px;width:200px;text-align:center;top:15px;font:500 8px/1.2 Inter,sans-serif;letter-spacing:.1em;color:#d1d6d3;}
 .device-type-integratedCompact .compact-power {position:absolute;left:33px;top:43px;width:23px;display:flex;flex-direction:column;align-items:center;gap:3px;}
 .device-type-integratedCompact .compact-power>span {font:500 7px/1 Inter,sans-serif;color:#c3ccc4;}
 .device-type-integratedCompact .compact-wireless {position:absolute;left:82px;top:43px;display:flex;width:35px;flex-direction:column;align-items:center;gap:4px;}
@@ -40,3 +40,14 @@
 .device-type-integratedCompact .assembly-details {z-index:1;}
 .device-type-integratedCompact .assembly-fastener {width:10px;height:10px;}
 .device-type-integratedCompact :is(button,.port):focus-visible {outline:2px solid #e1c59a;outline-offset:3px;}
+
+/* Rear antenna is below the opaque case and every front control in paint order. */
+.device-type-integratedCompact .compact-antenna {position:absolute;right:38px;top:-44px;width:18px;height:68px;z-index:-1;pointer-events:none;transform:rotate(7deg);transform-origin:50% 100%;}
+.device-type-integratedCompact .compact-antenna::before {content:'';position:absolute;left:2px;right:2px;top:0;bottom:8px;border:1px solid #171d20;border-radius:9px 9px 3px 3px;background:linear-gradient(90deg,#13191d,#444c50 32%,#292f33 67%,#11171b);clip-path:polygon(29% 0,71% 0,86% 12%,100% 96%,92% 100%,8% 100%,0 96%,14% 12%);box-shadow:inset 2px 0 2px #8d96952b;}
+.device-type-integratedCompact .compact-antenna::after {content:'';position:absolute;left:2px;right:2px;bottom:0;height:11px;border:1px solid #796744;border-radius:2px;background:linear-gradient(90deg,#746246,#c1aa71 45%,#776440);}
+.device-type-integratedCompact .compact-power .power-control-panel {position:relative!important;inset:auto!important;margin:0!important;transform:none!important;}
+.device-type-integratedCompact .compact-power .hw-chrome-collar {top:9px;width:12px;height:12px;left:calc(50% - 6px);background:linear-gradient(135deg,#f1f2e9,#75868b 45%,#c6d1d0 70%,#47595f);}
+.device-type-integratedCompact .compact-power .hw-chrome-stem {height:17px;top:-4px;transform-origin:50% 85%;transform:rotateX(-36deg) translateY(3px);transition:transform 160ms cubic-bezier(.2,.7,.3,1);}
+.device-type-integratedCompact .compact-power [aria-checked="true"] .hw-chrome-stem {transform:rotateX(36deg) translateY(-2px);}
+.device-type-integratedCompact .compact-wireless button:disabled {opacity:.5;cursor:default;}
+@media(prefers-reduced-motion:reduce){.device-type-integratedCompact .compact-power .hw-chrome-stem {transition:none;}}
