@@ -2,6 +2,21 @@
 const {chromium}=require('playwright');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'..');
+async function assertCatalogInViewport(page,label){
+    const bounds=await page.evaluate(()=>{
+        const rect=selector=>{const r=document.querySelector(selector).getBoundingClientRect();return {left:r.left,top:r.top,right:r.right,bottom:r.bottom,width:r.width,height:r.height};};
+        const dock=rect('#equipment-catalog'),search=rect('#equipment-search'),card=rect('.catalog-category .catalog-item'),canvas=rect('#canvas');
+        const viewport={width:visualViewport.width,height:visualViewport.height};
+        const hit=(r,selector)=>Boolean(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)?.closest(selector));
+        return {dock,search,card,canvas,viewport,searchHit:hit(search,'#equipment-search'),cardHit:hit(card,'.catalog-item')};
+    });
+    const message=label+' '+JSON.stringify(bounds);
+    assert(bounds.dock.height>0&&bounds.dock.top>=0&&bounds.dock.bottom<=bounds.viewport.height+1,message);
+    assert(Math.abs(bounds.dock.bottom-bounds.viewport.height)<=1,message);
+    assert(Math.abs(bounds.canvas.bottom-bounds.dock.top)<=1,message);
+    for(const r of [bounds.search,bounds.card])assert(r.left>=0&&r.right<=bounds.viewport.width+1&&r.top>=bounds.dock.top&&r.bottom<=bounds.viewport.height+1,message);
+    assert(bounds.searchHit&&bounds.cardHit,message);
+}
 (async()=>{
     const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox','--autoplay-policy=no-user-gesture-required']});
     try{
@@ -48,6 +63,29 @@ const root=path.resolve(__dirname,'..');
           await p.locator('[data-home="continue"]').tap();await p.locator('#headphone-calibration-skip').tap();await p.getByRole('button',{name:'Agora não',exact:true}).click();
           const state=await p.evaluate(()=>({width:innerWidth,nav:getComputedStyle(document.querySelector('.mobile-panel-controls')).display,catalog:getComputedStyle(document.querySelector('#equipment-catalog')).visibility,touch:document.documentElement.classList.contains('has-touch-input'),icon:document.querySelector('link[rel="apple-touch-icon"]').getAttribute('href'),particles:document.querySelector('.room-mote-canvas').width}));
           assert.equal(state.nav,'none',JSON.stringify({item,state}));assert(state.width>=1280);assert.equal(state.catalog,'visible');assert.equal(state.touch,true);assert(state.particles<=item.width+2,'effect resolution follows the physical display rather than the wide layout viewport');assert.match(state.icon,/apple-touch-icon.png/);
+          await assertCatalogInViewport(p,item.name);
+          // Browser controls and the keyboard can shrink the visual viewport without changing 100vh.
+          await p.evaluate(()=>{
+            window.__fullViewportHeight=visualViewport.height;
+            Object.defineProperty(visualViewport,'height',{configurable:true,get:()=>window.__fullViewportHeight-120/visualViewport.scale});
+            visualViewport.dispatchEvent(new Event('resize'));
+          });
+          await p.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+          await assertCatalogInViewport(p,item.name+' with browser controls');
+          await p.evaluate(()=>{delete visualViewport.height;visualViewport.dispatchEvent(new Event('resize'));});
+          await p.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+          await assertCatalogInViewport(p,item.name+' after browser controls close');
+          const originalViewport=await p.evaluate(()=>({scale:visualViewport.scale,height:document.body.getBoundingClientRect().height}));
+          const cdp=await context.newCDPSession(p);
+          await cdp.send('Emulation.setPageScaleFactor',{pageScaleFactor:originalViewport.scale*1.5});
+          await p.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+          const zoomedViewport=await p.evaluate(()=>({scale:visualViewport.scale,height:document.body.getBoundingClientRect().height}));
+          assert(zoomedViewport.scale>originalViewport.scale,item.name+' actually zooms');
+          assert.equal(zoomedViewport.height,originalViewport.height,item.name+' pinch zoom keeps the workspace geometry');
+          await cdp.send('Emulation.setPageScaleFactor',{pageScaleFactor:originalViewport.scale});
+          await p.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+          await assertCatalogInViewport(p,item.name+' after pinch zoom');
+          await cdp.detach();
           await p.evaluate(()=>{__desktop.createDevice('headphoneAmp',400,200,'touch-amp');__desktop.view.zoom=1;__desktop.view.x=0;__desktop.view.y=0;__desktop.applyView();__desktop.selectDevice('touch-amp');});
           await p.waitForFunction(()=>document.getElementById('inspector').dataset.floating==='true');
           const power=await p.evaluate(()=>__desktop.appState.project.devices['touch-amp'].powered);
@@ -58,6 +96,7 @@ const root=path.resolve(__dirname,'..');
             await p.setViewportSize({width:844,height:390});await p.waitForTimeout(200);
             const rotated=await p.evaluate(()=>({width:innerWidth,scale:visualViewport.scale,nav:getComputedStyle(document.querySelector('.mobile-panel-controls')).display}));
             assert(rotated.width>=1280&&rotated.scale<1&&rotated.nav==='none',JSON.stringify(rotated));
+            await assertCatalogInViewport(p,'iphone after rotation');
             await p.screenshot({path:'/tmp/audio-lab-desktop-phone-landscape.png'});
           }
           console.log(item.name,JSON.stringify(state));await context.close();
