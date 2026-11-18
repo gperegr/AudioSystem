@@ -938,6 +938,7 @@
                     if (e.button !== 0) return;
                     if (e.target.closest('button, input, select, textarea, .port, .speaker-grille, .grille-restore, [role="button"]')) return;
                     const clickToPlace=e.pointerType!=='touch';
+                    if(clickToPlace)dev.el.focus({preventScroll:true});
                     if(clickToPlace&&(e.shiftKey||e.metaKey||e.ctrlKey)){e.preventDefault();toggleDeviceSelection(dev.id);return;}
                     activeCatalogPreviewCleanup?.();activeEquipmentMoveCleanup?.();
                     if(clickToPlace&&!appState.interface.selectedDeviceIds.has(dev.id)){
@@ -1272,9 +1273,8 @@
             if (!dev || appState.project.devices[dev.id]!==dev) return;
             const wasInspected=appState.interface.selectedDeviceId===dev.id;
             // Removing a hovered/focused node does not reliably emit pointerout/focusout.
-            if(contextHelpTarget&&dev.el.contains(contextHelpTarget)||contextTouchTarget&&dev.el.contains(contextTouchTarget)){
-                hideContextHelp();contextTouchTarget=null;contextTouchStart=null;
-            }
+            if(contextHelpTarget&&dev.el.contains(contextHelpTarget))hideContextHelp();
+            if(contextTouchTarget&&dev.el.contains(contextTouchTarget))cancelContextTouch();
             if(recordHistory)recordDeletedDevices([dev]);
             if(dev.spotifyVinyl){if(spotifyPlayingTurntable===dev.id){spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});}dev.spotifyVinyl.turntableId=null;dev.spotifyVinyl.el.classList.remove('is-on-platter');}
             disposeDeviceRuntime(dev);

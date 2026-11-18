@@ -295,6 +295,8 @@
         'Projeto':'Project',
         'Avançado':'Advanced',
         'Orientação de conexões':'Connection guidance',
+        'Dicas ao passar o mouse':'Hover tips',
+        'Mostra dicas nos controles e conexões dos equipamentos no canvas.':'Show tips for equipment controls and ports on the canvas.',
         'Mostra dicas e impede ligações incompatíveis. Desative para permitir erros quando os plugues encaixarem.':'Shows tips and prevents incompatible connections. Turn off to allow mismatched connections when plugs fit.',
         'Modo desenvolvedor':'Developer mode',
         'Mostra a categoria DEBUG e os modelos de teste no catálogo.':'Shows the DEBUG category and test models in the catalog.',

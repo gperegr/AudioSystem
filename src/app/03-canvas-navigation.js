@@ -349,9 +349,11 @@
         document.getElementById('fit-selection').addEventListener('click', adjustSelection);
 
         window.addEventListener('keydown', e => {
-            if (e.target.closest?.('input, textarea, select, [contenteditable="true"]')) return;
             const key = e.key.toLowerCase();
+            const editingControl = e.target.closest?.('input, textarea, select, [contenteditable="true"]');
             if((key==='delete'||key==='backspace')&&!e.metaKey&&!e.ctrlKey&&!e.altKey){
+                const equipmentSlider=editingControl?.matches('input[type="range"]')&&editingControl.closest('#audio-world,#inspector-content,.knob-fine-control');
+                if(editingControl&&!equipmentSlider)return;
                 if(e.defaultPrevented||e.repeat||e.isComposing||e.target.isContentEditable||e.target.closest?.('[role="textbox"]')||document.querySelector('dialog[open]')||isPatching)return;
                 if(activeCatalogPreviewCleanup){e.preventDefault();activeCatalogPreviewCleanup();return;}
                 const selected=[...appState.interface.selectedDeviceIds].map(id=>appState.project.devices[id]).filter(Boolean);
@@ -364,6 +366,7 @@
                 setDeviceSelection([]);playUiSound('discard');scheduleProjectSave();
                 return;
             }
+            if(editingControl)return;
             if ((e.metaKey || e.ctrlKey) && key === 'a') {
                 e.preventDefault();
                 setDeviceSelection(Object.keys(appState.project.devices), Object.keys(appState.project.devices)[0] || null);

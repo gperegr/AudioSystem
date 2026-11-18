@@ -9,6 +9,17 @@
         const interactionSection=document.createElement('section');interactionSection.className='settings-theme-section';
         const connectionHelpCheckbox=connectionHelpSetting.querySelector('input');connectionHelpCheckbox.checked=appState.preferences.connectionGuidanceEnabled;interactionSection.appendChild(connectionHelpSetting);
         connectionHelpCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('connectionGuidanceEnabled',connectionHelpCheckbox.checked);hideContextHelp();updatePortGuidance(true);scheduleAppPreferencesSave();});
+        const equipmentHintsSetting=document.createElement('label');
+        equipmentHintsSetting.className='connection-help-setting';
+        equipmentHintsSetting.innerHTML='<input id="equipment-hints-enabled" type="checkbox"><span><strong>Dicas ao passar o mouse</strong><small>Mostra dicas nos controles e conexões dos equipamentos no canvas.</small></span>';
+        const equipmentHintsCheckbox=equipmentHintsSetting.querySelector('input');
+        equipmentHintsCheckbox.checked=appState.preferences.equipmentHintsEnabled;
+        interactionSection.appendChild(equipmentHintsSetting);
+        equipmentHintsCheckbox.addEventListener('change',()=>{
+            appStateStore.actions.setPreference('equipmentHintsEnabled',equipmentHintsCheckbox.checked);
+            if(contextHelpMode==='hover')hideContextHelp();
+            scheduleAppPreferencesSave();
+        });
         const rightAngleSetting=document.createElement('label');rightAngleSetting.className='connection-help-setting';rightAngleSetting.innerHTML='<input id="orthogonal-cables" type="checkbox"><span><strong>Cabos em ângulos retos</strong><small>Traça cabos com segmentos horizontais e verticais.</small></span>';
         const rightAngleCheckbox=rightAngleSetting.querySelector('input');rightAngleCheckbox.checked=appState.preferences.orthogonalCables;interactionSection.appendChild(rightAngleSetting);
         rightAngleCheckbox.addEventListener('change',()=>{appStateStore.actions.setPreference('orthogonalCables',rightAngleCheckbox.checked);updateCables();scheduleAppPreferencesSave();});

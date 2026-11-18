@@ -61,6 +61,11 @@ const root=path.resolve(__dirname,'..');
         // Editing the actual search field consumes Delete as text editing.
         await page.locator('#equipment-search').fill('abc');await page.keyboard.press('Home');await page.keyboard.press('Delete');
         assert.equal(await page.locator('#equipment-search').inputValue(),'bc');assert.equal((await snapshot()).devices.length,3);
+        // Selecting equipment after a search hands keyboard focus back to the canvas.
+        await page.evaluate(()=>__signal.selectDevice('amp'));
+        await page.locator('#source').click({position:{x:12,y:8}});
+        assert.equal(await page.evaluate(()=>document.activeElement.id),'source');
+        await page.keyboard.press('Delete');assert.deepEqual((await snapshot()).devices,['amp','unselected']);await undo();
         await page.locator('#equipment-search').fill('');
         await page.evaluate(()=>{const editor=document.createElement('div');editor.id='delete-editor';editor.contentEditable='plaintext-only';editor.textContent='Text';document.body.appendChild(editor);editor.focus();});
         await page.keyboard.press('Delete');assert.equal((await snapshot()).devices.length,3);
@@ -77,7 +82,7 @@ const root=path.resolve(__dirname,'..');
         await undo();const after=await page.evaluate(()=>__signal.projectCapture().devices.find(d=>d.id==='source'));
         assert.equal(after.x,original.x);assert.equal(after.y,original.y);
         // A pending new item is only a preview; Delete must not erase a different device.
-        await page.locator('.setup-object[data-setup-category="sources"]').click();await page.locator('.catalog-item[data-template="cdPlayer"]').click();
+        await page.locator('#equipment-search').fill('CD Player');await page.locator('.catalog-item[data-template="cdPlayer"]').click();
         await page.mouse.move(650,450);await page.keyboard.press('Delete');
         assert.equal((await snapshot()).devices.length,3);assert.equal(await page.locator('.catalog-placement-preview').count(),0);
         assert.deepEqual(errors,[]);console.log('Delete/Backspace: single/multiple selection, cables, undo/redo, editing/modal guards and pending placement passed.');

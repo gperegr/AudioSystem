@@ -1,4 +1,21 @@
 /* Catalog visuals, search, category layout, hover signatures, and port normalization. */
+        function catalogTurntableDrawing(type){
+            const profiles={
+                turntable:[11,'<path d="M35 23l5-5h6m-11 5-2 2"/><path d="M10 33h4m7 0h7m6-2v4m9-2h2m3 0h1"/>'],
+                turntableVintage:[11,'<path d="M35 23l5-5h6m-11 5-2 2"/><path d="M7 29v9m42-9v9M11 32h5v3h-5zm11 1h6m6-2v4m7-2h2m2 0h2"/>'],
+                turntableBelt:[6,'<path d="m33 23 12-5m-12 5-2 2M9 31v1m33-1h1m3 0h1"/>'],
+                turntableDirect:[11,'<path d="M33 25h5q2 0 3-4t3-3h3M10 32h2m4 0h4m4 0h2m2 0h2m4 0h2m4-1v4m5-2h1m2 0h1"/><path d="M9 26h1m2 0h1m2 0h1m2 0h1m2 0h1m2 0h1m2 0h1m2 0h1" stroke-width=".8"/>'],
+                turntableAutomatic:[10,'<path d="m33 23 12-5m-12 5-2 2M9 32h3m3 0h3m15 0h3m3 0h3m3 0h3M9 35h5m33 1h1"/>'],
+                turntableLinear:[13,'<path d="M8 17h40m-39 0v9m37-9v9M32 16h5v5h-5zm2 5v4m-24 6h9v3h-9zm16 0h21m-21 4h9m3 0h9M7 39h42"/>']
+            };
+            const [height,details]=profiles[type];
+            const lid='<path d="m7 25 3-14h36l3 14M10 14h36" opacity=".46"/>';
+            const plinth=`<path d="m4 28 4-3m44 3-4-3"/><rect x="4" y="28" width="48" height="${height}" rx="1.5"/>`;
+            const rim=type==='turntableBelt'
+                ?'<path d="M8 23v3q13 3 26 0v-3M9 25q12 2 24 0" stroke-width="1.1"/>'
+                :'<path d="M8 23v3q13 3 26 0v-3" stroke-width="1.1"/>';
+            return lid+plinth+'<ellipse cx="21" cy="23" rx="13" ry="3"/><path d="M21 21v2" stroke-width="1.1"/>'+rim+details;
+        }
         function catalogIcon(type) {
             const rack = '<rect x="4" y="10" width="48" height="24" rx="3"/>';
             const pair = '<circle cx="13" cy="27" r="2"/><circle cx="20" cy="27" r="2"/>';
@@ -25,16 +42,8 @@
                 drawing='<path d="M5 12h46v27H5ZM19 12V8h18v4M5 34h46M8 15v17m40-17v17"/><rect x="17" y="17" width="23" height="14" rx="1"/><path d="m20 27 5-5 5 3 6-5m9-3v2m0 4v2M10 38h4m28 0h4"/><circle cx="11" cy="28" r="2"/>';
             } else if(type==='shelfRadiator'){
                 drawing='<rect x="14" y="8" width="28" height="34" rx="1.5"/><rect x="17" y="4" width="22" height="4" rx="1"/><circle cx="28" cy="17" r="4.5"/><circle cx="28" cy="31" r="9"/><circle cx="28" cy="31" r="4"/>';
-            } else if(type==='turntableAutomatic'){
-                drawing='<path d="M5 10h46v27H5zM5 29h46"/><ellipse cx="23" cy="22" rx="13" ry="4"/><path d="M43 16v7l-8 4M9 33h4m23 0h3m3 0h3m3 0h1"/>';
-            } else if(type==='turntableBelt'){
-                drawing='<path d="M3 34h50v5H3zM6 32V9h44v23M10 29h29v3H10zm26-8h10v10m-3-10H23l-7 6M7 37h3"/>';
-            } else if(type==='turntableDirect'){
-                drawing='<path d="M3 9h50v29H3zM3 29h50M8 24h29v4H8zM10 26h2m2 0h2m2 0h2m2 0h2m2 0h2m2 0h2m2 0h2M43 15v9M43 15H28l-9 5M7 34h5m4 0h3m3 0h3m22-3v6"/>';
-            } else if(type==='turntableLinear'){
-                drawing='<path d="M3 8h50v29H3zM3 24h50M7 15h35M8 21h26m-23-2h20m8-7v9m4-9v9M7 29h8m-8 4h8m6-4h2m4 0h2m6 0h12m-12 4h12"/>';
             } else if (TURNTABLE_TYPES.has(type)) {
-                drawing = '<rect x="5" y="6" width="46" height="33" rx="3"/><circle cx="23" cy="22" r="12"/><circle cx="23" cy="22" r="3"/><path d="M43 12v13l-6 5M11 35h7"/>';
+                drawing = catalogTurntableDrawing(type);
             } else if(type==='preAurenne220'){
                 drawing=rack+'<rect x="7" y="13" width="42" height="11" rx="1"/><path d="M9 21h38m-32-7v6m8-6v6m8-6v6m8-6v6M9 29h9m20 0h9"/><circle cx="23" cy="29" r="3"/><circle cx="33" cy="29" r="3"/>';
             } else if(type==='powerAurenne220'){
@@ -133,10 +142,9 @@
             if(FURNITURE_TYPES[type]?.rack){const count=type==='furnitureRackSix'||type==='furnitureRackSixTall'?6:4;drawing='<path d="M8 3h40v38H8zM12 41v3m32-3v3"/>'+Array.from({length:count},(_,i)=>`<path d="M10 ${5+i*34/(count-1)}h36"/>`).join('');}
             if(type==='furnitureCoverflow')drawing='<path d="M3 6h50v34H3zM6 9h44v25H6zM6 36h44M9 40v3m38-3v3"/><path d="M9 13v19m4-19v19m4-19v19m4-19v19"/><rect x="25" y="12" width="13" height="19" rx="1"/><circle cx="40" cy="22" r="8"/><circle cx="40" cy="22" r="2"/><path d="M40 14v2m7 6h-2m-5 8v-2m-6-6h2"/><path d="M49 13v19"/>';
             if(type==='cdCollection')drawing='<path d="M5 7h46v32H5zM8 37h40M10 10v26m4-26v26m4-26v26m4-26v26m4-26v26m4-26v26m4-26v26m4-26v26m4-26v26m4-26v26"/>';
-            if(type==='turntableVintage')drawing='<path d="M5 7h46v32H5zM8 10v26m40-26v26"/><circle cx="24" cy="22" r="12"/><circle cx="24" cy="22" r="3"/><path d="M43 12v12l-6 6M12 35h6"/>';
             if(type==='eqVintage')drawing=rack+'<path d="M8 12v20m40-20v20M14 15v14m7-14v14m7-14v14m7-14v14m7-14v14M12 22h4m3-4h4m3 7h4m3-5h4m3 4h4"/>';
             if(type==='mixerVintage')drawing=rack+'<path d="M8 12v20m40-20v20M15 22v8m9-8v8m9-8v8m9-8v8M13 26h4m5-2h4m5 3h4m5-2h4"/>'+[15,24,33,42].map(x=>`<circle cx="${x}" cy="17" r="2"/>`).join('');
-            return `<svg class="catalog-equipment-icon" viewBox="0 0 56 46" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect class="catalog-icon-face" x="-10" y="-4" width="76" height="54" rx="11"/>${drawing}</svg>`;
+            return `<svg class="catalog-equipment-icon" viewBox="0 0 56 46" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${drawing}</svg>`;
         }
         const headphoneCatalogGrid=equipmentCatalog.querySelector('[data-template="hpStudio"]').closest('.grid');
         [['hpMonitor','Fone Monitor'],['hpMax','Fone Max'],...Object.keys(REFERENCE_HEADPHONES).map(type=>[type,DEVICE_NAMES[type]])].forEach(([type,label])=>{
@@ -279,46 +287,148 @@
         });
         equipmentCatalog.addEventListener('scroll',()=>{if(catalogAmpTip.classList.contains('is-visible'))hideCatalogAmpTip();},true);
         equipmentCatalog.addEventListener('pointerdown',hideCatalogAmpTip);
-        const contextHelp=document.createElement('aside');contextHelp.id='context-help';contextHelp.className='context-help';contextHelp.setAttribute('role','status');contextHelp.setAttribute('aria-live','polite');contextHelp.innerHTML='<strong></strong><span></span>';document.body.appendChild(contextHelp);
-        let contextHelpTarget=null,contextHelpTimer=0,contextHelpPreviousDescription=null;
-        function hideContextHelp(){clearTimeout(contextHelpTimer);contextHelp.classList.remove('is-visible');if(contextHelpTarget){if(contextHelpPreviousDescription)contextHelpTarget.setAttribute('aria-describedby',contextHelpPreviousDescription);else contextHelpTarget.removeAttribute('aria-describedby');}contextHelpTarget=null;contextHelpPreviousDescription=null;}
+        const EQUIPMENT_HOVER_DELAY = 1600;
+        const contextHelp = document.createElement('aside');
+        contextHelp.id = 'context-help';
+        contextHelp.className = 'context-help';
+        contextHelp.setAttribute('role','tooltip');
+        contextHelp.innerHTML = '<strong></strong><span></span>';
+        document.body.appendChild(contextHelp);
+        const contextHeading = contextHelp.querySelector('strong');
+        const contextMessage = contextHelp.querySelector('span');
+        let contextHelpTarget = null, contextHelpTimer = 0, contextHelpMode = null;
+        let blockedHintDevice = null, contextTouchTarget = null, contextTouchStart = null, contextTouchTimer = 0;
+
+        function hideContextHelp(){
+            clearTimeout(contextHelpTimer);
+            contextHelp.classList.remove('is-visible');
+            if(contextHelpTarget){
+                const ids = (contextHelpTarget.getAttribute('aria-describedby') || '').split(/\s+/).filter(id => id && id !== contextHelp.id);
+                if(ids.length)contextHelpTarget.setAttribute('aria-describedby', ids.join(' '));
+                else contextHelpTarget.removeAttribute('aria-describedby');
+            }
+            contextHelpTarget = null;
+            contextHelpMode = null;
+        }
+        function cancelContextTouch(){
+            clearTimeout(contextTouchTimer);
+            contextTouchTarget = contextTouchStart = null;
+        }
+        // Keep the accessible label and help text without triggering a native title popup.
+        function prepareEquipmentHint(element){
+            if(!(element instanceof Element) || !element.matches('.device-node *'))return;
+            const title = element.getAttribute('title');
+            if(!title)return;
+            element.dataset.canvasHint = title;
+            element.removeAttribute('title');
+            if(!element.hasAttribute('aria-label') || element.dataset.canvasHintLabel === 'generated'){
+                element.setAttribute('aria-label', title);
+                element.dataset.canvasHintLabel = 'generated';
+            }
+        }
+        function prepareEquipmentHints(root){
+            if(!(root instanceof Element))return;
+            prepareEquipmentHint(root);
+            root.querySelectorAll('[title]').forEach(prepareEquipmentHint);
+        }
+        prepareEquipmentHints(world);
+        new MutationObserver(records => {
+            if(contextHelpTarget && !world.contains(contextHelpTarget))hideContextHelp();
+            if(contextTouchTarget && !world.contains(contextTouchTarget))cancelContextTouch();
+            if(blockedHintDevice && !world.contains(blockedHintDevice))blockedHintDevice = null;
+            for(const record of records){
+                if(record.type === 'attributes')prepareEquipmentHint(record.target);
+                else record.addedNodes.forEach(prepareEquipmentHints);
+            }
+        }).observe(world, {subtree:true, childList:true, attributes:true, attributeFilter:['title']});
+
+        function contextTarget(element){
+            if(!(element instanceof Element) || !element.matches('#audio-world .device-node *'))return null;
+            return element.closest('.port,button,input,select,[role="switch"],[role="slider"]') || element.closest('[data-canvas-hint]');
+        }
         function positionContextHelp(target){
-            const rect=target.getBoundingClientRect(),tip=contextHelp.getBoundingClientRect(),gap=10,w=tip.width,h=tip.height,vw=innerWidth,vh=innerHeight;
-            const candidates=[{x:rect.right+gap,y:rect.top+(rect.height-h)/2},{x:rect.left-w-gap,y:rect.top+(rect.height-h)/2},{x:rect.left+(rect.width-w)/2,y:rect.bottom+gap},{x:rect.left+(rect.width-w)/2,y:rect.top-h-gap}];
-            const overlaps=(x,y)=>x<rect.right&&x+w>rect.left&&y<rect.bottom&&y+h>rect.top;
-            const valid=candidates.find(({x,y})=>x>=8&&x+w<=vw-8&&y>=8&&y+h<=vh-8&&!overlaps(x,y));
+            const rect = target.getBoundingClientRect(), tip = contextHelp.getBoundingClientRect(), gap = 10;
+            const {width:w,height:h} = tip;
+            const candidates = [
+                {x:rect.right+gap,y:rect.top+(rect.height-h)/2},
+                {x:rect.left-w-gap,y:rect.top+(rect.height-h)/2},
+                {x:rect.left+(rect.width-w)/2,y:rect.bottom+gap},
+                {x:rect.left+(rect.width-w)/2,y:rect.top-h-gap}
+            ];
+            const valid = candidates.find(({x,y}) => x>=8 && x+w<=innerWidth-8 && y>=8 && y+h<=innerHeight-8);
             if(!valid)return false;
-            contextHelp.style.left=`${valid.x}px`;contextHelp.style.top=`${valid.y}px`;return true;
+            contextHelp.style.left = valid.x+'px';
+            contextHelp.style.top = valid.y+'px';
+            return true;
         }
-        function showContextHelp(target,delay=1000){
-            if(!appState.preferences.connectionGuidanceEnabled||!target)return;
-            const port=target.closest('.port'),control=port?null:target.closest('button,input,select,[role="switch"],[role="slider"]');
-            let heading='',message='';
-            if(port){heading=port.dataset.baseTitle||port.getAttribute('aria-label')||'Conector';message=port.getAttribute('title')||`${port.dataset.io==='out'?'Saída':'Entrada'} ${port.dataset.format||port.dataset.type||'de áudio'} · sinal ${signalName(getPortSignal(port))}.`;}
-            else if(control){heading=control.getAttribute('aria-label')||control.labels?.[0]?.textContent?.trim()||control.title||control.textContent.trim()||'Controle';message=control.title||control.getAttribute('aria-description')||control.labels?.[0]?.textContent?.trim()||'Ajuste este controle para configurar o equipamento.';}
-            else return;
-            target=port||control;
-            if(!message||contextHelpTarget===target)return;
-            hideContextHelp();contextHelpTarget=target;contextHelpPreviousDescription=target.getAttribute('aria-describedby');target.setAttribute('aria-describedby',[contextHelpPreviousDescription,'context-help'].filter(Boolean).join(' '));
-            contextHelp.querySelector('strong').textContent=heading;contextHelp.querySelector('span').textContent=message;
-            contextHelpTimer=setTimeout(()=>{if(!appState.preferences.connectionGuidanceEnabled||!target.isConnected)return;if(positionContextHelp(target))contextHelp.classList.add('is-visible');},delay);
+        function showContextHelp(element, delay=EQUIPMENT_HOVER_DELAY, mode='hover'){
+            const target = contextTarget(element);
+            if(!target || (mode === 'hover' && !appState.preferences.equipmentHintsEnabled))return;
+            if(contextHelpTarget === target && contextHelpMode === mode)return;
+            hideContextHelp();
+            contextHelpTarget = target;
+            contextHelpMode = mode;
+            contextHelpTimer = setTimeout(() => {
+                if(!target.isConnected || !target.getClientRects().length){hideContextHelp();return;}
+                const port = target.classList.contains('port');
+                const title = target.getAttribute('title') || target.dataset.canvasHint;
+                const name = (port && target.dataset.baseTitle) || target.getAttribute('aria-label') || target.labels?.[0]?.textContent.trim() || target.textContent.trim();
+                const detail = port
+                    ? (appState.preferences.connectionGuidanceEnabled && title) || `${target.dataset.io==='out'?'Saída':'Entrada'} ${target.dataset.format||target.dataset.type||'de áudio'} · ${signalName(getPortSignal(target))}.`
+                    : title || target.getAttribute('aria-description');
+                contextHeading.textContent = detail && detail !== name ? AudioSystemLanguage.translate(name) : '';
+                contextHeading.hidden = !contextHeading.textContent;
+                contextMessage.textContent = AudioSystemLanguage.translate(detail || name);
+                if(!contextMessage.textContent || !positionContextHelp(target)){hideContextHelp();return;}
+                const ids = new Set((target.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean));
+                ids.add(contextHelp.id);
+                target.setAttribute('aria-describedby', [...ids].join(' '));
+                contextHelp.classList.add('is-visible');
+            }, delay);
         }
-        document.addEventListener('pointerover',event=>{if(event.pointerType==='touch'||!appState.preferences.connectionGuidanceEnabled)return;const target=event.target instanceof Element?event.target:null;if(target?.closest('.device-node'))showContextHelp(target);});
-        document.addEventListener('pointerout',event=>{const target=event.target instanceof Element?event.target:null,device=target?.closest('.device-node');if(!device||event.relatedTarget instanceof Node&&device.contains(event.relatedTarget))return;if(!contextHelpTarget||!device.contains(contextHelpTarget))return;if(!contextHelpTarget.matches(':focus')&&!contextHelpTarget.contains(document.activeElement))hideContextHelp();});
-        document.addEventListener('focusin',event=>{const target=event.target instanceof Element?event.target:null;if(target?.closest('.device-node'))showContextHelp(target,0);});
-        document.addEventListener('focusout',event=>{if(contextHelpTarget===event.target||contextHelpTarget?.contains(event.target))setTimeout(()=>{if(!contextHelpTarget?.matches(':hover')&&!contextHelpTarget?.contains(document.activeElement))hideContextHelp();},0);});
-        let contextTouchTarget=null,contextTouchStart=null;
-        document.addEventListener('pointerdown',event=>{
-            if(event.pointerType!=='touch'||!appState.preferences.connectionGuidanceEnabled)return;
-            const candidate=event.target instanceof Element?event.target.closest('.device-node .port,.device-node button,.device-node input,.device-node select,.device-node [role="switch"],.device-node [role="slider"]'):null;
-            if(!candidate)return;
-            clearTimeout(contextHelpTimer);contextTouchTarget=candidate;contextTouchStart={x:event.clientX,y:event.clientY};
-            contextHelpTimer=setTimeout(()=>{if(contextTouchTarget===candidate)showContextHelp(candidate,0);},620);
-        },true);
-        document.addEventListener('pointermove',event=>{if(event.pointerType!=='touch'||!contextTouchTarget||!contextTouchStart)return;if(Math.hypot(event.clientX-contextTouchStart.x,event.clientY-contextTouchStart.y)>9){clearTimeout(contextHelpTimer);contextTouchTarget=null;contextTouchStart=null;}},true);
-        document.addEventListener('pointerup',event=>{if(event.pointerType!=='touch')return;clearTimeout(contextHelpTimer);contextTouchTarget=null;contextTouchStart=null;},true);
-        document.addEventListener('pointercancel',()=>{clearTimeout(contextHelpTimer);contextTouchTarget=null;contextTouchStart=null;},true);
-        document.addEventListener('pointerdown',event=>{if(event.pointerType==='touch'&&contextHelpTarget&&!contextHelpTarget.contains(event.target))hideContextHelp();},false);
+
+        world.addEventListener('pointerover', event => {
+            if(event.pointerType === 'touch' || event.buttons || !appState.preferences.equipmentHintsEnabled)return;
+            const target = contextTarget(event.target);
+            if(!target || target === contextTarget(event.relatedTarget) || target.closest('.device-node') === blockedHintDevice)return;
+            showContextHelp(target);
+        });
+        world.addEventListener('pointerout', event => {
+            const next = event.relatedTarget;
+            if(blockedHintDevice && !(next instanceof Node && blockedHintDevice.contains(next)))blockedHintDevice = null;
+            if(contextHelpMode === 'hover' && contextTarget(event.target) === contextHelpTarget && contextTarget(next) !== contextHelpTarget)hideContextHelp();
+        });
+        world.addEventListener('focusin', event => {
+            const target = contextTarget(event.target);
+            if(target?.matches(':focus-visible'))showContextHelp(target, 0, 'focus');
+        });
+        world.addEventListener('focusout', event => {
+            if(contextHelpMode === 'focus' && contextTarget(event.target) === contextHelpTarget)hideContextHelp();
+        });
+        document.addEventListener('pointerdown', event => {
+            hideContextHelp();
+            cancelContextTouch();
+            if(event.pointerType !== 'touch'){
+                blockedHintDevice = event.target.closest?.('#audio-world .device-node') || null;
+                return;
+            }
+            const target = contextTarget(event.target);
+            if(!target)return;
+            contextTouchTarget = target;
+            contextTouchStart = {x:event.clientX,y:event.clientY};
+            contextTouchTimer = setTimeout(() => showContextHelp(target, 0, 'touch'), 620);
+        }, true);
+        document.addEventListener('pointermove', event => {
+            if(event.pointerType === 'touch' && contextTouchStart && Math.hypot(event.clientX-contextTouchStart.x,event.clientY-contextTouchStart.y)>9){
+                cancelContextTouch();
+                if(contextHelpMode === 'touch')hideContextHelp();
+            }
+        }, true);
+        document.addEventListener('pointerup', event => {
+            if(event.pointerType === 'touch')cancelContextTouch();
+        }, true);
+        document.addEventListener('pointercancel', () => {cancelContextTouch();hideContextHelp();}, true);
+        window.addEventListener('blur', () => {blockedHintDevice = null;cancelContextTouch();hideContextHelp();});
         const equipmentSearch = document.getElementById('equipment-search');
         const catalogSections = [...equipmentCatalog.querySelectorAll('.mb-6')].filter(section => section.querySelector('.catalog-item'));
         const catalogSearchSynonyms={optica:['optical','toslink','digital'],optical:['optica','toslink','digital'],digital:['optica','optical','toslink'],entrada:['input'],input:['entrada'],saida:['output'],output:['saida'],linha:['line'],line:['linha'],phono:['vinil','toca discos','riaa'],rca:['analogo','audio'],p2:['minijack','fone','headphone'],p10:['jack','fone','headphone','6 35 mm'],wire:['fio','borne','caixa passiva'],fio:['wire','borne','caixa passiva'],passiva:['passive','amplificado','speaker'],passivo:['passive','amplificado','speaker'],caixa:['speaker','alto falante'],fone:['headphone','p2','p10'],bluetooth:['sem fio','wireless'],potencia:['amplificado','speaker']};
@@ -377,6 +487,7 @@
             activeCatalogPreviewCleanup?.();activeEquipmentMoveCleanup?.();
             const type=item.dataset.template,preview=createDevice(type,0,0,null,true);
             if(!preview)return;
+            equipmentSearch.blur();
             let target=null;
             const inside=event=>{const rect=canvas.getBoundingClientRect();return event.clientX>=rect.left&&event.clientX<rect.right&&event.clientY>=rect.top&&event.clientY<rect.bottom;};
             const move=event=>{
