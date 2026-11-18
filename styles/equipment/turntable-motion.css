@@ -1,0 +1,153 @@
+/* Front elevation: retain the real edge of the disc and the hinge of each lid. */
+.device-node.device-type-turntable .at-lid-scene {
+    --tt-cover-edge: #b9cdd453;
+}
+.device-node.device-type-turntable.lid-open .at-lid-scene,
+.device-node.device-type-turntableLinear.lid-open .linear-lid-scene {
+    clip-path: inset(-1200px -1200px 0 -1200px);
+}
+.device-node.device-type-turntable .at-dust-cover > span {
+    border-color: var(--tt-cover-edge);
+}
+.device-node.device-type-turntable .at-cover-front {
+    border-top-color: #c6d6da97;
+}
+.device-node.device-type-turntable .at-dust-cover :is(.at-cover-back, .at-cover-side),
+.device-node.device-type-turntableLinear .linear-lid :is(.linear-cover-back, .linear-cover-side) {
+    opacity: .72;
+}
+
+.device-node.device-type-turntable .at-deck .tt-lid-button {
+    top: auto;
+    bottom: 1px;
+    right: 6px;
+    z-index: 8;
+}
+.device-node.device-type-turntableLinear .linear-deck .tt-lid-button {
+    top: auto;
+    bottom: 2px;
+    right: 8px;
+}
+
+/* The cartridge stays rigid while the tube foreshortens around its bearing. */
+.device-node.device-type-turntable.tt-pivot-motion .at-arm {
+    transform: none;
+    transition: none;
+}
+.device-node.device-type-turntable [data-pivot-rest] {
+    stroke: #526168;
+    filter: drop-shadow(1px 0 #9ca8a577);
+}
+.device-node.device-type-turntableVintage {
+    --tt-metal-light: #eee9d9;
+    --tt-metal-mid: #a9a895;
+    --tt-metal-dark: #535c50;
+}
+.device-node.device-type-turntableVintage [data-pivot-tube] path:nth-child(2) {
+    stroke: #a3a696;
+}
+.device-node.device-type-turntableVintage [data-pivot-tube] path:nth-child(3) {
+    stroke: #e5e5d3;
+}
+.device-node.device-type-turntableVintage [data-pivot-rest] {
+    stroke: #657263;
+}
+
+/* A little texture travels across the edge while the lighting stays fixed. */
+.device-node.device-type-turntable .at-front-mechanism .at-record {
+    background:
+        linear-gradient(90deg, #07090b90, transparent 14% 87%, #020304a0),
+        linear-gradient(#5b6063 0, #181d1d 1px, #090c0d 2px, #202929);
+}
+.device-node.device-type-turntable .at-record::before {
+    content: "";
+    position: absolute;
+    inset: 1px 0 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background-image: linear-gradient(105deg, transparent 27%, #c5d1ce28 42%, transparent 58% 81%, #84938f19 94%, transparent);
+    background-size: 120px 100%;
+    background-position: var(--tt-record-travel, 0px) 0;
+}
+.device-node.device-type-turntable:is(.tt-pivot-motion, .device-type-turntableAutomatic) .at-arm-svg {
+    filter: drop-shadow(0 1px 1px #090d0c72);
+}
+.device-node.device-type-turntableBelt .at-front-mechanism .at-platter {
+    border-color: #8aa9a3;
+    background: linear-gradient(#edfff9 0 1px, #a3c4ba 2px, #5983817e 5px, #d3f9eab3 8px, #577e778c 14px, #b3dfd1 16px, #456960 19px);
+}
+.device-node.device-type-turntableBelt .at-front-mechanism .at-platter::after {
+    display: block;
+    top: 4px;
+    left: 1px;
+    right: 1px;
+    height: 12px;
+    background: linear-gradient(105deg, transparent 28%, #ddf9ec32 50%, transparent 68%) var(--tt-record-travel, 0px) 0 / 120px 100% repeat-x;
+    box-shadow: inset 0 0 2px #d3f2e436;
+}
+
+/* The direct-drive strobe is lit steadily. Only the reference marks drift. */
+.device-node.device-type-turntableDirect .tt-strobe-pilot {
+    position: absolute;
+    z-index: 2;
+    left: 9px;
+    bottom: 6px;
+    width: 16px;
+    height: 14px;
+    border: 1px solid #526166;
+    border-radius: 2px 2px 0 0;
+    background: linear-gradient(#adb7b6, #536464);
+    box-shadow: inset 0 1px #edf4ea, 1px 1px 2px #0008;
+    pointer-events: none;
+}
+.device-node.device-type-turntableDirect .tt-strobe-pilot::before {
+    content: "";
+    position: absolute;
+    top: 4px;
+    right: 0;
+    width: 4px;
+    height: 5px;
+    border-radius: 1px;
+    background: #502324;
+}
+.device-node.device-type-turntableDirect:not(.power-off) .tt-strobe-pilot::before {
+    background: #ef6851;
+    box-shadow: 1px 0 4px #f66b54b0;
+}
+.device-node.device-type-turntableDirect:not(.power-off) .at-platter::after {
+    mask-image: linear-gradient(90deg, #000 12%, #0009 66%, #000b);
+}
+.device-node.device-type-turntableDirect .direct-stylus-light {
+    transition: box-shadow 160ms ease, background 160ms ease;
+}
+.device-node.device-type-turntableDirect.direct-light-on .direct-stylus-light {
+    box-shadow: -4px -2px 10px #fce7aa22;
+}
+
+.device-node.device-type-turntableAutomatic .hw-plunger-legend > .tt-start-mark {
+    width: 8px;
+    height: 8px;
+    color: #e5e8e0;
+}
+.device-node.device-type-turntableLinear [data-linear-carriage] {
+    filter: drop-shadow(1px 2px 1px #0c160f70);
+}
+.device-node.device-type-turntableLinear[data-linear-phase="scanning"] .linear-sensor-lens {
+    fill: #ecad67;
+    filter: drop-shadow(0 0 3px #f5ae607d);
+}
+.device-node.device-type-turntableLinear .linear-pickup {
+    transition: transform 380ms cubic-bezier(.25, .62, .3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .device-node.device-type-turntable .at-record::before,
+    .device-node.device-type-turntable .at-platter::after {
+        --tt-record-travel: 0px;
+        --tt-strobe-offset: 0px;
+    }
+    .device-node.device-type-turntableLinear .linear-pickup,
+    .device-node.device-type-turntableDirect .direct-stylus-light {
+        transition: none;
+    }
+}

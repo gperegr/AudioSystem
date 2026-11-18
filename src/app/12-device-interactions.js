@@ -119,6 +119,8 @@
         function setupLinearTurntable(dev){
             const tt=dev.state.tt={running:false,pitch:0,output:'line',speed:33,disc:'lp',trim33:0,trim45:0};
             const el=dev.el,mechanism=dev.linear={phase:'idle',deadline:0,arm:485,target:485,operation:0,cue:0,disposed:false,message:''};
+            const carriage=el.querySelector('[data-linear-carriage]'),rimPattern=el.querySelector('.linear-rim-pattern');
+            let carriagePose='',rimPose='';
             const phaseNames={idle:'Em repouso',scanning:'Detectando o disco',lowering:'Descendo a agulha',playing:'Em reprodução',raised:'Agulha elevada',returning:'Retornando ao repouso'};
             const duration=()=>dev.audioBuffer?.duration||180;
             const leadIn=()=>tt.disc==='single'?297:380;
@@ -135,7 +137,7 @@
                 const lowered=mechanism.phase==='playing';
                 el.dataset.linearPhase=mechanism.phase;el.dataset.linearDisc=tt.disc;
                 el.classList.toggle('tt-motor',tt.running);el.classList.toggle('tt-stopped',!tt.running);
-                el.classList.toggle('linear-needle-down',lowered);
+                el.classList.toggle('linear-needle-down',lowered||mechanism.phase==='lowering');
                 const status=!dev.powered?'Desligado':mechanism.message||phaseNames[mechanism.phase];
                 el.querySelector('[data-linear-status]').textContent=status;
                 el.querySelector('[data-linear-rpm]').textContent=(dev.powered?(tt.speed===45?45:100/3)*(1+tt.pitch*.03):0).toFixed(2);
@@ -261,8 +263,10 @@
                     if(dev.audioBuffer)dev.fileOffset=progress*duration();else dev.demoOffset=progress*duration();
                 }
                 mechanism.arm=reduced?mechanism.target:mechanism.arm+(mechanism.target-mechanism.arm)*(1-Math.exp(-elapsed/(mechanism.cue?.06:.15)));
-                el.querySelector('[data-linear-carriage]').setAttribute('transform',`translate(${(mechanism.arm-485).toFixed(3)} 0)`);
-                el.querySelector('.linear-rim-pattern')?.setAttribute('patternTransform',`translate(${(reduced?0:(dev.platterAngle||0)/72).toFixed(3)} 0)`);
+                const carriageTransform=`translate(${(mechanism.arm-485).toFixed(2)} 0)`;
+                const phase=`translate(${(reduced?0:(dev.platterAngle||0)/72).toFixed(3)} 0)`;
+                if(carriageTransform!==carriagePose){carriagePose=carriageTransform;carriage.setAttribute('transform',carriageTransform);}
+                if(phase!==rimPose){rimPose=phase;rimPattern.setAttribute('patternTransform',phase);}
             };
             const bind=(selector,handler)=>el.querySelector(selector).addEventListener('click',event=>{event.stopPropagation();handler();scheduleProjectSave();});
             bind('[data-linear-start]',dev.linearStart);bind('[data-linear-stop]',dev.linearStop);bind('[data-linear-lift]',dev.linearLift);
@@ -308,6 +312,9 @@
             const tt=dev.state.tt={running:false,pitch:0,output:'line',speed:33,size:12};
             const el=dev.el;
             const motion=dev.automatic={phase:'idle',arm:0,target:0,lift:0,lifted:false,holdRaised:false,pendingStart:false,deadline:0,operation:0,disposed:false};
+            const armSvg=el.querySelector('.at-arm-svg'),tubes=armSvg.querySelectorAll('[data-auto-tube]'),headshell=armSvg.querySelector('[data-auto-head]');
+            const contactY=(turntableRecordGeometry(armSvg,el.querySelector('[data-tt="record"]'))?.top??80)-16;
+            let armPose='';
             const phases={idle:'Em repouso',preparing:'Elevando a agulha',starting:'Posicionando o braço',lowering:'Descendo a agulha',playing:'Em reprodução',raised:'Agulha elevada',lifting:'Elevando a agulha',returning:'Retornando ao repouso',resting:'Descendo a agulha'};
             const duration=()=>dev.audioBuffer?.duration||180;
             const position=()=>dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?(appState.audio.context.currentTime-dev.demoStartedAt)*dev.ttRate():0);
@@ -435,9 +442,14 @@
                 motion.arm=reduced?motion.target:motion.arm+(motion.target-motion.arm)*(1-Math.exp(-elapsed/.15));
                 motion.lift=reduced?Number(motion.lifted):motion.lift+(Number(motion.lifted)-motion.lift)*(1-Math.exp(-elapsed/.085));
                 // Project a fixed-length arm rotating about its stationary bearing.
-                const angle=.04+motion.arm*.48,x=454-210*Math.sin(angle),y=64-motion.lift*12;
-                el.querySelectorAll('[data-auto-tube]').forEach(path=>path.setAttribute('d',`M454 39L${x.toFixed(3)} ${y.toFixed(3)}`));
-                el.querySelector('[data-auto-head]').setAttribute('transform',`translate(${(x-16).toFixed(3)} ${(y-1).toFixed(3)})`);
+                const angle=.04+motion.arm*.48,x=454-210*Math.sin(angle);
+                const y=64+(contactY-64)*Math.min(1,motion.arm/.65)-motion.lift*12;
+                const pose=`M454 39L${x.toFixed(2)} ${y.toFixed(2)}`;
+                if(pose!==armPose){
+                    armPose=pose;
+                    tubes.forEach(path=>path.setAttribute('d',pose));
+                    headshell.setAttribute('transform',`translate(${(x-16).toFixed(2)} ${(y-1).toFixed(2)})`);
+                }
                 if(appState.interface.selectedDeviceId===dev.id){
                     const cue=inspectorContent.querySelector('[data-auto-cue]');
                     if(cue&&document.activeElement!==cue)cue.value=Math.min(100,position()/duration()*100);
@@ -479,11 +491,74 @@
             </div>`;
         }
 
+        function turntableRecordGeometry(svg,record) {
+            const screen=svg.getScreenCTM(),box=record.getBoundingClientRect();
+            if(!screen||!box.width||!box.height)return null;
+            const local=screen.inverse();
+            const left=new DOMPoint(box.left,box.top).matrixTransform(local);
+            const right=new DOMPoint(box.right,box.top).matrixTransform(local);
+            return {left:left.x,right:right.x,top:left.y};
+        }
+
+        function preparePivotTurntable(dev) {
+            const svg=dev.el.querySelector('[data-pivot-arm]');
+            if(!svg)return;
+            const record=dev.el.querySelector('[data-tt="record"]');
+            const geometry=turntableRecordGeometry(svg,record);
+            if(!geometry)return;
+            // Bearing, tube end, stylus tip and arm rest in the source SVG's viewBox.
+            const [pivotX,pivotY,endX,endY,tipX,tipY,restX]=svg.dataset.pivotArm.split(' ').map(Number);
+            const {left,right,top}=geometry;
+            const restY=top-13;
+            const rest=svg.querySelector('[data-pivot-rest]');
+            if(rest){
+                const postX=restX+7;
+                rest.setAttribute('d',`M${postX-6} ${top+24}h12m-6 0V${restY-5}h-5`);
+            }
+            dev.el.classList.add('tt-pivot-motion');
+            dev.pivotArtwork={
+                pivotX,pivotY,endX,endY,tipX,tipY,restX,restY,
+                contactY:top+.25,leadIn:right-(right-left)*.045,leadOut:left+(right-left)*.66,
+                x:restX,lift:1,tube:svg.querySelector('[data-pivot-tube]'),head:svg.querySelector('[data-pivot-head]'),
+            };
+            updatePivotTurntableMotion(dev,0,true);
+        }
+
+        function updatePivotTurntableMotion(dev,elapsed,reduced){
+            const arm=dev.pivotArtwork;
+            if(!arm)return;
+            const playing=!!(dev.powered&&dev.state.tt?.running)&&!dev.el.classList.contains('spotify-vinyl-placing');
+            if(!playing&&arm.x===arm.restX&&arm.lift===1&&arm.pose)return;
+            const approach=(current,target,time)=>reduced||Math.abs(current-target)<.035?target:target+(current-target)*Math.exp(-elapsed/time);
+            const seconds=dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(playing&&dev.demoStartedAt!=null?(appState.audio.context.currentTime-dev.demoStartedAt)*dev.ttRate():0);
+            const duration=dev.audioBuffer?.duration||180;
+            const progress=reduced?0:Math.max(0,Math.min(1,seconds/duration));
+            const targetX=playing?arm.leadIn+(arm.leadOut-arm.leadIn)*progress:arm.restX;
+            // Lift before pulling back; only lower after the head reaches the lead-in.
+            if(playing||arm.lift>.82||reduced)arm.x=approach(arm.x,targetX,playing?.105:.13);
+            arm.lift=approach(arm.lift,playing&&Math.abs(arm.x-targetX)<4?0:1,.064);
+            const tipY=arm.contactY+(arm.restY-arm.contactY)*arm.lift;
+            const dx=arm.x-arm.tipX,dy=tipY-arm.tipY;
+            const pose=`translate(${dx.toFixed(2)} ${dy.toFixed(2)})`;
+            if(pose===arm.pose)return;
+            arm.pose=pose;
+            arm.head.setAttribute('transform',pose);
+            // Foreshorten the tube independently so the cartridge keeps its shape.
+            const length=arm.endX-arm.pivotX;
+            const scaleX=(length+dx)/length;
+            const reach=Math.min(1,(arm.restX-arm.x)/(arm.restX-arm.leadIn));
+            const scaleY=.35+.65*reach;
+            const shear=(dy+(1-scaleY)*(arm.endY-arm.pivotY))/length;
+            const x=arm.pivotX*(1-scaleX),y=arm.pivotY*(1-scaleY)-shear*arm.pivotX;
+            arm.tube.setAttribute('transform',`matrix(${scaleX.toFixed(5)} ${shear.toFixed(5)} 0 ${scaleY.toFixed(4)} ${x.toFixed(3)} ${y.toFixed(3)})`);
+        }
+
         function setupTurntable(dev) {
             if(dev.type==='turntableLinear'){setupLinearTurntable(dev);return;}
             if(dev.type==='turntableAutomatic'){setupAutomaticTurntable(dev);return;}
             const tt = dev.state.tt = { running: false, pitch: 0, output: 'line' };
             const el = dev.el;
+            preparePivotTurntable(dev);
             const direct=dev.type==='turntableDirect';
             if(direct)Object.assign(tt,{speed:33,pitchRange:8,stylusLight:false});
             dev.ttPitchRange=()=>direct&&tt.pitchRange===16?16:8;
@@ -744,6 +819,7 @@
 
         function renderDevicePreview(dev){
             dev.state={volume:dev.type==='integratedCompact'?.3:.8,integratedSource:0};dev.powered=true;
+            if(TURNTABLE_TYPES.has(dev.type))preparePivotTurntable(dev);
             if(SIGNAL_GENERATOR_TYPES.has(dev.type))configureSignalGenerator(dev);
             if(dev.type==='hardwareDemo')Hardware.bindDemo(dev);
             if(dev.type==='furnitureTable')updateBenchAppearance(dev);

@@ -52,6 +52,7 @@
     <link rel="stylesheet" href="./styles/equipment/analog-finishes.css?v=1">
     <link rel="stylesheet" href="./styles/equipment/product-families.css?v=1">
     <link rel="stylesheet" href="./styles/equipment/automatic-turntable.css?v=uniform-keys-v7">
+    <link rel="stylesheet" href="./styles/equipment/turntable-motion.css?v=1">
     <link rel="stylesheet" href="./styles/equipment/radiator-speaker.css?v=frontal-bare-input-v2">
     <link rel="stylesheet" href="./styles/equipment/compact-amplifier.css?v=lever-antenna-v2">
     <link rel="stylesheet" href="./styles/interface-palettes.css?v=home-preview-v1">
@@ -562,7 +563,7 @@
             <div class="at-deck">
                 <div class="at-front-mechanism">
                     <div class="at-platter"><div class="at-record" data-tt="record"><div class="at-label"></div><div class="at-spindle"></div></div></div>
-                    <svg class="at-arm-svg" viewBox="0 0 558 120" preserveAspectRatio="none" aria-hidden="true">
+                    <svg class="at-arm-svg" viewBox="0 0 558 120" data-pivot-arm="451 39 173 65 163 91 413" preserveAspectRatio="none" aria-hidden="true">
                         <path d="M430 117h46v7h-46Z" fill="#171b1b" stroke="#626863"/>
                         <path d="M445 46h15v71h-15Z" fill="#202625" stroke="#636c66"/>
                         <path d="M448 49v65" stroke="#8c9790" stroke-width="1.2"/>
@@ -573,13 +574,17 @@
                         <g class="at-arm">
                             <rect x="473" y="26" width="40" height="27" rx="5" fill="#242a26" stroke="#060a08" stroke-width="2"/>
                             <path d="M478 28v23m4-23v23m4-23v23m4-23v23m4-23v23m4-23v23m4-23v23m4-23v23" stroke="#667067" opacity=".5"/>
-                            <path d="M482 39H451L173 65l-19 8" fill="none" stroke="#0b100d" stroke-width="9" stroke-linecap="round"/>
-                            <path d="M450 36 174 62l-18 8" fill="none" stroke="#747d71" stroke-width="1.5"/>
-                            <path d="m154 68 23-2 8 9-28 5Z" fill="#1c241d" stroke="#525e4c"/>
-                            <path d="m163 70 11-1m-10 4 11-1" stroke="#050805" stroke-width="2"/>
-                            <path d="m159 79 15-2 1 7-14 2Z" fill="#ceae40" stroke="#7b6526"/>
-                            <path d="m164 85-1 6" stroke="#d0d0ad"/><path d="m182 73 9-3" stroke="#7f8778" stroke-width="2"/>
-                            <circle cx="160" cy="72" r="1.2" fill="#aab39e"/><circle cx="176" cy="71" r="1.2" fill="#aab39e"/>
+                            <g data-pivot-tube>
+                                <path d="M451 39 173 65l-19 8" fill="none" stroke="#0b100d" stroke-width="9" stroke-linecap="round"/>
+                                <path d="M450 36 174 62l-18 8" fill="none" stroke="#747d71" stroke-width="1.5"/>
+                            </g>
+                            <g data-pivot-head>
+                                <path d="m154 68 23-2 8 9-28 5Z" fill="#1c241d" stroke="#525e4c"/>
+                                <path d="m163 70 11-1m-10 4 11-1" stroke="#050805" stroke-width="2"/>
+                                <path d="m159 79 15-2 1 7-14 2Z" fill="#ceae40" stroke="#7b6526"/>
+                                <path d="m164 85-1 6" stroke="#d0d0ad"/><path d="m182 73 9-3" stroke="#7f8778" stroke-width="2"/>
+                                <circle cx="160" cy="72" r="1.2" fill="#aab39e"/><circle cx="176" cy="71" r="1.2" fill="#aab39e"/>
+                            </g>
                         </g>
                     </svg>
                 </div>
@@ -650,7 +655,7 @@
             <div class="at-controls">
                 <div class="auto-format-controls"><div class="auto-speed-control"><span>RPM</span><button type="button" data-auto-speed aria-label="Velocidade do prato" aria-pressed="false">33⅓ / 45</button></div><div class="auto-size-control"><span>SIZE</span><button type="button" class="auto-size" data-auto-size aria-label="Tamanho do disco" aria-pressed="false">12″ / 7″</button></div></div>
                 <div class="auto-transport">
-                    <div><span>START</span><button type="button" class="at-startstop" data-auto-start aria-label="Iniciar reprodução automática" aria-pressed="false">▶︎</button></div>
+                    <div><span>START</span><button type="button" class="at-startstop" data-auto-start aria-label="Iniciar reprodução automática" aria-pressed="false"><svg class="tt-start-mark" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1 9 5 2 9Z" fill="currentColor"/></svg></button></div>
                     <div><span>STOP</span><button type="button" data-auto-stop aria-label="Parar e retornar o braço">■</button></div>
                     <div><span>LIFT</span><button type="button" data-auto-lift aria-label="Elevar ou baixar a agulha" aria-pressed="false">▲ / ▼</button></div>
                 </div>
@@ -668,7 +673,7 @@
             <div class="at-deck">
                 <div class="at-front-mechanism">
                     <div class="at-platter"><div class="at-record" data-tt="record"><div class="at-label"></div><div class="at-spindle"></div></div></div>
-                    <svg class="at-arm-svg" viewBox="0 0 558 120" preserveAspectRatio="none" aria-hidden="true">
+                    <svg class="at-arm-svg" viewBox="0 0 558 120" data-pivot-arm="452 38 166 60 151 78 425" preserveAspectRatio="none" aria-hidden="true">
                         <defs>
                             <linearGradient id="direct-arm-steel" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#d3dcde"/><stop offset=".38" stop-color="#8d9ea5"/><stop offset=".55" stop-color="#485e68"/><stop offset="1" stop-color="#9daeb2"/></linearGradient>
                         </defs>
@@ -676,21 +681,27 @@
                         <rect x="444" y="41" width="16" height="62" rx="2" fill="url(#direct-arm-steel)" stroke="#435962"/>
                         <path d="M446 48v49" stroke="#d2dfe0" stroke-opacity=".55"/>
                         <rect x="431" y="31" width="42" height="18" rx="4" fill="#23343c" stroke="#778e98"/>
+                        <path data-pivot-rest fill="none" stroke-width="2" stroke-linecap="round"/>
                         <g class="at-arm">
-                            <path d="M452 38H320C285 38 288 61 254 61H166" fill="none" stroke="#0b151b" stroke-width="8" stroke-linecap="round"/>
-                            <path d="M452 37H320C285 37 288 60 254 60H166" fill="none" stroke="#91a5af" stroke-width="5" stroke-linecap="round"/>
-                            <path d="M448 35H320C285 35 288 58 254 58H166" fill="none" stroke="#e2ebec" stroke-width="1.2" stroke-linecap="round"/>
+                            <g data-pivot-tube>
+                                <path d="M452 38H320C285 38 288 61 254 61H166" fill="none" stroke="#0b151b" stroke-width="8" stroke-linecap="round"/>
+                                <path d="M452 37H320C285 37 288 60 254 60H166" fill="none" stroke="#91a5af" stroke-width="5" stroke-linecap="round"/>
+                                <path d="M448 35H320C285 35 288 58 254 58H166" fill="none" stroke="#e2ebec" stroke-width="1.2" stroke-linecap="round"/>
+                            </g>
                             <rect x="455" y="29" width="23" height="17" rx="3" fill="url(#direct-arm-steel)" stroke="#536b76"/>
                             <path d="M461 32v11m5-11v11m5-11v11" stroke="#3c535f" stroke-width="1"/>
-                            <path d="M144 59h26v9l-26 2Z" fill="#20313a" stroke="#8ca4b0" stroke-width="1.2"/>
-                            <path d="M148 61h17" stroke="#bdcccf" stroke-width="1.2"/>
-                            <path d="M149 70h10v4h-10Z" fill="#5fa895" stroke="#4e5149"/>
-                            <path d="m153 74-2 4" stroke="#ecdbb2" stroke-width="1.3"/>
+                            <g data-pivot-head>
+                                <path d="M144 59h26v9l-26 2Z" fill="#20313a" stroke="#8ca4b0" stroke-width="1.2"/>
+                                <path d="M148 61h17" stroke="#bdcccf" stroke-width="1.2"/>
+                                <path d="M149 70h10v4h-10Z" fill="#5fa895" stroke="#4e5149"/>
+                                <path d="m153 74-2 4" stroke="#ecdbb2" stroke-width="1.3"/>
+                            </g>
                         </g>
                         <circle cx="452" cy="38" r="6" fill="#a7babf" stroke="#4b6370"/>
                         <circle cx="452" cy="38" r="2" fill="#354f5e"/>
                     </svg>
                 </div>
+                <i class="tt-strobe-pilot" aria-hidden="true"></i>
                 <button type="button" class="direct-stylus-light" data-direct-light aria-label="Luz da agulha" aria-pressed="false"><i></i></button>
                 <div class="at-lid-scene" aria-hidden="true">
                     <span class="at-lid-hinge at-lid-hinge-left"></span><span class="at-lid-hinge at-lid-hinge-right"></span>
@@ -730,24 +741,31 @@
             <div class="at-deck">
                 <div class="at-front-mechanism">
                     <div class="at-platter"><div class="at-record" data-tt="record"><div class="at-label"></div><div class="at-spindle"></div></div></div>
-                    <svg class="at-arm-svg" viewBox="0 0 558 120" aria-hidden="true">
+                    <svg class="at-arm-svg" viewBox="0 0 558 120" data-pivot-arm="452 38 166 59 151 78 414" preserveAspectRatio="none" aria-hidden="true">
                         <defs>
-                            <linearGradient id="tt-arm-steel" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#d3dcde"/><stop offset=".38" stop-color="#8d9ea5"/><stop offset=".55" stop-color="#485e68"/><stop offset="1" stop-color="#9daeb2"/></linearGradient>
+                            <linearGradient id="tt-arm-steel" x1="0" y1="0" x2="0" y2="1">
+                                <stop stop-color="var(--tt-metal-light,#d3dcde)"/><stop offset=".38" stop-color="var(--tt-metal-mid,#8d9ea5)"/><stop offset=".55" stop-color="var(--tt-metal-dark,#485e68)"/><stop offset="1" stop-color="var(--tt-metal-mid,#9daeb2)"/>
+                            </linearGradient>
                         </defs>
                         <path d="M434 94h36v12h-36Z" fill="#172127" stroke="#677d85"/>
                         <rect x="444" y="41" width="16" height="54" rx="2" fill="url(#tt-arm-steel)" stroke="#435962"/>
                         <path d="M446 48v41" stroke="#d2dfe0" stroke-opacity=".55"/>
                         <rect x="431" y="31" width="42" height="18" rx="4" fill="#23343c" stroke="#778e98"/>
+                        <path data-pivot-rest fill="none" stroke-width="2" stroke-linecap="round"/>
                         <g class="at-arm">
-                            <path d="M452 38H238Q230 38 224 42L166 60" fill="none" stroke="#0b151b" stroke-width="8" stroke-linecap="round"/>
-                            <path d="M452 37H238Q230 37 224 41L166 59" fill="none" stroke="#91a5af" stroke-width="5" stroke-linecap="round"/>
-                            <path d="M448 35H238Q230 35 223 39L166 57" fill="none" stroke="#e2ebec" stroke-width="1.2" stroke-linecap="round"/>
+                            <g data-pivot-tube>
+                                <path d="M452 38H238Q230 38 224 42L166 60" fill="none" stroke="#0b151b" stroke-width="8" stroke-linecap="round"/>
+                                <path d="M452 37H238Q230 37 224 41L166 59" fill="none" stroke="#91a5af" stroke-width="5" stroke-linecap="round"/>
+                                <path d="M448 35H238Q230 35 223 39L166 57" fill="none" stroke="#e2ebec" stroke-width="1.2" stroke-linecap="round"/>
+                            </g>
                             <rect x="455" y="29" width="23" height="17" rx="3" fill="url(#tt-arm-steel)" stroke="#536b76"/>
                             <path d="M461 32v11m5-11v11m5-11v11" stroke="#3c535f" stroke-width="1"/>
-                            <path d="M144 59h26v9l-26 2Z" fill="#20313a" stroke="#8ca4b0" stroke-width="1.2"/>
-                            <path d="M148 61h17" stroke="#bdcccf" stroke-width="1.2"/>
-                            <path d="M149 70h10v4h-10Z" fill="#b19a70" stroke="#4e5149"/>
-                            <path d="m153 74-2 4" stroke="#ecdbb2" stroke-width="1.3"/>
+                            <g data-pivot-head>
+                                <path d="M144 59h26v9l-26 2Z" fill="#20313a" stroke="#8ca4b0" stroke-width="1.2"/>
+                                <path d="M148 61h17" stroke="#bdcccf" stroke-width="1.2"/>
+                                <path d="M149 70h10v4h-10Z" fill="#b19a70" stroke="#4e5149"/>
+                                <path d="m153 74-2 4" stroke="#ecdbb2" stroke-width="1.3"/>
+                            </g>
                         </g>
                         <circle cx="452" cy="38" r="6" fill="#a7babf" stroke="#4b6370"/>
                         <circle cx="452" cy="38" r="2" fill="#354f5e"/>
@@ -1602,6 +1620,6 @@
     <script src="./src/i18n/languages.js?v=aurenne-220-v1"></script>
     <script src="./src/modules/orthogonal-cables.js?v=short-local-routes-v1"></script>
     <script src="./src/modules/aurenne-220-panel.js?v=1"></script>
-    <script src="./script.js?v=aurenne-220-v1"></script>
+    <script src="./script.js?v=turntable-motion-v1"></script>
 </body>
 </html>

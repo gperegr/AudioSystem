@@ -177,6 +177,11 @@
             const angle=matchMedia('(prefers-reduced-motion: reduce)').matches?target:previous.angle+(target-previous.angle)*(1-Math.exp(-elapsed/response));
             needleMotion.set(needle,{angle,time:now});return angle;
         }
+        // Time constants for the inertia of each visual motor, in seconds.
+        const turntableMotorResponse={
+            turntable:[.19,.46],turntableVintage:[.24,.55],turntableBelt:[.34,.68],
+            turntableDirect:[.12,.22],turntableAutomatic:[.24,.53],turntableLinear:[.21,.49],
+        };
         let lastTransportFrame;
         function updateTransportMotion(now){
             const elapsed=lastTransportFrame==null?0:Math.max(0,Math.min(.1,(now-lastTransportFrame)/1000));lastTransportFrame=now;
@@ -186,13 +191,27 @@
                 if(!TURNTABLE_TYPES.has(dev.type))return;
                 const running=dev.powered&&dev.state.tt?.running;
                 const target=running?(dev.type==='turntableLinear'?(dev.state.tt.speed===45?45:100/3)*6*(1+dev.state.tt.pitch*.03):200*(dev.ttRate?.()||1)):0;
-                const speed=dev.platterSpeed||0,response=running?.18:.65;
+                const speed=dev.platterSpeed||0,response=(turntableMotorResponse[dev.type]||turntableMotorResponse.turntable)[running?0:1];
                 let next=reduced?0:target+(speed-target)*Math.exp(-elapsed/response);
                 if(!running&&next<.1)next=0;
                 // Integrate speed to preserve the platter's phase through stop/start.
                 const travel=reduced?0:target*elapsed+(speed-target)*response*(1-Math.exp(-elapsed/response));
                 dev.platterSpeed=next;dev.platterAngle=((dev.platterAngle||0)+travel)%360;
-                dev.el.style.setProperty('--tt-strobe-offset',(dev.platterAngle/360*80).toFixed(3)+'px');
+                if(travel>0&&!reduced&&dev.type!=='turntableLinear'){
+                    const style=dev.el.style;
+                    style.setProperty('--tt-record-travel',(dev.platterAngle/360*120).toFixed(3)+'px');
+                    let strobeTravel=travel;
+                    if(dev.type==='turntableDirect'&&running){
+                        // Once the rotor nears nominal speed, the strobe shows drift around its reference.
+                        const nominal=dev.state.tt.speed===45?270:200;
+                        const lock=Math.min(1,Math.max(0,((speed+next)/(2*nominal)-.78)/.17));
+                        strobeTravel-=nominal*elapsed*lock;
+                    }
+                    dev.strobePhase=((dev.strobePhase||0)+strobeTravel)%360;
+                    // Both rows use a 7px repeat, so a full phase wraps seamlessly.
+                    style.setProperty('--tt-strobe-offset',(dev.strobePhase/360*112).toFixed(3)+'px');
+                }
+                updatePivotTurntableMotion(dev,elapsed,reduced);
                 dev.updateLinearMotion?.(now,elapsed,reduced);
                 dev.updateAutomaticMotion?.(now,elapsed,reduced);
             });
