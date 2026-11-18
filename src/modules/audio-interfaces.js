@@ -29,7 +29,7 @@ const AudioInterfaceDesign = (() => {
         <div class="ai-interface-three-phones">${knob('data-ai-phones','Volume de fones','inputDial',32)}${icon('phones')}${jack('outPhone','headphone','Saída de fones · P10')}</div>
         <div class="ai-interface-three-outputs">${pair()}</div>
     </section>`;
-    const captureFour = () => `<section class="audio-interface-face ai-panel ai-interface-four"><div class="ai-interface-four-top"><span class="ai-interface-four-logo">USB</span><div class="ai-interface-four-connect">${capture()}</div></div>
+    const captureFour = () => `<section class="audio-interface-face ai-panel ai-interface-four"><div class="ai-interface-four-top"><div class="ai-interface-four-connect">${capture()}</div></div>
         <div class="ai-interface-four-monitor"><label>LINE OUT</label>${knob('data-ai-line','Volume de linha','monitorDial',54)}<div class="ai-interface-four-outputs">${pair()}</div></div>
         <div class="ai-interface-four-phones">${[0,1].map(i=>`<div><label>${icon('phones')} ${i+1}</label>${knob(`data-ai-phones="${i}"`,`Volume de fones ${i+1}`,'inputDialCompact',28)}${jack(`outPhone${i+1}`,'headphone',`Saída de fones ${i+1} · P10`)}</div>`).join('')}</div>
     </section>`;

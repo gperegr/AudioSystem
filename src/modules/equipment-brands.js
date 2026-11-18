@@ -141,6 +141,7 @@
             floorFlax:{x:(width-70)/2,y:9,w:70,h:9,mode:'word',zone:'header-center'},
         };
         if(type==='audioInterface1'||type==='audioInterface3')slots[type]={x:24,y:height-25,w:70,h:12,mode:'word',zone:'footer-left'};
+        if(type==='audioInterface4')slots[type]={x:area.x+12,y:area.y+9,w:100,h:22,mode:'full',zone:'header-left'};
         const slot=slots[type];if(slot&&free(slot.x,slot.y,slot.w,slot.h))candidates.push({...slot,score:-1});
         // Compact decks have controls across the entire front: a small signature
         // beside the power key is their explicitly reserved manufacturing mark.
