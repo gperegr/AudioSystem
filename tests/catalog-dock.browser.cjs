@@ -1,12 +1,14 @@
 // Dock regression: keep the search inside the silhouette and paint the canvas behind its cutouts.
 const {chromium}=require('playwright');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const inventory=require('./fixtures/equipment-contract-types.json');
 const root=path.resolve(__dirname,'..');
 (async()=>{
     const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',headless:true,args:['--no-sandbox','--autoplay-policy=no-user-gesture-required']});
     try{
         const page=await browser.newPage({viewport:{width:1600,height:1100}}),errors=[];
         page.on('pageerror',error=>errors.push(error.message));
+        page.on('console',message=>{if(message.type()==='error'&&message.text().startsWith('Error: <'))errors.push(message.text());});
         await page.route('**/*',async route=>{
             const url=new URL(route.request().url());
             if(url.hostname==='cdn.tailwindcss.com')return process.env.TAILWIND_SCRIPT_FILE?route.fulfill({contentType:'application/javascript',body:fs.readFileSync(process.env.TAILWIND_SCRIPT_FILE)}):route.continue();
@@ -25,6 +27,22 @@ const root=path.resolve(__dirname,'..');
         await page.goto('http://127.0.0.1:9876/');
         await page.locator('#headphone-calibration-skip').click();
         await page.getByRole('button',{name:'Agora não',exact:true}).click();
+
+        const artwork=await page.locator('.catalog-category .catalog-item').evaluateAll(cards=>cards.map(card=>{
+            const icon=card.querySelector(':scope > .catalog-equipment-icon');
+            const review=icon.cloneNode(true);
+            review.style.cssText='position:fixed;width:56px;height:46px;visibility:hidden';
+            document.body.append(review);
+            const {x,y,width,height}=review.getBBox();
+            review.remove();
+            return {type:card.dataset.template,drawing:icon.innerHTML,viewBox:icon.getAttribute('viewBox'),x,y,width,height};
+        }));
+        assert.deepEqual(artwork.map(item=>item.type).sort(),inventory.types.filter(type=>!inventory.compatibilityOnlyTypes.includes(type)));
+        assert.equal(new Set(artwork.map(item=>item.drawing)).size,artwork.length,'each catalog model has its own artwork');
+        for(const {type,viewBox,x,y,width,height} of artwork){
+            assert.equal(viewBox,'0 0 56 46',type+' uses the common icon frame');
+            assert(width>0&&height>0&&x>=1&&y>=1&&x+width<=55&&y+height<=45,type+' artwork fits the icon frame');
+        }
 
         const visible=()=>page.locator('.catalog-category:visible').count();
         assert(await visible()>10,'startup shows the complete catalog');

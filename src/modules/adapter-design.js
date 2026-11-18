@@ -52,6 +52,21 @@ const AudioAdapterDesign = (() => {
     }
     function markup(type,prefix){const m=models[type];return `<div class="device-header"><span>Adaptador ${m.input.toUpperCase()} → ${m.output.toUpperCase()}</span></div><div class="adapter-object" style="width:${m.width}px;height:${m.height}px">${svg(type,prefix)}${ports(type).map(p=>`<div class="port adapter-port" style="left:${p.x}px;top:${p.y}px" data-type="${p.format}" data-io="${p.io}" data-node="${p.node}" title="${p.label}"></div>`).join('')}</div>`;}
     function layout(el,type,value=0){const m=models[type],rotation=angle(value),vertical=rotation%180!==0;el.style.setProperty('--adapter-angle',rotation+'deg');el.dataset.adapterRotation=String(rotation);el.style.setProperty('--lighting-silhouette-mask',silhouette(type,rotation));el.classList.add('lighting-shaped-silhouette');for(const [axis,size]of Object.entries({width:vertical?m.height:m.width,height:vertical?m.width:m.height}))for(const key of [axis,'min-'+axis,'max-'+axis])el.style.setProperty(key,size+'px','important');return rotation;}
-    function icon(type){const m=models[type],rca=m.input==='rca'||m.output==='rca';return rca?`<g${m.input==='rca'?' transform="translate(56 0) scale(-1 1)"':''}><path d="M5 23h13q10 0 14-9h17M18 23q10 0 14 9h17"/><rect x="5" y="18" width="13" height="10" rx="4"/><rect x="36" y="9" width="12" height="10" rx="3"/><rect x="36" y="27" width="12" height="10" rx="3"/></g>`:'<path d="M8 17h24v12H8zM32 20h14l5 3-5 3H32M13 18v10m4-10v10m4-10v10m4-10v10M41 20v6m5-6v6"/><ellipse cx="8" cy="23" rx="4" ry="6"/>';}
+    function icon(type){
+        const {input,output}=models[type];
+        if(input!=='rca'&&output!=='rca'){
+            const socket=input==='p10'?7:5, tip=output==='p10'?3.6:2;
+            return `<path d="M10 ${23-socket}h19q3 0 3 3v${2*socket-6}q0 3-3 3H10M32 19h5v8h-5M37 ${23-tip}h10l4 ${tip}-4 ${tip}H37"/><ellipse cx="10" cy="23" rx="4" ry="${socket}"/><ellipse cx="10" cy="23" rx="1.65" ry="${socket-2.7}" stroke-width="1"/><path d="M17 ${25-socket}v${2*socket-4}m4 ${4-2*socket}v${2*socket-4}m4 ${4-2*socket}v${2*socket-4}M42 ${23-tip}v${2*tip}m4-${2*tip}v${2*tip}" stroke-width="1.05"/>`;
+        }
+        const fromRca=input==='rca';
+        const wide=(fromRca?output:input)==='p10';
+        const sleeve=wide?5:3.6, tip=wide?2.8:1.65;
+        const single=fromRca
+            ? `<path d="M9 ${23-sleeve}h11v${2*sleeve}H9M9 ${23-tip}H6l-3 ${tip} 3 ${tip}h3M14 ${25-sleeve}v${2*sleeve-4}"/>`
+            : `<path d="M8 ${23-sleeve}h10q2 0 2 2v${2*sleeve-4}q0 2-2 2H8"/><ellipse cx="8" cy="23" rx="3" ry="${sleeve}"/><ellipse cx="8" cy="23" rx="1.15" ry="${sleeve-1.6}" stroke-width="1"/>`;
+        const rca=[14,32].map(y=>`<rect x="35" y="${y-3.5}" width="12" height="7" rx="1.5"/>
+            <path d="M43 ${y-3.5}v7" stroke-width="1.05"/>${fromRca?'<ellipse cx="48.5" cy="'+y+'" rx="1.5" ry="3.5"/>':'<path d="M47 '+y+'h5"/>'}`).join('');
+        return `<g${fromRca?' transform="translate(56 0) scale(-1 1)"':''}>${single}<path d="M20 23c7 0 8-9 15-9m-15 9c7 0 8 9 15 9"/>${rca}</g>`;
+    }
     return Object.freeze({models,angle,svg,ports,markup,layout,icon});
 })();
