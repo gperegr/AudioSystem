@@ -51,7 +51,7 @@
 #inspector-content :is(.model-spec,.sonic-band,.headphone-output-specs dl>div){background:var(--ui-control);border-color:var(--ui-border);}
 #inspector-content :is(.model-spec dt,.headphone-output-specs dt,.sonic-band-name){color:var(--ui-secondary);}
 #inspector-content :is(.model-spec dd,.headphone-output-specs dd,.signal-history-reading output){color:var(--ui-text);}
-#inspector-content :is(.model-spec-icon,.port-signal-direction){background:var(--ui-panel);border-color:var(--ui-border);color:var(--ui-secondary);}
+#inspector-content .port-signal-direction{background:var(--ui-panel);border-color:var(--ui-border);color:var(--ui-secondary);}
 #inspector-content :is(.tt-insp-btn,button:not(.signal-history-name)):not([data-state=protection]){background:var(--ui-control)!important;border-color:var(--ui-border)!important;color:var(--ui-text)!important;}
 #inspector-content :is(.tt-insp-btn,button):is(.is-on,[aria-pressed=true]){background:var(--ui-active)!important;border-color:var(--ui-accent)!important;color:var(--ui-text)!important;}
 #inspector-content :is(.tt-insp-btn,button):hover:not(:disabled){background:var(--ui-hover)!important;}
@@ -512,4 +512,79 @@ body.equipment-cursor-placement,body.equipment-cursor-placement #canvas,body.equ
   #equipment-catalog .catalog-favorite path,
   .app-settings-content .settings-group>summary::after,
   .app-settings-content .connection-help-setting input::before{transition:none;}
+}
+
+/* Keep every catalog card on the same three visual rows. */
+#equipment-catalog .catalog-item,
+#equipment-catalog .catalog-item:has(>.catalog-product-identity){
+  display:grid;grid-template-rows:44px 38px 12px;gap:4px;
+  align-content:center;justify-items:center;padding:14px 13px!important;
+}
+#equipment-catalog .catalog-item>.catalog-product-label{
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;
+  overflow:hidden;align-self:start;min-height:0;margin:0;
+  width:100%;font-size:11.5px;line-height:12.5px;text-wrap:balance;
+}
+#equipment-catalog .catalog-item>.catalog-product-identity{
+  align-self:center;white-space:nowrap;line-height:1.2;
+  overflow:hidden;text-overflow:ellipsis;
+}
+.catalog-product-maker{font-weight:500;color:var(--ui-muted);}
+.catalog-product-model{font-weight:650;font-variant-numeric:tabular-nums;}
+#equipment-catalog .catalog-favorite[aria-pressed="true"]{
+  background:color-mix(in srgb,var(--ui-accent) 13%,var(--ui-panel));
+}
+@media(hover:hover) and (pointer:fine){
+  #equipment-catalog .catalog-item:hover .catalog-favorite{background:var(--ui-control);}
+}
+@media(max-height:500px){
+  #equipment-catalog .catalog-item,
+  #equipment-catalog .catalog-item:has(>.catalog-product-identity){
+    grid-template-rows:16px 22px 10px;gap:2px;padding:6px 9px!important;
+  }
+  #equipment-catalog .catalog-item>.catalog-equipment-icon{height:16px;}
+  #equipment-catalog .catalog-item>.catalog-product-label{
+    -webkit-line-clamp:2;font-size:9px;line-height:11px;
+  }
+  #equipment-catalog .catalog-favorite{top:3px;right:3px;width:24px;height:24px;}
+  #equipment-catalog .catalog-favorite svg{width:13px;height:13px;}
+}
+
+/* Device identity stays at the top while properties scroll beneath it. */
+#inspector .inspector-panel-header{gap:12px;}
+#inspector .inspector-heading{flex:1;min-width:0;display:grid;gap:4px;}
+#inspector[data-floating="true"] #inspector-title,
+#inspector #inspector-title{
+  font-size:15px;font-weight:700;line-height:1.2;color:var(--ui-text);
+  white-space:normal;overflow-wrap:anywhere;
+}
+#inspector-model-role{font-size:11px;font-weight:500;color:var(--ui-secondary);}
+#inspector-device-state{
+  display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;
+  min-width:0;margin-top:3px;font-size:10px;color:var(--ui-secondary);
+}
+#inspector-energy-state{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 7px;
+  border-radius:99px;background:var(--ui-control);color:var(--ui-text);
+}
+#inspector-device-state[hidden],#inspector-energy-state[hidden]{display:none;}
+#inspector-energy-state::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--ui-muted);}
+#inspector-energy-state[data-state="on"]::before{background:#71cfa7;}
+#inspector-energy-state[data-state="damaged"]::before{background:#f08c85;}
+#inspector-active-source strong{color:var(--ui-text);font-weight:650;overflow-wrap:anywhere;}
+#inspector-content .inspector-power-section{display:grid;gap:8px;}
+#inspector-content .inspector-power-section h3{margin:0;}
+#inspector-content .inspector-operating-controls{display:grid;gap:14px;min-width:0;}
+#inspector-content .inspector-operating-controls:not(:has(>*)){display:none;}
+#inspector-content .model-specs-grid{grid-template-columns:minmax(0,1fr);gap:0;}
+#inspector-content .model-spec{
+  grid-template-columns:minmax(0,1fr) minmax(min-content,46%);
+  align-items:baseline;gap:10px;padding:8px 10px;border-radius:0;
+  background:var(--ui-panel);
+}
+#inspector-content .model-spec+.model-spec{box-shadow:inset 0 1px color-mix(in srgb,var(--ui-border) 28%,transparent);}
+#inspector-content .model-spec dt{display:block;font-size:11px;}
+#inspector-content .model-specs-heading{margin:0;}
+#inspector-content .model-spec dd{
+  font-size:12px;text-align:end;font-variant-numeric:tabular-nums;overflow-wrap:normal;
 }

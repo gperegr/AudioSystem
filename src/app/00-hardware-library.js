@@ -872,6 +872,7 @@ const Hardware = (() => {
         const type=dev.el.dataset.equipmentType;
         if(EquipmentBrands.get(type))dev.el.dataset.analogFinish='true';
         const surfaces=[
+            ['glass','.glass-pre-glass,.stream-glass'],
             ['alloy','.classic-preamp-panel,.classic-preamp-connections,.tape-face,.precision-face,.utility-front,.glass-pre-switch-row,.glass-pre-end,.pre-finish-reference,.pre-finish-control,.power-finish-bias,.power-finish-valve .custom-power-connections,.finish-silver'],
             [dev.el.classList.contains('device-family-vintage')?'alloy':'coated','.rack-face,.graphic-eq-face,.stereo-power-face,.phone-amp-face,.matrix-face,.selector-face,.signal-face,.bench-face,.streamer-face,.cd-face,.interface-face,.xover-panel,.amp4-rack-face,.mixer-rack-panel,.extra-rack,.ai-panel,.integrated-face,.custom-pre-face,.custom-power-face'],
             ['walnut','.classic-preamp-case,.classic-box-cab,.shelf-finish-wood .bookshelf-cabinet,.device-type-spkPassiveWood .sp-cab'],
@@ -1291,6 +1292,9 @@ const Hardware = (() => {
             const localScene=sceneEmitters.map(source=>sampleSceneLight(source,centerX,centerY)).sort((a,b)=>b.weight-a.weight);
             const shadowScene=localScene.find(source=>source.weight>.01);
             const shadowX=shadowScene?.x||0,shadowY=shadowScene?.y||0,shadowStrength=shadowScene?.weight||0;
+            const lightAngle=shadowScene?Math.atan2(shadowX-centerX,centerY-shadowY)*180/Math.PI:0;
+            device.style.setProperty('--scene-sheen-angle',lightAngle.toFixed(1)+'deg');
+            device.style.setProperty('--scene-sheen-strength',shadowStrength.toFixed(3));
             localScene.slice(0,3).forEach((source,index)=>{
                 const suffix=['a','b','c'][index];
                 device.style.setProperty('--scene-light-'+suffix+'-rgb',source.rgb.join(' '));

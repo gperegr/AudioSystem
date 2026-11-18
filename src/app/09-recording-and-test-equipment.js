@@ -170,11 +170,13 @@
         }
         function tapePosition(dev){return dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?appState.audio.context.currentTime-dev.demoStartedAt:0);}
         const needleMotion=new WeakMap();
+        const needleMotionPreference=matchMedia('(prefers-reduced-motion: reduce)');
         function dampedNeedle(needle,target,now,rest){
             const previous=needleMotion.get(needle)||{angle:rest,time:now-16};
             const elapsed=Math.max(0,Math.min(.25,(now-previous.time)/1000));
-            const response=target>previous.angle?.14:.42;
-            const angle=matchMedia('(prefers-reduced-motion: reduce)').matches?target:previous.angle+(target-previous.angle)*(1-Math.exp(-elapsed/response));
+            const response=target>previous.angle?.105:.31;
+            const next=target+(previous.angle-target)*Math.exp(-elapsed/response);
+            const angle=needleMotionPreference.matches||Math.abs(target-next)<.025?target:next;
             needleMotion.set(needle,{angle,time:now});return angle;
         }
         // Time constants for the inertia of each visual motor, in seconds.

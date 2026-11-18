@@ -448,7 +448,7 @@
                 appStateStore.actions.setCanvasOption('hideCables',false);appState.project.connections.forEach(c=>c.hidden=false);
             }else appStateStore.actions.setCanvasOption('hideCables',!appState.canvas.hideCables);
             cableVisibilityButton.setAttribute('aria-pressed',String(!!appState.canvas.hideCables));
-            updateCables();renderCableProperties();
+            updateCables();renderCableProperties();updatePortGuidance();
         });
         const selectionMarquee = document.getElementById('selection-marquee');
         const selectionCount = document.getElementById('selection-count');

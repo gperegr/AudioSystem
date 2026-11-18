@@ -2120,8 +2120,6 @@
         .model-spec {display:grid;align-content:start;gap:7px;min-width:0;padding:10px;border:1px solid #354351;border-radius:7px;background:linear-gradient(145deg,#202b35,#192129);}
         .model-spec[data-kind="load"] {grid-column:1/-1;}
         .model-spec dt {display:flex;align-items:center;gap:6px;color:#9eafbd;font-size:10px;line-height:1.3;}
-        .model-spec-icon {display:grid;place-items:center;flex:none;width:18px;height:18px;border:1px solid #465b6c;border-radius:5px;background:#263744;color:#b9d8e7;font-size:12px;}
-        .model-spec[data-kind="impedance"] .model-spec-icon {font-size:11px;}
         .model-spec dd {margin:0;color:#e5edf2;font-size:14px;font-weight:650;line-height:1.25;overflow-wrap:anywhere;}
         .model-specs-status:empty {display:none;}
         .electrical-status {display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:2px;}
@@ -4336,6 +4334,24 @@ body.inspector-collapsed .sidebar-edge-tab-right {right:0;}
 @keyframes catalog-amp-pop {0%{opacity:0;transform:scale(.72)}62%{opacity:1;transform:scale(1.075)}82%{transform:scale(.975)}100%{opacity:1;transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){#catalog-amp-tooltip.is-visible {animation:none;transform:scale(1);}}
 .cable-group[data-miswired="true"] .cable-path {stroke-dasharray:6 5;}
+        #cables-layer:has(.cable-group.selected:not([data-cable-hidden])) .cable-group:not(.selected):not(:hover) {opacity:.42;}
+        #cables-layer .cable-group.selected {--cable-selection-ink:var(--ui-text,#f2f6f7);}
+        #cables-layer .cable-group.selected[data-signal="ativo"] {--cable-selection-ink:#9ce3c2;}
+        #cables-layer .cable-group.selected[data-miswired="true"] {--cable-selection-ink:#ffba9d;}
+        #cables-layer .cable-group.selected :is(.cable-outline,.wire-braid-black) {
+            stroke:var(--cable-selection-ink);stroke-width:calc(var(--cable-outer) + 1.5px);opacity:.93;filter:none;
+        }
+        #cables-layer .cable-group.selected :is(.cable-path,.wire-braid-red) {opacity:1;filter:none;}
+        #audio-world .port[data-cable-focus] {
+            z-index:28;outline:calc(2px * var(--canvas-inverse-zoom,1)) solid var(--ui-text,#f2f6f7);
+            outline-offset:calc(2px * var(--canvas-inverse-zoom,1));
+        }
+        #audio-world:has(.cable-group.selected[data-signal="ativo"]:not([data-cable-hidden])) .port[data-cable-focus="selected"] {outline-color:#9ce3c2;}
+        #audio-world .port[data-cable-focus="invalid"] {outline-color:#ffba9d;}
+        #cable-properties .cable-signal-summary[data-state="invalid"] {color:#ffc0ac;background:#422a28;border-color:#87534a;}
+        @media(prefers-reduced-motion:reduce) {
+            #cables-layer .cable-group :is(.cable-path,.wire-braid-red) {animation:none;}
+        }
 
 /* File action stays beside its name; the lid responds to hover and keyboard focus. */
 #inspector-content .source-file-row {display:flex;align-items:center;gap:8px;min-width:0;}

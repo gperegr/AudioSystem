@@ -106,6 +106,7 @@
         document.querySelectorAll('.catalog-item[data-template]').forEach(item => {
             const oldIcon = item.firstElementChild;
             if (oldIcon) oldIcon.outerHTML = catalogIcon(item.dataset.template);
+            item.querySelector(':scope > span')?.classList.add('catalog-product-label');
             EquipmentBrands.catalog(item,item.dataset.template);
         });
         const catalogAmpTip=document.createElement('aside');catalogAmpTip.id='catalog-amp-tooltip';catalogAmpTip.setAttribute('role','tooltip');document.body.appendChild(catalogAmpTip);

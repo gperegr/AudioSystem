@@ -208,6 +208,52 @@
         window.addEventListener('pointermove',scheduleInspectorPosition,{passive:true});
         window.addEventListener('wheel',scheduleInspectorPosition,{passive:true});
         const parameterlessDeviceTypes=new Set(['cdCollection','pendantLamp','wallLampCage','wallLampDome']);
+        const inspectorTitle=document.getElementById('inspector-title');
+        const inspectorModelRole=document.getElementById('inspector-model-role');
+        const inspectorDeviceState=document.getElementById('inspector-device-state');
+        const inspectorEnergyState=document.getElementById('inspector-energy-state');
+        const inspectorActiveSource=document.getElementById('inspector-active-source');
+        const inspectorSourceValue=inspectorActiveSource.querySelector('strong');
+
+        function setInspectorHeading(title,role=''){
+            inspectorTitle.textContent=title;
+            inspectorModelRole.textContent=role;
+            inspectorModelRole.hidden=!role;
+            inspectorDeviceState.hidden=true;
+        }
+        function inspectorSourceName(dev){
+            const state=dev.state;
+            if(dev.type==='preAurenne220'&&state.aurenne220){
+                const {source,monitor}=state.aurenne220;
+                return monitor?P220_MONITOR[monitor]:P220_SOURCE_LABELS[source];
+            }
+            if(RADIO_RECEIVERS.has(dev.type))return RECEIVER_INPUTS.find(([key])=>key===state.receiverInput)?.[1];
+            if(dev.type==='streamIntegrated'&&state.streamInput==='line')return 'Entrada de linha';
+            if(controlAmpConfig(dev.type))return controlAmpSources(dev.type)[state.integratedSource];
+            if(dev.type==='preamp')return state.preSource?'Linha '+state.preSource:'';
+            if(CAPTURE_INTERFACE_TYPES.has(dev.type))return 'Entrada do computador';
+            if(SOURCE_TYPES.has(dev.type)&&!SIGNAL_GENERATOR_TYPES.has(dev.type)){
+                if(state.tt?.disc==='none')return 'Sem disco';
+                return dev.spotifyVinyl?'Spotify':dev.audioBuffer?'Arquivo local':'Demonstração';
+            }
+            return '';
+        }
+        function refreshInspectorDeviceState(dev=appState.project.devices[appState.interface.selectedDeviceId]){
+            if(!dev||appState.interface.selectedConnection)return;
+            const power=dev.el.querySelector('.power-btn');
+            const state=dev.state.damage?'damaged':power?(dev.powered?'on':'off'):'';
+            const source=state==='off'||state==='damaged'?'':inspectorSourceName(dev);
+            const translate=AudioSystemLanguage.translate;
+            if(inspectorEnergyState.dataset.state!==state){
+                inspectorEnergyState.dataset.state=state;
+                inspectorEnergyState.textContent=state?translate({on:'Ligado',off:'Desligado',damaged:'Danificado'}[state]):'';
+            }
+            const sourceName=source?translate(source):'';
+            if(inspectorSourceValue.textContent!==sourceName)inspectorSourceValue.textContent=sourceName;
+            inspectorEnergyState.hidden=!state;
+            inspectorActiveSource.hidden=!sourceName;
+            inspectorDeviceState.hidden=!state&&!sourceName;
+        }
 
         function selectDevice(id, preserveSelection = false) {
             const wasOpenForDevice = !!id && appState.interface.selectedDeviceId === id && inspectorAnchorDevice?.isConnected && !inspectorContent.classList.contains('hidden');
@@ -231,7 +277,7 @@
             syncDeviceSelection();
             syncMobileContextActions();
             if(!id) {
-                document.getElementById('inspector-title').textContent='Selecione um equipamento';
+                setInspectorHeading('Selecione um equipamento');
                 inspectorEmpty.classList.remove('hidden'); inspectorContent.classList.add('hidden');
                 return;
             }
@@ -246,7 +292,7 @@
             if (!dev) {
                 inspectorWindow.dataset.floating='false';document.body.classList.remove('inspector-floating','mobile-properties-open');
                 appStateStore.actions.setSelectedDevice(null);
-                document.getElementById('inspector-title').textContent='Selecione um equipamento';
+                setInspectorHeading('Selecione um equipamento');
                 inspectorEmpty.classList.remove('hidden'); inspectorContent.classList.add('hidden');
                 return;
             }
@@ -256,15 +302,19 @@
             
             const names = DEVICE_NAMES;
             const equipmentName=names[dev.type]||dev.el.querySelector('.device-header > span')?.textContent.trim()||dev.type;
-            document.getElementById('inspector-title').textContent=EquipmentBrands.name(dev.type,equipmentName);
+            const branded=!!EquipmentBrands.get(dev.type)&&!EquipmentBrands.unprinted(dev.type);
+            setInspectorHeading(branded?EquipmentBrands.name(dev.type):equipmentName,branded?equipmentName:'');
+            refreshInspectorDeviceState(dev);
 
             const hasPowerControl = !!dev.el.querySelector('.power-btn');
             let html='';
             if (hasPowerControl) {
-                html += `<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Energia</span><button id="inspector-power-toggle" type="button" aria-label="Ligar ou desligar equipamento" aria-pressed="${dev.powered}" class="tt-insp-btn w-full ${dev.powered ? 'is-on' : ''}">LIGAR / DESLIGAR</button></div>`;
+                html += `<section class="inspector-power-section"><h3>Energia</h3><button id="inspector-power-toggle" type="button" aria-label="Ligar ou desligar equipamento" aria-pressed="${dev.powered}" class="tt-insp-btn w-full ${dev.powered ? 'is-on' : ''}">LIGAR / DESLIGAR</button></section>`;
             }
             if(dev.state.damage)html+='<div class="equipment-damage-notice" role="status">DANIFICADO · Sobrecarga elétrica simulada. Substitua o equipamento por outro do catálogo.</div>';
+            html+=modelSpecsInspectorHtml(dev);
             html+=amplificationInspectorHtml(dev);
+            html+='<div class="inspector-operating-controls" role="group" aria-label="Ajustes">';
 
             if(dev.type==='streamIntegrated'){html+=streamIntegratedInspector(dev);
             }else if(SIGNAL_GENERATOR_TYPES.has(dev.type)){html+=signalInspectorHtml(dev);
@@ -385,6 +435,7 @@
             }
             if (SOURCE_TYPES.has(dev.type) && !TURNTABLE_TYPES.has(dev.type)&&!CAPTURE_INTERFACE_TYPES.has(dev.type)) html += `<div class="flex flex-col gap-2"><span class="text-sm text-gray-300">Reprodução</span><button id="source-inspector-play" type="button" class="tt-insp-btn ${dev.state.playing ? 'is-on' : ''}" aria-pressed="${!!dev.state.playing}">REPRODUZIR / PAUSAR</button></div>`;
             if (SOURCE_TYPES.has(dev.type)&&!SIGNAL_GENERATOR_TYPES.has(dev.type)&&!CAPTURE_INTERFACE_TYPES.has(dev.type)&&!(TURNTABLE_TYPES.has(dev.type)&&dev.spotifyVinyl)) html += `<div class="flex flex-col gap-2 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Música própria</span><button id="source-load-audio" type="button" class="tt-insp-btn">CARREGAR ÁUDIO</button><input id="source-audio-file" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac" hidden><div class="source-file-row"><p id="source-file-name" class="text-xs text-gray-300 break-words"></p><button id="source-remove-audio" type="button" aria-label="Remover arquivo de áudio" title="Remover arquivo" ${dev.audioBuffer ? '' : 'hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path class="source-trash-lid" d="M4 7h16M9 7V5h6v2"/><path class="source-trash-bin" d="M6.5 9 7.5 20h9L17.5 9M10 11v6m4-6v6"/></svg></button></div><p id="source-file-message" class="text-xs text-gray-400"></p></div>`;
+            html+='</div>';
             if (dev.listeningProfile) html += `<section class="sonic-signature-panel"><h3>Assinatura sonora</h3>${listeningCurveHtml(dev)}</section>`;
             if(RADIO_RECEIVERS.has(dev.type))html+=radioInspectorHtml(dev);
             if(dev.type==='preAurenne220')html+=p220InspectorHtml(dev);

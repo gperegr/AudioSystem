@@ -546,16 +546,24 @@
             if(isListeningDevice(dev))html+=`<section class="listening-output-controls flex flex-col gap-2 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Escuta desta saída</span><div class="flex gap-2"><button id="listening-solo" class="tt-insp-btn flex-1 ${dev.state.solo?'is-on':''}" aria-label="Solo" aria-pressed="${!!dev.state.solo}"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 3v18m-5-4V7m10 10V7M3 10v4m18-4v4"/></svg><span>SOLO</span></button><button id="listening-mute" class="tt-insp-btn flex-1 ${dev.state.muted?'is-on':''}" aria-label="Mute" aria-pressed="${!!dev.state.muted}"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4zM16 9l5 6m0-6-5 6"/></svg><span>MUTE</span></button></div></section>`;
             if(HEADPHONE_OUTPUT_SPECS[dev.type]){const spec=HEADPHONE_OUTPUT_SPECS[dev.type];html+=`<section class="headphone-output-specs" aria-label="Saída de fones"><div class="headphone-output-heading"><span>Saída de fones</span><span aria-hidden="true">♫</span></div><dl><div><dt>Tensão máx.</dt><dd>${spec.voltsRms} V RMS</dd></div><div><dt>Corrente · canal</dt><dd>${Math.round(spec.currentRms*1000)} mA RMS</dd></div><div><dt>Resistência saída</dt><dd>${spec.outputOhms} Ω</dd></div></dl></section>`;}
             if(HP_TYPES.has(dev.type)&&dev.type!=='hpMax')html+=`<p class="text-sm text-gray-300">Impedância fixa: ${dev.state.headphoneOhms} Ω. A impedância, a resistência de saída e os limites de tensão/corrente do amplificador afetam o sinal.</p>`;
-            const amp=POWER_OUTPUT_TYPES.has(dev.type),passive=isPassiveLoad(dev);
-            if(amp||passive){
-                const spec=FIXED_AMP_SPECS[dev.type],recommended=isRecommendedSpeakerPower(dev.type);
-                const fields=amp?[["power",'Potência por canal',`${dev.state.ratedWatts} W / 8 Ω`],["impedance",'Carga mínima simulada',`${dev.state.minOhms} Ω`],["load",'Potência por carga',Object.entries(spec.powerByOhms).map(([r,p])=>`${p} W / ${r} Ω`).join(' · ')]]:[["impedance",PASSIVE_SUB_TYPES.has(dev.type)?'Impedância por bobina isolada':'Impedância nominal',`${dev.state.speakerOhms} Ω`],["power",recommended?'Amplificação recomendada':'Potência nominal suportada',`${dev.state.speakerWatts} W`]];
-                if(dev.type==='spkElectrostatic')fields.push(['sensitivity','Sensibilidade de referência','84 dB / 2,83 V / 1 m']);
-                const icons={power:'W',impedance:'Ω',load:'W',sensitivity:'dB'};
-                html+=`<section class="model-specs"><div class="model-specs-heading"><span>Características do modelo</span></div><dl class="model-specs-grid">${fields.map(([kind,label,value])=>`<div class="model-spec" data-kind="${kind}"><dt><span class="model-spec-icon" aria-hidden="true">${icons[kind]}</span>${label}</dt><dd>${value}</dd></div>`).join('')}</dl><div id="power-load-status" class="model-specs-status"></div></section>`;
-            }
             if(PASSIVE_SUB_TYPES.has(dev.type))html+='<p class="text-xs text-gray-400">Entradas L/R representam bobinas eletricamente isoladas. A potência total soma as duas bobinas; não una saídas de amplificadores entre si.</p>';
             return html;
+        }
+        function modelSpecsInspectorHtml(dev){
+            const amp=POWER_OUTPUT_TYPES.has(dev.type);
+            if(!amp&&!isPassiveLoad(dev))return '';
+            const spec=FIXED_AMP_SPECS[dev.type],recommended=isRecommendedSpeakerPower(dev.type);
+            const powerUnit=dev.type==='shelfRadiator'?'W RMS':'W';
+            const fields=amp?[
+                ['power','Potência por canal',`${dev.state.ratedWatts} W / 8 Ω`],
+                ['impedance','Carga mínima simulada',`${dev.state.minOhms} Ω`],
+                ['load','Potência por carga',Object.entries(spec.powerByOhms).map(([r,p])=>`${p} W / ${r} Ω`).join(' · ')]
+            ]:[
+                ['impedance',PASSIVE_SUB_TYPES.has(dev.type)?'Impedância por bobina isolada':'Impedância nominal',`${dev.state.speakerOhms} Ω`],
+                ['power',recommended?'Amplificação recomendada':'Potência nominal suportada',`${dev.state.speakerWatts} ${powerUnit}`]
+            ];
+            if(dev.type==='spkElectrostatic')fields.push(['sensitivity','Sensibilidade de referência','84 dB / 2,83 V / 1 m']);
+            return `<section class="model-specs"><h3 class="model-specs-heading">Características do modelo</h3><dl class="model-specs-grid">${fields.map(([kind,label,value])=>`<div class="model-spec" data-kind="${kind}"><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl><div id="power-load-status" class="model-specs-status"></div></section>`;
         }
         function bindListeningInspector(dev){
             ['solo','muted'].forEach(key=>{
@@ -570,6 +578,7 @@
         function applyCableAppearance(connection){
             const hidden=!!appState.canvas.hideCables||!!connection.hidden;
             connection.el.style.display=hidden?'none':'';
+            connection.el.toggleAttribute('data-cable-hidden',hidden);
             connection.el.querySelectorAll('.cable-path,.wire-braid-red').forEach(path=>{
                 if(connection.color)path.style.setProperty('stroke',connection.color,'important');else path.style.removeProperty('stroke');
             });
@@ -598,7 +607,7 @@
                 button.addEventListener('click',()=>{connection.slack=value;[...slackGroup.children].forEach(item=>{const active=item===button;item.classList.toggle('is-on',active);item.setAttribute('aria-pressed',String(active));});updateCables();scheduleProjectSave();});slackGroup.appendChild(button);
             });panel.appendChild(slackControl);
             const label=panel.querySelector('#cable-label');label.value=connection.label||'';
-            label.addEventListener('input',()=>{connection.label=label.value;document.getElementById('inspector-title').textContent=connection.label||'Cabo';applyCableAppearance(connection);scheduleProjectSave();});
+            label.addEventListener('input',()=>{connection.label=label.value;setInspectorHeading(connection.label||'Cabo');applyCableAppearance(connection);scheduleProjectSave();});
             const colors=[['Vermelho','#ef4444'],['Laranja','#f97316'],['Amarelo','#facc15'],['Verde','#22c55e'],['Azul','#60a5fa'],['Violeta','#a78bfa'],['Branco','#e5e7eb'],['Cinza','#64748b']];
             const palette=panel.querySelector('#cable-color-palette');
             colors.forEach(([name,color])=>{
@@ -613,7 +622,7 @@
             });
             panel.querySelector('#cable-color-reset').onclick=()=>{delete connection.color;applyCableAppearance(connection);renderCableProperties();};
             const visibility=panel.querySelector('#cable-visibility');const syncVisibility=()=>{visibility.setAttribute('aria-pressed',String(!connection.hidden));visibility.setAttribute('aria-label',connection.hidden?'Mostrar cabo':'Ocultar cabo');};syncVisibility();
-            visibility.onclick=()=>{connection.hidden=!connection.hidden;applyCableAppearance(connection);syncVisibility();scheduleProjectSave();};
+            visibility.onclick=()=>{connection.hidden=!connection.hidden;applyCableAppearance(connection);syncVisibility();updatePortGuidance();scheduleProjectSave();};
         }
 
         function wireSpeakerIn(dev, stereo = false) {

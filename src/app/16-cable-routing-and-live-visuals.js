@@ -83,6 +83,7 @@
         function updateCableFlows() {
             GuidedAccess.notify();
             updateListeningControls();
+            refreshInspectorDeviceState();
             if(spotifyPlayingTurntable||spotifyVolume>0)scheduleSpotifyVolume();
             updateStackFeet();
             syncSourceSequencer();
@@ -201,7 +202,7 @@
                 const isCarryingSignal = !!(!c.miswired && devOut && devOut.powered && hasOutputSignal(devOut,outPortEl) && portCarriesSignal(devOut, outPortEl));
                 c.el.classList.toggle('signal-idle', !isCarryingSignal);
                 c.el.dataset.signal = isCarryingSignal ? 'ativo' : 'sem sinal';
-                c.el.setAttribute('aria-label', `${c.el.querySelector('title')?.textContent || 'Cabo de áudio'} · ${isCarryingSignal ? 'sinal ativo' : 'sem sinal'}`);
+                c.el.setAttribute('aria-label', `${c.el.querySelector('title')?.textContent || 'Cabo de áudio'} · ${c.miswired ? 'Ligação incompatível' : isCarryingSignal ? 'sinal ativo' : 'sem sinal'}`);
                 
                 c.el.querySelectorAll('path').forEach(p => {
                     if (isCarryingSignal) {

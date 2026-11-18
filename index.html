@@ -27,7 +27,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./styles/app.css?v=canvas-equipment-hints-v2">
+    <link rel="stylesheet" href="./styles/app.css?v=studio-finish-v1">
     <link rel="stylesheet" href="./styles/home-menu.css?v=home-preview-v1">
     <link rel="stylesheet" href="./styles/signal-history.css?v=signal-history-v1">
     <link rel="stylesheet" href="./styles/equipment/adapters.css?v=physical-adapters-v1">
@@ -46,7 +46,7 @@
     <link rel="stylesheet" href="./styles/equipment/subwoofers.css?v=subwoofer-details-v1">
     <link rel="stylesheet" href="./styles/equipment/visual-refinements.css?v=visual-refinements-v5">
     <link rel="stylesheet" href="./styles/equipment/tactile-finishes.css?v=1">
-    <link rel="stylesheet" href="./styles/equipment/depth.css?v=stationary-knob-reflection-v2">
+    <link rel="stylesheet" href="./styles/equipment/depth.css?v=studio-finish-v1">
     <link rel="stylesheet" href="./styles/equipment/fasteners.css?v=1">
     <link rel="stylesheet" href="./styles/equipment/brands.css?v=material-print-v1">
     <link rel="stylesheet" href="./styles/equipment/analog-finishes.css?v=1">
@@ -55,7 +55,7 @@
     <link rel="stylesheet" href="./styles/equipment/turntable-motion.css?v=1">
     <link rel="stylesheet" href="./styles/equipment/radiator-speaker.css?v=frontal-bare-input-v2">
     <link rel="stylesheet" href="./styles/equipment/compact-amplifier.css?v=lever-antenna-v2">
-    <link rel="stylesheet" href="./styles/interface-palettes.css?v=menu-controls-v2">
+    <link rel="stylesheet" href="./styles/interface-palettes.css?v=studio-finish-v1">
     <link rel="stylesheet" href="./styles/desktop-layout.css?v=1">
 </head>
 <body class="flex flex-col h-screen bg-black text-white">
@@ -305,7 +305,17 @@
 
         <div id="inspector-layer">
             <div class="w-72 bg-[#181d23] border-l border-gray-800 flex flex-col shrink-0 z-30 shadow-xl overflow-y-auto" id="inspector">
-                <div class="inspector-panel-header"><span id="inspector-title">Selecione um equipamento</span><button id="inspector-sidebar-pin" class="sidebar-pin" type="button" aria-label="Fixar painel de propriedades aberto" aria-pressed="false" title="Fixar painel aberto"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8l-1 6 3 3v2H6v-2l3-3-1-6ZM12 14v7"/></svg></button></div>
+                <div class="inspector-panel-header">
+                    <div class="inspector-heading">
+                        <span id="inspector-title">Selecione um equipamento</span>
+                        <span id="inspector-model-role" hidden></span>
+                        <div id="inspector-device-state" hidden>
+                            <span id="inspector-energy-state" hidden></span>
+                            <span id="inspector-active-source" hidden><span>Fonte ativa</span> <strong></strong></span>
+                        </div>
+                    </div>
+                    <button id="inspector-sidebar-pin" class="sidebar-pin" type="button" aria-label="Fixar painel de propriedades aberto" aria-pressed="false" title="Fixar painel aberto"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8l-1 6 3 3v2H6v-2l3-3-1-6ZM12 14v7"/></svg></button>
+                </div>
                 <div class="p-6 flex flex-col items-center justify-center h-full text-center text-gray-500" id="inspector-empty">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="mb-4 opacity-50"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                     <p class="text-sm">Selecione um equipamento<br>para ver suas propriedades</p>
@@ -1610,7 +1620,7 @@
     <script src="./src/modules/spotify-coverflow.js?v=memory-lifecycle-v1"></script>
     <script src="./src/modules/audio-interfaces.js?v=interfaces-standard-io-20261025"></script>
     <script src="./src/modules/brand-lettering.js?v=retro-identities-v1"></script>
-    <script src="./src/modules/equipment-brands.js?v=aurenne-220-v1"></script>
+    <script src="./src/modules/equipment-brands.js?v=studio-finish-v1"></script>
     <script src="./src/modules/guided-access.js?v=grid-startup-v3"></script>
     <script src="./src/modules/adapter-design.js?v=catalog-icons-v1"></script>
     <script src="./src/modules/catalog-equipment-icons.js?v=2"></script>
@@ -1618,9 +1628,9 @@
     <script src="./src/modules/equipment-acoustics.js?v=nx-t60-v1"></script>
     <script src="./src/modules/menu-music.js?v=1"></script>
     <script src="./src/modules/signal-history.js?v=signal-history-v1"></script>
-    <script src="./src/i18n/languages.js?v=canvas-equipment-hints-v2"></script>
+    <script src="./src/i18n/languages.js?v=studio-finish-v1"></script>
     <script src="./src/modules/orthogonal-cables.js?v=short-local-routes-v1"></script>
     <script src="./src/modules/aurenne-220-panel.js?v=1"></script>
-    <script src="./script.js?v=catalog-icons-v2"></script>
+    <script src="./script.js?v=studio-finish-v1"></script>
 </body>
 </html>

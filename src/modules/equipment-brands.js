@@ -214,7 +214,10 @@
     function catalog(item,type){
         const p=get(type);if(!p||unprinted(type)||item.querySelector('.catalog-product-identity'))return;
         item.dataset.brand=p.manufacturer.name;item.dataset.model=p.model;
-        const line=document.createElement('small');line.className='catalog-product-identity';line.setAttribute('translate','no');line.textContent=name(type);item.appendChild(line);
+        const line=document.createElement('small');line.className='catalog-product-identity';line.setAttribute('translate','no');
+        const maker=document.createElement('span');maker.className='catalog-product-maker';maker.textContent=p.manufacturer.name;
+        const model=document.createElement('span');model.className='catalog-product-model';model.textContent=p.model;
+        line.append(maker,' ',model);item.appendChild(line);
         item.setAttribute('aria-label',name(type,item.querySelector(':scope>span')?.textContent.trim()));
     }
     return Object.freeze({brands,products,get,name,splitName,logo,mount,catalog,unprinted,families});

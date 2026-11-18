@@ -234,6 +234,7 @@
             const guidance = document.getElementById('connection-guidance');
             const selectedCable=!isPatching?appState.interface.selectedConnection:null;
             const cableOut=selectedCable&&document.getElementById(selectedCable.outId),cableIn=selectedCable&&document.getElementById(selectedCable.inId);
+            const showEndpoints=!!selectedCable&&!selectedCable.hidden&&!appState.canvas.hideCables;
             const cableEndpoints=new Set([cableOut?.closest('.device-node')?.id,cableIn?.closest('.device-node')?.id].filter(Boolean));
             const samePlug=(a,b)=>{const x=a?.dataset.type,y=b?.dataset.type;return x===y||(x==='rca'&&y?.startsWith('rca'))||(y==='rca'&&x?.startsWith('rca'))||(x?.startsWith('rca')&&y?.startsWith('rca'));};
             if(forceCompatibilityRefresh||selectedCable!==highlightedCompatibilityCable){
@@ -251,6 +252,9 @@
                 });
             }
             document.querySelectorAll('.port').forEach(port => {
+                const isEndpoint=showEndpoints&&(port===cableOut||port===cableIn);
+                if(isEndpoint)port.dataset.cableFocus=selectedCable.miswired?'invalid':'selected';
+                else port.removeAttribute('data-cable-focus');
                 const occupied = isPortOccupied(port);
                 const direction = port.dataset.io === 'out' ? 'saída' : 'entrada';
                 const type = port.dataset.type || 'conector';
@@ -277,12 +281,11 @@
                         port.classList.add(compatibility.compatible ? 'port-compatible' : 'port-incompatible');
                     }
                 } else if (appState.preferences.connectionGuidanceEnabled && !isPatching && appState.interface.selectedConnection) {
-                    const outPort = document.getElementById(appState.interface.selectedConnection.outId);
-                    const inPort = document.getElementById(appState.interface.selectedConnection.inId);
+                    const outPort = cableOut;
+                    const inPort = cableIn;
                     if (port === outPort || port === inPort) {
                         status = 'cabo selecionado';
                         explanation = 'Extremidade do cabo selecionado. Portas verdes mostram destinos alternativos compatíveis.';
-                        port.classList.add('port-source');
                     } else if (!occupied && outPort) {
                         const compatibility = getPortCompatibility(outPort, port);
                         if (compatibility.compatible) {
@@ -305,7 +308,12 @@
             });
             refreshPortSignalInspector();
             const summaryOut=appState.interface.selectedConnection&&document.getElementById(appState.interface.selectedConnection.outId),summaryIn=appState.interface.selectedConnection&&document.getElementById(appState.interface.selectedConnection.inId),cableSummary=document.querySelector('#cable-properties .cable-signal-summary');
-            if(cableSummary)cableSummary.textContent=appState.preferences.connectionGuidanceEnabled&&summaryOut&&summaryIn?`Transporta ${portSignalLabel(summaryOut)} → entrada espera ${portSignalLabel(summaryIn)}. ${getPortCompatibility(summaryOut,summaryIn).reason}`:'';
+            if(cableSummary&&summaryOut&&summaryIn){
+                const invalid=appState.interface.selectedConnection.miswired;
+                cableSummary.dataset.state=invalid?'invalid':'signal';
+                cableSummary.textContent=invalid?'Ligação incompatível · sem sinal'
+                    : `Transporta ${portSignalLabel(summaryOut)} → entrada espera ${portSignalLabel(summaryIn)}. ${getPortCompatibility(summaryOut,summaryIn).reason}`;
+            }
             if (!guidance) return;
             const selected = appState.interface.selectedConnection;
             guidance.classList.toggle('is-active', appState.preferences.connectionGuidanceEnabled&&(isPatching || !!selected));
@@ -507,8 +515,11 @@
             appState.interface.selectedConnection?.el?.classList.remove('selected');
             appStateStore.actions.setSelectedConnection(connection || null);
             appState.interface.selectedConnection?.el?.classList.add('selected');
-            if(connection){inspectorEmpty.classList.add('hidden');inspectorContent.classList.add('hidden');document.getElementById('inspector-title').textContent=connection.label||'Cabo';}
-            else if(restoreInspector){if(appState.interface.selectedDeviceId)selectDevice(appState.interface.selectedDeviceId,true);else{inspectorContent.classList.add('hidden');inspectorEmpty.classList.remove('hidden');document.getElementById('inspector-title').textContent='Selecione um equipamento';}}
+            if(connection){
+                connection.el.parentNode?.appendChild(connection.el);
+                inspectorEmpty.classList.add('hidden');inspectorContent.classList.add('hidden');setInspectorHeading(connection.label||'Cabo');
+            }
+            else if(restoreInspector){if(appState.interface.selectedDeviceId)selectDevice(appState.interface.selectedDeviceId,true);else{inspectorContent.classList.add('hidden');inspectorEmpty.classList.remove('hidden');setInspectorHeading('Selecione um equipamento');}}
             renderCableProperties();
             updatePortGuidance();
         }
