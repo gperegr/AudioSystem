@@ -21,6 +21,7 @@ const sections = [
     '09-recording-and-test-equipment.js',
     '10-integrated-equipment.js',
     '10-classic-preamp.js',
+    '10-aurenne-220.js',
     '11-device-creation.js',
     '12-device-interactions.js',
     '13-inspector-and-history.js',

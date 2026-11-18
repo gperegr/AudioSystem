@@ -100,6 +100,14 @@
             // Descobre quais aparelhos estão recebendo ou gerando sinal sonoro
             const activeDevices = new Set();
             const connectedDevices = new Set();
+            const activePreInputs = new Set();
+            const hasOutputSignal = (dev,port) => {
+                if(dev.type!=='preAurenne220')return activeDevices.has(dev.id);
+                return p220RadioOnOutput(dev,port)||routedInputPorts(dev,port).some(input=>activePreInputs.has(input.id));
+            };
+            for(const dev of Object.values(appState.project.devices)){
+                if(dev.aurenneRadio?.audible)activeDevices.add(dev.id);
+            }
             
             // 1. Fontes de áudio geradoras (toca-discos, streamer, Bluetooth) que estão ligadas
             if (appState.audio.isPlaying) {
@@ -140,7 +148,12 @@
                     if (!isSelectedSwitchOutput(devOut, outPortEl)) return;
 
                     // Se o aparelho de origem tem sinal e está ligado, ele transmite sinal pelo cabo
-                    if (devOut && devOut.powered && activeDevices.has(devOut.id)) {
+                    if (devOut && devOut.powered && hasOutputSignal(devOut,outPortEl)) {
+                        if(devIn.type==='preAurenne220'&&devIn.powered){
+                            const node=inPortEl.dataset.node.slice(0,-1),state=devIn.state.aurenne220;
+                            if(node!==p220Band(devIn)&&node!=='tape'+state.monitor)return;
+                            if(!activePreInputs.has(inPortEl.id)){activePreInputs.add(inPortEl.id);changed=true;}
+                        }
                         if (devIn && !activeDevices.has(devIn.id)) {
                             const needsPower = !PASSIVE_SPK.has(devIn.type) && !PASSIVE_SUB_TYPES.has(devIn.type) && !HP_TYPES.has(devIn.type);
                             if (!needsPower || devIn.powered) {
@@ -185,7 +198,7 @@
                 const devOut = outDevEl ? appState.project.devices[outDevEl.id] : null;
 
                 // O cabo só tem fluxo se a fonte estiver ligada e com áudio ativo alcançando essa saída
-                const isCarryingSignal = !!(!c.miswired && devOut && devOut.powered && activeDevices.has(devOut.id) && portCarriesSignal(devOut, outPortEl));
+                const isCarryingSignal = !!(!c.miswired && devOut && devOut.powered && hasOutputSignal(devOut,outPortEl) && portCarriesSignal(devOut, outPortEl));
                 c.el.classList.toggle('signal-idle', !isCarryingSignal);
                 c.el.dataset.signal = isCarryingSignal ? 'ativo' : 'sem sinal';
                 c.el.setAttribute('aria-label', `${c.el.querySelector('title')?.textContent || 'Cabo de áudio'} · ${isCarryingSignal ? 'sinal ativo' : 'sem sinal'}`);
@@ -302,6 +315,7 @@
             syncEquipmentAcoustics();
             updateReceiverRadioDisplays(performance.now());
             updateCustomPowerDisplays(performance.now());
+            updateAurenneDisplays(performance.now());
 
             // Simulação física de cabo com alta densidade e amortecimento de borracha
             if (isPatching && tempCableEl && startPort && dragPhysics.activeTarget) {

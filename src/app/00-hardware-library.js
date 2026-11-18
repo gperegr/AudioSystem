@@ -759,7 +759,7 @@ const Hardware = (() => {
         const model=el.matches('#source-progress')?'seek':el.matches('.eq-slider')?'vertical':'horizontal',spec=sliders[model];
         el.dataset.hardwareSlider=model;el.classList.add('hw-slider');el.style.setProperty('--hw-track',spec.track+'px');el.style.setProperty('--hw-thumb',spec.thumb+'px');
         if(model==='vertical')el.style.setProperty('--hw-slider-length',spec.length+'px');
-        if(model==='seek')return;
+        if(model==='seek'||el.dataset.sliderPrecision==='native')return;
         const min=Number(el.min),max=Number(el.max);if(!Number.isFinite(min)||!Number.isFinite(max)||max<=min)return;
         const step=(max-min)/physics.detents;el.step=String(step);
         const magnet=()=>{el.value=snap(Number(el.value),min,max,step);};
@@ -788,7 +788,7 @@ const Hardware = (() => {
         if(['prePrecision','preGlass'].includes(type))return;
         if(type==='hardwareDemo'||FURNITURE_TYPES[type]||isListeningDevice({type})||(SOURCE_TYPES.has(type)&&!SIGNAL_GENERATOR_TYPES.has(type)&&!['btReceiverA','cdPlayer','streamer',...CAPTURE_INTERFACE_TYPES].includes(type)))return;
         const compact=!!INTERFACE_DEVICES[type]||['headphoneAmp','headphoneAmpModern','btTransmitterPro','btReceiverA',...CAPTURE_INTERFACE_TYPES].includes(type)&&type!=='audioInterface4';
-        const height=INTEGRATED_AMPS[type]?.chassis||(type==='powerValve'||type==='preClassic'?'high':type==='audioInterface4'||INTEGRATED_AMPS[type]||CUSTOM_PREAMPS[type]||CUSTOM_POWER_AMPS[type]||RADIO_RECEIVERS.has(type)||MIXER_TYPES.has(type)||EQ_TYPES.has(type)||BENCH_METER_TYPES.has(type)||SIGNAL_GENERATOR_TYPES.has(type)?'medium':'low');
+        const height=INTEGRATED_AMPS[type]?.chassis||(type==='powerValve'||type==='preClassic'||AURENNE_220.has(type)?'high':type==='audioInterface4'||INTEGRATED_AMPS[type]||CUSTOM_PREAMPS[type]||CUSTOM_POWER_AMPS[type]||RADIO_RECEIVERS.has(type)||MIXER_TYPES.has(type)||EQ_TYPES.has(type)||BENCH_METER_TYPES.has(type)||SIGNAL_GENERATOR_TYPES.has(type)?'medium':'low');
         el.dataset.chassis=height;el.dataset.chassisWidth=compact?'compact':'full';
         const width=sizes.widths[el.dataset.chassisWidth],h=sizes.heights[height];el.style.setProperty('--chassis-height',h+'px');el.style.setProperty('--chassis-width',width+'px');
         for(const [key,value]of Object.entries({width:width+'px','min-width':width+'px','max-width':width+'px',height:h+'px','min-height':h+'px','max-height':h+'px'}))el.style.setProperty(key,value,'important');
@@ -906,11 +906,11 @@ const Hardware = (() => {
     }
     function mount(dev){
         dev.el.style.setProperty('--hw-motion',physics.settleMs+'ms');dev.el.style.setProperty('--hw-press',physics.pressMs+'ms');dev.el.style.setProperty('--hw-led-clip',leds.clip.color);
-        dev.el.querySelectorAll('[data-hardware-knob]').forEach(el=>{
+        dev.el.querySelectorAll('[data-hardware-knob]:not([data-own-skin])').forEach(el=>{
             skinKnob(el,bindings.get(el)?.model||knobModel(dev,el));const accent=el.dataset.demoAccent||accentModel(dev,el);if(accent)skinAccent(dev,el,accent);
         });
         dev.el.querySelectorAll('.speaker-grille').forEach(el=>{el.dataset.hardwareSurface='grille';});
-        dev.el.querySelectorAll('button:not([data-hardware-knob]):not(.speaker-grille):not(.cd-tray):not(.direct-stylus-light)').forEach(el=>skinButton(el,buttonModel(dev,el)));
+        dev.el.querySelectorAll('button:not([data-hardware-knob]):not(.speaker-grille):not(.cd-tray):not(.direct-stylus-light):not([data-own-skin])').forEach(el=>skinButton(el,buttonModel(dev,el)));
         dev.el.querySelectorAll('input[type="range"]').forEach(slider);
         dev.el.querySelectorAll('.device-led,.at-led,.integrated-status-led,.selector-input-led,.graphic-eq-led,[data-dual-led],.stereo-power-meters i,.bt-indicator').forEach(el=>{
             const model=el.hasAttribute('data-dual-led')?'signal':dev.el.classList.contains('device-family-vintage')?'warm':el.classList.contains('bt-indicator')?'blue':'power',spec=leds[model];

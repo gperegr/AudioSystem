@@ -5,6 +5,7 @@
             turntableAutomatic: 'Toca-discos · Automático', turntableDirect: 'Toca-discos · Tração Direta', turntableBelt: 'Toca-discos · Prato de Vidro', turntable: 'Toca-discos', turntableVintage: 'Toca-discos Vintage', turntableLinear:'Toca-discos Tangencial',
             hardwareDemo:'Modelo · Controles',signalGeneratorVintage:'Gerador de Sinais Vintage', signalGenerator:'Gerador de Sinais', cdPlayer: 'CD Player', tapeDeck:'Tape Deck de Rolo', preamp:'Pré · Slim',preReference:'Pré · Visor Verde',preControl:'Pré · Controle 2.1',preDisplay:'Pré · Tela Central', benchMeter:'Medidor de Bancada', benchMeterVintage:'Medidor de Bancada Vintage',
             streamer: 'Streamer Hi-Fi',streamIntegrated:'Streamer Integrado',audioInterface1:'Interface USB · Compacta',audioInterface2:'Interface USB · Central',audioInterface3:'Interface USB · Estéreo',audioInterface4:'Interface USB · Dupla',
+            preAurenne220:'Pré · Sintonizador AM/FM',powerAurenne220:'Potência · Dual Mono',
             receiver: 'Receiver Vintage',powerValve:'Potência · Valvulado',powerDual:'Potência · Duplo Canal',powerBias:'Potência · Visor Circular',
             integratedCompact:'Integrado · Classe D',integratedBlue:'Integrado · Visores Azuis',integratedMinimal:'Integrado · Minimalista',integratedSilver:'Integrado · Prateado',
             integratedUtility:'Integrado · Essencial',prePrecision:'Pré · Precisão',
@@ -42,6 +43,7 @@
         const DEVICE_FAMILIES = {
             streamIntegrated:'modern',
             integratedUtility:'vintage',prePrecision:'studio',
+            preAurenne220:'vintage',powerAurenne220:'vintage',
             preGlass:'vintage',preClassic:'vintage',spkElectrostatic:'vintage',
             turntableLinear:'vintage',
             hpMonitor:'modern',hpMax:'modern',

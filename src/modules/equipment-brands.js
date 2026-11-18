@@ -28,7 +28,7 @@
     });
     const products={};
     const line=(brand,models)=>Object.entries(models).forEach(([type,model])=>products[type]=Object.freeze({brand,model}));
-    line('aurenne',{receiver:'R-780',integratedSilver:'I-740',integratedUtility:'I-420',preClassic:'P-260',headphoneAmp:'H-120',turntableVintage:'T-240',turntableLinear:'T-360',tapeDeck:'D-340',eqVintage:'E-270',mixerVintage:'M-330',crossoverVintage:'X-310',powerVintage:'A-640',rcaSwitchVintage:'S-210',rcaMatrixVintage:'S-340',speakerSwitchVintage:'S-220'});
+    line('aurenne',{preAurenne220:'P-220',powerAurenne220:'R-220',receiver:'R-780',integratedSilver:'I-740',integratedUtility:'I-420',preClassic:'P-260',headphoneAmp:'H-120',turntableVintage:'T-240',turntableLinear:'T-360',tapeDeck:'D-340',eqVintage:'E-270',mixerVintage:'M-330',crossoverVintage:'X-310',powerVintage:'A-640',rcaSwitchVintage:'S-210',rcaMatrixVintage:'S-340',speakerSwitchVintage:'S-220'});
     line('veltron',{integratedBlue:'V 520i',preGlass:'V 320p',preReference:'V 420p',powerValve:'V 620v',powerBias:'V 720s',turntableBelt:'V 240t'});
     line('nexora',{integratedCompact:'NX-I20',turntableAutomatic:'NX-T60',integratedMinimal:'NX-I60',preControl:'NX-P40',preDisplay:'NX-P60',powerAmp:'NX-R80',streamer:'NX-S40',streamIntegrated:'NX-S90',cdPlayer:'NX-D30',headphoneAmpModern:'NX-H20',btReceiverA:'NX-L10',rcaSwitch:'NX-X10',speakerSwitch:'NX-X20'});
     line('korden',{turntable:'KR-T2',turntableDirect:'KR-T4',eqStudio:'KR-E7',mixer:'KR-M3',crossover:'KR-X3',powerStereo:'KR-P20',powerDual:'KR-P40',headphoneAmp4:'KR-H4',rcaMatrix:'KR-M34',btTransmitterPro:'KR-L2',preamp:'KR-P10',prePrecision:'KR-P60'});
@@ -191,6 +191,11 @@
         root.setAttribute('aria-label',name(type,role));
         const caption=root.querySelector('.device-header>span');if(caption)caption.textContent=name(type,role);
         if(root.querySelector('[data-brand-badge]'))return;
+        if(type==='preAurenne220'||type==='powerAurenne220'){
+            const printed=root.querySelector(type==='preAurenne220'?'.nameplate .mark':'.plinth b');
+            if(printed){printed.dataset.brandBadge='';printed.dataset.placement='heading';printed.dataset.zone='header-left';}
+            return;
+        }
         const badge=badgeElement(type);
         const heading=type==='preClassic'?root.querySelector('.classic-preamp-heading'):type==='preGlass'?root.querySelector('.glass-pre-heading'):type==='tapeDeck'?root.querySelector('.tape-face>header>strong'):type==='spkActiveCompact'?root.querySelector('.compact-name'):null;
         if(heading){

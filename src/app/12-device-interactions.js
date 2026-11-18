@@ -81,6 +81,7 @@
                     propertyToggle.classList.toggle('is-on', dev.powered);
                 }
             }
+            dev.syncAurenne?.();
             syncMobileContextActions();
             dev.refreshTurntable?.();
             refreshCdDisplay(dev);
@@ -707,7 +708,7 @@
                 dev.el.querySelector('.graphic-eq-level').replaceWith(levelDial);
             }
             const pBtn = dev.el.querySelector('.power-btn');
-            if(pBtn&&!pBtn.closest('.power-control-panel')){
+            if(pBtn&&!pBtn.hasAttribute('data-own-skin')&&!pBtn.closest('.power-control-panel')){
                 const panel = document.createElement('div');
                 panel.className='power-control-panel power-rocker-housing';
                 panel.setAttribute('aria-label','Controle de energia integrado ao equipamento');
@@ -1164,6 +1165,7 @@
             dev.disposeLinear?.();
             dev.disposeAutomatic?.();
             dev.disposeStream?.();
+            dev.disposeAurenne?.();
             Hardware.dispose(dev);
             stopPowerOnRitual(dev);
             dev.cancelPlacementMotion?.();
@@ -1377,7 +1379,7 @@
         }
 
         function hasRestorableSettings(dev) {
-            if(controlAmpConfig(dev.type)||CUSTOM_POWER_AMPS[dev.type])return true;
+            if(controlAmpConfig(dev.type)||CUSTOM_POWER_AMPS[dev.type]||AURENNE_220.has(dev.type))return true;
             // Listening controls and live meters alone are not equipment settings.
             return SOURCE_TYPES.has(dev.type)&&!CAPTURE_INTERFACE_TYPES.has(dev.type)||EQ_TYPES.has(dev.type)||MIXER_TYPES.has(dev.type)
                 ||SELECTOR_TYPES.has(dev.type)||MATRIX_TYPES.has(dev.type)
@@ -1389,6 +1391,7 @@
             if(appState.interface.selectedDeviceId!==dev.id)selectDevice(dev.id,true);
             const input=(id,value,eventType='input')=>{const element=document.getElementById(id);if(element){element.value=String(value);element.dispatchEvent(new Event(eventType,{bubbles:true}));}};
             let message='Configurações padrão restauradas.';
+            dev.resetAurenne?.();
             if(dev.type==='integratedUtility')Object.assign(dev.state,{utilityLoudness:false,utilityMono:false});
             if(dev.type==='prePrecision')dev.state.precisionGain=0;
             if(dev.type==='preClassic')Object.assign(dev.state,CLASSIC_PREAMP_DEFAULTS);

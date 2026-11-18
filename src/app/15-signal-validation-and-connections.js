@@ -22,7 +22,7 @@
             const rows=[...groups.values()].map(group=>{
                 const {port,io,node,signal,format}=group,info=SIGNAL_INFO[signal]||SIGNAL_INFO.unknown;
                 const numberedLine=/^line(\d+)$/.exec(node);
-                const groupName=port.dataset.role?.startsWith('lfe-')?'SUB/LFE mono':node.startsWith('outPhone')?'Fones '+node.replace('outPhone',''):numberedLine?'Linha '+(Number(numberedLine[1])+1):node==='line'?'LINE OUT':node==='output'?'Saída':node==='pre'?'Saída do pré':node.startsWith('spkOut')||node==='speaker'?'SPEAKER':node==='inStereo'||node==='outStereo'?'Estéreo':node.replace(/^in/,'Entrada ').replace(/^out/,'Saída ').replace('Low','Graves').replace('Mid','Médios').replace('High','Agudos');
+                const groupName=port.dataset.portGroup||(port.dataset.role?.startsWith('lfe-')?'SUB/LFE mono':node.startsWith('outPhone')?'Fones '+node.replace('outPhone',''):numberedLine?'Linha '+(Number(numberedLine[1])+1):node==='line'?'LINE OUT':node==='output'?'Saída':node==='pre'?'Saída do pré':node.startsWith('spkOut')||node==='speaker'?'SPEAKER':node==='inStereo'||node==='outStereo'?'Estéreo':node.replace(/^in/,'Entrada ').replace(/^out/,'Saída ').replace('Low','Graves').replace('Mid','Médios').replace('High','Agudos'));
                 const channels=new Set(group.channels),channelText=channels.size===2?' · L/R':channels.size===1?' · '+[...channels][0]:'';
                 const direction=io==='in'?'Entrada':'Saída';
                 const detail=port.dataset.role?.startsWith('lfe-')?'Nível de linha para subwoofer; SUB/LFE descreve o conteúdo de graves, não um nível de potência.':info.description;
@@ -94,7 +94,7 @@
         function connectionLoadWarnings(prospective){
             const warnings=[];
             for(const amp of Object.values(appState.project.devices).filter(dev=>FIXED_AMP_SPECS[dev.type]))for(const ch of ['L','R']){
-                const ports=[...amp.el.querySelectorAll('.port[data-io="out"]')].filter(port=>getPortSignal(port)==='amplified'&&portChannel(port)===ch);
+                const ports=[...amp.el.querySelectorAll('.port[data-io="out"]')].filter(port=>getPortSignal(port)==='amplified'&&portChannel(port)===ch&&isSelectedSwitchOutput(amp,port));
                 const terminals=uniqueTerminalLoads(ports,prospective),ohms=parallelOhms(terminals.map(load=>load.ohms));
                 const previous=parallelOhms(uniqueTerminalLoads(ports).map(load=>load.ohms));
                 if(ohms<FIXED_AMP_SPECS[amp.type].minOhms-.01&&Math.abs(ohms-previous)>.01)warnings.push((DEVICE_NAMES[amp.type]||'Amplificador')+' · '+ch+': a carga resultará em '+ohms.toFixed(1)+' Ω, abaixo do mínimo de '+amp.state.minOhms+' Ω. A proteção silenciará este canal; não é uma combinação válida para uso.');
@@ -193,6 +193,7 @@
         }
 
         function isSelectedSwitchOutput(dev, port) {
+            if(dev?.type==='powerAurenne220')return dev.state.aurenne220[port?.dataset.node?.slice(0,-1)]===true;
             if (dev && MATRIX_TYPES.has(dev.type)) return !!dev.state.matrixOutputs[Number(port?.dataset.node?.match(/^out(\d)/)?.[1])-1];
             if (!dev || !SELECTOR_TYPES.has(dev.type)) return true;
             return port?.dataset.node?.startsWith(`out${dev.selectedSource}`);
@@ -204,6 +205,7 @@
             if (!isSelectedSwitchOutput(dev, port)) return false;
             const nodeName = port.dataset.node || '';
             const channel=port.dataset.channel;
+            if(dev.type==='preAurenne220'&&!p220RecordPort(port)&&p220ListeningGain(dev,channel)<=0)return false;
             if(SIGNAL_GENERATOR_TYPES.has(dev.type)&&(dev.state.signalLevel===0||(channel&&dev.state.signalChannel!=='both'&&dev.state.signalChannel!==channel)))return false;
             if(POWER_OUTPUT_TYPES.has(dev.type)&&getPortSignal(port)==='amplified'&&(dev.channelLoads?.[channel]??8)<dev.state.minOhms-.01)return false;
             if((RADIO_RECEIVERS.has(dev.type)||dev.type==='preamp'||dev.type==='headphoneAmp'||dev.type==='headphoneAmpModern')&&dev.state.volume<=0)return false;
@@ -224,7 +226,7 @@
             const format=(port.dataset.format||port.dataset.type||'conector').replace(/^rca-[lr]$/i,'RCA').replace(/^p10$/i,'P10').replace(/^p2$/i,'P2').replace(/^wire$/i,'fio para caixas').replace(/^rca$/i,'RCA').toUpperCase();
             const signal=signalName(getPortSignal(port));
             const channel=port.dataset.channel||(/L$/.test(port.dataset.node||'')?'L':/R$/.test(port.dataset.node||'')?'R':'');
-            return [io,format,channel?`canal ${channel==='L'?'esquerdo (L)':'direito (R)'}`:'',signal].filter(Boolean).join(' · ');
+            return [io,port.dataset.portGroup,format,channel?`canal ${channel==='L'?'esquerdo (L)':'direito (R)'}`:'',signal].filter(Boolean).join(' · ');
         }
 
         let highlightedCompatibilityCable=null;

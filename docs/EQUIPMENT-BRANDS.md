@@ -20,6 +20,8 @@ Nomenclatura: Letra da função + três algarismos de série: R receiver, I inte
 
 | Equipamento | Modelo | Código compatível |
 | --- | --- | --- |
+| Pré · Sintonizador AM/FM | Aurenne P-220 | `preAurenne220` |
+| Potência · Dual Mono | Aurenne R-220 | `powerAurenne220` |
 | Receiver Vintage | Aurenne R-780 | `receiver` |
 | Integrado · Prateado | Aurenne I-740 | `integratedSilver` |
 | Integrado · Essencial | Aurenne I-420 | `integratedUtility` |

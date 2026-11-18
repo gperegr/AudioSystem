@@ -85,6 +85,10 @@
             const clean=projectJSON(saved.settings||{}),tt=clean.tt;delete clean.tt;
             clean.damage=['speaker-level-overload','speaker-thermal-overload'].includes(clean.damage?.kind)?{kind:clean.damage.kind}:null;
             Object.assign(dev.state,clean);dev.state.playing=false;
+            if(AURENNE_220.has(dev.type)){
+                normalizeAurenne220(dev);
+                if(dev.aurenneRadio)dev.aurenneRadio.armed=false;
+            }
             if(AudioAdapterDesign.models[dev.type])AudioAdapterDesign.layout(dev.el,dev.type,dev.state.adapterRotation=AudioAdapterDesign.angle(dev.state.adapterRotation));
             if(CAPTURE_INTERFACE_TYPES.has(dev.type)){
                 for(const channel of ['L','R'])dev.setMicGain(channel,dev.state['micGain'+channel]);
@@ -129,6 +133,7 @@
             dev.el.classList.toggle('grille-off',!!saved.grilleOff);dev.el.querySelector('.speaker-grille')?.setAttribute('aria-label',saved.grilleOff?'Recolocar tela da caixa':'Remover tela da caixa');
             if((saved.powered===false||dev.state.damage)&&dev.powered)toggleDevicePower(dev);
             dev.el.classList.toggle('device-damaged',!!dev.state.damage);
+            dev.syncAurenne?.();
             Hardware.sync(dev);
         }
         async function restoreLocalProject(snapshot,mediaReader){

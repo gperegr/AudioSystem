@@ -28,6 +28,10 @@
                 drawing='<path d="M3 8h50v29H3zM3 24h50M7 15h35M8 21h26m-23-2h20m8-7v9m4-9v9M7 29h8m-8 4h8m6-4h2m4 0h2m6 0h12m-12 4h12"/>';
             } else if (TURNTABLE_TYPES.has(type)) {
                 drawing = '<rect x="5" y="6" width="46" height="33" rx="3"/><circle cx="23" cy="22" r="12"/><circle cx="23" cy="22" r="3"/><path d="M43 12v13l-6 5M11 35h7"/>';
+            } else if(type==='preAurenne220'){
+                drawing=rack+'<rect x="7" y="13" width="42" height="11" rx="1"/><path d="M9 21h38m-32-7v6m8-6v6m8-6v6m8-6v6M9 29h9m20 0h9"/><circle cx="23" cy="29" r="3"/><circle cx="33" cy="29" r="3"/>';
+            } else if(type==='powerAurenne220'){
+                drawing=rack+'<circle cx="28" cy="22" r="7"/><path d="M8 14v16m3-16v16m3-16v16m3-16v16m22-16v16m3-16v16m3-16v16m3-16v16"/>';
             } else if(type==='preClassic'){drawing='<rect x="3" y="8" width="50" height="30" rx="1"/><path d="M6 10h44v26H6z"/>'+[13,24,38,46].flatMap(x=>[17,28].map(y=>`<circle cx="${x}" cy="${y}" r="3"/>`)).join('')+'<path d="M29 24v7m4-7v7"/>';
             } else if(type==='preGlass'){drawing=rack+'<path d="M8 13v18m40-18v18M11 28h34"/><circle cx="16" cy="20" r="4"/><circle cx="28" cy="20" r="2"/><circle cx="40" cy="20" r="4"/><path d="M16 30v3m6-3v3m6-3v3m6-3v3m6-3v3"/>';
             } else if(type==='prePrecision'){drawing=rack+'<rect x="9" y="15" width="15" height="13" rx="2"/><path d="m16 25-4-6m5 6 4-7M29 17v9m4-7v7"/><circle cx="42" cy="22" r="6"/><path d="m42 22 3-3"/>';
@@ -164,6 +168,14 @@
             item.innerHTML=`<div></div><span class="text-xs text-center text-gray-300">${DEVICE_NAMES[type]}</span>`;processingGrid.appendChild(item);
             catalogDescriptions[type]=INTEGRATED_AMPS[type].description;
         });
+        for(const [type,description] of [
+            ['preAurenne220','Pré estéreo com sintonia AM/FM, duas entradas phono MM e monitor de fita.'],
+            ['powerAurenne220','Potência estéreo de 220 W por canal a 8 Ω, com bancos A e B para caixas passivas.'],
+        ]){
+            const item=document.createElement('div');item.className='catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2';
+            item.dataset.template=type;item.innerHTML=`<div></div><span class="text-xs text-center text-gray-300">${DEVICE_NAMES[type]}</span>`;
+            processingGrid.appendChild(item);catalogDescriptions[type]=description;
+        }
         Object.keys(CUSTOM_PREAMPS).forEach(type=>{
             const item=document.createElement('div');item.className='catalog-item rounded-lg p-3 flex flex-col items-center justify-center gap-2';item.dataset.template=type;item.innerHTML=`<div></div><span class="text-xs text-center text-gray-300">${DEVICE_NAMES[type]}</span>`;processingGrid.appendChild(item);catalogDescriptions[type]=CUSTOM_PREAMPS[type].description;
         });
@@ -196,10 +208,10 @@
         const catalogGroups=[
             ['Fontes de áudio',type=>TURNTABLE_TYPES.has(type)||['tapeDeck','streamer','cdPlayer',...CAPTURE_INTERFACE_TYPES].includes(type)],
             ['Bluetooth',type=>BT_RX_TYPES.has(type)||BT_TX_TYPES.has(type)],
-            ['Pré-amplificadores',type=>type==='preamp'||!!CUSTOM_PREAMPS[type]],
+            ['Pré-amplificadores',type=>['preamp','preAurenne220'].includes(type)||!!CUSTOM_PREAMPS[type]],
             ['Amplificadores integrados',type=>!!INTEGRATED_AMPS[type]||type==='streamIntegrated'],
             ['Receivers',type=>['receiver','powerAmp'].includes(type)],
-            ['Amplificadores de potência',type=>['powerStereo','powerVintage'].includes(type)||!!CUSTOM_POWER_AMPS[type]],
+            ['Amplificadores de potência',type=>['powerStereo','powerVintage','powerAurenne220'].includes(type)||!!CUSTOM_POWER_AMPS[type]],
             ['Amplificadores de fones',type=>type.startsWith('headphoneAmp')],
             ['Equalizadores',type=>EQ_TYPES.has(type)],
             ['Crossovers',type=>CROSSOVER_TYPES.has(type)],

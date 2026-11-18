@@ -186,7 +186,7 @@
         // Keep physical units for the audio graph while exposing fixed detents in the inspector.
         function setupInspectorDetents() {
             inspectorContent.querySelectorAll('input[type="range"]:not(#source-progress):not([data-spotify-position])').forEach(slider=>{
-                if(slider.dataset.detents)return;slider.dataset.detents='true';Hardware.slider(slider);
+                if(slider.dataset.detents||slider.dataset.sliderPrecision==='native')return;slider.dataset.detents='true';Hardware.slider(slider);
                 if(slider.dataset.gainSteps)slider.step=String((Number(slider.max)-Number(slider.min))/(Number(slider.dataset.gainSteps)-1));
                 if(slider.matches('.gain-spark-slider'))setupInspectorGainVisual(slider);
                 const min=Number(slider.min),max=Number(slider.max),intervals=slider.dataset.gainSteps?Number(slider.dataset.gainSteps)-1:Hardware.physics.detents;
@@ -430,8 +430,9 @@
             if (SOURCE_TYPES.has(dev.type)&&!SIGNAL_GENERATOR_TYPES.has(dev.type)&&!CAPTURE_INTERFACE_TYPES.has(dev.type)&&!(TURNTABLE_TYPES.has(dev.type)&&dev.spotifyVinyl)) html += `<div class="flex flex-col gap-2 border-t border-gray-700 pt-4"><span class="text-sm text-gray-300">Música própria</span><button id="source-load-audio" type="button" class="tt-insp-btn">CARREGAR ÁUDIO</button><input id="source-audio-file" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac" hidden><div class="source-file-row"><p id="source-file-name" class="text-xs text-gray-300 break-words"></p><button id="source-remove-audio" type="button" aria-label="Remover arquivo de áudio" title="Remover arquivo" ${dev.audioBuffer ? '' : 'hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path class="source-trash-lid" d="M4 7h16M9 7V5h6v2"/><path class="source-trash-bin" d="M6.5 9 7.5 20h9L17.5 9M10 11v6m4-6v6"/></svg></button></div><p id="source-file-message" class="text-xs text-gray-400"></p></div>`;
             if (dev.listeningProfile) html += `<section class="sonic-signature-panel"><h3>Assinatura sonora</h3>${listeningCurveHtml(dev)}</section>`;
             if(RADIO_RECEIVERS.has(dev.type))html+=radioInspectorHtml(dev);
+            if(dev.type==='preAurenne220')html+=p220InspectorHtml(dev);
             if(dev.spotifyVinyl)html+=spotifyTrackInspectorHtml();
-            if ((dev.spotifyVinyl||dev.audioBuffer)&&!RADIO_RECEIVERS.has(dev.type)) html += transportInspectorHtml(dev);
+            if ((dev.spotifyVinyl||dev.audioBuffer)&&!RADIO_RECEIVERS.has(dev.type)&&dev.type!=='preAurenne220') html += transportInspectorHtml(dev);
             if (EQ_TYPES.has(dev.type) || CROSSOVER_TYPES.has(dev.type) || BENCH_METER_TYPES.has(dev.type)) html += spectrumInspectorHtml(dev);
             if(hasRestorableSettings(dev))html += '<div class="flex flex-col gap-2 border-t border-gray-700 pt-4"><button id="restore-device-settings" type="button" class="tt-insp-btn w-full">RESTAURAR CONFIGURAÇÕES</button><p id="restore-settings-status" role="status" class="text-xs text-gray-400"></p></div>';
             html+=portSignalsInspectorHtml(dev);
@@ -492,7 +493,8 @@
                 document.getElementById('spectrum-band')?.addEventListener('change',()=>setupSpectrum(dev));
             }
             if(RADIO_RECEIVERS.has(dev.type))bindRadioInspector(dev);
-            if ((dev.spotifyVinyl||dev.audioBuffer)&&!RADIO_RECEIVERS.has(dev.type)) bindTransportInspector(dev);
+            if(dev.type==='preAurenne220')bindP220Inspector(dev);
+            if ((dev.spotifyVinyl||dev.audioBuffer)&&!RADIO_RECEIVERS.has(dev.type)&&dev.type!=='preAurenne220') bindTransportInspector(dev);
             if(dev.spotifyVinyl)bindSpotifyTrackInspector(dev);
             if(SIGNAL_GENERATOR_TYPES.has(dev.type))bindSignalInspector(dev);
             if (document.getElementById('source-audio-file')) {

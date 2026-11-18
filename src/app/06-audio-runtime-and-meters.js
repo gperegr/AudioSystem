@@ -81,7 +81,9 @@
             syncRoomRainAudio();
             appState.audio.context.addEventListener('statechange', () => {
                 if(appState.audio.context.state==='interrupted')audioNeedsGestureRecovery=true;
-                syncRoomRainAudio();updateCableFlows();
+                syncRoomRainAudio();
+                Object.values(appState.project.devices).forEach(dev=>{if(dev.aurenneRadio)dev.syncAurenne();});
+                updateCableFlows();
             });
         }
         function setListeningOutputLevel(value){
@@ -646,7 +648,8 @@
             };
             // Receiver meters measure left and right outputs directly. Auxiliary
             // mono/sub and headphone outputs must not be folded into either reading.
-            const ports=RADIO_RECEIVERS.has(dev.type)?[]:[...dev.el.querySelectorAll('.port[data-io="out"]')].filter(port=>!POWER_OUTPUT_TYPES.has(dev.type)||port.dataset.type==='wire');
+            const ports=RADIO_RECEIVERS.has(dev.type)?[]:[...dev.el.querySelectorAll('.port[data-io="out"]')].filter(port=>
+                dev.type==='preAurenne220'?/^pre[LR]$/.test(port.dataset.node):!POWER_OUTPUT_TYPES.has(dev.type)||port.dataset.type==='wire');
             if(RADIO_RECEIVERS.has(dev.type)){
                 analyze(dev.nodes.spkOutL||dev.nodes.outL,0);analyze(dev.nodes.spkOutR||dev.nodes.outR,1);
             }

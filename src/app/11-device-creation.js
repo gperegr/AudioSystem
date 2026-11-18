@@ -44,6 +44,10 @@
             if(type==='turntableAutomatic')el.innerHTML=tpl.innerHTML.replaceAll('auto-arm-metal',`${id}-arm-metal`);
             
             if(type==='hardwareDemo')el.innerHTML=Hardware.demoMarkup();
+            if(AURENNE_220.has(type)){
+                el.innerHTML=`<div class="device-header"><span>${deviceName}</span></div>`;
+                Aurenne220Panel.mount(el,type,{preview:previewOnly});
+            }
             if(type==='streamIntegrated')el.innerHTML=streamIntegratedMarkup();
             if(SIGNAL_GENERATOR_TYPES.has(type)){el.innerHTML=generatorMarkup();if(type==='signalGeneratorVintage'){el.classList.add('device-type-signalGenerator');el.querySelector('.device-header span').textContent='GERADOR DE SINAIS VINTAGE';const display=document.createElement('canvas');display.className='signal-vintage-lcd';display.width=168;display.height=62;display.setAttribute('aria-hidden','true');el.querySelector('.signal-screen').appendChild(display);}}
             if(INTEGRATED_AMPS[type]){el.classList.add('integrated-amp');el.innerHTML=integratedMarkup(type);}
@@ -219,7 +223,7 @@
                 assemblySurface.appendChild(assembly);
             }
             standardizeStereoPorts(el);
-            el.querySelectorAll('.port[data-type="wire"]').forEach(port=>{
+            el.querySelectorAll('.port[data-type="wire"]:not(.binding-socket)').forEach(port=>{
                 port.innerHTML='<svg class="spring-terminal-art" viewBox="0 0 32 22" aria-hidden="true"><rect x=".5" y=".5" width="31" height="21" rx="1.8" fill="#2e3938" stroke="#66716b" stroke-width=".8"/><rect x="5.5" y="2" width="21" height="18" rx="1" fill="#16201e" stroke="#46534d" stroke-width=".6"/><circle cx="2.9" cy="11" r="1.05" fill="#aeb9ad"/><circle cx="29.1" cy="11" r="1.05" fill="#aeb9ad"/><rect x="7" y="3" width="7.5" height="7.3" rx=".6" fill="#c93237" stroke="#ed6c66" stroke-width=".4"/><path d="M7.8 5.2h6M7.8 7.1h6M7.8 9h6" stroke="#8a1e25" stroke-width=".5"/><rect x="17.5" y="3" width="7.5" height="7.3" rx=".6" fill="#171c1b" stroke="#515e55" stroke-width=".4"/><path d="M18.3 5.2h6M18.3 7.1h6M18.3 9h6" stroke="#050909" stroke-width=".6"/><path d="M7 12h7.5v6H7zM17.5 12H25v6h-7.5z" fill="#26352e" stroke="#415146" stroke-width=".5"/><ellipse class="spring-terminal-hole" cx="10.8" cy="15" rx="2" ry="1.6" fill="#0b1010"/><ellipse class="spring-terminal-hole" cx="21.3" cy="15" rx="2" ry="1.6" fill="#0b1010"/><path d="M9.5 16.6h2.6M20 16.6h2.6" stroke="#9da68c" stroke-width=".5"/></svg>';
             });
             el.querySelectorAll('.port').forEach((p, i) => {
@@ -326,6 +330,10 @@
                 dev.nodes.inL.connect(inputPowerL);
                 inputPowerR.connect(dev.nodes.btOut, 0, 1);
                 inputPowerL.connect(dev.nodes.btOut, 0, 0);
+            } else if(type==='preAurenne220'){
+                configureP220(dev);
+            } else if(type==='powerAurenne220'){
+                configureR220(dev);
             } else if(CUSTOM_POWER_AMPS[type]){
                 configureCustomPower(dev);
             } else if(controlAmpConfig(type)){

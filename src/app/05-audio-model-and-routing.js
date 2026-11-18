@@ -174,6 +174,7 @@
         const DEFAULT_POWER_GAIN=.5;
         // Individual simulation voicings.
         const AMPLIFICATION_VOICINGS={
+            powerAurenne220:{bass:0,treble:0,drive:0,asymmetry:0},
             integratedCompact:{bass:0,treble:0,drive:.12,asymmetry:0},
             preClassic:{bass:.3,treble:-.4,drive:.4,asymmetry:.035},
             preGlass:{bass:.2,treble:-.35,drive:.38,asymmetry:.035},
@@ -208,6 +209,7 @@
         }
         function installAmplificationVoicing(dev){
             const profile=AMPLIFICATION_VOICINGS[dev.type];if(!profile)return;
+            if(dev.electricalStages){dev.amplificationProfile=profile;return;}
             const ctx=appState.audio.context,byNode=new Map(),curve=modelSaturationCurve(profile);dev.amplificationProfile=profile;dev.modelAudioNodes||=[];dev.valveWarmGains=[];
             const outputPorts=[...dev.el.querySelectorAll('.port[data-io="out"]')];
             for(const port of outputPorts){
@@ -262,6 +264,7 @@
         const HEADPHONE_SPECS=Object.freeze({headphone:{ohms:32,powerMw:300},hpStudio:{ohms:64,powerMw:500},hpClassic:{ohms:80,powerMw:300},hpMonitor:{ohms:32,powerMw:200},hpMax:{ohms:32,powerMw:150},...REFERENCE_HEADPHONES});
         const HEADPHONE_OUTPUT_SPECS=Object.freeze({
             streamIntegrated:{voltsRms:2,currentRms:.07,outputOhms:2},
+            preAurenne220:{voltsRms:2,currentRms:.06,outputOhms:5},
             headphoneAmp:{voltsRms:3,currentRms:.065,outputOhms:12},headphoneAmpModern:{voltsRms:4,currentRms:.18,outputOhms:1},headphoneAmp4:{voltsRms:2.5,currentRms:.08,outputOhms:4},
             receiver:{voltsRms:3,currentRms:.04,outputOhms:47},powerAmp:{voltsRms:2.5,currentRms:.07,outputOhms:10},preControl:{voltsRms:2,currentRms:.07,outputOhms:3},preDisplay:{voltsRms:2.5,currentRms:.08,outputOhms:2}
         });
@@ -282,7 +285,7 @@
                 for(const circuit of dev.outputCircuits||[])for(const path of circuit.paths)if(path.analyzer)read(dev,path);
             }
         }
-        const POWER_OUTPUT_TYPES=new Set(['receiver','powerAmp','powerStereo','powerVintage','streamIntegrated',...Object.keys(INTEGRATED_AMPS),...Object.keys(CUSTOM_POWER_AMPS)]);
+        const POWER_OUTPUT_TYPES=new Set(['powerAurenne220','receiver','powerAmp','powerStereo','powerVintage','streamIntegrated',...Object.keys(INTEGRATED_AMPS),...Object.keys(CUSTOM_POWER_AMPS)]);
         const isListeningDevice=dev=>PASSIVE_SPK.has(dev.type)||ACTIVE_SPK.has(dev.type)||HP_TYPES.has(dev.type)||SUB_TYPES.has(dev.type)||PASSIVE_SUB_TYPES.has(dev.type);
         const FIXED_AMP_SPECS=Object.freeze({
             integratedUtility:{watts:20,minOhms:4,powerByOhms:{4:28,8:20}},
@@ -290,6 +293,7 @@
             receiver:{watts:60,minOhms:4,powerByOhms:{4:85,8:60}},
             powerAmp:{watts:100,minOhms:4,powerByOhms:{4:150,8:100}},
             powerStereo:{watts:80,minOhms:8,powerByOhms:{8:80}},
+            powerAurenne220:{watts:220,minOhms:8,powerByOhms:{8:220}},
             powerVintage:{watts:40,minOhms:4,powerByOhms:{4:60,8:40}},
             integratedBlue:{watts:100,minOhms:4,powerByOhms:{4:160,8:100}},
             integratedMinimal:{watts:70,minOhms:4,powerByOhms:{4:100,8:70}},
@@ -383,6 +387,7 @@
             return [...appState.project.connections.filter(c=>!c.miswired&&c.inId!==prospective.input.id&&c.outId!==prospective.output.id),{outId:prospective.output.id,inId:prospective.input.id}];
         }
         function routedInputPorts(dev,output,channelHint=''){
+            if(dev.aurenneInputs)return dev.aurenneInputs(output,channelHint);
             const channel=portChannel(output)||channelHint;
             return [...dev.el.querySelectorAll('.port[data-io="in"]')].filter(input=>{
                 if(channel&&portChannel(input)&&channel!==portChannel(input))return false;
@@ -393,7 +398,7 @@
             if(isPassiveLoad(dev))return dev.state.speakerOhms;
             if(HP_TYPES.has(dev.type))return dev.state.headphoneOhms||32;
             if(dev.type==='speakerConverter')return ELECTRICAL_MODEL.converterInputOhms;
-            return getPortSignal(input)==='phono'?47000:ELECTRICAL_MODEL.lineInputOhms;
+            return dev.aurenneInputOhms?.(input)??(getPortSignal(input)==='phono'?47000:ELECTRICAL_MODEL.lineInputOhms);
         }
         function terminalLoads(output,prospective=null,seen=new Set(),sourceChannel='',routingChannel=''){
             if(!output||seen.has(output.id))return [];
@@ -489,7 +494,7 @@
                 });
             });
             devices.forEach(dev=>{dev.powerStatus='';});
-            devices.filter(dev=>FIXED_AMP_SPECS[dev.type]).forEach(amp=>['L','R'].forEach(ch=>{const ports=[...amp.el.querySelectorAll('.port[data-io="out"]')].filter(port=>getPortSignal(port)==='amplified'&&portChannel(port)===ch);setAmplifierLoad(amp,ch,parallelOhms(uniqueTerminalLoads(ports).map(load=>load.ohms)));}));
+            devices.filter(dev=>FIXED_AMP_SPECS[dev.type]).forEach(amp=>['L','R'].forEach(ch=>{const ports=[...amp.el.querySelectorAll('.port[data-io="out"]')].filter(port=>getPortSignal(port)==='amplified'&&portChannel(port)===ch&&isSelectedSwitchOutput(amp,port));setAmplifierLoad(amp,ch,parallelOhms(uniqueTerminalLoads(ports).map(load=>load.ohms)));}));
             updateOutputCircuitLoads();
             const ampWarnings=new Map();
             sinks.forEach(dev=>{

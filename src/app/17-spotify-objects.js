@@ -91,18 +91,19 @@
             const solo=Object.values(appState.project.devices).some(dev=>isListeningDevice(dev)&&dev.state.solo),seen=new Set();let best=0;
             function walk(dev,input,gain){
                 if(!dev||dev.state.damage||!dev.powered)return;
-                if(dev!==source){if(dev.state.muted||dev.state.streamMute||dev.state.preMuted)return;if(typeof dev.state.volume==='number')gain*=Math.max(0,Math.min(1,dev.state.volume));if(Array.isArray(dev.state.channelVolumes))gain*=Math.max(0,...dev.state.channelVolumes.map(value=>Math.max(0,Math.min(1,value))));}
+                if(dev!==source){if(dev.state.muted||dev.state.streamMute||dev.state.preMuted)return;if(!AURENNE_220.has(dev.type)&&typeof dev.state.volume==='number')gain*=Math.max(0,Math.min(1,dev.state.volume));if(Array.isArray(dev.state.channelVolumes))gain*=Math.max(0,...dev.state.channelVolumes.map(value=>Math.max(0,Math.min(1,value))));}
                 if(isListeningDevice(dev)){if(!dev.state.muted&&(!solo||dev.state.solo))best=Math.max(best,gain);return;}
                 for(const output of dev.el.querySelectorAll('.port[data-io="out"]')){
                     if(input&&!routedInputPorts(dev,output).includes(input))continue;
                     if(!portCarriesSignal(dev,output))continue;
+                    const outGain=dev.type==='preAurenne220'&&!p220RecordPort(output)?gain*Math.min(1,p220ListeningGain(dev,portChannel(output))):gain;
                     for(const cable of appState.project.connections){if(cable.miswired||cable.outId!==output.id)continue;const nextInput=document.getElementById(cable.inId),next=appState.project.devices[nextInput?.closest('.device-node')?.id];if(!next||seen.has(next.id+':'+nextInput.id))continue;
                         if(RADIO_RECEIVERS.has(next.type)){const selected=next.state.receiverInput||'line1',prefix=selected==='line1'?'in':selected;if(selected==='fm'||!new RegExp('^'+prefix+'[LR]$').test(nextInput.dataset.node))continue;}
                         if(next.type==='streamIntegrated'&&next.state.streamInput!=='line')continue;
                         if(controlAmpConfig(next.type)&&!nextInput.dataset.node.startsWith(next.state.integratedSource===3&&controlAmpConfig(next.type).phono!==false?'phono':'line'+next.state.integratedSource))continue;
                         if(next.type==='preamp'&&!nextInput.dataset.node.startsWith('in'+next.state.preSource))continue;
                         if(MATRIX_TYPES.has(next.type)&&!nextInput.dataset.node.startsWith('in'+next.state.matrixInput))continue;
-                        seen.add(next.id+':'+nextInput.id);walk(next,nextInput,gain);seen.delete(next.id+':'+nextInput.id);
+                        seen.add(next.id+':'+nextInput.id);walk(next,nextInput,outGain);seen.delete(next.id+':'+nextInput.id);
                     }
                 }
             }

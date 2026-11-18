@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="pt-BR" data-ui-palette="graphite">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aurenne R-220 e P-220 · Prévia visual</title>
+<link rel="stylesheet" href="../styles/interface-palettes.css">
+<link rel="stylesheet" href="../styles/equipment/aurenne-220.css">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ui-side);
+    color: var(--ui-text);
+    font: 15px/1.5 var(--font-ui, system-ui, sans-serif);
+  }
+  main { width: min(100% - 40px, 1480px); margin: 0 auto; padding: 42px 0 40px; }
+  .review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-bottom: 25px;
+  }
+  h1, h2, p, figure { margin: 0; }
+  h1 { font-size: clamp(26px, 4vw, 38px); font-weight: 680; letter-spacing: -.045em; }
+  .review-header p { color: var(--ui-secondary); font-size: 13px; }
+  .zoom-picker { display: flex; gap: 3px; padding: 3px; border-radius: 9px; background: var(--ui-top); }
+  .zoom-picker button {
+    min-width: 51px;
+    min-height: 40px;
+    padding: 0 11px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--ui-text);
+    font: 600 12px/1 var(--font-ui, system-ui, sans-serif);
+    cursor: pointer;
+  }
+  .zoom-picker button:hover { background: var(--ui-hover); }
+  .zoom-picker button[aria-pressed="true"] { background: var(--ui-active); }
+  .zoom-picker button:focus-visible, .preview-viewport:focus-visible {
+    outline: 2px solid var(--ui-accent);
+    outline-offset: 2px;
+  }
+  .previews {
+    --scale: .75;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(760px * var(--scale) + 46px)), 1fr));
+    gap: 20px;
+    align-items: start;
+  }
+  .preview {
+    min-width: 0;
+    border: 1px solid color-mix(in srgb, var(--ui-border) 42%, transparent);
+    border-radius: 11px;
+    overflow: hidden;
+    background: var(--ui-top);
+  }
+  .preview figcaption {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 9px;
+    padding: 13px 17px;
+  }
+  .preview h2 { font-size: 15px; font-weight: 700; }
+  .preview figcaption p { color: var(--ui-secondary); font-size: 12px; }
+  .preview-viewport {
+    overflow: auto;
+    padding: 28px 20px 35px;
+    background:
+      radial-gradient(circle, #9caaa826 1px, transparent 1.3px) center / 20px 20px,
+      radial-gradient(ellipse at 50% -55%, #555c59, #2a2e2f 75%);
+    scrollbar-color: var(--ui-border) var(--ui-top);
+  }
+  .equipment {
+    position: relative;
+    width: 760px;
+    margin-inline: auto;
+    padding-bottom: 20px;
+    zoom: var(--scale);
+  }
+  .equipment::before, .equipment::after {
+    /* Deployed canvas stack feet, outside the height of the chassis. */
+    content: "";
+    position: absolute;
+    bottom: 0;
+    width: 22px;
+    height: 20px;
+    border-radius: 0 0 3px 3px;
+    border-bottom: 3px solid #111;
+    background: linear-gradient(90deg, #131617, #454b4e 45%, #181b1d);
+    box-shadow: 0 2px 2px #0003;
+  }
+  .equipment::before { left: 10%; }
+  .equipment::after { right: 10%; }
+
+  @media (max-width: 540px) {
+    main { width: calc(100% - 24px); padding-top: 24px; }
+    .preview-viewport { padding-inline: 11px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="review-header">
+    <div>
+      <h1>Aurenne P-220 e R-220</h1>
+      <p>Prévia inspirada no Sansui G-22000 · Chassis de 760 × 240 px</p>
+    </div>
+    <div class="zoom-picker" role="group" aria-label="Escala da prévia">
+      <button type="button" data-scale="fit" aria-pressed="true">Ajustar</button>
+      <button type="button" data-scale=".5" aria-pressed="false">50%</button>
+      <button type="button" data-scale="1" aria-pressed="false">100%</button>
+    </div>
+  </header>
+
+  <div class="previews">
+    <figure class="preview">
+      <figcaption><h2 id="preamp-label">P-220</h2><p>Pré com sintonizador</p></figcaption>
+      <div class="preview-viewport" role="region" tabindex="0" aria-labelledby="preamp-label">
+        <div class="equipment" data-preamp role="img" aria-label="Vista frontal do pré P-220, com escala AM e FM, quatro medidores e conectores nas laterais."></div>
+      </div>
+    </figure>
+
+    <figure class="preview">
+      <figcaption><h2 id="power-label">R-220</h2><p>Potência estéreo</p></figcaption>
+      <div class="preview-viewport" role="region" tabindex="0" aria-labelledby="power-label">
+        <div class="equipment" data-power role="img" aria-label="Vista frontal da potência R-220, com dissipadores verticais e grade circular do ventilador."></div>
+      </div>
+    </figure>
+  </div>
+</main>
+
+<script src="../src/modules/aurenne-220-panel.js"></script>
+<script>
+  Aurenne220Panel.mount(document.querySelector("[data-preamp]"), "preAurenne220", { preview: true, assetBase: "../" });
+  Aurenne220Panel.mount(document.querySelector("[data-power]"), "powerAurenne220", { preview: true, assetBase: "../" });
+
+  const previews = document.querySelector(".previews");
+  const zoomButtons = [...document.querySelectorAll("[data-scale]")];
+  let selectedScale = "fit";
+  function applyScale() {
+    const width = previews.clientWidth;
+    const padding = matchMedia("(max-width: 540px)").matches ? 24 : 42;
+    const twoColumns = width >= 2 * (760 * .75 + 46) + 20;
+    const fit = Math.min(.75, ((twoColumns ? (width - 20) / 2 : width) - padding) / 760);
+    previews.style.setProperty("--scale", selectedScale === "fit" ? fit : selectedScale);
+    zoomButtons.forEach(button => button.setAttribute("aria-pressed", String(button.dataset.scale === selectedScale)));
+  }
+  zoomButtons.forEach(button => button.addEventListener("click", () => {
+    selectedScale = button.dataset.scale;
+    applyScale();
+  }));
+  window.addEventListener("resize", applyScale);
+  applyScale();
+</script>
+</body>
+</html>

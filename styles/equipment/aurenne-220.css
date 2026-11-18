@@ -1,0 +1,429 @@
+/* Front orthographic equipment artwork, sized in canvas pixels. */
+.aurenne220 .chassis {
+  --engraving: #252722;
+  --engrave-shadow: 0 1px #fbfaed60;
+  position: relative;
+  width: 760px;
+  height: 240px;
+  font: 700 8px/1.12 Arial, sans-serif;
+  color: var(--engraving);
+  background:
+    repeating-linear-gradient(89deg, #ffffff09 0 1px, #08040226 2px 4px, transparent 4px 8px),
+    repeating-linear-gradient(92deg, transparent 0 6px, #08050333 10px 11px, transparent 12px 19px),
+    linear-gradient(90deg, #221612, #72503a 6%, #35241d 36%, #654331 78%, #2d201a);
+  border-radius: 3px 3px 2px 2px;
+  box-shadow: inset 0 1px #bc9a76, inset 0 -3px 4px #140e0b, 0 6px 9px #0008, 0 14px 21px #0005;
+}
+.aurenne220 .pre-chassis {
+  display: grid;
+  grid-template-columns: 68px 1fr 68px;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 4px;
+  padding: 6px 8px 8px;
+}
+.aurenne220 .silver-face {
+  position: relative;
+  min-width: 0;
+  padding: 6px 13px;
+  border: 1px solid #777c77;
+  border-radius: 2px;
+  background:
+    repeating-linear-gradient(0deg, #ffffff17 0 1px, #4247420c 1px 2px, transparent 2px 4px),
+    linear-gradient(110deg, #a9aca5, #d6d8cf 17%, #bbbfb7 45%, #e1e0d8 78%, #a9ada5);
+  box-shadow: inset 0 1px 1px #fffef3, inset 1px 0 #f3f0df, inset -1px 0 #f0f0e6, inset 0 -3px #858983, 0 2px 3px #171410;
+}
+.aurenne220 .screw {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: linear-gradient(140deg, #eeeee5, #929991 70%, #555b56);
+  box-shadow: 0 0 0 1px #26282165;
+}
+.aurenne220 .screw::after {
+  content: "";
+  position: absolute;
+  inset: 2px 1px;
+  background: linear-gradient(transparent 34%, #343b35 34% 70%, #f0efe55c 70%);
+  transform: rotate(var(--slot, -27deg));
+}
+.aurenne220 .silver-face > .screw:nth-child(1) { top: 5px; left: 5px; }
+.aurenne220 .silver-face > .screw:nth-child(2) { top: 5px; right: 5px; --slot: 30deg; }
+.aurenne220 .silver-face > .screw:nth-child(3) { bottom: 6px; left: 5px; --slot: 48deg; }
+.aurenne220 .silver-face > .screw:nth-child(4) { bottom: 6px; right: 5px; --slot: -12deg; }
+.aurenne220 .radio-glass {
+  position: relative;
+  height: 93px;
+  padding: 5px 11px 4px;
+  overflow: hidden;
+  border: 3px solid #464c3d;
+  border-bottom-color: #242b21;
+  border-radius: 2px;
+  background: radial-gradient(ellipse at 35% 33%, #e5e7b5, #c1c697 56%, #8d9a73 100%);
+  box-shadow: inset 0 0 12px #28342290, inset 0 2px 2px #22272090, 0 0 0 1px #ecedde, 1px 3px 3px #272a226b;
+  color: #252e23;
+}
+.aurenne220 .radio-glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(107deg, transparent 23%, #fffbe726 23.5% 35%, #fffcec0e 35.5% 61%, transparent 61.5%),
+    linear-gradient(180deg, #ffffff27, transparent 21%, transparent 89%, #0f1e1738);
+}
+.aurenne220 .instruments {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) 1.6fr;
+  align-items: center;
+  gap: 9px;
+  height: 39px;
+}
+.aurenne220 .meter { position: relative; min-width: 0; text-align: center; }
+.aurenne220 .meter canvas {
+  display: block;
+  width: 100%;
+  height: 28px;
+  border: 1px solid #4a5749;
+  border-radius: 2px;
+  background: linear-gradient(#5e745b, #b0be96 22%, #c1cd9d 72%, #788b6f);
+  box-shadow: 0 0 0 1px #d8ddaf80, inset 0 2px 3px #24342d7a;
+}
+.aurenne220 .meter span { display: block; margin-top: 3px; font-size: 7px; letter-spacing: .07em; white-space: nowrap; }
+.aurenne220 .indicators { font-size: 7px; letter-spacing: .04em; }
+.aurenne220 .input-lights { display: flex; justify-content: space-between; gap: 5px; }
+.aurenne220 .input-lights span { white-space: nowrap; text-align: center; }
+.aurenne220 .lamp {
+  display: block;
+  width: 4px;
+  height: 4px;
+  margin: 0 auto 4px;
+  border-radius: 50%;
+  background: #394331;
+  box-shadow: 0 0 0 1px #44543a35, 0 1px #eff5bd77;
+}
+.aurenne220 .lamp.red { background: #d44127; box-shadow: 0 0 4px 1px #d4412770, inset 0 1px #fbc191; }
+.aurenne220 .lamp.green { background: #a2f67b; box-shadow: 0 0 4px 1px #477f37b0, inset 0 1px #e4ffbf; }
+.aurenne220 .stereo-light { display: flex; align-items: center; gap: 6px; margin-top: 7px; }
+.aurenne220 .stereo-light .lamp { margin: 0; }
+.aurenne220 .scales { position: relative; display: grid; gap: 2px; margin: 3px 0 0; padding-top: 2px; border-top: 1px solid #46554250; }
+.aurenne220 .scale { display: grid; grid-template-columns: 20px 1fr 22px; align-items: center; gap: 3px; }
+.aurenne220 .scale-name, .aurenne220 .scale-unit { font-size: 7px; letter-spacing: .04em; }
+.aurenne220 .scale-unit { text-align: right; }
+.aurenne220 .ruler { position: relative; height: 13px; }
+.aurenne220 .ruler::after { position: absolute; content: ""; bottom: 0; width: 100%; border-bottom: 1px solid #465542a3; }
+.aurenne220 .tick { position: absolute; bottom: 0; width: 1px; height: 3px; background: #374536a3; }
+.aurenne220 .tick.major { height: 6px; }
+.aurenne220 .tick-label { position: absolute; top: -1px; transform: translateX(-50%); font-size: 7px; font-variant-numeric: tabular-nums; }
+.aurenne220 .pointer {
+  position: absolute;
+  z-index: 1;
+  left: calc(23px + (100% - 48px) * var(--dial-position, .5));
+  top: 8px;
+  bottom: -2px;
+  width: 2px;
+  background: #a53b27;
+  box-shadow: 1px 0 #fbd09680, 0 0 2px #4b3918;
+}
+.aurenne220 .pointer::before { content: ""; position: absolute; left: -3px; width: 8px; height: 3px; background: #b65736; }
+.aurenne220 .nameplate {
+  height: 21px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding-inline: 3px;
+  border-bottom: 1px solid #656a602c;
+  text-shadow: var(--engrave-shadow);
+  letter-spacing: .12em;
+}
+.aurenne220 .nameplate .mark { display: inline-flex; align-items: center; gap: 9px; font-size: 12px; letter-spacing: .09em; }
+.aurenne220 .nameplate img { width: 63px; height: auto; display: block; }
+.aurenne220 .front-controls {
+  display: grid;
+  grid-template-columns: 167px 183px 1fr;
+  gap: 5px;
+  padding-top: 5px;
+  text-align: center;
+  text-shadow: var(--engrave-shadow);
+}
+.aurenne220 .control { min-width: 0; display: grid; justify-items: center; align-content: start; }
+.aurenne220 .control-label { display: block; min-height: 15px; padding-inline: 1px; font-size: 7px; line-height: 1.05; }
+.aurenne220 .control-detail { display: block; margin-top: 2px; font-size: 6.5px; line-height: 1.05; white-space: nowrap; }
+.aurenne220 .lever-bank { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; height: 40px; }
+.aurenne220 .lever-slot {
+  display: grid;
+  place-items: center;
+  width: 11px;
+  height: 17px;
+  border: 1px solid #464c46;
+  border-radius: 4px;
+  background: #202522;
+  box-shadow: inset 0 1px 2px #0a0c0bb3, 0 1px #fcfbeb9c;
+}
+.aurenne220 .lever {
+  width: 7px;
+  height: 11px;
+  border-radius: 2px;
+  transform: translateY(2px);
+  background: linear-gradient(90deg, #222522, #4c4e47 37%, #1a1d1a 73%), #171a17;
+  box-shadow: 0 2px 2px #1116129c, inset 0 1px #5b6157;
+}
+.aurenne220 .lever-slot.up .lever { transform: translateY(-2px); }
+.aurenne220 .lever-slot[data-position="1"] .lever { transform: translateY(0); }
+.aurenne220 .secondary-controls { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; align-items: start; }
+.aurenne220 [data-controls="tone"] { position: relative; grid-template-columns: 28px 28px 34px 43px 34px; }
+.aurenne220 [data-controls="tone"]::after { content: "PHONES"; position: absolute; top: 35px; left: 0; width: 56px; font-size: 7px; }
+.aurenne220 .rotary .control-label { min-height: auto; margin-top: 4px; }
+.aurenne220 .knob {
+  position: relative;
+  display: block;
+  width: var(--diameter, 28px);
+  height: var(--diameter, 28px);
+  border: 1px solid #525751;
+  border-radius: 50%;
+  background:
+    repeating-conic-gradient(from 0deg, #0d130f26 0 2deg, #ecf0e028 2deg 4deg),
+    conic-gradient(from -22deg, #d7d9d0, #7b8078 105deg, #373d38 195deg, #c1c5bd 300deg, #d7d9d0);
+  box-shadow: 1px 3px 4px #131914a0, 0 0 0 1px #f2f3ea65;
+}
+.aurenne220 .knob::before {
+  content: "";
+  position: absolute;
+  inset: var(--bevel, 3px);
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(circle, transparent 0 .7px, #42464118 .8px 1.1px, #ffffff12 1.2px 1.4px),
+    conic-gradient(from -28deg, #e6e6dc, #7f847e 100deg, #c7c9be 161deg, #edefe4 224deg, #a1a59b 275deg, #e6e6dc);
+  box-shadow: inset 0 0 0 1px #f8f8f36b, inset 0 0 2px #272b2666;
+}
+.aurenne220 .knob::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  transform: rotate(var(--index, 0deg));
+  background: linear-gradient(#2f352f 0 5px, transparent 5px) center top / 1px 100% no-repeat;
+}
+.aurenne220 .large-knobs { display: grid; grid-template-columns: 73px 37px 73px; align-items: start; padding-top: 4px; }
+.aurenne220 .main-control .knob { --diameter: 52px; --bevel: 5px; }
+.aurenne220 .graduated {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 225deg, #494b429c 0 .85deg, transparent 1deg 9deg);
+}
+.aurenne220 .graduated::before {
+  grid-area: 1 / 1;
+  content: "";
+  width: 57px;
+  height: 57px;
+  border-radius: 50%;
+  background: #c5c8bf;
+}
+.aurenne220 .graduated .knob { grid-area: 1 / 1; }
+.aurenne220 .main-control .control-label { font-size: 8.5px; letter-spacing: .08em; }
+.aurenne220 .balance-bank { padding-top: 2px; }
+.aurenne220 .balance-bank .lever-bank { height: 42px; }
+.aurenne220 .phono-knob .knob, .aurenne220 .selector-knob .knob { --diameter: 31px; }
+.aurenne220 .jack-control { align-content: start; padding-top: 5px; }
+.aurenne220 .jack-control .control-label { min-height: auto; margin-top: 9px; font-size: 6.5px; }
+.aurenne220 .jack {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border: 1px solid #92968c;
+  border-radius: 50%;
+  background: radial-gradient(circle, #0f1312 32%, #434743 36% 44%, #b4b9ab 49%, #676f66 61%, #252c27 72%);
+  box-shadow: 0 1px #f6f4e56f;
+}
+.aurenne220 .jack.rca { width: 12px; height: 12px; --collar: #dfdcd0; }
+.aurenne220 .jack.rca.red { --collar: #ad4d42; }
+.aurenne220 .jack.rca { background: radial-gradient(circle, #090a0a 26%, #b9a16d 31% 42%, var(--collar) 46% 63%, #565952 72%); }
+.aurenne220 .port-bank {
+  position: relative;
+  align-self: stretch;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 8px 4px 5px;
+  margin-block: 3px;
+  border: 1px solid #111311;
+  border-radius: 2px;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 3px, #969e910b 3px 4px),
+    linear-gradient(90deg, #161918, #2c2e2a 42%, #1d201e);
+  color: #e1dfd3;
+  box-shadow: inset 0 0 0 2px #51514a44, inset 0 2px 4px #05070588;
+  text-align: center;
+  font-size: 7px;
+  letter-spacing: .055em;
+}
+.aurenne220 .port-bank h3 { margin: 0 0 1px; font-size: 7px; letter-spacing: .16em; color: #c5bb9c; }
+.aurenne220 .port-block {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  padding-block: 3px;
+  border-top: 1px solid #b8baa629;
+}
+.aurenne220 .port-pair { display: flex; justify-content: center; gap: 9px; }
+.aurenne220 .port-bank .jack { box-shadow: 0 1px #050605, inset 0 1px #fff7; }
+.aurenne220 .port-key { font-size: 6px; color: #c4c4b5; white-space: pre; letter-spacing: .03em; }
+.aurenne220 .power-chassis {
+  display: grid;
+  grid-template-columns: 60px 1fr 166px 1fr 60px;
+  grid-template-rows: 1fr 21px;
+  gap: 0;
+  padding: 9px 8px 7px;
+  color: #dad9ca;
+  box-shadow: inset 0 1px #b39170, inset 0 -3px 4px #140e0b, 0 11px 16px #0008, 0 22px 31px #0005;
+}
+.aurenne220 .power-chassis .port-bank { margin: 0 3px 6px; }
+.aurenne220 .power-chassis .port-bank:first-child { justify-content: center; }
+.aurenne220 .power-chassis .port-bank:last-of-type { justify-content: center; }
+.aurenne220 .heat-sink {
+  margin-bottom: 6px;
+  border-block: 3px solid #141817;
+  background:
+    linear-gradient(180deg, #bfc9c32a, transparent 18%, #0005 91%, #070908 99%),
+    repeating-linear-gradient(90deg, #090b0b 0 3px, #343937 4px, #606360 5px, #1d2220 7px, #0d1010 9px);
+  box-shadow: inset 0 1px #656962, inset 0 -1px #030505, 0 1px 4px #070908;
+}
+.aurenne220 .power-core {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 6px;
+  padding-top: 15px;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 2px, #a9aba608 2px 3px),
+    linear-gradient(105deg, #25292a, #373b3c 65%, #212526);
+  border: 1px solid #141716;
+  border-top-color: #565b57;
+  box-shadow: inset 0 1px #777b7466, inset 0 -2px #0b0d0e, 0 2px 4px #0008;
+}
+.aurenne220 .fan-grille {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  border: 5px solid #161b1a;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #282f2b;
+  box-shadow: 0 0 0 1px #81847a, inset 0 0 12px #070b0a, 0 3px 6px #0b0d0e;
+}
+.aurenne220 .fan-rotor {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at center, #e0e3ce25 0 6%, #10171599 7% 15%, transparent 16%),
+    repeating-conic-gradient(from 19deg, #636965 0 18deg, #8b8e83 29deg, #313934 31deg 50deg);
+}
+.aurenne220.fan-on .fan-rotor { animation: aurenne-fan-spin 230ms linear infinite; }
+@keyframes aurenne-fan-spin { to { transform: rotate(1turn); } }
+.aurenne220 .fan-grille::after {
+  position: absolute;
+  content: "";
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(ellipse at top, #e0ddc547, transparent 76%),
+    radial-gradient(circle, #d3d7ca 0 16%, #666f67 23%, #0d1311 43%, transparent 50%) 0 0 / 4px 4px,
+    radial-gradient(circle, #d3d7ca 0 16%, #666f67 23%, #0d1311 43%, transparent 50%) 2px 2px / 4px 4px,
+    #292e2b93;
+  box-shadow: inset 0 0 13px 5px #080b0b99;
+}
+.aurenne220 .power-controls { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
+.aurenne220 .power-controls .control-label { min-height: 0; margin-top: 4px; font-size: 7px; letter-spacing: .06em; }
+.aurenne220 .power-controls .lever-bank { gap: 12px; }
+.aurenne220 .power-caption { margin-top: 8px; color: #b6baaf; font-size: 7px; letter-spacing: .17em; }
+.aurenne220 .binding-posts { display: grid; grid-template-columns: repeat(2, auto); gap: 3px 8px; }
+.aurenne220 .binding-channel { display: flex; align-items: center; gap: 3px; font-size: 7px; }
+.aurenne220 .post {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: radial-gradient(circle, #0e1211 22%, #c3a775 25% 42%, #393d3b 46% 65%, #767d6f 68%);
+  box-shadow: 0 1px 2px #090a0a;
+}
+.aurenne220 .post.plus { background: radial-gradient(circle, #180c0b 22%, #e1b581 25% 42%, #943e35 46% 65%, #c06354 68%); }
+.aurenne220 .plinth {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 15px;
+  background: linear-gradient(#555852 0, #262b2b 20%, #1d2121 87%, #101312);
+  border: 1px solid #131714;
+  border-top-color: #656963;
+  box-shadow: 0 2px 3px #050807, inset 0 1px #eeeece19;
+  font-size: 8px;
+  letter-spacing: .18em;
+}
+.aurenne220 .plinth b { color: #d8cfb3; }
+
+.aurenne220 :is(button.lever-slot, button.knob) {
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  min-height: 0;
+  cursor: pointer;
+  touch-action: none;
+}
+.aurenne220 button.knob { cursor: ns-resize; }
+.aurenne220 :is(button.lever-slot, button.knob):focus-visible {
+  outline: 2px solid #9edbcc;
+  outline-offset: 3px;
+  z-index: 22;
+}
+.aurenne220 .lever { transition: transform 120ms ease-out; }
+.aurenne220 .power-chassis .binding-socket { gap: 3px; }
+.aurenne220 .port-block .port-pair { gap: 10px; }
+.aurenne220 .port-bank .port-pair .port { box-shadow: none; }
+.aurenne220 .power-controls .control-detail { color: #b8bdb1; }
+.aurenne220 [data-aurenne-fan] {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: 1px;
+  background: #42463d;
+}
+.aurenne220.fan-on [data-aurenne-fan] { background: #d9a258; box-shadow: 0 0 5px #d9a258; }
+.aurenne220.power-off .radio-glass {
+  background: linear-gradient(#4e584a, #7b8568);
+  filter: saturate(.48) brightness(.76);
+}
+:is(#audio-world,.equipment-preview-world) .device-node.aurenne220 .jack.port {
+  --port-diameter: 13px;
+  --port-ring: 1px;
+  background: radial-gradient(circle, #101211 32%, #434743 36% 44%, #b4b9ab 49%, #676f66 61%, #252c27 72%);
+}
+:is(#audio-world,.equipment-preview-world) .device-node.aurenne220 .jack.rca.port {
+  --port-diameter: 12px;
+  background: radial-gradient(circle, #090a0a 26%, #b9a16d 31% 42%, var(--collar) 46% 63%, #565952 72%);
+}
+:is(#audio-world,.equipment-preview-world) .device-node.aurenne220 .binding-socket.port {
+  width: 22px !important;
+  min-width: 22px !important;
+  max-width: 22px !important;
+  height: 12px !important;
+  min-height: 12px !important;
+  max-height: 12px !important;
+  box-shadow: none;
+}
+.aurenne220 .port::before { inset: -3px; }
+.aurenne220 .port.port-incompatible::after { display: grid; }
+@media (prefers-reduced-motion: reduce) {
+  .aurenne220 .lever { transition: none; }
+  .aurenne220.fan-on .fan-rotor { animation: none; }
+}
+.aurenne220 .lever-slot.power-btn::before,
+.aurenne220 .lever-slot.power-btn::after { content: none; }
+.aurenne220 .lever-slot.power-btn.off { background: #202522; }
