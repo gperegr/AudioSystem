@@ -1,6 +1,8 @@
 /* Settings panel, theme controls, custom selects, and settings interactions. */
+        const settingIcon=path=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${path}</svg>`;
         const settingsMenu=document.createElement('details');settingsMenu.className='app-settings';
-        settingsMenu.innerHTML='<summary aria-label="Abrir configurações" title="Configurações"><svg class="settings-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="7.1"/><circle cx="12" cy="12" r="2.7"/><path d="M12 1.8v3.1m0 14.2v3.1M1.8 12h3.1m14.2 0h3.1M4.3 4.3l2.2 2.2m11 11 2.2 2.2m0-15.4-2.2 2.2m-11 11-2.2 2.2"/></svg></summary>';
+        settingsMenu.innerHTML=`<summary aria-label="Abrir configurações" title="Configurações">${settingIcon('<path d="M9 4.9 10 2.5h4l1 2.4 1.3.8 2.6-.4 2 3.4-1.6 2.1v2.4l1.6 2.1-2 3.4-2.6-.4-1.3.8-1 2.4h-4l-1-2.4-1.3-.8-2.6.4-2-3.4 1.6-2.1v-2.4L3.1 8.7l2-3.4 2.6.4Z"/><circle cx="12" cy="12" r="3.2"/>')}</summary>`;
+        settingsMenu.querySelector('svg').classList.add('settings-icon');
         clearCatalogFooter.className='app-settings-content';
         const themeSection=document.createElement('section');themeSection.className='settings-theme-section';themeSection.appendChild(canvasThemeControl);themeSection.appendChild(canvasGridControl);themeSection.appendChild(canvasBackdropControl);themeSection.appendChild(canvasTimeControl);
         const connectionHelpSetting=document.createElement('label');connectionHelpSetting.className='connection-help-setting';connectionHelpSetting.innerHTML='<input id="connection-help-enabled" type="checkbox"><span><strong>Orientação de conexões</strong><small>Mostra dicas e impede ligações incompatíveis. Desative para permitir erros quando os plugues encaixarem.</small></span>';
@@ -83,7 +85,6 @@
         roomSection.addEventListener('input',()=>{setRoomSettings({preset:document.getElementById('room-preset').value,intensity:Number(document.getElementById('room-intensity').value)});scheduleProjectSave();});
         setRoomSettings(appState.audio.environment);
 
-        const settingIcon=path=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
         const choiceIcons={
             scene:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 15h20M7 15V9h4v6m3 0v-4h4v4"/>',
             dots:'<circle cx="5" cy="5" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="19" cy="5" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="19" r="1"/><circle cx="12" cy="19" r="1"/><circle cx="19" cy="19" r="1"/>',
@@ -121,7 +122,8 @@
             const content=document.createElement('div');content.className='settings-group-content';content.append(...nodes);group.append(summary,content);return group;
         };
         const clearButton=document.getElementById('clear-system');
-        const languageSetting=document.createElement('div');languageSetting.className='language-setting';languageSetting.innerHTML='<span>Idioma</span><div class="language-options" role="group" aria-label="Idioma"><button type="button" class="language-choice" data-language="en" aria-label="English">EN</button><button type="button" class="language-choice" data-language="pt" aria-label="Português">PT</button></div>';
+        const languageSetting=document.createElement('div');languageSetting.className='language-setting';
+        languageSetting.innerHTML=`<span class="settings-language-label">${settingIcon('<circle cx="12" cy="12" r="8.5"/><ellipse cx="12" cy="12" rx="3.8" ry="8.5"/><path d="M4 9h16M4 15h16"/>')}<span>Idioma</span></span><div class="language-options" role="group" aria-label="Idioma"><button type="button" class="language-choice" data-language="en" aria-label="English">EN</button><button type="button" class="language-choice" data-language="pt" aria-label="Português">PT</button></div>`;
         const languageButtons=[...languageSetting.querySelectorAll('[data-language]')];
         languageButtons.forEach(button=>button.addEventListener('click',()=>AudioSystemLanguage.set(button.dataset.language)));
         const syncLanguageButtons=language=>languageButtons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.language===language)));
@@ -181,6 +183,7 @@
             function open(widget){
                 if(widget.select.disabled||!widget.select.options.length)return;
                 close();const popup=document.createElement('div');popup.className='app-select-popup';popup.id=widget.popupId;popup.setAttribute('role','listbox');popup.setAttribute('aria-label',widget.button.getAttribute('aria-label')||'Opções');
+                if(widget.button.closest('.app-settings-content'))popup.classList.add('settings-select-popup');
                 active={...widget,popup,index:widget.select.selectedIndex,choices:[]};(widget.button.closest('dialog[open]')||document.body).appendChild(popup);widget.button.setAttribute('aria-expanded','true');buildOptions();widget.button.focus();
             }
             function enabledIndex(start,direction){

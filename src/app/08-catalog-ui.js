@@ -4,7 +4,7 @@
             const pair = '<circle cx="13" cy="27" r="2"/><circle cx="20" cy="27" r="2"/>';
             let drawing;
             if(type==='pendantLamp'){
-                drawing='<path d="M28 3v19M13 27q15-12 30 0H13m-15 0h60M24 29v9q4 8 8 0v-9m-6 5h4"/>';
+                drawing='<path d="M23 5h10m-5 0v12M12 30c2-8 8-13 16-13s14 5 16 13H12Zm11 0v2a5 5 0 0 0 10 0v-2m-5 10v2m-9-5-2 2m20-2 2 2"/>';
             } else if(WALL_LAMP_TYPES[type]){
                 drawing={
                     wallLampCage:'<ellipse cx="28" cy="6" rx="9" ry="3"/><path d="M28 9v4m-6 0h12l2 6H20zM17 19h22v17q-3 8-11 8t-11-8zM17 26h22M18 35h20M22 20v20m12-20v20"/><path d="M24 22q-2 11 4 15 6-4 4-15m-6 6 2-3 2 3-2 3"/>',
@@ -12,12 +12,19 @@
                 }[type];
             } else if (FURNITURE_TYPES[type]) {
                 drawing = type === 'furnitureTable' ? '<path d="M5 15h46v5H5zM10 20v20m36-20v20M12 26h32"/>' : type === 'furnitureNiche' ? '<path d="M6 10h44v28H6zM11 15h34v18H11z"/>' : '<path d="M9 5h38v34H9zM9 16h38M9 27h38M13 39v4m30-4v4"/>';
+            } else if (CAPTURE_INTERFACE_TYPES.has(type)) {
+                drawing = {
+                    audioInterface1:'<rect x="4" y="13" width="48" height="19" rx="3"/><circle cx="12" cy="22.5" r="2.5"/><circle cx="20" cy="22.5" r="2.5"/><circle cx="31" cy="22.5" r="5"/><path d="M31 21v-2m9 3.5h3m3 0h2"/>',
+                    audioInterface2:'<rect x="8" y="9" width="40" height="27" rx="4"/><circle cx="28" cy="22.5" r="8"/><path d="M28 17v3m-15 2.5h3m24-3h3m-3 6h3"/>',
+                    audioInterface3:'<rect x="4" y="10" width="48" height="25" rx="3"/><circle cx="20" cy="22.5" r="7.5"/><circle cx="36" cy="22.5" r="3"/><path d="M20 17v3m-11 9h3m31-8h4m-4 4h4"/>',
+                    audioInterface4:'<rect x="3" y="9" width="50" height="27" rx="3"/><path d="M6 13h44M25 17v14M7 32h13"/><circle cx="15" cy="22.5" r="5.5"/><circle cx="33" cy="21" r="3"/><circle cx="44" cy="21" r="3"/><path d="M32 29h2m9 0h2"/>'
+                }[type];
             } else if (INTERFACE_DEVICES[type]) {
                 drawing = AudioAdapterDesign.models[type]?AudioAdapterDesign.icon(type):'<rect x="6" y="11" width="44" height="24" rx="3"/><circle cx="14" cy="23" r="3"/><circle cx="42" cy="23" r="3"/><path d="M21 23h14m-4-4 4 4-4 4"/><path d="m26 13-3 6h6l-3 6"/>';
             } else if(type==='streamIntegrated'){
                 drawing='<path d="M5 12h46v27H5ZM19 12V8h18v4M5 34h46M8 15v17m40-17v17"/><rect x="17" y="17" width="23" height="14" rx="1"/><path d="m20 27 5-5 5 3 6-5m9-3v2m0 4v2M10 38h4m28 0h4"/><circle cx="11" cy="28" r="2"/>';
             } else if(type==='shelfRadiator'){
-                drawing='<path d="M14 7h28v35H14zM17 7V4h22v3"/><ellipse cx="28" cy="4" rx="8" ry="2"/><circle cx="28" cy="17" r="5"/><circle cx="28" cy="31" r="9"/>';
+                drawing='<rect x="14" y="8" width="28" height="34" rx="1.5"/><rect x="17" y="4" width="22" height="4" rx="1"/><circle cx="28" cy="17" r="4.5"/><circle cx="28" cy="31" r="9"/><circle cx="28" cy="31" r="4"/>';
             } else if(type==='turntableAutomatic'){
                 drawing='<path d="M5 10h46v27H5zM5 29h46"/><ellipse cx="23" cy="22" rx="13" ry="4"/><path d="M43 16v7l-8 4M9 33h4m23 0h3m3 0h3m3 0h1"/>';
             } else if(type==='turntableBelt'){
@@ -129,24 +136,7 @@
             if(type==='turntableVintage')drawing='<path d="M5 7h46v32H5zM8 10v26m40-26v26"/><circle cx="24" cy="22" r="12"/><circle cx="24" cy="22" r="3"/><path d="M43 12v12l-6 6M12 35h6"/>';
             if(type==='eqVintage')drawing=rack+'<path d="M8 12v20m40-20v20M14 15v14m7-14v14m7-14v14m7-14v14m7-14v14M12 22h4m3-4h4m3 7h4m3-5h4m3 4h4"/>';
             if(type==='mixerVintage')drawing=rack+'<path d="M8 12v20m40-20v20M15 22v8m9-8v8m9-8v8m9-8v8M13 26h4m5-2h4m5 3h4m5-2h4"/>'+[15,24,33,42].map(x=>`<circle cx="${x}" cy="17" r="2"/>`).join('');
-            const colors={
-                turntable:'#9cbbc0',turntableVintage:'#c4ad83',cdPlayer:'#b2bec7',tapeDeck:'#b8bcb0',streamer:'#85b7bb',
-                receiver:'#c8b28b',powerAmp:'#88b3c7',powerStereo:'#9faebc',powerVintage:'#baa889',powerValve:'#c3ad86',powerDual:'#94a7b3',powerBias:'#9cbfcf',
-                integratedBlue:'#7eadd2',integratedMinimal:'#91b79a',integratedSilver:'#c9baa0',preamp:'#a7b9bb',preReference:'#acd19a',preControl:'#b2c8d3',preDisplay:'#96abbf',
-                benchMeter:'#8cbfc3',benchMeterVintage:'#c9be91',signalGenerator:'#8fbac9',signalGeneratorVintage:'#bec785',
-                spkPassiveGridBlack:'#a6acb3',spkPassiveGridOrange:'#df985f',spkPassiveWood:'#bea27e',spkPassiveCarbon:'#9aafbd',speaker:'#b7a083',
-                spkActiveRounded:'#9caeb0',spkActiveCompact:'#d0c7ab',spkActiveBookshelf:'#a8b9c6',spkActiveMonitor:'#c4aa87',
-                shelfCoax:'#c8a07c',shelfWood:'#c09a7c',shelfTop:'#afbac3',floorDiamond:'#b4ada0',floorCoax:'#c4ccc6',floorFlax:'#c4b48d',
-                subwoofer:'#9cabb5',subwooferCube:'#a8b9bc',subwooferPro:'#c18f94',subwooferPassive:'#a2b1bd',subwooferPassiveVintage:'#bba282',
-                headphone:'#a6b6c2',hpStudio:'#9db9c7',hpClassic:'#c3aa86',hpMonitor:'#bfa77c',hpMax:'#c0cbce',hpOpenRing:'#aebfc8',hpOpenDome:'#acb4c0',hpPlanar:'#b49c81',
-                headphoneAmp:'#c6ab87',headphoneAmpModern:'#91b7c7',headphoneAmp4:'#a1b7c0',eqStudio:'#9eb7c5',eqVintage:'#c5ad86',mixer:'#a4b6c6',mixerVintage:'#bfa385',
-                crossover:'#93b8bf',crossoverVintage:'#c3ae8b',btReceiverA:'#8abac8',btTransmitterPro:'#99b7cc',
-                rcaSwitch:'#a4b5c1',rcaSwitchVintage:'#bda98a',speakerSwitch:'#9eb8bc',speakerSwitchVintage:'#c1a785',rcaMatrix:'#9bacc3',rcaMatrixVintage:'#b9a88b',
-                furnitureRack:'#a5b3ad',furnitureCoverflow:'#c19a71',furnitureRackTall:'#a0b1ab',furnitureRackSix:'#9baaa6',furnitureRackSixTall:'#92a5a0',furnitureTable:'#baa48a',furnitureNiche:'#b7a58d',cdCollection:'#b88a62',pendantLamp:'#e6b674',wallLampCage:'#d8b879',wallLampDome:'#d9ae75'
-            };
-            const color=colors[type]||(INTERFACE_DEVICES[type]?.passive?'#b6b5aa':DEVICE_FAMILIES[type]==='vintage'?'#c0ab8a':'#a0b8c4');
-            drawing=drawing.replace(/ opacity="[^"]*"/g,'');
-            return `<svg class="catalog-equipment-icon" style="color:${color}" viewBox="0 0 56 46" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${drawing}</svg>`;
+            return `<svg class="catalog-equipment-icon" viewBox="0 0 56 46" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect class="catalog-icon-face" x="-10" y="-4" width="76" height="54" rx="11"/>${drawing}</svg>`;
         }
         const headphoneCatalogGrid=equipmentCatalog.querySelector('[data-template="hpStudio"]').closest('.grid');
         [['hpMonitor','Fone Monitor'],['hpMax','Fone Max'],...Object.keys(REFERENCE_HEADPHONES).map(type=>[type,DEVICE_NAMES[type]])].forEach(([type,label])=>{

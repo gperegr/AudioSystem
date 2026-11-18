@@ -91,10 +91,10 @@ const root=path.resolve(__dirname,'..');
                     const off=read();button.click();const on=read();button.click();read();
                     return {off,on};
                 });
-                assert.equal(favoriteStates.off.stroke,'none',`${sample.key}: OFF favorite must have no outline`);
-                assert.equal(favoriteStates.on.stroke,'none',`${sample.key}: ON favorite must have no outline`);
+                assert.equal(favoriteStates.off.fill,'rgba(0, 0, 0, 0)',`${sample.key}: OFF favorite uses an outline`);
+                assert(favoriteStates.off.outlineContrast>=3,`${sample.key}: OFF outline must stand out against the card`);
+                assert.equal(favoriteStates.on.stroke,favoriteStates.on.fill,`${sample.key}: ON favorite is solid`);
                 assert(favoriteStates.on.contrast>=3,`${sample.key}: ON must stand out against the card`);
-                assert(favoriteStates.on.contrast>favoriteStates.off.contrast*2,`${sample.key}: ON must stand out more than OFF ${JSON.stringify(favoriteStates)}`);
 
                 await page.evaluate(()=>document.querySelector('.app-settings').open=false);
                 samples.push(sample);

@@ -357,3 +357,165 @@ body.equipment-cursor-placement,body.equipment-cursor-placement #canvas,body.equ
 .catalog-setup-layer path{fill:color-mix(in srgb,var(--ui-side) 82%,var(--ui-panel));}
 #equipment-catalog>.catalog-setup{z-index:2;}
 #equipment-catalog>.overflow-y-auto{z-index:0;}
+
+/* Keep hit areas stationary while icon artwork responds to the interaction. */
+#equipment-catalog,.app-settings,.app-settings-content,.settings-select-popup{
+  --menu-feedback:160ms ease-out;
+}
+#equipment-catalog .catalog-item{
+  border-radius:14px;
+  box-shadow:inset 0 1px color-mix(in srgb,var(--ui-text) 10%,transparent),0 2px 5px var(--ui-shadow);
+}
+#equipment-catalog .catalog-item>.catalog-equipment-icon{
+  overflow:visible;
+  color:color-mix(in srgb,var(--ui-secondary) 80%,var(--ui-accent))!important;
+}
+#equipment-catalog .catalog-icon-face{
+  fill:color-mix(in srgb,var(--ui-control) 55%,var(--ui-panel));
+  stroke:color-mix(in srgb,var(--ui-text) 9%,transparent);
+  stroke-width:1;
+}
+#equipment-catalog .catalog-item:focus-within>.catalog-equipment-icon{
+  color:var(--ui-accent)!important;
+}
+#equipment-catalog .catalog-favorite{
+  border-radius:7px;
+  transform:none;
+}
+#equipment-catalog .catalog-favorite path{
+  stroke:var(--ui-muted)!important;
+  stroke-width:1.45!important;
+  stroke-linejoin:round;
+  fill:transparent;
+}
+#equipment-catalog .catalog-favorite[aria-pressed="true"] path{
+  fill:var(--ui-accent);
+  stroke:var(--ui-accent)!important;
+}
+#equipment-catalog .catalog-search:focus-within{
+  box-shadow:inset 0 0 0 1px var(--ui-accent),0 0 0 2px color-mix(in srgb,var(--ui-accent) 17%,transparent);
+}
+#equipment-catalog .catalog-search:focus-within .catalog-search-icon{color:var(--ui-accent);}
+#equipment-catalog .setup-all[aria-pressed="true"]{
+  background:var(--ui-active);
+  box-shadow:inset 0 -1px var(--ui-accent);
+}
+
+#app-topbar .app-settings[open]>summary{
+  background:var(--ui-active)!important;
+  color:var(--ui-accent)!important;
+}
+.app-settings-content :is(.settings-group,.language-setting){
+  border-radius:12px;
+  box-shadow:inset 0 1px color-mix(in srgb,var(--ui-text) 8%,transparent);
+}
+.app-settings-content :is(.language-setting,.settings-group>summary){
+  min-height:52px;
+  padding-inline:var(--ui-space-md);
+}
+.settings-language-label{
+  display:flex;
+  align-items:center;
+  gap:var(--ui-space-md);
+}
+.app-settings-content :is(.settings-group>summary svg,.settings-language-label svg){
+  flex:0 0 30px;
+  box-sizing:border-box;
+  width:30px;
+  height:30px;
+  padding:5px;
+  border-radius:8px;
+  background:var(--ui-control);
+  color:var(--ui-secondary);
+}
+.app-settings-content .settings-group[open]>summary svg{
+  background:var(--ui-active);
+  color:var(--ui-accent);
+}
+.app-settings-content .settings-group>summary::after{
+  content:"";
+  flex:0 0 7px;
+  width:7px;
+  height:7px;
+  margin-inline: auto var(--ui-space-xs);
+  border:solid currentColor;
+  border-width:0 1.5px 1.5px 0;
+  transform:translateY(-2px) rotate(45deg);
+}
+.app-settings-content .settings-group[open]>summary::after{
+  color:var(--ui-accent);
+  transform:translateY(2px) rotate(225deg);
+}
+.app-settings-content .settings-group-content{
+  border-top-color:color-mix(in srgb,var(--ui-border) 42%,transparent);
+}
+.app-settings-content .settings-icon-options button[aria-pressed="true"]{
+  color:var(--ui-accent);
+}
+.app-settings-content :is(.settings-icon-options,.room-preset-buttons) button[aria-pressed="true"]{
+  box-shadow:inset 0 -2px var(--ui-accent)!important;
+}
+.app-settings-content .connection-help-setting:focus-within{
+  background:var(--ui-control)!important;
+}
+.app-settings-content .language-options .language-choice:hover,
+.app-settings-content .connection-help-setting:hover{
+  transform:none;
+}
+.settings-select-popup .app-select-check{color:var(--ui-accent);}
+
+@media(hover:hover) and (pointer:fine){
+  #equipment-catalog .catalog-item:hover>.catalog-equipment-icon{color:var(--ui-accent)!important;}
+  #equipment-catalog .catalog-item:hover .catalog-icon-face{fill:var(--ui-active);}
+  #equipment-catalog .catalog-favorite:hover{background:var(--ui-control);}
+  #equipment-catalog .catalog-favorite:hover path{stroke:var(--ui-accent)!important;}
+  .app-settings-content .settings-group>summary:hover{background:var(--ui-hover);}
+  .app-settings-content .connection-help-setting:hover{background:var(--ui-control)!important;}
+  .app-settings-content .room-preset-buttons button[aria-pressed="false"]:hover{background:var(--ui-hover)!important;}
+}
+
+@media(prefers-reduced-motion:no-preference){
+  :root[data-ui-palette] :is(
+    #equipment-catalog :is(.catalog-equipment-icon,.catalog-favorite svg,.setup-object svg,.setup-all svg,.catalog-search-icon),
+    #app-topbar .app-settings>summary .settings-icon,
+    .app-settings-content :is(.settings-icon-options,.room-preset-buttons,.rain-controls) button>svg
+  ){
+    transition:transform var(--menu-feedback),color var(--menu-feedback);
+  }
+  :root[data-ui-palette] :is(
+    #equipment-catalog :is(.catalog-item,.catalog-favorite,.catalog-search),
+    #app-topbar .app-settings>summary,
+    .app-settings-content :is(.settings-group>summary,.settings-group>summary svg,.connection-help-setting,button),
+    .settings-select-popup .app-select-option
+  ){
+    transition:background-color var(--menu-feedback),color var(--menu-feedback),box-shadow var(--menu-feedback);
+  }
+  #equipment-catalog :is(.catalog-icon-face,.catalog-favorite path,.setup-object .setup-face){
+    transition:fill var(--menu-feedback),stroke var(--menu-feedback);
+  }
+  .app-settings-content .settings-group>summary::after,
+  .app-settings-content .app-select-chevron{transition:transform var(--menu-feedback);}
+  #equipment-catalog .catalog-search:focus-within .catalog-search-icon{transform:scale(1.08);}
+  #equipment-catalog :is(.setup-object,.setup-all,.catalog-favorite):active>svg,
+  .app-settings-content :is(.settings-icon-options,.room-preset-buttons,.rain-controls) button:active>svg{transform:scale(.92);}
+  #app-topbar .app-settings[open]>summary .settings-icon{transform:rotate(24deg);}
+  :is(.app-settings[open]>.app-settings-content,.settings-group[open]>.settings-group-content,.settings-select-popup){
+    animation:settings-enter 180ms var(--ui-palette-easing);
+  }
+  @keyframes settings-enter{
+    from{opacity:.65;transform:translateY(-3px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+}
+@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
+  #equipment-catalog .catalog-item:hover:not(:active)>.catalog-equipment-icon{transform:translateY(-2px);}
+  #equipment-catalog .catalog-favorite:hover:not(:active)>svg{transform:scale(1.12);}
+  #equipment-catalog .setup-object:hover:not(:active)>svg{transform:translateY(-1px);}
+  #app-topbar .app-settings:not([open])>summary:hover .settings-icon{transform:rotate(14deg);}
+  .app-settings-content :is(.settings-icon-options,.room-preset-buttons,.rain-controls) button:hover:not(:active):not(:disabled)>svg{transform:scale(1.08);}
+}
+@media(prefers-reduced-motion:reduce){
+  #equipment-catalog .catalog-favorite path,
+  .app-settings-content .settings-group>summary::after,
+  .app-settings-content .connection-help-setting input::before{transition:none;}
+}
