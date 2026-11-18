@@ -16,6 +16,14 @@
 :is(#audio-world,.equipment-preview-world) .device-node.audio-interface.ai-art-v3 .ai-panel .ai-key {display:inline-grid!important;place-items:center!important;position:relative;box-sizing:border-box!important;min-height:0;padding:0!important;margin:0!important;border:1px solid #101115!important;border-radius:50%!important;background:radial-gradient(ellipse at 35% 25%,#45464c,#303138 75%)!important;color:#dcdde0!important;box-shadow:0 1px 2px #0009,inset 0 1px #ffffff18!important;font:500 8px/1 'Inter',sans-serif!important;touch-action:manipulation;cursor:pointer;}
 .ai-art-v3 .ai-panel .ai-key[aria-pressed="true"] {color:#dcdde0!important;box-shadow:inset 0 0 0 1px #85899188,0 1px 2px #0009!important;}
 .ai-art-v3 .ai-panel .ai-key.hw-pressing {filter:brightness(.8);translate:0 1px;}
+.ai-art-v3 .ai-key[data-source-play]::after {
+  content:'';position:absolute;inset:0;border:1px solid #8ed2ff;border-radius:inherit;
+  box-shadow:0 0 4px #54a9ff80;opacity:0;pointer-events:none;
+}
+.ai-art-v3.ai-live .ai-key[data-source-play]::after {opacity:1;}
+@media(prefers-reduced-motion:no-preference){
+  .ai-art-v3 .ai-key[data-source-play]::after {transition:opacity 150ms ease-out;}
+}
 .ai-art-v3 .ai-socket {display:inline-flex;justify-content:center;align-items:center;}
 .ai-art-v3 .ai-socket-visual {width:24px;height:24px;box-sizing:border-box;border:4px solid #30343a!important;border-radius:50%;background:radial-gradient(circle,#090a0c 0 48%,#1b1e22 52% 70%,#363a40 75% 100%)!important;box-shadow:inset 0 1px 3px #000,0 1px 2px #0008!important;pointer-events:none;}
 .ai-art-v3 .ai-socket-visual[data-visual-socket^="rca"] {border-color:#30343a!important;}
@@ -49,7 +57,6 @@
 .ai-art-v3 .ai-interface-three-gain label,.ai-art-v3 .ai-interface-three-main label {margin-bottom:6px;font-size:8px;}
 .ai-art-v3 .ai-interface-three-main {position:absolute;left:43%;top:17px;}
 .ai-art-v3 .ai-interface-three-usb {position:absolute;right:22%;top:17px;display:flex;flex-direction:column;align-items:center;gap:4px;}
-.ai-art-v3 .ai-usb-light {width:12px;height:5px;border-radius:3px;background:#41464b;}.ai-art-v3.ai-live .ai-usb-light {background:#55a7ff;box-shadow:0 0 5px #217bff;}
 .ai-art-v3 .ai-interface-three-phones {position:absolute;right:16px;top:17px;display:flex;flex-direction:column;align-items:center;gap:4px;}.ai-art-v3 .ai-interface-three-phones>svg {width:14px;height:14px;}
 .ai-art-v3 .ai-interface-three-marking {position:absolute;left:14px;bottom:13px;font:600 8px/1 'Inter',sans-serif;letter-spacing:.08em;}
 .ai-art-v3 .ai-interface-three-outputs {position:absolute;left:14px;right:14px;bottom:7px;display:flex;align-items:center;justify-content:flex-end;}
@@ -145,7 +152,6 @@
 .ai-art-v3.graphite-interface .ai-interface-three-gain .ai-socket-visual {align-self:center;margin:0!important;}
 .ai-art-v3.graphite-interface .ai-interface-three-main {display:grid!important;grid-template-rows:24px 1fr;align-content:center;justify-items:center;align-self:center;height:100%;}
 .ai-art-v3.graphite-interface .ai-interface-three-main .ai-dial {align-self:center;}
-.ai-art-v3.graphite-interface .ai-interface-three-usb {display:grid!important;grid-template-rows:1fr 8px;align-items:center;justify-items:center;align-self:center;height:74px;}
 .ai-art-v3.graphite-interface .ai-interface-three-phones {display:grid!important;grid-template-rows:38px 16px 28px;align-items:center;justify-items:center;align-self:center;}
 .ai-art-v3.graphite-interface .ai-interface-three-phones>svg {grid-row:2;}
 .ai-art-v3.graphite-interface .ai-interface-three-phones .ai-socket {grid-row:3;}

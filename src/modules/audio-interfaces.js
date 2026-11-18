@@ -25,7 +25,7 @@ const AudioInterfaceDesign = (() => {
     </section>`;
     const captureThree = () => `<section class="audio-interface-face ai-panel ai-interface-three">
         <div class="ai-interface-three-main"><label>Main · LINE</label>${knob('data-ai-line','Volume de linha','outputDial',70)}</div>
-        <div class="ai-interface-three-usb">${capture()}<i class="ai-usb-light"></i></div>
+        <div class="ai-interface-three-usb">${capture()}</div>
         <div class="ai-interface-three-phones">${knob('data-ai-phones','Volume de fones','inputDial',32)}${icon('phones')}${jack('outPhone','headphone','Saída de fones · P10')}</div>
         <div class="ai-interface-three-outputs">${pair()}</div>
     </section>`;
