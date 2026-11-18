@@ -1,0 +1,67 @@
+/* Draw the open tray and disc in the same shallow front perspective. */
+:is(#audio-world,.equipment-preview-world) .device-type-cdPlayer .cd-tray {
+  --cd-tray-travel:30px;
+  appearance:none;
+  display:block;
+  padding:0;
+  overflow:visible;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+
+:is(#audio-world,.equipment-preview-world) .cd-tray > .cd-tray-platform {
+  position:absolute;
+  inset:3px 5px auto;
+  height:calc(var(--cd-tray-travel) - 2px);
+  display:grid;
+  place-items:center;
+  clip-path:polygon(7% 0,93% 0,100% 100%,0 100%);
+  background:linear-gradient(#131a20,#35424b);
+  transform-origin:50% 0;
+  transform:scaleY(0);
+  pointer-events:none;
+  transition:transform 340ms cubic-bezier(.2,.7,.3,1);
+}
+
+:is(#audio-world,.equipment-preview-world) .cd-tray-platform > .cd-tray-disc {
+  box-sizing:border-box;
+  width:76%;
+  height:calc(100% - 6px);
+  border:1px solid #c6d3d5;
+  border-radius:50%;
+  background:
+    radial-gradient(ellipse closest-side,#253139 0 11%,#64717a 14% 21%,transparent 25%),
+    conic-gradient(#b8cdd1,#e0d9c6,#91aab5,#dae0e2,#b8cdd1);
+  box-shadow:0 1px 3px #0009;
+}
+
+:is(#audio-world,.equipment-preview-world) .cd-tray > .cd-tray-lip {
+  position:absolute;
+  inset:0;
+  z-index:2;
+  border:1px solid #18232b;
+  border-radius:2px;
+  background:linear-gradient(#465158,#29343b 75%,#1c272e);
+  box-shadow:inset 0 1px #a3b0b633,0 1px 2px #0008;
+  transform:translateY(0);
+  pointer-events:none;
+  transition:transform 340ms cubic-bezier(.2,.7,.3,1),box-shadow 340ms;
+}
+
+:is(#audio-world,.equipment-preview-world) .cd-tray-open .cd-tray > .cd-tray-platform {
+  transform:scaleY(1);
+}
+
+:is(#audio-world,.equipment-preview-world) .cd-tray-open .cd-tray > .cd-tray-lip {
+  transform:translateY(var(--cd-tray-travel));
+  box-shadow:0 7px 7px #0006,inset 0 1px #c7d5dd44;
+}
+
+:is(#audio-world,.equipment-preview-world) .cd-tray:focus-visible {
+  outline:2px solid #93c5fd;
+  outline-offset:4px;
+}
+
+@media(prefers-reduced-motion:reduce){
+  :is(#audio-world,.equipment-preview-world) .cd-tray > :is(.cd-tray-platform,.cd-tray-lip) {transition:none;}
+}

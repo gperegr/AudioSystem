@@ -27,7 +27,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./styles/app.css?v=cd-tray-fit-v1">
+    <link rel="stylesheet" href="./styles/app.css?v=cd-tray-layout-v2">
     <link rel="stylesheet" href="./styles/home-menu.css?v=home-preview-v1">
     <link rel="stylesheet" href="./styles/signal-history.css?v=signal-history-v1">
     <link rel="stylesheet" href="./styles/equipment/adapters.css?v=physical-adapters-v1">
@@ -36,6 +36,7 @@
     <link rel="stylesheet" href="./styles/equipment/aurenne-220.css?v=1">
     <link rel="stylesheet" href="./styles/equipment/direct-turntable.css?v=3">
     <link rel="stylesheet" href="./styles/equipment/glass-turntable.css?v=2">
+    <link rel="stylesheet" href="./styles/equipment/cd-player.css?v=1">
     <link rel="stylesheet" href="./styles/equipment/tape-deck.css?v=raised-control-fascia-v5">
     <link rel="stylesheet" href="./styles/equipment/audio-interfaces.css?v=usb-capture-ring">
     <link rel="stylesheet" href="./styles/equipment/materials.css?v=tactile-materials-v2">
@@ -888,7 +889,14 @@
     <template id="tpl-cdPlayer">
         <div class="device-header"><span>CD PLAYER · DIGITAL AUDIO</span></div>
         <section class="cd-player-face">
-            <div class="cd-drive"><span>COMPACT DISC</span><button type="button" class="cd-tray" aria-label="Abrir bandeja do CD" aria-expanded="false" title="Abrir bandeja"><span class="cd-drawer" aria-hidden="true"><b class="cd-disc"></b></span><span class="cd-tray-front" aria-hidden="true"><i></i></span></button><small>DIGITAL AUDIO</small></div>
+            <div class="cd-drive">
+                <span>COMPACT DISC</span>
+                <button type="button" class="cd-tray" aria-label="Abrir bandeja do CD" aria-expanded="false" title="Abrir bandeja">
+                    <span class="cd-tray-platform" aria-hidden="true"><span class="cd-tray-disc"></span></span>
+                    <span class="cd-tray-lip" aria-hidden="true"><i></i></span>
+                </button>
+                <small>DIGITAL AUDIO</small>
+            </div>
             <div class="cd-lcd device-display" aria-label="Visor do CD Player">
                 <div class="cd-lcd-meta"><span>TRACK 01 · STEREO</span><span data-cd-status>PAUSE</span></div>
                 <div class="cd-title-window"><span data-cd-title>DEMONSTRAÇÃO</span></div>
