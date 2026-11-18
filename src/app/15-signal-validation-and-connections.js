@@ -362,7 +362,7 @@
 
         canvas.addEventListener('pointermove', e => {
             if (isPatching) return;
-            const port = document.elementFromPoint(e.clientX, e.clientY)?.closest('.port') || null;
+            const port = canvasTargetAt(e.clientX,e.clientY)?.closest('.port') || null;
             if (port !== hoveredGuidancePort) {
                 hoveredGuidancePort = port;
                 if (appState.interface.selectedConnection) updatePortGuidance();
@@ -374,9 +374,9 @@
         });
 
         window.addEventListener('pointermove', e => {
-            if (isPatching && tempCableEl && startPort) {
+            if (isPatching && e.pointerId===patchPointerId && tempCableEl && startPort) {
                 e.preventDefault();
-                const guidancePort = document.elementFromPoint(e.clientX, e.clientY)?.closest('.port') || null;
+                const guidancePort = canvasTargetAt(e.clientX,e.clientY)?.closest('.port') || null;
                 if (guidancePort !== hoveredGuidancePort) {
                     hoveredGuidancePort = guidancePort;
                     updatePortGuidance();
@@ -419,18 +419,14 @@
         });
 
         window.addEventListener('pointerup', async e => {
+            if(e.pointerId!==patchPointerId)return;
             if(e.cancelled){cancelCableDrag();return;}
             if (isPatching) {
                 if (hoveredTargetPort) {
                     hoveredTargetPort.classList.remove('port-highlight');
                 }
 
-                // Tenta pegar a porta pelo magnetismo ou diretamente sob o cursor
-                tempCableEl.style.visibility = 'hidden';
-                const directEl = document.elementFromPoint(e.clientX, e.clientY);
-                tempCableEl.style.visibility = 'visible';
-                
-                let tPort = directEl ? directEl.closest('.port') : null;
+                let tPort = canvasTargetAt(e.clientX,e.clientY)?.closest('.port');
                 const attempted=tPort&&!isPortOccupied(tPort)?getPortCompatibility(startPort,tPort):null;
                 const hazardous=!!attempted?.damageRisk;
                 if(appState.preferences.connectionGuidanceEnabled&&hazardous){cancelCableDrag();offerDamageSimulation(attempted);return;}
@@ -471,7 +467,7 @@
                     tempCableEl.remove();
                 }
                 stopCableHum();
-                isPatching = false; startPort = null; tempCableEl = null; hoveredTargetPort = null;
+                isPatching = false; patchPointerId=null; startPort = null; tempCableEl = null; hoveredTargetPort = null;
                 hoveredGuidancePort = null;
                 updatePortGuidance();
                 dragPhysics.activeTarget = null;

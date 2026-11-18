@@ -16,7 +16,7 @@ const root=path.resolve(__dirname,'..');
             let body=fs.readFileSync(file);
             if(file===path.join(root,'script.js')){
                 const source=body.toString(),marker='        renderVisuals();',index=source.lastIndexOf(marker);
-                assert(index>0);body=source.slice(0,index)+'window.__signal={setCanvasTheme,createDevice,selectDevice,setDeviceSelection,deleteDevice,connectProjectPorts,appState,view,applyView,projectCapture};\n'+source.slice(index);
+                assert(index>0);body=source.slice(0,index)+'window.__signal={setCanvasTheme,createDevice,selectDevice,setDeviceSelection,deleteDevice,connectProjectPorts,appState,view,applyView,projectCapture,restoreLocalProject,get isPatching(){return isPatching;}};\n'+source.slice(index);
             }
             const ext=path.extname(file),mime={'.html':'text/html','.js':'application/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.json':'application/json'};
             return route.fulfill({contentType:mime[ext]||'application/octet-stream',body});
@@ -156,7 +156,84 @@ const root=path.resolve(__dirname,'..');
         await card.click();await page.mouse.move(1,300);await page.waitForTimeout(60);
         const edge=await preview();grid(edge);assert(edge.x>=202);
         await page.keyboard.press('Escape');await clean();
+
+        // The visible control has priority, with a small fallback on the bare panel around it.
+        await page.evaluate(()=>{
+            const api=__signal;
+            Object.values(api.appState.project.devices).forEach(dev=>api.deleteDevice(dev,false));
+            api.setCanvasTheme('light');Object.assign(api.view,{x:0,y:0,zoom:1});api.applyView();
+            api.createDevice('audioInterface4',260,200,'gesture-source');
+            api.createDevice('integratedCompact',740,340,'gesture-amp');
+            api.selectDevice(null);
+        });
+        const source=page.locator('#gesture-source');
+        const volume=source.locator('[data-ai-phones="0"]');
+        const knobBounds=await volume.boundingBox();
+        const knobEdge={x:knobBounds.x+knobBounds.width+1,y:knobBounds.y+knobBounds.height/2};
+        const initialLevel=await volume.getAttribute('aria-valuenow');
+        assert(await page.evaluate(({x,y})=>!document.elementFromPoint(x,y).closest('[data-ai-phones]'),knobEdge),'start just outside the knob artwork');
+        await page.mouse.move(knobEdge.x,knobEdge.y);await page.mouse.down();
+        assert(await volume.evaluate(el=>el.classList.contains('hw-turning')));
+        await page.mouse.move(knobEdge.x,knobEdge.y+30,{steps:5});await page.mouse.up();
+        assert.notEqual(await volume.getAttribute('aria-valuenow'),initialLevel);
+        assert.equal(await page.locator('.equipment-dragging,.cable-group').count(),0);
+
+        const sourceBefore=(await devices()).find(d=>d.id==='gesture-source');
+        const sourceRect=await source.boundingBox();
+        await page.mouse.move(sourceRect.x+14,sourceRect.y+8);await page.mouse.down();
+        await page.mouse.move(sourceRect.x+94,sourceRect.y+48,{steps:5});
+        assert.equal(await page.locator('#gesture-source.equipment-dragging').count(),1);
+        await page.mouse.up();await clean();
+        const sourceAfter=(await devices()).find(d=>d.id==='gesture-source');
+        assert.equal(sourceAfter.x,sourceBefore.x+80);grid(sourceAfter);
+        await page.evaluate(()=>__signal.selectDevice(null));
+
+        const output=source.locator('[data-node="outL"]');
+        const out=await output.boundingBox(),input=await page.locator('#gesture-amp [data-node="line0L"]').boundingBox();
+        await page.mouse.move(out.x-3,out.y+out.height/2);await page.mouse.down();
+        assert.equal(await page.evaluate(()=>__signal.isPatching),false,'pressing the jack waits for a drag');
+        await page.mouse.move(out.x-3,out.y+out.height/2+12,{steps:3});
+        assert.equal(await page.evaluate(()=>__signal.isPatching),true);
+        assert.equal(await page.locator('.equipment-dragging').count(),0);
+        await page.mouse.move(input.x+input.width/2,input.y+input.height/2,{steps:6});await page.mouse.up();
+        assert.equal(await page.evaluate(()=>__signal.appState.project.connections.length),1);
+        await page.mouse.click(out.x+out.width/2,out.y+out.height/2);
+        assert.equal(await page.evaluate(()=>__signal.appState.project.connections.length),1,'a click leaves the RCA cable seated');
+        await page.mouse.move(out.x+out.width/2,out.y+out.height/2);await page.mouse.down();
+        await page.mouse.move(out.x+out.width/2-12,out.y+out.height/2,{steps:3});
+        assert.equal(await page.evaluate(()=>__signal.isPatching),true,'a connected jack remains draggable through the cable stroke');
+        await page.mouse.move(out.x+out.width/2,out.y+out.height/2);await page.mouse.up();
+        assert.equal(await page.evaluate(()=>__signal.appState.project.connections.length),1);
+
+        // Add from a scrolled search, then restore the project with the same catalog view.
+        await page.evaluate(()=>Object.values(__signal.appState.project.devices).forEach(dev=>__signal.deleteDevice(dev,false)));
+        const search=page.locator('#equipment-search');
+        await search.fill('a');
+        const catalogStrip=page.locator('#equipment-catalog > .overflow-y-auto');
+        const scrolledCard=await catalogStrip.evaluate(strip=>{
+            strip.scrollLeft=720;
+            const tray=strip.getBoundingClientRect();
+            return [...strip.querySelectorAll('.catalog-item')].find(item=>{
+                const bounds=item.getBoundingClientRect();
+                return bounds.width&&bounds.left>=tray.left+60&&bounds.right<tray.right;
+            }).dataset.template;
+        });
+        const scrollBefore=await catalogStrip.evaluate(strip=>strip.scrollLeft);
+        assert(scrollBefore>0);
+        await catalogStrip.evaluate(strip=>strip.addEventListener('pointerdown',()=>{
+            strip.dispatchEvent(new WheelEvent('wheel',{bubbles:true,cancelable:true,deltaY:120}));
+        },{capture:true,once:true}));
+        await page.locator(`.catalog-item[data-template="${scrolledCard}"]:visible`).click();
+        await page.mouse.move(800,350);await page.mouse.click(800,350);await clean();
+        assert.equal((await devices())[0].type,scrolledCard);
+        const snapshot=await page.evaluate(()=>__signal.projectCapture());
+        assert.equal(snapshot.ui.search,'a');assert.equal(snapshot.ui.catalogCategory,'sources');assert.equal(snapshot.ui.catalogScroll,scrollBefore);
+        await page.locator('[data-setup-all]').click();
+        await page.evaluate(snapshot=>__signal.restoreLocalProject(snapshot,()=>null),snapshot);
+        assert.equal(await search.inputValue(),'a');
+        assert.equal(await page.locator('[data-setup-category="sources"]').getAttribute('aria-pressed'),'true');
+        assert.equal(await catalogStrip.evaluate(strip=>strip.scrollLeft),scrollBefore);
         await page.screenshot({path:'/tmp/click-to-place-equipment.png'});
-        assert.deepEqual(errors,[]);console.log('Click placement: catalog/canvas, grid, undo/redo, cancellation, controls, cables, groups, furniture, zoom and touch passed.');
+        assert.deepEqual(errors,[]);console.log('Click placement, adjustment and wiring gestures, catalog context, grid, undo/redo, groups, furniture, zoom and touch passed.');
     }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -518,7 +518,7 @@ const Hardware = (() => {
             if(Math.abs(next-get())>1e-7){set(next);playEquipmentControlSound(movementSound(el,kind),el);}paintKnob(el);if(el.dataset.interfaceKnob)el.dispatchEvent(new Event('interface-control-change',{bubbles:true}));
         };
         const commit=()=>{if(el.isConnected){updateCableFlows();scheduleProjectSave();}};
-        el.addEventListener('pointerdown',event=>{
+        control.startDrag=event=>{
             if(event.button!==0||el.disabled)return;event.preventDefault();event.stopPropagation();activate?.();el.classList.add('hw-pointer-focus');el.focus({preventScroll:true});
             const pointer=event.pointerId,start=get(),x=event.clientX,y=event.clientY,zoom=Math.max(.1,view.zoom);let holdOpened=false,anchorX=x,anchorY=y,anchorValue=start,fine=event.shiftKey;el.setPointerCapture(pointer);el.classList.add('hw-turning');showKnobReadout(el);
             clearTimeout(knobHoldTimer);knobHoldTimer=setTimeout(()=>{if(el.hasPointerCapture(pointer)){holdOpened=true;showFineControl(el);}},480);
@@ -526,7 +526,8 @@ const Hardware = (() => {
             const move=e=>{if(e.pointerId===pointer){if(Math.hypot(e.clientX-x,e.clientY-y)>8&&!holdOpened)clearTimeout(knobHoldTimer);e.preventDefault();if(!pointerToValue&&fine!==e.shiftKey){fine=e.shiftKey;anchorX=e.clientX;anchorY=e.clientY;anchorValue=get();}change(pointerToValue?(e.shiftKey?start+(pointerToValue(e)-start)*.2:pointerToValue(e)):anchorValue+((anchorY-e.clientY)+(e.clientX-anchorX)*.35)*(max-min)/(physics.travel*zoom)*(fine?.2:1),!e.shiftKey);}};
             const finish=e=>{if(e?.pointerId!=null&&e.pointerId!==pointer)return;clearTimeout(knobHoldTimer);el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',finish);el.removeEventListener('pointercancel',finish);el.removeEventListener('lostpointercapture',finish);window.removeEventListener('blur',finish);releases.delete(el);el.classList.remove('hw-turning');if(el.hasPointerCapture(pointer))el.releasePointerCapture(pointer);hideKnobReadout();if(holdOpened&&fineControlPanel){fineControlPanel.querySelector('input').focus({preventScroll:true});}commit();};
             releases.set(el,finish);el.addEventListener('pointermove',move);el.addEventListener('pointerup',finish);el.addEventListener('pointercancel',finish);el.addEventListener('lostpointercapture',finish);window.addEventListener('blur',finish);
-        });
+        };
+        el.addEventListener('pointerdown',control.startDrag);
         if(kind==='knob')el.addEventListener('dblclick',event=>{event.preventDefault();event.stopPropagation();activate?.();change(min<0&&max>0?0:defaultValue);commit();});
         el.addEventListener('blur',()=>{el.classList.remove('hw-pointer-focus');if(readoutOwner===el)hideKnobReadout(0);});
         el.addEventListener('keydown',event=>{
@@ -1544,7 +1545,8 @@ const Hardware = (() => {
         if(spec.kind==='jack')return `<g transform="scale(${spec.scale})"><path d="M0 0 3 -2h12v4H3Z" fill="#ddbc77" stroke="#887044" stroke-width=".7"/><path d="M6 -2v4M11 -2v4" stroke="#20252a" stroke-width="1.1"/><rect x="15" y="-4" width="13" height="8" rx="2" fill="#363f45" stroke="#85949c" stroke-width="1"/><path d="M18 -3v6m3-6v6" stroke="#5d6c74"/></g>`;
         return `<path d="M0 0h7" stroke="#e2c283" stroke-width="2.5" stroke-linecap="round"/><rect x="5" y="-4" width="7" height="8" rx="1" fill="#bac2c5" stroke="#677780" stroke-width=".8"/><rect x="12" y="-5" width="13" height="10" rx="2" fill="#262e33" stroke="#788790" stroke-width=".8"/><rect x="14" y="-5" width="4" height="10" rx=".6" fill="${spec.color||'#cf4545'}"/>`;
     }
-    return Object.freeze({knobs,buttons,screws,screw:screwMarkup,fasteners:mountScrews,frontFasteners,controlSizes,setControlSize,buttonSounds,movementSounds,movementSound,sliders,leds,plugs,accents,sizes,physics,updateAccents,updateLightingDemo,renderLightingDemo,sceneLightAt,demoMarkup,bindDemo,sourceTransport,setButtonLabel,button:skinButton,bindKnob,bindLinear,slider,setLed,layout,materials:mountMaterials,preview,mount,sync,dispose,inspector,plugMarkup});
+    function startControlDrag(el,event){bindings.get(el)?.startDrag(event);}
+    return Object.freeze({knobs,buttons,screws,screw:screwMarkup,fasteners:mountScrews,frontFasteners,controlSizes,setControlSize,buttonSounds,movementSounds,movementSound,sliders,leds,plugs,accents,sizes,physics,updateAccents,updateLightingDemo,renderLightingDemo,sceneLightAt,demoMarkup,bindDemo,sourceTransport,setButtonLabel,button:skinButton,bindKnob,bindLinear,startControlDrag,slider,setLed,layout,materials:mountMaterials,preview,mount,sync,dispose,inspector,plugMarkup});
 })();
 
         // Code-only switch: set true and rebuild script.js to expose DEBUG equipment.
@@ -2163,7 +2165,16 @@ const Hardware = (() => {
         const inspectorContent = document.getElementById('inspector-content');
         document.getElementById('inspector').classList.add('inspector-compact');
         const equipmentCatalog = document.getElementById('equipment-catalog');
+        const catalogStrip = equipmentCatalog.querySelector(':scope > .overflow-y-auto');
         const wheelScrollMotions=new WeakMap();
+        function stopWheelMomentumScroll(element){
+            const motion=wheelScrollMotions.get(element);
+            if(!motion?.frame)return;
+            cancelAnimationFrame(motion.frame);
+            motion.frame=0;
+            element.style.removeProperty('--wheel-elastic-offset');
+            element.classList.remove('wheel-elastic-active');
+        }
         function enableWheelMomentumScroll(element,{horizontal=false}={}){
             if(!element)return;
             const positionKey=horizontal?'scrollLeft':'scrollTop';
@@ -2205,7 +2216,7 @@ const Hardware = (() => {
                 motion.frame=requestAnimationFrame(step);
             }
         }
-        enableWheelMomentumScroll(equipmentCatalog.querySelector('.overflow-y-auto'),{horizontal:true});
+        enableWheelMomentumScroll(catalogStrip,{horizontal:true});
         enableWheelMomentumScroll(document.getElementById('inspector-content'));
         enableWheelMomentumScroll(document.getElementById('inspector-empty'));
         const discardZone=document.createElement('div');
@@ -2241,6 +2252,22 @@ const Hardware = (() => {
         const view = { x: 0, y: 0, zoom: 1 };
         const MIN_CANVAS_ZOOM = 0.175;
         const MAX_CANVAS_ZOOM = 2.5;
+        const equipmentControlSelector = 'button,input,select,textarea,a[href],[contenteditable]:not([contenteditable="false"]),[role="button"],[role="slider"],[data-hardware-knob],[data-hardware-linear],.port,.speaker-grille,.grille-restore,.receiver-radio[tabindex],.poweramp-screen[tabindex],.spotify-flow-stage';
+        function nearbyEquipmentControl(node,event){
+            const touch=event.pointerType==='touch';
+            let nearest=null,distance=Infinity;
+            for(const control of node.querySelectorAll('.port,[data-hardware-knob]:not(:disabled)')){
+                const rect=control.getBoundingClientRect();
+                if(!rect.width||!rect.height)continue;
+                const margin=Math.min(touch?8:4,((touch?36:32)-Math.min(rect.width,rect.height))/2);
+                if(margin<=0||event.clientX<rect.left-margin||event.clientX>rect.right+margin||event.clientY<rect.top-margin||event.clientY>rect.bottom+margin)continue;
+                const style=getComputedStyle(control);
+                if(style.visibility!=='visible'||style.pointerEvents==='none')continue;
+                const offset=Math.hypot(event.clientX-rect.left-rect.width/2,event.clientY-rect.top-rect.height/2);
+                if(offset<distance){nearest=control;distance=offset;}
+            }
+            return nearest;
+        }
         const clampZoom = zoom => {
             const minimum = Math.max(MIN_CANVAS_ZOOM, canvas.clientWidth / Math.max(1, world.offsetWidth), canvas.clientHeight / Math.max(1, world.offsetHeight));
             return Math.max(minimum, Math.min(MAX_CANVAS_ZOOM, zoom));
@@ -2324,8 +2351,8 @@ const Hardware = (() => {
             setZoomAt(view.zoom*Math.exp(-Math.max(-160,Math.min(160,pixels))*.001),e.clientX,e.clientY);
         },{passive:false});
         const canvasTouches=new Map();let canvasPinch=null;
-        function cancelPointerInteraction(event){
-            const cancel=new PointerEvent('pointerup',{pointerId:event.pointerId||0,pointerType:'touch',clientX:event.clientX||0,clientY:event.clientY||0,button:0,buttons:0});
+        function cancelPointerInteraction(event,pointerId=event.pointerId){
+            const cancel=new PointerEvent('pointerup',{pointerId,pointerType:'touch',clientX:event.clientX||0,clientY:event.clientY||0,button:0,buttons:0});
             Object.defineProperty(cancel,'cancelled',{value:true});window.dispatchEvent(cancel);
         }
         document.addEventListener('pointerdown',event=>{
@@ -2333,7 +2360,7 @@ const Hardware = (() => {
             if(canvas.contains(event.target)&&!event.target.closest('.canvas-tools')){
                 canvasTouches.set(event.pointerId,{x:event.clientX,y:event.clientY});
                 if(canvasTouches.size===2){
-                    cancelPointerInteraction(event);
+                    cancelPointerInteraction(event,canvasTouches.keys().next().value);
                     const [a,b]=[...canvasTouches.values()],cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;
                     canvasPinch={distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),zoom:view.zoom,anchor:screenToWorld(cx,cy)};
                     event.preventDefault();event.stopImmediatePropagation();
@@ -3999,8 +4026,7 @@ const Hardware = (() => {
         document.addEventListener('pointerdown',event=>{
             if(event.button!==0)return;
             try{prepareUiAudio();}catch{}
-            const control=event.target.closest('button,input,select,textarea,.port,.speaker-grille,.grille-restore,[role="button"]');
-            if(!control&&event.target.closest('.device-node,.catalog-item'))playUiSound('pickup');
+            if(event.target.closest('.catalog-item')&&!event.target.closest(equipmentControlSelector))playUiSound('pickup');
         },{capture:true});
         async function playUiSound(kind = 'click', options = {}) {
             if(appState.project.restoringProject)return;
@@ -4106,13 +4132,15 @@ const Hardware = (() => {
             }catch(error){ /* Cable feedback remains optional if audio is blocked. */ }
         }
         function cancelCableDrag(){
+            pendingCableDrag?.();
             stopCableHum();
             if(!isPatching)return;
             tempCableEl?.remove();hoveredTargetPort?.classList.remove('port-highlight');
-            isPatching=false;startPort=null;tempCableEl=null;hoveredTargetPort=null;hoveredGuidancePort=null;
+            isPatching=false;patchPointerId=null;startPort=null;tempCableEl=null;hoveredTargetPort=null;hoveredGuidancePort=null;
             dragPhysics.activeTarget=null;updatePortGuidance();
         }
-        window.addEventListener('pointerup',stopCableHum,{capture:true});
+        window.addEventListener('pointerup',event=>{if(event.pointerId===patchPointerId)stopCableHum();},{capture:true});
+        window.addEventListener('pointercancel',event=>{if(event.pointerId===patchPointerId)cancelCableDrag();});
         window.addEventListener('blur',cancelCableDrag);
         window.addEventListener('keydown',event=>{if(event.key==='Escape')cancelCableDrag();},{capture:true});
         const soundControls=document.createElement('div');
@@ -5415,6 +5443,7 @@ const Hardware = (() => {
             item.addEventListener('dragstart', e => e.preventDefault());
             item.addEventListener('pointerdown', e => {
                 if (e.button !== 0) return;
+                stopWheelMomentumScroll(catalogStrip);
                 if(e.pointerType!=='touch'){e.preventDefault();startCatalogCursorPlacement(item);return;}
                 activeCatalogPreviewCleanup?.();activeEquipmentMoveCleanup?.();
                 if(e.pointerType==='touch'&&!item.firstElementChild.contains(e.target)){
@@ -5515,7 +5544,7 @@ const Hardware = (() => {
             quickCatalog.replaceChildren();
             for(const [title,types] of [['Favoritos',quickData.favorites]]){
                 if(!types.length)continue;const section=document.createElement('div');section.className='mb-6';const heading=document.createElement('h3');heading.className='text-[10px] font-bold text-gray-500 mb-3 tracking-wider uppercase';heading.textContent=title;const grid=document.createElement('div');grid.className='grid grid-cols-2 gap-3';section.append(heading,grid);
-                types.forEach(type=>{const original=catalogItems.find(item=>item.dataset.template===type);if(!original)return;const copy=original.cloneNode(true);copy.querySelector('.catalog-favorite')?.remove();bindCatalogItem(copy);grid.appendChild(copy);});quickCatalog.appendChild(section);
+                types.forEach(type=>{const original=catalogItems.find(item=>item.dataset.template===type);if(!original)return;const copy=original.cloneNode(true);copy.hidden=false;copy.querySelector('.catalog-favorite')?.remove();bindCatalogItem(copy);grid.appendChild(copy);});quickCatalog.appendChild(section);
             }
             if(!quickData.favorites.length){const empty=document.createElement('p');empty.className='p-4 text-sm';empty.setAttribute('role','status');empty.textContent='Nenhum favorito ainda.';quickCatalog.appendChild(empty);}
             updateStars();AudioSystemLanguage.translateTree?.(quickCatalog);
@@ -5552,11 +5581,22 @@ const Hardware = (() => {
             button.innerHTML=`<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">${category.art}</svg>`;
             button.addEventListener('click',()=>selectSetupCategory(category));setupScene.appendChild(button);
         });
-        function selectSetupCategory(category){
-            selectedSetupCategory=category&&selectedSetupCategory?.id===category.id?null:category;equipmentSearch.value='';
+        function setSetupCategory(category){
+            selectedSetupCategory=category;
             setupNav.querySelectorAll('[data-setup-category]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.setupCategory===selectedSetupCategory?.id)));
             setupNav.querySelector('[data-setup-all]').setAttribute('aria-pressed',String(selectedSetupCategory===null));
+        }
+        function selectSetupCategory(category){
+            setSetupCategory(category?.id===selectedSetupCategory?.id?null:category);
+            equipmentSearch.value='';
             equipmentSearch.dispatchEvent(new Event('input'));
+        }
+        function restoreCatalogView(ui){
+            stopWheelMomentumScroll(catalogStrip);
+            setSetupCategory([favoritesCategory,...setupCategories].find(category=>category.id===ui.catalogCategory)??null);
+            equipmentSearch.value=typeof ui.search==='string'?ui.search:'';
+            equipmentSearch.dispatchEvent(new Event('input'));
+            catalogStrip.scrollLeft=Number(ui.catalogScroll)||0;
         }
         setupNav.querySelector('[data-setup-all]').addEventListener('click',()=>selectSetupCategory(null));
         equipmentCatalog.appendChild(setupNav);
@@ -5581,7 +5621,7 @@ const Hardware = (() => {
             const radius=searchRadius+padding;
             const shoulder=searchBounds.right-dockBounds.left-searchRadius;
             const outerRight=searchBounds.right-dockBounds.left+padding;
-            const trayTop=equipmentCatalog.querySelector(':scope > .overflow-y-auto').offsetTop;
+            const trayTop=catalogStrip.offsetTop;
             dockSilhouette.setAttribute('viewBox',`0 0 ${w} ${h}`);
             const contour=`M${left} ${h} V${top+radius} Q${left} ${top} ${left+radius} ${top} H${shoulder} C${outerRight} ${top} ${outerRight} ${trayTop} ${outerRight+padding} ${trayTop} H${w} V${h} Z`;
             dockContour.setAttribute('d',contour);
@@ -8967,16 +9007,21 @@ const Hardware = (() => {
                 handle.setAttribute('aria-hidden', 'true');
                 handle.addEventListener('dragstart', e => e.preventDefault());
                 dev.el.addEventListener('pointerdown', e => {
-                    if (e.button !== 0) return;
-                    if (e.target.closest('button, input, select, textarea, .port, .speaker-grille, .grille-restore, [role="button"]')) return;
-                    const clickToPlace=e.pointerType!=='touch';
-                    if(clickToPlace)dev.el.focus({preventScroll:true});
-                    if(clickToPlace&&(e.shiftKey||e.metaKey||e.ctrlKey)){e.preventDefault();toggleDeviceSelection(dev.id);return;}
-                    activeCatalogPreviewCleanup?.();activeEquipmentMoveCleanup?.();
-                    if(clickToPlace&&!appState.interface.selectedDeviceIds.has(dev.id)){
-                        e.preventDefault();selectDevice(dev.id);return;
+                    if(e.button!==0||isPatching||e.target.closest(equipmentControlSelector))return;
+                    const touchHold=e.pointerType==='touch';
+                    const modifier=e.shiftKey||e.metaKey||e.ctrlKey;
+                    if(!modifier){
+                        const control=nearbyEquipmentControl(dev.el,e);
+                        if(control){
+                            if(control.matches('.port'))queueCableDrag(control,e);
+                            else Hardware.startControlDrag(control,e);
+                            return;
+                        }
                     }
-                    const touchHold = e.pointerType === 'touch';
+                    const wasSelected=appState.interface.selectedDeviceIds.has(dev.id);
+                    if(!touchHold)dev.el.focus({preventScroll:true});
+                    if(!touchHold&&modifier){e.preventDefault();toggleDeviceSelection(dev.id);return;}
+                    activeCatalogPreviewCleanup?.();activeEquipmentMoveCleanup?.();
                     // On touch screens a tap must remain available for wiring and selection.
                     // Movement starts only after a short deliberate press, so passing a cable
                     // across a device does not pick it up accidentally.
@@ -8985,8 +9030,8 @@ const Hardware = (() => {
                     let holdTimer = touchHold&&!directTouchMove ? setTimeout(() => { touchReady = true; }, 320) : null;
                     if (!touchHold) e.preventDefault();
                     window.getSelection()?.removeAllRanges();
-                    if (e.shiftKey || e.metaKey || e.ctrlKey) toggleDeviceSelection(dev.id);
-                    else if (appState.interface.selectedDeviceIds.has(dev.id)) selectDevice(dev.id, true);
+                    if (modifier) toggleDeviceSelection(dev.id);
+                    else if (wasSelected) selectDevice(dev.id, true);
                     else selectDevice(dev.id);
 
                     const startX = e.clientX;
@@ -9004,7 +9049,7 @@ const Hardware = (() => {
                     const origin = initialPositions[0] || { x:0, y:0 };
                     const baseY = Math.max(...initialPositions.map(position => position.y + position.dev.el.offsetHeight));
                     const ignored = new Set(movingDevices.map(item => item.id));
-                    let isDragging = clickToPlace, frame = 0, lastTime = 0, released = false;
+                    let clickToPlace=false,isDragging=false,frame=0,lastTime=0,released=false;
                     let targets = initialPositions.map(p=>({...p}));
                     const visualPositions=new Map(initialPositions.map(p=>[p.dev.id,{x:p.x,y:p.y}]));
                     const initialById=new Map(initialPositions.map(p=>[p.dev.id,{x:p.x,y:p.y}]));
@@ -9048,7 +9093,12 @@ const Hardware = (() => {
                         discardPreviewLayer?.remove();discardPreviewLayer=null;
                     }
 
-                    const cancel = () => { document.body.classList.remove('equipment-drag-active');clearDiscardPreview();cancelAnimationFrame(frame); frame=0;movingDevices.forEach(item=>{item.el.style.translate='none';delete item.dragVisualPosition;item.el.classList.remove('equipment-dragging','history-settling');}); };
+                    const clearMovement=item=>{
+                        item.el.style.translate='none';delete item.dragVisualPosition;
+                        item.el.classList.remove('equipment-dragging','history-settling');
+                        if(item.cancelPlacementMotion===cancelMotion)item.cancelPlacementMotion=null;
+                    };
+                    const cancel = () => { document.body.classList.remove('equipment-drag-active');clearDiscardPreview();cancelAnimationFrame(frame); frame=0;movingDevices.forEach(clearMovement); };
                     const cancelMotion=()=>{
                         if(!released){abortDrag();return;}
                         cancel();targets.forEach(p=>{p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;});
@@ -9078,7 +9128,7 @@ const Hardware = (() => {
                         const pending=resolved.some((p,i)=>Math.abs(p.x-targets[i].x)+Math.abs(p.y-targets[i].y)>.1);
                         if(pending&&moved) frame=requestAnimationFrame(animate);
                         else if(released){
-                            targets.forEach(p=>{p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;p.dev.el.style.translate='none';delete p.dev.dragVisualPosition;p.dev.el.classList.remove('equipment-dragging','history-settling');});
+                            targets.forEach(p=>{p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;clearMovement(p.dev);});
                             updateCables();scheduleProjectSave();
                         }
                     };
@@ -9104,18 +9154,23 @@ const Hardware = (() => {
                         }
                         if(!frame){lastTime=0;frame=requestAnimationFrame(animate);}
                     };
+                    const beginMove=()=>{
+                        isDragging=true;
+                        document.body.classList.add('equipment-drag-active');
+                        movingDevices.forEach(item=>item.el.classList.add('equipment-dragging'));
+                        playUiSound('pickup');
+                    };
                     const move = ev => {
+                        if(!clickToPlace&&ev.pointerId!==e.pointerId)return;
+                        const distance=Math.hypot(ev.clientX-startX,ev.clientY-startY);
                         if (touchHold && !touchReady) {
-                            if (Math.hypot(ev.clientX-startX,ev.clientY-startY) > 8) {
+                            if (distance > 8) {
                                 clearTimeout(holdTimer); holdTimer = null; touchReady = false;
                             }
                             return;
                         }
                         ev.preventDefault();
-                        isDragging = Math.hypot(ev.clientX-startX,ev.clientY-startY)>3||isDragging;
-                        if(!isDragging)return;
-                        document.body.classList.add('equipment-drag-active');
-                            movingDevices.forEach(item=>item.el.classList.add('equipment-dragging'));
+                        if(!isDragging){if(distance<=4)return;beginMove();}
                         aim(ev);updateDiscardPreview(ev);
                         equipmentCatalog.classList.add('discard-ready');
                         discardZone.setAttribute('aria-hidden','false');
@@ -9127,7 +9182,7 @@ const Hardware = (() => {
                         clearTimeout(holdTimer); holdTimer = null;
                         if(ev.cancelled){abortDrag();return;}
                         window.removeEventListener('pointermove',move);
-                        window.removeEventListener('pointerup',up);
+                        window.removeEventListener('pointerup',release);
                         window.removeEventListener('pointerdown',place,true);window.removeEventListener('pointercancel',abortDrag);
                         document.body.classList.remove('equipment-cursor-placement');
                         if(activeEquipmentMoveCleanup===abortDrag)activeEquipmentMoveCleanup=null;
@@ -9145,13 +9200,12 @@ const Hardware = (() => {
 
                     const abortDrag=()=>{
                         clearTimeout(holdTimer); holdTimer = null;
-                        window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);
+                        window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',release);
                         window.removeEventListener('pointerdown',place,true);window.removeEventListener('pointercancel',abortDrag);
                         document.body.classList.remove('equipment-cursor-placement');
                         if(activeEquipmentMoveCleanup===abortDrag)activeEquipmentMoveCleanup=null;
                         window.removeEventListener('blur',abortDrag);window.removeEventListener('keydown',cancelWithEscape,true);
                         cancel();
-                        movingDevices.forEach(item=>{if(item.cancelPlacementMotion===cancelMotion)item.cancelPlacementMotion=null;});
                         initialPositions.forEach(p=>{if(appState.project.devices[p.dev.id]){p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;}});
                         equipmentCatalog.classList.remove('return-drag-over','discard-ready');discardZone.setAttribute('aria-hidden','true');
                         updateCables();scheduleInspectorPosition();
@@ -9163,17 +9217,22 @@ const Hardware = (() => {
                         if(!inside&&!isOverCatalog(event))return;
                         consumePlacementClick(event);up(event);
                     };
+                    const release=event=>{
+                        if(event.pointerId!==e.pointerId)return;
+                        if(!isDragging&&!touchHold&&wasSelected&&!event.cancelled){
+                            clickToPlace=true;beginMove();
+                            window.removeEventListener('pointerup',release);
+                            document.body.classList.add('equipment-cursor-placement');
+                            window.addEventListener('pointerdown',place,true);
+                        }else up(event);
+                    };
                     const cancelWithEscape=event=>{if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();abortDrag();}};
                     window.addEventListener('blur',abortDrag);
                     window.addEventListener('keydown',cancelWithEscape,true);
 
                     window.addEventListener('pointermove', move);
-                    if(clickToPlace){
-                        activeEquipmentMoveCleanup=abortDrag;
-                        document.body.classList.add('equipment-cursor-placement','equipment-drag-active');
-                        movingDevices.forEach(item=>item.el.classList.add('equipment-dragging'));
-                        window.addEventListener('pointerdown',place,true);
-                    }else window.addEventListener('pointerup',up);
+                    activeEquipmentMoveCleanup=abortDrag;
+                    window.addEventListener('pointerup',release);
                     window.addEventListener('pointercancel',abortDrag);
                 });
             }
@@ -10168,6 +10227,8 @@ const Hardware = (() => {
         });
 
         let isPatching = false; let startPort = null; let tempCableEl = null;
+        let pendingCableDrag = null;
+        let patchPointerId = null;
 
         function getPortScreenAnchor(elem){
             const rect=elem.getBoundingClientRect();
@@ -10354,51 +10415,83 @@ const Hardware = (() => {
             }
         }
 
-        canvas.addEventListener('pointerdown', e => {
-            const port = e.target.closest('.port');
-            if (port) {
-                e.preventDefault();
-                window.getSelection()?.removeAllRanges();
-                
-                // Conectar ou reconectar
-                const existingIdx = appState.project.connections.findIndex(c => c.outId === port.id || c.inId === port.id);
-                if (existingIdx > -1) {
-                    const conn = appState.project.connections[existingIdx];
-                    const otherId = conn.outId === port.id ? conn.inId : conn.outId;
-                    removeConnection(existingIdx);
-                    startPort = document.getElementById(otherId);
-                } else {
-                    startPort = port;
-                    playUiSound('pickup');
-                }
+        function queueCableDrag(port,event){
+            if(event.button!==0||isPatching||pendingCableDrag)return;
+            event.preventDefault();event.stopPropagation();
+            const {clientX,clientY,pointerId}=event;
+            const clear=()=>{
+                pendingCableDrag=null;
+                window.removeEventListener('pointermove',move,true);
+                window.removeEventListener('pointerup',end,true);
+                window.removeEventListener('pointercancel',end,true);
+            };
+            const end=e=>{if(e.pointerId===pointerId)clear();};
+            const move=e=>{
+                if(e.pointerId!==pointerId||Math.hypot(e.clientX-clientX,e.clientY-clientY)<=4)return;
+                clear();
+                if(port.isConnected)beginCableDrag(port,e);
+            };
+            pendingCableDrag=clear;
+            window.addEventListener('pointermove',move,true);
+            window.addEventListener('pointerup',end,true);
+            window.addEventListener('pointercancel',end,true);
+        }
+        function beginCableDrag(port,e){
+            e.preventDefault();
+            window.getSelection()?.removeAllRanges();
 
-                if (!startPort) return;
-                
-                isPatching = true;
-                scheduleVisuals();
-                startCableHum();
-                dragPhysics.displayedTarget=null;dragPhysics.frameTime=0;
-                updatePortGuidance();
-                tempCableEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                tempCableEl.setAttribute("class", "cable-group active");
-                tempCableEl.dataset.type = startPort.dataset.type;
-                svgLayer.appendChild(tempCableEl);
-                
-                const pCenter = getPortCenter(startPort);
-                const mousePos = screenToWorld(e.clientX, e.clientY);
+            // Conectar ou reconectar
+            const existingIdx = appState.project.connections.findIndex(c => c.outId === port.id || c.inId === port.id);
+            if (existingIdx > -1) {
+                const conn = appState.project.connections[existingIdx];
+                const otherId = conn.outId === port.id ? conn.inId : conn.outId;
+                removeConnection(existingIdx);
+                startPort = document.getElementById(otherId);
+            } else {
+                startPort = port;
+                playUiSound('pickup');
+            }
 
-                // Inicializa variáveis do pêndulo físico para o cabo solto
-                dragPhysics.lastX = e.clientX;
-                dragPhysics.lastY = e.clientY;
-                dragPhysics.lastTime = performance.now();
-                dragPhysics.swingX = 0;
-                dragPhysics.swingY = 0;
-                dragPhysics.swingVelX = 0;
-                dragPhysics.swingVelY = 0;
-                dragPhysics.activeTarget = mousePos;
+            if (!startPort) return;
 
-                drawCable(tempCableEl, pCenter, mousePos, [], startPort.dataset.type, { x: 0, y: 0 });
-                e.stopPropagation();
+            isPatching = true;
+            patchPointerId=e.pointerId;
+            scheduleVisuals();
+            startCableHum();
+            dragPhysics.displayedTarget=null;dragPhysics.frameTime=0;
+            updatePortGuidance();
+            tempCableEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            tempCableEl.setAttribute("class", "cable-group active");
+            tempCableEl.dataset.type = startPort.dataset.type;
+            svgLayer.appendChild(tempCableEl);
+
+            const pCenter = getPortCenter(startPort);
+            const mousePos = screenToWorld(e.clientX, e.clientY);
+
+            // Inicializa variáveis do pêndulo físico para o cabo solto
+            dragPhysics.lastX = e.clientX;
+            dragPhysics.lastY = e.clientY;
+            dragPhysics.lastTime = performance.now();
+            dragPhysics.swingX = 0;
+            dragPhysics.swingY = 0;
+            dragPhysics.swingVelX = 0;
+            dragPhysics.swingVelY = 0;
+            dragPhysics.activeTarget = mousePos;
+
+            drawCable(tempCableEl, pCenter, mousePos, [], startPort.dataset.type, { x: 0, y: 0 });
+        }
+        function canvasTargetAt(x,y,target=document.elementFromPoint(x,y)){
+            if(!target?.closest('.cable-group'))return target;
+            // The cable remains selectable along its run and leaves real controls reachable underneath it.
+            return document.elementsFromPoint(x,y).find(element=>!svgLayer.contains(element))??target;
+        }
+        canvas.addEventListener('pointerdown',event=>{
+            const target=canvasTargetAt(event.clientX,event.clientY,event.target);
+            const port=target?.closest('.port');
+            if(port)queueCableDrag(port,event);
+            else if(target!==event.target){
+                const knob=target?.closest('[data-hardware-knob],[data-hardware-linear]');
+                if(knob)Hardware.startControlDrag(knob,event);
             }
         });
 
@@ -10765,7 +10858,7 @@ const Hardware = (() => {
 
         canvas.addEventListener('pointermove', e => {
             if (isPatching) return;
-            const port = document.elementFromPoint(e.clientX, e.clientY)?.closest('.port') || null;
+            const port = canvasTargetAt(e.clientX,e.clientY)?.closest('.port') || null;
             if (port !== hoveredGuidancePort) {
                 hoveredGuidancePort = port;
                 if (appState.interface.selectedConnection) updatePortGuidance();
@@ -10777,9 +10870,9 @@ const Hardware = (() => {
         });
 
         window.addEventListener('pointermove', e => {
-            if (isPatching && tempCableEl && startPort) {
+            if (isPatching && e.pointerId===patchPointerId && tempCableEl && startPort) {
                 e.preventDefault();
-                const guidancePort = document.elementFromPoint(e.clientX, e.clientY)?.closest('.port') || null;
+                const guidancePort = canvasTargetAt(e.clientX,e.clientY)?.closest('.port') || null;
                 if (guidancePort !== hoveredGuidancePort) {
                     hoveredGuidancePort = guidancePort;
                     updatePortGuidance();
@@ -10822,18 +10915,14 @@ const Hardware = (() => {
         });
 
         window.addEventListener('pointerup', async e => {
+            if(e.pointerId!==patchPointerId)return;
             if(e.cancelled){cancelCableDrag();return;}
             if (isPatching) {
                 if (hoveredTargetPort) {
                     hoveredTargetPort.classList.remove('port-highlight');
                 }
 
-                // Tenta pegar a porta pelo magnetismo ou diretamente sob o cursor
-                tempCableEl.style.visibility = 'hidden';
-                const directEl = document.elementFromPoint(e.clientX, e.clientY);
-                tempCableEl.style.visibility = 'visible';
-                
-                let tPort = directEl ? directEl.closest('.port') : null;
+                let tPort = canvasTargetAt(e.clientX,e.clientY)?.closest('.port');
                 const attempted=tPort&&!isPortOccupied(tPort)?getPortCompatibility(startPort,tPort):null;
                 const hazardous=!!attempted?.damageRisk;
                 if(appState.preferences.connectionGuidanceEnabled&&hazardous){cancelCableDrag();offerDamageSimulation(attempted);return;}
@@ -10874,7 +10963,7 @@ const Hardware = (() => {
                     tempCableEl.remove();
                 }
                 stopCableHum();
-                isPatching = false; startPort = null; tempCableEl = null; hoveredTargetPort = null;
+                isPatching = false; patchPointerId=null; startPort = null; tempCableEl = null; hoveredTargetPort = null;
                 hoveredGuidancePort = null;
                 updatePortGuidance();
                 dragPhysics.activeTarget = null;
@@ -11438,7 +11527,6 @@ const Hardware = (() => {
                 return {id:dev.id,type:dev.type,x:parseFloat(dev.el.style.left)||0,y:parseFloat(dev.el.style.top)||0,settings,powered:dev.powered,selectedSource:dev.selectedSource,grilleOff:dev.el.classList.contains('grille-off'),pairedId:dev.btPairedId||null,mediaKey:dev.audioBuffer?dev.mediaKey||null:null,fileName:dev.fileName||'',trackTitle:dev.trackTitle||'',position:dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?appState.audio.context.currentTime-dev.demoStartedAt:0)};
             });
             const connections=appState.project.connections.map(c=>{const out=document.getElementById(c.outId),input=document.getElementById(c.inId);return {from:out?.closest('.device-node')?.id,out:out?.dataset.node,to:input?.closest('.device-node')?.id,input:input?.dataset.node,label:c.label||'',color:c.color||null,hidden:!!c.hidden,slack:c.slack??5};});
-            const catalogScroll=equipmentCatalog.querySelector('.overflow-y-auto');
             const vinyls=[...spotifyVinyls.values()].map(item=>({id:item.id,uri:item.uri,name:item.name,image:item.image,origin:item.origin,x:item.x,y:item.y,turntableId:item.turntableId}));
             const albums=[...spotifyAlbums.values()].map(item=>({id:item.id,uri:item.uri,name:item.name,image:item.image,origin:item.origin,x:item.x,y:item.y,open:item.open}));
             return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,vinyls,albums,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{
@@ -11446,7 +11534,7 @@ const Hardware = (() => {
                 canvasGrid:appState.canvas.grid||'dots',canvasTheme:appState.canvas.theme||'scene',canvasBackdrop:appState.canvas.backdrop||DEFAULT_BACKDROP,canvasTime:appState.canvas.time||'dusk',
                 soundVolume:appState.preferences.uiSoundVolume??DEFAULT_UI_SOUND_VOLUME,equipmentSoundVolume:appState.preferences.equipmentSoundVolume??.5,hideCables:!!appState.canvas.hideCables,
                 selected:[...appState.interface.selectedDeviceIds],selectedCable:appState.project.connections.indexOf(appState.interface.selectedConnection),
-                search:document.getElementById('equipment-search').value,catalogScroll:catalogScroll?.scrollTop||0,inspectorScroll:inspectorContent.scrollTop
+                search:equipmentSearch.value,catalogCategory:selectedSetupCategory?.id??null,catalogScroll:catalogStrip.scrollLeft,inspectorScroll:inspectorContent.scrollTop
             }};
         }
         function projectValidate(value){
@@ -11610,12 +11698,12 @@ const Hardware = (() => {
                 appStateStore.actions.setPreference('uiSoundVolume',typeof ui.soundVolume==='number'?Math.max(0,Math.min(1,ui.soundVolume)):DEFAULT_UI_SOUND_VOLUME);appStateStore.actions.setCanvasOption('hideCables',!!ui.hideCables);
                 appStateStore.actions.setPreference('equipmentSoundVolume',typeof ui.equipmentSoundVolume==='number'?Math.max(0,Math.min(1,ui.equipmentSoundVolume)):.5);const equipmentSound=document.getElementById('equipment-sound-volume');equipmentSound.value=Math.round(appState.preferences.equipmentSoundVolume*100);document.getElementById('equipment-sound-value').textContent=appState.preferences.equipmentSoundVolume?`${equipmentSound.value}%`:'desligados';syncEquipmentAcoustics(performance.now(),true);
                 const sound=document.getElementById('ui-sound-volume');sound.value=Math.round(appState.preferences.uiSoundVolume*100);document.getElementById('ui-sound-value').textContent=appState.preferences.uiSoundVolume?`${sound.value}%`:'desligados';uiEffectsGain?.gain.setValueAtTime(interactionGain(appState.preferences.uiSoundVolume),appState.audio.context.currentTime);
-                const search=document.getElementById('equipment-search');search.value=typeof ui.search==='string'?ui.search:'';search.dispatchEvent(new Event('input'));
+                restoreCatalogView(ui);
                 if(snapshot.view&&snapshot.devices.length){view.zoom=clampZoom(Number(snapshot.view.zoom)||1);view.x=Number(snapshot.view.x)||0;view.y=Number(snapshot.view.y)||0;}
                 else view.y=Math.min(0,canvas.clientHeight-world.offsetHeight*view.zoom);
                 applyView();
                 setDeviceSelection((ui.selected||[]).map(id=>ids.get(id)).filter(Boolean));if(links[ui.selectedCable])selectCable(links[ui.selectedCable]);else selectCable(null);
-                const scroll=equipmentCatalog.querySelector('.overflow-y-auto');if(scroll)scroll.scrollTop=Number(ui.catalogScroll)||0;inspectorContent.scrollTop=Number(ui.inspectorScroll)||0;
+                inspectorContent.scrollTop=Number(ui.inspectorScroll)||0;
                 updateCables();updateCableFlows();
                 return warnings;
             }finally{shield.remove();appStateStore.actions.setProjectRestoring(false);projectRestoring=false;}
@@ -11646,6 +11734,7 @@ const Hardware = (() => {
         let projectSaveTimer;
         function scheduleProjectSave(){if(projectRestoring)return;clearTimeout(projectSaveTimer);projectSaveTimer=setTimeout(()=>saveLocalProject(),350);}
         ['pointerup','input','change','click','keyup'].forEach(type=>document.addEventListener(type,scheduleProjectSave,{capture:true,passive:true}));
+        catalogStrip.addEventListener('scroll',scheduleProjectSave,{passive:true});
         setInterval(()=>saveLocalProject(),2500);
         document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveLocalProject(true);});
         window.addEventListener('pagehide',()=>{if(projectRestoring||projectPersistenceBlocked||exampleLoading)return;try{localStorage.setItem('audio-system-project-fallback',JSON.stringify({...projectCapture(),savedAt:Date.now()}));}catch{}saveLocalProject(true);});

@@ -518,7 +518,7 @@ const Hardware = (() => {
             if(Math.abs(next-get())>1e-7){set(next);playEquipmentControlSound(movementSound(el,kind),el);}paintKnob(el);if(el.dataset.interfaceKnob)el.dispatchEvent(new Event('interface-control-change',{bubbles:true}));
         };
         const commit=()=>{if(el.isConnected){updateCableFlows();scheduleProjectSave();}};
-        el.addEventListener('pointerdown',event=>{
+        control.startDrag=event=>{
             if(event.button!==0||el.disabled)return;event.preventDefault();event.stopPropagation();activate?.();el.classList.add('hw-pointer-focus');el.focus({preventScroll:true});
             const pointer=event.pointerId,start=get(),x=event.clientX,y=event.clientY,zoom=Math.max(.1,view.zoom);let holdOpened=false,anchorX=x,anchorY=y,anchorValue=start,fine=event.shiftKey;el.setPointerCapture(pointer);el.classList.add('hw-turning');showKnobReadout(el);
             clearTimeout(knobHoldTimer);knobHoldTimer=setTimeout(()=>{if(el.hasPointerCapture(pointer)){holdOpened=true;showFineControl(el);}},480);
@@ -526,7 +526,8 @@ const Hardware = (() => {
             const move=e=>{if(e.pointerId===pointer){if(Math.hypot(e.clientX-x,e.clientY-y)>8&&!holdOpened)clearTimeout(knobHoldTimer);e.preventDefault();if(!pointerToValue&&fine!==e.shiftKey){fine=e.shiftKey;anchorX=e.clientX;anchorY=e.clientY;anchorValue=get();}change(pointerToValue?(e.shiftKey?start+(pointerToValue(e)-start)*.2:pointerToValue(e)):anchorValue+((anchorY-e.clientY)+(e.clientX-anchorX)*.35)*(max-min)/(physics.travel*zoom)*(fine?.2:1),!e.shiftKey);}};
             const finish=e=>{if(e?.pointerId!=null&&e.pointerId!==pointer)return;clearTimeout(knobHoldTimer);el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',finish);el.removeEventListener('pointercancel',finish);el.removeEventListener('lostpointercapture',finish);window.removeEventListener('blur',finish);releases.delete(el);el.classList.remove('hw-turning');if(el.hasPointerCapture(pointer))el.releasePointerCapture(pointer);hideKnobReadout();if(holdOpened&&fineControlPanel){fineControlPanel.querySelector('input').focus({preventScroll:true});}commit();};
             releases.set(el,finish);el.addEventListener('pointermove',move);el.addEventListener('pointerup',finish);el.addEventListener('pointercancel',finish);el.addEventListener('lostpointercapture',finish);window.addEventListener('blur',finish);
-        });
+        };
+        el.addEventListener('pointerdown',control.startDrag);
         if(kind==='knob')el.addEventListener('dblclick',event=>{event.preventDefault();event.stopPropagation();activate?.();change(min<0&&max>0?0:defaultValue);commit();});
         el.addEventListener('blur',()=>{el.classList.remove('hw-pointer-focus');if(readoutOwner===el)hideKnobReadout(0);});
         el.addEventListener('keydown',event=>{
@@ -1544,5 +1545,6 @@ const Hardware = (() => {
         if(spec.kind==='jack')return `<g transform="scale(${spec.scale})"><path d="M0 0 3 -2h12v4H3Z" fill="#ddbc77" stroke="#887044" stroke-width=".7"/><path d="M6 -2v4M11 -2v4" stroke="#20252a" stroke-width="1.1"/><rect x="15" y="-4" width="13" height="8" rx="2" fill="#363f45" stroke="#85949c" stroke-width="1"/><path d="M18 -3v6m3-6v6" stroke="#5d6c74"/></g>`;
         return `<path d="M0 0h7" stroke="#e2c283" stroke-width="2.5" stroke-linecap="round"/><rect x="5" y="-4" width="7" height="8" rx="1" fill="#bac2c5" stroke="#677780" stroke-width=".8"/><rect x="12" y="-5" width="13" height="10" rx="2" fill="#262e33" stroke="#788790" stroke-width=".8"/><rect x="14" y="-5" width="4" height="10" rx=".6" fill="${spec.color||'#cf4545'}"/>`;
     }
-    return Object.freeze({knobs,buttons,screws,screw:screwMarkup,fasteners:mountScrews,frontFasteners,controlSizes,setControlSize,buttonSounds,movementSounds,movementSound,sliders,leds,plugs,accents,sizes,physics,updateAccents,updateLightingDemo,renderLightingDemo,sceneLightAt,demoMarkup,bindDemo,sourceTransport,setButtonLabel,button:skinButton,bindKnob,bindLinear,slider,setLed,layout,materials:mountMaterials,preview,mount,sync,dispose,inspector,plugMarkup});
+    function startControlDrag(el,event){bindings.get(el)?.startDrag(event);}
+    return Object.freeze({knobs,buttons,screws,screw:screwMarkup,fasteners:mountScrews,frontFasteners,controlSizes,setControlSize,buttonSounds,movementSounds,movementSound,sliders,leds,plugs,accents,sizes,physics,updateAccents,updateLightingDemo,renderLightingDemo,sceneLightAt,demoMarkup,bindDemo,sourceTransport,setButtonLabel,button:skinButton,bindKnob,bindLinear,startControlDrag,slider,setLed,layout,materials:mountMaterials,preview,mount,sync,dispose,inspector,plugMarkup});
 })();

@@ -194,8 +194,7 @@
         document.addEventListener('pointerdown',event=>{
             if(event.button!==0)return;
             try{prepareUiAudio();}catch{}
-            const control=event.target.closest('button,input,select,textarea,.port,.speaker-grille,.grille-restore,[role="button"]');
-            if(!control&&event.target.closest('.device-node,.catalog-item'))playUiSound('pickup');
+            if(event.target.closest('.catalog-item')&&!event.target.closest(equipmentControlSelector))playUiSound('pickup');
         },{capture:true});
         async function playUiSound(kind = 'click', options = {}) {
             if(appState.project.restoringProject)return;
@@ -301,13 +300,15 @@
             }catch(error){ /* Cable feedback remains optional if audio is blocked. */ }
         }
         function cancelCableDrag(){
+            pendingCableDrag?.();
             stopCableHum();
             if(!isPatching)return;
             tempCableEl?.remove();hoveredTargetPort?.classList.remove('port-highlight');
-            isPatching=false;startPort=null;tempCableEl=null;hoveredTargetPort=null;hoveredGuidancePort=null;
+            isPatching=false;patchPointerId=null;startPort=null;tempCableEl=null;hoveredTargetPort=null;hoveredGuidancePort=null;
             dragPhysics.activeTarget=null;updatePortGuidance();
         }
-        window.addEventListener('pointerup',stopCableHum,{capture:true});
+        window.addEventListener('pointerup',event=>{if(event.pointerId===patchPointerId)stopCableHum();},{capture:true});
+        window.addEventListener('pointercancel',event=>{if(event.pointerId===patchPointerId)cancelCableDrag();});
         window.addEventListener('blur',cancelCableDrag);
         window.addEventListener('keydown',event=>{if(event.key==='Escape')cancelCableDrag();},{capture:true});
         const soundControls=document.createElement('div');

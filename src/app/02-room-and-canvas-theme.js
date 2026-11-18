@@ -377,7 +377,16 @@
         const inspectorContent = document.getElementById('inspector-content');
         document.getElementById('inspector').classList.add('inspector-compact');
         const equipmentCatalog = document.getElementById('equipment-catalog');
+        const catalogStrip = equipmentCatalog.querySelector(':scope > .overflow-y-auto');
         const wheelScrollMotions=new WeakMap();
+        function stopWheelMomentumScroll(element){
+            const motion=wheelScrollMotions.get(element);
+            if(!motion?.frame)return;
+            cancelAnimationFrame(motion.frame);
+            motion.frame=0;
+            element.style.removeProperty('--wheel-elastic-offset');
+            element.classList.remove('wheel-elastic-active');
+        }
         function enableWheelMomentumScroll(element,{horizontal=false}={}){
             if(!element)return;
             const positionKey=horizontal?'scrollLeft':'scrollTop';
@@ -419,7 +428,7 @@
                 motion.frame=requestAnimationFrame(step);
             }
         }
-        enableWheelMomentumScroll(equipmentCatalog.querySelector('.overflow-y-auto'),{horizontal:true});
+        enableWheelMomentumScroll(catalogStrip,{horizontal:true});
         enableWheelMomentumScroll(document.getElementById('inspector-content'));
         enableWheelMomentumScroll(document.getElementById('inspector-empty'));
         const discardZone=document.createElement('div');

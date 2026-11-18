@@ -1,5 +1,7 @@
 /* Cable geometry, plugs, drawing, and pointer interaction. */
         let isPatching = false; let startPort = null; let tempCableEl = null;
+        let pendingCableDrag = null;
+        let patchPointerId = null;
 
         function getPortScreenAnchor(elem){
             const rect=elem.getBoundingClientRect();
@@ -186,51 +188,83 @@
             }
         }
 
-        canvas.addEventListener('pointerdown', e => {
-            const port = e.target.closest('.port');
-            if (port) {
-                e.preventDefault();
-                window.getSelection()?.removeAllRanges();
-                
-                // Conectar ou reconectar
-                const existingIdx = appState.project.connections.findIndex(c => c.outId === port.id || c.inId === port.id);
-                if (existingIdx > -1) {
-                    const conn = appState.project.connections[existingIdx];
-                    const otherId = conn.outId === port.id ? conn.inId : conn.outId;
-                    removeConnection(existingIdx);
-                    startPort = document.getElementById(otherId);
-                } else {
-                    startPort = port;
-                    playUiSound('pickup');
-                }
+        function queueCableDrag(port,event){
+            if(event.button!==0||isPatching||pendingCableDrag)return;
+            event.preventDefault();event.stopPropagation();
+            const {clientX,clientY,pointerId}=event;
+            const clear=()=>{
+                pendingCableDrag=null;
+                window.removeEventListener('pointermove',move,true);
+                window.removeEventListener('pointerup',end,true);
+                window.removeEventListener('pointercancel',end,true);
+            };
+            const end=e=>{if(e.pointerId===pointerId)clear();};
+            const move=e=>{
+                if(e.pointerId!==pointerId||Math.hypot(e.clientX-clientX,e.clientY-clientY)<=4)return;
+                clear();
+                if(port.isConnected)beginCableDrag(port,e);
+            };
+            pendingCableDrag=clear;
+            window.addEventListener('pointermove',move,true);
+            window.addEventListener('pointerup',end,true);
+            window.addEventListener('pointercancel',end,true);
+        }
+        function beginCableDrag(port,e){
+            e.preventDefault();
+            window.getSelection()?.removeAllRanges();
 
-                if (!startPort) return;
-                
-                isPatching = true;
-                scheduleVisuals();
-                startCableHum();
-                dragPhysics.displayedTarget=null;dragPhysics.frameTime=0;
-                updatePortGuidance();
-                tempCableEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
-                tempCableEl.setAttribute("class", "cable-group active");
-                tempCableEl.dataset.type = startPort.dataset.type;
-                svgLayer.appendChild(tempCableEl);
-                
-                const pCenter = getPortCenter(startPort);
-                const mousePos = screenToWorld(e.clientX, e.clientY);
+            // Conectar ou reconectar
+            const existingIdx = appState.project.connections.findIndex(c => c.outId === port.id || c.inId === port.id);
+            if (existingIdx > -1) {
+                const conn = appState.project.connections[existingIdx];
+                const otherId = conn.outId === port.id ? conn.inId : conn.outId;
+                removeConnection(existingIdx);
+                startPort = document.getElementById(otherId);
+            } else {
+                startPort = port;
+                playUiSound('pickup');
+            }
 
-                // Inicializa variáveis do pêndulo físico para o cabo solto
-                dragPhysics.lastX = e.clientX;
-                dragPhysics.lastY = e.clientY;
-                dragPhysics.lastTime = performance.now();
-                dragPhysics.swingX = 0;
-                dragPhysics.swingY = 0;
-                dragPhysics.swingVelX = 0;
-                dragPhysics.swingVelY = 0;
-                dragPhysics.activeTarget = mousePos;
+            if (!startPort) return;
 
-                drawCable(tempCableEl, pCenter, mousePos, [], startPort.dataset.type, { x: 0, y: 0 });
-                e.stopPropagation();
+            isPatching = true;
+            patchPointerId=e.pointerId;
+            scheduleVisuals();
+            startCableHum();
+            dragPhysics.displayedTarget=null;dragPhysics.frameTime=0;
+            updatePortGuidance();
+            tempCableEl = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            tempCableEl.setAttribute("class", "cable-group active");
+            tempCableEl.dataset.type = startPort.dataset.type;
+            svgLayer.appendChild(tempCableEl);
+
+            const pCenter = getPortCenter(startPort);
+            const mousePos = screenToWorld(e.clientX, e.clientY);
+
+            // Inicializa variáveis do pêndulo físico para o cabo solto
+            dragPhysics.lastX = e.clientX;
+            dragPhysics.lastY = e.clientY;
+            dragPhysics.lastTime = performance.now();
+            dragPhysics.swingX = 0;
+            dragPhysics.swingY = 0;
+            dragPhysics.swingVelX = 0;
+            dragPhysics.swingVelY = 0;
+            dragPhysics.activeTarget = mousePos;
+
+            drawCable(tempCableEl, pCenter, mousePos, [], startPort.dataset.type, { x: 0, y: 0 });
+        }
+        function canvasTargetAt(x,y,target=document.elementFromPoint(x,y)){
+            if(!target?.closest('.cable-group'))return target;
+            // The cable remains selectable along its run and leaves real controls reachable underneath it.
+            return document.elementsFromPoint(x,y).find(element=>!svgLayer.contains(element))??target;
+        }
+        canvas.addEventListener('pointerdown',event=>{
+            const target=canvasTargetAt(event.clientX,event.clientY,event.target);
+            const port=target?.closest('.port');
+            if(port)queueCableDrag(port,event);
+            else if(target!==event.target){
+                const knob=target?.closest('[data-hardware-knob],[data-hardware-linear]');
+                if(knob)Hardware.startControlDrag(knob,event);
             }
         });
 

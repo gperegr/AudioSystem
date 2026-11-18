@@ -1,6 +1,22 @@
 /* Canvas viewport, mobile navigation, sidebars, and device selection. */
         const MIN_CANVAS_ZOOM = 0.175;
         const MAX_CANVAS_ZOOM = 2.5;
+        const equipmentControlSelector = 'button,input,select,textarea,a[href],[contenteditable]:not([contenteditable="false"]),[role="button"],[role="slider"],[data-hardware-knob],[data-hardware-linear],.port,.speaker-grille,.grille-restore,.receiver-radio[tabindex],.poweramp-screen[tabindex],.spotify-flow-stage';
+        function nearbyEquipmentControl(node,event){
+            const touch=event.pointerType==='touch';
+            let nearest=null,distance=Infinity;
+            for(const control of node.querySelectorAll('.port,[data-hardware-knob]:not(:disabled)')){
+                const rect=control.getBoundingClientRect();
+                if(!rect.width||!rect.height)continue;
+                const margin=Math.min(touch?8:4,((touch?36:32)-Math.min(rect.width,rect.height))/2);
+                if(margin<=0||event.clientX<rect.left-margin||event.clientX>rect.right+margin||event.clientY<rect.top-margin||event.clientY>rect.bottom+margin)continue;
+                const style=getComputedStyle(control);
+                if(style.visibility!=='visible'||style.pointerEvents==='none')continue;
+                const offset=Math.hypot(event.clientX-rect.left-rect.width/2,event.clientY-rect.top-rect.height/2);
+                if(offset<distance){nearest=control;distance=offset;}
+            }
+            return nearest;
+        }
         const clampZoom = zoom => {
             const minimum = Math.max(MIN_CANVAS_ZOOM, canvas.clientWidth / Math.max(1, world.offsetWidth), canvas.clientHeight / Math.max(1, world.offsetHeight));
             return Math.max(minimum, Math.min(MAX_CANVAS_ZOOM, zoom));
@@ -84,8 +100,8 @@
             setZoomAt(view.zoom*Math.exp(-Math.max(-160,Math.min(160,pixels))*.001),e.clientX,e.clientY);
         },{passive:false});
         const canvasTouches=new Map();let canvasPinch=null;
-        function cancelPointerInteraction(event){
-            const cancel=new PointerEvent('pointerup',{pointerId:event.pointerId||0,pointerType:'touch',clientX:event.clientX||0,clientY:event.clientY||0,button:0,buttons:0});
+        function cancelPointerInteraction(event,pointerId=event.pointerId){
+            const cancel=new PointerEvent('pointerup',{pointerId,pointerType:'touch',clientX:event.clientX||0,clientY:event.clientY||0,button:0,buttons:0});
             Object.defineProperty(cancel,'cancelled',{value:true});window.dispatchEvent(cancel);
         }
         document.addEventListener('pointerdown',event=>{
@@ -93,7 +109,7 @@
             if(canvas.contains(event.target)&&!event.target.closest('.canvas-tools')){
                 canvasTouches.set(event.pointerId,{x:event.clientX,y:event.clientY});
                 if(canvasTouches.size===2){
-                    cancelPointerInteraction(event);
+                    cancelPointerInteraction(event,canvasTouches.keys().next().value);
                     const [a,b]=[...canvasTouches.values()],cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;
                     canvasPinch={distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),zoom:view.zoom,anchor:screenToWorld(cx,cy)};
                     event.preventDefault();event.stopImmediatePropagation();

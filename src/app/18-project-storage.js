@@ -13,7 +13,6 @@
                 return {id:dev.id,type:dev.type,x:parseFloat(dev.el.style.left)||0,y:parseFloat(dev.el.style.top)||0,settings,powered:dev.powered,selectedSource:dev.selectedSource,grilleOff:dev.el.classList.contains('grille-off'),pairedId:dev.btPairedId||null,mediaKey:dev.audioBuffer?dev.mediaKey||null:null,fileName:dev.fileName||'',trackTitle:dev.trackTitle||'',position:dev.audioBuffer?sourcePosition(dev):(dev.demoOffset||0)+(dev.state.playing&&dev.demoStartedAt!=null?appState.audio.context.currentTime-dev.demoStartedAt:0)};
             });
             const connections=appState.project.connections.map(c=>{const out=document.getElementById(c.outId),input=document.getElementById(c.inId);return {from:out?.closest('.device-node')?.id,out:out?.dataset.node,to:input?.closest('.device-node')?.id,input:input?.dataset.node,label:c.label||'',color:c.color||null,hidden:!!c.hidden,slack:c.slack??5};});
-            const catalogScroll=equipmentCatalog.querySelector('.overflow-y-auto');
             const vinyls=[...spotifyVinyls.values()].map(item=>({id:item.id,uri:item.uri,name:item.name,image:item.image,origin:item.origin,x:item.x,y:item.y,turntableId:item.turntableId}));
             const albums=[...spotifyAlbums.values()].map(item=>({id:item.id,uri:item.uri,name:item.name,image:item.image,origin:item.origin,x:item.x,y:item.y,open:item.open}));
             return {format:PROJECT_FORMAT,version:PROJECT_VERSION,devices,connections,vinyls,albums,view:{...view},world:{width:world.offsetWidth,height:world.offsetHeight},ui:{
@@ -21,7 +20,7 @@
                 canvasGrid:appState.canvas.grid||'dots',canvasTheme:appState.canvas.theme||'scene',canvasBackdrop:appState.canvas.backdrop||DEFAULT_BACKDROP,canvasTime:appState.canvas.time||'dusk',
                 soundVolume:appState.preferences.uiSoundVolume??DEFAULT_UI_SOUND_VOLUME,equipmentSoundVolume:appState.preferences.equipmentSoundVolume??.5,hideCables:!!appState.canvas.hideCables,
                 selected:[...appState.interface.selectedDeviceIds],selectedCable:appState.project.connections.indexOf(appState.interface.selectedConnection),
-                search:document.getElementById('equipment-search').value,catalogScroll:catalogScroll?.scrollTop||0,inspectorScroll:inspectorContent.scrollTop
+                search:equipmentSearch.value,catalogCategory:selectedSetupCategory?.id??null,catalogScroll:catalogStrip.scrollLeft,inspectorScroll:inspectorContent.scrollTop
             }};
         }
         function projectValidate(value){
@@ -185,12 +184,12 @@
                 appStateStore.actions.setPreference('uiSoundVolume',typeof ui.soundVolume==='number'?Math.max(0,Math.min(1,ui.soundVolume)):DEFAULT_UI_SOUND_VOLUME);appStateStore.actions.setCanvasOption('hideCables',!!ui.hideCables);
                 appStateStore.actions.setPreference('equipmentSoundVolume',typeof ui.equipmentSoundVolume==='number'?Math.max(0,Math.min(1,ui.equipmentSoundVolume)):.5);const equipmentSound=document.getElementById('equipment-sound-volume');equipmentSound.value=Math.round(appState.preferences.equipmentSoundVolume*100);document.getElementById('equipment-sound-value').textContent=appState.preferences.equipmentSoundVolume?`${equipmentSound.value}%`:'desligados';syncEquipmentAcoustics(performance.now(),true);
                 const sound=document.getElementById('ui-sound-volume');sound.value=Math.round(appState.preferences.uiSoundVolume*100);document.getElementById('ui-sound-value').textContent=appState.preferences.uiSoundVolume?`${sound.value}%`:'desligados';uiEffectsGain?.gain.setValueAtTime(interactionGain(appState.preferences.uiSoundVolume),appState.audio.context.currentTime);
-                const search=document.getElementById('equipment-search');search.value=typeof ui.search==='string'?ui.search:'';search.dispatchEvent(new Event('input'));
+                restoreCatalogView(ui);
                 if(snapshot.view&&snapshot.devices.length){view.zoom=clampZoom(Number(snapshot.view.zoom)||1);view.x=Number(snapshot.view.x)||0;view.y=Number(snapshot.view.y)||0;}
                 else view.y=Math.min(0,canvas.clientHeight-world.offsetHeight*view.zoom);
                 applyView();
                 setDeviceSelection((ui.selected||[]).map(id=>ids.get(id)).filter(Boolean));if(links[ui.selectedCable])selectCable(links[ui.selectedCable]);else selectCable(null);
-                const scroll=equipmentCatalog.querySelector('.overflow-y-auto');if(scroll)scroll.scrollTop=Number(ui.catalogScroll)||0;inspectorContent.scrollTop=Number(ui.inspectorScroll)||0;
+                inspectorContent.scrollTop=Number(ui.inspectorScroll)||0;
                 updateCables();updateCableFlows();
                 return warnings;
             }finally{shield.remove();appStateStore.actions.setProjectRestoring(false);projectRestoring=false;}
@@ -221,6 +220,7 @@
         let projectSaveTimer;
         function scheduleProjectSave(){if(projectRestoring)return;clearTimeout(projectSaveTimer);projectSaveTimer=setTimeout(()=>saveLocalProject(),350);}
         ['pointerup','input','change','click','keyup'].forEach(type=>document.addEventListener(type,scheduleProjectSave,{capture:true,passive:true}));
+        catalogStrip.addEventListener('scroll',scheduleProjectSave,{passive:true});
         setInterval(()=>saveLocalProject(),2500);
         document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveLocalProject(true);});
         window.addEventListener('pagehide',()=>{if(projectRestoring||projectPersistenceBlocked||exampleLoading)return;try{localStorage.setItem('audio-system-project-fallback',JSON.stringify({...projectCapture(),savedAt:Date.now()}));}catch{}saveLocalProject(true);});

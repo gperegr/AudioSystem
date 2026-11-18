@@ -382,6 +382,7 @@
             item.addEventListener('dragstart', e => e.preventDefault());
             item.addEventListener('pointerdown', e => {
                 if (e.button !== 0) return;
+                stopWheelMomentumScroll(catalogStrip);
                 if(e.pointerType!=='touch'){e.preventDefault();startCatalogCursorPlacement(item);return;}
                 activeCatalogPreviewCleanup?.();activeEquipmentMoveCleanup?.();
                 if(e.pointerType==='touch'&&!item.firstElementChild.contains(e.target)){
@@ -482,7 +483,7 @@
             quickCatalog.replaceChildren();
             for(const [title,types] of [['Favoritos',quickData.favorites]]){
                 if(!types.length)continue;const section=document.createElement('div');section.className='mb-6';const heading=document.createElement('h3');heading.className='text-[10px] font-bold text-gray-500 mb-3 tracking-wider uppercase';heading.textContent=title;const grid=document.createElement('div');grid.className='grid grid-cols-2 gap-3';section.append(heading,grid);
-                types.forEach(type=>{const original=catalogItems.find(item=>item.dataset.template===type);if(!original)return;const copy=original.cloneNode(true);copy.querySelector('.catalog-favorite')?.remove();bindCatalogItem(copy);grid.appendChild(copy);});quickCatalog.appendChild(section);
+                types.forEach(type=>{const original=catalogItems.find(item=>item.dataset.template===type);if(!original)return;const copy=original.cloneNode(true);copy.hidden=false;copy.querySelector('.catalog-favorite')?.remove();bindCatalogItem(copy);grid.appendChild(copy);});quickCatalog.appendChild(section);
             }
             if(!quickData.favorites.length){const empty=document.createElement('p');empty.className='p-4 text-sm';empty.setAttribute('role','status');empty.textContent='Nenhum favorito ainda.';quickCatalog.appendChild(empty);}
             updateStars();AudioSystemLanguage.translateTree?.(quickCatalog);
@@ -519,11 +520,22 @@
             button.innerHTML=`<svg viewBox="0 0 ${w} ${h}" aria-hidden="true">${category.art}</svg>`;
             button.addEventListener('click',()=>selectSetupCategory(category));setupScene.appendChild(button);
         });
-        function selectSetupCategory(category){
-            selectedSetupCategory=category&&selectedSetupCategory?.id===category.id?null:category;equipmentSearch.value='';
+        function setSetupCategory(category){
+            selectedSetupCategory=category;
             setupNav.querySelectorAll('[data-setup-category]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.setupCategory===selectedSetupCategory?.id)));
             setupNav.querySelector('[data-setup-all]').setAttribute('aria-pressed',String(selectedSetupCategory===null));
+        }
+        function selectSetupCategory(category){
+            setSetupCategory(category?.id===selectedSetupCategory?.id?null:category);
+            equipmentSearch.value='';
             equipmentSearch.dispatchEvent(new Event('input'));
+        }
+        function restoreCatalogView(ui){
+            stopWheelMomentumScroll(catalogStrip);
+            setSetupCategory([favoritesCategory,...setupCategories].find(category=>category.id===ui.catalogCategory)??null);
+            equipmentSearch.value=typeof ui.search==='string'?ui.search:'';
+            equipmentSearch.dispatchEvent(new Event('input'));
+            catalogStrip.scrollLeft=Number(ui.catalogScroll)||0;
         }
         setupNav.querySelector('[data-setup-all]').addEventListener('click',()=>selectSetupCategory(null));
         equipmentCatalog.appendChild(setupNav);
@@ -548,7 +560,7 @@
             const radius=searchRadius+padding;
             const shoulder=searchBounds.right-dockBounds.left-searchRadius;
             const outerRight=searchBounds.right-dockBounds.left+padding;
-            const trayTop=equipmentCatalog.querySelector(':scope > .overflow-y-auto').offsetTop;
+            const trayTop=catalogStrip.offsetTop;
             dockSilhouette.setAttribute('viewBox',`0 0 ${w} ${h}`);
             const contour=`M${left} ${h} V${top+radius} Q${left} ${top} ${left+radius} ${top} H${shoulder} C${outerRight} ${top} ${outerRight} ${trayTop} ${outerRight+padding} ${trayTop} H${w} V${h} Z`;
             dockContour.setAttribute('d',contour);

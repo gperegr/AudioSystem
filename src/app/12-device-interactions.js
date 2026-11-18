@@ -935,16 +935,21 @@
                 handle.setAttribute('aria-hidden', 'true');
                 handle.addEventListener('dragstart', e => e.preventDefault());
                 dev.el.addEventListener('pointerdown', e => {
-                    if (e.button !== 0) return;
-                    if (e.target.closest('button, input, select, textarea, .port, .speaker-grille, .grille-restore, [role="button"]')) return;
-                    const clickToPlace=e.pointerType!=='touch';
-                    if(clickToPlace)dev.el.focus({preventScroll:true});
-                    if(clickToPlace&&(e.shiftKey||e.metaKey||e.ctrlKey)){e.preventDefault();toggleDeviceSelection(dev.id);return;}
-                    activeCatalogPreviewCleanup?.();activeEquipmentMoveCleanup?.();
-                    if(clickToPlace&&!appState.interface.selectedDeviceIds.has(dev.id)){
-                        e.preventDefault();selectDevice(dev.id);return;
+                    if(e.button!==0||isPatching||e.target.closest(equipmentControlSelector))return;
+                    const touchHold=e.pointerType==='touch';
+                    const modifier=e.shiftKey||e.metaKey||e.ctrlKey;
+                    if(!modifier){
+                        const control=nearbyEquipmentControl(dev.el,e);
+                        if(control){
+                            if(control.matches('.port'))queueCableDrag(control,e);
+                            else Hardware.startControlDrag(control,e);
+                            return;
+                        }
                     }
-                    const touchHold = e.pointerType === 'touch';
+                    const wasSelected=appState.interface.selectedDeviceIds.has(dev.id);
+                    if(!touchHold)dev.el.focus({preventScroll:true});
+                    if(!touchHold&&modifier){e.preventDefault();toggleDeviceSelection(dev.id);return;}
+                    activeCatalogPreviewCleanup?.();activeEquipmentMoveCleanup?.();
                     // On touch screens a tap must remain available for wiring and selection.
                     // Movement starts only after a short deliberate press, so passing a cable
                     // across a device does not pick it up accidentally.
@@ -953,8 +958,8 @@
                     let holdTimer = touchHold&&!directTouchMove ? setTimeout(() => { touchReady = true; }, 320) : null;
                     if (!touchHold) e.preventDefault();
                     window.getSelection()?.removeAllRanges();
-                    if (e.shiftKey || e.metaKey || e.ctrlKey) toggleDeviceSelection(dev.id);
-                    else if (appState.interface.selectedDeviceIds.has(dev.id)) selectDevice(dev.id, true);
+                    if (modifier) toggleDeviceSelection(dev.id);
+                    else if (wasSelected) selectDevice(dev.id, true);
                     else selectDevice(dev.id);
 
                     const startX = e.clientX;
@@ -972,7 +977,7 @@
                     const origin = initialPositions[0] || { x:0, y:0 };
                     const baseY = Math.max(...initialPositions.map(position => position.y + position.dev.el.offsetHeight));
                     const ignored = new Set(movingDevices.map(item => item.id));
-                    let isDragging = clickToPlace, frame = 0, lastTime = 0, released = false;
+                    let clickToPlace=false,isDragging=false,frame=0,lastTime=0,released=false;
                     let targets = initialPositions.map(p=>({...p}));
                     const visualPositions=new Map(initialPositions.map(p=>[p.dev.id,{x:p.x,y:p.y}]));
                     const initialById=new Map(initialPositions.map(p=>[p.dev.id,{x:p.x,y:p.y}]));
@@ -1016,7 +1021,12 @@
                         discardPreviewLayer?.remove();discardPreviewLayer=null;
                     }
 
-                    const cancel = () => { document.body.classList.remove('equipment-drag-active');clearDiscardPreview();cancelAnimationFrame(frame); frame=0;movingDevices.forEach(item=>{item.el.style.translate='none';delete item.dragVisualPosition;item.el.classList.remove('equipment-dragging','history-settling');}); };
+                    const clearMovement=item=>{
+                        item.el.style.translate='none';delete item.dragVisualPosition;
+                        item.el.classList.remove('equipment-dragging','history-settling');
+                        if(item.cancelPlacementMotion===cancelMotion)item.cancelPlacementMotion=null;
+                    };
+                    const cancel = () => { document.body.classList.remove('equipment-drag-active');clearDiscardPreview();cancelAnimationFrame(frame); frame=0;movingDevices.forEach(clearMovement); };
                     const cancelMotion=()=>{
                         if(!released){abortDrag();return;}
                         cancel();targets.forEach(p=>{p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;});
@@ -1046,7 +1056,7 @@
                         const pending=resolved.some((p,i)=>Math.abs(p.x-targets[i].x)+Math.abs(p.y-targets[i].y)>.1);
                         if(pending&&moved) frame=requestAnimationFrame(animate);
                         else if(released){
-                            targets.forEach(p=>{p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;p.dev.el.style.translate='none';delete p.dev.dragVisualPosition;p.dev.el.classList.remove('equipment-dragging','history-settling');});
+                            targets.forEach(p=>{p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;clearMovement(p.dev);});
                             updateCables();scheduleProjectSave();
                         }
                     };
@@ -1072,18 +1082,23 @@
                         }
                         if(!frame){lastTime=0;frame=requestAnimationFrame(animate);}
                     };
+                    const beginMove=()=>{
+                        isDragging=true;
+                        document.body.classList.add('equipment-drag-active');
+                        movingDevices.forEach(item=>item.el.classList.add('equipment-dragging'));
+                        playUiSound('pickup');
+                    };
                     const move = ev => {
+                        if(!clickToPlace&&ev.pointerId!==e.pointerId)return;
+                        const distance=Math.hypot(ev.clientX-startX,ev.clientY-startY);
                         if (touchHold && !touchReady) {
-                            if (Math.hypot(ev.clientX-startX,ev.clientY-startY) > 8) {
+                            if (distance > 8) {
                                 clearTimeout(holdTimer); holdTimer = null; touchReady = false;
                             }
                             return;
                         }
                         ev.preventDefault();
-                        isDragging = Math.hypot(ev.clientX-startX,ev.clientY-startY)>3||isDragging;
-                        if(!isDragging)return;
-                        document.body.classList.add('equipment-drag-active');
-                            movingDevices.forEach(item=>item.el.classList.add('equipment-dragging'));
+                        if(!isDragging){if(distance<=4)return;beginMove();}
                         aim(ev);updateDiscardPreview(ev);
                         equipmentCatalog.classList.add('discard-ready');
                         discardZone.setAttribute('aria-hidden','false');
@@ -1095,7 +1110,7 @@
                         clearTimeout(holdTimer); holdTimer = null;
                         if(ev.cancelled){abortDrag();return;}
                         window.removeEventListener('pointermove',move);
-                        window.removeEventListener('pointerup',up);
+                        window.removeEventListener('pointerup',release);
                         window.removeEventListener('pointerdown',place,true);window.removeEventListener('pointercancel',abortDrag);
                         document.body.classList.remove('equipment-cursor-placement');
                         if(activeEquipmentMoveCleanup===abortDrag)activeEquipmentMoveCleanup=null;
@@ -1113,13 +1128,12 @@
 
                     const abortDrag=()=>{
                         clearTimeout(holdTimer); holdTimer = null;
-                        window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);
+                        window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',release);
                         window.removeEventListener('pointerdown',place,true);window.removeEventListener('pointercancel',abortDrag);
                         document.body.classList.remove('equipment-cursor-placement');
                         if(activeEquipmentMoveCleanup===abortDrag)activeEquipmentMoveCleanup=null;
                         window.removeEventListener('blur',abortDrag);window.removeEventListener('keydown',cancelWithEscape,true);
                         cancel();
-                        movingDevices.forEach(item=>{if(item.cancelPlacementMotion===cancelMotion)item.cancelPlacementMotion=null;});
                         initialPositions.forEach(p=>{if(appState.project.devices[p.dev.id]){p.dev.el.style.left=`${p.x}px`;p.dev.el.style.top=`${p.y}px`;}});
                         equipmentCatalog.classList.remove('return-drag-over','discard-ready');discardZone.setAttribute('aria-hidden','true');
                         updateCables();scheduleInspectorPosition();
@@ -1131,17 +1145,22 @@
                         if(!inside&&!isOverCatalog(event))return;
                         consumePlacementClick(event);up(event);
                     };
+                    const release=event=>{
+                        if(event.pointerId!==e.pointerId)return;
+                        if(!isDragging&&!touchHold&&wasSelected&&!event.cancelled){
+                            clickToPlace=true;beginMove();
+                            window.removeEventListener('pointerup',release);
+                            document.body.classList.add('equipment-cursor-placement');
+                            window.addEventListener('pointerdown',place,true);
+                        }else up(event);
+                    };
                     const cancelWithEscape=event=>{if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();abortDrag();}};
                     window.addEventListener('blur',abortDrag);
                     window.addEventListener('keydown',cancelWithEscape,true);
 
                     window.addEventListener('pointermove', move);
-                    if(clickToPlace){
-                        activeEquipmentMoveCleanup=abortDrag;
-                        document.body.classList.add('equipment-cursor-placement','equipment-drag-active');
-                        movingDevices.forEach(item=>item.el.classList.add('equipment-dragging'));
-                        window.addEventListener('pointerdown',place,true);
-                    }else window.addEventListener('pointerup',up);
+                    activeEquipmentMoveCleanup=abortDrag;
+                    window.addEventListener('pointerup',release);
                     window.addEventListener('pointercancel',abortDrag);
                 });
             }
