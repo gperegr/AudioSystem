@@ -1,25 +1,6 @@
 /* Catalog visuals, search, category layout, hover signatures, and port normalization. */
-        function catalogTurntableDrawing(type){
-            const profiles={
-                turntable:[11,'<path d="M35 23l5-5h6m-11 5-2 2"/><path d="M10 33h4m7 0h7m6-2v4m9-2h2m3 0h1"/>'],
-                turntableVintage:[11,'<path d="M35 23l5-5h6m-11 5-2 2"/><path d="M7 29v9m42-9v9M11 32h5v3h-5zm11 1h6m6-2v4m7-2h2m2 0h2"/>'],
-                turntableBelt:[6,'<path d="m33 23 12-5m-12 5-2 2M9 31v1m33-1h1m3 0h1"/>'],
-                turntableDirect:[11,'<path d="M33 25h5q2 0 3-4t3-3h3M10 32h2m4 0h4m4 0h2m2 0h2m4 0h2m4-1v4m5-2h1m2 0h1"/><path d="M9 26h1m2 0h1m2 0h1m2 0h1m2 0h1m2 0h1m2 0h1m2 0h1" stroke-width=".8"/>'],
-                turntableAutomatic:[10,'<path d="m33 23 12-5m-12 5-2 2M9 32h3m3 0h3m15 0h3m3 0h3m3 0h3M9 35h5m33 1h1"/>'],
-                turntableLinear:[13,'<path d="M8 17h40m-39 0v9m37-9v9M32 16h5v5h-5zm2 5v4m-24 6h9v3h-9zm16 0h21m-21 4h9m3 0h9M7 39h42"/>']
-            };
-            const [height,details]=profiles[type];
-            const lid='<path d="m7 25 3-14h36l3 14M10 14h36" opacity=".46"/>';
-            const plinth=`<path d="m4 28 4-3m44 3-4-3"/><rect x="4" y="28" width="48" height="${height}" rx="1.5"/>`;
-            const rim=type==='turntableBelt'
-                ?'<path d="M8 23v3q13 3 26 0v-3M9 25q12 2 24 0" stroke-width="1.1"/>'
-                :'<path d="M8 23v3q13 3 26 0v-3" stroke-width="1.1"/>';
-            return lid+plinth+'<ellipse cx="21" cy="23" rx="13" ry="3"/><path d="M21 21v2" stroke-width="1.1"/>'+rim+details;
-        }
         function catalogIcon(type) {
-            const drawing = TURNTABLE_TYPES.has(type) ? catalogTurntableDrawing(type)
-                : AudioAdapterDesign.models[type] ? AudioAdapterDesign.icon(type)
-                : CatalogEquipmentIcons[type];
+            const drawing = AudioAdapterDesign.models[type] ? AudioAdapterDesign.icon(type) : CatalogEquipmentIcons[type];
             if(!drawing)throw new Error('Missing catalog artwork: '+type);
             return `<svg class="catalog-equipment-icon" viewBox="0 0 56 46" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${drawing}</svg>`;
         }

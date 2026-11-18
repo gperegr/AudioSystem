@@ -11,8 +11,8 @@ const CatalogEquipmentIcons = (() => {
     const dial = (x,y,r) => circle(x,y,r)+detail(`M${x} ${y-r+1}v${r-1}`);
     const screen = (x,y,w,h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1" fill="currentColor" fill-opacity=".14"/>`;
     const meter = (x,y,w=10,h=8) => screen(x,y,w,h)+detail(`M${x+2} ${y+h-1.8}l${w*.45} -${h*.6}`);
-    const chassis = (w,h,face,r=2) => {
-        const x=(56-w)/2, y=(46-h)/2, bottom=y+h;
+    const chassis = (w,h,face,r=2,y=(46-h)/2) => {
+        const x=(56-w)/2, bottom=y+h;
         return rect(x,y,w,h,r)+detail(`M${x+5} ${bottom}v2h4v-2m${w-18} 0v2h4v-2`)+face;
     };
     const rails = (y,bottom) => detail(`M8 ${y}V${bottom}M48 ${y}V${bottom}`);
@@ -35,6 +35,11 @@ const CatalogEquipmentIcons = (() => {
         return sockets+(keys?xs.slice(1).map(x=>rect(x-2,y-7,4,2,.45)).join(''):'');
     };
     const reel = (x,y) => circle(x,y,9)+circle(x,y,2.1)+detail(`M${x-1} ${y-4}l-2-3m-1 9-3 2m10 0 2 2`);
+    const lid = '<path d="M10 24V7h36v9" stroke-width="1.05" opacity=".55"/>';
+    const platter = (height=3) => rect(7,28-height,29,height,.5)+detail(`M21 ${26-height}v2`);
+    const bentArm = path('M44 28V19H38l-3 3h-3')+detail('M32 22v1.5m12-4.5h3');
+    const turntableDeck = (height,arm,controls,record=platter()) =>
+        lid+record+arm+chassis(48,height,controls,1.5,28);
 
     return Object.freeze({
         // Sources, capture interfaces and Bluetooth.
@@ -47,6 +52,22 @@ const CatalogEquipmentIcons = (() => {
             screen(13,14,30,13)+rect(16,17,6,6,.6)+detail('M25 18h14m-14 3h11m-11 3h6')+dots([9,46],19)+pairs([13,28,43],33)),
         tapeDeck:rect(8,3,40,39,2)+reel(18,15)+reel(38,15)+
             path('M18 25h20l-3 3H21zM8 30h40')+meter(30,33,6,6)+meter(39,33,6,6)+detail('M12 35h3m3 0h3m3 0h2M13 42v2m30-2v2'),
+        turntable:turntableDeck(10,bentArm,
+            rect(8,31,5,3,.6)+detail('M17 32.5h9m4-1.5v5m-2-3h4m8-4v8')+pair(46,34)),
+        turntableVintage:turntableDeck(10,bentArm,
+            detail('M7 29v8m42-8v8M17 32.5h9m4-1.5v5m-2-3h4m8-4v8')+rect(10,31,4,3,.6)+
+            rect(34,31.5,3.5,2,.5)+pair(45,34)),
+        turntableBelt:turntableDeck(5.5,path('M44 28V18l-12 4v1.5')+detail('M44 18h5'),
+            rect(8,29.6,3,2,.5)+pair(45,31),platter(4)+detail('M8 26h27')),
+        turntableDirect:turntableDeck(9,
+            path('M44 28V18h-2q-2 0-3 2t-3 2h-4')+detail('M32 22v1.5m12-5.5h3'),
+            circle(8.5,32.5,1.1)+rect(13,31,4,2.5,.5)+detail('M21 32h2m3 0h2m3 0h2m4-1v4m-2-2h4')+
+            pair(46,34),platter(5)+detail('M10 25.5h1m3 0h1m3 0h1m3 0h1m3 0h1m3 0h1')),
+        turntableAutomatic:turntableDeck(10,path('M44 28V19l-12 3.5v1.5')+detail('M44 19h3'),
+            detail('M8 31.5h3m3 0h3m15 0h3m3 0h3m3 0h3M8 35h6')+circle(47,35,1)),
+        turntableLinear:turntableDeck(13,
+            path('M7 16h38m-37 0v9m36-9v12')+rect(31,14,6,4,1)+detail('M33 18v5m2-5v5'),
+            screen(8,31,9,3.5)+pair(12.5,37)+detail('M22 32h2m3 0h2m3 0h4m3 0h2m3 0h2M25 36h8m3 0h8M7 39h42')),
         audioInterface1:chassis(48,20,
             rect(6,15,44,16,2)+dial(11,22,2.1)+dial(19,22,2.1)+dial(28,22,3.6)+dot(37,22)+circle(44,22,2.1)+dot(44,27),3),
         audioInterface2:chassis(36,26,
