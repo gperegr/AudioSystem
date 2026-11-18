@@ -37,7 +37,7 @@ const AudioInterfaceDesign = (() => {
         audioInterface1:{width:420,height:156,chassisHeight:'low',chassisWidth:'compact',skin:'red',role:'capture-one',render:captureOne},
         audioInterface2:{width:300,height:182,chassisHeight:'medium',chassisWidth:'compact',skin:'gray',role:'capture-two',render:captureTwo},
         audioInterface3:{width:420,height:177,chassisHeight:'medium',chassisWidth:'compact',skin:'graphite',role:'capture-three',render:captureThree},
-        audioInterface4:{width:510,height:184,chassisHeight:'medium',chassisWidth:'full',skin:'wood',role:'capture-four',render:captureFour}
+        audioInterface4:{width:510,height:184,chassisHeight:'medium',chassisWidth:'compact',skin:'wood',role:'capture-four',render:captureFour}
     });
     return Object.freeze({models,markup(type,name){return `<div class="device-header"><span>${name}</span></div>${models[type].render()}`;}});
 })();
