@@ -9,13 +9,13 @@ function wav(){const b=Buffer.alloc(44+16000);b.write('RIFF');b.writeUInt32LE(b.
     try{
         const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
         await page.route('**/guided-access.js?*',route=>{const body=fs.readFileSync(path.join(root,'src/modules/guided-access.js'),'utf8')+'\nconst originalMount=GuidedAccess.mount;GuidedAccess.mount=a=>{window.__adapter=a;return originalMount(a)};';return route.fulfill({contentType:'application/javascript',body});});
-        await page.route('**/script.js?*',route=>{let body=fs.readFileSync(path.join(root,'script.js'),'utf8');const i=body.lastIndexOf('        renderVisuals();');body=body.slice(0,i)+'window.__test={state,world,createDevice,deleteDevice,selectDevice,updateCableFlows,guidedAccess,maxEquipmentBottom,tutorialInspect,projectCapture,saveLocalProject};\n'+body.slice(i);return route.fulfill({contentType:'application/javascript',body});});
+        await page.route('**/script.js?*',route=>{let body=fs.readFileSync(path.join(root,'script.js'),'utf8');const i=body.lastIndexOf('        renderVisuals();');body=body.slice(0,i)+'window.__test={state:appState.project,world,createDevice,deleteDevice,selectDevice,updateCableFlows,guidedAccess,maxEquipmentBottom,tutorialInspect,projectCapture,saveLocalProject};\n'+body.slice(i);return route.fulfill({contentType:'application/javascript',body});});
         const url=process.env.TEST_BASE_URL||'http://127.0.0.1:8000/';require('./helpers/studio-entry.cjs')(page);await page.goto(url);
         await page.locator('#headphone-calibration-skip').click();await page.getByRole('button',{name:'Começar tutorial',exact:true}).click();
         await page.waitForTimeout(150);assert(await page.locator('[data-tutorial-next]').isDisabled());
         await page.evaluate(()=>__test.createDevice('cdPlayer',500,200));await page.waitForTimeout(150);assert(await page.locator('[data-tutorial-next]').isEnabled());
         await page.locator('[data-tutorial-next]').click();
-        await page.evaluate(()=>{Object.values(__test.state.devices).forEach(__test.deleteDevice);});await page.waitForTimeout(150);assert(await page.locator('[data-tutorial-next]').isDisabled());
+        await page.evaluate(()=>{Object.values(__test.state.devices).forEach(dev=>__test.deleteDevice(dev));});await page.waitForTimeout(150);assert(await page.locator('[data-tutorial-next]').isDisabled());
         await page.getByRole('button',{name:'Sair do tutorial'}).click();
         // Every example is built by the production adapter, with real dimensions and ports.
         for(let index=0;index<5;index++){

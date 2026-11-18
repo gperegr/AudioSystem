@@ -464,7 +464,13 @@ const Hardware = (() => {
         knobReadout.style.top=(rect.top>height+18?rect.top-height-10:rect.bottom+10)+'px';
     }
     function hideKnobReadout(delay=450){
-        clearTimeout(readoutTimer);readoutTimer=setTimeout(()=>{if(knobReadout)knobReadout.hidden=true;readoutOwner=null;},delay);
+        clearTimeout(readoutTimer);
+        const hide=()=>{if(knobReadout)knobReadout.hidden=true;readoutOwner=null;};
+        if(delay)readoutTimer=setTimeout(hide,delay);else hide();
+    }
+    function hideFineControl(){
+        fineControlPanel.hidden=true;
+        fineControlOwner=null;
     }
     function showFineControl(el){
         const control=bindings.get(el);if(!control||!el.isConnected)return;
@@ -476,8 +482,8 @@ const Hardware = (() => {
                 active.set(value);paintKnob(owner);fineControlPanel.querySelector('output').textContent=knobValueText(active);
             });
             fineControlPanel.querySelector('input').addEventListener('change',()=>{updateCableFlows();scheduleProjectSave();});
-            document.addEventListener('pointerdown',event=>{if(fineControlPanel&&!fineControlPanel.hidden&&!fineControlPanel.contains(event.target)&&!fineControlOwner?.contains(event.target)){fineControlPanel.hidden=true;fineControlOwner=null;}},true);
-            document.addEventListener('keydown',event=>{if(event.key==='Escape'&&fineControlPanel&&!fineControlPanel.hidden){fineControlPanel.hidden=true;fineControlOwner=null;}});
+            document.addEventListener('pointerdown',event=>{if(!fineControlPanel.hidden&&!fineControlPanel.contains(event.target)&&!fineControlOwner?.contains(event.target))hideFineControl();},true);
+            document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!fineControlPanel.hidden)hideFineControl();});
         }
         fineControlOwner=el;const range=fineControlPanel.querySelector('input');range.min=control.min;range.max=control.max;range.step=control.fineStep;range.value=control.get();fineControlPanel.querySelector('output').textContent=knobValueText(control);fineControlPanel.hidden=false;
         const rect=el.getBoundingClientRect(),panelWidth=Math.min(220,innerWidth-16);fineControlPanel.style.width=panelWidth+'px';fineControlPanel.style.left=Math.max(8,Math.min(innerWidth-panelWidth-8,rect.left+(rect.width-panelWidth)/2))+'px';fineControlPanel.style.top=Math.max(8,Math.min(innerHeight-96,rect.top-94))+'px';
@@ -769,7 +775,11 @@ const Hardware = (() => {
         el.classList.add('hw-linear');el.dataset.hardwareLinear='vertical';
         bindKnob(el,{...options,kind:'linear'});
     }
-    function dispose(dev){if(readoutOwner&&dev.el.contains(readoutOwner))hideKnobReadout(0);dev.el.querySelectorAll('[data-hardware-knob],[data-hardware-linear],[data-hardware-feedback]').forEach(el=>releases.get(el)?.());}
+    function dispose(dev){
+        dev.el.querySelectorAll('[data-hardware-knob],[data-hardware-linear],[data-hardware-feedback]').forEach(el=>releases.get(el)?.());
+        if(readoutOwner&&dev.el.contains(readoutOwner))hideKnobReadout(0);
+        if(fineControlOwner&&dev.el.contains(fineControlOwner))hideFineControl();
+    }
     function layout({type,el}){
         if(AudioAdapterDesign.models[type]){AudioAdapterDesign.layout(el,type);return;}
         const interfaceDesign=typeof AudioInterfaceDesign!=='undefined'&&AudioInterfaceDesign.models[type];
@@ -1780,7 +1790,7 @@ const Hardware = (() => {
         roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far is-visible" alt="" decoding="async" draggable="false"><i class="room-grid-overlay"></i>';
         const roomRain=document.createElement('div');roomRain.className='room-rain';roomRain.setAttribute('aria-hidden','true');roomBackdrop.appendChild(roomRain);
         const roomRainStatic=document.createElement('img');roomRainStatic.className='room-rain-static';roomRainStatic.hidden=true;roomRainStatic.alt='';roomRainStatic.draggable=false;roomBackdrop.insertBefore(roomRainStatic,roomRain);
-        const staticRainCache=new Map();let staticRainRequest=0;
+        const staticRainCache=new Map();let staticRainRequest=0,staticRainResolution=0;
         // Clip after the rain filter as well, so blur cannot bleed onto the frames.
         const rainMaskSvg=document.createElementNS('http://www.w3.org/2000/svg','svg');
         rainMaskSvg.setAttribute('width','0');rainMaskSvg.setAttribute('height','0');
@@ -1855,18 +1865,19 @@ const Hardware = (() => {
         function updateStaticRain(scene){
             const request=++staticRainRequest;
             roomRainStatic.hidden=roomRain.hidden;
-            if(roomRain.hidden)return;
+            if(roomRain.hidden){roomRainStatic.removeAttribute('src');return;}
             roomRainStatic.style.opacity=appState.preferences.rainIntensity===100?'1':String(appState.preferences.rainIntensity/160);
-            // Retina gets up to 2× resolution; cached output keeps navigation free of redraws.
-            const resolution=Math.min(2,Math.max(1,devicePixelRatio||1)),key=scene+':'+resolution;
-            // Cache promises as well as decoded material: rapid time/room changes cannot duplicate a bake.
-            if(!staticRainCache.has(key)){
-                const bake=loadRainMaterial().then(material=>bakeStaticRain(scene,material,resolution));
-                staticRainCache.set(key,bake);
-                bake.catch(()=>{if(staticRainCache.get(key)===bake)staticRainCache.delete(key);});
+            // Keep one texture per scene at the current resolution, even across browser zoom changes.
+            const resolution=Math.min(2,Math.max(1,devicePixelRatio||1));
+            if(staticRainResolution!==resolution){staticRainCache.clear();staticRainResolution=resolution;}
+            let bake=staticRainCache.get(scene);
+            if(!bake){
+                bake=loadRainMaterial().then(material=>staticRainCache.get(scene)===bake?bakeStaticRain(scene,material,resolution):null);
+                staticRainCache.set(scene,bake);
+                bake.catch(()=>{if(staticRainCache.get(scene)===bake)staticRainCache.delete(scene);});
             }
-            staticRainCache.get(key).then(url=>{
-                if(request!==staticRainRequest)return;
+            bake.then(url=>{
+                if(!url||request!==staticRainRequest)return;
                 if(roomRainStatic.getAttribute('src')!==url)roomRainStatic.src=url;
                 roomRainStatic.dataset.scene=scene;
             }).catch(()=>{});
@@ -4148,6 +4159,11 @@ const Hardware = (() => {
             gain.gain.setValueAtTime(vol, appState.audio.context.currentTime + timeOffset);
             gain.gain.exponentialRampToValueAtTime(0.0001, appState.audio.context.currentTime + timeOffset + duration);
             osc.connect(gain); gain.connect(destNode);
+            osc.onended = () => {
+                osc.onended = null;
+                osc.disconnect();
+                gain.disconnect();
+            };
             osc.start(appState.audio.context.currentTime + timeOffset);
             osc.stop(appState.audio.context.currentTime + timeOffset + duration);
         }
@@ -4401,10 +4417,16 @@ const Hardware = (() => {
             fileInput.onchange=async()=>{
                 const file=fileInput.files[0];if(!file)return;const token=dev.fileLoadToken=(dev.fileLoadToken||0)+1;filename.textContent='Carregando estação…';
                 try{
-                    await appState.audio.context.resume();const buffer=await appState.audio.context.decodeAudioData(await file.arrayBuffer());if(!appState.project.devices[dev.id]||dev.fileLoadToken!==token)return;
+                    const context=appState.audio.context;
+                    await context.resume();
+                    if(!isCurrentDeviceAudioLoad(dev,token))return;
+                    const bytes=await file.arrayBuffer();
+                    if(!isCurrentDeviceAudioLoad(dev,token))return;
+                    const buffer=await context.decodeAudioData(bytes);
+                    if(!isCurrentDeviceAudioLoad(dev,token))return;
                     stopReceiverRadioVoices(dev);dev.audioBuffer=buffer;dev.mediaBlob=file;dev.mediaKey='radio_'+Date.now()+'_'+Math.random().toString(36).slice(2);dev.fileName=file.name;dev.fileMessage='';dev.state.receiverInput='fm';dev.state.radioStation=randomFmStation();dev.state.radioOn=true;
                     if(Math.abs(dev.state.radioFrequency-dev.state.radioStation)<1)dev.state.radioFrequency=87.5;dev.syncRadio();updateCableFlows();scheduleProjectSave();if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);
-                }catch{if(dev.fileLoadToken!==token||!appState.project.devices[dev.id])return;dev.fileMessage='Não foi possível carregar o MP3.';if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);}
+                }catch{if(!isCurrentDeviceAudioLoad(dev,token))return;dev.fileMessage='Não foi possível carregar o MP3.';if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);}
             };
             document.getElementById('radio-frequency').oninput=e=>{dev.tuneRadio(e.target.value);activate();};
             document.querySelectorAll('[data-radio-step]').forEach(button=>button.onclick=()=>{dev.tuneRadio(dev.state.radioFrequency+Number(button.dataset.radioStep)*.1);activate();});
@@ -4714,27 +4736,32 @@ const Hardware = (() => {
             };
             source.start(0, dev.fileOffset || 0);
         }
+        function isCurrentDeviceAudioLoad(dev,token){
+            return !dev.runtimeDisposed&&dev.fileLoadToken===token;
+        }
         async function loadSourceAudio(dev, file) {
             const token = dev.fileLoadToken = (dev.fileLoadToken || 0) + 1;
             await setSourcePlaying(dev, false);
+            if (!isCurrentDeviceAudioLoad(dev,token)) return;
             dev.fileMessage = 'Carregando áudio…';
             if (appState.interface.selectedDeviceId === dev.id) selectDevice(dev.id, true);
             try {
                 const bytes = await file.arrayBuffer();
+                if (!isCurrentDeviceAudioLoad(dev,token)) return;
                 const streamMetadata=dev.type==='streamIntegrated'?readStreamMetadata(bytes):null;
                 const trackTitle = readAudioTrackTitle(bytes) || file.name.replace(/\.[^.]+$/, '');
                 const buffer = await appState.audio.context.decodeAudioData(bytes);
-                if (!appState.project.devices[dev.id] || dev.fileLoadToken !== token) return;
+                if (!isCurrentDeviceAudioLoad(dev,token)) return;
                 dev.audioBuffer = buffer; dev.fileOffset = 0;
                 dev.mediaBlob=file;dev.mediaKey='audio_'+Date.now()+'_'+Math.random().toString(36).slice(2);scheduleProjectSave();
                 dev.fileName = file.name; dev.trackTitle=trackTitle; dev.demoOffset=0; dev.fileMessage = '';
                 if(streamMetadata)dev.setStreamMetadata(streamMetadata);
                 refreshCdDisplay(dev);
             } catch (error) {
-                if (dev.fileLoadToken !== token) return;
+                if (!isCurrentDeviceAudioLoad(dev,token)) return;
                 dev.fileMessage = 'Não foi possível ler este áudio. Tente um arquivo MP3 ou WAV.';
             }
-            if (appState.interface.selectedDeviceId === dev.id && appState.project.devices[dev.id]) selectDevice(dev.id, true);
+            if (appState.interface.selectedDeviceId === dev.id) selectDevice(dev.id, true);
         }
 
         const VINYL_NOISE_LEVELS={none:{label:'Sem ruído',gain:0},low:{label:'Ruído baixo',gain:.016},medium:{label:'Ruído médio',gain:.035},high:{label:'Ruído alto',gain:.07}};
@@ -7238,15 +7265,17 @@ const Hardware = (() => {
                 dev.fileMessage='Carregando estação…';
                 refreshP220Inspector(dev);
                 try{
-                    const buffer=await appState.audio.context.decodeAudioData(await file.arrayBuffer());
-                    if(dev.runtimeDisposed||dev.fileLoadToken!==token)return;
+                    const bytes=await file.arrayBuffer();
+                    if(!isCurrentDeviceAudioLoad(dev,token))return;
+                    const buffer=await appState.audio.context.decodeAudioData(bytes);
+                    if(!isCurrentDeviceAudioLoad(dev,token))return;
                     stopP220Radio(dev);
                     dev.audioBuffer=buffer;dev.mediaBlob=file;dev.mediaKey='radio_'+Date.now()+'_'+Math.random().toString(36).slice(2);
                     dev.fileName=file.name;dev.fileMessage='';
                     dev.syncAurenne();updateCableFlows();scheduleProjectSave();
                     if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);
                 }catch{
-                    if(dev.runtimeDisposed||dev.fileLoadToken!==token)return;
+                    if(!isCurrentDeviceAudioLoad(dev,token))return;
                     dev.fileMessage='Não foi possível carregar a estação.';refreshP220Inspector(dev);
                 }
             };
@@ -9293,7 +9322,8 @@ const Hardware = (() => {
         }
 
         function deleteDevice(dev,recordHistory=false) {
-            if (!dev || !appState.project.devices[dev.id]) return;
+            if (!dev || appState.project.devices[dev.id]!==dev) return;
+            const wasInspected=appState.interface.selectedDeviceId===dev.id;
             // Removing a hovered/focused node does not reliably emit pointerout/focusout.
             if(contextHelpTarget&&dev.el.contains(contextHelpTarget)||contextTouchTarget&&dev.el.contains(contextTouchTarget)){
                 hideContextHelp();contextTouchTarget=null;contextTouchStart=null;
@@ -9323,6 +9353,8 @@ const Hardware = (() => {
             }
             dev.el.remove();
             appStateStore.actions.removeDevice(dev.id);
+            if(wasInspected)selectDevice(null,true);
+            if(SOURCE_TYPES.has(dev.type))syncSourceSequencer();
             updateMovementHistoryButtons();
             if (appState.interface.selectedDeviceIds.has(dev.id)) {
                 const remaining = [...appState.interface.selectedDeviceIds].filter(id => id !== dev.id);
@@ -9572,10 +9604,14 @@ const Hardware = (() => {
         }
         function prepareEquipmentHints(root){if(root instanceof Element){prepareEquipmentHint(root);root.querySelectorAll('[title]').forEach(prepareEquipmentHint);}}
         prepareEquipmentHints(document.querySelector('#audio-world'));
-        new MutationObserver(records=>records.forEach(record=>{
-            if(record.type==='attributes')prepareEquipmentHint(record.target);
-            else record.addedNodes.forEach(prepareEquipmentHints);
-        })).observe(document.querySelector('#audio-world'),{subtree:true,childList:true,attributes:true,attributeFilter:['title']});
+        new MutationObserver(records=>{
+            if(equipmentHintTarget&&!equipmentHintTarget.isConnected)hideEquipmentHint();
+            if(equipmentHintBlockedDevice&&!equipmentHintBlockedDevice.isConnected)equipmentHintBlockedDevice=null;
+            records.forEach(record=>{
+                if(record.type==='attributes')prepareEquipmentHint(record.target);
+                else record.addedNodes.forEach(prepareEquipmentHints);
+            });
+        }).observe(document.querySelector('#audio-world'),{subtree:true,childList:true,attributes:true,attributeFilter:['title']});
         function scheduleEquipmentHint(target){
             hideEquipmentHint();if(!target?.dataset.canvasHint)return;
             const device=target.closest('.device-node');if(!device||equipmentHintBlockedDevice===device)return;
@@ -9598,7 +9634,8 @@ const Hardware = (() => {
         });
         document.addEventListener('pointerout',event=>{
             if(!(event.target instanceof Element))return;
-            const device=event.target.closest('.device-node');if(device&&event.relatedTarget instanceof Node&&!device.contains(event.relatedTarget)&&equipmentHintBlockedDevice===device)equipmentHintBlockedDevice=null;
+            const device=event.target.closest('.device-node');
+            if(device&&equipmentHintBlockedDevice===device&&!(event.relatedTarget instanceof Node&&device.contains(event.relatedTarget)))equipmentHintBlockedDevice=null;
             const target=event.target.closest('.device-node [data-canvas-hint]');if(target&&!(event.relatedTarget instanceof Node&&target.contains(event.relatedTarget)))hideEquipmentHint();
         });
         document.addEventListener('pointerdown',event=>{
@@ -9608,6 +9645,11 @@ const Hardware = (() => {
         },true);
         document.addEventListener('focusin',event=>{const target=event.target instanceof Element?event.target.closest('.device-node [data-canvas-hint]'):null;if(target)scheduleEquipmentHint(target);});
         document.addEventListener('focusout',event=>{if(event.target instanceof Element&&event.target.matches('.device-node [data-canvas-hint]'))hideEquipmentHint();});
+        function clearMovementHistory(){
+            movementUndo.length=0;
+            movementRedo.length=0;
+            updateMovementHistoryButtons();
+        }
         function updateMovementHistoryButtons(){
             const valid=entry=>entry.kind!=='move'||entry.before.every(p=>appState.project.devices[p.id]);
             for(const stack of [movementUndo,movementRedo])for(let i=stack.length-1;i>=0;i--)if(!valid(stack[i]))stack.splice(i,1);
@@ -9676,7 +9718,7 @@ const Hardware = (() => {
             scheduleProjectSave();updateMovementHistoryButtons();
         }
         async function replayMovement(redo=false){
-            if(isPatching||document.querySelector('.equipment-dragging:not(.history-settling)'))return;
+            if(projectRestoring||isPatching||document.querySelector('.equipment-dragging:not(.history-settling)'))return;
             updateMovementHistoryButtons();const from=redo?movementRedo:movementUndo,to=redo?movementUndo:movementRedo,entry=from.at(-1);if(!entry)return;
             try{await replayHistoryEntry(entry,redo);from.pop();to.push(entry);}
             catch(error){projectStatus(`Não foi possível ${redo?'refazer':'desfazer'}: ${error.message}`,true);}
@@ -9812,6 +9854,8 @@ const Hardware = (() => {
             if(hasParameters&&!appState.project.restoringProject&&!compactLayout.matches)openSidebar('properties',4000);
             if (id && appState.interface.selectedConnection) selectCable(null,false);
             disposeSpectrum();
+            SpotifyCoverflow.unbindInspector();
+            if(!hasParameters)inspectorContent.replaceChildren();
             if (!preserveSelection) appStateStore.actions.setSelectedDevices(new Set(id ? [id] : []));
             appStateStore.actions.setSelectedDevice(id);
             syncDeviceSelection();
@@ -10047,8 +10091,9 @@ const Hardware = (() => {
                 document.getElementById('source-load-audio').addEventListener('click', () => input.click());
                 input.addEventListener('change', () => { if (input.files[0]) loadSourceAudio(dev, input.files[0]); });
                 document.getElementById('source-remove-audio').addEventListener('click', async () => {
-                    ++dev.fileLoadToken;
+                    const token=dev.fileLoadToken=(dev.fileLoadToken||0)+1;
                     await setSourcePlaying(dev, false);
+                    if(!isCurrentDeviceAudioLoad(dev,token))return;
                     dev.audioBuffer = null; dev.mediaBlob=null;dev.mediaKey=null; dev.fileName = ''; dev.trackTitle=''; dev.demoOffset=0; dev.fileMessage = ''; dev.fileOffset = 0;dev.setStreamMetadata?.(null);
                     refreshCdDisplay(dev);
                     selectDevice(dev.id, true);
@@ -11534,7 +11579,9 @@ const Hardware = (() => {
             const shield=document.createElement('div');shield.className='project-restore-shield';shield.textContent='Restaurando montagem local…';document.body.appendChild(shield);
             const ids=new Map(),restored=[],warnings=[];
             try{
-                stopViewMotion();cancelCableDrag();spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});spotifyVinyls.forEach(item=>item.el.remove());spotifyVinyls.clear();spotifyAlbums.forEach(item=>item.el.remove());spotifyAlbums.clear();refreshSpotifyVinyls();refreshSpotifyAlbums();Object.values(appState.project.devices).forEach(deleteDevice);
+                stopViewMotion();cancelCableDrag();clearMovementHistory();
+                spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});spotifyVinyls.forEach(item=>item.el.remove());spotifyVinyls.clear();spotifyAlbums.forEach(item=>item.el.remove());spotifyAlbums.clear();refreshSpotifyVinyls();refreshSpotifyAlbums();
+                Object.values(appState.project.devices).forEach(dev=>deleteDevice(dev));
                 world.style.removeProperty('min-width');world.style.removeProperty('min-height');
                 const ui=snapshot.ui||{};setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setCanvasTime(ui.canvasTime||(ui.canvasBackdrop==='night'?'night':'dusk'));setCanvasBackdrop(ui.canvasBackdrop);
                 for(const saved of snapshot.devices){
@@ -12110,9 +12157,10 @@ const Hardware = (() => {
             await new Promise(resolve=>setTimeout(resolve,320));
             return control||dev.el;
         }
-        function clearExampleHistory(){movementUndo.length=movementRedo.length=0;updateMovementHistoryButtons();}
         function buildExample(spec){
-            [...spotifyVinyls.values()].forEach(removeSpotifyVinyl);[...spotifyAlbums.values()].forEach(removeSpotifyAlbum);Object.values(appState.project.devices).forEach(deleteDevice);selectDevice(null);
+            [...spotifyVinyls.values()].forEach(item=>removeSpotifyVinyl(item,false));
+            [...spotifyAlbums.values()].forEach(item=>removeSpotifyAlbum(item,false));
+            Object.values(appState.project.devices).forEach(dev=>deleteDevice(dev));selectDevice(null);
             appStateStore.actions.setCanvasOption('hideCables',false);cableVisibilityButton.setAttribute('aria-pressed','false');appStateStore.actions.setProjectRestoring(true);
             const add=type=>{const ids=new Set(Object.keys(appState.project.devices));createDevice(type,sceneSideInset(),0);const dev=Object.values(appState.project.devices).find(item=>!ids.has(item.id));if(!dev)throw new Error('Não foi possível criar '+(DEVICE_NAMES[type]||type));return dev;};
             const support=add(spec.furniture),gear=spec.types.map(add),supports=[support],floor=maxEquipmentBottom();
@@ -12170,7 +12218,7 @@ const Hardware = (() => {
                 validate:spec=>{if(appState.project.connections.length!==spec.links.length||exampleAssembly.gear.some(dev=>dev.state.playing||dev.micStream))throw new Error('A montagem não foi validada.');},
                 restore:previous=>restoreLocalProject(previous.snapshot,key=>Promise.resolve(previous.audio.get(key))),
                 recoveryFailed:previous=>{projectPersistenceBlocked=true;try{localStorage.setItem('audio-system-project-fallback',JSON.stringify(previous.snapshot));}catch{}},
-                end:()=>{appStateStore.actions.setProjectRestoring(false);projectRestoring=false;exampleLoading=false;clearExampleHistory();},
+                end:()=>{appStateStore.actions.setProjectRestoring(false);projectRestoring=false;exampleLoading=false;clearMovementHistory();},
                 commit:async()=>{projectRestoring=false;await saveLocalProject(true,true);document.getElementById('fit-selection').click();selectDevice(exampleAssembly.gear[0].id,true);}
             }
         });

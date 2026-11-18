@@ -29,10 +29,14 @@
         }
         function prepareEquipmentHints(root){if(root instanceof Element){prepareEquipmentHint(root);root.querySelectorAll('[title]').forEach(prepareEquipmentHint);}}
         prepareEquipmentHints(document.querySelector('#audio-world'));
-        new MutationObserver(records=>records.forEach(record=>{
-            if(record.type==='attributes')prepareEquipmentHint(record.target);
-            else record.addedNodes.forEach(prepareEquipmentHints);
-        })).observe(document.querySelector('#audio-world'),{subtree:true,childList:true,attributes:true,attributeFilter:['title']});
+        new MutationObserver(records=>{
+            if(equipmentHintTarget&&!equipmentHintTarget.isConnected)hideEquipmentHint();
+            if(equipmentHintBlockedDevice&&!equipmentHintBlockedDevice.isConnected)equipmentHintBlockedDevice=null;
+            records.forEach(record=>{
+                if(record.type==='attributes')prepareEquipmentHint(record.target);
+                else record.addedNodes.forEach(prepareEquipmentHints);
+            });
+        }).observe(document.querySelector('#audio-world'),{subtree:true,childList:true,attributes:true,attributeFilter:['title']});
         function scheduleEquipmentHint(target){
             hideEquipmentHint();if(!target?.dataset.canvasHint)return;
             const device=target.closest('.device-node');if(!device||equipmentHintBlockedDevice===device)return;
@@ -55,7 +59,8 @@
         });
         document.addEventListener('pointerout',event=>{
             if(!(event.target instanceof Element))return;
-            const device=event.target.closest('.device-node');if(device&&event.relatedTarget instanceof Node&&!device.contains(event.relatedTarget)&&equipmentHintBlockedDevice===device)equipmentHintBlockedDevice=null;
+            const device=event.target.closest('.device-node');
+            if(device&&equipmentHintBlockedDevice===device&&!(event.relatedTarget instanceof Node&&device.contains(event.relatedTarget)))equipmentHintBlockedDevice=null;
             const target=event.target.closest('.device-node [data-canvas-hint]');if(target&&!(event.relatedTarget instanceof Node&&target.contains(event.relatedTarget)))hideEquipmentHint();
         });
         document.addEventListener('pointerdown',event=>{
@@ -65,6 +70,11 @@
         },true);
         document.addEventListener('focusin',event=>{const target=event.target instanceof Element?event.target.closest('.device-node [data-canvas-hint]'):null;if(target)scheduleEquipmentHint(target);});
         document.addEventListener('focusout',event=>{if(event.target instanceof Element&&event.target.matches('.device-node [data-canvas-hint]'))hideEquipmentHint();});
+        function clearMovementHistory(){
+            movementUndo.length=0;
+            movementRedo.length=0;
+            updateMovementHistoryButtons();
+        }
         function updateMovementHistoryButtons(){
             const valid=entry=>entry.kind!=='move'||entry.before.every(p=>appState.project.devices[p.id]);
             for(const stack of [movementUndo,movementRedo])for(let i=stack.length-1;i>=0;i--)if(!valid(stack[i]))stack.splice(i,1);
@@ -133,7 +143,7 @@
             scheduleProjectSave();updateMovementHistoryButtons();
         }
         async function replayMovement(redo=false){
-            if(isPatching||document.querySelector('.equipment-dragging:not(.history-settling)'))return;
+            if(projectRestoring||isPatching||document.querySelector('.equipment-dragging:not(.history-settling)'))return;
             updateMovementHistoryButtons();const from=redo?movementRedo:movementUndo,to=redo?movementUndo:movementRedo,entry=from.at(-1);if(!entry)return;
             try{await replayHistoryEntry(entry,redo);from.pop();to.push(entry);}
             catch(error){projectStatus(`Não foi possível ${redo?'refazer':'desfazer'}: ${error.message}`,true);}
@@ -269,6 +279,8 @@
             if(hasParameters&&!appState.project.restoringProject&&!compactLayout.matches)openSidebar('properties',4000);
             if (id && appState.interface.selectedConnection) selectCable(null,false);
             disposeSpectrum();
+            SpotifyCoverflow.unbindInspector();
+            if(!hasParameters)inspectorContent.replaceChildren();
             if (!preserveSelection) appStateStore.actions.setSelectedDevices(new Set(id ? [id] : []));
             appStateStore.actions.setSelectedDevice(id);
             syncDeviceSelection();
@@ -504,8 +516,9 @@
                 document.getElementById('source-load-audio').addEventListener('click', () => input.click());
                 input.addEventListener('change', () => { if (input.files[0]) loadSourceAudio(dev, input.files[0]); });
                 document.getElementById('source-remove-audio').addEventListener('click', async () => {
-                    ++dev.fileLoadToken;
+                    const token=dev.fileLoadToken=(dev.fileLoadToken||0)+1;
                     await setSourcePlaying(dev, false);
+                    if(!isCurrentDeviceAudioLoad(dev,token))return;
                     dev.audioBuffer = null; dev.mediaBlob=null;dev.mediaKey=null; dev.fileName = ''; dev.trackTitle=''; dev.demoOffset=0; dev.fileMessage = ''; dev.fileOffset = 0;dev.setStreamMetadata?.(null);
                     refreshCdDisplay(dev);
                     selectDevice(dev.id, true);

@@ -67,27 +67,32 @@
             };
             source.start(0, dev.fileOffset || 0);
         }
+        function isCurrentDeviceAudioLoad(dev,token){
+            return !dev.runtimeDisposed&&dev.fileLoadToken===token;
+        }
         async function loadSourceAudio(dev, file) {
             const token = dev.fileLoadToken = (dev.fileLoadToken || 0) + 1;
             await setSourcePlaying(dev, false);
+            if (!isCurrentDeviceAudioLoad(dev,token)) return;
             dev.fileMessage = 'Carregando áudio…';
             if (appState.interface.selectedDeviceId === dev.id) selectDevice(dev.id, true);
             try {
                 const bytes = await file.arrayBuffer();
+                if (!isCurrentDeviceAudioLoad(dev,token)) return;
                 const streamMetadata=dev.type==='streamIntegrated'?readStreamMetadata(bytes):null;
                 const trackTitle = readAudioTrackTitle(bytes) || file.name.replace(/\.[^.]+$/, '');
                 const buffer = await appState.audio.context.decodeAudioData(bytes);
-                if (!appState.project.devices[dev.id] || dev.fileLoadToken !== token) return;
+                if (!isCurrentDeviceAudioLoad(dev,token)) return;
                 dev.audioBuffer = buffer; dev.fileOffset = 0;
                 dev.mediaBlob=file;dev.mediaKey='audio_'+Date.now()+'_'+Math.random().toString(36).slice(2);scheduleProjectSave();
                 dev.fileName = file.name; dev.trackTitle=trackTitle; dev.demoOffset=0; dev.fileMessage = '';
                 if(streamMetadata)dev.setStreamMetadata(streamMetadata);
                 refreshCdDisplay(dev);
             } catch (error) {
-                if (dev.fileLoadToken !== token) return;
+                if (!isCurrentDeviceAudioLoad(dev,token)) return;
                 dev.fileMessage = 'Não foi possível ler este áudio. Tente um arquivo MP3 ou WAV.';
             }
-            if (appState.interface.selectedDeviceId === dev.id && appState.project.devices[dev.id]) selectDevice(dev.id, true);
+            if (appState.interface.selectedDeviceId === dev.id) selectDevice(dev.id, true);
         }
 
         const VINYL_NOISE_LEVELS={none:{label:'Sem ruído',gain:0},low:{label:'Ruído baixo',gain:.016},medium:{label:'Ruído médio',gain:.035},high:{label:'Ruído alto',gain:.07}};

@@ -371,6 +371,11 @@
             gain.gain.setValueAtTime(vol, appState.audio.context.currentTime + timeOffset);
             gain.gain.exponentialRampToValueAtTime(0.0001, appState.audio.context.currentTime + timeOffset + duration);
             osc.connect(gain); gain.connect(destNode);
+            osc.onended = () => {
+                osc.onended = null;
+                osc.disconnect();
+                gain.disconnect();
+            };
             osc.start(appState.audio.context.currentTime + timeOffset);
             osc.stop(appState.audio.context.currentTime + timeOffset + duration);
         }
@@ -624,10 +629,16 @@
             fileInput.onchange=async()=>{
                 const file=fileInput.files[0];if(!file)return;const token=dev.fileLoadToken=(dev.fileLoadToken||0)+1;filename.textContent='Carregando estação…';
                 try{
-                    await appState.audio.context.resume();const buffer=await appState.audio.context.decodeAudioData(await file.arrayBuffer());if(!appState.project.devices[dev.id]||dev.fileLoadToken!==token)return;
+                    const context=appState.audio.context;
+                    await context.resume();
+                    if(!isCurrentDeviceAudioLoad(dev,token))return;
+                    const bytes=await file.arrayBuffer();
+                    if(!isCurrentDeviceAudioLoad(dev,token))return;
+                    const buffer=await context.decodeAudioData(bytes);
+                    if(!isCurrentDeviceAudioLoad(dev,token))return;
                     stopReceiverRadioVoices(dev);dev.audioBuffer=buffer;dev.mediaBlob=file;dev.mediaKey='radio_'+Date.now()+'_'+Math.random().toString(36).slice(2);dev.fileName=file.name;dev.fileMessage='';dev.state.receiverInput='fm';dev.state.radioStation=randomFmStation();dev.state.radioOn=true;
                     if(Math.abs(dev.state.radioFrequency-dev.state.radioStation)<1)dev.state.radioFrequency=87.5;dev.syncRadio();updateCableFlows();scheduleProjectSave();if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);
-                }catch{if(dev.fileLoadToken!==token||!appState.project.devices[dev.id])return;dev.fileMessage='Não foi possível carregar o MP3.';if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);}
+                }catch{if(!isCurrentDeviceAudioLoad(dev,token))return;dev.fileMessage='Não foi possível carregar o MP3.';if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);}
             };
             document.getElementById('radio-frequency').oninput=e=>{dev.tuneRadio(e.target.value);activate();};
             document.querySelectorAll('[data-radio-step]').forEach(button=>button.onclick=()=>{dev.tuneRadio(dev.state.radioFrequency+Number(button.dataset.radioStep)*.1);activate();});

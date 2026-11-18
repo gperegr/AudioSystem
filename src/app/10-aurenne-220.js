@@ -450,15 +450,17 @@
                 dev.fileMessage='Carregando estação…';
                 refreshP220Inspector(dev);
                 try{
-                    const buffer=await appState.audio.context.decodeAudioData(await file.arrayBuffer());
-                    if(dev.runtimeDisposed||dev.fileLoadToken!==token)return;
+                    const bytes=await file.arrayBuffer();
+                    if(!isCurrentDeviceAudioLoad(dev,token))return;
+                    const buffer=await appState.audio.context.decodeAudioData(bytes);
+                    if(!isCurrentDeviceAudioLoad(dev,token))return;
                     stopP220Radio(dev);
                     dev.audioBuffer=buffer;dev.mediaBlob=file;dev.mediaKey='radio_'+Date.now()+'_'+Math.random().toString(36).slice(2);
                     dev.fileName=file.name;dev.fileMessage='';
                     dev.syncAurenne();updateCableFlows();scheduleProjectSave();
                     if(appState.interface.selectedDeviceId===dev.id)selectDevice(dev.id,true);
                 }catch{
-                    if(dev.runtimeDisposed||dev.fileLoadToken!==token)return;
+                    if(!isCurrentDeviceAudioLoad(dev,token))return;
                     dev.fileMessage='Não foi possível carregar a estação.';refreshP220Inspector(dev);
                 }
             };

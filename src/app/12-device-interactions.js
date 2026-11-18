@@ -1269,7 +1269,8 @@
         }
 
         function deleteDevice(dev,recordHistory=false) {
-            if (!dev || !appState.project.devices[dev.id]) return;
+            if (!dev || appState.project.devices[dev.id]!==dev) return;
+            const wasInspected=appState.interface.selectedDeviceId===dev.id;
             // Removing a hovered/focused node does not reliably emit pointerout/focusout.
             if(contextHelpTarget&&dev.el.contains(contextHelpTarget)||contextTouchTarget&&dev.el.contains(contextTouchTarget)){
                 hideContextHelp();contextTouchTarget=null;contextTouchStart=null;
@@ -1299,6 +1300,8 @@
             }
             dev.el.remove();
             appStateStore.actions.removeDevice(dev.id);
+            if(wasInspected)selectDevice(null,true);
+            if(SOURCE_TYPES.has(dev.type))syncSourceSequencer();
             updateMovementHistoryButtons();
             if (appState.interface.selectedDeviceIds.has(dev.id)) {
                 const remaining = [...appState.interface.selectedDeviceIds].filter(id => id !== dev.id);

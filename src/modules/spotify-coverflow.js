@@ -18,7 +18,7 @@ const SpotifyCoverflow=(()=>{
     const clientId=DEFAULT_CLIENT_ID;
     let sdkPromise=null,player=null,deviceId=null,playback=null,playbackUpdatedAt=0,trackRepeat=false,shuffleEnabled=false,playbackElementActivated=false,beforeRedirect=()=>{},refreshPromise=null,inspector=null;
     const extracted=new Set(),removed=new Set();
-    const trackLists=new Map();
+    const trackLists=new Map(),TRACK_LIST_CACHE_LIMIT=24;
     const tokenData=()=>{try{return JSON.parse(sessionStorage.getItem(TOKEN_KEY)||'null');}catch{return null;}};
     const base64=bytes=>btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
     const random=()=>base64(crypto.getRandomValues(new Uint8Array(48)));
@@ -107,7 +107,8 @@ const SpotifyCoverflow=(()=>{
     function disconnect(){if(player){player.pause().catch(()=>{});player.disconnect();}player=null;deviceId=null;playback=null;shuffleEnabled=false;playbackElementActivated=false;broadcast();}
     async function loadTracks(uri){
         if(!/^spotify:(album|playlist):[A-Za-z0-9]+$/.test(uri))throw new Error('Disco inválido.');
-        if(trackLists.has(uri))return trackLists.get(uri);
+        const cached=trackLists.get(uri);
+        if(cached){trackLists.delete(uri);trackLists.set(uri,cached);return cached;}
         const loading=(async()=>{
             const [,kind,id]=uri.split(':'),tracks=[];
             let next=`https://api.spotify.com/v1/${kind==='album'?'albums':'playlists'}/${id}/tracks?limit=50`;
@@ -121,7 +122,8 @@ const SpotifyCoverflow=(()=>{
             return tracks;
         })();
         trackLists.set(uri,loading);
-        try{return await loading;}catch(error){trackLists.delete(uri);throw error;}
+        if(trackLists.size>TRACK_LIST_CACHE_LIMIT)trackLists.delete(trackLists.keys().next().value);
+        try{return await loading;}catch(error){if(trackLists.get(uri)===loading)trackLists.delete(uri);throw error;}
     }
     async function playAlbum(album,trackIndex=null){
         try{
@@ -213,12 +215,13 @@ const SpotifyCoverflow=(()=>{
         root.querySelector('[data-spotify-position]').addEventListener('input',event=>{const source=host.querySelector('.spotify-flow-position');source.value=event.target.value;source.dispatchEvent(new Event('input',{bubbles:true}));});
         syncInspector(host);
     }
+    function unbindInspector(){inspector=null;}
     function mount(host,state,onChange,{preview=false}={}){
         const stage=host.querySelector('.spotify-flow-stage'),flow=host.querySelector('.spotify-flow-cards'),message=host.querySelector('.spotify-flow-message');
         const hitLayer=document.createElement('div');hitLayer.className='spotify-flow-hits';stage.append(hitLayer);
         const title=host.querySelector('.spotify-flow-title'),subtitle=host.querySelector('.spotify-flow-subtitle'),count=host.querySelector('.spotify-flow-count');
         const position=host.querySelector('.spotify-flow-position'),sort=host.querySelector('.spotify-flow-sort'),play=host.querySelector('.spotify-flow-play');
-        const nodes=new Map(),hits=new Map();let ordered=[],allOrdered=[],orderedSource=null,orderedSort=null,drag=null,dragged=false,suppressClickUntil=0,disposed=false;
+        const nodes=new Map(),hits=new Map();let ordered=[],allOrdered=[],orderedSource=null,orderedSort=null,drag=null,dragged=false,suppressClickUntil=0,disposed=false,cancelCoverPickup=null;
         state.coverflowMode=state.coverflowMode==='playlists'?'playlists':'albums';
         const saved=state.coverflowCollections||{};
         state.coverflowCollections=Object.fromEntries(['albums','playlists'].map(mode=>{
@@ -249,7 +252,28 @@ const SpotifyCoverflow=(()=>{
             const vinyl=document.createElement('span');vinyl.className='spotify-flow-vinyl';
             vinyl.title='Retirar disco da capa';vinyl.setAttribute('role','button');vinyl.setAttribute('aria-label',`Retirar ${album.name} da capa`);
             const cover=document.createElement('img');cover.alt='';cover.loading='lazy';cover.decoding='async';cover.referrerPolicy='no-referrer';
-            cover.addEventListener('pointerdown',event=>{if(event.button!==0||current()!==index)return;event.stopPropagation();const startX=event.clientX,startY=event.clientY,pointerId=event.pointerId;const move=ev=>{if(ev.pointerId!==pointerId||Math.hypot(ev.clientX-startX,ev.clientY-startY)<9)return;cleanup();suppressClickUntil=performance.now()+350;host.dispatchEvent(new CustomEvent('spotify-album-pickup',{bubbles:true,detail:{uri:album.uri,name:album.name,image:album.images?.[0]?.url||'',clientX:ev.clientX,clientY:ev.clientY,pointerId}}));};const cleanup=()=>{window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',cleanup,true);window.removeEventListener('pointercancel',cleanup,true);};window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',cleanup,true);window.addEventListener('pointercancel',cleanup,true);});
+            cover.addEventListener('pointerdown',event=>{
+                if(disposed||event.button!==0||current()!==index)return;
+                event.stopPropagation();cancelCoverPickup?.();
+                const startX=event.clientX,startY=event.clientY,pointerId=event.pointerId;
+                const move=ev=>{
+                    if(ev.pointerId!==pointerId||Math.hypot(ev.clientX-startX,ev.clientY-startY)<9)return;
+                    cleanup();suppressClickUntil=performance.now()+350;
+                    host.dispatchEvent(new CustomEvent('spotify-album-pickup',{bubbles:true,detail:{uri:album.uri,name:album.name,image:album.images?.[0]?.url||'',clientX:ev.clientX,clientY:ev.clientY,pointerId}}));
+                };
+                const cleanup=()=>{
+                    window.removeEventListener('pointermove',move,true);
+                    window.removeEventListener('pointerup',cleanup,true);
+                    window.removeEventListener('pointercancel',cleanup,true);
+                    window.removeEventListener('blur',cleanup);
+                    cancelCoverPickup=null;
+                };
+                cancelCoverPickup=cleanup;
+                window.addEventListener('pointermove',move,true);
+                window.addEventListener('pointerup',cleanup,true);
+                window.addEventListener('pointercancel',cleanup,true);
+                window.addEventListener('blur',cleanup);
+            });
             const artUrl=albumArt(album,false);
             if(artUrl)cover.src=artUrl;
             const spine=document.createElement('span');spine.className='spotify-flow-spine spotify-flow-spine-right';const spineText=document.createElement('span');spineText.textContent=album.name;spine.append(spineText);
@@ -337,7 +361,7 @@ const SpotifyCoverflow=(()=>{
             if(!['ArrowLeft','ArrowRight','Home','End','Enter',' '].includes(event.key))return;if(event.target!==stage&&['Enter',' '].includes(event.key))return;event.preventDefault();event.stopPropagation();if(event.key==='ArrowLeft')shift(-1);else if(event.key==='ArrowRight')shift(1);else if(event.key==='Home')select(0);else if(event.key==='End')select(ordered.length-1);else activate(current()>=0?current():Math.round(active().position));
         });
         const view={refresh};if(!preview)views.add(view);if(!preview&&tokenData())status='';refresh();if(!preview&&tokenData()){loadCollection(state.coverflowMode);ensurePlayer().catch(error=>setStatus(error.message));}
-        return {refresh(){if(disposed)return;refresh();if(tokenData())loadCollection(state.coverflowMode);},dispose(){if(disposed)return;disposed=true;views.delete(view);if(dragFrame){cancelAnimationFrame(dragFrame);dragFrame=0;}drag=null;pendingPosition=null;host.classList.remove('is-dragging');nodes.forEach(node=>node.remove());nodes.clear();hitLayer.remove();hits.forEach(hit=>hit.remove());hits.clear();}};
+        return {refresh(){if(disposed)return;refresh();if(tokenData())loadCollection(state.coverflowMode);},dispose(){if(disposed)return;disposed=true;views.delete(view);cancelCoverPickup?.();if(dragFrame){cancelAnimationFrame(dragFrame);dragFrame=0;}drag=null;pendingPosition=null;host.classList.remove('is-dragging');nodes.forEach(node=>node.remove());nodes.clear();hitLayer.remove();hits.forEach(hit=>hit.remove());hits.clear();}};
     }
     async function initialize(){
         const url=new URL(location.href),code=url.searchParams.get('code'),error=url.searchParams.get('error');
@@ -353,5 +377,5 @@ const SpotifyCoverflow=(()=>{
         }
         if(tokenData()){status='';await loadCollection('albums');}
     }
-    return {mount,inspectorHtml,bindInspector,initialize,login,logout,playAlbum,resumeAlbum,activatePlayback,loadTracks,selectTrack,pauseAlbum,setPlaybackVolume,getPlaybackState,seekTo,setTrackRepeat,setShuffle,markExtracted,markRemoved,setBeforeRedirect(callback){beforeRedirect=callback;}};
+    return {mount,inspectorHtml,bindInspector,unbindInspector,initialize,login,logout,playAlbum,resumeAlbum,activatePlayback,loadTracks,selectTrack,pauseAlbum,setPlaybackVolume,getPlaybackState,seekTo,setTrackRepeat,setShuffle,markExtracted,markRemoved,setBeforeRedirect(callback){beforeRedirect=callback;}};
 })();

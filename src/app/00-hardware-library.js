@@ -464,7 +464,13 @@ const Hardware = (() => {
         knobReadout.style.top=(rect.top>height+18?rect.top-height-10:rect.bottom+10)+'px';
     }
     function hideKnobReadout(delay=450){
-        clearTimeout(readoutTimer);readoutTimer=setTimeout(()=>{if(knobReadout)knobReadout.hidden=true;readoutOwner=null;},delay);
+        clearTimeout(readoutTimer);
+        const hide=()=>{if(knobReadout)knobReadout.hidden=true;readoutOwner=null;};
+        if(delay)readoutTimer=setTimeout(hide,delay);else hide();
+    }
+    function hideFineControl(){
+        fineControlPanel.hidden=true;
+        fineControlOwner=null;
     }
     function showFineControl(el){
         const control=bindings.get(el);if(!control||!el.isConnected)return;
@@ -476,8 +482,8 @@ const Hardware = (() => {
                 active.set(value);paintKnob(owner);fineControlPanel.querySelector('output').textContent=knobValueText(active);
             });
             fineControlPanel.querySelector('input').addEventListener('change',()=>{updateCableFlows();scheduleProjectSave();});
-            document.addEventListener('pointerdown',event=>{if(fineControlPanel&&!fineControlPanel.hidden&&!fineControlPanel.contains(event.target)&&!fineControlOwner?.contains(event.target)){fineControlPanel.hidden=true;fineControlOwner=null;}},true);
-            document.addEventListener('keydown',event=>{if(event.key==='Escape'&&fineControlPanel&&!fineControlPanel.hidden){fineControlPanel.hidden=true;fineControlOwner=null;}});
+            document.addEventListener('pointerdown',event=>{if(!fineControlPanel.hidden&&!fineControlPanel.contains(event.target)&&!fineControlOwner?.contains(event.target))hideFineControl();},true);
+            document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!fineControlPanel.hidden)hideFineControl();});
         }
         fineControlOwner=el;const range=fineControlPanel.querySelector('input');range.min=control.min;range.max=control.max;range.step=control.fineStep;range.value=control.get();fineControlPanel.querySelector('output').textContent=knobValueText(control);fineControlPanel.hidden=false;
         const rect=el.getBoundingClientRect(),panelWidth=Math.min(220,innerWidth-16);fineControlPanel.style.width=panelWidth+'px';fineControlPanel.style.left=Math.max(8,Math.min(innerWidth-panelWidth-8,rect.left+(rect.width-panelWidth)/2))+'px';fineControlPanel.style.top=Math.max(8,Math.min(innerHeight-96,rect.top-94))+'px';
@@ -769,7 +775,11 @@ const Hardware = (() => {
         el.classList.add('hw-linear');el.dataset.hardwareLinear='vertical';
         bindKnob(el,{...options,kind:'linear'});
     }
-    function dispose(dev){if(readoutOwner&&dev.el.contains(readoutOwner))hideKnobReadout(0);dev.el.querySelectorAll('[data-hardware-knob],[data-hardware-linear],[data-hardware-feedback]').forEach(el=>releases.get(el)?.());}
+    function dispose(dev){
+        dev.el.querySelectorAll('[data-hardware-knob],[data-hardware-linear],[data-hardware-feedback]').forEach(el=>releases.get(el)?.());
+        if(readoutOwner&&dev.el.contains(readoutOwner))hideKnobReadout(0);
+        if(fineControlOwner&&dev.el.contains(fineControlOwner))hideFineControl();
+    }
     function layout({type,el}){
         if(AudioAdapterDesign.models[type]){AudioAdapterDesign.layout(el,type);return;}
         const interfaceDesign=typeof AudioInterfaceDesign!=='undefined'&&AudioInterfaceDesign.models[type];

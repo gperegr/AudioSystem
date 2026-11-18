@@ -141,7 +141,9 @@
             const shield=document.createElement('div');shield.className='project-restore-shield';shield.textContent='Restaurando montagem local…';document.body.appendChild(shield);
             const ids=new Map(),restored=[],warnings=[];
             try{
-                stopViewMotion();cancelCableDrag();spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});spotifyVinyls.forEach(item=>item.el.remove());spotifyVinyls.clear();spotifyAlbums.forEach(item=>item.el.remove());spotifyAlbums.clear();refreshSpotifyVinyls();refreshSpotifyAlbums();Object.values(appState.project.devices).forEach(deleteDevice);
+                stopViewMotion();cancelCableDrag();clearMovementHistory();
+                spotifyPlayingTurntable=null;SpotifyCoverflow.setPlaybackVolume(0).catch(()=>{});SpotifyCoverflow.pauseAlbum().catch(()=>{});spotifyVinyls.forEach(item=>item.el.remove());spotifyVinyls.clear();spotifyAlbums.forEach(item=>item.el.remove());spotifyAlbums.clear();refreshSpotifyVinyls();refreshSpotifyAlbums();
+                Object.values(appState.project.devices).forEach(dev=>deleteDevice(dev));
                 world.style.removeProperty('min-width');world.style.removeProperty('min-height');
                 const ui=snapshot.ui||{};setCanvasTheme(ui.canvasTheme);setCanvasGrid(ui.canvasGrid);setCanvasTime(ui.canvasTime||(ui.canvasBackdrop==='night'?'night':'dusk'));setCanvasBackdrop(ui.canvasBackdrop);
                 for(const saved of snapshot.devices){

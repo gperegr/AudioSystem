@@ -6,7 +6,7 @@ const vm=require('node:vm');
 
 const filename=path.join(__dirname,'../src/modules/spotify-coverflow.js');
 let source=readFileSync(filename,'utf8');
-const apiMarker='    return {mount,inspectorHtml,bindInspector,initialize,login,logout,playAlbum,resumeAlbum,activatePlayback,loadTracks,selectTrack,pauseAlbum,setPlaybackVolume,getPlaybackState,seekTo,setTrackRepeat,setShuffle,markExtracted,markRemoved,setBeforeRedirect(callback){beforeRedirect=callback;}};';
+const apiMarker='    return {mount,inspectorHtml,bindInspector,';
 assert.ok(source.includes(apiMarker),'Spotify API export must be present');
 source=source.replace(apiMarker,"    window.__setTestPlayer=value=>{player=value;deviceId='device';playbackElementActivated=false};\n"+apiMarker);
 const context=vm.createContext({window:{},location:{origin:'https://audio.test',pathname:'/'},matchMedia:()=>({matches:false})});

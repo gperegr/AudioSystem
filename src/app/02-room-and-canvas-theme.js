@@ -9,7 +9,7 @@
         roomBackdrop.innerHTML='<img class="room-scene-image room-layer-far is-visible" alt="" decoding="async" draggable="false"><i class="room-grid-overlay"></i>';
         const roomRain=document.createElement('div');roomRain.className='room-rain';roomRain.setAttribute('aria-hidden','true');roomBackdrop.appendChild(roomRain);
         const roomRainStatic=document.createElement('img');roomRainStatic.className='room-rain-static';roomRainStatic.hidden=true;roomRainStatic.alt='';roomRainStatic.draggable=false;roomBackdrop.insertBefore(roomRainStatic,roomRain);
-        const staticRainCache=new Map();let staticRainRequest=0;
+        const staticRainCache=new Map();let staticRainRequest=0,staticRainResolution=0;
         // Clip after the rain filter as well, so blur cannot bleed onto the frames.
         const rainMaskSvg=document.createElementNS('http://www.w3.org/2000/svg','svg');
         rainMaskSvg.setAttribute('width','0');rainMaskSvg.setAttribute('height','0');
@@ -84,18 +84,19 @@
         function updateStaticRain(scene){
             const request=++staticRainRequest;
             roomRainStatic.hidden=roomRain.hidden;
-            if(roomRain.hidden)return;
+            if(roomRain.hidden){roomRainStatic.removeAttribute('src');return;}
             roomRainStatic.style.opacity=appState.preferences.rainIntensity===100?'1':String(appState.preferences.rainIntensity/160);
-            // Retina gets up to 2× resolution; cached output keeps navigation free of redraws.
-            const resolution=Math.min(2,Math.max(1,devicePixelRatio||1)),key=scene+':'+resolution;
-            // Cache promises as well as decoded material: rapid time/room changes cannot duplicate a bake.
-            if(!staticRainCache.has(key)){
-                const bake=loadRainMaterial().then(material=>bakeStaticRain(scene,material,resolution));
-                staticRainCache.set(key,bake);
-                bake.catch(()=>{if(staticRainCache.get(key)===bake)staticRainCache.delete(key);});
+            // Keep one texture per scene at the current resolution, even across browser zoom changes.
+            const resolution=Math.min(2,Math.max(1,devicePixelRatio||1));
+            if(staticRainResolution!==resolution){staticRainCache.clear();staticRainResolution=resolution;}
+            let bake=staticRainCache.get(scene);
+            if(!bake){
+                bake=loadRainMaterial().then(material=>staticRainCache.get(scene)===bake?bakeStaticRain(scene,material,resolution):null);
+                staticRainCache.set(scene,bake);
+                bake.catch(()=>{if(staticRainCache.get(scene)===bake)staticRainCache.delete(scene);});
             }
-            staticRainCache.get(key).then(url=>{
-                if(request!==staticRainRequest)return;
+            bake.then(url=>{
+                if(!url||request!==staticRainRequest)return;
                 if(roomRainStatic.getAttribute('src')!==url)roomRainStatic.src=url;
                 roomRainStatic.dataset.scene=scene;
             }).catch(()=>{});

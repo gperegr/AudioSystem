@@ -108,9 +108,10 @@
             await new Promise(resolve=>setTimeout(resolve,320));
             return control||dev.el;
         }
-        function clearExampleHistory(){movementUndo.length=movementRedo.length=0;updateMovementHistoryButtons();}
         function buildExample(spec){
-            [...spotifyVinyls.values()].forEach(removeSpotifyVinyl);[...spotifyAlbums.values()].forEach(removeSpotifyAlbum);Object.values(appState.project.devices).forEach(deleteDevice);selectDevice(null);
+            [...spotifyVinyls.values()].forEach(item=>removeSpotifyVinyl(item,false));
+            [...spotifyAlbums.values()].forEach(item=>removeSpotifyAlbum(item,false));
+            Object.values(appState.project.devices).forEach(dev=>deleteDevice(dev));selectDevice(null);
             appStateStore.actions.setCanvasOption('hideCables',false);cableVisibilityButton.setAttribute('aria-pressed','false');appStateStore.actions.setProjectRestoring(true);
             const add=type=>{const ids=new Set(Object.keys(appState.project.devices));createDevice(type,sceneSideInset(),0);const dev=Object.values(appState.project.devices).find(item=>!ids.has(item.id));if(!dev)throw new Error('Não foi possível criar '+(DEVICE_NAMES[type]||type));return dev;};
             const support=add(spec.furniture),gear=spec.types.map(add),supports=[support],floor=maxEquipmentBottom();
@@ -168,7 +169,7 @@
                 validate:spec=>{if(appState.project.connections.length!==spec.links.length||exampleAssembly.gear.some(dev=>dev.state.playing||dev.micStream))throw new Error('A montagem não foi validada.');},
                 restore:previous=>restoreLocalProject(previous.snapshot,key=>Promise.resolve(previous.audio.get(key))),
                 recoveryFailed:previous=>{projectPersistenceBlocked=true;try{localStorage.setItem('audio-system-project-fallback',JSON.stringify(previous.snapshot));}catch{}},
-                end:()=>{appStateStore.actions.setProjectRestoring(false);projectRestoring=false;exampleLoading=false;clearExampleHistory();},
+                end:()=>{appStateStore.actions.setProjectRestoring(false);projectRestoring=false;exampleLoading=false;clearMovementHistory();},
                 commit:async()=>{projectRestoring=false;await saveLocalProject(true,true);document.getElementById('fit-selection').click();selectDevice(exampleAssembly.gear[0].id,true);}
             }
         });
